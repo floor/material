@@ -1,4 +1,4 @@
-/** The ripple is the press (FLO-260): sample the painted press layers in Chromium. */
+/** The ripple is the press: sample the painted press layers in Chromium. */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createButton from "../src/components/button";

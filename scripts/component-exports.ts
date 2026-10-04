@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /**
- * Each component subpath's exports, pinned (FLO-381), and each
- * `material/components/<name>/constants` subpath's (FLO-384).
+ * Each component subpath's exports, pinned, and each
+ * `material/components/<name>/constants` subpath's.
  *
- * `material/components/<name>` is public API like the root (FLO-351): every name
+ * `material/components/<name>` is public API like the root: every name
  * its index exports is a 3.x promise. This reads every component index with
  * the type checker, values and types, records each export as public or
  * deprecated (an `@deprecated` tag on its re-export), and pins the result in
@@ -40,7 +40,7 @@ const deprecation = (symbol: ts.Symbol): string | undefined => {
   return undefined;
 };
 
-/** The `material/components/<name>/constants` subpaths, pinned beside the indexes (FLO-384) */
+/** The `material/components/<name>/constants` subpaths, pinned beside the indexes */
 export const constantsNames = (): string[] =>
   componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/constants.ts`))).map((name) => `${name}/constants`);
 

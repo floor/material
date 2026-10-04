@@ -39,7 +39,7 @@ for (const component of ['fab', 'extended-fab'] as const) {
     if (component === 'fab') expect(b.element.getAttribute('aria-label')).toBe('Create');
     else expect(b.element.hasAttribute('aria-label')).toBe(false);
   });
-  // FLO-110. config.ts used to read
+  // Config.ts used to read
   // `config.ariaLabel || (config.icon ? "action" : undefined)`, so a FAB
   // built without a label got the name "action" -- enough to pass axe and
   // Lighthouse while telling a screen-reader user nothing. The fallback is
@@ -147,7 +147,7 @@ for (const component of ['fab', 'extended-fab'] as const) {
     const b = make(); let calls = 0;
     // emit is not part of the public type; it is the events feature the API delegates to
     const emit = (event: string) => Reflect.apply(Reflect.get(b, 'emit'), b, [event]);
-    // A real event name rather than an invented one: FLO-114 made `on` generic
+    // A real event name rather than an invented one: made `on` generic
     // over the component's event map, so `'ping'` is no longer a key. The
     // subject here is destroy, not the name -- the event is emitted by hand
     // either way, so `'focus'` tests exactly what `'ping'` did.
@@ -159,7 +159,7 @@ for (const component of ['fab', 'extended-fab'] as const) {
     emit('focus');
     expect(calls).toBe(1);
   });
-  // FLO-114 gave the FAB a typed event map declaring click, focus and blur,
+  // Gave the FAB a typed event map declaring click, focus and blur,
   // each carrying `{ event, element, originalEvent }` from the core
   // forwarder. A map is a claim about what exists and what it hands over;
   // only `click` firing was covered before, and the payload shape not at all.
@@ -225,7 +225,7 @@ test('extended FAB: text and collapse/expand update the real DOM and emit events
   expect(b.element.querySelector('.mtrl-extended-fab__text')?.textContent).toBe('Save');
   const events: string[] = [];
   const emitterEvents: string[] = [];
-  // Both the DOM element and the emitter get them (FLO-319): the emitter is
+  // Both the DOM element and the emitter get them: the emitter is
   // what <m-extended-fab> and the adapters listen to.
   b.on('collapse', () => emitterEvents.push('collapse')).on('expand', () => emitterEvents.push('expand'));
   b.element.addEventListener('collapse', () => events.push('collapse'));

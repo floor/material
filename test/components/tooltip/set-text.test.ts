@@ -8,7 +8,7 @@
 // removeChild(null) — a TypeError. Guarding that alone only moves the throw to
 // insertBefore, whose anchor is gone as well, so both ends are handled here.
 //
-// Found while clearing this file for strictNullChecks (FLO-114): the compiler
+// Found while clearing this file for strictNullChecks: the compiler
 // flagged `firstChild` as possibly null, and it was right for a reason the
 // type alone did not say.
 

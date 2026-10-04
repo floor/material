@@ -1,6 +1,6 @@
 // test/components/toolbar/toolbar.test.ts
 //
-// The M3 Expressive toolbar (FLO-304) in a JSDOM document: its variants and
+// The M3 Expressive toolbar in a JSDOM document: its variants and
 // their settled options, the toolbar role and its one tab stop, the items it
 // creates or takes, the FAB outside the tab stop, the injected overflow menu,
 // leaving the screen on scroll, and cleanup.

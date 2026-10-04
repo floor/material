@@ -1,11 +1,11 @@
 // test/components/text-field/placement-setup.test.ts
 //
-// FLO-378: a filled field with nothing to place installs no observers and no
+// A filled field with nothing to place installs no observers and no
 // resize listener, and reads no style. The first request for placement, from
 // any setter that can give it something to place, sets them up. It does join
 // the batch once, to ask whether it is in a shadow root (a field has no root
 // when it is created): there, and only there, one measure reads its direction
-// for the --rtl class, which nothing else can give it (FLO-562).
+// for the --rtl class, which nothing else can give it.
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
 import { JSDOM } from "jsdom";
 
@@ -70,7 +70,7 @@ beforeEach(async () => {
 });
 afterAll(() => dom.window.close());
 
-describe("placement waits for something to place (FLO-378)", () => {
+describe("placement waits for something to place", () => {
   test("a filled field with no prefix, suffix or icon, in the light DOM, sets up no observer and no listener and reads no style", async () => {
     mount({ variant: "filled" });
     expect(setUp()).toEqual(NOTHING);
@@ -78,7 +78,7 @@ describe("placement waits for something to place (FLO-378)", () => {
     expect({ ...setUp(), styleReads }).toEqual({ ...NOTHING, styleReads: 0 });
   });
 
-  test("the same field in a shadow root reads its direction once, and still sets up no observer and no listener (FLO-562)", async () => {
+  test("the same field in a shadow root reads its direction once, and still sets up no observer and no listener", async () => {
     const host = document.createElement("div");
     document.body.append(host);
     const field = createTextField({ label: "Name", variant: "filled" } as never);

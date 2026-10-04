@@ -1,4 +1,4 @@
-// FLO-553: scrollToChip leaves the scroll behaviour to the stylesheet. It
+// ScrollToChip leaves the scroll behaviour to the stylesheet. It
 // passed `behavior: "smooth"`, which overrides CSS: under reduced motion the
 // reset's `scroll-behavior: auto` was ignored and the set still glided.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";

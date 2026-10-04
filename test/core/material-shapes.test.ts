@@ -1,6 +1,6 @@
 // test/core/material-shapes.test.ts
 //
-// FLO-346: the 35 Material 3 Expressive shapes, held to Compose. The fixture
+// The 35 Material 3 Expressive shapes, held to Compose. The fixture
 // is Compose Material 3's own MaterialShapes builders, run on graphics-shapes
 // 1.0.1 (the version Compose depends on) by scripts/generate-material-shapes.kt:
 // every shape here must match it cubic for cubic.

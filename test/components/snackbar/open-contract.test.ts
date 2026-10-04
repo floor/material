@@ -1,6 +1,6 @@
 // test/components/snackbar/open-contract.test.ts
 //
-// FLO-548: one open and close contract for every overlay. For the snackbar
+// One open and close contract for every overlay. For the snackbar
 // the methods are show() and hide(), the events open and close: when either
 // returns, the state has changed and the event has been emitted. A snackbar
 // waiting behind another is "queued", not open: its state turns "visible"

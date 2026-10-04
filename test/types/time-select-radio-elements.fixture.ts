@@ -1,5 +1,5 @@
 // test/types/time-select-radio-elements.fixture.ts
-// FLO-380 PR 5: custom-element events and generated adapter props.
+// PR 5: custom-element events and generated adapter props.
 import type { ElementEvents, TimepickerSpec, SelectSpec, RadiosSpec } from "../../src/elements";
 import type { Timepicker as ReactTimepicker, Select as ReactSelect, Radios as ReactRadios } from "../../src/react";
 import type { Timepicker as SolidTimepicker, Select as SolidSelect, Radios as SolidRadios } from "../../src/solid";

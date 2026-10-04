@@ -47,7 +47,7 @@ assert<Equals<TextFieldProps["onInput"], ((event: CustomEvent<{ value: string }>
 // @ts-expect-error -- a switch's checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
 
-// Named slots are props taking nodes (FLO-333); a text prop of a slot's name
+// Named slots are props taking nodes; a text prop of a slot's name
 // takes text or nodes.
 type DialogProps = ReactProps<typeof Dialog>;
 assert<Equals<DialogProps["actions"], import("react").ReactNode>>();

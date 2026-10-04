@@ -1,5 +1,5 @@
 // test/components/event-value-getters.test.ts
-// FLO-380: factory model events report the live getter during dispatch.
+// Factory model events report the live getter during dispatch.
 // Snapshot in each handler before another activation changes the model.
 import { expect, test } from "bun:test";
 import createTextField from "../../src/components/text-field";

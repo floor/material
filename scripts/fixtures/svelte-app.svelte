@@ -38,7 +38,7 @@
   let due = $state("2026-09-10");
   let query = $state("ap");
   let ref = $state<{ readonly element: HTMLElement | null } | undefined>();
-  // Callbacks that are not snippets: never called by rendering (FLO-334)
+  // Callbacks that are not snippets: never called by rendering
   let renderCalls = 0;
   const callbacks = { onFoo: () => void renderCalls++ };
 
@@ -116,7 +116,7 @@
   </Select>
   <output id="pet">{String(pet)}</output>
   <!-- Controlled: Escape closes the dialog, and onclose puts the state in step -->
-  <!-- Named snippets are the named slots (FLO-325) -->
+  <!-- Named snippets are the named slots -->
   <Dialog id="dg" open={dialog} onclose={() => (dialog = false)}>
     {#snippet headline()}Discard draft?{/snippet}
     {#snippet actions()}<Button id="dga">Discard</Button>{/snippet}
@@ -139,9 +139,9 @@
     {/each}
   </Search>
   <output id="query">{query}</output>
-  <!-- A camelCase handler and a spread callback are not snippets (FLO-334) -->
+  <!-- A camelCase handler and a spread callback are not snippets -->
   <Button id="cbk" onClick={() => void renderCalls++} {...callbacks}>Callbacks</Button>
-  <!-- bind:this reads the element; an attachment reaches it (FLO-325) -->
+  <!-- bind:this reads the element; an attachment reaches it -->
   <Switch id="bt" bind:this={ref}>Ref</Switch>
   <Switch id="at" {@attach (node: HTMLElement) => { node.dataset.attached = "yes"; }}>Attached</Switch>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}

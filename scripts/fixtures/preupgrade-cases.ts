@@ -136,7 +136,7 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "default", `<m-text-field label="Name"></m-text-field>`),
   c("text-field", "variant=outlined", `<m-text-field variant="outlined" label="Name"></m-text-field>`),
   c("text-field", "supporting-text", `<m-text-field label="Name" supporting-text="As on your passport"></m-text-field>`),
-  // FLO-300: the supporting text row under the field, reserved before upgrade
+  // The supporting text row under the field, reserved before upgrade
   c("text-field", "outlined supporting-text", `<m-text-field variant="outlined" label="Name" supporting-text="As on your passport"></m-text-field>`),
   c("text-field", "maxlength (counter)", `<m-text-field label="Name" maxlength="20"></m-text-field>`),
   c("text-field", "compact supporting-text", `<m-text-field density="compact" label="Name" supporting-text="Help"></m-text-field>`),
@@ -156,11 +156,11 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "type=hidden", `<m-text-field type="hidden"></m-text-field>`),
   c("text-field", "type=hidden value", `<m-text-field type="hidden" value="synthetic-token"></m-text-field>`),
   c("text-field", "type=HIDDEN value", `<m-text-field type="HIDDEN" value="synthetic-token"></m-text-field>`),
-  // FLO-299: without a label the text is centred, in both densities
+  // Without a label the text is centred, in both densities
   c("text-field", "no label value", `<m-text-field aria-label="Name" value="Ada"></m-text-field>`),
   c("text-field", "no label compact value", `<m-text-field density="compact" aria-label="Name" value="Ada"></m-text-field>`),
   c("text-field", "no label outlined value", `<m-text-field variant="outlined" aria-label="Name" value="Ada"></m-text-field>`),
-  // FLO-425: the multiline box is the textarea's, not the single-line field's
+  // The multiline box is the textarea's, not the single-line field's
   c("text-field", "type=multiline", `<m-text-field label="Name" type="multiline"></m-text-field>`),
   c("text-field", "type=multiline value", `<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>`),
   c("text-field", "type=multiline no label", `<m-text-field type="multiline" aria-label="Name"></m-text-field>`),

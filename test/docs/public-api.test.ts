@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Application, LogLevel } from "typedoc";
 
-test("Tabs documentation exposes supported APIs and omits internal hooks (FLO-239)", async () => {
+test("Tabs documentation exposes supported APIs and omits internal hooks", async () => {
   // Use the real documentation configuration and converter, so an annotation
   // alone cannot pass while the documentation still advertises the member.
   const app = await Application.bootstrapWithPlugins({

@@ -42,7 +42,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       const host = root.getElementById("x") as HTMLElement & { show: () => void };
       for (const type of ["change", "input", "open", "close"]) {
         host.addEventListener(type, (event) => {
-          // The date picker's `date` (FLO-320) is logged only when it is not
+          // The date picker's `date` is logged only when it is not
           // the Date form of `value`, so a mismatch fails the expected log.
           const detail = (event as CustomEvent).detail as { value?: string; date?: Date | Date[] | null } | null;
           const local = (d: Date): string =>
@@ -349,7 +349,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     check("datepicker: a range is a start/end interval, in the value, the form and change");
   }
 
-  // Range: a lone date is a one-day range, as the factory holds it (FLO-295).
+  // Range: a lone date is a one-day range, as the factory holds it.
   await stage(`<form id="f"><m-datepicker id="x" name="x" variant="modal" selection-mode="range" label="Day"
     value="2026-09-10" supporting-text="Check-in and out"></m-datepicker></form>`);
   {
@@ -508,7 +508,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     assert.deepEqual((await state()).log, [["open", null], ["close", null]]);
     check("timepicker: OK on the same time dispatches no change");
 
-    // `format` changes in place and is not a change of value (FLO-281).
+    // `format` changes in place and is not a change of value.
     const format = await page.evaluate(() => {
       const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & { component: unknown; value: string };
       const before = host.component;

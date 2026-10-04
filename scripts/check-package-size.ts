@@ -88,7 +88,7 @@ try {
   }
   sizes.ssr = measure(new Uint8Array(await Bun.file(join(fixture.installed, "dist/ssr/index.js")).arrayBuffer()));
   console.log(`SSR entry: ${sizes.ssr.raw} bytes raw, ${sizes.ssr.gzip} gzip (shared mtrl modules/CSS excluded)`);
-  // FLO-364: linkedom and its dependencies plus the renderer, measured at
+  // Linkedom and its dependencies plus the renderer, measured at
   // 306,706 B raw / 111,726 B gzip, including dependency license notices.
   // Client budgets below are unchanged.
   // 307,059 raw tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
@@ -121,7 +121,7 @@ try {
     ].join("\n"));
     const budgets = {
       // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
-      // main's reduced-motion rule in every root's host sheet (FLO-549, 0.10.6), on the
+      // main's reduced-motion rule in every root's host sheet (0.10.6), on the
       // forward merge: 700,173 raw, 11,154 gzip against 42c1a111 plus main 23c03a2f.
       // This merge: that block (275 B) plus data-mtrl-ssr="" (17 B), and no guard.
       // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
@@ -150,25 +150,25 @@ try {
   }
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
-  // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
+  // 1,010,000 for the 35 public Material shapes: 994,762 to 1,000,150,
   // measured with CI's Node 22 / npm 10.
-  // Lowered to 885,000 when 3.0.0 dropped the CommonJS bundle (FLO-358): 997,366 to 872,414
+  // Lowered to 885,000 when 3.0.0 dropped the CommonJS bundle: 997,366 to 872,414
   // against 073eeeb, Node 22 / npm 10, keeping the headroom it had.
-  // Raised to 900,000 for the element CSS as .css files (FLO-365), which SSR's <link>
+  // Raised to 900,000 for the element CSS as .css files, which SSR's <link>
   // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
   // headroom it had.
-  // Raised for the bundled server-only SSR entry (FLO-364): 888,897 to 1,002,195,
+  // Raised for the bundled server-only SSR entry: 888,897 to 1,002,195,
   // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
-  // The navigation bar (FLO-305): 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
-  // FLO-406 on main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
+  // The navigation bar: 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
+  // On main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
   // On next, with the forward merge: 1,006,369 -> 1,063,466 against
   // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
-  // FLO-428 removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
-  // The overlays' open / close contract and Escape as a key press for every modal (FLO-548,
-  // FLO-556: core/dom/layer's stack and marker, in each modal's bundle and each element's):
+  // Removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
+  // The overlays' open / close contract and Escape as a key press for every modal
+  // (core/dom/layer's stack and marker, in each modal's bundle and each element's):
   // 1,066,924 measured, 76 under the ceiling, Node 22.23.3 / npm 10.9.9. Raised by the rule
   // (measured plus 1%, up to the next 1,000).
-  // FLO-546 merged tree, Node 22.23.3 / npm 10.9.9: 1,071,606. Measured + 1%,
+  // Merged tree, Node 22.23.3 / npm 10.9.9: 1,071,606. Measured + 1%,
   // up to 1,000, is 1,083,000, above next's 1,078,000, so the ceiling stays.
   // Merged again with next (reduced motion, the child selector): 1,073,438.
   // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so it stays.
@@ -188,21 +188,21 @@ try {
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
-  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 3.0.0 drops (FLO-358).
+  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 3.0.0 drops.
   // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
-  // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
-  // The navigation bar (FLO-305): its component, element, adapters and CSS, 5,880,623 to
+  // 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
+  // The navigation bar: its component, element, adapters and CSS, 5,880,623 to
   // 5,956,491 against 51455a6, same packer; the budget keeps about the headroom it had.
-  // FLO-406 on main: the generated SCSS plus standalone, base and full CSS copies,
+  // On main: the generated SCSS plus standalone, base and full CSS copies,
   // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
   // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
-  // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
+  // Removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
   // The 3.0.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
-  // README and declaration text. The SSR style-modes docs (FLO-554) add 4,458 (the README is
+  // README and declaration text. The SSR style-modes docs add 4,458 (the README is
   // packed twice, at the root and in dist/: 3,600; RenderOptions' TSDoc in the .d.ts: 858), to
   // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised by the rule for explicit
   // ceilings (measured plus 1%, up to the next 1,000), decided by the main coordinator.
-  // FLO-546 merged tree, Node 22.23.3 / npm 10.9.9: 6,420,252. The pre-upgrade
+  // Merged tree, Node 22.23.3 / npm 10.9.9: 6,420,252. The pre-upgrade
   // rules left the element modules. Measured + 1%, up to 1,000, is 6,485,000,
   // above next's 6,458,000, so the ceiling stays.
   // Merged again with next: 6,434,514. The child selector is in the 38 pre-upgrade
@@ -214,7 +214,7 @@ try {
   // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
   // 6,411,348. The README and LICENSE are packed once. Measured + 1%, up to
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
-  // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
+  // Merged with a8c24f7f, same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
   // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
   // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
@@ -242,13 +242,13 @@ try {
     import { JSDOM } from ${JSON.stringify(pathToFileURL(resolve("node_modules/jsdom/lib/api.js")).href)};
     assert.equal(button, createButton);
     assert.equal(rail, esm.createNavigationRail);
-    // 3.0.0: the core helpers are at their subpath only, not on the root (FLO-351)
+    // 3.0.0: the core helpers are at their subpath only, not on the root
     assert.equal(esm.addClass, undefined);
-    // 3.0.0 is ESM-only (FLO-358): no require condition, so require('material') does not resolve
+    // 3.0.0 is ESM-only: no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
 
     const componentKeys = ${JSON.stringify(componentKeys)};
-    // A filter that matches nothing would loop over nothing and pass (FLO-569)
+    // A filter that matches nothing would loop over nothing and pass
     assert.equal(componentKeys.length, ${componentEntryCount}, 'the component entries checked are not the component entries package.json exports');
     for (const key of componentKeys) {
       const name = key.slice(13); // remove "./components/"
@@ -270,7 +270,7 @@ try {
     dom.window.HTMLCanvasElement.prototype.getContext = () => null;
     const b = button({ text: 'Save', variant: BUTTON_VARIANTS.FILLED });
     document.body.append(b.element);
-    // FLO-117: addClass takes the name as given. This asserts it from the
+    // addClass takes the name as given. This asserts it from the
     // packaged build, which is where a consumer meets it.
     addClass(b.element, 'smoke');
     assert(b.element.classList.contains('smoke'));
@@ -322,7 +322,7 @@ try {
     "--target", "ES2020", "--types", "node", "--typeRoots", resolve("node_modules/@types")]);
 
   const fixtures = [
-    // From its subpath since 3.0.0 removed it from the root (FLO-351)
+    // From its subpath since 3.0.0 removed it from the root
     { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: 550 }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
     { name: "button", code: "export { createButton } from 'material';", gzip: 13900 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
@@ -336,7 +336,7 @@ try {
     // only the content attribute, going through the shared createElement
     // (which cost 5 more), and one formFields property rather than two — so
     // the feature costs what it costs.
-    // The boolean-attribute predicate (FLO-240) is reached through core/dom in
+    // The boolean-attribute predicate is reached through core/dom in
     // the same way the URL allowlist is, so every bundle that builds an element
     // carries it: +71 here, +79 button, +85 rail, +77 text field, +87 form,
     // +107 all-js, measured against 73cbb0c. Slider again had the least
@@ -345,68 +345,68 @@ try {
     // includes() in place of the Set measured 3 bytes worse, so this is close
     // to what the check costs. Writing disabled="false" for disabled: false
     // disabled the control, which is not a trade worth 71 bytes to keep.
-    // M3 conformance (FLO-249, FLO-250, FLO-252) adds 888, 11,594 to 12,482 against
+    // M3 conformance adds 888, 11,594 to 12,482 against
     // 6b2143b: the three variants' track geometry after Compose's drawTrack with a stop
     // at each end, the handle narrowing on focus, settling on a spring only for value
     // changes that do not follow the pointer, the inset icon placed on whichever track
     // holds it, and vertical orientation through one axis description shared by the
     // track, the controller and the pointer handlers rather than a second code path.
-    // Range limits, keys and RTL (FLO-251) add 302, 12,482 to 12,784: handles that stop
+    // Range limits, keys and RTL add 302, 12,482 to 12,784: handles that stop
     // at each other in drag, keys and setters with the inner ARIA bounds, PageUp and
     // PageDown by a tenth of the steps, arrows that follow the track as drawn, and an
     // axis that can start on the right.
-    // Raised from 12,900 for FLO-331: the track's corner reads its shape token (12,983 measured).
-    // Raised from 13,090 for FLO-369: the track, stops and inset icon are a percentage
+    // Raised from 12,900: the track's corner reads its shape token (12,983 measured).
+    // Raised from 13,090: the track, stops and inset icon are a percentage
     // of the value, so the first paint does not wait on a measurement (13,356 measured).
     // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     { name: "slider", code: "export { createSlider } from 'material';", gzip: 13400 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 6950 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-    // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
+    // Contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // Direct high values: 8,156 -> 7,631 gzip bytes (same packer).
     // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
-    // FLO-540 merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
+    // Typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
+    // Merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
     { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';", gzip: 5400 },
-    // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
+    // The required asterisk, the live error, the trailing icon button: 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
     { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9250 },
     { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20100 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-    // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
-    // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
-    // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
-    // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
-    // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
+    // The toolbar: 123,080 to 125,176, measured against b1dbf77.
+    // The FAB menu: 125,245 to 127,714, measured against 1bd8343.
+    // The Material shapes' geometry in the loading indicator: 127,894 to 128,195, measured against 5b314c5.
+    // The text field's asterisk, live error and trailing button: 128,187 to 128,802, against 7cd57a6.
+    // The carousel's opt-in wheel scrolling with momentum: 128,896 to 129,565 against
     // 2ef11f0, Node 22 / npm 10.
-    // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
-    // isDisabled() on eleven components and the type exports (FLO-384): 129,650 to 129,773
+    // The main merge with the root class option: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
+    // isDisabled() on eleven components and the type exports: 129,650 to 129,773
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
     // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The text-field rename merged in: 126,962, the same figure main packed.
     // 38 B left under 127,000.
     // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the coordinator's bounded rule.
     { name: "all-js", code: "export * from 'material';", gzip: 127100 },
-    // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
+    // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 the base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
-    // FLO-540 merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
+    // The base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
+    // Merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
     { name: "base-css", code: "import 'material/styles/base';", gzip: 3050 },
-    // FLO-539 typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
-    // FLO-540 merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
+    // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
+    // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
     { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: 5300 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
-    // alone (FLO-354, FLO-355): the placeholder's fill cleared and the affixes hidden
+    // alone: the placeholder's fill cleared and the affixes hidden
     // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
-    // The text field's trailing icon button and asterisk (FLO-301): 8,245 to 8,426 against 7cd57a6.
-    // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
+    // The text field's trailing icon button and asterisk: 8,245 to 8,426 against 7cd57a6.
+    // Contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // Direct high values: 11,342 -> 10,811 gzip bytes (same packer).
     // 10,602 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
-    // FLO-540 merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
-    // FLO-299 the text field's layout, against 1dc3bc72 (8,468). The input's padding beside a
+    // Typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
+    // Merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
+    // The text field's layout, against 1dc3bc72 (8,468). The input's padding beside a
     // prefix or a suffix moves from the script to the stylesheet, two insets per side: 8,539
     // (all-js gives back 86). A multiline field's first line and label where the single-line
     // field has them, per variant and density: 8,595. The M3 insets, with the outlined input's
@@ -414,16 +414,16 @@ try {
     // with the affix's place no longer a rule per state: 8,499.
     // The filled indicator's reduced-motion rule: 8,511. With main's package name taken in
     // (47a3ebcd): 8,528. 8,528 + 100 = 8,628, rounded up to 8,650.
-    // FLO-562 the text field's insets as custom properties, mirrored by one block for both
+    // The text field's insets as custom properties, mirrored by one block for both
     // directions in place of a rule per case: 8,528 -> 8,268 against a8c24f7f.
     // 8,268 + 100 = 8,368, rounded up to 8,400.
     { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8400 },
-    // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
+    // Contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // Direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
-    // FLO-540 merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
+    // Typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
+    // Merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
     { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: 4850 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
@@ -431,38 +431,38 @@ try {
     // Moving drawer, side sheet, bottom sheet and dialog onto the expressive springs adds
     // 530 (measured, 47,908 to 48,438 at 0c2d347): each open and close state spells out
     // its spring's linear() curve, and the copies sit too far apart for gzip to share.
-    // The inverse roles in every theme (FLO-254) add about 500 (dist/styles.css at gzip
+    // The inverse roles in every theme add about 500 (dist/styles.css at gzip
     // level 9, 44,479 to 44,986): three roles in the light and dark block of 17 themes,
     // spread across 34 blocks too far apart for gzip to share. The fixture read 48,709.
-    // A chip set's grid cell draws its own 3px focus ring and focus layer (FLO-261): +57
+    // A chip set's grid cell draws its own 3px focus ring and focus layer: +57
     // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
     // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
-    // 51,067. The time picker's DOM dial (FLO-279): measured 51,497 with both in. Its
-    // hour and minute radios (FLO-283): measured 51,628. The menu's top-layer rule
+    // 51,067. The time picker's DOM dial: measured 51,497 with both in. Its
+    // hour and minute radios: measured 51,628. The menu's top-layer rule
     // (#251), with main at 312ca0e and the time picker tokens: measured 51,667. The
     // modal surfaces in the top layer: +328, measured 51,995 at dba5ba9: the dialog, the
     // two sheets and the modal drawer each undo the user agent's <dialog> box and fade a
     // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
-    // Search's surface, a <dialog> in the top layer (FLO-285): measured 52,194. Its
-    // state layers and the contained variant (FLO-286, FLO-287): measured 52,328.
-    // FLO-311, measured each alone on e36838c: dropping the --*-rgb twin of every colour
+    // Search's surface, a <dialog> in the top layer: measured 52,194. Its
+    // state layers and the contained variant: measured 52,328.
+    // Measured each alone on e36838c: dropping the --*-rgb twin of every colour
     // role in every theme, 52,398 to 49,528; one button state layer in currentColor, its
     // opacity alone per state, in place of a layer per colour style and toggle state:
-    // 48,934. With main's FLO-308 themes merged and regenerated without twins: 48,794.
-    // The typeface and corner tokens (FLO-330): every font-family and token corner is
+    // 48,934. With the themes on main merged and regenerated without twins: 48,794.
+    // The typeface and corner tokens: every font-family and token corner is
     // var(--token, <compiled>), measured 50,184 to 50,678 (+494) at 64c1e86.
-    // The toolbar (FLO-304): 50,752 to 51,449, measured against b1dbf77.
-    // The FAB menu (FLO-306): 51,494 to 52,688, measured against 1bd8343.
+    // The toolbar: 50,752 to 51,449, measured against b1dbf77.
+    // The FAB menu: 51,494 to 52,688, measured against 1bd8343.
     // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
-    // The text field's trailing icon button and asterisk (FLO-301): 52,916 to 53,072 against 7cd57a6.
+    // The text field's trailing icon button and asterisk: 52,916 to 53,072 against 7cd57a6.
     // The tabs indicator anchors in the stylesheet, and the slider visual is a size
-    // container so its ticks can use cqw/cqh (FLO-369): measured 53,386.
-    // The navigation bar's stylesheet (FLO-305): 53,389 to 54,659 against 51455a6.
-    // FLO-406 contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
+    // container so its ticks can use cqw/cqh: measured 53,386.
+    // The navigation bar's stylesheet: 53,389 to 54,659 against 51455a6.
+    // Contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
     // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
-    // FLO-428 removed four themes from the full stylesheet: 65,790 -> 62,120.
+    // Removed four themes from the full stylesheet: 65,790 -> 62,120.
     // 62,087 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-540 merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
+    // Merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
     { name: "full-css", code: "import 'material/styles';", gzip: 62750 },
   ];
   for (const fixture of fixtures) {

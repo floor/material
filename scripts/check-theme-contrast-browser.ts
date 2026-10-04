@@ -1,5 +1,5 @@
 // scripts/check-theme-contrast-browser.ts
-// FLO-406: exercise the actual cascade, including both system preferences.
+// Exercise the actual cascade, including both system preferences.
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
 import { readFileSync } from 'node:fs';
@@ -83,7 +83,7 @@ export async function checkThemeContrast(page: Page): Promise<void> {
   // Exercise every role: sparse light deltas must never bleed into dark, and
   // custom-property preference switches must reset across theme boundaries.
   // The full stylesheet (loaded by check-core) carries explicit contrast for the
-  // themes it includes. Standalone themes are only their own files: after FLO-540
+  // themes it includes. Standalone themes are only their own files: after the split
   // the attribute rules are `themes/<name>-contrast.css`, and the OS preference
   // stays in `themes/<name>.css`. Load both.
   const extras = await page.addStyleTag({ content: standaloneThemes.flatMap(name => [

@@ -41,7 +41,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'material'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'material'; window.createSearch = createSearch;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'material'; window.createSelect = createSelect;`);
-  // createMenu for the menu checks, and the openers for FLO-386's: one import, two windows
+  // createMenu for the menu checks, and the openers for it: one import, two windows
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });

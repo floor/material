@@ -194,7 +194,7 @@ describe('menu', () => {
     const values: string[] = [];
     const menu = createMenu({ opener, items });
     menu.on('select', (e: { item: { id: string } }) => chosen.push(e.item.id));
-    // The <m-menu> element's field (FLO-320)
+    // The <m-menu> element's field
     menu.on('select', (e: { value: string }) => values.push(e.value));
     await opened(menu);
     const rendered = menuItems(menu);
@@ -259,7 +259,7 @@ describe('menu', () => {
   });
 });
 
-// Regression cover for the FLO-111 migration, which moved these off the style
+// Regression cover for the migration that moved these off the style
 // *attribute* and onto the style option.
 //
 // The attribute took a joined string built with
@@ -695,7 +695,7 @@ describe('menu as a listbox', () => {
 });
 
 // Every MenuComponent method documented as returning the menu does. Pinned
-// because FLO-114 declared the *feature-level* commands as returning void --
+// because the *feature-level* commands are declared as returning void --
 // they hand back the pre-controller component, which nothing reads -- and the
 // public layer is what actually chains. The two are separate, and list's
 // api.ts had exactly this confusion the wrong way round (#125).

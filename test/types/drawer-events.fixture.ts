@@ -1,4 +1,4 @@
-// FLO-114: public drawer events match state, item activation and root forwarding.
+// Public drawer events match state, item activation and root forwarding.
 import createDrawer, { type DrawerComponent, type DrawerEvents, type DrawerSelectEvent, type DrawerItemConfig } from "../../src/components/drawer";
 import { getApiConfig } from "../../src/components/drawer/config";
 import { DRAWER_EVENTS } from "../../src/components/drawer/constants";

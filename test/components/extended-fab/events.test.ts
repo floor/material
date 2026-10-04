@@ -1,6 +1,6 @@
 // test/components/extended-fab/events.test.ts
 //
-// FLO-319: collapse and expand were dispatched only as DOM events on the
+// Collapse and expand were dispatched only as DOM events on the
 // FAB's element, without `composed`, so inside <m-extended-fab>'s shadow root
 // they never reached the host, and the emitter never saw them. They now reach
 // the emitter too, which the element and the adapters listen to.

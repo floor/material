@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Renames the text field's one-word strings to two words (FLO-560).
+// Renames the text field's one-word strings to two words.
 // Order: git mv, the seven patterns, the explicit remainder, then the generators.
 // A second run finds the new names already in place and changes nothing.
 // textField and TextField are the two-word forms and are not the one-word spelling.
@@ -344,7 +344,7 @@ const PIN_COMMENT_OLD = [
 
 const PIN_COMMENT_NEW = [
   "    // `@use \"main\"` compressed, before the banner the build adds.",
-  "    // The hash is this sheet after the text field strings are two words (FLO-560).",
+  "    // The hash is this sheet after the text field strings are two words.",
 ].join("\n");
 
 const hashPattern = /createHash\("sha256"\)\.update\(css\)\.digest\("hex"\)\)\r?\n([ \t]*)\.toBe\("[0-9a-f]{64}"\)/;

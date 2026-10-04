@@ -56,7 +56,7 @@ const renderNode = (element: DomElement, extra: Array<[string, string]> = []): s
   const name = element.localName.slice(2);
   const spec = specs.get(name);
   assert(spec, `no Vue component for <${element.localName}>`);
-  const component = `M${componentName(name)}`; // MTextField (FLO-383)
+  const component = `M${componentName(name)}`; // MTextField
   used.add(component);
   const props = new Map<string, string>(extra);
   for (const attribute of element.attributes) {

@@ -1,5 +1,5 @@
 // test/styles/handmade-theme-contrast.test.ts
-// FLO-406: contrast must retain the hand-picked palette identities.
+// Contrast must retain the hand-picked palette identities.
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { compileString, Logger } from 'sass';

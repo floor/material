@@ -121,7 +121,7 @@ describe('switch', () => {
     expect(mount().isChecked()).toBe(false);
   });
 
-  test('check, uncheck and toggle move the input and the class, silently (FLO-328)', () => {
+  test('check, uncheck and toggle move the input and the class, silently', () => {
     const s = mount();
     const changes = mock((_event: unknown) => {});
     s.on('change', changes);
@@ -182,7 +182,7 @@ describe('switch', () => {
     control.destroy();
   });
 
-  test('programmatic changes are silent, as setting a native checkbox (FLO-328)', () => {
+  test('programmatic changes are silent, as setting a native checkbox', () => {
     const control = mount({ value: 'accepted' });
     const payloads: Array<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent?: Event }> = [];
     control.on('change', payload => {
@@ -254,7 +254,7 @@ describe('switch', () => {
     const s = mount({ label: 'Wi-Fi' });
     expect(s.supportingTextElement).toBeNull();
 
-    // The flag colours the text; the switch's error state is setError's (FLO-318)
+    // The flag colours the text; the switch's error state is setError's
     s.setSupportingText('Required', true);
     const helper = s.element.querySelector('.mtrl-switch__helper');
     expect(helper?.textContent).toBe('Required');
@@ -282,7 +282,7 @@ describe('switch', () => {
   });
 });
 
-// FLO-267: the switch conformance audit.
+// The switch conformance audit.
 describe('switch error, description, icons and events', () => {
   test('error alone marks the switch and its input invalid', () => {
     const s = mount({ label: 'Sync', error: true });
@@ -298,7 +298,7 @@ describe('switch error, description, icons and events', () => {
     expect(s.input.getAttribute('aria-invalid')).toBe('true');
     s.removeSupportingText();
     expect(s.input.hasAttribute('aria-describedby')).toBe(false);
-    // Removing the text leaves the error to setError (FLO-318)
+    // Removing the text leaves the error to setError
     expect(s.input.getAttribute('aria-invalid')).toBe('true');
     s.setError(false);
     expect(s.input.hasAttribute('aria-invalid')).toBe(false);
@@ -322,7 +322,7 @@ describe('switch error, description, icons and events', () => {
   });
 });
 
-// FLO-316: the switch shares the checkbox's key handler, which now activates
+// The switch shares the checkbox's key handler, which now activates
 // the input as a click does: input then change, once, and nothing when disabled.
 describe('switch keyboard activation', () => {
   const press = (control: ReturnType<typeof mount>, key: string) => {
@@ -349,7 +349,7 @@ describe('switch keyboard activation', () => {
   });
 });
 
-// FLO-318: the error state has one owner. It updated from config only, and
+// The error state has one owner. It updated from config only, and
 // replacing or removing the supporting text ended it.
 describe('switch error state', () => {
   const invalid = (s: ReturnType<typeof mount>) => [

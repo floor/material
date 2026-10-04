@@ -71,7 +71,7 @@ const createBase = (config: Record<string, any> = {}) => ({
   componentName: config.componentName,
   getClass: (name: string): string => `${config.prefix || 'mtrl'}-${name}`,
   getModifierClass: (base: string, modifier: string): string => `${base}--${modifier}`,
-  // Mirrors the real getElementClass, which emits BEM since FLO-120. This
+  // Mirrors the real getElementClass, which emits BEM since. This
   // stub is why the assertion below passed against a dash for so long: the
   // test was checking its own copy, not the function (F6).
   getElementClass: (base: string, element: string): string => `${base}__${element}`,

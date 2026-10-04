@@ -1,6 +1,6 @@
 // test/components/class-option.test.ts
-// FLO-403: custom root classes survive component config normalization.
-// (next: segmented buttons are removed in 3.0.0, FLO-382, so their case is dropped.)
+// Custom root classes survive component config normalization.
+// (next: segmented buttons are removed in 3.0.0, so their case is dropped.)
 import { describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createTopAppBar from "../../src/components/top-app-bar";

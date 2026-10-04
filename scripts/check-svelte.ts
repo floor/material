@@ -71,13 +71,13 @@ const run = async (): Promise<void> => {
   assert.equal(tsc.exitCode, 0, tsc.stdout.toString() + tsc.stderr.toString());
   check("the generated declarations compile");
 
-  // FLO-383: the text field is TextField (and TextField.svelte); the old spelling is gone in 3.0.0
+  // The text field is TextField (and TextField.svelte); the old spelling is gone in 3.0.0
   for (const file of ["dist/svelte/index.js", "dist/svelte/index.d.ts"]) {
     const index = await Bun.file(file).text();
     assert.match(index, /export \{ default as TextField \} from "\.\/TextField\.svelte";/, file);
     assert.doesNotMatch(index, /Textfield/, file);
   }
-  check("the text field is TextField, and only TextField (FLO-383)");
+  check("the text field is TextField, and only TextField");
 
   // Server render in this process, no DOM.
   const server = await bundle("scripts/fixtures/svelte-server.ts", "bun");
@@ -94,7 +94,7 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-switch id="d" disabled="" supporting-text="Unavailable">/);
   assert.match(html, /<m-tabs id="t" value="t2">/);
   // `{#if shadow}` leaves an empty branch marker before children when no
-  // renderer is registered (FLO-375). Comments are not elements.
+  // renderer is registered. Comments are not elements.
   const between = String.raw`(?:\s|<!--[\s\S]*?-->)*`;
   assert.match(html, new RegExp(String.raw`<m-radios [^>]*value="m"[^>]*>${between}<m-radio value="s">`));
   assert.match(html, new RegExp(String.raw`<m-chips [^>]*value="veg"[^>]*>${between}<m-chip value="veg">`));
@@ -317,7 +317,7 @@ const run = async (): Promise<void> => {
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
-    // A named snippet is the headline slot's content (FLO-325): the slot the
+    // A named snippet is the headline slot's content: the slot the
     // element renders the headline into is assigned the snippet's text.
     const headline = await page.evaluate(() => {
       const slot = document.getElementById("dg")?.shadowRoot?.querySelector<HTMLSlotElement>('slot[name="headline"]');
@@ -331,14 +331,14 @@ const run = async (): Promise<void> => {
     check("dialog: headline and actions snippets reach their slots");
 
     // bind:this gives the component, whose `element` is the element; an
-    // attachment runs on the element (FLO-325).
+    // attachment runs on the element.
     assert.equal(await page.evaluate(() => (window as unknown as Win).api.ref === document.getElementById("bt")), true, "bind:this");
     assert.equal(await page.evaluate(() => document.getElementById("at")?.dataset.attached), "yes", "{@attach}");
     check("bind:this reads the element, and {@attach} reaches it");
 
     // Only a prop named after a declared slot is a snippet: a camelCase
     // handler and a spread callback are never called by rendering, and render
-    // no slot wrapper (FLO-334).
+    // no slot wrapper.
     assert.deepEqual(await page.evaluate(() => ({
       calls: (window as unknown as Win).api.renderCalls,
       wrappers: document.getElementById("cbk")?.querySelectorAll("[slot]").length,

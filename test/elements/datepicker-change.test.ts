@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { datepickerElement } from "../../src/elements/datepicker";
 
-// FLO-320: the element's `change` carries `date`, the Date form of its
+// The element's `change` carries `date`, the Date form of its
 // `value`, in the same shape whichever way the factory reported the range.
 const detail = (payload: unknown): unknown => datepickerElement.spec.events.change.detail(payload);
 const start = new Date(2026, 8, 14);

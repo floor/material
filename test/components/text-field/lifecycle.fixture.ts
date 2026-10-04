@@ -58,7 +58,7 @@ test("destroy releases placement, notch and autofill observers", async () => {
   expect(listeners.get("resize")!.size).toBe(1);
   // #234: no theme listener and no observer per ancestor for a copied label
   // background: the class and autofill observers and one label observer remain,
-  // and the counter's maxlength observer (FLO-300)
+  // and the counter's maxlength observer
   expect(listeners.get("themechange")!.size).toBe(0);
   expect(activeObservers.size).toBe(3);
   expect(activeResizeObservers.size).toBe(1);

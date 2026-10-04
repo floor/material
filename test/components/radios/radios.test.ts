@@ -125,7 +125,7 @@ describe('radios', () => {
     radios.destroy();
   });
 
-  test('programmatic selection and clearing are silent (FLO-328)', () => {
+  test('programmatic selection and clearing are silent', () => {
     const radios = mount();
     const payloads: unknown[] = [];
     radios.on('change', payload => payloads.push(payload));

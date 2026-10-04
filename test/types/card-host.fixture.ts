@@ -1,6 +1,6 @@
 // test/types/card-host.fixture.ts
 //
-// Card's internal host and the component it is actually handed (FLO-114).
+// Card's internal host and the component it is actually handed.
 // Nothing here runs; the assertions are the test.
 //
 // This one is not an event map. Card's `BaseComponent` -- internal, exported

@@ -1,5 +1,5 @@
 /**
- * The button's one state layer (FLO-311): a ::before in currentColor whose opacity alone
+ * The button's one state layer: a ::before in currentColor whose opacity alone
  * changes with the state. For every colour style, toggle state, state and theme mode,
  * Chromium must paint the layer in the button's computed `color` at the M3 opacity
  * (m3.material.io state layers: hover 0.08, focus 0.10, pressed 0.10).

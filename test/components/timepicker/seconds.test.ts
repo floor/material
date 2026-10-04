@@ -7,7 +7,7 @@
 // input and wires it was uncovered.
 //
 // That branch is where `secondsInput` lives -- a `let` with no type until
-// FLO-114, read at a dozen sites and guarded at every one. Typing it
+// Read at a dozen sites and guarded at every one. Typing it
 // `HTMLInputElement | undefined` is what says out loud that the readers are
 // right to check, and this says the field they are checking for works.
 
@@ -120,7 +120,7 @@ describe("with showSeconds on", () => {
   });
 });
 
-// In dial mode the fields are radios (FLO-283); clicking one makes it the part
+// In dial mode the fields are radios; clicking one makes it the part
 // the dial sets.
 describe("clicking the seconds radio makes it the active one", () => {
   test("it takes data-active and the other two give it up", () => {

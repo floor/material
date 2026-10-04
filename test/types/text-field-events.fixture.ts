@@ -1,4 +1,4 @@
-// FLO-114: public text field event names and the payloads its input feature emits.
+// Public text field event names and the payloads its input feature emits.
 import createTextField, {
   type TextFieldComponent,
   type TextFieldEvents,
@@ -13,7 +13,7 @@ type Equals<A, B> =
 
 const field = createTextField();
 export const eventNames: Equals<keyof TextFieldEvents, "input" | "change" | "focus" | "blur" | "trailing"> = true;
-// FLO-301: the trailing icon button carries the value, as the house's events do, and the click
+// The trailing icon button carries the value, as the house's events do, and the click
 export const trailingShape: Equals<TextFieldTrailingPayload, { value: string; event: MouseEvent }> = true;
 export const trailingPayload: Equals<Parameters<Parameters<typeof field.on<"trailing">>[1]>[0], TextFieldTrailingPayload> = true;
 export const valueShape: Equals<TextFieldValuePayload, { value: string; isEmpty: boolean; isAutofilled: boolean }> = true;

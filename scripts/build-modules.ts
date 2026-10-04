@@ -69,7 +69,7 @@ export function buildModules(outdir: string) {
       text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
     }
     // The printer drops every comment, `/*#__PURE__*/` too, and bundlers need
-    // it to drop an unused adapter component (FLO-327): a module carrying one
+    // it to drop an unused adapter component: a module carrying one
     // keeps the compiler's output, which is only the generated header there.
     if (filename.endsWith(".js") && !text.includes("#__PURE__")) {
       // Avoid shipping API prose twice while keeping ESM readable for debugging.

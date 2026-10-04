@@ -1,6 +1,6 @@
 // test/styles/text-field-sass.test.ts
 //
-// FLO-383: Sass spells the text field in two words too. 0.10.5 had both names;
+// Sass spells the text field in two words too. 0.10.5 had both names;
 // 3.0.0 has only `$text-field` and `text-field()`.
 import { expect, test } from "bun:test";
 import { compileString } from "sass";

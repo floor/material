@@ -1,6 +1,6 @@
 // test/components/search/variant.test.ts
 //
-// Search's two M3 styles (FLO-287): contained, M3 Expressive's recommendation
+// Search's two M3 styles: contained, M3 Expressive's recommendation
 // and the default, and divided, the baseline mtrl drew until now.
 
 import { expect, test } from "bun:test";
@@ -35,7 +35,7 @@ test("the variant is not the element's inline style", () => {
   expect(search.element.getAttribute("style") ?? "").not.toContain("divided");
 });
 
-// FLO-290: minWidth and maxWidth were accepted and never applied.
+// MinWidth and maxWidth were accepted and never applied.
 test("minWidth and maxWidth reach the root, for the stylesheet", () => {
   const search = mount(createSearch({ minWidth: 240, maxWidth: 480 }));
   expect(search.element.style.getPropertyValue("--mtrl-search-min-width")).toBe("240px");

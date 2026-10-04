@@ -164,7 +164,7 @@ describe('badge visibility', () => {
   });
 });
 
-// FLO-108. Creation and the setters disagreed about the same badge. Measured
+// Creation and the setters disagreed about the same badge. Measured
 // before the fix, at 600px in JSDOM:
 //
 //   label 0     created hidden=false   setLabel(0)     hidden=true
@@ -305,7 +305,7 @@ describe('badge attachment', () => {
   });
 });
 
-// FLO-324: a small badge is a dot with no label; its empty label counted as
+// A small badge is a dot with no label; its empty label counted as
 // "nothing to show", so it was created invisible.
 describe('small badge at creation', () => {
   test('a small badge is visible without a label', () => {

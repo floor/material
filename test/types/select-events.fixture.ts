@@ -1,7 +1,7 @@
 // test/types/select-events.fixture.ts
 //
 // Select's *public* `on`/`off` were already generic over a `SelectEvents`
-// map -- it and `list` are the two components that had one before FLO-114.
+// map -- it and `list` are the two components that had one before.
 // What was not narrowed is the internal host, `BaseComponent` in the same
 // file, which still declared `on?: (event: string, handler: Function)`.
 //
@@ -96,7 +96,7 @@ select.on("input", () => {});
 // `SelectChangeEvent`. It does not, yet -- with strictFunctionTypes off
 // parameter positions are bivariant, so a narrower handler is still
 // accepted. That case starts failing when the flag lands, which is the whole
-// point of FLO-114; asserting it now would fail this file instead.
+// point of; asserting it now would fail this file instead.
 // @ts-expect-error a string is not the payload `open` carries
 select.on("open", (event: string) => void event.length);
 

@@ -55,7 +55,7 @@ const browser = await chromium.launch({ headless: true });
 let checks = 0;
 
 // Every module of material/react is a client module, so a React Server Component
-// can import one (FLO-327 split the index into a module per component): its
+// can import one (split the index into a module per component): its
 // first statement is the directive, only comments before it.
 const modules = [...new Bun.Glob("*.js").scanSync("dist/react")];
 assert(modules.length > 40, `dist/react has ${modules.length} modules: build first`);
@@ -333,7 +333,7 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
-    // Named slots as props reach the element's slots (FLO-333), each in a
+    // Named slots as props reach the element's slots, each in a
     // wrapper carrying slot="…"; the headline's nodes are not its attribute.
     const slotted = await page.evaluate(() => {
       const host = document.getElementById("dg");
@@ -368,7 +368,7 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.equal(await railModal(), false);
     check("navigation rail: expanded follows the state; Escape collapses it and the collapse handler updates the state");
 
-    // ------------------------------------------------------------- extended fab (FLO-319)
+    // ------------------------------------------------------------- extended fab
     await page.evaluate(() => (document.getElementById("xf") as HTMLElement & { collapse: () => void }).collapse());
     await page.waitForFunction(() => document.getElementById("fab")?.textContent === "collapsed");
     await page.evaluate(() => (document.getElementById("xf") as HTMLElement & { expand: () => void }).expand());

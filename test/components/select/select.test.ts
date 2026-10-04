@@ -83,7 +83,7 @@ describe('select', () => {
   });
 });
 
-test('select.textField is the text field; 3.0.0 keeps no textfield alias, which reads undefined (FLO-383)', () => {
+test('select.textField is the text field; 3.0.0 keeps no textfield alias, which reads undefined', () => {
   const select = createSelect({ label: 'Fruit', options });
   expect(select.textField).toBeDefined();
   expect((select as unknown as Record<string, unknown>).textfield).toBeUndefined();

@@ -1,8 +1,8 @@
 // test/components/synchronous-open.test.ts
 //
 // What is true on the line after open() (or expand()) returns, pinned before
-// the menu a select or split button holds is loaded on demand (FLO-543,
-// FLO-544). These pass on the code as it is: they are the guard, not a fix.
+// the menu a select or split button holds is loaded on demand.
+// These pass on the code as it is: they are the guard, not a fix.
 // "Open" here is state, ARIA and events; when the surface is painted is not
 // part of the contract.
 import { describe, expect, test } from "bun:test";
@@ -120,7 +120,7 @@ describe("split button: expand() is synchronous", () => {
 });
 
 describe("dialog, date picker, time picker: what open() has done when it returns", () => {
-  // The contract (FLO-548): the state and the event are there when open()
+  // The contract: the state and the event are there when open()
   // returns. Until then the default dialog set both on a 10 ms timer. The
   // rest of it is in dialog/open-contract.test.ts.
   test("dialog: isOpen() and the open event are there when open() returns; beforeopen runs first and can cancel", async () => {
@@ -173,7 +173,7 @@ describe("dialog, date picker, time picker: what open() has done when it returns
     expect(seen).toEqual(["open", "close", "open"]);
   });
 
-  // FLO-548: the event that opened an overlay never dismisses it. The docked
+  // The event that opened an overlay never dismisses it. The docked
   // date picker closes on a click outside, a listener on the document, which
   // the click that called open() reaches next.
   test("date picker: a click outside that calls open() does not close it; the next one does", async () => {

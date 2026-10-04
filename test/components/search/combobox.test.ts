@@ -1,6 +1,6 @@
 // test/components/search/combobox.test.ts
 //
-// The search input is a combobox that owns its suggestions listbox (FLO-286).
+// The search input is a combobox that owns its suggestions listbox.
 // It was a plain text field: a screen reader heard neither the list nor the
 // suggestion the arrows reached, and M3 asks that suggestions be announced.
 
@@ -86,7 +86,7 @@ test("hovering a suggestion does not highlight it for the keyboard", async () =>
   expect(active()).toBeNull();
 });
 
-// FLO-553: an explicit behavior overrides the stylesheet, and with it the
+// An explicit behavior overrides the stylesheet, and with it the
 // reduced-motion reset. The suggestion list's own scroll-behavior decides.
 test("the arrows scroll the highlighted suggestion into view and name no behaviour", async () => {
   const { search, press } = await setup();

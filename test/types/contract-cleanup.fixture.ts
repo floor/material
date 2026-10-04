@@ -3,7 +3,7 @@
 // The two type-level halves of the 0.10.0 contract cleanup. Nothing here
 // runs; the assertions are the test.
 //
-// FLO-118 removed the `prefix` config option, and FLO-115 closed the layering
+// The 0.10.0 cleanup removed the `prefix` config option and closed the layering
 // inversion where core imported leaf component types. Neither change has a
 // runtime surface to assert — a removed option is simply absent, and a closed
 // import cycle is simply not there — so both are pinned here instead.
@@ -15,7 +15,7 @@ import { setComponentDefaults } from "../../src/core/config/global";
 
 // Importing a component's types is what registers its key on the map. These
 // are the two the assertions below use; without them the map is empty, which
-// is exactly the behaviour FLO-115 chose.
+// is exactly the behaviour the layering rule chose.
 import type {} from "../../src/components/button/types";
 import type {} from "../../src/components/slider/types";
 
@@ -23,7 +23,7 @@ import type {} from "../../src/components/slider/types";
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
-// --- FLO-118: the prefix option is gone ------------------------------------
+// --- the prefix option is gone ---------------------------------------------
 //
 // It was accepted on the config and then overwritten with the PREFIX constant
 // in the force-these-values block, so a consumer could set it and nothing
@@ -39,7 +39,7 @@ export const configStillHasClassName: "className" extends keyof BaseComponentCon
   ? true
   : false = true;
 
-// --- FLO-115: components register themselves -------------------------------
+// --- components register themselves ----------------------------------------
 //
 // Core declares ComponentConfigMap empty; each component augments it from its
 // own types.ts. So the keys below exist only because this file imported those
@@ -65,7 +65,7 @@ export const theMapIsNotOpen: Equals<
 // Each directive below fails the build if the line it guards stops being an
 // error, so each is an assertion in both directions.
 
-// @ts-expect-error prefix is no longer a config option (FLO-118)
+// @ts-expect-error prefix is no longer a config option
 const config: BaseComponentConfig = { prefix: "acme" };
 void config;
 

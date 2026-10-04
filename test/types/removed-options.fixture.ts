@@ -8,18 +8,18 @@ import type { DialogButton } from "../../src/components/dialog/types";
 import type { TooltipConfig } from "../../src/components/tooltip";
 import { TOOLTIP_DEFAULTS } from "../../src/components/tooltip/constants";
 
-// @ts-expect-error rawClass: use class or className (unprefixed since FLO-117)
+// @ts-expect-error rawClass: use class or className (unprefixed)
 export const element: CreateElementOptions = { rawClass: "x" };
 // @ts-expect-error rawClass: use class or className
 export const config: BaseComponentConfig = { rawClass: "x" };
-// @ts-expect-error a dialog button has no color option (FLO-324)
+// @ts-expect-error a dialog button has no color option
 export const button: DialogButton = { text: "OK", color: "primary" };
-// @ts-expect-error a rich tooltip is variant: 'rich' (FLO-324)
+// @ts-expect-error a rich tooltip is variant: 'rich'
 export const tooltip: TooltipConfig = { text: "Hi", rich: true };
 // @ts-expect-error TOOLTIP_DEFAULTS.RICH was the default of the removed option
 export const richDefault = TOOLTIP_DEFAULTS.RICH;
 
-// Commit 2: rippleConfig's timing and opacity were never applied (FLO-268)
+// Commit 2: rippleConfig's timing and opacity were never applied
 import type { ButtonConfig } from "../../src/components/button/types";
 import type { RippleConfig } from "../../src/core/compose/features/ripple";
 // @ts-expect-error rippleConfig.timing: the stylesheet draws the wave's motion
@@ -33,18 +33,18 @@ import type { ListConfig } from "../../src/components/list/types";
 import type { RadiosConfig } from "../../src/components/radios/types";
 import type { TimePickerConfig } from "../../src/components/timepicker/types";
 import { TIMEPICKER_DEFAULTS } from "../../src/components/timepicker/constants";
-// @ts-expect-error checkbox variant: M3 has one checkbox style (FLO-94, FLO-265)
+// @ts-expect-error checkbox variant: M3 has one checkbox style
 export const checkboxVariant: CheckboxConfig = { variant: "filled" };
-// @ts-expect-error list prefix: fixed at build time (FLO-118)
+// @ts-expect-error list prefix: fixed at build time
 export const listPrefix: ListConfig = { items: [], prefix: "x" };
-// @ts-expect-error radios rippleConfig: never applied (FLO-266)
+// @ts-expect-error radios rippleConfig: never applied
 export const radiosRipple: RadiosConfig = { name: "r", options: [], rippleConfig: { duration: 300 } };
-// @ts-expect-error closeOnSelect: the time picker is confirmed with OK (FLO-281)
+// @ts-expect-error closeOnSelect: the time picker is confirmed with OK
 export const timeClose: TimePickerConfig = { closeOnSelect: false };
 // @ts-expect-error CLOSE_ON_SELECT was the removed option's default
 export const timeCloseDefault = TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT;
 import type { ResponsiveConfig } from "../../src/components/tabs";
-// @ts-expect-error maxVisibleTabs: never had an effect (FLO-232)
+// @ts-expect-error maxVisibleTabs: never had an effect
 export const tabsMax: ResponsiveConfig = { smallScreen: { layout: "icon-only", maxVisibleTabs: 4 } };
 
 // Constant properties nothing read (deprecated in v0.10.0)
@@ -52,17 +52,17 @@ import { SLIDER_MEASUREMENTS } from "../../src/components/slider/constants";
 import { TABS_DEFAULTS } from "../../src/components/tabs/constants";
 import { TEXT_FIELD_CLASSES } from "../../src/components/text-field/constants";
 import { TIMEPICKER_SELECTORS } from "../../src/components/timepicker/constants";
-// @ts-expect-error the stylesheet draws the track's corners (FLO-250)
+// @ts-expect-error the stylesheet draws the track's corners
 export const sliderRadius = SLIDER_MEASUREMENTS.TRACK_RADIUS;
-// @ts-expect-error the gap does not shrink (FLO-250)
+// @ts-expect-error the gap does not shrink
 export const sliderGap = SLIDER_MEASUREMENTS.HANDLE_GAP_PRESSED_REDUCTION;
-// @ts-expect-error the indicator height follows the variant (FLO-262)
+// @ts-expect-error the indicator height follows the variant
 export const tabsIndicatorHeight = TABS_DEFAULTS.INDICATOR_HEIGHT;
 // @ts-expect-error the stylesheet sets the icon size
 export const tabsIconSize = TABS_DEFAULTS.ICON_SIZE;
-// @ts-expect-error a floating label is the field's populated or focused state (FLO-295)
+// @ts-expect-error a floating label is the field's populated or focused state
 export const labelFloating = TEXT_FIELD_CLASSES.LABEL_FLOATING;
-// @ts-expect-error the dial is DOM, not a canvas (FLO-279)
+// @ts-expect-error the dial is DOM, not a canvas
 export const dialCanvas = TIMEPICKER_SELECTORS.DIAL_CANVAS;
 
 // The FAB's surface style and small size, deprecated since 0.8 (M3 Expressive)

@@ -10,7 +10,7 @@ type Detail = { checked: boolean; value: boolean; valueAttribute: string; native
 type Probe = { form: HTMLFormElement; input: HTMLInputElement; control: Control; host?: CheckboxElement | SwitchElement; events: unknown[]; native: Event[]; references: Event[] };
 type ProbeWindow = Window & { inputs: { createCheckbox: typeof createCheckbox; createSwitch: typeof createSwitch }; checkableProbe: Probe };
 
-/** FLO-380: model values and form tokens remain distinct across activation, reset and disable. */
+/** Model values and form tokens remain distinct across activation, reset and disable. */
 export async function checkCheckableValues(page: Page, surface: "factory" | "element"): Promise<void> {
   for (const kind of ["checkbox", "switch"] as const) {
     await page.evaluate(({ kind, surface }) => {
@@ -24,11 +24,11 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
         host = document.createElement(kind === "checkbox" ? "m-checkbox" : "m-switch");
         host.setAttribute("name", "choice");
         host.setAttribute("value", "accepted");
-        host.textContent = "FLO-380 checkable";
+        host.textContent = "checkable";
         form.append(host);
         control = host.component!;
       } else {
-        control = w.inputs[kind === "checkbox" ? "createCheckbox" : "createSwitch"]({ name: "choice", value: "accepted", label: "FLO-380 checkable" });
+        control = w.inputs[kind === "checkbox" ? "createCheckbox" : "createSwitch"]({ name: "choice", value: "accepted", label: "checkable" });
         form.append(control.element);
       }
       const probe: Probe = { form, host, control, input: control.input, events: [], native: [], references: [] };
@@ -72,5 +72,5 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
       p.form.remove();
     });
   }
-  console.log(`  ok FLO-380 ${surface}: checkbox/switch boolean model values, string form tokens, native identity, click/Space, reset and disabled controls`);
+  console.log(`  ok ${surface}: checkbox/switch boolean model values, string form tokens, native identity, click/Space, reset and disabled controls`);
 }

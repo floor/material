@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-react-ssr.ts
 // Built-package SSR, parser consumption, hydration and browser isolation on both React versions.
-// Known limit (FLO-517): material/ssr/react children cannot see providers above their host until upgrade.
+// Known limit: material/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -40,9 +40,9 @@ const browser = await chromium.launch();
 const summaries: object[] = [];
 const contextFailures: string[] = [];
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {
-  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker`);
   assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
-  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+  console.log(`known limit (expected to fail until the page-level integration): ${label}: ${observed}`);
 };
 await mkdir("analysis/react-ssr", { recursive: true });
 try {

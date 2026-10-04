@@ -54,7 +54,7 @@ describe('withToggle', () => {
     component.element.click();
     expect(enhanced.toggle?.isSelected()).toBe(true);
     expect(component.element.getAttribute('aria-pressed')).toBe('true');
-    // The button's value rides along (FLO-380); this element has none, so ''.
+    // The button's value rides along; this element has none, so ''.
     expect(component.emit).toHaveBeenCalledWith('change', { selected: true, value: '' });
 
     component.element.click();

@@ -3,7 +3,7 @@
 // What `handleTabClick` accepts. Nothing here runs; the assertions are the
 // test, and each stops compiling if the declaration it covers drifts.
 //
-// The defect, from FLO-114: tabs declared this handler twice and the two
+// The defect: tabs declared this handler twice and the two
 // declarations contradicted each other. `types.ts` and the internal hosts said
 // `(event: unknown, tab)`; `api.ts` and one host in `features.ts` said
 // `(event: Event, tab)`. Both were wrong, in opposite directions:

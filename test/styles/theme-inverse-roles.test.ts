@@ -1,4 +1,4 @@
-// FLO-254. The inverse roles (the snackbar, the tooltip, the slider's value
+// The inverse roles (the snackbar, the tooltip, the slider's value
 // indicator) were defined for baseline only, so every other theme showed baseline's
 // purple-grey there. Every colour block of every theme now defines them, and they
 // hold the contrast they carry text at: inverse-on-surface on inverse-surface for

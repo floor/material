@@ -1,5 +1,5 @@
 // test/styles/contrast-split.test.ts
-// FLO-540. Today's resolved colours are test/styles/fixtures/contrast-states.json,
+// Today's resolved colours are test/styles/fixtures/contrast-states.json,
 // generated from origin/next at ORIGIN_COMMIT (emit "all", byte-identical to
 // that build). With the contrast sheet loaded, every state matches the fixture.
 // Without it, standard and OS-preference states still match; an explicit
@@ -109,8 +109,8 @@ describe("explicit contrast levels are opt-in", () => {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
-    // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299),
-    // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
+    // The hash is this sheet with the text field's layout at the M3 measurements,
+    // its insets mirrored by one block, the unlabelled checkbox's centring
     // (styles/components/_checkbox.scss), the icon button's inner padding
     // (styles/components/_icon-button.scss), the unlabelled switch's 52 x 48 box
     // (styles/components/_switch.scss), the close target of the side sheet and the
@@ -121,7 +121,7 @@ describe("explicit contrast levels are opt-in", () => {
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
-    // (styles/abstract/_mixins.scss, FLO-592).
+    // (styles/abstract/_mixins.scss).
     // The list's two variants: standard has no container and square rows;
     // segmented rows read six list custom properties that the list does not
     // declare, so they inherit, with keyboard focus on the row action

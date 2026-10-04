@@ -52,7 +52,7 @@ test('selection swaps icons and modified link clicks preserve current page', () 
     rail.setActive('b');
     expect(rail.element.querySelector('[data-id="a"]')?.textContent).toContain('outline');
 });
-test('select carries value, the id, as the element change does (FLO-320)', () => {
+test('select carries value, the id, as the element change does', () => {
     const selected: unknown[] = [];
     const rail = make({ items: [{ id: 'a', label: 'A', icon: 'A', active: true }, { id: 'b', label: 'B', icon: 'B' }] });
     rail.on('select', (event) => selected.push([event.id, event.value, rail.getValue()]));

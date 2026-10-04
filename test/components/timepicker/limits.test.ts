@@ -1,6 +1,6 @@
 // test/components/timepicker/limits.test.ts
 //
-// minTime, maxTime, minuteStep and secondStep (FLO-281). All four were accepted,
+// minTime, maxTime, minuteStep and secondStep. All four were accepted,
 // documented and never applied: `isTimeWithinConstraints` had no caller. The
 // dial disables what cannot be reached, a pick lands on the step, and a time
 // outside the limits moves to the nearest one inside.
@@ -14,7 +14,7 @@ import { callbacksFixture } from "../callbacks.fixture";
 const mount = callbacksFixture();
 
 const setup = (config: TimePickerConfig) => {
-  // Edits are a draft until OK (FLO-288): what they did shows in `input`.
+  // Edits are a draft until OK: what they did shows in `input`.
   const changes: string[] = [];
   const picker = mount(createTimePicker({ value: "10:15", ...config }));
   picker.on("input", ({ draftValue }) => changes.push(draftValue));

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { cornerToken, type ShapeStep } from "../../../src/core/theme";
 
-// FLO-331: a radius a component writes from script reads the shape scale's
+// A radius a component writes from script reads the shape scale's
 // token, the compiled value its fallback, as the stylesheets do.
 describe("cornerToken", () => {
   test("a step's token, its px the fallback, under the library prefix", () => {

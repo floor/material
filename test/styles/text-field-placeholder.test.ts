@@ -1,6 +1,6 @@
 // test/styles/text-field-placeholder.test.ts
 //
-// FLO-354: under a resting label the placeholder is hidden. The disabled input
+// Under a resting label the placeholder is hidden. The disabled input
 // sets -webkit-text-fill-color, which its placeholder inherits and which paints
 // over color, so a disabled, empty field showed its placeholder over the label
 // in both variants. The rule clears the fill too.
@@ -31,7 +31,7 @@ test('the disabled input still sets the fill the placeholder would inherit', () 
   expect(css).toMatch(/\.mtrl-text-field--disabled \.mtrl-text-field__input\s*\{[^}]*-webkit-text-fill-color/);
 });
 
-// FLO-355: the prefix and suffix rest with the label too, and fade in as it floats.
+// The prefix and suffix rest with the label too, and fade in as it floats.
 const restingAffixes = Array.from(
   css.matchAll(/(?:^|\n)([^{}\n]*:is\(\.mtrl-text-field__prefix, \.mtrl-text-field__suffix\))\s*\{\s*opacity: 0;/g),
   (m) => m[1]!,

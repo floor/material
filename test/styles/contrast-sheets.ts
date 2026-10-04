@@ -1,5 +1,5 @@
 // test/styles/contrast-sheets.ts
-// Compile the theme sheets the FLO-540 resolver compares. `all` is what
+// Compile the theme sheets the contrast resolver compares. `all` is what
 // origin/next emits (the mixin default). `preference` and `explicit` are the
 // split: they need `$contrast-emit` in themes/_base-theme.scss. Until that
 // switch exists, the base file still carries both, and there is no contrast

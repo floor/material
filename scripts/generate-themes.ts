@@ -2,9 +2,9 @@
 // scripts/generate-themes.ts
 /**
  * Generates mtrl's seed themes from Google's material-color-utilities
- * (FLO-308). Every theme listed here is written to
+ * Every theme listed here is written to
  * `src/styles/themes/_<name>.scss` through the `create-theme` mixin, light and
- * dark, with exactly the baseline theme's colour roles (no `-rgb` twins, FLO-311).
+ * dark, with exactly the baseline theme's colour roles (no `-rgb` twins).
  * The role-to-token mapping is `schemeToTokens` (src/core/theme), the same
  * function md3.io's theme builder calls, so the two cannot drift.
  *
@@ -75,7 +75,7 @@ const TITLE: Record<VariantName, string> = {
 
 export const THEMES: ThemeSpec[] = [
   // The eight M3 dynamic-scheme variants other than Tonal Spot, from the
-  // baseline seed. Tonal Spot itself is `baseline` (ΔE00 1.31, FLO-309).
+  // baseline seed. Tonal Spot itself is `baseline` (ΔE00 1.31).
   ...VARIANTS.map((variant): ThemeSpec => ({
     name: variant,
     description: `M3's ${TITLE[variant]} scheme variant, from the baseline seed ${BASELINE_SEED}.`,
@@ -83,7 +83,7 @@ export const THEMES: ThemeSpec[] = [
     variant,
     standalone: true,
   })),
-  // The audited themes, regenerated from their seeds (FLO-309): the hand-set
+  // The audited themes, regenerated from their seeds: the hand-set
   // values failed contrast or drifted from M3's tones.
   { name: "desert", description: "Road Runner desert: sand, with a sky-blue secondary.", seed: "#9a7a3e", secondary: "#4a87c4", variant: "tonal-spot" },
   { name: "summer", description: "Summer: mid blue, with a sunflower-yellow secondary.", seed: "#4196cb", secondary: "#f3c649", variant: "tonal-spot" },
@@ -231,9 +231,9 @@ ${renderContrast(spec, tokens)}`;
 };
 
 /**
- * The hand-kept themes: their colours are set by hand and stay (the FLO-309
+ * The hand-kept themes: their colours are set by hand and stay (an
  * audit found them M3-faithful). Only their fixed roles are generated, from
- * the theme's own primary, secondary and tertiary (FLO-315).
+ * the theme's own primary, secondary and tertiary.
  */
 export const KEPT_THEMES = ["ocean", "forest", "spring", "sunset", "autumn"];
 

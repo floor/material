@@ -159,7 +159,7 @@ describe("split button layer: top", () => {
     const selected: unknown[] = [];
     const values: unknown[] = [];
     split.on("select", (event) => selected.push(event.item && "id" in event.item ? event.item.id : null));
-    // The element's field, FLO-320
+    // The element's field
     split.on("select", (event) => values.push(event.value));
     await opened(split);
     (innerMenu(split)?.element.querySelector('[data-id="pdf"]') as HTMLElement).click();

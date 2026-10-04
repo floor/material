@@ -108,7 +108,7 @@ export const App = () => {
       </Select>
       <output id="pet">{String(pet())}</output>
       {/* Controlled: Escape closes the dialog, and onClose puts the state in step */}
-      {/* Named slots as props (FLO-333): JSX for the headline, a component in actions */}
+      {/* Named slots as props: JSX for the headline, a component in actions */}
       <Dialog id="dg" open={dialog()} onClose={() => setDialog(false)}
         headline={<strong>Discard draft?</strong>} actions={<Button id="dga">Discard</Button>}>
         {dialogText()}

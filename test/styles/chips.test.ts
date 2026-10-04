@@ -1,4 +1,4 @@
-// FLO-256: the chip's 48dp targets, keyboard-only focus layer, remove icon geometry,
+// The chip's 48dp targets, keyboard-only focus layer, remove icon geometry,
 // disabled avatar and selection motion, in the compiled stylesheet.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
@@ -50,7 +50,7 @@ describe('chip focus and motion', () => {
     expect(css).toMatch(/\.mtrl-chip:is\(:has\(:focus-visible\), :focus-visible\):not\(\.mtrl-chip--disabled\):not\(\.mtrl-chip--pointer-focus\)::after \{\s*opacity: 0\.1;/);
   });
 
-  test('the focus ring is md.comp.focus-ring: 3px at a 2px offset, on buttons and on a focused cell (FLO-261)', () => {
+  test('the focus ring is md.comp.focus-ring: 3px at a 2px offset, on buttons and on a focused cell', () => {
     expect(value(`${root}__action:focus-visible`, 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
     expect(value(`${root}__action:focus-visible`, 'outline-offset')).toBe('2px');
     expect(value(`${root}:focus-visible:not(${root}--pointer-focus)::before`, 'border')).toBe('3px solid var(--mtrl-sys-color-secondary)');
@@ -71,7 +71,7 @@ describe('chip focus and motion', () => {
   });
 });
 
-describe('trailing action and dragged state (FLO-259)', () => {
+describe('trailing action and dragged state', () => {
   test('a filter chip\'s trailing button takes the remove button\'s place and target', () => {
     expect(value(`${root}__trailing-action`, 'width')).toBe('calc(18px + 8px)');
     expect(value(`${root}__trailing-action::before`, 'width')).toBe('48px');

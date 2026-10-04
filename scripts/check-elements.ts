@@ -98,7 +98,7 @@ const check = (name: string): void => {
 };
 
 /**
- * FLO-320: one handler reading `value` works on both flavours. Clicks the
+ * One handler reading `value` works on both flavours. Clicks the
  * shadow-root targets of element `id` in turn (a selector and the index of the
  * match) and returns what a factory handler (on the host's component) and a
  * DOM listener each read.
@@ -120,7 +120,7 @@ const payloadParity = (page: Page, id: string, event: string, targets: Array<[st
 
 /**
  * The same proof for a pair of event names, or for an action that is not a
- * click (FLO-320 part 2): `act` runs in the page with `host` in scope, the
+ * click (part 2): `act` runs in the page with `host` in scope, the
  * factory handler listens on `factory` (an expression of `host`), and reads
  * `field`, the element's `value` unless it has another name.
  */
@@ -164,7 +164,7 @@ try {
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
 
-  // FLO-380: each model payload agrees with the public getter during dispatch.
+  // Each model payload agrees with the public getter during dispatch.
   await fresh(page, `<m-timepicker id="event-time"></m-timepicker>
     <m-select id="event-select" value="a"><m-select-option value="a">Alpha</m-select-option><m-select-option value="">None</m-select-option></m-select>
     <m-radios id="event-radios"><m-radio value="a">Alpha</m-radio><m-radio value="">None</m-radio></m-radios>`);
@@ -296,7 +296,7 @@ try {
     assert.equal(state.wifi, null);
     check("switch: setting the property fires no event and updates the form value");
 
-    // FLO-328: the methods are silent too; the model still follows them
+    // The methods are silent too; the model still follows them
     // (form value, dirty) without the event, and reset returns to the default.
     const methods = await page.evaluate(() => {
       type Switch = HTMLElement & { checked: boolean; toggle(): void; check(): void; uncheck(): void };
@@ -333,7 +333,7 @@ try {
     assert.equal(await page.evaluate(() => (document.getElementById("s") as HTMLElement & { checked: boolean }).checked), true);
     check("switch: an outer <label for> toggles it");
 
-    // FLO-328: the slot's attribute is a real property.
+    // The slot's attribute is a real property.
     const label = await page.evaluate(async () => {
       type Labelled = HTMLElement & { label: string | null };
       const slotted = document.getElementById("s") as Labelled;
@@ -378,7 +378,7 @@ try {
     assert.equal(disabled, true);
     check("switch: the disabled attribute disables the inner input");
 
-    // FLO-318: error updates through setError; supporting text never ends it
+    // Error updates through setError; supporting text never ends it
     const errors = await page.evaluate(() => {
       const s = document.getElementById("s") as HTMLElement & { component: { isError: () => boolean } };
       s.removeAttribute("disabled");
@@ -675,7 +675,7 @@ try {
     assert.equal(await page.getByRole("button", { name: "Renamed" }).count(), 1);
     check("button: a label attribute change updates the name");
 
-    // FLO-328: the slot's attribute is a real property, as `label` is on a native <option>.
+    // The slot's attribute is a real property, as `label` is on a native <option>.
     const label = await page.evaluate(async () => {
       type Labelled = HTMLElement & { label: string | null };
       const attr = document.getElementById("attr") as Labelled;
@@ -721,7 +721,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("button: renders as the factory does with the global stylesheet");
 
-    // FLO-380: a toggle button's change crosses to the host with the button's value,
+    // A toggle button's change crosses to the host with the button's value,
     // the getter's value read inside the listener. The element has no toggle
     // attribute yet, so the toggle comes from scoped global defaults.
     const toggled = await page.evaluate(() => {
@@ -745,7 +745,7 @@ try {
       }
     });
     assert.deepEqual(toggled, [[{ selected: true, value: "bold" }, "bold"], [{ selected: false, value: "bold" }, "bold"]]);
-    check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it (FLO-380)");
+    check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it");
   }
 
   // Leading icon: the start inset and the end inset match in both directions
@@ -885,7 +885,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295). 3.0.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
+      // `change`. 3.0.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -896,7 +896,7 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    // FLO-380: change carries the button's value beside selected.
+    // Change carries the button's value beside selected.
     assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
     check("icon button: a click dispatches one change from the host with { selected, value } and no toggle; click stays native");
@@ -1128,7 +1128,7 @@ try {
     assert.equal(clicks, 1);
     check("extended fab: a click reaches the host once, not re-dispatched");
 
-    // FLO-319: collapse and expand leave the shadow root, from the host, once each
+    // Collapse and expand leave the shadow root, from the host, once each
     const toggles = await page.evaluate(() => {
       const eb = document.getElementById("eb") as HTMLElement & { collapse: () => void; expand: () => void };
       const seen: string[] = [];
@@ -1305,7 +1305,7 @@ try {
     assert.deepEqual(cleared, { indeterminate: false, checked: true });
     check("checkbox: indeterminate is a live property, cleared by a click");
 
-    // FLO-316: Space on a mixed box activates it as a click does
+    // Space on a mixed box activates it as a click does
     await page.evaluate(() => {
       const w = window as unknown as Win;
       const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean; checked: boolean };
@@ -1390,7 +1390,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("checkbox: renders as the factory does with the global stylesheet");
 
-    // FLO-336: the check icon, built with DOM APIs, is the DOM its old markup
+    // The check icon, built with DOM APIs, is the DOM its old markup
     // parsed to, in the browser too (the svg's xmlns in the XMLNS namespace).
     const icon = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
@@ -1407,7 +1407,7 @@ try {
     assert.equal(icon, true);
     check("checkbox: the check icon is the DOM its markup parsed to");
 
-    // FLO-336: the form state stays exact and synchronous, while a checkbox
+    // The form state stays exact and synchronous, while a checkbox
     // that stays valid does not set its validity again on every set.
     const sync = await page.evaluate(() => {
       const form = document.createElement("form");
@@ -1871,7 +1871,7 @@ try {
     assert.deepEqual(reset, { t: "new@b.c", p: "second" });
     check("text field: form.reset() restores the value attribute");
 
-    // FLO-335: an autofill fills the input without an input event and starts
+    // An autofill fills the input without an input event and starts
     // the stylesheet's onAutoFillStart animation; the label then floats, as
     // over a typed value. Simulated: the value set silently, the animation's
     // animationstart dispatched, as Chromium's :autofill would. The float
@@ -2086,7 +2086,7 @@ try {
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("text field: renders as the factory does with the global stylesheet, filled and outlined");
 
-    // FLO-305: <m-navigation-bar> renders as the factory does with the global
+    // <m-navigation-bar> renders as the factory does with the global
     // stylesheet, and a click on a destination dispatches change once with its value
     const navBar = await page.evaluate(async (icon) => {
       const w = window as unknown as Win & { mtrl: { createNavigationBar: (c: object) => { element: HTMLElement; destroy: () => void } } };
@@ -2131,9 +2131,9 @@ try {
     }, ICON);
     assert.deepEqual(navBar.element, navBar.factory, "the element renders as the factory");
     assert.deepEqual(navBar.changes, ["search", "value:search"]);
-    check("navigation bar: renders as the factory does with the global stylesheet; a click dispatches change with the value (FLO-305)");
+    check("navigation bar: renders as the factory does with the global stylesheet; a click dispatches change with the value");
 
-    // FLO-354, FLO-355: inside the shadow root too, a resting label is all the
+    // Inside the shadow root too, a resting label is all the
     // input area shows — no placeholder (even disabled), no prefix or suffix —
     // and the affixes appear once the label floats.
     const resting = await page.evaluate(async () => {
@@ -2165,11 +2165,11 @@ try {
     }
     check("text field: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
 
-    // FLO-299: the layout against the M3 measurements, inside the shadow root
+    // The layout against the M3 measurements, inside the shadow root
     await checkTextFieldLayout(page, "element");
-    check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
+    check("text field: the layout at the M3 measurements, 112 fields, in both directions");
     await checkTextFieldReducedMotion(page, "element", null);
-    check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
+    check("text field: the filled indicator's fade stops with reduced motion");
     await checkTextFieldSearchCancel(page, "element");
     check("text field: a search field's own trailing icon hides the browser's clear button");
 
@@ -2179,7 +2179,7 @@ try {
     await checkSelectWidth(page, "element");
     check("select: the menu is its field's width, the selected mark at the item's end in both directions, the selected option on secondary-container");
 
-    // FLO-301: the required attribute moves the input's required and the label's asterisk together
+    // The required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = '<m-text-field id="rq" label="Email"></m-text-field>';
@@ -2479,7 +2479,7 @@ try {
     }
     check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn");
 
-    // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
+    // A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class
     // placement.ts sets from the computed direction. Four fields under
     // <div dir="rtl"> — filled and outlined, each a factory in the light DOM
@@ -2589,7 +2589,7 @@ try {
       rtlFailures.push(`filled element, leading icon and prefix: the input's padding ${iconPrefix.paddingLeft}/${iconPrefix.paddingRight} is not the twin's ${mirror.iconPrefixTwin.paddingRight}/${mirror.iconPrefixTwin.paddingLeft} swapped`);
     assert.deepEqual(rtlFailures, [], rtlFailures.join("\n"));
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
-    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined (FLO-562)");
+    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
@@ -3362,10 +3362,10 @@ try {
     assert.deepEqual(single, { factory: ["b", "a"], element: ["b", "a"] });
     const multi = await payloadParity(page, "pm", "change", [["button", 1], ["button", 0], ["button", 1]]);
     assert.deepEqual(multi, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
-    check("button group: a change handler reading value reads the same on the factory and the element (FLO-320)");
+    check("button group: a change handler reading value reads the same on the factory and the element");
   }
 
-  // ---------------------------------------------------------------- button group press, labels stay whole (FLO-537)
+  // ---------------------------------------------------------------- button group press, labels stay whole
   // Motion on: a width that starts at `auto` cannot ride the spatial spring,
   // so a neighbour's width used to jump while its padding was still easing and
   // the truncated label showed an ellipsis. Sample every frame from pointer
@@ -3623,8 +3623,8 @@ try {
       await page.emulateMedia({ reducedMotion: "no-preference" });
 
       console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
-      assert.equal(failures.length, 0, `button group press (FLO-537):\n${failures.join("\n")}`);
-      check("button group: a press never ellipsizes a label, at every size, with motion on (FLO-537)");
+      assert.equal(failures.length, 0, `button group press:\n${failures.join("\n")}`);
+      check("button group: a press never ellipsizes a label, at every size, with motion on");
     } finally {
       await page.emulateMedia({ reducedMotion: null });
     }
@@ -3666,7 +3666,7 @@ try {
     assert.equal(await single.getByRole("gridcell", { name: "First", selected: false }).count(), 1);
     assert.equal(await single.getByRole("gridcell", { name: "Last", selected: true }).count(), 1);
     assert.equal(await page.evaluate(() => (document.getElementById("ss") as Chips).value), "last");
-    check("chips: the last selected declaration wins in a single-select set (FLO-518)");
+    check("chips: the last selected declaration wins in a single-select set");
     check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
 
     await page.evaluate(() => {
@@ -3864,7 +3864,7 @@ try {
     assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
     check("chips: scrollable, label and aria-label update the set in place");
 
-    // FLO-550: a refused deselect changes nothing, so the host dispatches nothing.
+    // A refused deselect changes nothing, so the host dispatches nothing.
     const refusedDeselect = await page.evaluate(async () => {
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
       const host = document.createElement("m-chips") as Chips;
@@ -3924,7 +3924,7 @@ try {
     assert.deepEqual(chipsSingle, { factory: ["b", "a"], element: ["b", "a"] });
     const chipsMulti = await payloadParity(page, "cm", "change", [['[data-value="b"]', 0], ['[data-value="a"]', 0], ['[data-value="b"]', 0]]);
     assert.deepEqual(chipsMulti, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
-    check("chips: a change handler reading value reads the same on the factory and the element (FLO-320)");
+    check("chips: a change handler reading value reads the same on the factory and the element");
 
     await fresh(page, `<section id="factory"></section>`);
     const parity = await page.evaluate(async () => {
@@ -4146,11 +4146,11 @@ try {
     check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
   }
 
-  // ---------------------------------------------------------------- text field: the trailing icon button's 48 px target (FLO-592)
+  // ---------------------------------------------------------------- text field: the trailing icon button's 48 px target
   // M3 "Text fields" -> Specs: an interactive trailing icon is an icon button
   // with a 48 x 48 dp target (checkTextFieldA11y measures the 40 dp round state
   // layer it centres in). The target must sit on the button's centre in both
-  // directions: FLO-592 measured it 48 px to the left in RTL, where the
+  // directions: measured it 48 px to the left in RTL, where the
   // `touch-target` mixin's inline-start inset met a physical translate.
   //
   // The mixin's live users, `git grep -n "touch-target" -- src/styles`:
@@ -4335,7 +4335,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("progress: linear and circular render as the factory does with the global stylesheet");
 
-    // FLO-338: the indeterminate circular indicator keeps its track. Its
+    // The indeterminate circular indicator keeps its track. Its
     // colour is read from a determinate indicator at 0, all track; the
     // indeterminate one, element and factory, must show pixels of it.
     const track = await page.evaluate(async () => {
@@ -4450,7 +4450,7 @@ try {
     check("loading indicator: renders as the factory does with the global stylesheet");
   }
 
-  // ---------------------------------------------------------- canvas theme (FLO-389)
+  // ---------------------------------------------------------- canvas theme
   // A theme set on a section, with :root light: the canvases draw the
   // section's colours, factory and element, and follow a theme change on it.
   await fresh(
@@ -4614,7 +4614,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("badge: renders as the factory does with the global stylesheet");
 
-    // FLO-329: baseline declared no status roles, so these had no background.
+    // Baseline declared no status roles, so these had no background.
     const status = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
       return Object.fromEntries(["success", "warning", "info"].map((color) => {
@@ -5177,7 +5177,7 @@ try {
     check("bottom app bar: renders as the factory does with the global stylesheet");
   }
 
-  // ---------------------------------------------------------------- toolbar (FLO-304)
+  // ---------------------------------------------------------------- toolbar
   await fresh(
     page,
     `<div class="stage"><button id="before">Before</button>
@@ -5330,7 +5330,7 @@ try {
     check("toolbar: renders as the factory does with the global stylesheet");
   }
 
-  // FLO-387: the rows the roving rule must get right. Read in the same turn as
+  // The rows the roving rule must get right. Read in the same turn as
   // connect, before the browser's own slotchange microtask.
   {
     const roving = await page.evaluate((icon) => {
@@ -6887,7 +6887,7 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index). 3.0.0 dropped the doubled detail.index.
+    // Value is the model (the index). 3.0.0 dropped the doubled detail.index.
     assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
@@ -6990,7 +6990,7 @@ try {
     check("carousel: items match the factory's sizes, masks, positions and colours");
   }
 
-  // FLO-395: declarative opt-in and toggling without recreating the factory.
+  // Declarative opt-in and toggling without recreating the factory.
   await fresh(page, `<m-carousel id="wheel-carousel" wheel item-width="200" style="width:600px;height:240px">
     ${Array.from({ length: 8 }, (_, i) => slide(String(i), `Slide ${i}`)).join("")}
   </m-carousel>`);
@@ -7523,7 +7523,7 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
-    // The menu's "close" comes with Enter (FLO-548; it came 50ms after), and the select
+    // The menu's "close" comes with Enter (it came 50ms after), and the select
     // looks at its focused styling again 10ms after that: read once the menu has closed
     // and that turn has passed, or the class read is the one left from the open menu.
     await until(() => page.evaluate(() =>
@@ -7565,7 +7565,7 @@ try {
     await returnsFocus("dialog", "createDialog");
     check("factories in a shadow root: a dialog returns focus to its opener inside the shadow root");
 
-    // The event that opened an overlay never dismisses it (FLO-548). A dialog
+    // The event that opened an overlay never dismisses it. A dialog
     // opened from an Escape keydown gets its Escape listener (or, in the top
     // layer, becomes the browser's topmost modal) while that key press is
     // still being handled. Both layers are read before the assertion, so a
@@ -7608,8 +7608,8 @@ try {
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
 
-    // Escape is handled as a key press, in both layers (FLO-548 family 6,
-    // FLO-556): prevented, so the browser sends a top-layer dialog no `cancel`
+    // Escape is handled as a key press, in both layers: prevented, so the browser
+    // sends a top-layer dialog no `cancel`
     // and never forces one closed. With focus on a child and on the body; a
     // dialog that refuses, by option and by beforeclose, for five presses (the
     // browser forced the third); a menu open inside it, which takes the key;
@@ -7750,7 +7750,7 @@ try {
     );
     check("dialog: Escape closes it from a child and from the body, a refusal holds for five presses, a menu inside takes the key first, and a forced close leaves the page clean");
 
-    // Which event is "the one that opened it" (FLO-548): the one whose dispatch
+    // Which event is "the one that opened it": the one whose dispatch
     // had begun when open() ran, told by a capture listener on the window that
     // numbers events, not by time or by the task. Each form opens a dialog from
     // an Escape keydown and then sends a second one in the same task: the first
@@ -7828,7 +7828,7 @@ try {
     );
     check("dialog: only the event in flight when open() ran is ignored: from a child, the body, the window's listeners, a shadow root, after a promise, and with other dialogs open");
 
-    // The same for the modal sheets and the modal drawer (FLO-548 family 6 B):
+    // The same for the modal sheets and the modal drawer (family 6 B):
     // Escape as a key press, from wherever focus is; a refusal held for five
     // presses; the key press that opened it; and, in the top layer, a close
     // the browser makes without asking, after which it opens again. Every
@@ -7915,7 +7915,7 @@ try {
     check("sheets and drawer: Escape closes a modal one from wherever focus is, a refusal holds for five presses, the key press that opened it does not close it, and a forced close is followed");
 
     // And for the time picker, the modal date picker and the full-screen search
-    // (FLO-548 family 6 C): Escape with focus on the body; the key press that
+    // (family 6 C): Escape with focus on the body; the key press that
     // opened it, then the next; and one opened above a dialog, which takes the
     // key first. All read before the assertion.
     const pickerEscapes = async (kind: "time picker" | "date picker" | "search"): Promise<Record<string, unknown>> => {
@@ -8060,7 +8060,7 @@ try {
     });
     check("date picker, docked: the click that opened it leaves it open, and the next click outside closes it once");
 
-    // The same sentence for the menu (FLO-548): its click-outside and Escape
+    // The same sentence for the menu: its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that
     // event is still on its way up to the document. Every form is read before
@@ -8501,7 +8501,7 @@ try {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
           const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
-          // What the state above cannot tell (FLO-551: open and connected, with no focus):
+          // What the state above cannot tell (open and connected, with no focus):
           // whether the surface is shown and focusable, and whether the page reported errors.
           const surface = await page.evaluate(() => {
             const element = (window as unknown as TopWin).__tl.menu.element;
@@ -8715,7 +8715,7 @@ try {
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
 
       // By key and by hover. The submenu is a feature the menu loads on
-      // demand (FLO-310); each way in must reach it. Opened by key, Share
+      // demand; each way in must reach it. Opened by key, Share
       // has focus: ArrowRight opens its submenu on the first item, ArrowLeft
       // closes it and goes back to Share. Resting the pointer on Share opens it.
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
@@ -8761,7 +8761,7 @@ try {
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
 
-      // ArrowUp on the opener opens the menu on its last item (FLO-524), for the
+      // ArrowUp on the opener opens the menu on its last item, for the
       // factory, in a shadow root and in light DOM. The opener puts focus there
       // 100ms after the key; the menu's own initial focus, 20ms later, used to move
       // it to the first item. The fixed wait is the assertion: focus is still on the
@@ -8780,7 +8780,7 @@ try {
     }
   }
 
-  // ---------------------------------------------------------------- FAB menu (FLO-306)
+  // ---------------------------------------------------------------- FAB menu
   await fresh(
     page,
     `<div class="stage" style="padding-top:260px"><button id="fm-before">Before</button>
@@ -8883,7 +8883,7 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
-      // The menu's "close" comes with the click since FLO-548 (it came on a 50ms timer),
+      // The menu's "close" comes with the click since then (it came on a 50ms timer),
       // so this loop should find the attribute gone at once; it stays as the guard it
       // was. The assertion below reports an `open` that stayed.
       for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
@@ -8892,7 +8892,7 @@ try {
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
     check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
 
-    // FLO-548: `open` by attribute or property is applied in the attribute
+    // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
     // each, and the state and the attribute are there when they return. In the
     // menu presentation too, where the surface comes from a module of its own.
@@ -8949,7 +8949,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("FAB menu: renders as the factory does with the global stylesheet");
 
-    // FLO-348: the motion, frame by frame. The transitions are paused and seeked,
+    // The motion, frame by frame. The transitions are paused and seeked,
     // so every frame is read exactly, whatever the machine's speed.
     const motion = await page.evaluate(async () => {
       const fm = document.getElementById("fm") as Fm;
@@ -9148,7 +9148,7 @@ try {
     check("FAB menu: bottom-end and bottom-start open into the page, in both directions, factory and element");
   }
 
-  // ---------------------------------------------------------------- chips right to left (FLO-343 follow-up)
+  // ---------------------------------------------------------------- chips right to left (follow-up)
   // <m-chips> renders its chips in a shadow root: a `dir="rtl"` above the host
   // reverses Left and Right there too, which closest("[dir]") did not see.
   await fresh(
@@ -9265,7 +9265,7 @@ try {
     const settle = (): Promise<unknown> => wait(450);
     // `settle()` is the menu's open or close transition. What the next step needs
     // comes on the menu's own timers and frames (focus 120ms after opening, the
-    // "close" event with a dismissal since FLO-548, focus back on the anchor a frame later, a
+    // "close" event with a dismissal since, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
     // wait, for 5s at most. When it never comes, the failure says at which step,
@@ -9305,7 +9305,7 @@ try {
        </m-menu>`
     );
     await listen("mm", ["open", "close", "select"]);
-    // A close takes effect in the call (FLO-548): asserted on the line after the action, before
+    // A close takes effect in the call: asserted on the line after the action, before
     // the fixed wait, not waited for. A poll here would pass a close that had become late.
     const closed = async (step: string): Promise<void> =>
       assert.deepEqual(await menuState(), { open: false, attribute: false }, `${step}: <m-menu> is closed when the action returns`);
@@ -9344,7 +9344,7 @@ try {
     // A menu opened with a key puts focus on its first item on a timer, about 120ms
     // after the key. A fixed wait is not that moment: on a runner whose main thread
     // paused for a third of a second, the keys below got there first, were handled
-    // with no item focused, and focus ended one item short (FLO-423).
+    // with no item focused, and focus ended one item short.
     const focusOn = async (label: string): Promise<void> => {
       for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
     };
@@ -9360,7 +9360,7 @@ try {
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
 
-    // ArrowUp on the anchor opens the menu on its last item (FLO-524). The anchor puts
+    // ArrowUp on the anchor opens the menu on its last item. The anchor puts
     // focus there 100ms after the key, and the menu's own initial focus, which runs
     // 20ms later, used to move it to the first item. The fixed wait is the assertion:
     // focus is still on the last item once every opening timer has run.
@@ -9407,8 +9407,8 @@ try {
     ]);
     check("menu: nested items open a submenu in the top layer; its item selects and closes once");
 
-    // By key and by hover, as the factory: the submenu is loaded on demand
-    // (FLO-310), and each way in must reach it
+    // By key and by hover, as the factory: the submenu is loaded on demand,
+    // and each way in must reach it
     const openSubmenus = (): Promise<number> =>
       page.evaluate(() =>
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
@@ -9445,7 +9445,7 @@ try {
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
 
-    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // Acceptance: arrows pressed before the menu's initial focus are not
     // undone by it. A menu opened with a key focuses its first item on a 100ms
     // timer; here that timer is held until the arrows have been handled, the order
     // fast keys (or a paused page) produce. Today the timer then puts focus back
@@ -9493,8 +9493,8 @@ try {
       await settle();
       await log();
       // The known bug is this one move, back to the first item. Any other change of
-      // focus is not FLO-515 and fails as usual.
-      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      // focus is not the known bug and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "The menu's initial focus moved focus back to the first item, after arrows had moved it on");
       assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
     })();
 
@@ -9505,7 +9505,7 @@ try {
     await closed("menu, hide()");
     await settle();
     // The attribute, and the property that reflects it, are applied in the
-    // attribute callback (FLO-548): the menu is open, or closed, on the next
+    // attribute callback: the menu is open, or closed, on the next
     // line, and nothing is dispatched. It was applied a microtask later, and
     // dispatched `open` and `close`.
     const byAttribute = await page.evaluate(() => {
@@ -9722,7 +9722,7 @@ try {
     assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
     check("select: <label for> focuses the combobox");
 
-    // FLO-543: the attribute reaches the select's menu, which has no public
+    // The attribute reaches the select's menu, which has no public
     // member for it; the menu is under mtrl's symbol, found by its description.
     const placed = await page.evaluate(() => {
       const el = document.getElementById("ms") as Host;
@@ -9787,7 +9787,7 @@ try {
     assert.deepEqual(selectParity.element, selectParity.factory);
     check("select: the closed field renders as the factory's in light DOM");
 
-    // FLO-272: a long list stays in the viewport, scrolling, on the side of
+    // A long list stays in the viewport, scrolling, on the side of
     // the field with room: near the bottom it opens above, near the top
     // below; the factory's in-field menu and the element's top-layer one.
     const long = await page.evaluate(async () => {
@@ -9854,7 +9854,7 @@ try {
     });
     check("select: a long list stays in the viewport and scrolls, above the field near the bottom and below it near the top");
 
-    // FLO-272: an open menu follows its field when a panel around it
+    // An open menu follows its field when a panel around it
     // scrolls, not only the window; the menu's own list scrolling does not move it.
     const follows = await page.evaluate(async () => {
       type Opener = { open: () => unknown; close: () => unknown; element: HTMLElement };
@@ -9937,7 +9937,7 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      // The inner menu is not a member (FLO-543): it is under mtrl's symbol, found by its description
+      // The inner menu is not a member: it is under mtrl's symbol, found by its description
       const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       menu.on("close", () => void w.__closes++);
     });
@@ -9999,7 +9999,7 @@ try {
     await splitClosed("a click on an item", 4);
     await settle();
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
-    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value (FLO-320)");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value");
     assert.deepEqual(await splitState(), { open: false, closes: 4 });
     check("split button: a click outside closes it once; a click on an item selects once");
 
@@ -10055,7 +10055,7 @@ try {
     check("split button: the closed button renders as the factory's in light DOM");
   }
 
-  // ---------------------------------------------------------------- tooltip placement during the entrance transition (FLO-535)
+  // ---------------------------------------------------------------- tooltip placement during the entrance transition
   {
     type Direction = "top" | "bottom" | "left" | "right";
     type Case = { name: string; position: Direction; x: number; y: number; text: string; layer?: "top"; edge?: boolean; wrapped?: boolean };
@@ -10172,11 +10172,11 @@ try {
       if (Math.abs(measured.widthReadWhenPlaced - measured.naturalWidth) > 1) failures.push(`${scenario.name}: placement width ${measured.widthReadWhenPlaced.toFixed(2)} differs from layout width ${measured.naturalWidth}`);
     }
     await page.emulateMedia({ reducedMotion: null });
-    assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
+    assert.equal(failures.length, 0, `tooltip placement:\n${failures.join("\n")}`);
     check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
   }
 
-  // ---------------------------------------------------------------- reduced motion inside a shadow root (FLO-549)
+  // ---------------------------------------------------------------- reduced motion inside a shadow root
   // The document's reduced-motion reset does not reach a shadow tree. The
   // button's corner morph and the group's width springs are not fades, so
   // under the preference they must not be in the computed transition list.
@@ -10534,7 +10534,7 @@ try {
     });
     check("snackbar: its text and message change in place, action recreates");
 
-    // FLO-548: a snackbar shown behind another is queued, not open. Its state
+    // A snackbar shown behind another is queued, not open. Its state
     // turns visible and `open` is dispatched together, at its turn.
     const queued = await page.evaluate(async () => {
       type Bar = HTMLElement & { open: boolean; show: () => void; hide: () => void; component: { state: string } };
@@ -11039,7 +11039,7 @@ try {
     assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
     check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
 
-    // FLO-386: <m-dialog>'s action buttons (here from the global defaults) and
+    // <m-dialog>'s action buttons (here from the global defaults) and
     // its dividers are mtrl buttons and dividers drawn in its shadow root. Their
     // sheets used to be missing there, so the buttons rendered unstyled: 70
     // computed properties apart from the same button in the page.
@@ -11075,7 +11075,7 @@ try {
     });
     assert.deepEqual(nested.button.inDialog, nested.button.inPage, "the dialog's button is styled as a button in the page");
     assert.deepEqual(nested.divider.inDialog, nested.divider.inPage, "the dialog's divider is styled as a divider in the page");
-    check("dialog element: its buttons and dividers carry their own sheets in its shadow root (FLO-386)");
+    check("dialog element: its buttons and dividers carry their own sheets in its shadow root");
 
     // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
     // display:contents wrapper: its action is a Tab stop, its fixed box is placed
@@ -11781,7 +11781,7 @@ try {
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
   }
 
-  // ---------------------------------------------------------------- named slots (FLO-325)
+  // ---------------------------------------------------------------- named slots
   // Each element's `slots` are the named slots it reads, and no other: given
   // a child per declared name, its shadow root has exactly those named
   // <slot>s, and each child is assigned to one.
@@ -11817,7 +11817,7 @@ try {
   }
 
   // ---------------------------------------------------------------- parts
-  // FLO-328: every piece is a part named after its BEM class without the
+  // Every piece is a part named after its BEM class without the
   // prefix; the element holding the slot is also the slot attribute's part.
   await fresh(
     page,
@@ -11862,7 +11862,7 @@ try {
     check("parts: page CSS styles m-button::part(label) and (icon), m-switch::part(track) and a helper added later, m-tabs::part(indicator)");
   }
 
-  // ---------------------------------------------------------------- FLO-320: payload parity, part 2
+  // ---------------------------------------------------------------- payload parity, part 2
   await fresh(
     page,
     `<m-navigation-rail id="pr" aria-label="Rail" value="a">
@@ -11898,7 +11898,7 @@ try {
     );
     // The factory's `value` stays a Date: its `iso` is the element's `value`,
     // and the element's `date` is the factory's Date.
-    // Entered by hand: setValue is silent (FLO-328).
+    // Entered by hand: setValue is silent.
     const enter = (text: string): string =>
       `const input = host.shadowRoot.querySelector("input"); input.value = "${text}"; input.dispatchEvent(new Event("change", { bubbles: true }));`;
     const date = enter("09/12/2026");
@@ -11916,7 +11916,7 @@ try {
     assert.deepEqual(
       await eventParity(page, "ptp", {
         factoryEvent: "change", elementEvent: "change", factory: "host.component.picker",
-        // Committed by OK: setValue is silent (FLO-328).
+        // Committed by OK: setValue is silent.
         act: `const p = host.component.picker; p.setType("input"); p.open();
           const set = (type, v) => { const f = p.dialogElement.querySelector('[data-type="' + type + '"]'); f.value = v; f.dispatchEvent(new Event("change", { bubbles: true })); };
           set("hour", "10"); set("minute", "45");
@@ -11924,7 +11924,7 @@ try {
       }),
       { factory: ["10:45"], element: ["10:45"] }, "time picker",
     );
-    check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element (FLO-320)");
+    check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element");
   }
 
   // ---------------------------------------------------------------- theme
@@ -11947,7 +11947,7 @@ try {
     check("theme: a theme on the document reaches the shadow root");
   }
 
-  // FLO-330: the typeface and the corners are tokens, the compiled values their
+  // The typeface and the corners are tokens, the compiled values their
   // fallback. Unset, a button and a card render as before; set on the document,
   // the tokens reach an element's shadow root and a factory alike.
   await fresh(
@@ -12008,7 +12008,7 @@ try {
   }
 
   // ---------------------------------------------------------------- the sheets' and the dialog's close target
-  // FLO-579: the side sheet's and the dialog's close buttons are hand-built
+  // The side sheet's and the dialog's close buttons are hand-built
   // 40 x 40 buttons with no expanded target, so a click a few pixels outside
   // them does not reach them. m3.material.io, Density: "The default target size
   // should be at least 48x48 CSS pixels". The case, ltr and rtl: on every side

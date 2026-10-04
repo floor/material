@@ -35,7 +35,7 @@ describe('tab', () => {
     tab.destroy();
   });
 
-  // FLO-264: TAB_EVENTS declares focus and blur, and nothing emitted them.
+  // TAB_EVENTS declares focus and blur, and nothing emitted them.
   test('focus and blur reach handlers registered through on', () => {
     const tab = createTab({ text: 'One', value: 'one' });
     document.body.appendChild(tab.element);

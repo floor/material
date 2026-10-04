@@ -1,4 +1,4 @@
-// FLO-114: public picker events, display strings and root-only forwarded events.
+// Public picker events, display strings and root-only forwarded events.
 import createTimePicker, {
   TIMEPICKER_EVENTS,
   type TimePickerComponent,
@@ -17,7 +17,7 @@ const picker = createTimePicker();
 export const names: Equals<keyof TimePickerEvents,
   "change" | "input" | "confirm" | "open" | "close" | "cancel" | "click" | "keydown" | "tap" | "swipe"
 > = true;
-// One object, the <m-timepicker> element's shape (FLO-320)
+// One object, the <m-timepicker> element's shape
 export const changeIsValue: Equals<Parameters<TimePickerEvents["change"]>, [event: TimePickerValueEvent]> = true;
 export const valueIsString: Equals<TimePickerValueEvent, { value: string }> = true;
 // Input reports both the committed value and the draft.
@@ -69,5 +69,5 @@ picker.on("click", payload => payload.component.open());
 picker.on("keydown", payload => payload.event.clientX);
 // @ts-expect-error swipe payloads do not carry a DOM event
 picker.on("swipe", payload => payload.event);
-// @ts-expect-error the change payload is an object, not the string (FLO-320)
+// @ts-expect-error the change payload is an object, not the string
 picker.on("change", (time: string) => time.toUpperCase());

@@ -1,4 +1,4 @@
-// FLO-257, decided by Dr Jones on 2026-09-28: chip sets follow Material's selection
+// Decided by Dr Jones on 2026-09-28: chip sets follow Material's selection
 // defaults (MDC Chip.md: multi-select, with single-select and selection-required
 // opt-in), and input chips are always removable (m3.material.io chips).
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";

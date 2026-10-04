@@ -11,7 +11,7 @@ let menus: ReturnType<typeof createMenu>[];
 let opener: HTMLButtonElement;
 let tick: () => void;
 
-// The submenu feature is a lazy chunk (FLO-310): a menu with nested items
+// The submenu feature is a lazy chunk: a menu with nested items
 // starts loading it at creation. Tests that interact with a submenu right
 // after construction wait for that load first -- it is a dynamic import,
 // which the fake timers here never run. Taken before beforeEach replaces
@@ -279,7 +279,7 @@ test("destroy cancels hover intent, Tab blur, and queued focus restoration", asy
   }
 });
 
-// ---------------------------------------------------------------- the lazy submenu (FLO-310)
+// ---------------------------------------------------------------- the lazy submenu
 // Everything before an `await` here runs in one turn, so an interaction in it
 // happens before the submenu feature's dynamic import can resolve.
 

@@ -1,6 +1,6 @@
 // test/core/dom/boolean-attributes.test.ts
 //
-// FLO-240. An HTML boolean attribute is true whenever it is present, whatever
+// An HTML boolean attribute is true whenever it is present, whatever
 // its value: `disabled="false"` is a disabled control, exactly like
 // `disabled=""` or `disabled="disabled"`. Every path that wrote an attribute
 // did `String(value)`, so asking for `disabled: false` produced the opposite

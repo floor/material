@@ -29,7 +29,7 @@ const value = (selector: string, property: string) =>
 beforeAll(() => { css = compileString("@use 'main';", { loadPaths: ['src/styles'] }).css.replace(/\/\*[\s\S]*?\*\//g, ''); });
 
 for (const [role, size, height, tracking, weight] of scale) {
-  // The class reads the token, and the token holds the scale (FLO-315): the
+  // The class reads the token, and the token holds the scale: the
   // class used to repeat the literal values and the Roboto family.
   test(`${role}: the utility class reads the emitted system tokens, which hold the baseline type scale`, () => {
     for (const [property, expected] of [

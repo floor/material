@@ -7,7 +7,7 @@
 // receive [..., null], which is not a value anything could submit and not
 // what the signature promised.
 //
-// Found while clearing chips for strictNullChecks (FLO-114).
+// Found while clearing chips for strictNullChecks.
 
 import { describe, test, expect, beforeEach } from "bun:test";
 import { JSDOM } from "jsdom";

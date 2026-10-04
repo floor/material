@@ -62,7 +62,7 @@ const has = (button: { element: HTMLElement }, modifier: string) =>
 
 // What a forwarded event hands a listener. Nothing asserted this, which is
 // how four call sites in the repository came to read the payload as though it
-// were the DOM event -- see FLO-114 and the button-group, split-button and
+// were the DOM event -- see the button-group, split-button and
 // dialog suites. The typed event map makes that a compile error now; this
 // pins the runtime shape the map describes.
 describe('what a forwarded event hands a listener', () => {

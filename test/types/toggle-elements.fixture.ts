@@ -1,6 +1,6 @@
 // test/types/toggle-elements.fixture.ts
 //
-// FLO-380 PR 3: the element and adapter surface of the toggle buttons' and the
+// PR 3: the element and adapter surface of the toggle buttons' and the
 // carousel's change. Each element's detail carries value beside the old field,
 // and every adapter types its change handler with it. The factory payloads are
 // pinned in button-events, icon-button-events and carousel-events.

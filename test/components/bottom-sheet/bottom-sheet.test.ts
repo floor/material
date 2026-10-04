@@ -224,7 +224,7 @@ describe('bottom sheet', () => {
   });
 });
 
-// FLO-324: a modal sheet outside the top layer made neither the page inert nor
+// A modal sheet outside the top layer made neither the page inert nor
 // kept Tab inside, as showModal() does for one in it.
 describe('bottom sheet: modal outside the top layer', () => {
   const page = () => {
@@ -286,7 +286,7 @@ describe('bottom sheet: modal outside the top layer', () => {
   });
 });
 
-// FLO-324: the drag handle was aria-hidden and unreachable by keyboard.
+// The drag handle was aria-hidden and unreachable by keyboard.
 // Compose's is clickable: partially open it expands, expanded it dismisses.
 describe('bottom sheet drag handle as a button', () => {
   const handleOf = (sheet: ReturnType<typeof make>) => sheet.element.querySelector<HTMLButtonElement>('.mtrl-bottom-sheet__handle')!;
@@ -331,7 +331,7 @@ describe('bottom sheet drag handle as a button', () => {
   });
 });
 
-// FLO-324: a standard sheet sits beside the page, so Escape pressed elsewhere
+// A standard sheet sits beside the page, so Escape pressed elsewhere
 // (closing a menu, say) no longer closes it; from inside it still does.
 describe('bottom sheet: Escape on a standard sheet', () => {
   test('Escape elsewhere leaves it open; Escape from inside closes it', () => {

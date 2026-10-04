@@ -416,7 +416,7 @@ describe("a chip inside a set emits its own change", () => {
     expect(second!.isSelected()).toBe(false);
   });
 
-  // FLO-550: "emit only when something changed" is part of the contract.
+  // "emit only when something changed" is part of the contract.
   test("a refused deselect emits no change, on the chip or on the set, and calls no onSelect; the click is still reported", () => {
     for (const multiSelect of [false, true]) {
       const calls: string[] = [];

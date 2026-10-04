@@ -1,5 +1,5 @@
 /**
- * A menu's opener while the menu is open (FLO-386). The menu used to give any
+ * A menu's opener while the menu is open. The menu used to give any
  * <button> opener the button's `--active` class, whose pressed rule reshaped a
  * FAB (16 to 8px corners, no shadow) and an icon button. Only an mtrl button
  * keeps its pressed shape now; a FAB or an icon button opening a menu looks as

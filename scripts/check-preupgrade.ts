@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Pre-upgrade styles (FLO-293, ssr.md Phase A): no layout shift from the
+// Pre-upgrade styles (ssr.md Phase A): no layout shift from the
 // server's HTML to the upgraded element.
 //
 // Each case is the server-style HTML of one element (the host and its light
@@ -482,7 +482,7 @@ try {
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
-      // Against a bare twin's padding, not a pinned value: a pin passes on anything once the padding changes (FLO-299)
+      // Against a bare twin's padding, not a pinned value: a pin passes on anything once the padding changes
       assert(before.padding !== before.fieldBarePadding, `text field still has pre-upgrade padding (${before.padding})`);
       assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
       assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);

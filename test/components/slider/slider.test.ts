@@ -106,7 +106,7 @@ describe('slider value', () => {
     expect(slider.getValue()).toBe(0);
   });
 
-  test('setValue is silent unless told to report change (FLO-328)', async () => {
+  test('setValue is silent unless told to report change', async () => {
     const slider = await mount({ value: 10 });
     const seen: number[] = [];
     slider.on('change', (e) => seen.push(e.value));
@@ -178,7 +178,7 @@ describe('range slider', () => {
     expect(second.getAttribute('aria-valuenow')).toBe('80');
   });
 
-  test('setSecondValue updates the second handle silently, and reports both values when asked (FLO-328)', async () => {
+  test('setSecondValue updates the second handle silently, and reports both values when asked', async () => {
     const slider = await mount({ range: true, value: 20, secondValue: 80, valueFormatter: (v) => `$${v}` });
     const [, second] = handles(slider);
     const seen: [number, number | null][] = [];
@@ -369,7 +369,7 @@ describe('slider events and destroy', () => {
 // `range: true` without a `secondValue` builds two handles and leaves the
 // second value null. Every range test above supplies one, so this shape had no
 // coverage -- and it is the shape where the keyboard handler had a null to do
-// arithmetic on. FLO-114 gave it a guard; these say what the guard preserves.
+// arithmetic on. A guard was added; these say what the guard preserves.
 describe('a range slider given no second value', () => {
   // withDom always rendered the second handle at max; the controller's state
   // said null. So the picture and the screen reader said 20 to 100 while
@@ -425,7 +425,7 @@ describe('a range slider given no second value', () => {
   });
 });
 
-// FLO-250. The track is drawn the way Compose's Slider.kt drawTrack draws it: values
+// The track is drawn the way Compose's Slider.kt drawTrack draws it: values
 // span the whole track (a discrete slider insets its interior steps by the corner
 // radius), the gap between the handle's edge and the track is 6dp, so 8px from the
 // centre of a 4px handle and 7px from a 2px one, and a stop indicator ends every
@@ -550,7 +550,7 @@ describe('slider track geometry', () => {
   });
 });
 
-// FLO-249, FLO-250. A change of value that does not follow a pointer settles on a
+// A change of value that does not follow a pointer settles on a
 // spring (the stylesheet animates under `--settling`); the first render, a resize
 // and a drag set nothing, so the slider appears at its value and follows the finger.
 describe('slider settling', () => {
@@ -591,7 +591,7 @@ describe('slider settling', () => {
   });
 });
 
-// FLO-252. The inset icon: standard sliders at M, L and XL, 10px from the start of
+// The inset icon: standard sliders at M, L and XL, 10px from the start of
 // the active track, or of the inactive track when the active one cannot hold it and
 // its padding (m3.material.io slider guidelines, MDC BaseSlider).
 describe('slider inset icon', () => {
@@ -653,7 +653,7 @@ describe('slider inset icon', () => {
   });
 });
 
-// FLO-252. A vertical slider runs bottom to top ("zero is at the bottom",
+// A vertical slider runs bottom to top ("zero is at the bottom",
 // m3.material.io guidelines), or top to bottom with `topToBottom` (Compose
 // VerticalSlider's flag). Positions go to bottom/top and lengths to height; sizes
 // are thicknesses, across. The container is given a 300px height.
@@ -710,7 +710,7 @@ describe('vertical slider', () => {
   });
 });
 
-// FLO-251, after Compose's Slider.kt keyboard handling and RangeSlider coercion:
+// After Compose's Slider.kt keyboard handling and RangeSlider coercion:
 // PageUp/PageDown move a tenth of the steps (one to ten), range handles stop at each
 // other instead of crossing, the arrows along the track follow it as drawn (reversed
 // in RTL and top to bottom), and an RTL slider lays out and reads taps from the right.
@@ -825,7 +825,7 @@ describe('slider keys, range limits and RTL', () => {
   });
 });
 
-// FLO-253. The handles' listeners were added and removed as separate inline
+// The handles' listeners were added and removed as separate inline
 // functions, so destroy removed none of them: a key still moved a destroyed
 // slider's value and focus still marked the handle. The existing destroy test
 // watched for a change event, which the cleared emitter never delivers.
@@ -855,7 +855,7 @@ describe('slider destroy removes the handle listeners', () => {
   });
 });
 
-// FLO-107. Options and setters that did nothing or disagreed with the other paths:
+// Options and setters that did nothing or disagreed with the other paths:
 // the setters now snap to the step as keys and the pointer do (and as Compose's
 // SliderState snaps a value it is given), setSize swaps the size modifier instead
 // of adding a second one, getSize returns what was set under a type that says so,

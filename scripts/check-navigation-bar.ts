@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-navigation-bar.ts
 //
-// The navigation bar (FLO-305), measured in Chromium against Compose's
+// The navigation bar, measured in Chromium against Compose's
 // ShortNavigationBar tokens (NavigationBarTokens, NavigationBarVerticalItemTokens
 // and NavigationBarHorizontalItemTokens v0_11_0), with the full stylesheet and
 // with the selective one: geometry, colours, badge, the container query, the

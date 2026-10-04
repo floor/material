@@ -2,7 +2,7 @@
 //
 // What mtrl-addons imports from mtrl, pinned.
 //
-// FLO-123 removes four public exports that nothing uses — `createLifecycle`,
+// Removes four public exports that nothing uses — `createLifecycle`,
 // `createDisabled`/`DisabledState`, `COMPONENTS` and `STATES`. The issue made
 // a consumer check the gate on that removal, and for good reason: the same
 // sweep once came within one line of deleting the *live* `createComponentConfig`
@@ -19,7 +19,7 @@
 // is a breaking change for a consumer we can see, and should be a decision
 // rather than an accident.
 //
-// 3.0.0 made one (FLO-351): the composition core left the root for
+// 3.0.0 made one: the composition core left the root for
 // material/core/compose, and EventCallback for material/core/state. mtrl-addons moves
 // with its own 1.0 (floor/mtrl-addons#5), so the pins follow it there.
 
@@ -78,10 +78,10 @@ describe("the exports mtrl-addons depends on", () => {
   }
 });
 
-// The other half of FLO-123: these were exported, used by nothing in src, in
+// These were exported, used by nothing in src, in
 // test, or in mtrl-addons, and are removed. Asserting their absence keeps the
 // removal from being quietly undone by a barrel edit.
-describe("the exports FLO-123 removed", () => {
+describe("the exports removed", () => {
   for (const name of ["createLifecycle", "createDisabled", "COMPONENTS", "STATES"]) {
     test(`${name} is no longer exported`, () => {
       expect((mtrl as Record<string, unknown>)[name]).toBeUndefined();
