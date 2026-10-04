@@ -20,19 +20,6 @@ $component: '#{base.$prefix}-toolbar';
   --#{$component}-content: #{t.color('on-surface-variant')};
   // The window-edge margin of a placed floating toolbar
   --#{$component}-margin: 16px;
-  // A toolbar shows a selected item through its colour alone: the m3
-  // toolbars specs give a selected toggle item colour roles and the toolbar
-  // token set has no item shape tokens, while a standalone toggle icon
-  // button morphs round to square when selected (icon buttons specs) and
-  // "their square shape conflicts with the fully-rounded shape of the
-  // floating toolbar container". So the morph targets of a round icon
-  // button are pinned to its round radius, selected and pressed. This
-  // default (half the 40dp item, the icon button's s round radius) is what
-  // a host behind its own shadow root (<m-icon-button> slotted in)
-  // inherits; items in the same tree are pinned per size by the rule after
-  // this one.
-  --#{base.$prefix}-icon-button-shape-selected: 20px;
-  --#{base.$prefix}-icon-button-shape-pressed: 20px;
 
   display: flex;
   align-items: center;
@@ -215,35 +202,41 @@ $component: '#{base.$prefix}-toolbar';
   }
 }
 
-// A round icon button in the same tree as its toolbar (a factory toolbar's
-// items, the overflow button) is pinned per size; a host behind its own
-// shadow root (<m-icon-button> slotted in) is matched by no descendant
-// selector and inherits the default the toolbar declares above. The radii
-// mirror the icon button's round radii, half the container height per size
-// (styles/components/_icon-button.scss, which owns them).
-.#{base.$prefix}-toolbar {
-  .#{base.$prefix}-icon-button--round {
-    --#{base.$prefix}-icon-button-shape-selected: 20px;
-    --#{base.$prefix}-icon-button-shape-pressed: 20px;
+// A toolbar shows a selected item through its colour alone: the m3 toolbars
+// specs give a selected toggle item colour roles and the toolbar token set
+// has no item shape tokens, while a standalone toggle icon button morphs
+// round to square when selected (icon buttons specs) and "their square
+// shape conflicts with the fully-rounded shape of the floating toolbar
+// container". So the morph targets of a round item are pinned to its round
+// radius, selected and pressed. (Pressed is this library's reading of the
+// report — round stays round — not something the toolbars spec asks for.)
+// The pins are each item's own resting round radius, half the container
+// height per size (styles/components/_icon-button.scss, which owns them),
+// and they reach only the bar's direct items:
+// - a round icon button that is a child of the bar in the same tree (a
+//   factory toolbar's items and overflow button, and the <m-toolbar>
+//   element's own overflow button): a size changed later swaps the size
+//   class, and the selector follows;
+// - an icon-button host assigned to the bar's default slot
+//   (<m-icon-button> slotted into <m-toolbar>), behind its own shadow root
+//   where no descendant selector reaches: ::slotted() matches it where it
+//   is assigned, and [size=…] follows a size changed after insertion, the
+//   size attribute being the host's public size (the element exposes no
+//   size property to drift from it). The tag is the default prefix; a host
+//   under another prefix keeps the standalone morphs.
+// Anything deeper — an icon button in the overflow menu's content, a dialog
+// or menu opened from the bar, a composite child — matches neither selector
+// and keeps the standalone morphs.
+.#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round,
+slot:not([name])::slotted(m-icon-button) {
+  --#{base.$prefix}-icon-button-shape-selected: 20px;
+  --#{base.$prefix}-icon-button-shape-pressed: 20px;
+}
 
-    &.#{base.$prefix}-icon-button--xs {
-      --#{base.$prefix}-icon-button-shape-selected: 16px;
-      --#{base.$prefix}-icon-button-shape-pressed: 16px;
-    }
-
-    &.#{base.$prefix}-icon-button--m {
-      --#{base.$prefix}-icon-button-shape-selected: 28px;
-      --#{base.$prefix}-icon-button-shape-pressed: 28px;
-    }
-
-    &.#{base.$prefix}-icon-button--l {
-      --#{base.$prefix}-icon-button-shape-selected: 48px;
-      --#{base.$prefix}-icon-button-shape-pressed: 48px;
-    }
-
-    &.#{base.$prefix}-icon-button--xl {
-      --#{base.$prefix}-icon-button-shape-selected: 68px;
-      --#{base.$prefix}-icon-button-shape-pressed: 68px;
-    }
+@each $size, $radius in ("xs": 16px, "m": 28px, "l": 48px, "xl": 68px) {
+  .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round.#{base.$prefix}-icon-button--#{$size},
+  slot:not([name])::slotted(m-icon-button[size=#{$size}]) {
+    --#{base.$prefix}-icon-button-shape-selected: #{$radius};
+    --#{base.$prefix}-icon-button-shape-pressed: #{$radius};
   }
 }

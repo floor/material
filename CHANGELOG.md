@@ -25,8 +25,12 @@ below are kept as they were published, and the release they announce as 1.0.0 is
   toolbar turned a rounded square — a shape the toolbars specs warn against in
   the floating container. Selection inside a toolbar is shown by colour roles
   alone (the toolbar token set has no item shape tokens), so the round radius
-  now stays in every state, pressed included; standalone toggles, square buttons
-  and explicit `--mtrl-button-shape-*` overrides are unchanged.
+  now stays in every state. Extending that to the pressed state — and to docked
+  as well as floating toolbars — is this library's choice (round stays round),
+  not something the specs ask for. The pin is each item's own resting radius,
+  on the bar's direct items only; standalone toggles, square buttons, the
+  overflow menu's content and explicit `--mtrl-button-shape-*` overrides are
+  unchanged.
 
 ## [3.0.2] - 2026-10-04
 
