@@ -245,6 +245,10 @@ Install the stable release with `npm install material`.
    git push origin vx.y.z
    ```
 
+   Tag only a commit on `main`: the workflow refuses a tag whose commit is not
+   an ancestor of `main`. A `v*` tag ruleset (only the owner creates matching
+   tags) is recommended.
+
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
    `latest`. `npm view material dist-tags` confirms.
