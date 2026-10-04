@@ -10,7 +10,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 Up to 0.10.x the package was published as `mtrl`, from `floor/mtrl`: the sections for `[0.10.6]` and
 below are kept as they were published, and the release they announce as 1.0.0 is this one,
-`material` 3.0.0.
+`material` 3.0.0. Pull-request numbers in the sections published from `floor/mtrl` are
+`floor/mtrl`'s.
 
 `material` 3.0.0 is MIT; `material` 1.x was GPL-3.
 
