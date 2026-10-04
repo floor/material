@@ -43,7 +43,7 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      - name: Types, ratchets, lint, test naming and test types (in parallel)
+      - name: Types, ratchets, lint, test naming, test types and internal ids (in parallel)
         # The step's shell stops at the first failing command (bash -e), in the
         # background shells too. `|| status=$?` keeps a failing script from ending
         # its shell before the status is written: without it a failure printed
@@ -51,13 +51,13 @@ jobs:
         run: |
           logs=$(mktemp -d)
           pids=()
-          for script in ts:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types ids:check; do
             (status=0; bun run "$script" > "$logs/$script.log" 2>&1 || status=$?; echo "$status" > "$logs/$script.status") &
             pids+=($!)
           done
           wait "${pids[@]}" || true
           failed=0
-          for script in ts:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types ids:check; do
             status=$(cat "$logs/$script.status" 2> /dev/null || echo "not recorded")
             echo "::group::$script (exit $status)"
             cat "$logs/$script.log" || true
