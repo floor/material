@@ -13,9 +13,13 @@
 // The pin reaches only the bar's direct items: a round icon button that is a
 // child of the bar in the same tree, and a host assigned to the bar's
 // default slot (matched by ::slotted() where it is assigned, per [size=…]
-// for the sizes). Content deeper than that — the overflow slot's, a dialog
-// opened from the bar, a composite child — matches nothing and keeps the
-// standalone morphs; nothing is declared on the toolbar root to inherit.
+// for the sizes). The slotted selectors match the marker attribute every
+// icon-button host of this library carries whatever its tag prefix
+// (src/elements/icon-button.ts), not the tag: the page chooses the prefix
+// and the sheet cannot spell it. Content deeper than that — the overflow
+// slot's, a dialog opened from the bar, a composite child — matches nothing
+// and keeps the standalone morphs; nothing is declared on the toolbar root
+// to inherit.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -39,7 +43,7 @@ const value = (css: string, selector: string, property: string): string | undefi
 const items = (size: keyof typeof round): string => {
   const suffix = size === 's' ? '' : `.mtrl-icon-button--${size}`;
   const attr = size === 's' ? '' : `[size=${size}]`;
-  return `.mtrl-toolbar .mtrl-toolbar__bar > .mtrl-icon-button--round${suffix}, slot:not([name])::slotted(m-icon-button${attr})`;
+  return `.mtrl-toolbar .mtrl-toolbar__bar > .mtrl-icon-button--round${suffix}, slot:not([name])::slotted([data-mtrl-icon-button]${attr})`;
 };
 
 let buttons = '';
@@ -88,6 +92,13 @@ describe('a toolbar keeps its round items round', () => {
     expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-selected')).toBeUndefined();
     expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-pressed')).toBeUndefined();
     expect(toolbar).not.toContain('.mtrl-toolbar .mtrl-icon-button');
+  });
+
+  test('the slotted pin matches the marker, never a tag', () => {
+    // The sheet is built once and cannot know the prefix a page chose; a tag
+    // selector would leave a custom-prefix host unpinned.
+    expect(toolbar).not.toContain('::slotted(m-icon-button');
+    expect(toolbar).toContain('::slotted([data-mtrl-icon-button])');
   });
 
   test('square items keep their morphs inside a toolbar', () => {
