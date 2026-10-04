@@ -219,8 +219,15 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
         const ssr = !asyncDefaults && (typeof entry.ssr === "function" ? entry.ssr(element) : entry.ssr !== false);
         // The sheet matches the attribute, not the shadow. An opted-out host
         // keeps the reserved box; a rendered one must not be painted over.
+        // A spec's marker is serialized beside it: the connected host carries
+        // it (define.ts), and the declarative markup must carry it too, or a
+        // prefix-independent selector would first match only after upgrade.
         const hostAttributes = ssr
-          ? [...authored.filter(([name]) => name !== RENDERED_HOST_ATTRIBUTE), [RENDERED_HOST_ATTRIBUTE, ""] as const]
+          ? [
+              ...authored.filter(([name]) => name !== RENDERED_HOST_ATTRIBUTE && name !== entry.marker),
+              ...(entry.marker ? ([[entry.marker, ""]] as const) : []),
+              [RENDERED_HOST_ATTRIBUTE, ""] as const,
+            ]
           : authored;
         if (!ssr) {
           const content = light.map(node => serializeNode(node, expand, depth + 1)).join("");

@@ -217,25 +217,28 @@ $component: '#{base.$prefix}-toolbar';
 //   factory toolbar's items and overflow button, and the <m-toolbar>
 //   element's own overflow button): a size changed later swaps the size
 //   class, and the selector follows;
-// - an icon-button host assigned to the bar's default slot
-//   (<m-icon-button> slotted into <m-toolbar>), behind its own shadow root
-//   where no descendant selector reaches: ::slotted() matches it where it
-//   is assigned, and [size=…] follows a size changed after insertion, the
-//   size attribute being the host's public size (the element exposes no
-//   size property to drift from it). The tag is the default prefix; a host
-//   under another prefix keeps the standalone morphs.
+// - an icon-button host assigned to the bar's default slot (an
+//   <m-icon-button> slotted into an <m-toolbar>), behind its own shadow
+//   root where no descendant selector reaches: ::slotted() matches it where
+//   it is assigned, by the marker attribute every icon-button host of this
+//   library carries whatever its tag prefix (src/elements/icon-button.ts,
+//   src/elements/define.ts — the sheet cannot spell a tag the page chose),
+//   and [size=…] follows a size changed after insertion, the size attribute
+//   being the host's public size (the element exposes no size property to
+//   drift from it). Another library's icon button keeps the standalone
+//   morphs.
 // Anything deeper — an icon button in the overflow menu's content, a dialog
 // or menu opened from the bar, a composite child — matches neither selector
 // and keeps the standalone morphs.
 .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round,
-slot:not([name])::slotted(m-icon-button) {
+slot:not([name])::slotted([data-mtrl-icon-button]) {
   --#{base.$prefix}-icon-button-shape-selected: 20px;
   --#{base.$prefix}-icon-button-shape-pressed: 20px;
 }
 
 @each $size, $radius in ("xs": 16px, "m": 28px, "l": 48px, "xl": 68px) {
   .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round.#{base.$prefix}-icon-button--#{$size},
-  slot:not([name])::slotted(m-icon-button[size=#{$size}]) {
+  slot:not([name])::slotted([data-mtrl-icon-button][size=#{$size}]) {
     --#{base.$prefix}-icon-button-shape-selected: #{$radius};
     --#{base.$prefix}-icon-button-shape-pressed: #{$radius};
   }

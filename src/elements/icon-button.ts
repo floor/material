@@ -13,6 +13,10 @@
  *
  * Parts: `icon-button`, `icon`, `ripple`.
  *
+ * The host carries `data-mtrl-icon-button` whenever it is connected: its
+ * prefix-independent marker, which another element's `::slotted()` rules can
+ * match where they cannot spell the tag (`ElementSpec.marker`).
+ *
  * @module elements
  */
 
@@ -27,6 +31,11 @@ const iconButtonSpec = {
   create: (config) => createIconButton({ ariaLabel: "", ...(config as Partial<IconButtonConfig>), type: "button" }),
   styles: ["icon-button"],
   hostStyles: ":host{vertical-align:middle}",
+  // The toolbar's sheet pins a directly slotted host's morph targets through
+  // `::slotted([data-mtrl-icon-button])`: the tag is the page's choice of
+  // prefix, the marker is this library's, and the size selectors beside it
+  // stay live for a size changed after insertion.
+  marker: "data-mtrl-icon-button",
   attributes: {
     variant: { type: "string", config: "variant", update: (c, v) => void c.setVariant(String(v ?? "standard")) },
     size: { type: "string", config: "size", update: (c, v) => void c.setSize(String(v ?? "s")) },
