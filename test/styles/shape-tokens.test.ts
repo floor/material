@@ -1,6 +1,6 @@
 // test/styles/shape-tokens.test.ts
 //
-// FLO-331: the corners of these components read the shape scale's tokens
+// The corners of these components read the shape scale's tokens
 // (`var(--mtrl-sys-shape-corner-<step>, <px>)`). A radius left literal is
 // listed here with its reason; any other literal fails, and so does a listed
 // one that is gone.
@@ -16,8 +16,8 @@ const LITERAL: Record<string, Record<string, string>> = {
   drawer: {},
   carousel: {},
   dialog: { '4px': 'the scrollable content\'s scrollbar thumb, not a component shape' },
-  search: { '56px': 'the bar\'s CornerFull as half its 56px height, under min() with the full token (FLO-345)' },
-  checkbox: { '2px': 'CheckboxTokens.ContainerShape, 2dp: outside the shape scale (FLO-345)' },
+  search: { '56px': 'the bar\'s CornerFull as half its 56px height, under min() with the full token' },
+  checkbox: { '2px': 'CheckboxTokens.ContainerShape, 2dp: outside the shape scale' },
   slider: {
     '2px': 'TrackInsideCornerSize, the track segments\' inside corners: 2dp, not a scale step',
     '16px': 'the handle\'s invisible hit area',
@@ -61,7 +61,7 @@ const literals = (component: string): string[] => {
   return [...found].sort();
 };
 
-describe('the shape scale (FLO-345)', () => {
+describe('the shape scale', () => {
   const tokens = compileString(`@use 'base/tokens';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
 
   test('the root emits M3\'s scale and nothing else: no extra-tiny, tiny or pill', () => {
@@ -99,7 +99,7 @@ describe('the shape scale (FLO-345)', () => {
   });
 });
 
-describe('corner radii read the shape tokens (FLO-331)', () => {
+describe('corner radii read the shape tokens', () => {
   for (const [component, allowed] of Object.entries(LITERAL)) {
     test(`${component}: every literal radius is listed with its reason`, () => {
       expect(literals(component)).toEqual(Object.keys(allowed).sort());

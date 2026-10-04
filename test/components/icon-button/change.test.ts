@@ -1,7 +1,7 @@
 // test/components/icon-button/change.test.ts
 //
 // A toggle icon button reports its state with `change` through its emitter
-// (FLO-295), as a switch or checkbox does. The DOM `toggle` it dispatched
+// As a switch or checkbox does. The DOM `toggle` it dispatched
 // shares its name with the native ToggleEvent; it is kept, deprecated, for one
 // release.
 
@@ -11,7 +11,7 @@ import { callbacksFixture } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
 
-test("a click emits change with { selected, value }, each way; value is getValue()'s (FLO-380)", () => {
+test("a click emits change with { selected, value }, each way; value is getValue()'s", () => {
   const button = mount(createIconButton({ toggle: true, icon: "<svg></svg>", ariaLabel: "Favorite", value: "fav" }));
   const seen: unknown[] = [];
   button.on("change", payload => seen.push([payload, button.getValue()]));

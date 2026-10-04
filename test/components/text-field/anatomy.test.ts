@@ -1,6 +1,6 @@
 // test/components/text-field/anatomy.test.ts
 //
-// FLO-300: the root holds the field (the container every slot is drawn in)
+// The root holds the field (the container every slot is drawn in)
 // and, under it, the supporting text row with the helper and the counter.
 
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
@@ -40,7 +40,7 @@ const type = (input: HTMLInputElement, text: string) => {
 beforeEach(() => { document.body.innerHTML = ""; });
 afterAll(() => dom.window.close());
 
-describe("text field anatomy (FLO-300)", () => {
+describe("text field anatomy", () => {
   test("the root holds the field, then the supporting text row", () => {
     const field = mount({ variant: "outlined", leadingIcon: ICON, trailingIcon: ICON, prefixText: "$", supportingText: "Help" });
     expect(names(field.element)).toEqual(["field", "supporting"]);
@@ -74,7 +74,7 @@ describe("text field anatomy (FLO-300)", () => {
   });
 });
 
-describe("text field character counter (FLO-300)", () => {
+describe("text field character counter", () => {
   const counter = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-text-field__counter");
 
   test("no maxlength, no counter", () => {

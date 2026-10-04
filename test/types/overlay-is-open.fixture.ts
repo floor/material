@@ -1,6 +1,6 @@
 // test/types/overlay-is-open.fixture.ts
 //
-// FLO-548: isOpen() is a method on the snackbar and on both pickers, and the
+// IsOpen() is a method on the snackbar and on both pickers, and the
 // snackbar's state has three values.
 import type { TimePickerComponent } from "../../src/components/timepicker/types";
 import type { DatePickerComponent } from "../../src/components/datepicker/types";

@@ -1,6 +1,6 @@
 // test/types/button-events.fixture.ts
 //
-// The first component migrated to a typed event map (FLO-114). Nothing here
+// The first component migrated to a typed event map. Nothing here
 // runs; the assertions are the test.
 //
 // `on` and `off` took `(event: string, handler: Function)`. Two things follow
@@ -85,7 +85,7 @@ export const focusCarriesAFocusEvent: Equals<
 button.on("chick", () => {});
 
 button.on("change", ({ selected }) => { const value: boolean = selected; void value; });
-// FLO-380: the toggle's change carries the button's value, as getValue() returns it.
+// The toggle's change carries the button's value, as getValue() returns it.
 button.on("change", payload => { const value: string = payload.value; void value; });
 export const buttonChangeValue: Equals<ButtonChangePayload["value"], ReturnType<typeof button.getValue>> = true;
 // @ts-expect-error selected stays the toggled state, a boolean

@@ -1,6 +1,6 @@
 // test/components/tabs/indicator.test.ts
 //
-// FLO-262. The indicator's height follows its variant: the site's 3dp primary and
+// The indicator's height follows its variant: the site's 3dp primary and
 // 2dp secondary (both were 3). Its motion belongs to the stylesheet's default
 // spatial spring unless an app passes a duration or an easing.
 import { describe, test, expect } from 'bun:test';
@@ -33,7 +33,7 @@ describe('tab indicator', () => {
   });
 });
 
-// FLO-264: options that were accepted and never applied.
+// Options that were accepted and never applied.
 describe('indicator options', () => {
   test('color colours the indicator', () => {
     expect(createTabIndicator({ color: 'rgb(1, 2, 3)' }).element.style.backgroundColor).toBe('rgb(1, 2, 3)');

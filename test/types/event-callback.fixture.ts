@@ -1,10 +1,10 @@
 // test/types/event-callback.fixture.ts
 //
-// FLO-295 item 9: the emitter's fallback handler type, and typed event maps.
+// Item 9: the emitter's fallback handler type, and typed event maps.
 //
 // `EventCallback` was `(...args: never[]) => void`, so a handler passed to an
 // untyped `on()` had its parameter inferred as `never`: every payload was
-// unusable without a cast. That is the root of FLO-296 item 4 (mtrl-addons'
+// unusable without a cast. That is the root of the problem (mtrl-addons'
 // form handlers). An untyped channel now hands its handlers `unknown`, and a
 // factory can name its events with `withEvents<Events>()`.
 //

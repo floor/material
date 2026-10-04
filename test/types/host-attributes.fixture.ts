@@ -1,6 +1,6 @@
 // test/types/host-attributes.fixture.ts
 //
-// FLO-519: a component accepts the host element's standard HTML attributes.
+// A component accepts the host element's standard HTML attributes.
 // The component's own props keep their types where the names collide, a wrong
 // type for one of those still fails, and an attribute the framework does not
 // know still fails. An event the component declares under a DOM event's name

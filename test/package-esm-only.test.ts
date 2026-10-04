@@ -1,8 +1,8 @@
 // test/package-esm-only.test.ts
 //
-// FLO-358: 3.0.0 is ESM-only. The subpaths always were (import conditions
+// 3.0.0 is ESM-only. The subpaths always were (import conditions
 // only); the root's CommonJS bundle was the one way in for require(), and with
-// the internals gone from the root (FLO-351) it would have been a partial API.
+// the internals gone from the root it would have been a partial API.
 // So the manifest offers no require anywhere, and the build makes no CJS.
 import { expect, test } from "bun:test";
 

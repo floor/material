@@ -17,7 +17,7 @@ import { pascal } from "./element-modules";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
 const OPT_OUT = new Set(["carousel", "fab-menu"]);
-// Component names as the adapters export them: text field is TextField (FLO-383)
+// Component names as the adapters export them: text field is TextField
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }
@@ -77,7 +77,7 @@ for (const item of defaults) {
   if (item.element === "switch") markup += `\n<output id="checked">{checked}</output>`;
   pieces.push(markup);
 }
-// Named snippets (FLO-412). The component renders each one as a light child of the
+// Named snippets. The component renders each one as a light child of the
 // host, inside `<span style="display: contents" slot="…">`, on the server and in
 // the browser alike; the declarative root's named slot then shows it before any
 // script runs. The default cases above pass default children only.
@@ -319,9 +319,9 @@ console.log(`named snippets: ${SLOTTED.map(({ host, slot }) => `${host.slice("sn
 console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no material/ssr or linkedom`);
 
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string): void => {
-  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker`);
   assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
-  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+  console.log(`known limit (expected to fail until the page-level integration): ${label}: ${observed}`);
 };
 
 const contextClient = await bundle("scripts/fixtures/svelte-ssr-context-client.ts", "browser");

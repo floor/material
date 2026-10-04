@@ -2,14 +2,14 @@
 // scripts/check-shadow-styles.ts
 //
 // Every component class drawn in an element's shadow root has its sheet adopted
-// there (FLO-386). A shadow root adopts only the host's, the ripple's and the
+// there. A shadow root adopts only the host's, the ripple's and the
 // spec's `styles`, so a factory that renders another component inside it (the
 // dialog's buttons and dividers) needs that component's sheet in its spec, or
 // the part renders unstyled. All 36 elements across the preupgrade cases and
 // the configurations below; any class whose sheet is missing fails, whether or
 // not it changes a computed style today. The diff a missing sheet would make
 // is written to analysis/shadow-styles-chromium.json. From Codex's probe
-// (FLO-363 part B review).
+// (part B review).
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";

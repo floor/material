@@ -2,7 +2,7 @@
 //
 // `createComponentConfig` existed twice under one name: the live one in
 // core/config/component.ts, which 44 files call and the package exports, and a
-// dead one in core/config.ts that nothing imported. F27 (FLO-123) names that
+// dead one in core/config.ts that nothing imported. F27 names that
 // duplication, and removing the dead one is only safe if something says which
 // of the two survived.
 //
@@ -17,7 +17,7 @@
 
 import { describe, test, expect } from "bun:test";
 
-// From material/core since 3.0.0 removed them from the root (FLO-351)
+// From material/core since 3.0.0 removed them from the root
 import { createComponentConfig, createElementConfig, PREFIX } from "../../src/core";
 
 describe("the package exports the live createComponentConfig", () => {

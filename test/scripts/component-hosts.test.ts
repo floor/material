@@ -1,6 +1,6 @@
 // test/scripts/component-hosts.test.ts
 //
-// FLO-561. `suppressHydrationWarning` hides every attribute mismatch on a
+// `suppressHydrationWarning` hides every attribute mismatch on a
 // component host. The React checks replace that with a comparison. A live
 // property is an attribute in server markup and a property on the client, so
 // the comparison has to read the property. Dropping the attribute compares

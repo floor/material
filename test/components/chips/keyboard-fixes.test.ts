@@ -1,6 +1,6 @@
 // test/components/chips/keyboard-fixes.test.ts
 //
-// A keyboard fix the FLO-343 migration found (the migration was not merged; its
+// A keyboard fix the migration found (the migration was not merged; its
 // fixes were): keyboard.disable() stops the arrows. The set's own listener kept
 // handling them after the chips' listeners were removed. The other chips fix,
 // the direction through a shadow root, is checked in a browser (elements:check):

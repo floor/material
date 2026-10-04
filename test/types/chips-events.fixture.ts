@@ -6,7 +6,7 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 export const names: Equals<keyof ChipsEvents, "change" | "add" | "remove"> = true;
 export const change: Equals<Parameters<ChipsEvents["change"]>, [event: ChipsChangeEvent]> = true;
-// FLO-530: the named payload is an object, with no array inheritance.
+// The named payload is an object, with no array inheritance.
 export const fields: Equals<Pick<ChipsChangeEvent, "value" | "selected" | "changed">, { value: string | string[] | null; selected: (string | null)[]; changed: string | null }> = true;
 export const plainObject: Equals<ChipsChangeEvent, { value: string | string[] | null; selected: (string | null)[]; changed: string | null }> = true;
 export const add: Equals<Parameters<ChipsEvents["add"]>, [event: ChipsAddEvent]> = true;
@@ -61,14 +61,14 @@ chips.on("change", event => { const value: string | string[] | null = event.valu
 chips.on("change", values => values.toUpperCase());
 // @ts-expect-error changed value is not a DOM event
 chips.on("change", event => event.changed?.preventDefault());
-// FLO-352: the keyboard API the set has at runtime is typed
+// The keyboard API the set has at runtime is typed
 export const keyboard: Equals<ChipsComponent["keyboard"], { enable: () => void; disable: () => void }> = true;
 chips.keyboard.disable();
 chips.keyboard.enable();
 // @ts-expect-error the keyboard API takes no arguments
 chips.keyboard.disable(true);
 
-// FLO-380: a single chip's change carries its value, in getValue()'s type.
+// A single chip's change carries its value, in getValue()'s type.
 export const chipChange: Equals<Parameters<ChipEvents["change"]>[0], ChipChangePayload> = true;
 export const chipChangeShape: Equals<ChipChangePayload, { selected: boolean; chip: ChipComponent; value: string | null }> = true;
 export const chipChangeValue: Equals<ChipChangePayload["value"], ReturnType<ChipComponent["getValue"]>> = true;

@@ -15,8 +15,8 @@ test("search input, submit, clear and state events expose the finished search", 
   search.clear();
   search.expand();
   search.collapse();
-  // setValue emits input only when asked, and clear() from code is silent
-  // (FLO-328); the clear button emits input, then clear (FLO-291).
+  // setValue emits input only when asked, and clear() from code is silent;
+  // the clear button emits input, then clear.
   expect(seen.slice(0, 2).map(event => event.value)).toEqual(["hello", "hello"]);
   expect(seen).toHaveLength(4);
   for (const event of seen) expect(event.component === search).toBe(true);

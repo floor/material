@@ -137,14 +137,14 @@ describe("the setters return the field, so they chain", () => {
   });
 });
 
-describe("placement is batched (FLO-335)", () => {
+describe("placement is batched", () => {
   test("fields created together are all measured before any is written", async () => {
     const log: string[] = [];
     const fields = [0, 1, 2].map((i) => {
       const field = mount({ prefixText: "$", suffixText: "kg", variant: "outlined" });
       const prefix = field.element.querySelector<HTMLElement>(".mtrl-text-field__prefix")!;
       prefix.getBoundingClientRect = () => { log.push(`read ${i}`); return { width: 10 } as DOMRect; };
-      // The write is the prefix's width, as a custom property on the root (FLO-299)
+      // The write is the prefix's width, as a custom property on the root
       const style = field.element.style;
       const setProperty = style.setProperty.bind(style);
       style.setProperty = (name: string, value: string | null) => {
@@ -169,10 +169,10 @@ describe("placement is batched (FLO-335)", () => {
   });
 });
 
-// FLO-299. The script sized the input's padding from the affix alone, so beside
+// The script sized the input's padding from the affix alone, so beside
 // an icon the value was drawn under the icon. It now hands the stylesheet each
 // affix's width, and the stylesheet adds what else stands on that side.
-describe("the affix widths go to the stylesheet (FLO-299)", () => {
+describe("the affix widths go to the stylesheet", () => {
   const widths = (el: HTMLElement) => ["prefix", "suffix"].map((affix) => el.style.getPropertyValue(`--mtrl-text-field-${affix}-width`));
   const measured = (field: { element: HTMLElement }, part: string, width: number) => {
     field.element.querySelector<HTMLElement>(`.mtrl-text-field__${part}`)!.getBoundingClientRect = () => ({ width }) as DOMRect;

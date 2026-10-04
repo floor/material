@@ -1,5 +1,5 @@
 /**
- * The text field's label rules, rendered from the packed CSS (FLO-303).
+ * The text field's label rules, rendered from the packed CSS.
  *
  * The label comes before the input in the DOM, so every `__input… ~ __label`
  * rule matched nothing: the label floated only through the script's --empty
@@ -66,7 +66,7 @@ type Probe = { element: HTMLElement; input: HTMLInputElement; setError: (e: bool
 
 /**
  * The text field's colours and states against the Compose tokens, rendered
- * from the packed CSS (FLO-298). Each expected colour is the theme role
+ * from the packed CSS. Each expected colour is the theme role
  * resolved in the same page, so the check follows the theme, not a hex.
  */
 export async function checkTextFieldTokens(page: Page): Promise<void> {
@@ -165,7 +165,7 @@ type AnatomyWindow = Window & {
 };
 
 /**
- * The field and its supporting text row (FLO-300): the field stays 56px and
+ * The field and its supporting text row: the field stays 56px and
  * lines up with a button; only the row adds height, 4dp plus its lines; a
  * long helper wraps and pushes what follows; a select's menu opens against
  * the field, not under its helper.
@@ -234,8 +234,8 @@ export async function checkTextFieldAnatomy(page: Page): Promise<void> {
 }
 
 /**
- * While the label rests in the input area it is all that area shows (FLO-354,
- * FLO-355): in both variants, with and without a leading icon, enabled,
+ * While the label rests in the input area it is all that area shows.
+ * In both variants, with and without a leading icon, enabled,
  * disabled, empty or with a value, no painted placeholder overlaps the label's
  * text, and the prefix and suffix show only once the label has floated. The
  * disabled input's -webkit-text-fill-color is inherited by the placeholder and
@@ -299,7 +299,7 @@ export async function checkTextFieldPlaceholder(page: Page): Promise<void> {
 }
 
 /**
- * The accessibility the text field draws (FLO-301), measured in the browser:
+ * The accessibility the text field draws, measured in the browser:
  * an interactive trailing icon is an icon button with a 48dp target and a 40dp
  * round state layer, after the input in the tab order, with a focus ring only
  * from the keyboard; decorative icons take no focus; and a required outlined
@@ -377,7 +377,7 @@ export async function checkTextFieldA11y(page: Page): Promise<void> {
 }
 
 /**
- * Placement set up late equals placement set up at creation (FLO-378). A plain
+ * Placement set up late equals placement set up at creation. A plain
  * filled field installs no observers and measures nothing until a setter gives
  * it something to place; each of those setters must leave the field exactly as
  * a field created with that config: notch, input padding, label place and
@@ -470,7 +470,7 @@ type LayoutRow = {
 };
 
 /**
- * The text field's layout against the M3 measurements (FLO-299), rendered from
+ * The text field's layout against the M3 measurements, rendered from
  * the packed CSS: filled and outlined, default and compact, left to right and
  * right to left, built by the factory or as `<m-text-field>`. Every distance is
  * from the container's start edge (its end edge for `…End`), so one expectation
@@ -478,7 +478,7 @@ type LayoutRow = {
  *
  * Right to left is a `dir` on an ancestor of the field: for `<m-text-field>`
  * that ancestor is outside the shadow root, where the stylesheet's `[dir]`
- * selectors do not reach (FLO-562).
+ * selectors do not reach.
  */
 export async function checkTextFieldLayout(page: Page, api: "factory" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
@@ -682,7 +682,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
 }
 
 /**
- * The filled field's focus indicator and reduced motion (FLO-299): its fade
+ * The filled field's focus indicator and reduced motion: its fade
  * runs on the motion tokens, and with `prefers-reduced-motion: reduce` it does
  * not run, as the label, the outline, the icons and the affixes already do not.
  * No M3 source gives a number here: the tokens are the library's.

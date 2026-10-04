@@ -1,6 +1,6 @@
 // test/types/menu-member.fixture.ts
 //
-// FLO-543: the inner menu is not on SelectComponent or SplitButtonComponent.
+// The inner menu is not on SelectComponent or SplitButtonComponent.
 import type { SelectComponent } from "../../src/components/select/types";
 import type { SplitButtonComponent } from "../../src/components/split-button/types";
 import type { MenuContent } from "../../src/components/menu/types";

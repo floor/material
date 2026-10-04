@@ -1,4 +1,4 @@
-// FLO-114: public radios map and both selection/clearing payload shapes.
+// Public radios map and both selection/clearing payload shapes.
 import createRadios, {
   RADIO_EVENTS,
   type RadiosComponent,

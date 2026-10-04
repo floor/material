@@ -25,10 +25,10 @@ const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).leng
 // The package budget for the slider (check-package-size.ts) moved to 11,500 when the URL
 // allowlist reached every bundle; this copy stayed at 11,000, 17 bytes above the slider
 // (10,983), until linking a label to its input (#67) added 19 and crossed it at 11,002.
-// It follows check-package-size.ts again at 12,600 for M3 conformance (FLO-250, FLO-252),
+// It follows check-package-size.ts again at 12,600 for M3 conformance,
 // which took this build from 11,410 to 12,308; the breakdown is in that fixture.
-// Range limits, keys and RTL (FLO-251) took it to 12,604; both copies move to 12,900.
-// Track, stops and the inset icon as a percentage of the value (FLO-369) took it
+// Range limits, keys and RTL took it to 12,604; both copies move to 12,900.
+// Track, stops and the inset icon as a percentage of the value took it
 // to 13,151. The ceiling keeps about 150 bytes of room.
 // 13,040 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
 assert(size.gzip < 13200, `Slider JS exceeds 13,200 gzip bytes: ${size.gzip}`);
@@ -129,7 +129,7 @@ try {
   await page.evaluate(() => { const s = window.slider; s.enable(); s.destroy(); });
   assert.equal(await page.getByRole("slider").count(), 0);
 
-  // M3 conformance, measured on the painted page (FLO-250, FLO-252). Positions are
+  // M3 conformance, measured on the painted page. Positions are
   // relative to the track, in CSS pixels; the host is 320px wide.
   const paint = async (config: SliderConfig, height = 0) => {
     // As a JSON string, like the scenarios above: SliderConfig is too deep a type to
@@ -185,7 +185,7 @@ try {
   near(shown.handles[0]!.y, 60, "top-to-bottom handle");
 
   // The icon beside the track, level with it, before or after it; the label above or
-  // below (FLO-107: both positions used to change nothing on screen).
+  // below (both positions used to change nothing on screen).
   const icon = '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>';
   for (const [iconPosition, labelPosition] of [["start", "start"], ["end", "end"]] as const) {
     await paint({ value: 50, icon, iconPosition, label: "Volume", labelPosition });

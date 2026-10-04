@@ -6,7 +6,7 @@ import { callbacksFixture, wait } from "../callbacks.fixture";
 const mount = callbacksFixture();
 
 const setup = (config: TimePickerConfig = {}) => {
-  // Edits are a draft until OK (FLO-288): `input` and onInput as they happen,
+  // Edits are a draft until OK: `input` and onInput as they happen,
   // `change` and onChange once OK commits a different time.
   const changes: string[] = [];
   const callbacks: string[] = [];
@@ -44,7 +44,7 @@ const setup = (config: TimePickerConfig = {}) => {
   return { picker, submitted, field, period, edit, confirm, changes, callbacks, drafts, inputCallbacks, draft, confirms, confirmCallbacks };
 };
 
-describe("one time value for the API, callbacks and form (FLO-237)", () => {
+describe("one time value for the API, callbacks and form", () => {
   for (const format of [TIME_FORMAT.AMPM, TIME_FORMAT.MILITARY]) {
     for (const showSeconds of [false, true]) {
       for (const value of ["00:05:07", "12:30:45", "23:59:59"]) {
@@ -67,8 +67,8 @@ describe("one time value for the API, callbacks and form (FLO-237)", () => {
     p.picker.setFormat(TIME_FORMAT.MILITARY);
     p.picker.setFormat(TIME_FORMAT.AMPM);
     p.picker.setValue("14:45:07");
-    // No notification, event or callback: setValue is silent (FLO-328) and
-    // display format changes are not changes of value (FLO-281).
+    // No notification, event or callback: setValue is silent and
+    // display format changes are not changes of value.
     expect(p.changes).toEqual([]);
     expect(p.callbacks).toEqual([]);
     expect(p.picker.getValue()).toBe("14:45:07");
@@ -165,7 +165,7 @@ describe("one time value for the API, callbacks and form (FLO-237)", () => {
 
   test("dial edits synchronize hours, minutes and seconds once", () => {
     const p = setup({ type: TIME_PICKER_TYPE.DIAL, value: "14:30:10", showSeconds: true });
-    // The dial is a listbox (FLO-279): Enter on the number at three o'clock selects
+    // The dial is a listbox: Enter on the number at three o'clock selects
     // 3 hours, then 15 minutes and 15 seconds.
     for (const unit of ["hour", "minute", "second"]) {
       p.field(unit).click();

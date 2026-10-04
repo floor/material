@@ -133,7 +133,7 @@ describe('snackbar', () => {
     expect(focused.state).toBe('hidden');
   });
 
-  // FLO-114 gave snackbar a typed event map, which declares four events. A
+  // Gave snackbar a typed event map, which declares four events. A
   // map is a claim about what exists, and `open`, `action` and `dismiss` had
   // no runtime coverage at all -- only `close` did. So the claim is checked
   // here: each of the four arrives, once, carrying the documented payload.

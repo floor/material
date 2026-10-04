@@ -2,7 +2,7 @@
 //
 // These helpers used to prefix every class name with `mtrl-`, so a consumer's
 // `class: "custom-button"` landed as `mtrl-custom-button` and could not be
-// styled by the name they wrote (FLO-117). They now take names exactly as
+// styled by the name they wrote. They now take names exactly as
 // given; prefixing belongs to `getClass()`, which internal code uses at the
 // call site. The assertions below are written with bare names for that reason
 // -- they used to read `${PREFIX}-test` on both the seed and the assertion.
@@ -168,7 +168,7 @@ describe('DOM Classes Utilities', () => {
   });
 });
 
-// The point of FLO-117, stated directly rather than implied by the cases above.
+// The point of, stated directly rather than implied by the cases above.
 describe('class names are taken exactly as given', () => {
   test('a consumer class is not prefixed', () => {
     const element = document.createElement('div');

@@ -1,6 +1,6 @@
 // test/styles/text-field-trailing.test.ts
 //
-// FLO-301 (3.0.0): a decorative trailing icon no longer looks clickable. Only the
+// 3.0.0: a decorative trailing icon no longer looks clickable. Only the
 // button a trailingIconLabel makes keeps the pointer.
 import { expect, test } from 'bun:test';
 import { compileString } from 'sass';

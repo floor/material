@@ -100,7 +100,7 @@ describe('checkbox', () => {
     expect(checkbox.getValue()).toBe(true);
   });
 
-  test('check, uncheck and toggle move the input and the class, silently (FLO-328)', () => {
+  test('check, uncheck and toggle move the input and the class, silently', () => {
     const checkbox = mount();
     const changes = mock((_event: unknown) => {});
     checkbox.on('change', changes);
@@ -153,7 +153,7 @@ describe('checkbox', () => {
     checkbox.destroy();
   });
 
-  // FLO-265 (Dr Jones): Space toggles; Enter is left to the form, as natively.
+  // Dr Jones: Space toggles; Enter is left to the form, as natively.
   test('Enter does not toggle a checkbox, and is not cancelled', () => {
     const checkbox = mount();
     const enter = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
@@ -173,7 +173,7 @@ describe('checkbox', () => {
     checkbox.destroy();
   });
 
-  test('programmatic changes are silent, as setting a native checkbox (FLO-328)', () => {
+  test('programmatic changes are silent, as setting a native checkbox', () => {
     const checkbox = mount({ value: 'accepted' });
     const payloads: Array<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent?: Event }> = [];
     checkbox.on('change', payload => {
@@ -258,7 +258,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(true);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
+    expect(changes).not.toHaveBeenCalled(); // silent
   });
 
   test('uncheck() on an indeterminate checkbox clears mixed state', () => {
@@ -269,7 +269,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(false);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
+    expect(changes).not.toHaveBeenCalled(); // silent
   });
 
   test('setValue on an indeterminate checkbox clears mixed state', () => {
@@ -300,7 +300,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(true);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
+    expect(changes).not.toHaveBeenCalled(); // silent
   });
 
   test('setIndeterminate after check() restores mixed state', () => {
@@ -329,7 +329,7 @@ describe('checkbox', () => {
   });
 });
 
-// FLO-316: Space (and Enter, with enterToggles) on a mixed box set `checked`
+// Space (and Enter, with enterToggles) on a mixed box set `checked`
 // by hand and left `indeterminate` true, so the dash and the mixed class
 // stayed. The key now activates the input as a click does.
 describe('keyboard activation of a mixed checkbox', () => {
@@ -383,7 +383,7 @@ describe('keyboard activation of a mixed checkbox', () => {
   });
 });
 
-// FLO-336: the check icon is built with DOM APIs, not parsed through the HTML
+// The check icon is built with DOM APIs, not parsed through the HTML
 // sink; its nodes are exactly those the old markup parsed to.
 describe('the check icon', () => {
   test('is the same DOM the markup parsed to, whitespace included, and no shared node', () => {

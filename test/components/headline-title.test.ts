@@ -1,6 +1,6 @@
 // test/components/headline-title.test.ts
 //
-// FLO-347: on the dialog, the time picker and the sheets, `title` is the
+// On the dialog, the time picker and the sheets, `title` is the
 // headline. createElementConfig passed it on as the element's `title`, the
 // native tooltip, which then showed over the whole surface. The headline names
 // the surface through aria-labelledby instead. The dialog's role follows the

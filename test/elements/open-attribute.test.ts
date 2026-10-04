@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { menuElement } from "../../src/elements/menu";
 import { fabMenuElement } from "../../src/elements/fab-menu";
 
-// FLO-548: on <m-menu> and <m-fab-menu> the `open` attribute (and the property
+// On <m-menu> and <m-fab-menu> the `open` attribute (and the property
 // that reflects it) is applied in the attribute callback, as on <m-dialog>
 // and the other overlays' elements: synchronously, and inside the element's
 // quiet window, so setting it dispatches no `open` or `close`. It used to be

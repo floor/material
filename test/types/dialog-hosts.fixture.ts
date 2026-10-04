@@ -1,4 +1,4 @@
-// FLO-114: dialog's internal event hosts must accept the callback type supplied
+// Dialog's internal event hosts must accept the callback type supplied
 // by withEvents. These assertions are compiled, not executed. The private
 // DialogFeatureHost is reached through getApiConfig's parameter rather than
 // exported for a test. ts:check also checks the real composition pipeline.

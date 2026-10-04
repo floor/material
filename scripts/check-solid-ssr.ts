@@ -38,7 +38,7 @@ const within = async <T>(work: Promise<T>, name: string): Promise<T> => {
 };
 
 const OPT_OUT = new Set(["carousel", "fab-menu"]);
-// Component names as the adapters export them: text field is TextField (FLO-383)
+// Component names as the adapters export them: text field is TextField
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }

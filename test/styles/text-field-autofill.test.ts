@@ -1,6 +1,6 @@
 // test/styles/text-field-autofill.test.ts
 //
-// FLO-335: the text field learns of an autofill from the stylesheet, not by
+// The text field learns of an autofill from the stylesheet, not by
 // reading computed styles: :autofill (and WebKit's prefixed state) run the
 // onAutoFillStart keyframes, and the input listens for their animationstart.
 import { expect, test } from 'bun:test';

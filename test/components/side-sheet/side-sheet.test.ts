@@ -175,7 +175,7 @@ describe('side sheet', () => {
   });
 });
 
-// FLO-324: a modal sheet outside the top layer made neither the page inert nor
+// A modal sheet outside the top layer made neither the page inert nor
 // kept Tab inside, as showModal() does for one in it.
 describe('side sheet: modal outside the top layer', () => {
   const page = () => {
@@ -237,7 +237,7 @@ describe('side sheet: modal outside the top layer', () => {
   });
 });
 
-// FLO-324: a standard sheet sits beside the page, so Escape pressed elsewhere
+// A standard sheet sits beside the page, so Escape pressed elsewhere
 // (closing a menu, say) no longer closes it; from inside it still does.
 describe('side sheet: Escape on a standard sheet', () => {
   test('Escape elsewhere leaves it open; Escape from inside closes it', () => {

@@ -23,7 +23,7 @@
 //   ClockDialSelectedLabelTextColor        = OnPrimary
 //   ClockDialSelectorHandleContainerColor  = Primary
 //
-// The dial's tokens are checked in the compiled CSS, like the rest (FLO-279).
+// The dial's tokens are checked in the compiled CSS, like the rest.
 
 import { describe, test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -109,7 +109,7 @@ describe("time selector colour roles", () => {
   });
 });
 
-describe("clock dial colour roles, now styled (FLO-279: the canvas is gone)", () => {
+describe("clock dial colour roles, now styled (the canvas is gone)", () => {
   test("ClockDialColor is SurfaceContainerHighest", () => {
     expect(ruleFor(".mtrl-time-picker__dial-face")).toContain("surface-container-highest");
   });
@@ -132,8 +132,8 @@ describe("clock dial colour roles, now styled (FLO-279: the canvas is gone)", ()
   });
 });
 
-// FLO-280: the sizes and colours of each variant, and no overrides of the theme.
-describe("time picker variants (FLO-280)", () => {
+// The sizes and colours of each variant, and no overrides of the theme.
+describe("time picker variants", () => {
   test("the input mode's focused field is primary-container inside a 2dp primary outline", () => {
     const rule = /__seconds\[type=number\]:focus \{([^}]*)\}/.exec(css)?.[1] ?? "";
     expect(rule).toContain("background-color: var(--mtrl-sys-color-primary-container)");

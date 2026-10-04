@@ -21,7 +21,7 @@ const day = (picker: DatePickerComponent, date: string) => query<HTMLButtonEleme
 const inputDate = (input: HTMLInputElement, value: string, event = "input") => { input.value = value; input.dispatchEvent(new Event(event, { bubbles: true })); };
 
 describe("Material date picker", () => {
-  // FLO-276: the full-screen range picker (m3.material.io: close (x) and Save, months
+  // The full-screen range picker (m3.material.io: close (x) and Save, months
   // scrolling vertically).
   test("full screen: close and Save above a list of months, each date once, no footer", () => {
     const picker = mount({ variant: "fullscreen", selectionMode: "range", value: ["2026-09-10", "2026-09-15"] }); picker.open();
@@ -150,7 +150,7 @@ describe("Material date picker", () => {
     key(day(picker, '2025-03-01'), 'Home'); expect(document.activeElement).toBe(day(picker, '2025-02-23'));
     expect(picker.element.querySelectorAll('[data-date][tabindex="0"]')).toHaveLength(1);
   });
-  // FLO-275: the year picker is one scrolling list, from minDate to maxDate or
+  // The year picker is one scrolling list, from minDate to maxDate or
   // 1900-2100, with no arrows to page it.
   test("the year view lists every allowed year, with no paging arrows", () => {
     const bounded = mount({ minDate: '2019-03-01', maxDate: '2031-06-30' }); bounded.open(); bounded.calendar.showYearView();
@@ -174,7 +174,7 @@ describe("Material date picker", () => {
     picker.on('open', () => opened++).on('close', () => closed++);
     const trigger = query<HTMLButtonElement>(picker, '[data-action="open"]'); trigger.focus(); trigger.click(); picker.open();
     key(query(picker, 'dialog'), 'Escape'); picker.close(); expect(opened).toBe(1); expect(closed).toBe(1); expect(document.activeElement).toBe(trigger);
-    // A cancel in the task of open() is the opening key's (FLO-548): this one comes later
+    // A cancel in the task of open() is the opening key's: this one comes later
     picker.open(); await new Promise((resolve) => setTimeout(resolve, 0));
     query(picker, 'dialog').dispatchEvent(new Event('cancel', { cancelable: true })); expect(closed).toBe(2);
   });

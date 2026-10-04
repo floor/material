@@ -28,7 +28,7 @@ describe("theme utils", () => {
     expect(calls).toBe(2);
   });
 
-  // FLO-389: a theme set on a section, a card or a dark panel
+  // A theme set on a section, a card or a dark panel
   test("onThemeChange fires for data-theme set on any element in the document", async () => {
     let calls = 0;
     const off = onThemeChange(() => calls++);
@@ -58,7 +58,7 @@ describe("theme utils", () => {
     document.body.append(panel);
     expect(getThemeColor("sys-color-primary", { element: panel })).toBe("#d0bcff");
     expect(getThemeColor("sys-color-primary", { element: panel, alpha: 0.5 })).toBe("rgba(208, 188, 255, 0.5)");
-    // 0.10 derived the -rgb twin the themes no longer declare; 3.0.0 does not (FLO-311)
+    // 0.10 derived the -rgb twin the themes no longer declare; 3.0.0 does not
     expect(getThemeColor("sys-color-primary-rgb", { element: panel })).toBe("");
     expect(getThemeColor("sys-color-primary-rgb", { element: panel, fallback: "x" })).toBe("x");
     expect(getThemeColor("sys-color-nope", { element: panel, fallback: "#123456" })).toBe("#123456");
@@ -76,9 +76,9 @@ describe("theme utils", () => {
     expect(getThemeColor("sys-color-primary", { alpha: 0.5 })).toBe("rgba(103, 80, 164, 0.5)");
   });
 
-  // FLO-311: the themes no longer declare --mtrl-sys-color-*-rgb, and 3.0.0 no
+  // The themes no longer declare --mtrl-sys-color-*-rgb, and 3.0.0 no
   // longer derives them: an '-rgb' name is an undeclared variable like any other.
-  test("3.0.0 derives no -rgb twin: the role with alpha replaces it (FLO-311)", () => {
+  test("3.0.0 derives no -rgb twin: the role with alpha replaces it", () => {
     document.documentElement.style.setProperty("--mtrl-sys-color-on-primary", "#fff");
     expect(getThemeColor("sys-color-on-primary-rgb")).toBe("");
     expect(getThemeColor("sys-color-on-primary", { alpha: 0.1 })).toBe("rgba(255, 255, 255, 0.1)");

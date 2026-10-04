@@ -98,7 +98,7 @@ test("button active constant selects an active menu opener", async () => {
   expect(opener.classList.contains(`mtrl-${BUTTON_CLASSES.ACTIVE}`)).toBe(false);
 });
 
-// FLO-386: a <button> that is not an mtrl button (a FAB, an icon button) is not
+// A <button> that is not an mtrl button (a FAB, an icon button) is not
 // given the button's pressed class, which would reshape it
 test("a <button> opener that is not an mtrl button gets the menu's own opener class", () => {
   const opener = document.createElement("button"); opener.className = "mtrl-fab"; document.body.append(opener);

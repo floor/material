@@ -1,4 +1,4 @@
-// FLO-114: the internal progress host must accept the canvas thickness setter.
+// The internal progress host must accept the canvas thickness setter.
 // Its old number|string parameter promised more than the canvas can handle.
 import type { ComponentWithLifecycle } from "../../src/components/progress/features/state";
 import type { ProgressComponent } from "../../src/components/progress";

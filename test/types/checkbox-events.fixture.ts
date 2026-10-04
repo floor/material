@@ -1,4 +1,4 @@
-// FLO-114: public checkbox event names and the actual native/programmatic payload.
+// Public checkbox event names and the actual native/programmatic payload.
 import createCheckbox, {
   type CheckboxComponent,
   type CheckboxEvents,
@@ -58,7 +58,7 @@ checkbox.on("change", payload => payload.target.checked);
 // @ts-expect-error nativeEvent is an Event, not an arbitrary object
 export const invalidNativeEvent: CheckboxChangePayload = { checked: true, value: true, valueAttribute: "yes", nativeEvent: {} };
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<CheckboxEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<CheckboxEvents["swipe"]>[0], SwipePayload> = true;

@@ -29,7 +29,7 @@ assert<Equals<ComponentProps<typeof Button>["class"], string | undefined>>();
 // @ts-expect-error -- checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
 
-// Named slots are props taking JSX (FLO-333); a text prop of a slot's name
+// Named slots are props taking JSX; a text prop of a slot's name
 // takes text or JSX.
 type DialogProps = ComponentProps<typeof Dialog>;
 assert<Equals<DialogProps["actions"], import("solid-js").JSX.Element | undefined>>();

@@ -27,8 +27,8 @@ afterEach(() => {
 });
 
 // Partial: the helper already supplies icon and ariaLabel, so a caller
-// overriding one option should not have to repeat the label. FLO-110 made
-// ariaLabel required on the component's own config.
+// overriding one option should not have to repeat the label. It is required
+// on the component's own config.
 const make = (config: Partial<Parameters<typeof createIconButton>[0]> = {}) => {
   const button = createIconButton({ icon, ariaLabel: 'Favorite', ...config });
   document.body.append(button.element);

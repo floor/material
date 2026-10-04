@@ -54,7 +54,7 @@ export type { VueProps, VueEmits, VueSlots, ModelProps, Exposed, MComponent, MDe
   },
 ];
 
-// A component's own module (FLO-327): its element's CSS and element module
+// A component's own module: its element's CSS and element module
 // only, so importing one component ships that component and nothing else.
 // The index re-exports them, and the calls are pure, so a bundler drops what
 // the app does not name.
@@ -97,7 +97,7 @@ ${framework.exports}
 ${[...elementModules, ...declarationModules].map(({ name }) => `export { ${framework.component(name)} } from "./${kebab(name)}";`).join("\n")}
 `;
 
-// The bare tags in the framework's JSX, an opt-in types entry (FLO-333):
+// The bare tags in the framework's JSX, an opt-in types entry:
 // `material/react/jsx` and `material/solid/jsx`. Augmenting from material/elements would
 // break type-checking for an app without React or Solid.
 const tags = [

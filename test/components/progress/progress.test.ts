@@ -237,7 +237,7 @@ describe('progress', () => {
     expect(track.at[1]).toBeLessThan(2 * Math.PI - indicator.at[1]);
   });
 
-  // FLO-338: M3 shows the indeterminate indicator on a fixed track too; it
+  // M3 shows the indeterminate indicator on a fixed track too; it
   // turns with the arc and clears both of its ends, at every frame.
   test('a circular indeterminate indicator keeps its track, clear of both ends of the arc, as it turns', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
@@ -267,7 +267,7 @@ describe('progress', () => {
   test('values are clamped, reported and announced', () => {
     const progress = createProgress({ value: 10 });
     const changes: number[] = [];
-    // The emitter's payload, `{ value, max }`, not a DOM event (FLO-295).
+    // The emitter's payload, `{ value, max }`, not a DOM event.
     progress.on('change', ({ value }) => changes.push(value));
     progress.setValue(60, false);
     expect(progress.getValue()).toBe(60);
@@ -287,7 +287,7 @@ describe('progress', () => {
     expect(completed).toBe(1);
   });
 
-  // FLO-295: the emitter, as every component's; not DOM CustomEvents.
+  // The emitter, as every component's; not DOM CustomEvents.
   test('events carry { value, max } through the emitter, and off() stops them', () => {
     const progress = createProgress({ value: 0, max: 50 });
     const seen: unknown[] = [];
@@ -351,7 +351,7 @@ describe('progress', () => {
   });
 });
 
-// FLO-389: the colours are the theme where the indicator sits, not only the
+// The colours are the theme where the indicator sits, not only the
 // page's. JSDOM does not inherit custom properties, so the section's tokens
 // are set on the indicator's own element here; in a browser they inherit from
 // any ancestor or shadow host (scripts/check-elements.ts samples the pixels,
@@ -439,7 +439,7 @@ describe('the configured state is the state the API reports', () => {
   });
 });
 
-// FLO-324: created disabled, the bar had aria-disabled; disabled later it got
+// Created disabled, the bar had aria-disabled; disabled later it got
 // only the class, and enable() left a creation-time aria-disabled behind.
 describe('progress disabled state', () => {
   test('disable() and enable() set and clear aria-disabled with the state', () => {
@@ -458,7 +458,7 @@ describe('progress disabled state', () => {
   });
 });
 
-// FLO-324: setValue(150) drew 100 but reported 150 in aria-valuenow, the
+// SetValue(150) drew 100 but reported 150 in aria-valuenow, the
 // label and change. One clamped value is used everywhere, at creation too.
 describe('progress values past the range', () => {
   test('setValue clamps once, and aria, the label, getValue and change all say the drawn value', () => {

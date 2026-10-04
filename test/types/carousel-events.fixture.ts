@@ -1,4 +1,4 @@
-// FLO-114: carousel public events match navigation and root focus forwarding.
+// Carousel public events match navigation and root focus forwarding.
 import createCarousel, {
   CAROUSEL_EVENTS,
   type CarouselComponent,
@@ -13,7 +13,7 @@ const carousel = createCarousel();
 export const names: Equals<keyof CarouselEvents, "change" | "focus" | "blur"> = true;
 export const change: Equals<Parameters<CarouselEvents["change"]>[0], CarouselChangePayload> = true;
 export const changeShape: Equals<CarouselChangePayload, { value: number }> = true;
-// FLO-380: the change's value is the model, as getValue() returns it.
+// The change's value is the model, as getValue() returns it.
 export const changeValue: Equals<CarouselChangePayload["value"], ReturnType<typeof carousel.getValue>> = true;
 export const focus: Equals<Parameters<CarouselEvents["focus"]>[0], ForwardedEventPayload<FocusEvent, HTMLElement>> = true;
 export const blur: Equals<Parameters<CarouselEvents["blur"]>[0], ForwardedEventPayload<FocusEvent, HTMLElement>> = true;

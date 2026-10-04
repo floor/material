@@ -227,7 +227,7 @@ describe('dialog', () => {
   // `afteropen` is on a timer that starts only when the 10ms show timer has
   // run. Waiting on the wall clock for it (400ms: not yet, 560ms: by now) failed
   // on a busy runner: the show timer ran late and the 500ms started from there
-  // (FLO-569). The clock is the test's own here, so the rule is stated to the
+  // The clock is the test's own here, so the rule is stated to the
   // millisecond: the surface is shown 10ms after open(), and `afteropen`
   // follows 500ms after that, the default spatial spring's settle.
   test('afteropen waits for the surface to finish growing', () => {
@@ -279,12 +279,12 @@ describe('dialog', () => {
 // A handler can refuse a close by calling preventDefault on beforeclose. That
 // is the documented way to hold a dialog open for a validation or an "are you
 // sure", and nothing covered it -- which is also how a console.log sat on the
-// path, printing on an ordinary refusal, until FLO-114 typed this file.
+// path, printing on an ordinary refusal, until the file was typed.
 // `DialogButton.onClick` is declared `(event: MouseEvent, dialog) => ...`.
 // It was handed the button's forwarded payload object instead, because the
 // handler inside features.ts read its argument as the DOM event. Third
 // instance of the same defect, all found by typing button's event map
-// (FLO-114) -- see also the button-group and split-button suites.
+// -- see also the button-group and split-button suites.
 describe('a dialog button hands its onClick a real MouseEvent', () => {
   test('the first argument is the DOM event, not the forwarded payload', async () => {
     let seen: any;
@@ -367,7 +367,7 @@ describe('refusing a close', () => {
   });
 });
 
-// FLO-324: a dialog button's size was accepted and dropped.
+// A dialog button's size was accepted and dropped.
 describe('dialog button options', () => {
   test('size reaches the button', () => {
     const dialog = createDialog({ buttons: [{ text: 'Later', size: 'small' }, { text: 'Now', size: 'large' }] });
@@ -378,7 +378,7 @@ describe('dialog button options', () => {
   });
 });
 
-// FLO-324: confirm() resolved only through its two buttons, so closing the
+// Confirm() resolved only through its two buttons, so closing the
 // dialog any other way left the promise hanging; its confirming button came
 // first; and the message went into innerHTML.
 describe('dialog confirm()', () => {

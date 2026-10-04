@@ -1,6 +1,6 @@
 // test/components/text-field/accessibility.test.ts
 //
-// FLO-301: a required field's asterisk, the error read when it appears, the
+// A required field's asterisk, the error read when it appears, the
 // leading icon hidden as decoration, and an interactive trailing icon as a
 // button. M3's text field guidelines first, Compose second: the asterisk follows
 // the label (Material Web appends it in the label's colour); the trailing slot
@@ -56,7 +56,7 @@ beforeEach(() => {
 });
 afterAll(() => dom.window.close());
 
-describe("the required asterisk (FLO-301)", () => {
+describe("the required asterisk", () => {
   test("a required field's label ends in an asterisk hidden from screen readers; the input says required", () => {
     const field = mount({ required: true });
     expect(asterisk(field)?.textContent).toBe("*");
@@ -89,7 +89,7 @@ describe("the required asterisk (FLO-301)", () => {
   });
 });
 
-describe("the error is read when it appears (FLO-301)", () => {
+describe("the error is read when it appears", () => {
   test("the supporting text is a polite live region the input is described by", () => {
     const field = mount({ supportingText: "We never share it" });
     expect(helper(field)?.getAttribute("aria-live")).toBe("polite");
@@ -150,7 +150,7 @@ describe("the error is read when it appears (FLO-301)", () => {
   });
 });
 
-describe("decorative icons are hidden (FLO-301)", () => {
+describe("decorative icons are hidden", () => {
   test("the leading icon is aria-hidden", () => {
     const field = mount({ leadingIcon: ICON });
     expect(field.leadingIcon?.getAttribute("aria-hidden")).toBe("true");
@@ -170,7 +170,7 @@ describe("decorative icons are hidden (FLO-301)", () => {
   });
 });
 
-describe("an interactive trailing icon is a button (FLO-301)", () => {
+describe("an interactive trailing icon is a button", () => {
   test("trailingIconLabel makes it a button with that name, out of any form's submit", () => {
     const field = mount({ trailingIcon: ICON, trailingIconLabel: "Clear" });
     const button = field.trailingIcon as HTMLButtonElement;

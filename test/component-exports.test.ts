@@ -1,6 +1,6 @@
 // test/component-exports.test.ts
 //
-// FLO-381: `material/components/<name>` is public API like the root. Each index's
+// `material/components/<name>` is public API like the root. Each index's
 // export list is pinned, so a name joining or leaving a component subpath fails
 // here until the fixture is regenerated (`bun run component-exports:update`)
 // and the diff reviewed. 0.10.5 deprecated the internals the indexes leaked;
@@ -16,7 +16,7 @@ const ROOT = join(import.meta.dir, "..");
 const now = readComponentExports();
 const pkg = await Bun.file(join(ROOT, "package.json")).json();
 
-/** What 0.10.5 deprecated on the component subpaths (FLO-381 PR 1, #359) */
+/** What 0.10.5 deprecated on the component subpaths (PR 1, #359) */
 const REMOVED = [
   "card:ExpandableFeature", "card:LoadingFeature", "card:SwipeableFeature", "card:withAPI", "card:withElevation",
   "card:withExpandable", "card:withLoading", "card:withSwipeable",
@@ -28,7 +28,7 @@ const REMOVED = [
   "tabs:withDivider", "tabs:withIndicator", "tabs:withScrollable", "tabs:withTabsManagement",
 ];
 
-describe("the component subpaths' exports (FLO-381)", () => {
+describe("the component subpaths' exports", () => {
   test("match the pinned lists: an added or removed name fails until the fixture is regenerated", async () => {
     const changes = diffComponentExports(await readPinned(), now);
     expect(changes, `Run \`bun run component-exports:update\` if intended:\n${changes.join("\n")}`).toEqual([]);
@@ -47,7 +47,7 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
   });
 
-  test("only the canonical names: the old spellings are gone from their subpaths (FLO-383)", () => {
+  test("only the canonical names: the old spellings are gone from their subpaths", () => {
     const names = (component: string) => now[component]?.map((e) => e.name) ?? [];
     for (const [component, old, to] of [["text-field", "TextfieldConfig", "TextFieldConfig"], ["text-field", "TextfieldComponent", "TextFieldComponent"],
       ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"],
@@ -55,7 +55,6 @@ describe("the component subpaths' exports (FLO-381)", () => {
       expect(names(component!)).toContain(to);
       expect(names(component!)).not.toContain(old);
     }
-    expect(Object.values(now).flat().filter((e) => e.note?.includes("FLO-383")).map((e) => e.name)).toEqual([]);
   });
 
   test("3.0.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
@@ -81,7 +80,7 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(declared.filter(([, name]) => !root.has(name)).map(([, n]) => `root:${n}`)).toEqual([]);
   }, 60_000);
 
-  test("every /constants subpath is pinned beside its index (FLO-384)", () => {
+  test("every /constants subpath is pinned beside its index", () => {
     const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
     expect(constants.length).toBeGreaterThan(30);
     for (const key of constants) expect(Object.keys(now)).toContain(key.slice(0, -"/constants".length));
@@ -105,7 +104,7 @@ describe("the component subpaths' exports (FLO-381)", () => {
   });
 });
 
-describe("the manifest lists each component subpath (FLO-381)", () => {
+describe("the manifest lists each component subpath", () => {
   const keys = Object.keys(pkg.exports).filter((key) => key.startsWith("./components/"));
 
   test("no wildcard: a pattern would also expose the folders inside a component", () => {

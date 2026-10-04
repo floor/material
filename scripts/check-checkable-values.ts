@@ -10,13 +10,13 @@ type Detail = { checked: boolean; value: boolean; valueAttribute: string; native
 type Probe = { form: HTMLFormElement; input: HTMLInputElement; control: Control; host?: CheckboxElement | SwitchElement; events: unknown[]; native: Event[]; references: Event[] };
 type ProbeWindow = Window & { inputs: { createCheckbox: typeof createCheckbox; createSwitch: typeof createSwitch }; checkableProbe: Probe };
 
-/** FLO-380: model values and form tokens remain distinct across activation, reset and disable. */
+/** Model values and form tokens remain distinct across activation, reset and disable. */
 export async function checkCheckableValues(page: Page, surface: "factory" | "element"): Promise<void> {
   for (const kind of ["checkbox", "switch"] as const) {
     await page.evaluate(({ kind, surface }) => {
       const w = window as unknown as ProbeWindow;
       const form = document.createElement("form");
-      form.id = "flo380-form";
+      form.id = "checkable-form";
       document.body.append(form);
       let host: CheckboxElement | SwitchElement | undefined;
       let control: Control;
@@ -24,16 +24,16 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
         host = document.createElement(kind === "checkbox" ? "m-checkbox" : "m-switch");
         host.setAttribute("name", "choice");
         host.setAttribute("value", "accepted");
-        host.textContent = "FLO-380 checkable";
+        host.textContent = "checkable";
         form.append(host);
         control = host.component!;
       } else {
-        control = w.inputs[kind === "checkbox" ? "createCheckbox" : "createSwitch"]({ name: "choice", value: "accepted", label: "FLO-380 checkable" });
+        control = w.inputs[kind === "checkbox" ? "createCheckbox" : "createSwitch"]({ name: "choice", value: "accepted", label: "checkable" });
         form.append(control.element);
       }
       const probe: Probe = { form, host, control, input: control.input, events: [], native: [], references: [] };
       w.checkableProbe = probe;
-      control.input.id = "flo380-input";
+      control.input.id = "checkable-input";
       control.input.addEventListener("change", event => probe.native.push(event));
       const record = (detail: Detail, event?: CustomEvent): void => {
         probe.references.push(detail.nativeEvent!);
@@ -45,8 +45,8 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
         emitter.on("change", record);
       }
     }, { kind, surface });
-    await page.locator("#flo380-input").click();
-    await page.locator("#flo380-input").focus();
+    await page.locator("#checkable-input").click();
+    await page.locator("#checkable-input").focus();
     await page.keyboard.press("Space");
     const changed = await page.evaluate(() => {
       const p = (window as unknown as ProbeWindow).checkableProbe;
@@ -72,5 +72,5 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
       p.form.remove();
     });
   }
-  console.log(`  ok FLO-380 ${surface}: checkbox/switch boolean model values, string form tokens, native identity, click/Space, reset and disabled controls`);
+  console.log(`  ok ${surface}: checkbox/switch boolean model values, string form tokens, native identity, click/Space, reset and disabled controls`);
 }

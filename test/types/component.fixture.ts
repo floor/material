@@ -5,7 +5,7 @@
 // assertions are the test, and each one stops compiling if the declaration it
 // covers goes back to naming a fixed interface.
 //
-// The defect these cover, from FLO-235: `addClass` was declared
+// The defect these cover: `addClass` was declared
 // `(...classes: string[]) => ElementComponent`. At runtime it returns `this`,
 // which by the time anyone can call it carries every feature the pipe applied.
 // Declaring the narrow interface threw all of that away, so

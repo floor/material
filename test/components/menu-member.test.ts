@@ -1,6 +1,6 @@
 // test/components/menu-member.test.ts
 //
-// FLO-543: the menu inside a select or a split button is not a member of
+// The menu inside a select or a split button is not a member of
 // either. A leftover `.menu` in JavaScript reads undefined; what a caller did
 // through it has a method on the component.
 import { expect, test } from "bun:test";
@@ -68,7 +68,7 @@ test("setItems on a split button created without items creates its menu, which t
   split.on("select", event => { selected.push(event.value); });
   for (const name of ["expand", "collapse"] as const) split.on(name, () => { seen.push(name); });
   // One menu is open at a time, and opening one closes the other in that call
-  // (FLO-548): the two are expanded in turn. They used to overlap for the
+  // The two are expanded in turn. They used to overlap for the
   // 50ms a close took.
   made.expand();
   await wait();

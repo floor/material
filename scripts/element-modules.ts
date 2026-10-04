@@ -1,6 +1,6 @@
 // The module of each element and declaration child in src/elements, read from
 // the registry's imports in src/elements/index.ts, so the generated adapters
-// can import one component without the registry (FLO-327).
+// can import one component without the registry.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

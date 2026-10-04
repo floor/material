@@ -7,7 +7,7 @@
 // from the other, while the signature promised null throughout. A caller
 // written against that signature, comparing `=== null`, was simply wrong.
 //
-// Found while clearing tabs for strictNullChecks (FLO-114).
+// Found while clearing tabs for strictNullChecks.
 //
 // This drives the exported helper directly rather than a whole tabs group,
 // because the fallback only runs for a host without getActiveTab — which a

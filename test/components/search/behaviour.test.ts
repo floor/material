@@ -1,6 +1,6 @@
 // test/components/search/behaviour.test.ts
 //
-// FLO-291, found by the elements session building <m-search>: Enter on a
+// Found by the elements session building <m-search>: Enter on a
 // suggestion, reopening, clearing, trailing items, the avatar and two-line
 // suggestions.
 

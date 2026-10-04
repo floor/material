@@ -1,4 +1,4 @@
-// FLO-256, after the m3.material.io chips accessibility page: Backspace and Delete
+// After the m3.material.io chips accessibility page: Backspace and Delete
 // remove a focused removable chip and focus moves on to a neighbour, the arrows reach
 // the set from the remove button and follow the reading direction, and the set is a
 // named group without attributes ARIA does not allow on one.
@@ -99,7 +99,7 @@ describe("arrows between chips", () => {
 });
 
 describe("the set's accessibility", () => {
-  test("a named grid, which says whether several chips can be selected (FLO-261)", () => {
+  test("a named grid, which says whether several chips can be selected", () => {
     const chips = mount({ label: "Interests", multiSelect: true, chips: [{ label: "One" }] });
     expect(chips.element.getAttribute("role")).toBe("grid");
     expect(chips.element.getAttribute("aria-multiselectable")).toBe("true");

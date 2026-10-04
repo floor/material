@@ -2,7 +2,7 @@
 //
 // This suite used to replace src/core/state/emitter with a hand-rolled stand-in
 // through `mock.module`, then assert that the stand-in had been called. It was
-// testing its own re-implementation (F6 / FLO-93), and `mock.module` is process
+// testing its own re-implementation, and `mock.module` is process
 // wide: the fake emitter was installed for every test file loaded after this
 // one in the same run, so a later suite's onUnmount handler could be dropped by
 // an unrelated test clearing the shared instance.

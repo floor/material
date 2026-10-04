@@ -1,6 +1,6 @@
 // test/types/tabs-events.fixture.ts
 //
-// FLO-523: `on` and `off` are generic over a closed map, so a misspelled name
+// `on` and `off` are generic over a closed map, so a misspelled name
 // is an error and the handler's payload is inferred. Compiled twice, once with
 // strictNullChecks (tooling:check) and once without (test:types). A wrong
 // parameter type below is unrelated in both directions, so it is an error

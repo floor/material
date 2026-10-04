@@ -93,7 +93,7 @@ describe('carousel', () => {
     expect(carousel.getCurrentSlide()).toBe(0);
   });
 
-  test('a corner radius given in the config stays as given (FLO-331)', () => {
+  test('a corner radius given in the config stays as given', () => {
     const carousel = createCarousel({ slides, cornerRadius: 12 });
     sized(carousel, 600);
     carousel.addSlide({ image: 'd.jpg' });
@@ -115,7 +115,7 @@ describe('carousel', () => {
     expect((snaps[0] as HTMLElement).style.left).toBe('0px');
     const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
     expect(parseFloat(items[0]!.style.width)).toBeGreaterThan(200);
-    // The default corner reads the extra-large token (FLO-331)
+    // The default corner reads the extra-large token
     expect(items[0]!.style.clipPath).toContain(`round ${corner(28)}`);
     expect(carousel.element.style.getPropertyValue('--mtrl-carousel-corner')).toBe(corner(28));
     expect(carousel.getCurrentSlide()).toBe(1);
@@ -175,7 +175,7 @@ describe('carousel', () => {
 });
 
 
-// FLO-114: the real emitter behind the public event map.
+// The real emitter behind the public event map.
 describe('carousel event contract', () => {
   test('navigation emits only index changes, as value alone (3.0.0 dropped the doubled index), clamps boundaries and supports off', () => {
     const carousel = createCarousel({ slides });
@@ -254,7 +254,7 @@ describe('carousel event contract', () => {
 });
 
 
-// FLO-395: each negative case includes a positive wheel control, so the
+// Each negative case includes a positive wheel control, so the
 // original implementation cannot pass simply by ignoring every wheel event.
 describe('carousel opt-in wheel', () => {
   // Target-selection tests use reduced motion so navigation is synchronous;

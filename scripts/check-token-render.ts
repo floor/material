@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * The corners and typefaces the components read from tokens (FLO-330,
- * FLO-331) render as recorded, and follow the tokens.
+ * The corners and typefaces the components read from tokens
+ * render as recorded, and follow the tokens.
  *
  * Each case renders a component from the build's factories with the full
  * stylesheet, and reads the computed corner radii and font family of every
@@ -66,11 +66,11 @@ const CASES: Record<string, { make: string }> = {
   "button-group": {
     make: `m.createButtonGroup({ kind: "connected", selection: "single", buttons: [{ value: "a", text: "Left", selected: true }, { value: "b", text: "Mid" }, { value: "c", text: "Right" }] }).element`
   },
-  // FLO-306: the FAB menu open as a list, the close button and the pill items
+  // The FAB menu open as a list, the close button and the pill items
   "fab-menu-list": {
     make: `(() => { const f = m.createFabMenu({ icon: ${JSON.stringify(ICON)}, ariaLabel: "Compose", presentation: "list", items: [{ id: "a", text: "Reply", icon: ${JSON.stringify(ICON)} }, { id: "b", text: "Forward" }] }); f.open(); return f.element; })()`
   },
-  // FLO-304: the docked toolbar's square corners, the floating pill and its vibrant item colours
+  // The docked toolbar's square corners, the floating pill and its vibrant item colours
   "toolbar-docked": {
     make: `m.createToolbar({ items: [{ icon: ${JSON.stringify(ICON)}, ariaLabel: "a" }, { icon: ${JSON.stringify(ICON)}, ariaLabel: "b" }] }).element`
   },
@@ -83,7 +83,7 @@ const CASES: Record<string, { make: string }> = {
   "search-docked-view": {
     make: `(() => { const s = m.createSearch({ placeholder: "Search", variant: "contained", viewMode: "docked", suggestions: [{ text: "Apple" }, { text: "Apricot" }] }); setTimeout(() => s.expand(), 0); return s.element; })()`
   },
-  // FLO-330: the typefaces, and the button and card corners
+  // The typefaces, and the button and card corners
   button: { make: `m.createButton({ text: "Save" }).element` },
   "button-square": { make: `m.createButton({ text: "Square", shape: "square" }).element` },
   card: { make: `(() => { const c = m.createCard({ variant: "filled" }); c.element.style.width = "240px"; c.element.style.height = "120px"; return c.element; })()` },

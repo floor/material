@@ -1,5 +1,5 @@
 // The slider's stylesheet against Compose SliderTokens / SliderDefaults.colors() and
-// the m3.material.io slider specs. FLO-250.
+// the m3.material.io slider specs.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -75,7 +75,7 @@ describe('slider value indicator', () => {
 describe('slider motion', () => {
   // A change of value settles on the default spatial spring, but only under
   // `--settling`, which the controller sets for changes that do not follow a pointer;
-  // a drag and a layout render move nothing (FLO-249, FLO-250).
+  // a drag and a layout render move nothing.
   const spring = /^left 450ms linear\(/;
   test('outside --settling nothing transitions position or size', () => {
     const rules = Array.from(css.matchAll(/([^{}]+)\{([^{}]*)\}/g)).filter(([selectors]) => !selectors.includes('--settling'));

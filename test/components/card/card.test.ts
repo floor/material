@@ -97,7 +97,7 @@ describe('card', () => {
     expect(card.element.getAttribute('aria-grabbed')).toBe('false');
   });
 
-  // FLO-109: the states only; a clickable card is the one reachable by Tab
+  // The states only; a clickable card is the one reachable by Tab
   test('an interactive card is marked but not a tab stop; a clickable one is', () => {
     const card = createCard({ interactive: true });
     expect(card.element.classList.contains('mtrl-card--interactive')).toBe(true);

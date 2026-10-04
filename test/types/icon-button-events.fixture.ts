@@ -1,4 +1,4 @@
-// FLO-114: compile the public component barrel, including its event map.
+// Compile the public component barrel, including its event map.
 // Runtime forwarding is covered by test/components/icon-button/behavior.fixture.ts.
 import {
   createIconButton,
@@ -13,7 +13,7 @@ type Equals<A, B> =
 
 const button = createIconButton({ ariaLabel: "Favorite" });
 
-// The forwarded native events, and a toggle button's `change` (FLO-295).
+// The forwarded native events, and a toggle button's `change`.
 export const exactlyTheEvents: Equals<
   keyof IconButtonEvents,
   "click" | "focus" | "blur" | "change" | "tap" | "swipe"
@@ -23,7 +23,7 @@ export const changePayload: Equals<
   Parameters<Parameters<typeof button.on<"change">>[1]>[0],
   IconButtonChangePayload
 > = true;
-// FLO-380: selected is the toggled state; value is the model, as getValue() returns it.
+// Selected is the toggled state; value is the model, as getValue() returns it.
 export const changeShape: Equals<IconButtonChangePayload, { selected: boolean; value: string }> = true;
 export const changeValue: Equals<IconButtonChangePayload["value"], ReturnType<typeof button.getValue>> = true;
 
@@ -71,7 +71,7 @@ button.off("toggle", () => {});
 button.on("mount", () => {});
 
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<IconButtonEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<IconButtonEvents["swipe"]>[0], SwipePayload> = true;

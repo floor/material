@@ -96,7 +96,7 @@ describe('tabs', () => {
     expect(change.mock.calls[0][0].value).toBe('flights');
   });
 
-  test('setActiveTab selects by value or by tab, silently (FLO-328)', () => {
+  test('setActiveTab selects by value or by tab, silently', () => {
     const tabs = mount();
     const changes = mock((_event: unknown) => {});
     tabs.on('change', changes);
@@ -107,7 +107,7 @@ describe('tabs', () => {
     expect(changes).not.toHaveBeenCalled();
   });
 
-  // FLO-106 changed half of what this test used to assert. `disabled` blocks
+  // Changed half of what this test used to assert. `disabled` blocks
   // the user, not the application, so a click still refuses and setActiveTab
   // no longer does -- a form restored from saved data has to be able to show a
   // value that is currently disabled. Radios, select and segmented button
@@ -123,7 +123,7 @@ describe('tabs', () => {
 
     tabs.setActiveTab('explore');
     expect(tabs.getActiveTab()?.getValue()).toBe('explore');
-    expect(changes).not.toHaveBeenCalled(); // silent from code (FLO-328)
+    expect(changes).not.toHaveBeenCalled(); // silent from code
     // Still disabled to the user afterwards.
     expect((byValue(tabs, 'explore').element as HTMLButtonElement).disabled).toBe(true);
   });
@@ -226,7 +226,7 @@ describe('tabs keyboard', () => {
     expect(stops(tabs)).toEqual(['-1', '0', '-1']);
   });
 
-  // FLO-263: m3.material.io's tabs accessibility guidance. Arrows move focus;
+  // M3.material.io's tabs accessibility guidance. Arrows move focus;
   // Space or Enter, through the native button's click, selects.
   test('by default an arrow moves focus and the tab stop, not the selection', () => {
     const tabs = mount({ tabs: FOUR() });
@@ -366,7 +366,7 @@ describe('tabs keyboard', () => {
     expect(tabs.getActiveTab()?.getValue()).toBe('flights');
   });
 
-  // Found by the FLO-343 migration: a tab marked aria-disabled was focused
+  // Found by the migration: a tab marked aria-disabled was focused
   test('an aria-disabled tab is skipped like a disabled one', () => {
     const tabs = mount({ tabs: FOUR() });
     byValue(tabs, 'trips').element.setAttribute('aria-disabled', 'true');
@@ -391,7 +391,7 @@ describe('tabs keyboard', () => {
 // them. So unless the page happened to provide one, assistive technology was
 // handed a relationship pointing at nothing.
 
-// FLO-229. A tab's id was `tab-<value>`, so two tablists sharing a value
+// A tab's id was `tab-<value>`, so two tablists sharing a value
 // produced duplicate ids -- and `updateTabPanels` resolved panels with
 // `document.querySelectorAll('[role="tabpanel"]')`, matching by stripping
 // `tab-` off each panel's aria-labelledby. So the groups did not merely
@@ -443,7 +443,7 @@ describe('two tab groups on one page do not reach into each other', () => {
   // The defect proper: activating a tab in one group used to hide the other
   // group's panel of the same value.
   //
-  // Driven by clicking. setActiveTab only updated the panels from FLO-263 on;
+  // Driven by clicking. setActiveTab only updated the panels from then on;
   // the test after this one covers that path.
   test('clicking a tab in one group leaves the other group\'s panel alone', () => {
     const leftTrips = panelFor('left', 'trips');
@@ -463,7 +463,7 @@ describe('two tab groups on one page do not reach into each other', () => {
     expect(rightTrips.hasAttribute('hidden')).toBe(false);
   });
 
-  // FLO-263: the gap the note above records. setActiveTab now updates the panels too.
+  // The gap the note above records. setActiveTab now updates the panels too.
   test('setActiveTab shows its panel and hides the others', () => {
     const trips = panelFor('left', 'trips');
     const flights = panelFor('left', 'flights');
@@ -497,7 +497,7 @@ describe('two tab groups on one page do not reach into each other', () => {
 });
 
 describe('icon-only tabs', () => {
-  // FLO-263: a tab with an icon and no text had no accessible name.
+  // A tab with an icon and no text had no accessible name.
   test('ariaLabel names a tab with an icon and no text, and keeps naming it', () => {
     const icon = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
     const tabs = mount({ tabs: [{ icon, ariaLabel: 'Flights', value: 'f', state: 'active' }, { icon, ariaLabel: 'Trips', value: 't' }] });
@@ -510,7 +510,7 @@ describe('icon-only tabs', () => {
 });
 
 describe('tabs panel linking', () => {
-  // FLO-229: ids carry the group, so `tab-g-trips` and `tabpanel-g-trips`.
+  // Ids carry the group, so `tab-g-trips` and `tabpanel-g-trips`.
   // The group is pinned here rather than allocated, which is what a page does
   // when it writes the panels itself.
   const GROUP = 'g';
@@ -526,7 +526,7 @@ describe('tabs panel linking', () => {
     return el;
   };
 
-  // FLO-430: a value outside [A-Za-z0-9_-] gets a derived id with no whitespace
+  // A value outside [A-Za-z0-9_-] gets a derived id with no whitespace
   // and no other character, in its own namespace; the panel lookup reads the
   // tab's data-value and group, not its id.
   for (const value of ['a"b', 'a\\b', 'a]b', 'a b', 'a\nb']) {
@@ -575,7 +575,7 @@ describe('tabs panel linking', () => {
     expect(special.element.getAttribute('aria-controls')).toBe(conventional.id);
   });
 
-  test('the derived ids: [A-Za-z0-9_-] values keep today\'s; others are encoded, collision-free (FLO-430)', () => {
+  test('the derived ids: [A-Za-z0-9_-] values keep today\'s; others are encoded, collision-free', () => {
     expect([tabIdFor(GROUP, 'trips'), tabPanelIdFor(GROUP, 'trips')]).toEqual(['tab-g-trips', 'tabpanel-g-trips']);
     expect([tabIdFor(GROUP, 'a_b-C9'), tabIdFor(GROUP, '')]).toEqual(['tab-g-a_b-C9', 'tab-g-']);
     expect(['a b', 'a\nb', 'a"b', 'a\\b', 'a]b', 'é', '😀'].map(value => tabIdFor(GROUP, value)))
@@ -639,7 +639,7 @@ describe('tabs panel linking', () => {
 });
 
 
-// FLO-264: the group passes its indicator options on; visible and color stopped short.
+// The group passes its indicator options on; visible and color stopped short.
 describe('tabs indicator options', () => {
   test('indicator.visible and indicator.color reach the indicator', () => {
     const tabs = mount({ indicator: { visible: false, color: 'rgb(1, 2, 3)' } });

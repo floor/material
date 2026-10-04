@@ -1,6 +1,6 @@
 // test/types/open-close-payload.fixture.ts
 //
-// FLO-548: a menu's and a select's `open` and `close` cannot be cancelled, so
+// A menu's and a select's `open` and `close` cannot be cancelled, so
 // their payloads no longer carry `preventDefault` / `defaultPrevented` (they
 // did nothing), in the types and at run time. Nor does a select's `change`.
 // A menu's `select` keeps both: preventing it keeps the menu open.

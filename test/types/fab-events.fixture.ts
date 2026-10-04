@@ -1,6 +1,6 @@
 // test/types/fab-events.fixture.ts
 //
-// The FAB's typed event map (FLO-114). Nothing here runs; the assertions are
+// The FAB's typed event map. Nothing here runs; the assertions are
 // the test.
 //
 // `on`/`off` took `(event: string, handler: Function)` on both the public
@@ -100,7 +100,7 @@ fab.on("blur", () => {});
 // Chaining survives the generic.
 fab.on("focus", () => {}).off("focus", () => {});
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<FabEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<FabEvents["swipe"]>[0], SwipePayload> = true;

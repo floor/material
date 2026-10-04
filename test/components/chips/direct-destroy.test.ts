@@ -1,4 +1,4 @@
-// FLO-533: a chip destroyed directly (chip.destroy(), not the set's removeChip)
+// A chip destroyed directly (chip.destroy(), not the set's removeChip)
 // must leave the set. Until it does, the set still counts it, so a single-select
 // set can report two selected chips, and the arrows stop on the detached chip.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
@@ -203,7 +203,7 @@ describe("what already holds when a chip is destroyed directly", () => {
   });
 });
 
-// FLO-542: removeChip hands focus to the neighbour; the direct path unlisted
+// RemoveChip hands focus to the neighbour; the direct path unlisted
 // the chip and left focus to fall to the page.
 describe("a chip destroyed directly while it has focus", () => {
   test("focus moves to the chip that takes its place, or to the one before when it was the last", () => {

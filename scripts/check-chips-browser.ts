@@ -38,7 +38,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   }));
   for (const result of geometry) { assert.equal(result.height, 32); assert.equal(result.radius, "8px"); }
   // The 1dp stroke is an outline drawn inside the chip, so it takes no room and the
-  // paddings measure from the edge as M3 gives them (FLO-256).
+  // paddings measure from the edge as M3 gives them.
   for (const result of geometry.slice(0, 4)) { assert.equal(result.background, "rgba(0, 0, 0, 0)"); assert.equal(result.border, "0px"); assert.equal(result.outline, "solid 1px -1px"); }
   assert.notEqual(geometry[4].shadow, "none");
   assert.notEqual(geometry[5].background, "rgba(0, 0, 0, 0)");
@@ -56,7 +56,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Remove Ada");
   await page.keyboard.press("Enter");
   assert.equal(await page.evaluate(() => (window as unknown as ChipWindow).chipRemovals), 1);
-  // Input chips are always removable, and on its own a chip leaves the page (FLO-257).
+  // Input chips are always removable, and on its own a chip leaves the page.
   assert.equal(await page.locator("#chip-2").count(), 0);
   await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); });
   await page.screenshot({ path: join(artifacts, "chips-light.png"), animations: "disabled" });
@@ -72,7 +72,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   });
   assert.equal(await page.locator("#chip-2").evaluate(el => el.scrollWidth <= el.clientWidth), true, "Long input labels must fit beside removal");
   assert.equal(await page.locator("#chip-2 .mtrl-chip__label").evaluate(el => el.scrollWidth > el.clientWidth), true);
-  // Conformance on the painted page (FLO-256, FLO-259, #202): M3's paddings with the
+  // Conformance on the painted page (#202): M3's paddings with the
   // stroke drawn inside, 48dp targets that never overflow, the trailing button, no
   // icon motion on a chip's first render but motion after, the dragged state, and a
   // ripple that belongs to the action alone.
@@ -134,7 +134,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.ok(painted.actionRipples > 0, "pressing the chip ripples its action");
   await page.emulateMedia({ reducedMotion: "reduce" });
 
-  // A chip set is a grid with one Tab stop (FLO-261): Tab lands on the first cell, an
+  // A chip set is a grid with one Tab stop: Tab lands on the first cell, an
   // arrow moves on, the focused cell draws the 3px ring 2px outside the chip, and a
   // real Space selects the cell.
   await page.evaluate(() => {
@@ -190,7 +190,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   await page.locator("#grid-set [role=gridcell]").nth(2).click();
   assert.deepEqual(await ringOf(), { label: "Three", ring: "0px" }, "no ring where focusVisible is ignored");
   await page.evaluate(() => { HTMLElement.prototype.focus = (window as unknown as { nativeFocus: HTMLElement["focus"] }).nativeFocus; });
-  // FLO-542: a chip destroyed directly while it has focus hands focus to its
+  // A chip destroyed directly while it has focus hands focus to its
   // neighbour, as the set's removeChip does; it used to fall to the page.
   const handed = await page.evaluate(() => {
     type Chip = { focus: () => void; destroy: () => void; getValue: () => string | null };

@@ -1,6 +1,6 @@
 // test/components/chips/label.test.ts
 //
-// The set's label API (FLO-231): setLabel, getLabel, setLabelPosition and
+// The set's label API: setLabel, getLabel, setLabelPosition and
 // getLabelPosition reached an enhancer nothing applied, so they did nothing.
 // They now drive the <label> the set creates, and keep the grid named by it.
 // Two sets are live at once so a change on one cannot pass by matching the other.

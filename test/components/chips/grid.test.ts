@@ -1,4 +1,4 @@
-// FLO-261: a chip set follows the m3.material.io chips' web roles. It is a grid with a
+// A chip set follows the m3.material.io chips' web roles. It is a grid with a
 // row of gridcell chips and one Tab stop; a one-action chip's cell is its focus
 // target and carries the selection, and a two-action chip keeps its two buttons.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";

@@ -7,7 +7,7 @@ import type { ExtendedFabComponent, ExtendedFabConfig } from '../../../src/compo
 // The visible text already names the button, so copying it was redundant; a
 // Node as text (<m-extended-fab> passes its <slot>) became
 // "[object HTMLSlotElement]"; and no text at all became "action", the name
-// FLO-110 removed from the FAB. Only an explicit ariaLabel sets the attribute.
+// Removed from the FAB. Only an explicit ariaLabel sets the attribute.
 
 let dom: JSDOM;
 let fabs: ExtendedFabComponent[];

@@ -21,8 +21,17 @@ describe('internal id guard', () => {
     expect(internalIdRefs(text)).toEqual([reference(999998), reference(999999)]);
   });
 
-  test('requires the prefix, the dash and the digits', () => {
-    expect(internalIdRefs('flo-999998 FLO FLO- NLO-999998')).toEqual([]);
+  test('finds the lowercase and the hyphenless spellings', () => {
+    const lower = reference(999998).toLowerCase();
+    const bare = ['FLO', '999998'].join('');
+    const lowerBare = lower.replace('-', '');
+    expect(internalIdRefs(lower)).toEqual([lower]);
+    expect(internalIdRefs(bare)).toEqual([bare]);
+    expect(internalIdRefs(lowerBare)).toEqual([lowerBare]);
+  });
+
+  test('the word boundary and the digits keep near misses out', () => {
+    expect(internalIdRefs('floor 42, float 7, FLO, FLO-, NLO-999998')).toEqual([]);
   });
 
   test('a clean comment has none', () => {

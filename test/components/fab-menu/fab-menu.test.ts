@@ -1,6 +1,6 @@
 // test/components/fab-menu/fab-menu.test.ts
 //
-// The M3 Expressive FAB menu (FLO-306) in a JSDOM document: the FAB as a menu
+// The M3 Expressive FAB menu in a JSDOM document: the FAB as a menu
 // button, the list as a menu of menuitems, the focus rules of the site
 // (focus stays on the close button, the keys go into the list, Escape and Tab
 // out come back), selection, outside presses, the stagger and its absence
@@ -214,7 +214,7 @@ describe("fab menu list: opening and focus", () => {
     const m = make();
     const chosen: { id: string; value: string }[] = [];
     const seen: string[] = [];
-    // `value` repeats the id, as <m-fab-menu>'s select does (FLO-320)
+    // `value` repeats the id, as <m-fab-menu>'s select does
     m.on("select", (event) => chosen.push(event));
     m.on("close", () => seen.push("close"));
     m.open();
@@ -275,7 +275,7 @@ describe("fab menu stagger", () => {
     expect(m.list.style.getPropertyValue("--mtrl-fab-menu-exit")).toBe(`${81 + 425}ms`);
   });
 
-  test("opening measures each item's width to reveal, from its content (FLO-348)", () => {
+  test("opening measures each item's width to reveal, from its content", () => {
     const m = make();
     const widths = [120, 161, 135];
     items(m).forEach((item, index) => {
@@ -390,7 +390,7 @@ describe("fab menu presentation", () => {
     const m = make({ presentation: "menu" });
     m.open(new dom.window.MouseEvent("click", { detail: 1 }));
     // The chunk's first import can take a while in a busy run: wait up to 2s
-    // for its surface. The state is there at once (FLO-548).
+    // for its surface. The state is there at once.
     expect(m.isOpen()).toBe(true);
     for (let i = 0; i < 200 && !document.querySelector(".mtrl-menu"); i++) await new Promise((r) => setTimeout(r, 10));
     expect(m.isOpen()).toBe(true);
@@ -399,7 +399,7 @@ describe("fab menu presentation", () => {
     expect(surface.querySelectorAll(".mtrl-menu__item")).toHaveLength(3);
   });
 
-  // FLO-548: when open() returns, isOpen() is true and `open` has been emitted,
+  // When open() returns, isOpen() is true and `open` has been emitted,
   // in the menu presentation as in the list. The menu is a lazy module, so its
   // surface may be painted after open() returns. A close() before it arrives
   // means nothing is painted.
