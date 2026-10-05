@@ -485,6 +485,7 @@
     "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "tabs:check": "bun run scripts/check-tabs.ts",
     "slider:check": "bun run scripts/check-slider.ts",
+    "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
