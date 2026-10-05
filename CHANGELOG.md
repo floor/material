@@ -17,6 +17,8 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-10-05
+
 ### Fixed
 
 - **A selected toggle icon button inside a toolbar keeps its round shape.**
@@ -37,6 +39,8 @@ below are kept as they were published, and the release they announce as 1.0.0 is
   markup still pins under the default `m-` prefix, where the sheet can spell
   the tag. Standalone toggles, square buttons, the overflow menu's content and
   explicit `--mtrl-button-shape-*` overrides are unchanged.
+
+- An internal marker attribute, `data-mtrl-icon-button`, now appears on icon buttons; it carries no public API.
 
 ## [3.0.2] - 2026-10-04
 
@@ -3860,7 +3864,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.3...HEAD
+[3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/floor/material/compare/v3.0.0-next.1...v3.0.0

@@ -26,6 +26,9 @@ export interface ComponentSpec {
    * adapter read it from this spec, so a future element with a marker needs no
    * adapter change. The server writes it beside `data-mtrl-ssr`; styles match
    * slotted hosts with it where the sheet cannot spell their tag.
+   *
+   * @internal A host attribute an element carries so another element's sheet
+   * can match it; not part of the public API and may change without notice.
    */
   marker?: string;
   attributes?: Record<string, { type: AttributeType }>;

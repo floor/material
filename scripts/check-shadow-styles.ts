@@ -8,8 +8,8 @@
 // the part renders unstyled. All 36 elements across the preupgrade cases and
 // the configurations below; any class whose sheet is missing fails, whether or
 // not it changes a computed style today. The diff a missing sheet would make
-// is written to analysis/shadow-styles-chromium.json. From Codex's probe
-// (part B review).
+// is written to analysis/shadow-styles-chromium.json. From a probe taken
+// during the part B review.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
