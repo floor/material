@@ -145,9 +145,12 @@ describe("explicit contrast levels are opt-in", () => {
     // carries whatever its tag prefix, with the default tag as a second arm
     // so marker-less markup still pins under it (styles/components/_icon-button.scss,
     // styles/components/_toolbar.scss).
+    // The tooltip's arrow reads one custom property set by the variant whose
+    // surface it grows from, replacing the twelve plain-arrow overrides
+    // (styles/components/_tooltip.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d4cc25ffb7ea8b539a9961384bfba0b214cb3c9abad2cde4cf9896ab0d923b7e");
-    expect(css.length).toBe(530404);
+      .toBe("e6a5279ede09980078789bda4231db3780a1524dc4e40c8d1786ed587f2127ee");
+    expect(css.length).toBe(529484);
   });
 
   test("today's sheets still resolve to the fixture", () => {
