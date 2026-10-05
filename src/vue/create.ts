@@ -271,7 +271,12 @@ export const createComponent = <S, E extends HTMLElement>(
         const rendered = typeof inner === "string"
           ? inner.startsWith("<template shadowrootmode=")
           : !staticallyOptedOut;
-        if (rendered) hostProps[RENDERED_HOST_ATTRIBUTE] = "";
+        if (rendered) {
+          hostProps[RENDERED_HOST_ATTRIBUTE] = "";
+          // The marker is server HTML of the same kind: styles match the host
+          // before upgrade where the sheet cannot spell its tag.
+          if (spec.marker) hostProps[spec.marker] = "";
+        }
         if (typeof inner !== "string") {
           // A promise is an object, and Vue would treat it as a slot. The
           // static vnode pushes its children straight into the SSR buffer.

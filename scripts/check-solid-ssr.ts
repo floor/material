@@ -100,6 +100,15 @@ for (const item of defaults) {
 }
 used.add("Button");
 pieces.push(`<Button id="globals" label="Globals" popover="auto" inputMode="numeric" enterKeyHint="send" itemProp="name" nonce="abc" />`);
+// The shape toolbar: directly slotted selected icon buttons at two sizes and
+// one deeper in the overflow slot's content. The inert page below reads the
+// computed radii before any script runs — the adapter's server markup must
+// carry the marker, so the toolbar's pins apply before upgrade — and the
+// hydration page follows, where the server-only marker must not warn.
+const SHAPE_ICON = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
+const shapeBar = parseHTML(`<html><body><m-toolbar aria-label="Shapes"><m-icon-button id="shape-sel-s" toggle selected icon="${SHAPE_ICON}" aria-label="Selected s"></m-icon-button><m-icon-button id="shape-sel-m" toggle selected size="m" icon="${SHAPE_ICON}" aria-label="Selected m"></m-icon-button><m-icon-button id="shape-overflow" toggle selected icon="${SHAPE_ICON}" aria-label="Overflow"></m-icon-button></m-toolbar></body></html>`).document.body.firstElementChild as DomElement;
+const [shapeSelS, shapeSelM, shapeOverflow] = [...shapeBar.children].map((child) => renderNode(child as DomElement));
+pieces.push(`<Toolbar id="shape-toolbar" aria-label="Shapes">${shapeSelS}${shapeSelM}<div slot="overflow">${shapeOverflow}</div></Toolbar>`);
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `import { createSignal } from "solid-js";
@@ -311,6 +320,24 @@ try {
     assert.equal(row.shadow, !OPT_OUT.has(element), `${element} shadow root before script`);
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
+  // The shape toolbar with the element script held back: the adapter's server
+  // markup must carry the marker, so the toolbar's pins apply before upgrade.
+  const shape = await inert.evaluate(() => {
+    const radius = (id: string): string => {
+      const host = document.getElementById(id);
+      const inner: Element | null = host?.shadowRoot?.querySelector(".mtrl-icon-button") ?? host ?? null;
+      return inner ? getComputedStyle(inner).borderTopLeftRadius : "missing";
+    };
+    return {
+      marked: ["shape-sel-s", "shape-sel-m", "shape-overflow"].every((id) => document.getElementById(id)?.hasAttribute("data-mtrl-icon-button") === true),
+      selS: radius("shape-sel-s"),
+      selM: radius("shape-sel-m"),
+      overflow: radius("shape-overflow"),
+    };
+  });
+  assert.equal(shape.marked, true, "the adapter markup carries the icon-button marker before upgrade");
+  assert.deepEqual([shape.selS, shape.selM, shape.overflow], ["20px", "28px", "12px"], "held-script markup pins direct items round, overflow content square");
+  console.log("solid-ssr: held-script markup — direct items 20px/28px round, overflow 12px square, marker present");
   assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 

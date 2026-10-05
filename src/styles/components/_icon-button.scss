@@ -331,25 +331,43 @@ $widths: (
         }
     }
 
-    // Shape morph on press - both round and square morph to pressed radius
+    // Shape morph on press - both round and square morph to pressed radius.
+    // A container can keep the resting shape instead (a toolbar does: see
+    // the toolbar rule in _toolbar.scss) through the icon button's own
+    // override, which an explicit --…-button-shape-pressed still beats.
     &:active {
         &.#{$component}--round {
-            border-radius: var(--#{base.$prefix}-button-shape-pressed, get-size("s", pressed-radius));
+            border-radius: var(
+                --#{base.$prefix}-button-shape-pressed,
+                var(--#{base.$prefix}-icon-button-shape-pressed, get-size("s", pressed-radius))
+            );
 
             &.#{$component}--xs {
-                border-radius: var(--#{base.$prefix}-button-shape-pressed, get-size("xs", pressed-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-pressed,
+                    var(--#{base.$prefix}-icon-button-shape-pressed, get-size("xs", pressed-radius))
+                );
             }
 
             &.#{$component}--m {
-                border-radius: var(--#{base.$prefix}-button-shape-pressed, get-size("m", pressed-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-pressed,
+                    var(--#{base.$prefix}-icon-button-shape-pressed, get-size("m", pressed-radius))
+                );
             }
 
             &.#{$component}--l {
-                border-radius: var(--#{base.$prefix}-button-shape-pressed, get-size("l", pressed-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-pressed,
+                    var(--#{base.$prefix}-icon-button-shape-pressed, get-size("l", pressed-radius))
+                );
             }
 
             &.#{$component}--xl {
-                border-radius: var(--#{base.$prefix}-button-shape-pressed, get-size("xl", pressed-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-pressed,
+                    var(--#{base.$prefix}-icon-button-shape-pressed, get-size("xl", pressed-radius))
+                );
             }
         }
 
@@ -492,26 +510,45 @@ $widths: (
         // Shape morphs on selection (handled by selected class)
     }
 
-    // Selected state - shape morphs (round becomes square, square becomes round)
+    // Selected state - shape morphs (round becomes square, square becomes
+    // round). Inside a toolbar the morph stays out: the toolbar pins the
+    // round radius through the icon button's own override (see the toolbar
+    // rule in _toolbar.scss), which an explicit
+    // --…-button-shape-selected still beats.
     &--selected {
         // Round buttons become square when selected
         &.#{$component}--round:not(:active) {
-            border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("s", square-radius));
+            border-radius: var(
+                --#{base.$prefix}-button-shape-selected,
+                var(--#{base.$prefix}-icon-button-shape-selected, get-size("s", square-radius))
+            );
 
             &.#{$component}--xs {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("xs", square-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-selected,
+                    var(--#{base.$prefix}-icon-button-shape-selected, get-size("xs", square-radius))
+                );
             }
 
             &.#{$component}--m {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("m", square-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-selected,
+                    var(--#{base.$prefix}-icon-button-shape-selected, get-size("m", square-radius))
+                );
             }
 
             &.#{$component}--l {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("l", square-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-selected,
+                    var(--#{base.$prefix}-icon-button-shape-selected, get-size("l", square-radius))
+                );
             }
 
             &.#{$component}--xl {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("xl", square-radius));
+                border-radius: var(
+                    --#{base.$prefix}-button-shape-selected,
+                    var(--#{base.$prefix}-icon-button-shape-selected, get-size("xl", square-radius))
+                );
             }
         }
 

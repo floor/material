@@ -463,7 +463,9 @@ try {
     // Removed four themes from the full stylesheet: 65,790 -> 62,120.
     // 62,087 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // Merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
-    { name: "full-css", code: "import 'material/styles';", gzip: 62750 },
+    // The toolbar's marker selectors grew a default-tag arm each (:is()), the
+    // belt for marker-less markup: 62,746 to 62,755, ceiling to 62,760.
+    { name: "full-css", code: "import 'material/styles';", gzip: 62760 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

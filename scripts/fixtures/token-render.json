@@ -1106,9 +1106,9 @@
   ],
   [
    "2:button.mtrl-icon-button.mtrl-icon-button--round",
-   "12px 12px 12px 12px",
+   "20px 20px 20px 20px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [
@@ -1120,9 +1120,9 @@
   ],
   [
    "4:div.mtrl-ripple",
-   "12px 12px 12px 12px",
+   "20px 20px 20px 20px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [

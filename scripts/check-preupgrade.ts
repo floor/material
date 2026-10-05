@@ -39,6 +39,8 @@ import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
 import { renderElement } from "../dist/ssr/index.js";
 
+const pinIcon = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
+
 const phaseB = [
   renderElement("m-text-field", { label: "Name", value: "Ada" }),
   renderElement("m-button", {}, "Save"),
@@ -56,6 +58,23 @@ const phaseB = [
   // toolbar it is still an undefined custom element, and its own rule reserves
   // the 56px box. A bare twin beside it is that rule with no rendered parent.
   renderElement("m-toolbar", { id: "toolbar" }, '<m-fab-menu slot="fab"></m-fab-menu>'),
+  // A directly slotted selected icon button keeps its round radius at first
+  // paint, before upgrade, whatever the tag prefix: the pin comes from the
+  // toolbar's inline sheet and the marker attribute the renderer writes into
+  // the host markup. An icon button deeper in the toolbar — the overflow
+  // slot's content — morphs square, as standalone.
+  renderElement("m-toolbar", { id: "shape", "aria-label": "Shapes" },
+    `<m-icon-button id="pinned" toggle selected size="m" aria-label="P" icon="${pinIcon}"></m-icon-button>` +
+    `<div slot="overflow"><m-icon-button id="deep" toggle selected aria-label="D" icon="${pinIcon}"></m-icon-button></div>`),
+  renderElement("x-toolbar", { id: "xshape", "aria-label": "Shapes" },
+    `<x-icon-button id="xpinned" toggle selected size="xl" aria-label="P" icon="${pinIcon}"></x-icon-button>`, { prefix: "x" }),
+  // The belt: the same toolbar with the marker stripped from the static
+  // markup. Markup that reaches the browser without the marker by any path —
+  // an adapter not yet writing it, hand-written HTML, a cached page from an
+  // older server render — still pins under the default prefix, where the
+  // sheet can spell the tag.
+  renderElement("m-toolbar", { id: "beltshape", "aria-label": "Shapes" },
+    `<m-icon-button id="beltpinned" toggle selected size="l" aria-label="P" icon="${pinIcon}"></m-icon-button>`).replaceAll(' data-mtrl-icon-button=""', ""),
 ].join("") + '<m-text-field id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-text-field>'
   + '<m-text-field id="field-bare" label="Name" value="Ada"></m-text-field>'
   + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
@@ -454,6 +473,11 @@ try {
         const toolbar = document.querySelector("#toolbar")!;
         const fab = toolbar.querySelector("m-fab-menu")!;
         const fabBare = document.querySelector("#fab-bare")!;
+        const shapePinned = document.getElementById("pinned")!.shadowRoot!.querySelector(".mtrl-icon-button")!;
+        const shapeDeep = document.getElementById("deep")!.shadowRoot!.querySelector(".mtrl-icon-button")!;
+        const shapeX = document.getElementById("xpinned")!.shadowRoot!.querySelector(".mtrl-icon-button")!;
+        const shapeBeltHost = document.getElementById("beltpinned")!;
+        const shapeBelt = shapeBeltHost.shadowRoot!.querySelector(".mtrl-icon-button")!;
         const box = (element: Element): { w: number; h: number } => {
           const r = element.getBoundingClientRect();
           return { w: r.width, h: r.height };
@@ -479,6 +503,11 @@ try {
           headlineBare: { visibility: getComputedStyle(headlineBare).visibility, order: getComputedStyle(headlineBare).order, ...box(headlineBare) },
           fab: box(fab),
           fabBare: box(fabBare),
+          shapePinned: getComputedStyle(shapePinned).borderTopLeftRadius,
+          shapeDeep: getComputedStyle(shapeDeep).borderTopLeftRadius,
+          shapeX: getComputedStyle(shapeX).borderTopLeftRadius,
+          shapeBelt: getComputedStyle(shapeBelt).borderTopLeftRadius,
+          beltMarked: shapeBeltHost.hasAttribute("data-mtrl-icon-button"),
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
@@ -511,6 +540,17 @@ try {
       assert.equal(Math.round(before.fabBare.h), 56);
       assert.equal(Math.round(before.fab.w), Math.round(before.fabBare.w));
       assert.equal(Math.round(before.fab.h), Math.round(before.fabBare.h));
+      // The toolbar shape pin, before the script runs: a slotted selected host
+      // keeps its round radius (28px at m, 68px at xl) from the toolbar's
+      // inline sheet and the marker in the static markup, the default prefix
+      // and a custom one alike; the overflow slot's content morphs square,
+      // as standalone.
+      assert.equal(before.shapePinned, "28px", "a slotted selected host is not round before upgrade");
+      assert.equal(before.shapeX, "68px", "a custom-prefix slotted selected host is not round before upgrade");
+      assert.equal(before.shapeDeep, "12px", "the overflow slot's content is not standalone before upgrade");
+      // The belt: no marker in the markup, and the default tag pins anyway.
+      assert.equal(before.beltMarked, false, "the belt host still carries a marker");
+      assert.equal(before.shapeBelt, "48px", "marker-less markup is not pinned by the default tag before upgrade");
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await p.waitForTimeout(300);
@@ -519,11 +559,17 @@ try {
         button: document.querySelector("m-button:not(#bare)")!.getBoundingClientRect().width,
         select: document.querySelector("m-select")!.getBoundingClientRect().width,
         background: getComputedStyle(document.querySelector("m-text-field")!).backgroundColor,
+        shapePinned: getComputedStyle(document.getElementById("pinned")!.shadowRoot!.querySelector(".mtrl-icon-button")!).borderTopLeftRadius,
+        shapeX: getComputedStyle(document.getElementById("xpinned")!.shadowRoot!.querySelector(".mtrl-icon-button")!).borderTopLeftRadius,
       }));
       assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
       assert.equal(before.background, after.background, "text field background changed when the script ran");
-      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)})`);
+      // No flash of the square shape across the upgrade boundary: the radius
+      // the page painted with no script is the radius it keeps with it.
+      assert.equal(after.shapePinned, "28px", "the slotted selected host changed radius at upgrade");
+      assert.equal(after.shapeX, "68px", "the custom-prefix slotted selected host changed radius at upgrade");
+      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)}), shape pin ${before.shapePinned}/${before.shapeX} (deep ${before.shapeDeep}, belt ${before.shapeBelt} without the marker)`);
     } finally {
       await p.close();
     }

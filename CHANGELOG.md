@@ -17,6 +17,27 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Fixed
+
+- **A selected toggle icon button inside a toolbar keeps its round shape.**
+  A standalone toggle morphs round to square when selected (icon buttons specs),
+  and toolbar items inherited that morph, so the selected Bold of a formatting
+  toolbar turned a rounded square — a shape the toolbars specs warn against in
+  the floating container. Selection inside a toolbar is shown by colour roles
+  alone (the toolbar token set has no item shape tokens), so the round radius
+  now stays in every state. Extending that to the pressed state — and to docked
+  as well as floating toolbars — is this library's choice (round stays round),
+  not something the specs ask for. The pin is each item's own resting radius,
+  on the bar's direct items only, whatever the tag prefix the elements were
+  registered under — the toolbar's sheet matches the marker attribute every
+  icon-button host of this library carries. The radius is right at first
+  paint on the paths the checks cover: elements created in the browser,
+  `renderElement()` output, and the server render of the React, Vue, Svelte
+  and Solid adapters, which all write the marker into their markup. Marker-less
+  markup still pins under the default `m-` prefix, where the sheet can spell
+  the tag. Standalone toggles, square buttons, the overflow menu's content and
+  explicit `--mtrl-button-shape-*` overrides are unchanged.
+
 ## [3.0.2] - 2026-10-04
 
 ### Fixed

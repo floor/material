@@ -131,7 +131,10 @@ export const readComponentHosts = (query: { prefix: string; live: readonly LiveA
     if (!el.localName.startsWith(start)) return [];
     const attrs: Record<string, string> = {};
     for (const attr of el.attributes) {
-      if (attr.name === "data-mtrl-ssr") continue;
+      // The server render writes the element's marker beside data-mtrl-ssr;
+      // a client render never does. Both stay out of the comparison: that is
+      // what suppressHydrationWarning would hide.
+      if (attr.name === "data-mtrl-ssr" || attr.name === "data-mtrl-icon-button") continue;
       attrs[attr.name] = attr.value;
     }
     const props: ComponentHost["props"] = {};
