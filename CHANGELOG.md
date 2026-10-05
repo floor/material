@@ -17,17 +17,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.1.0] - 2026-10-05
-
-### Added
-
-- **`ComponentSpec.marker`: an element's spec can name a host attribute it carries from the moment it
-  connects, whatever tag prefix it was registered under.**
-  The icon button declares `marker: "data-mtrl-icon-button"`, so its hosts carry `data-mtrl-icon-button`
-  once connected, and the server render writes it into a rendered host's markup, so it is there before
-  upgrade. Another element's sheet can match a slotted host by it — the toolbar's
-  `::slotted([data-mtrl-icon-button])` does — where a compound selector cannot spell the tag, whose
-  prefix is the page's choice. An additive field: a spec without a marker is unchanged.
+## [3.0.3] - 2026-10-05
 
 ### Fixed
 
@@ -49,6 +39,8 @@ below are kept as they were published, and the release they announce as 1.0.0 is
   markup still pins under the default `m-` prefix, where the sheet can spell
   the tag. Standalone toggles, square buttons, the overflow menu's content and
   explicit `--mtrl-button-shape-*` overrides are unchanged.
+
+- An internal marker attribute, `data-mtrl-icon-button`, now appears on icon buttons; it carries no public API.
 
 ## [3.0.2] - 2026-10-04
 
@@ -3872,8 +3864,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.1.0...HEAD
-[3.1.0]: https://github.com/floor/material/compare/v3.0.2...v3.1.0
+[Unreleased]: https://github.com/floor/material/compare/v3.0.3...HEAD
+[3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/floor/material/compare/v3.0.0-next.1...v3.0.0
