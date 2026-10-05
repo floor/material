@@ -247,7 +247,27 @@ try {
       assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
       assert.equal(await inert.getByRole("tab", { name: "Trips", selected: true }).count(), 1, "Declaration children reach the renderer");
       assert.equal(await inert.getByRole("switch", { name: "Wi-Fi" }).isChecked(), true);
+      // The shape toolbar with the element script held back: the adapter's
+      // server markup must carry the marker, so the toolbar's pins apply
+      // before upgrade — direct items round at their own sizes, the
+      // overflow slot's content square.
+      const shape = await inert.evaluate(() => {
+        const radius = (id: string): string => {
+          const host = document.getElementById(id);
+          const inner: Element | null = host?.shadowRoot?.querySelector(".mtrl-icon-button") ?? host ?? null;
+          return inner ? getComputedStyle(inner).borderTopLeftRadius : "missing";
+        };
+        return {
+          marked: ["shape-sel-s", "shape-sel-m", "shape-overflow"].every((id) => document.getElementById(id)?.hasAttribute("data-mtrl-icon-button") === true),
+          selS: radius("shape-sel-s"),
+          selM: radius("shape-sel-m"),
+          overflow: radius("shape-overflow"),
+        };
+      });
       await inert.close();
+      assert.equal(shape.marked, true, `React ${version}: the adapter markup carries the icon-button marker before upgrade`);
+      assert.deepEqual([shape.selS, shape.selM, shape.overflow], ["20px", "28px", "12px"], `React ${version}: held-script markup pins direct items round, overflow content square`);
+      console.log(`React ${version}: held-script markup — direct items 20px/28px round, overflow 12px square, marker present`);
       const page = await browser.newPage();
       const warnings: string[] = [], errors: string[] = [];
       page.on("console", message => { if (["warning", "error"].includes(message.type())) warnings.push(message.text()); });
