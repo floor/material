@@ -25,9 +25,9 @@ const RECORDINGS = 3;
  * carousel and the page stood. A bare "Timeout 30000ms exceeded" from this check
  * (seen once, under load, after the uncontained traces) names neither.
  */
-const waitFor = async (page: Page, what: string, ready: () => unknown): Promise<void> => {
+const waitFor = async <T = undefined>(page: Page, what: string, ready: (arg: T) => unknown, arg?: T): Promise<void> => {
   try {
-    await page.waitForFunction(ready);
+    await page.waitForFunction(ready, arg);
   } catch (error) {
     const state = await page.evaluate(() => {
       const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
@@ -414,6 +414,63 @@ export async function checkCarouselUncontained(
     const rightmost10 = Math.max(...slide10.visibleItems.map(item => item.right));
     if (rightmost10 < slide10.containerWidth) {
       failures.push(`Slide 10: row terminates before container right edge: rightmost visible item right is ${rightmost10.toFixed(2)} px vs container ${slide10.containerWidth} px`);
+    }
+
+    // --- Keyboard navigation & focus reachability check ---
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);
+    });
+    await waitFor(page, "scroll to return to slide 0", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller");
+      return el && el.scrollLeft === 0;
+    });
+
+    // Focus the last fully visible item at slide 0 (item 1: 304..584 px inside 760 px container)
+    await page.evaluate(() => {
+      const items = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item");
+      items[1]!.focus();
+    });
+
+    for (let expected = 2; expected < 24; expected++) {
+      await page.keyboard.press("ArrowRight");
+      const activeIndex = await page.evaluate(() => {
+        const active = document.activeElement;
+        const items = Array.from(document.querySelectorAll("#uncontained-carousel .mtrl-carousel__item"));
+        return items.indexOf(active as HTMLElement);
+      });
+      if (activeIndex !== expected) {
+        failures.push(`Keyboard ArrowRight to item ${expected}: activeElement is item ${activeIndex}`);
+        break;
+      }
+      await waitFor(page, `item ${expected} to scroll into view`, (idx: number) => {
+        const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+        const item = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")[idx]!;
+        const sRect = scroller.getBoundingClientRect();
+        const iRect = item.getBoundingClientRect();
+        return iRect.right > sRect.left && iRect.left < sRect.right;
+      }, expected);
+    }
+
+    if (!failures.some(f => f.includes("Keyboard ArrowRight"))) {
+      for (let expected = 22; expected >= 0; expected--) {
+        await page.keyboard.press("ArrowLeft");
+        const activeIndex = await page.evaluate(() => {
+          const active = document.activeElement;
+          const items = Array.from(document.querySelectorAll("#uncontained-carousel .mtrl-carousel__item"));
+          return items.indexOf(active as HTMLElement);
+        });
+        if (activeIndex !== expected) {
+          failures.push(`Keyboard ArrowLeft to item ${expected}: activeElement is item ${activeIndex}`);
+          break;
+        }
+        await waitFor(page, `item ${expected} to scroll into view`, (idx: number) => {
+          const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+          const item = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")[idx]!;
+          const sRect = scroller.getBoundingClientRect();
+          const iRect = item.getBoundingClientRect();
+          return iRect.right > sRect.left && iRect.left < sRect.right;
+        }, expected);
+      }
     }
 
   } finally {

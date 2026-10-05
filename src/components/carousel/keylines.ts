@@ -353,6 +353,29 @@ export const heroKeylines = (
   return fromArrangement(arrangement, containerSize, gap, rules.anchorSize, rules.anchorSize, alignment);
 };
 
+/** Capped uniform keyline for contained variants under prefers-reduced-motion: reduce */
+export const cappedKeylines = (
+  containerSize: number,
+  itemSize: number,
+  gap: number,
+  rules: KeylineRules,
+): KeylineList => {
+  if (containerSize <= 0 || itemSize <= 0) return [];
+  const large = Math.min(itemSize, containerSize);
+  const largeCount = Math.max(1, Math.floor((containerSize + gap) / (large + gap)));
+  const remaining = Math.max(0, containerSize - largeCount * (large + gap));
+  let medium = Math.max(remaining * 1.5, rules.anchorSize);
+  if (medium > large * rules.mediumLargeThreshold) medium = Math.max(remaining * 1.2, rules.anchorSize);
+  return fromArrangement(
+    { priority: 0, smallSize: 0, smallCount: 0, mediumSize: medium, mediumCount: remaining > 0 ? 1 : 0, largeSize: large, largeCount },
+    containerSize,
+    gap,
+    Math.max(Math.min(rules.anchorSize, itemSize), medium * 0.5),
+    rules.anchorSize,
+    'start',
+  );
+};
+
 /**
  * Uncontained: all items are a single uniform size and flow past the
  * edge of the container without changing size (Material Design 3

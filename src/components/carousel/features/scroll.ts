@@ -15,6 +15,7 @@ import {
   KeylineRules,
   multiBrowseKeylines,
   heroKeylines,
+  cappedKeylines,
   fullScreenKeylines,
 } from "../keylines";
 import {
@@ -127,15 +128,14 @@ export const withScroll = (config: CarouselConfig) =>
 
     const buildKeylines = (size: number) => {
       const preferred = config.itemWidth ?? CAROUSEL_DEFAULTS.ITEM_WIDTH;
-      switch (variant) {
-        case CAROUSEL_VARIANTS.HERO:
-        case CAROUSEL_VARIANTS.HERO_CENTER:
-          return heroKeylines(size, config.itemWidth ?? null, gap, count, variant === CAROUSEL_VARIANTS.HERO_CENTER, rules);
-        case CAROUSEL_VARIANTS.FULL_SCREEN:
-          return fullScreenKeylines(size, gap, rules);
-        default:
-          return multiBrowseKeylines(size, preferred, gap, count, rules);
+      if (variant === CAROUSEL_VARIANTS.FULL_SCREEN) return fullScreenKeylines(size, gap, rules);
+      if (reduceMotion?.matches === true) {
+        const itemSize = variant.startsWith("hero") ? Math.min(config.itemWidth ?? size, size) : preferred;
+        return cappedKeylines(size, itemSize, gap, rules);
       }
+      return variant.startsWith("hero")
+        ? heroKeylines(size, config.itemWidth ?? null, gap, count, variant === CAROUSEL_VARIANTS.HERO_CENTER, rules)
+        : multiBrowseKeylines(size, preferred, gap, count, rules);
     };
 
     const build = (): void => {
@@ -146,7 +146,7 @@ export const withScroll = (config: CarouselConfig) =>
         strategy = null;
         return;
       }
-      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED || reduceMotion?.matches === true;
+      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED;
       strategy = isUncontained
         ? ({ itemSize: config.itemWidth ?? CAROUSEL_DEFAULTS.ITEM_WIDTH, gap, valid: true } as Strategy)
         : createStrategy(buildKeylines(containerSize), containerSize, gap, padding, padding);
@@ -187,7 +187,7 @@ export const withScroll = (config: CarouselConfig) =>
     const layout = (): void => {
       if (!strategy) return;
       const position = scrollPosition();
-      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED || reduceMotion?.matches === true;
+      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED;
       const itemSize = strategy.itemSize;
       const unit = itemSize + strategy.gap;
       const scrollOffset = position + scrollOffsetAtStart;
@@ -199,7 +199,7 @@ export const withScroll = (config: CarouselConfig) =>
         let start = padding + i * unit;
         let inset = 0;
         let fade = 1;
-        let offscreen = start + itemSize < position || start > position + containerSize;
+        let offscreen = false;
         if (!isUncontained) {
           const placement = placeItem(strategy, keylines!, i, scrollOffset);
           const visible = Math.max(0, Math.min(itemSize, placement.size));
