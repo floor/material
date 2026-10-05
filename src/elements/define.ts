@@ -131,13 +131,17 @@ export interface ElementSpec<C extends ElementComponent> {
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   /**
-   * A boolean attribute the host carries whenever it is connected, whatever
+   * A boolean attribute the host carries from the moment it connects, whatever
    * the tag prefix it was registered under. The library's sheets are built
    * once and cannot know the prefix a page chose, so a compound selector
    * that must recognise one of its own hosts — `::slotted([data-…])` in
    * another element's sheet, which cannot spell the tag — matches this
    * instead. Server rendering writes it into the declarative markup too, so
-   * it is there at first paint, before upgrade.
+   * it is there at first paint, before upgrade. The attribute is the
+   * library's own, in its reserved `data-mtrl-*` namespace: it is set on
+   * connection (and again on reconnect) but not observed, so a consumer that
+   * removes it while the host stays connected also removes the matching until
+   * the host reconnects. Do not mutate it.
    */
   marker?: string;
   attributes?: Record<string, AttributeSpec<C>>;

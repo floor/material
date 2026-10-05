@@ -212,10 +212,12 @@ export const createComponent = <S, E extends HTMLElement>(
       },
     });
     if (isServer) {
-      Object.defineProperty(host, RENDERED_HOST_ATTRIBUTE, {
-        enumerable: true,
-        get: () => rendered ? "" : undefined,
-      });
+      for (const name of [RENDERED_HOST_ATTRIBUTE, ...(spec.marker ? [spec.marker] : [])]) {
+        Object.defineProperty(host, name, {
+          enumerable: true,
+          get: () => rendered ? "" : undefined,
+        });
+      }
     }
 
     const ref = (node: E): void => {

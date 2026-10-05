@@ -148,7 +148,12 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     if (!isBrowser) for (const [name, value] of serverDefaults(described, (p) => live[p])) result[name] ??= value;
     // The spread is the opening tag. Svelte does not remove an attribute the
     // client spread omits, so the server-only value stays through hydration.
-    if (shadow) result[RENDERED_HOST_ATTRIBUTE] = "";
+    // The marker is server HTML of the same kind: styles match the host
+    // before upgrade where the sheet cannot spell its tag.
+    if (shadow) {
+      result[RENDERED_HOST_ATTRIBUTE] = "";
+      if (spec.marker) result[spec.marker] = "";
+    }
     // Attachments (`{@attach}`) are symbol-keyed props: Svelte applies them
     // from the spread, which `Object.entries` does not see.
     for (const symbol of Object.getOwnPropertySymbols(props)) result[symbol as unknown as string] = props[symbol as unknown as string];

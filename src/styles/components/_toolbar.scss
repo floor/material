@@ -225,20 +225,26 @@ $component: '#{base.$prefix}-toolbar';
 //   src/elements/define.ts — the sheet cannot spell a tag the page chose),
 //   and [size=…] follows a size changed after insertion, the size attribute
 //   being the host's public size (the element exposes no size property to
-//   drift from it). Another library's icon button keeps the standalone
+//   drift from it). The default tag is matched as well, so markup that
+//   reaches the browser without the marker by any path — an adapter not
+//   writing it, hand-written HTML, a cached page from an older server
+//   render — still pins under the default prefix, as before the marker; a
+//   custom prefix cannot be spelled and needs the marker. :is() weighs its
+//   most specific argument, so the compound keeps the bare attribute's
+//   (0,1,0). Another library's icon button keeps the standalone
 //   morphs.
 // Anything deeper — an icon button in the overflow menu's content, a dialog
 // or menu opened from the bar, a composite child — matches neither selector
 // and keeps the standalone morphs.
 .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round,
-slot:not([name])::slotted([data-mtrl-icon-button]) {
+slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)) {
   --#{base.$prefix}-icon-button-shape-selected: 20px;
   --#{base.$prefix}-icon-button-shape-pressed: 20px;
 }
 
 @each $size, $radius in ("xs": 16px, "m": 28px, "l": 48px, "xl": 68px) {
   .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round.#{base.$prefix}-icon-button--#{$size},
-  slot:not([name])::slotted([data-mtrl-icon-button][size=#{$size}]) {
+  slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)[size=#{$size}]) {
     --#{base.$prefix}-icon-button-shape-selected: #{$radius};
     --#{base.$prefix}-icon-button-shape-pressed: #{$radius};
   }

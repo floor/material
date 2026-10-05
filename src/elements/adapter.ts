@@ -20,6 +20,14 @@ export interface ComponentSpec {
   name: string;
   /** `false`: the server never marks the host. A function still can. Absent means it does. */
   ssr?: boolean | ((host: HTMLElement) => boolean);
+  /**
+   * The prefix-independent attribute the element's host carries once connected
+   * (`data-mtrl-icon-button`). The renderer, the element class and every
+   * adapter read it from this spec, so a future element with a marker needs no
+   * adapter change. The server writes it beside `data-mtrl-ssr`; styles match
+   * slotted hosts with it where the sheet cannot spell their tag.
+   */
+  marker?: string;
   attributes?: Record<string, { type: AttributeType }>;
   properties?: Record<string, unknown>;
   events?: Record<string, unknown>;
