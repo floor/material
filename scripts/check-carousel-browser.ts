@@ -25,9 +25,16 @@ const RECORDINGS = 3;
  * carousel and the page stood. A bare "Timeout 30000ms exceeded" from this check
  * (seen once, under load, after the uncontained traces) names neither.
  */
-const waitFor = async <T = undefined>(page: Page, what: string, ready: (arg: T) => unknown, arg?: T): Promise<void> => {
+function waitFor(page: Page, what: string, ready: () => unknown): Promise<void>;
+function waitFor<T>(page: Page, what: string, ready: (arg: T) => unknown, arg: T): Promise<void>;
+async function waitFor<T>(
+  page: Page,
+  what: string,
+  ready: (arg: T) => unknown,
+  arg?: T,
+): Promise<void> {
   try {
-    await page.waitForFunction(ready, arg);
+    await page.waitForFunction(ready as Parameters<Page["waitForFunction"]>[0], arg);
   } catch (error) {
     const state = await page.evaluate(() => {
       const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
@@ -39,7 +46,7 @@ const waitFor = async <T = undefined>(page: Page, what: string, ready: (arg: T) 
     }).catch(() => "the page could not be read");
     throw new Error(`waiting for ${what}: ${String(error).split("\n")[0]} ${JSON.stringify(state)}`);
   }
-};
+}
 
 /** Packed carousel wheel input and per-frame velocity and snap restoration. */
 export async function checkCarouselWheel(page: Page): Promise<void> {
