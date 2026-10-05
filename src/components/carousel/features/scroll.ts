@@ -15,7 +15,6 @@ import {
   KeylineRules,
   multiBrowseKeylines,
   heroKeylines,
-  uncontainedKeylines,
   fullScreenKeylines,
 } from "../keylines";
 import {
@@ -127,26 +126,15 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Strategy ────────────────────────────────────────────────
 
     const buildKeylines = (size: number) => {
-      // Reduced motion: items keep one size and run past the edges
-      // (m3.material.io carousel accessibility)
-      const uniform = reduceMotion?.matches === true;
       const preferred = config.itemWidth ?? CAROUSEL_DEFAULTS.ITEM_WIDTH;
       switch (variant) {
         case CAROUSEL_VARIANTS.HERO:
-        case CAROUSEL_VARIANTS.HERO_CENTER: {
-          const max = config.itemWidth ?? null;
-          return uniform
-            ? uncontainedKeylines(size, Math.min(max ?? size, size), gap, rules)
-            : heroKeylines(size, max, gap, count, variant === CAROUSEL_VARIANTS.HERO_CENTER, rules);
-        }
-        case CAROUSEL_VARIANTS.UNCONTAINED:
-          return uncontainedKeylines(size, preferred, gap, rules);
+        case CAROUSEL_VARIANTS.HERO_CENTER:
+          return heroKeylines(size, config.itemWidth ?? null, gap, count, variant === CAROUSEL_VARIANTS.HERO_CENTER, rules);
         case CAROUSEL_VARIANTS.FULL_SCREEN:
           return fullScreenKeylines(size, gap, rules);
         default:
-          return uniform
-            ? uncontainedKeylines(size, preferred, gap, rules)
-            : multiBrowseKeylines(size, preferred, gap, count, rules);
+          return multiBrowseKeylines(size, preferred, gap, count, rules);
       }
     };
 
@@ -158,16 +146,20 @@ export const withScroll = (config: CarouselConfig) =>
         strategy = null;
         return;
       }
-      const afterPadding = variant === CAROUSEL_VARIANTS.UNCONTAINED ? 0 : padding;
-      strategy = createStrategy(buildKeylines(containerSize), containerSize, gap, padding, afterPadding);
+      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED || reduceMotion?.matches === true;
+      strategy = isUncontained
+        ? ({ itemSize: config.itemWidth ?? CAROUSEL_DEFAULTS.ITEM_WIDTH, gap, valid: true } as Strategy)
+        : createStrategy(buildKeylines(containerSize), containerSize, gap, padding, padding);
       if (!strategy.valid) {
         strategy = null;
         return;
       }
 
       const unit = strategy.itemSize + strategy.gap;
-      scrollOffsetAtStart = -snapPositionOffset(strategy, 0, count);
-      snapPositions = slideElements.map((_, i) => i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart);
+      scrollOffsetAtStart = isUncontained ? 0 : -snapPositionOffset(strategy, 0, count);
+      snapPositions = slideElements.map((_, i) =>
+        isUncontained ? i * unit : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
+      );
       const scrollRange = Math.max(0, snapPositions[count - 1] ?? 0);
 
       // Track length and one snap point per item
@@ -195,21 +187,27 @@ export const withScroll = (config: CarouselConfig) =>
     const layout = (): void => {
       if (!strategy) return;
       const position = scrollPosition();
-      const scrollOffset = position + scrollOffsetAtStart;
-      const keylines = keylinesForScrollOffset(strategy, scrollOffset, maxScrollOffset(strategy, count));
+      const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED || reduceMotion?.matches === true;
       const itemSize = strategy.itemSize;
+      const unit = itemSize + strategy.gap;
+      const scrollOffset = position + scrollOffsetAtStart;
+      const keylines = isUncontained ? null : keylinesForScrollOffset(strategy, scrollOffset, maxScrollOffset(strategy, count));
       const fadeRange = strategy.maxItemSize - strategy.minItemSize;
 
       for (let i = 0; i < count; i++) {
         const el = slideElements[i]!;
-        const placement = placeItem(strategy, keylines, i, scrollOffset);
-        const visible = Math.max(0, Math.min(itemSize, placement.size));
-        // Keylines are container coordinates; the items live inside the
-        // scrolled track, so the scroll position is added back
-        const start = placement.center - itemSize / 2 + position;
-        const offscreen = placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
-        const inset = Math.max(0, (itemSize - visible) / 2);
-        const fade = fadeRange > 0 ? Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange)) : 1;
+        let start = padding + i * unit;
+        let inset = 0;
+        let fade = 1;
+        let offscreen = start + itemSize < position || start > position + containerSize;
+        if (!isUncontained) {
+          const placement = placeItem(strategy, keylines!, i, scrollOffset);
+          const visible = Math.max(0, Math.min(itemSize, placement.size));
+          start = placement.center - itemSize / 2 + position;
+          offscreen = placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
+          inset = Math.max(0, (itemSize - visible) / 2);
+          if (fadeRange > 0) fade = Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange));
+        }
         const style = offscreen
           ? "hidden"
           : `${Math.round(start * 100) / 100}|${Math.round(inset * 100) / 100}|${fade.toFixed(3)}`;
@@ -221,9 +219,7 @@ export const withScroll = (config: CarouselConfig) =>
         }
         el.style.visibility = "";
         el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${start}px, 0, 0)`;
-        el.style.clipPath = vertical
-          ? `inset(${inset}px 0 round ${corner})`
-          : `inset(0 ${inset}px round ${corner})`;
+        el.style.clipPath = inset > 0 ? (vertical ? `inset(${inset}px 0 round ${corner})` : `inset(0 ${inset}px round ${corner})`) : "";
         el.style.setProperty(`--${config.prefix}-carousel-fade`, fade.toFixed(3));
       }
 
