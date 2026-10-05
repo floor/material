@@ -45,7 +45,7 @@ try {
 
   console.log("Checking carousel uncontained layout...");
   await checkCarouselUncontained(page, {
-    screenshotDir: resolve("/Users/jvial/Code/floor/worktrees/material/briefs/previews/carousel-uncontained-fix"),
+    screenshotDir: process.env.CI ? undefined : resolve("briefs/previews/carousel-uncontained-fix"),
   });
   console.log("Carousel uncontained layout check passed.");
 
