@@ -3872,7 +3872,7 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.1.0...HEAD
 [3.1.0]: https://github.com/floor/material/compare/v3.0.2...v3.1.0
 [3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
