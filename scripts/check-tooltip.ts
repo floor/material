@@ -11,7 +11,7 @@ declare global {
   interface Window {
     ready: boolean;
     tooltip: TooltipComponent;
-    mount: (config: TooltipConfig) => void;
+    mountTooltip: (config: TooltipConfig) => void;
   }
 }
 
@@ -29,7 +29,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
   background:#ddd;border:0}.mtrl-tooltip{transition:none!important}</style></head><body>
   <button id="target">&#9829;</button>
   <script type="module">import { createTooltip } from '/tooltip.js';
-  window.mount = (config) => {
+  window.mountTooltip = (config) => {
     window.tooltip?.destroy();
     window.tooltip = createTooltip({ target: document.querySelector('#target'), visible: true, ...config });
   };window.ready=true;</script></body></html>`, { headers: { "Content-Type": "text/html" } });
@@ -60,7 +60,7 @@ try {
       document.documentElement.dataset.themeMode = mode;
     }, mode);
     for (const variant of variants) for (const position of positions) {
-      await page.evaluate(({ variant, position }) => window.mount({
+      await page.evaluate(({ variant, position }) => window.mountTooltip({
         position, variant,
         text: variant === "rich" ? "Rich tooltip with two lines of text to show" : "Search, and filter",
       }), { variant, position });
