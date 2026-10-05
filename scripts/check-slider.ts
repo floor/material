@@ -246,6 +246,157 @@ try {
   await moving.mouse.up();
   await moving.close();
   assert.deepEqual(errors, []);
+
+  // Discrete end stops. The ticks are a background image, so the centre row of
+  // the host screenshot is classified the way the end-tick measurement was: a
+  // column that differs from the row's dominant colour and from the page
+  // background is a mark. The end tick's centre is read while the handle is at
+  // the other end, where that tick is fully painted. At min and at max the
+  // handle centre has to meet it (half a pixel), the tick's own pixels stay
+  // painted, and no track segment runs out past it.
+  type Mark = { from: number; to: number; centre: number };
+  type Shot = {
+    handle: number;
+    hostWidth: number;
+    imageWidth: number;
+    marks: Mark[];
+    segments: { from: number; to: number }[];
+    background: number[];
+  };
+  const classify = async (file?: string): Promise<Shot> => {
+    const png = await page.locator("#host").screenshot(file ? { path: file } : undefined);
+    return page.evaluate(async (data: string) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${data}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+      const px = ctx.getImageData(0, 0, image.width, image.height).data;
+      const at = (x: number, y: number) => [
+        px[(y * image.width + x) * 4]!,
+        px[(y * image.width + x) * 4 + 1]!,
+        px[(y * image.width + x) * 4 + 2]!,
+      ];
+      const host = document.querySelector("#host")!.getBoundingClientRect();
+      const container = document.querySelector(".mtrl-slider__container")!.getBoundingClientRect();
+      const y = Math.round((container.top - host.top + container.height / 2) * (image.width / host.width));
+      const handleBox = document.querySelector('[role="slider"]')!.getBoundingClientRect();
+      const scale = image.width / host.width;
+      const toCss = (x: number) => x / scale;
+      const bg = at(2, 2);
+      const channel = (c: number[], d: number[]) => Math.abs(c[0]! - d[0]!) + Math.abs(c[1]! - d[1]!) + Math.abs(c[2]! - d[2]!);
+      const counts = new Map<string, number>();
+      for (let x = 0; x < image.width; x++) {
+        const key = at(x, y).join(",");
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      let dominant = [255, 255, 255];
+      let best = 0;
+      for (const [key, n] of counts) if (n > best) { best = n; dominant = key.split(",").map(Number); }
+      const differs = (c: number[]) => channel(c, dominant) > 30 && channel(c, bg) > 30;
+      const marks: { from: number; to: number; centre: number }[] = [];
+      const background: number[] = [];
+      let run: { from: number; to: number } | null = null;
+      for (let x = 0; x < image.width; x++) {
+        const colour = at(x, y);
+        if (channel(colour, bg) <= 30) background.push(toCss(x));
+        if (!differs(colour)) continue;
+        if (!run) run = { from: x, to: x };
+        else if (x - run.to <= 1) run.to = x;
+        else {
+          marks.push({ from: toCss(run.from), to: toCss(run.to), centre: toCss(run.from + run.to + 1) / 2 });
+          run = { from: x, to: x };
+        }
+      }
+      if (run) marks.push({ from: toCss(run.from), to: toCss(run.to), centre: toCss(run.from + run.to + 1) / 2 });
+      const track = document.querySelector(".mtrl-slider__track")!.getBoundingClientRect();
+      const edgeFrom = track.left - host.left - 1;
+      const edgeTo = track.right - host.left + 1;
+      const segments = [...document.querySelectorAll(".mtrl-slider__segment")].flatMap(segment => {
+        const rect = segment.getBoundingClientRect();
+        if (rect.width <= 0.5) return [];
+        return [{ from: rect.left - host.left, to: rect.right - host.left }];
+      });
+      return {
+        handle: handleBox.x - host.x + handleBox.width / 2,
+        hostWidth: host.width,
+        imageWidth: image.width,
+        marks: marks.filter(mark => mark.from >= edgeFrom && mark.to <= edgeTo),
+        segments,
+        background,
+      };
+    }, png.toString("base64"));
+  };
+  const endRows: { name: string; handle: number; tick: number; delta: number; bare: number; span: number; overshoot: boolean }[] = [];
+  const endFailures: string[] = [];
+  for (const size of ["XS", "S", "M", "L", "XL"] as const) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const mode of ["light", "dark"] as const) {
+        const shots = {} as Record<"min" | "max", Shot>;
+        for (const end of ["min", "max"] as const) {
+          await page.evaluate(({ config, dir, mode }) => {
+            document.documentElement.dir = dir;
+            window.mount(JSON.parse(config), 320, "baseline", mode);
+          }, {
+            config: JSON.stringify({ ticks: true, step: 10, value: end === "min" ? 0 : 100, size }),
+            dir,
+            mode,
+          });
+          await page.waitForTimeout(35);
+          const preview = (size === "XS" || size === "L") && dir === "ltr"
+            ? `${artifacts}/end-${size.toLowerCase()}-${mode}-${end}.png`
+            : undefined;
+          shots[end] = await classify(preview);
+          assert.equal(shots[end].imageWidth, shots[end].hostWidth, `${size} ${dir} ${mode} ${end}: screenshot scale`);
+        }
+        for (const end of ["min", "max"] as const) {
+          const near = shots[end];
+          const other = shots[end === "min" ? "max" : "min"];
+          const farSide = other.handle < other.hostWidth / 2 ? "right" : "left";
+          const band = 36;
+          // A stop is 4px. The rounded cap of an XL track leaves a narrower
+          // fringe at the edge; that is not the tick.
+          const candidates = other.marks.filter(mark => {
+            if (mark.to - mark.from + 1 < 3.5) return false;
+            return farSide === "right" ? mark.centre > other.hostWidth - band : mark.centre < band;
+          });
+          const name = `${size} ${dir} ${mode} ${end}`;
+          if (candidates.length === 0) {
+            endFailures.push(`${name}: no end tick while the handle is at the other end`);
+            continue;
+          }
+          const tick = candidates.reduce((a, b) =>
+            (farSide === "right" ? b.centre > a.centre : b.centre < a.centre) ? b : a);
+          const delta = Math.abs(near.handle - tick.centre);
+          let bare = 0;
+          for (let x = Math.round(tick.from); x <= Math.round(tick.to); x++) if (near.background.includes(x)) bare++;
+          const span = Math.round(tick.to) - Math.round(tick.from) + 1;
+          const outward = tick.centre < near.hostWidth / 2 ? "left" : "right";
+          const overshoot = near.segments.some(segment =>
+            outward === "left" ? segment.from < tick.centre - 0.5 : segment.to > tick.centre + 0.5);
+          endRows.push({
+            name,
+            handle: +near.handle.toFixed(2),
+            tick: +tick.centre.toFixed(2),
+            delta: +delta.toFixed(2),
+            bare,
+            span,
+            overshoot,
+          });
+          if (delta > 0.5) endFailures.push(`${name}: handle ${near.handle.toFixed(1)} is ${delta.toFixed(1)}px from the end tick at ${tick.centre.toFixed(1)}`);
+          if (bare > 1) endFailures.push(`${name}: end tick leaves ${bare}px of ${span}px unpainted`);
+          if (overshoot) endFailures.push(`${name}: a track segment runs past the end tick at ${tick.centre.toFixed(1)}`);
+        }
+      }
+    }
+  }
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  console.log(JSON.stringify({ gzip: size.gzip, endTicks: endRows, endFailures }, null, 2));
+  assert.deepEqual(endFailures, []);
+
   const timings: Record<string, number> = {};
   for (const [name, target] of [["dom", page], ["canvas", old]] as const) {
     if (!target) continue;

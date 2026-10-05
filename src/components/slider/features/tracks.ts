@@ -35,12 +35,11 @@ export const getHandleHeight = (size?: SliderSize): number => {
 
 /**
  * Gets the track's outer corner radius for a size: 8 / 8 / 12 / 16 / 28 for
- * XS / S / M / L / XL (material-components-android slider tokens, m3.material.io
- * slider specs). A numeric size takes the radius of the named size it falls in.
+ * XS / S / M / L / XL (m3.material.io slider specs, Track shape). A numeric
+ * size takes the radius of the named size it falls in.
  *
- * It is also the inset of the value positions: Compose lays the values out over the
- * track less one corner radius at each end (Slider.kt drawTrack), so the first and
- * last values sit at the centres of the rounded ends.
+ * On a discrete slider it is also the inset of every value position. The handle
+ * and the stops sit that far in from each end of the track.
  */
 /** The steps of the track's corner radii (Compose SliderTokens: small to extra-large). */
 const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
@@ -55,17 +54,19 @@ export const getExternalTrackRadius = (size?: SliderSize): number => {
 
 /**
  * Where a value sits along a track `width` wide, from its fraction of the range.
- * A continuous slider spans the whole track, so its ends meet the rounded corners; a
- * discrete one puts its interior steps on a scale inset by a corner radius at each
- * end, while the first and last steps still reach the edges (Slider.kt drawTrack:
- * `sliderValueEnd`, `isEndOnFirstOrLastStep`). `inset` is 0 for a continuous slider.
+ * A continuous slider spans the whole track (`inset` is 0), so its ends meet the
+ * rounded corners. A discrete one insets every step, the first and the last
+ * included, by the track's corner radius: the handle centre lands on the stop,
+ * and the end stops sit in from the pill
+ * (https://m3.material.io/components/sliders/guidelines — "The slider handle snaps
+ * to the closest stop.").
  */
 export const trackPosition = (fraction: number, width: number, inset: number): number =>
-  inset && fraction > 0 && fraction < 1 ? inset + fraction * (width - 2 * inset) : fraction * width;
+  inset ? inset + fraction * (width - 2 * inset) : fraction * width;
 
 /** The same position as CSS, so a handle stays in place when the track resizes. */
 export const trackPositionCss = (fraction: number, inset: number): string =>
-  inset && fraction > 0 && fraction < 1
+  inset
     ? `calc(${fraction * 100}% + ${inset * (1 - 2 * fraction)}px)`
     : `${fraction * 100}%`;
 
@@ -203,10 +204,11 @@ export const withTracks =
     const fraction = (value: number) => Math.min(1, Math.max(0,
       state.max === state.min ? 0 : (value - state.min) / (state.max - state.min),
     ));
-    // trackPosition, as a fraction plus pixels. The inset drops off at the ends.
+    // trackPosition, as a fraction plus pixels. The inset stays on at the ends,
+    // so a segment that follows the handle stops on the same centre as the tick.
     const atValue = (value: number): Along => {
       const f = fraction(value);
-      return ap(f, inset && f > 0 && f < 1 ? inset * (1 - 2 * f) : 0);
+      return ap(f, inset * (1 - 2 * f));
     };
     const cmp = (a: Along, b: Along): number =>
       width > 0 ? a.f * width + a.p - (b.f * width + b.p) : (a.f - b.f) || (a.p - b.p);
@@ -272,8 +274,8 @@ export const withTracks =
     const discrete = !!config.ticks && state.step > 0 && state.max > state.min;
     ticks.forEach(tick => { tick.hidden = !discrete; });
     if (discrete) {
-      // Ticks sit on the inset scale, including the ends (trackPosition drops the
-      // inset there). TickSize 4dp, and none is drawn within a gap of a handle.
+      // Ticks sit on the same inset scale as the handle, ends included.
+      // TickSize 4dp, and none is drawn within a gap of a handle.
       // cqw/cqh: background-position percentages are not a fraction of the box.
       const stepF = state.step / (state.max - state.min);
       const repeat = `max(0.01px, ${alongCss(ap(stepF, -2 * inset * stepF))})`;

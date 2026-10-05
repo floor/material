@@ -425,9 +425,9 @@ describe('a range slider given no second value', () => {
   });
 });
 
-// The track is drawn the way Compose's Slider.kt drawTrack draws it: values
-// span the whole track (a discrete slider insets its interior steps by the corner
-// radius), the gap between the handle's edge and the track is 6dp, so 8px from the
+// A continuous slider's values span the whole track. A discrete one insets every
+// step, including the ends, by the corner radius, so the handle sits on the end
+// tick. The gap between the handle's edge and the track is 6dp, so 8px from the
 // centre of a 4px handle and 7px from a 2px one, and a stop indicator ends every
 // inactive track longer than a corner radius. The container is given a 300px width.
 describe('slider track geometry', () => {
@@ -526,7 +526,7 @@ describe('slider track geometry', () => {
     ]);
   });
 
-  test('a discrete slider insets its interior steps by the corner radius', async () => {
+  test('a discrete slider insets every step by the corner radius, ends included', async () => {
     const slider = await sized({ value: 20, step: 10, ticks: true });
     // 8 + 0.2 * (300 - 16), minus the 8px gap: calc(20% - 3.2px)
     const active = segments(slider)[1]!;
@@ -534,9 +534,14 @@ describe('slider track geometry', () => {
     expect(active.width).toBe('calc(20% - 3.2px)');
     expect(active.active).toBe(true);
     expect(handles(slider)[0]!.style.left).toBe('calc(20% + 4.8px)');
-    // The first and last steps still reach the edges.
+    // Min and max stay on that inset: the handle centre is the end tick, and the
+    // track stops one gap (8px) short of it.
+    slider.setValue(0);
+    expect(handles(slider)[0]!.style.left).toBe('calc(0% + 8px)');
+    expect(segments(slider)[2]).toEqual({ left: '16px', width: 'calc(100% - 16px)', active: false });
     slider.setValue(100);
-    expect(handles(slider)[0]!.style.left).toBe('100%');
+    expect(handles(slider)[0]!.style.left).toBe('calc(100% + -8px)');
+    expect(segments(slider)[1]).toEqual({ left: '0px', width: 'calc(100% - 16px)', active: true });
   });
 
   test('the corner radius and the handle height follow the size', async () => {
