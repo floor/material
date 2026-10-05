@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.1.0",
+  "version": "3.0.3",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
