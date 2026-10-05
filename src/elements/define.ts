@@ -142,6 +142,8 @@ export interface ElementSpec<C extends ElementComponent> {
    * connection (and again on reconnect) but not observed, so a consumer that
    * removes it while the host stays connected also removes the matching until
    * the host reconnects. Do not mutate it.
+   *
+   * @internal Not part of the public API and may change without notice.
    */
   marker?: string;
   attributes?: Record<string, AttributeSpec<C>>;
