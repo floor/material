@@ -13,13 +13,13 @@
 // The pin reaches only the bar's direct items: a round icon button that is a
 // child of the bar in the same tree, and a host assigned to the bar's
 // default slot (matched by ::slotted() where it is assigned, per [size=…]
-// for the sizes). The slotted selectors match the marker attribute every
+// for the sizes). The slotted compounds match the marker attribute every
 // icon-button host of this library carries whatever its tag prefix
-// (src/elements/icon-button.ts), not the tag: the page chooses the prefix
-// and the sheet cannot spell it. Content deeper than that — the overflow
-// slot's, a dialog opened from the bar, a composite child — matches nothing
-// and keeps the standalone morphs; nothing is declared on the toolbar root
-// to inherit.
+// (src/elements/icon-button.ts), with the default tag as a second arm so
+// marker-less markup still pins under the default prefix. Content deeper
+// than that — the overflow slot's, a dialog opened from the bar, a
+// composite child — matches nothing and keeps the standalone morphs;
+// nothing is declared on the toolbar root to inherit.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -43,7 +43,7 @@ const value = (css: string, selector: string, property: string): string | undefi
 const items = (size: keyof typeof round): string => {
   const suffix = size === 's' ? '' : `.mtrl-icon-button--${size}`;
   const attr = size === 's' ? '' : `[size=${size}]`;
-  return `.mtrl-toolbar .mtrl-toolbar__bar > .mtrl-icon-button--round${suffix}, slot:not([name])::slotted([data-mtrl-icon-button]${attr})`;
+  return `.mtrl-toolbar .mtrl-toolbar__bar > .mtrl-icon-button--round${suffix}, slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)${attr})`;
 };
 
 let buttons = '';
@@ -94,11 +94,17 @@ describe('a toolbar keeps its round items round', () => {
     expect(toolbar).not.toContain('.mtrl-toolbar .mtrl-icon-button');
   });
 
-  test('the slotted pin matches the marker, never a tag', () => {
-    // The sheet is built once and cannot know the prefix a page chose; a tag
-    // selector would leave a custom-prefix host unpinned.
+  test('the slotted pin matches the marker, the default tag only as a belt', () => {
+    // The sheet is built once and cannot know the prefix a page chose; the
+    // marker matches every host of this library whatever its tag prefix, and
+    // stays the first arm of every compound. The default tag is the belt:
+    // marker-less markup under the default prefix (an adapter not writing
+    // it, hand-written HTML, a cached page from an older server render)
+    // still pins, as before the marker. :is() weighs its most specific
+    // argument, so the compound keeps the bare attribute's specificity.
     expect(toolbar).not.toContain('::slotted(m-icon-button');
-    expect(toolbar).toContain('::slotted([data-mtrl-icon-button])');
+    expect(toolbar).toContain('::slotted(:is([data-mtrl-icon-button], m-icon-button))');
+    expect(toolbar).toContain('::slotted(:is([data-mtrl-icon-button], m-icon-button)[size=m])');
   });
 
   test('square items keep their morphs inside a toolbar', () => {
