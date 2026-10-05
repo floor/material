@@ -200,8 +200,8 @@ try {
   // The 3.0.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
   // README and declaration text. The SSR style-modes docs add 4,458 (the README is
   // packed twice, at the root and in dist/: 3,600; RenderOptions' TSDoc in the .d.ts: 858), to
-  // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised by the rule for explicit
-  // ceilings (measured plus 1%, up to the next 1,000), decided by the main coordinator.
+  // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised deliberately by the rule
+  // for explicit ceilings (measured plus 1%, up to the next 1,000).
   // Merged tree, Node 22.23.3 / npm 10.9.9: 6,420,252. The pre-upgrade
   // rules left the element modules. Measured + 1%, up to 1,000, is 6,485,000,
   // above next's 6,458,000, so the ceiling stays.
@@ -384,7 +384,7 @@ try {
     // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The text-field rename merged in: 126,962, the same figure main packed.
     // 38 B left under 127,000.
-    // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the coordinator's bounded rule.
+    // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the bounded rule.
     { name: "all-js", code: "export * from 'material';", gzip: 127100 },
     // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
