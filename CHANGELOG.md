@@ -17,6 +17,34 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.0.4] - 2026-10-06
+
+### Fixed
+
+- **A tooltip's arrow is the colour of the tooltip's own surface, in every variant and both
+  themes (#77).**
+  The arrow grows out of the container, so it has to read as that surface. A rich tooltip paints
+  `surface-container`, but its arrow kept the base `inverse-surface`; a plain tooltip paints
+  `inverse-surface`, but its arrow still painted the `surface-container-high` of a surface the
+  variant had dropped. On each of the twelve placements that draw an arrow, the arrow showed as a
+  triangle in a colour that was not the tooltip's own. Every direction now takes its colour from
+  the variant's surface — `inverse-surface` by default and for plain, `surface-container` for rich.
+  Geometry, transitions and the surfaces themselves are unchanged.
+
+- **An uncontained carousel lays every item out at the configured item size, stepping by
+  `itemWidth + gap` and flowing past the container's edge (#78).**
+  The uncontained layout was placed through the multi-browse keyline model: after the first one or
+  two items, slides were scaled down toward a 10 px anchor, so each showed as a sliver a few pixels
+  wide and consecutive items stepped 28.8 px apart instead of 288. That bunched the tail of the row
+  into a fraction of its width and left the row ending well before the container's right edge.
+  Items are now laid out at the configured width, at `itemWidth + gap` steps, and cut only by the
+  container edge — never shrunk into a sliver. How much of an item the edge leaves showing depends
+  on the container width and the scroll position. An item that sits fully past the edge stays laid
+  out and is not hidden. Snap positions are those steps, so a slide's scroll offset is its index
+  times `itemWidth + gap`; the scrollable extent is wider, because the row is now as long as its
+  slides. The contained variants — multi-browse, hero, center-aligned hero and fullscreen — keep
+  their keyline layout, and under reduced motion they behave as before.
+
 ## [3.0.3] - 2026-10-05
 
 ### Fixed
@@ -3864,7 +3892,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.4...HEAD
+[3.0.4]: https://github.com/floor/material/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
