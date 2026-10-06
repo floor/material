@@ -74,16 +74,17 @@ describe('carousel keylines', () => {
     expect(sizes(list)).toEqual([360]);
   });
 
-  test('uncontained keeps one item size and cuts the last one off by a third', () => {
+  test('uncontained keeps one uniform item size flowing past the container edge', () => {
     const list = uncontainedKeylines(700, 280, 8, rules);
     const items = nonAnchors(list);
-    expect(items.filter((k) => k.isFocal).length).toBe(2);
+    expect(items.filter((k) => k.isFocal).length).toBe(3);
     expect(items[0]!.size).toBe(280);
     expect(items[1]!.size).toBe(280);
-    // 700 - 2 * (280 + 8) = 124 left: the third item is 186 wide with 62 hidden
+    expect(items[2]!.size).toBe(280);
+    // 2 * (280 + 8) + 280 = 856: the third item flows past 700 with 156 cutoff
     const cut = items.at(-1)!;
-    expect(cut.size).toBe(186);
-    expect(cut.cutoff).toBeCloseTo(62, 5);
+    expect(cut.size).toBe(280);
+    expect(cut.cutoff).toBe(156);
   });
 
   test('full-screen is one item the size of the container', () => {

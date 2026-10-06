@@ -36,10 +36,10 @@ const slides = [
 ];
 
 /** JSDOM has no layout: give the scroller a size */
-const sized = (carousel: ReturnType<typeof createCarousel>, width: number) => {
+const sized = (carousel: ReturnType<typeof createCarousel>, width: number, height = 200) => {
   const scroller = carousel.element.querySelector('.mtrl-carousel__scroller') as HTMLElement;
   Object.defineProperty(scroller, 'clientWidth', { value: width, configurable: true });
-  Object.defineProperty(scroller, 'clientHeight', { value: 200, configurable: true });
+  Object.defineProperty(scroller, 'clientHeight', { value: height, configurable: true });
   return scroller;
 };
 
@@ -556,3 +556,68 @@ describe('carousel opt-in wheel', () => {
     } finally { hero.carousel.destroy(); vertical.carousel.destroy(); }
   });
 });
+
+describe('carousel reduced motion variant preservation', () => {
+  beforeEach(() => {
+    Object.defineProperty(dom.window, 'matchMedia', {
+      value: (query: string) => ({
+        matches: query.includes('prefers-reduced-motion: reduce'),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+      configurable: true,
+    });
+  });
+
+  test('full-screen variant sizes item to container under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'full-screen', slides });
+    sized(carousel, 400, 600);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.height).toBe('600px');
+  });
+
+  test('hero variant keeps container or capped width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'hero', slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('600px');
+  });
+
+  test('hero-center variant keeps container or capped width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'hero-center', slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('600px');
+  });
+
+  test('multi-browse variant keeps preferred item width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'multi-browse', itemWidth: 280, slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('280px');
+  });
+});
+
+describe('carousel uncontained accessibility and keyboard navigation', () => {
+  test('uncontained offscreen items do not have visibility hidden', () => {
+    const carousel = createCarousel({
+      variant: 'uncontained',
+      itemWidth: 280,
+      gap: 8,
+      padding: 16,
+      slides: Array.from({ length: 6 }, (_, i) => ({ title: `Slide ${i}` })),
+    });
+    document.body.appendChild(carousel.element);
+    sized(carousel, 760);
+    carousel.addSlide({ title: 'Slide 6' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    // Slide 3 is at start = 16 + 3 * 288 = 880px > container width 760px.
+    // It must remain reachable by keyboard and screen reader, not visibility: hidden.
+    expect(items[3]!.style.visibility).not.toBe('hidden');
+  });
+});
+
