@@ -62,6 +62,35 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   assert.deepEqual(styles, { header: "flex", title: "22px", subtitle: "14px", avatar: "40px", padding: "16px", actions: "flex", alignment: "flex-end", image: "contain" });
   const media = await root.locator(".mtrl-card__media").boundingBox();
   assert(media && Math.abs(media.width / media.height - 16 / 9) < 0.01);
+  // A header with content and actions after it keeps the interior bottom pad.
+  assert.equal(await root.locator(".mtrl-card__header").evaluate(element => getComputedStyle(element).paddingBottom), "0px");
+  await page.evaluate(() => {
+    const state = window as unknown as CardWindow;
+    const { default: createCard, createCardHeader, createCardMedia } = state.cardParts;
+    const block = document.createElement("div");
+    block.style.cssText = "width:100%;height:100%;background:#c4c7c5";
+    const card = createCard({ variant: "outlined" });
+    card.element.id = "card-header-only";
+    card.element.style.width = "340px";
+    card.addMedia(createCardMedia({ element: block, aspectRatio: "1:1" }));
+    card.setHeader(createCardHeader({ title: "90th minute", subtitle: "4.31 MB" }));
+    state.cards.push(card);
+    document.body.append(card.element);
+  });
+  const only = page.locator("#card-header-only .mtrl-card__header");
+  assert.equal(await only.evaluate(element => getComputedStyle(element).paddingTop), "16px");
+  const headerOnly = await only.evaluate(element => {
+    const card = element.parentElement!;
+    const subtitle = card.querySelector(".mtrl-card__header-subtitle")!;
+    return {
+      paddingBottom: getComputedStyle(element).paddingBottom,
+      lastChild: element === card.lastElementChild,
+      gap: card.getBoundingClientRect().bottom - subtitle.getBoundingClientRect().bottom,
+    };
+  });
+  assert.equal(headerOnly.lastChild, true);
+  assert.equal(headerOnly.paddingBottom, "16px", `header-only padding-bottom ${headerOnly.paddingBottom}, gap ${headerOnly.gap}px`);
+  assert.ok(headerOnly.gap >= 12, `header-only subtitle is ${headerOnly.gap}px from the card edge`);
   const light = await root.evaluate(element => getComputedStyle(element).backgroundColor);
   await page.screenshot({ path: join(artifacts, "card-light.png"), animations: "disabled" });
   await page.evaluate(() => document.documentElement.setAttribute("data-theme-mode", "dark"));

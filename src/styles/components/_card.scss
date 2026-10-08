@@ -179,6 +179,12 @@ $component: '#{base.$prefix}-card';
     padding: v.card('padding');
     padding-bottom: 0;
 
+    // A header that is the card's edge keeps the same 16px the other sides use.
+    // Interior headers stay flush so content or actions can follow.
+    &:last-child {
+      padding-bottom: v.card('padding');
+    }
+
     &-avatar {
       margin-right: v.card('padding');
       flex-shrink: 0;
