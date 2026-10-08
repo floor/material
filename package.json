@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -489,6 +489,7 @@
     "drawer:check": "bun run scripts/check-drawer.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
+    "carousel:check": "bun run scripts/check-carousel.ts",
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",

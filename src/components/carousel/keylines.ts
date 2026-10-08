@@ -353,19 +353,8 @@ export const heroKeylines = (
   return fromArrangement(arrangement, containerSize, gap, rules.anchorSize, rules.anchorSize, alignment);
 };
 
-const mediumChildSize = (minimum: number, largeSize: number, remaining: number, threshold: number): number => {
-  let medium = Math.max(remaining * 1.5, minimum);
-  if (medium > largeSize * threshold) medium = Math.max(remaining * 1.2, minimum);
-  return medium;
-};
-
-/**
- * Uncontained: every item keeps its width and the last visible one is cut
- * off at the trailing edge, about a third of it hidden. Compose folds the
- * spacing into the item size; here the gaps stay between the items so the
- * spec's 8dp holds and the cut-off item keeps two thirds visible.
- */
-export const uncontainedKeylines = (
+/** Capped uniform keyline for contained variants under prefers-reduced-motion: reduce */
+export const cappedKeylines = (
   containerSize: number,
   itemSize: number,
   gap: number,
@@ -375,20 +364,46 @@ export const uncontainedKeylines = (
   const large = Math.min(itemSize, containerSize);
   const largeCount = Math.max(1, Math.floor((containerSize + gap) / (large + gap)));
   const remaining = Math.max(0, containerSize - largeCount * (large + gap));
-  const mediumCount = remaining > 0 ? 1 : 0;
-  const medium = mediumChildSize(rules.anchorSize, large, remaining, rules.mediumLargeThreshold);
-  const arrangement: Arrangement = {
-    priority: 0,
-    smallSize: 0,
-    smallCount: 0,
-    mediumSize: medium,
-    mediumCount,
-    largeSize: large,
-    largeCount,
-  };
-  const xSmall = Math.min(rules.anchorSize, itemSize);
-  const leftAnchor = Math.max(xSmall, medium * 0.5);
-  return fromArrangement(arrangement, containerSize, gap, leftAnchor, rules.anchorSize, 'start');
+  let medium = Math.max(remaining * 1.5, rules.anchorSize);
+  if (medium > large * rules.mediumLargeThreshold) medium = Math.max(remaining * 1.2, rules.anchorSize);
+  return fromArrangement(
+    { priority: 0, smallSize: 0, smallCount: 0, mediumSize: medium, mediumCount: remaining > 0 ? 1 : 0, largeSize: large, largeCount },
+    containerSize,
+    gap,
+    Math.max(Math.min(rules.anchorSize, itemSize), medium * 0.5),
+    rules.anchorSize,
+    'start',
+  );
+};
+
+/**
+ * Uncontained: all items are a single uniform size and flow past the
+ * edge of the container without changing size (Material Design 3
+ * Carousel guidelines & specs: m3.material.io/components/carousel/guidelines).
+ * How much of the trailing item is cut off is determined by the container
+ * width and scroll position.
+ */
+export const uncontainedKeylines = (
+  containerSize: number,
+  itemSize: number,
+  gap: number,
+  _rules?: KeylineRules,
+): KeylineList => {
+  if (containerSize <= 0 || itemSize <= 0) return [];
+  const large = Math.min(itemSize, containerSize);
+  const count = Math.max(1, Math.ceil((containerSize + gap) / (large + gap)));
+  return Array.from({ length: count }, (_, i) => {
+    const offset = large / 2 + i * (large + gap);
+    return {
+      size: large,
+      offset,
+      unadjustedOffset: offset,
+      isFocal: true,
+      isAnchor: false,
+      isPivot: i === 0,
+      cutoff: Math.max(0, offset + large / 2 - containerSize),
+    };
+  });
 };
 
 /** Full-screen: one item fills the container edge to edge */
