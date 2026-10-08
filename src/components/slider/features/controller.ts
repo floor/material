@@ -112,7 +112,7 @@ export const withController =
     return range === 0 ? 0 : ((value - state.min) / range) * 100;
   };
 
-  // A discrete slider puts its interior steps on a scale inset by the track's corner
+  // A discrete slider insets every step, ends included, by the track's corner
   // radius; a continuous one spans the whole track (see trackPosition).
   // Read at each use: a right-to-left layout is known only once the slider is placed.
   const axisNow = () => getAxis(config, isRtl(component.element));
@@ -136,8 +136,8 @@ export const withController =
       const containerRect = container.getBoundingClientRect();
       const range = state.max - state.min;
 
-      // The inverse of trackPosition: the interior of a discrete slider is on the
-      // inset scale, and anything beyond it clamps to the first or last step.
+      // The inverse of trackPosition: a discrete slider reads that inset scale,
+      // and a pointer past either end clamps to the first or last step.
       // `position` is a client coordinate on the slider's axis.
       const edge = inset();
       const axis = axisNow();
