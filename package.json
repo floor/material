@@ -490,6 +490,7 @@
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts",
+    "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",

@@ -148,9 +148,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The tooltip's arrow reads one custom property set by the variant whose
     // surface it grows from, replacing the twelve plain-arrow overrides
     // (styles/components/_tooltip.scss).
+    // A card header that is the card's last child keeps the 16px padding
+    // (styles/components/_card.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("e6a5279ede09980078789bda4231db3780a1524dc4e40c8d1786ed587f2127ee");
-    expect(css.length).toBe(529484);
+      .toBe("4006a5a28f22c74630c35ce77aed7f5a59376a86e49983e9ffc7164e11b73fd7");
+    expect(css.length).toBe(529534);
   });
 
   test("today's sheets still resolve to the fixture", () => {
