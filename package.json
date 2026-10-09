@@ -20,7 +20,12 @@
     "vue",
     "svelte",
     "solid",
-    "design system"
+    "design system",
+    "material 3 expressive",
+    "m3 expressive",
+    "expressive motion",
+    "spring motion",
+    "motion"
   ],
   "sideEffects": [
     "**/*.css",
