@@ -2,6 +2,7 @@
 
 import { TIME_FORMAT, TimeValue, type TimeFormat } from "./types";
 import { activeElementOf } from "../../core/dom/focus";
+import { effectiveZoom } from "../../core/dom/scale";
 
 /** Which part of the time the dial is setting. */
 export type DialSelector = "hour" | "minute" | "second";
@@ -175,8 +176,13 @@ export const createDial = (options: DialOptions): Dial => {
   // the 24-hour ring. The hand follows a drag without motion.
   const valueAt = (event: PointerEvent): number => {
     const box = element.getBoundingClientRect();
-    const dx = event.clientX - (box.left + box.width / 2);
-    const dy = event.clientY - (box.top + box.height / 2);
+    // The pointer is in visual pixels and the ring radii are the dial's own:
+    // divide the offset by the zoom the dial renders under, or a scaled dial
+    // reads a press at 95% of its half-width as an inner-ring one and picks
+    // the hour twelve steps away.
+    const zoom = effectiveZoom(element);
+    const dx = (event.clientX - (box.left + box.width / 2)) / zoom;
+    const dy = (event.clientY - (box.top + box.height / 2)) / zoom;
     const degrees = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
     if (selector !== "hour") return Math.round(degrees / 6) % 60;
     const step = Math.round(degrees / 30) % 12;

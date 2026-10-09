@@ -16,6 +16,7 @@ import {
   PROGRESS_WAVE,
 } from "../constants";
 import { observeCanvasResize } from "../../../core/canvas/resize";
+import { effectiveZoom } from "../../../core/dom/scale";
 import { createColors } from "./colors";
 import { drawCircularProgress } from "./circular";
 import { drawLinearProgress } from "./linear";
@@ -158,8 +159,16 @@ export const withCanvas =
     const paintBox = (): void => {
       const ratio = ratioOf();
       const height = boxHeight();
-      const bitmapW = Math.round((isCircular ? currentSize : LINEAR_BITMAP) * ratio);
-      const bitmapH = Math.round(height * ratio);
+      // The box is the token box, but the canvas renders it inside whatever
+      // zoom its subtree sits in: a bitmap sized from the tokens alone is
+      // over-sampled below 1 and under-sampled above it. The drawing is not
+      // part of the problem — it is mapped onto the measured box and the
+      // shapes scale to it, so the picture is proportional at any factor.
+      // Rounding, and a 0-wide bitmap is a blank canvas: a factor small enough
+      // to round the track away keeps one pixel of it.
+      const zoom = effectiveZoom(canvas);
+      const bitmapW = Math.max(1, Math.round((isCircular ? currentSize : LINEAR_BITMAP) * ratio * zoom));
+      const bitmapH = Math.max(1, Math.round(height * ratio * zoom));
       canvas.style.width = isCircular ? `${currentSize}px` : "100%";
       canvas.style.height = `${height}px`;
       // Assigning width or height clears the bitmap even when unchanged.

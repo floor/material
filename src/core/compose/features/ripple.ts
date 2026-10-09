@@ -57,7 +57,7 @@ const RELEASE = ["pointerup", "pointercancel", "mouseleave"] as const;
 
 export const createRipple = (config: RippleConfig = {}): RippleController => {
   // The wave's motion and opacity come from the stylesheet.
-  const options = { duration: config.duration ?? RIPPLE_CONFIG.duration };
+  const duration = config.duration ?? RIPPLE_CONFIG.duration;
 
   const mounts = new WeakMap<HTMLElement, () => void>();
 
@@ -67,6 +67,13 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       const doc = element.ownerDocument;
       const view = doc.defaultView;
       if (!view) return;
+      // The optional call matters: every browser window has getComputedStyle
+      // and so does this build's server DOM (src/ssr/server-dom.ts), but a
+      // minimal fake window in the unit suite does not, and with `?.` the
+      // whole chain short-circuits to undefined there instead of throwing
+      // into the caller's component constructor. Removing those two
+      // characters to save bytes failed "constructs without browser-only
+      // APIs"; the bytes were found elsewhere.
       if (view.getComputedStyle?.(element).position === "static") {
         element.style.position = "relative";
       }
@@ -79,13 +86,20 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       // is the press, and mousedown only fires on touch after the finger lifts.
       const press = (event: PointerEvent): void => {
         const bounds = element.getBoundingClientRect();
-        const size = Math.max(bounds.width, bounds.height) * 2;
+        // A rect is visual pixels; these lengths are layout pixels inside the
+        // element and render scaled again, so the element's own zoom is
+        // divided back out. It is 1 outside a scaled container, where nothing
+        // moves. Read here rather than through `effectiveZoom` (core/dom): the
+        // import cost 18 gzipped bytes in the split-button bundle, and its
+        // budget had 17 to give (scripts/size.ts).
+        const zoom = element.currentCSSZoom || 1;
+        const size = Math.max(bounds.width, bounds.height) * 2 / zoom;
         const wave = doc.createElement("div");
         wave.className = `${PREFIX}-ripple-wave active`;
         Object.assign(wave.style, {
           width: `${size}px`, height: `${size}px`,
-          left: `${event.clientX - bounds.left - size / 2}px`,
-          top: `${event.clientY - bounds.top - size / 2}px`,
+          left: `${(event.clientX - bounds.left) / zoom - size / 2}px`,
+          top: `${(event.clientY - bounds.top) / zoom - size / 2}px`,
         });
         let timer: number | undefined;
         let released = false;
@@ -94,7 +108,9 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
         };
         const dispose = (): void => {
           removeListeners();
-          if (timer !== undefined) view.clearTimeout(timer);
+          // Truthiness, not `!== undefined`: a timer handle is a positive
+          // integer, so every real handle takes the same branch.
+          if (timer) view.clearTimeout(timer);
           wave.remove();
           waves.delete(dispose);
         };
@@ -103,7 +119,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
           released = true;
           removeListeners();
           wave.classList.add("fade-out");
-          timer = view.setTimeout(dispose, options.duration);
+          timer = view.setTimeout(dispose, duration);
         };
         waves.add(dispose);
         for (const type of RELEASE) doc.addEventListener(type, release);

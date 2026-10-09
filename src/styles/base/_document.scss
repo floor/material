@@ -52,3 +52,19 @@ html {
 *::after {
     box-sizing: border-box;
 }
+
+// The scale factor. `zoom` scales the element and everything under it —
+// layout, borders, glyphs, focus rings, the pixels of a canvas — while the
+// custom property inherits, so one number on a subtree (or on `:root`) sizes
+// the whole product. Cumulated with any `zoom` on an ancestor, the way nested
+// elements accumulate. Script that writes a px length measured inside the
+// subtree divides by `effectiveZoom` from `core/dom`: a rect read there is in
+// visual pixels and a length written there is scaled again.
+//
+// Below 1 is the consumer's call. Type and targets shrink with everything
+// else: M3's 48px minimum touch target and the 12px legibility floor are the
+// consumer's to keep, and the library does not enforce them here.
+.#{base.$prefix}-scale,
+[data-#{base.$prefix}-scale] {
+    zoom: var(--#{base.$prefix}-scale, 1);
+}

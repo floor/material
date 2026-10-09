@@ -1,4 +1,6 @@
 // src/core/navigation/ripple.ts
+import { effectiveZoom } from '../dom/scale';
+
 /** A CSS-animated state layer with no document listeners, timers, or animation frames. */
 export function mountRailRipple(root: HTMLElement, className: (part: string) => string): () => void {
     const waveClass = className('__ripple');
@@ -14,14 +16,20 @@ export function mountRailRipple(root: HTMLElement, className: (part: string) => 
             return;
         const host = target.querySelector<HTMLElement>(`.${className('__indicator')}`) || target;
         const bounds = host.getBoundingClientRect();
+        // A rect is visual pixels; these lengths are layout pixels inside the
+        // host and render scaled again, so the host's own zoom is divided back
+        // out. It is 1 outside a scaled container, where nothing moves.
+        const zoom = effectiveZoom(host);
+        const pointer = event instanceof MouseEvent;
+        const size = Math.max(bounds.width, bounds.height) * 2 / zoom;
+        const left = (pointer ? event.clientX - bounds.left : bounds.width / 2) / zoom;
+        const top = (pointer ? event.clientY - bounds.top : bounds.height / 2) / zoom;
         const wave = document.createElement('span');
         wave.className = waveClass;
         wave.setAttribute('aria-hidden', 'true');
-        const size = Math.max(bounds.width, bounds.height) * 2;
-        const pointer = event instanceof MouseEvent;
         wave.style.width = wave.style.height = `${size}px`;
-        wave.style.left = `${(pointer ? event.clientX - bounds.left : bounds.width / 2) - size / 2}px`;
-        wave.style.top = `${(pointer ? event.clientY - bounds.top : bounds.height / 2) - size / 2}px`;
+        wave.style.left = `${left - size / 2}px`;
+        wave.style.top = `${top - size / 2}px`;
         host.append(wave);
     };
     const finish = (event: AnimationEvent): void => {

@@ -13,6 +13,7 @@ import {
 import createChip from "../chip/chip";
 import { CHIPS_EVENTS } from "../constants";
 import { activeElementOf } from "../../../core/dom/focus";
+import { effectiveZoom } from "../../../core/dom/scale";
 
 /**
  * Add controller functionality to chips component
@@ -186,13 +187,19 @@ export const withController =
 
       const isVertical = component.layout && component.layout.isVertical();
 
+      // The offsets are the container's own layout pixels, the rects are
+      // visual ones: a scroll offset is written in the container's pixels, so
+      // the rect halves need the zoom divided out, or a chip set inside a
+      // scaled container scrolls the chip past its centre.
+      const zoom = effectiveZoom(container);
+
       if (isVertical) {
         // For vertical scroll
         const scrollTop =
           chipElement.offsetTop -
           container.offsetTop -
-          containerRect.height / 2 +
-          chipRect.height / 2;
+          containerRect.height / 2 / zoom +
+          chipRect.height / 2 / zoom;
 
         container.scrollTo({
           top: Math.max(0, scrollTop),
@@ -202,8 +209,8 @@ export const withController =
         const scrollLeft =
           chipElement.offsetLeft -
           container.offsetLeft -
-          containerRect.width / 2 +
-          chipRect.width / 2;
+          containerRect.width / 2 / zoom +
+          chipRect.width / 2 / zoom;
 
         container.scrollTo({
           left: Math.max(0, scrollLeft),
