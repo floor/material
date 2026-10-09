@@ -10260,10 +10260,9 @@ try {
     });
 
     // Where the factory without a layer puts it, on the body with the global
-    // stylesheet, hovered on the same target alongside the element's. That
-    // tooltip is `position: fixed` at page coordinates, so with the page
-    // scrolled it sits the scroll offset below its place: the top-layer one
-    // is compared with it less the scroll.
+    // stylesheet, hovered on the same target alongside the element's. Both
+    // tooltips are `position: fixed` and placed in viewport coordinates, so
+    // with the page scrolled the two are compared directly.
     await page.evaluate(() => {
       const w = window as unknown as PopWin & { __unlayered: Tip };
       w.__unlayered = w.mtrl.createTooltip({ target: w.__pop.root.getElementById("pt-save"), text: "Save the file" });
@@ -10274,7 +10273,7 @@ try {
         const { top, left, width, height } = tip.element.getBoundingClientRect();
         const style = getComputedStyle(tip.element);
         const result = {
-          rect: { top: top - window.scrollY, left, width, height },
+          rect: { top, left, width, height },
           style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
           classes: [...tip.element.classList].sort().join(" "),
         };
