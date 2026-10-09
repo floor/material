@@ -106,9 +106,95 @@ try {
       await page.screenshot({ path: `${artifacts}/${name}.png`, clip });
     }
   }
+
+  // --------------------------------------------------------------- scrolled page
+  // The surface is `position: fixed` in every path (`src/styles/components/_tooltip.scss:13`),
+  // so its inline top/left place it in viewport coordinates, and a top-layer
+  // popover is placed in viewport coordinates too. The offset between a
+  // tooltip and its target is therefore a function of their viewport positions
+  // alone: holding the target at one viewport position and scrolling the page
+  // must not change it. The non-top-layer path added window.scrollX/Y to the
+  // target's already viewport-relative rectangle, which moved the tooltip away
+  // by the scroll distance.
+  const scrollBy = 500;
+  await page.evaluate(() => {
+    // A page taller and wider than the viewport, so it scrolls on both axes
+    document.body.style.width = "1800px";
+    document.body.style.height = "1700px";
+  });
+
+  type Box = { top: number; left: number; right: number; bottom: number };
+  const boxes = () => page.evaluate(() => {
+    const box = (element: Element): Box => {
+      const { top, left, right, bottom } = element.getBoundingClientRect();
+      return { top, left, right, bottom };
+    };
+    return {
+      target: box(document.querySelector("#target")!),
+      tip: box(document.querySelector(".mtrl-tooltip")!),
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      scroll: { x: window.scrollX, y: window.scrollY },
+    };
+  });
+
+  /**
+   * Shows a tooltip on the target, held at a viewport position on a page
+   * scrolled by (scrollX, scrollY), and measures both boxes.
+   */
+  const showAt = async (
+    viewportX: number, viewportY: number, position: TooltipPosition, layer: "top" | undefined, scrollX: number, scrollY: number,
+  ) => {
+    await page.evaluate(({ targetX, targetY, scrollX, scrollY }) => {
+      const target = document.querySelector("#target") as HTMLElement;
+      target.style.left = `${targetX}px`;
+      target.style.top = `${targetY}px`;
+      window.scrollTo(scrollX, scrollY);
+    }, { targetX: viewportX + scrollX, targetY: viewportY + scrollY, scrollX, scrollY });
+    await page.evaluate(({ position, layer }) => window.mountTooltip({
+      position, layer, text: "Search, and filter",
+    }), { position, layer });
+    await page.waitForTimeout(30);
+    return boxes();
+  };
+
+  /** The gap between the two boxes along the placement axis. */
+  const gap = (position: TooltipPosition, target: Box, tip: Box): number =>
+    ({ top: target.top - tip.bottom, bottom: tip.top - target.bottom, left: target.left - tip.right, right: tip.left - target.right } as Record<string, number>)[position]!;
+
+  const scenarios: { name: string; position: TooltipPosition; layer?: "top"; x: number; y: number }[] = [];
+  for (const layer of [undefined, "top"] as const) for (const side of ["top", "bottom", "left", "right"] as const) {
+    scenarios.push({ name: `${layer ? "top-layer " : ""}${side}`, position: side, layer, x: 400, y: 300 });
+  }
+  // The horizontal clamp, at either viewport edge, when scrolled
+  scenarios.push({ name: "left edge", position: "left", x: 0, y: 300 });
+  scenarios.push({ name: "right edge", position: "right", x: 760, y: 300 });
+
+  const scrolledRows: Record<string, unknown>[] = [];
+  for (const scenario of scenarios) {
+    const flat = await showAt(scenario.x, scenario.y, scenario.position, scenario.layer, 0, 0);
+    const down = await showAt(scenario.x, scenario.y, scenario.position, scenario.layer, scrollBy, scrollBy);
+    const name = `scrolled-${scenario.name.replace(/ /g, "-")}`;
+    if (down.scroll.x !== scrollBy || down.scroll.y !== scrollBy) {
+      failures.push(`${name}: asked for a scroll of ${scrollBy},${scrollBy}, measured at ${down.scroll.x},${down.scroll.y}`);
+    }
+    const before = { dx: flat.tip.left - flat.target.left, dy: flat.tip.top - flat.target.top };
+    const after = { dx: down.tip.left - down.target.left, dy: down.tip.top - down.target.top };
+    if (Math.abs(after.dx - before.dx) > 1 || Math.abs(after.dy - before.dy) > 1) {
+      failures.push(
+        `${name}: at scroll ${scrollBy},${scrollBy} the tooltip sits ${after.dx.toFixed(1)},${after.dy.toFixed(1)} from its target, ` +
+        `against ${before.dx.toFixed(1)},${before.dy.toFixed(1)} unscrolled ` +
+        `(gap ${gap(scenario.position, down.target, down.tip).toFixed(1)}px against ${gap(scenario.position, flat.target, flat.tip).toFixed(1)}px)`,
+      );
+    }
+    if (down.tip.left < -1 || down.tip.right > down.viewport.width + 1) {
+      failures.push(`${name}: scrolled tooltip outside the viewport at ${down.tip.left.toFixed(1)}..${down.tip.right.toFixed(1)} of ${down.viewport.width}`);
+    }
+    scrolledRows.push({ name, position: scenario.position, layer: scenario.layer ?? "body", unscrolled: before, scrolled: after });
+  }
+
   assert.deepEqual(errors, []);
   // Every mismatch is collected, so one run names every failing case.
   assert.deepEqual(failures, []);
-  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, failures, errors }, null, 2));
-  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, errors }, null, 2));
+  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, scrolled: scrolledRows, failures, errors }, null, 2));
+  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, scrolled: scrolledRows.length, errors }, null, 2));
 } finally { await browser.close(); server.stop(true); }
