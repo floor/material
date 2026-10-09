@@ -17,6 +17,52 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.0.5] - 2026-10-09
+
+### Changed
+
+- **`package.json` adds five keywords: `material 3 expressive`, `m3 expressive`, `expressive
+  motion`, `spring motion` and `motion`.** They are what npm's search reads. The library follows
+  the Material 3 Expressive tokens for sizes, shapes and colours, and takes the spring motion
+  tokens where a component's design uses them. The description, the README and the code are
+  unchanged.
+
+### Fixed
+
+- **A discrete slider's handle rests on the end stop at either end of the track, not past it
+  (#79).**
+  A discrete slider sets its stops in from the ends of the track by the end's own corner radius —
+  8, 12, 16 or 28 px at XS to XL — so its first and last stops sit inside the pill. The handle's
+  position dropped that inset at the first and last values, so at the minimum and the maximum its
+  centre sat on the track's very edge, a corner radius past the end stop, with the handle
+  straddling the end of the pill. Every value position now takes the inset, the ends included: the
+  handle's centre lands on the end stop, and the filled track stops with it, keeping the handle gap
+  it keeps everywhere else. A continuous slider spans the whole track as before; the interior
+  stops, every size and right-to-left are unchanged.
+
+- **A toolbar's overflow button draws its icon in the toolbar's own colour, not black (#81).**
+  The overflow icon's SVG carried no `fill`, so it painted the SVG initial black in every variant
+  and both themes, while the toolbar's other icons follow the button through
+  `fill="currentColor"`. On a dark or coloured toolbar the overflow button showed black dots. The
+  icon now carries `currentColor`, so it takes the colour its siblings take, in every theme and
+  under a custom `color`. A custom `overflowIcon` is drawn as you give it.
+
+- **A card whose header is its last child keeps the bottom padding of its other three sides
+  (#81).**
+  A card header takes the card's 16 px padding on the top, left and right and no bottom padding, so
+  content or actions can follow it flush. A card that was only a header — no content, no actions —
+  kept that zero, and its title and supporting text sat on the card's lower edge. A header that is
+  the card's last child now keeps the same 16 px at the bottom as on the other sides; a header
+  followed by content or actions stays flush.
+
+- **A tooltip outside the top layer is placed correctly on a scrolled page (#84).**
+  The surface is fixed to the viewport in every path and takes the target's viewport rectangle,
+  but the placement added the document's scroll offset to it: on a page scrolled 300 px, the
+  tooltip sat one scroll distance away from its target, and a page scrolled sideways pushed it
+  aside the same way. The placement no longer adds the scroll, so the surface lands on its
+  target at any scroll position, in every placement. The top-layer path, the viewport clamps and
+  the transitions are unchanged.
+
 ## [3.0.4] - 2026-10-06
 
 ### Fixed
@@ -3892,7 +3938,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.5...HEAD
+[3.0.5]: https://github.com/floor/material/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/floor/material/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2

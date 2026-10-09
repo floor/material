@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -20,7 +20,12 @@
     "vue",
     "svelte",
     "solid",
-    "design system"
+    "design system",
+    "material 3 expressive",
+    "m3 expressive",
+    "expressive motion",
+    "spring motion",
+    "motion"
   ],
   "sideEffects": [
     "**/*.css",
