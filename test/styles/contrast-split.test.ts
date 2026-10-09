@@ -150,9 +150,11 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_tooltip.scss).
     // A card header that is the card's last child keeps the 16px padding
     // (styles/components/_card.scss).
+    // The scale factor: one rule on `.mtrl-scale` / `[data-mtrl-scale]`, the
+    // custom property it reads inherited (styles/base/_document.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4006a5a28f22c74630c35ce77aed7f5a59376a86e49983e9ffc7164e11b73fd7");
-    expect(css.length).toBe(529534);
+      .toBe("049af928c5a67c50550e2da77317ff7582242f58ddcd2c69000877f4e765e717");
+    expect(css.length).toBe(529590);
   });
 
   test("today's sheets still resolve to the fixture", () => {

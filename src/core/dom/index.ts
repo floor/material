@@ -29,6 +29,8 @@ export { activeElementOf, deepActiveElement } from "./focus";
 export { createRoving, isTextEditable } from "./roving";
 export type { Roving, RovingOptions } from "./roving";
 
+export { effectiveZoom } from "./scale";
+
 export {
   supportsTopLayer,
   showInTopLayer,
