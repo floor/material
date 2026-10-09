@@ -95,9 +95,12 @@ export const withAPI =
       // changes the visual rect but must not change placement or clamping.
       const tooltipWidth = component.element.offsetWidth;
       const tooltipHeight = component.element.offsetHeight;
+      // getBoundingClientRect() is relative to the viewport, and the surface is
+      // `position: fixed` in every path (see the stylesheet), so the rectangle
+      // is already in the coordinates the surface is placed in. The scroll
+      // offset this used to add to paths below the top layer placed the
+      // tooltip one scroll distance away from its target on a scrolled page.
       const targetRect = target.getBoundingClientRect();
-      const scrollY = topLayer ? 0 : window.scrollY || window.pageYOffset;
-      const scrollX = topLayer ? 0 : window.scrollX || window.pageXOffset;
 
       // Default offset
       const offset = DEFAULT_OFFSET;
@@ -109,102 +112,97 @@ export const withAPI =
       // Calculate position based on position value
       switch (position) {
         case TOOLTIP_POSITIONS.TOP:
-          top = targetRect.top + scrollY - tooltipHeight - offset;
+          top = targetRect.top - tooltipHeight - offset;
           left =
             targetRect.left +
-            scrollX +
             targetRect.width / 2 -
             tooltipWidth / 2;
           arrowPosition = "bottom";
           break;
 
         case TOOLTIP_POSITIONS.TOP_START:
-          top = targetRect.top + scrollY - tooltipHeight - offset;
-          left = targetRect.left + scrollX;
+          top = targetRect.top - tooltipHeight - offset;
+          left = targetRect.left;
           arrowPosition = "bottom-start";
           break;
 
         case TOOLTIP_POSITIONS.TOP_END:
-          top = targetRect.top + scrollY - tooltipHeight - offset;
+          top = targetRect.top - tooltipHeight - offset;
           left =
-            targetRect.left + scrollX + targetRect.width - tooltipWidth;
+            targetRect.left + targetRect.width - tooltipWidth;
           arrowPosition = "bottom-end";
           break;
 
         case TOOLTIP_POSITIONS.RIGHT:
           top =
             targetRect.top +
-            scrollY +
             targetRect.height / 2 -
             tooltipHeight / 2;
-          left = targetRect.left + scrollX + targetRect.width + offset;
+          left = targetRect.left + targetRect.width + offset;
           arrowPosition = "left";
           break;
 
         case TOOLTIP_POSITIONS.RIGHT_START:
-          top = targetRect.top + scrollY;
-          left = targetRect.left + scrollX + targetRect.width + offset;
+          top = targetRect.top;
+          left = targetRect.left + targetRect.width + offset;
           arrowPosition = "left-start";
           break;
 
         case TOOLTIP_POSITIONS.RIGHT_END:
           top =
-            targetRect.top + scrollY + targetRect.height - tooltipHeight;
-          left = targetRect.left + scrollX + targetRect.width + offset;
+            targetRect.top + targetRect.height - tooltipHeight;
+          left = targetRect.left + targetRect.width + offset;
           arrowPosition = "left-end";
           break;
 
         case TOOLTIP_POSITIONS.BOTTOM:
-          top = targetRect.top + scrollY + targetRect.height + offset;
+          top = targetRect.top + targetRect.height + offset;
           left =
             targetRect.left +
-            scrollX +
             targetRect.width / 2 -
             tooltipWidth / 2;
           arrowPosition = "top";
           break;
 
         case TOOLTIP_POSITIONS.BOTTOM_START:
-          top = targetRect.top + scrollY + targetRect.height + offset;
-          left = targetRect.left + scrollX;
+          top = targetRect.top + targetRect.height + offset;
+          left = targetRect.left;
           arrowPosition = "top-start";
           break;
 
         case TOOLTIP_POSITIONS.BOTTOM_END:
-          top = targetRect.top + scrollY + targetRect.height + offset;
+          top = targetRect.top + targetRect.height + offset;
           left =
-            targetRect.left + scrollX + targetRect.width - tooltipWidth;
+            targetRect.left + targetRect.width - tooltipWidth;
           arrowPosition = "top-end";
           break;
 
         case TOOLTIP_POSITIONS.LEFT:
           top =
             targetRect.top +
-            scrollY +
             targetRect.height / 2 -
             tooltipHeight / 2;
-          left = targetRect.left + scrollX - tooltipWidth - offset;
+          left = targetRect.left - tooltipWidth - offset;
           arrowPosition = "right";
           break;
 
         case TOOLTIP_POSITIONS.LEFT_START:
-          top = targetRect.top + scrollY;
-          left = targetRect.left + scrollX - tooltipWidth - offset;
+          top = targetRect.top;
+          left = targetRect.left - tooltipWidth - offset;
           arrowPosition = "right-start";
           break;
 
         case TOOLTIP_POSITIONS.LEFT_END:
           top =
-            targetRect.top + scrollY + targetRect.height - tooltipHeight;
-          left = targetRect.left + scrollX - tooltipWidth - offset;
+            targetRect.top + targetRect.height - tooltipHeight;
+          left = targetRect.left - tooltipWidth - offset;
           arrowPosition = "right-end";
           break;
 
         default:
-          top = targetRect.top + scrollY + targetRect.height + offset;
+          top = targetRect.top + targetRect.height + offset;
           left =
             targetRect.left +
-            scrollX +
             targetRect.width / 2 -
             tooltipWidth / 2;
           arrowPosition = "top";
