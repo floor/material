@@ -7,6 +7,7 @@ import { withEvents, withLifecycle } from "../../core/compose/features";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
 import { setHTML } from "../../core/dom/html";
+import { effectiveZoom } from "../../core/dom/scale";
 import { warnDev } from "../../core/utils/warn";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
@@ -259,7 +260,12 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     measure();
     stagger(true);
     // The items scroll behind the close button when the window is short.
-    const top = root.getBoundingClientRect().top;
+    // The window's top is a visual coordinate and the cap is a length in the
+    // list's own pixels, which render scaled again: divide the read by the
+    // zoom the list sits under, or a scaled menu is capped at twice the room
+    // it has and its list runs into the window's top.
+    const zoom = effectiveZoom(list);
+    const top = root.getBoundingClientRect().top / zoom;
     list.style.maxHeight = top > 0 ? `${Math.max(0, top - FAB_MENU_LIST_GAP - WINDOW_MARGIN)}px` : "";
     list.removeAttribute("inert");
     root.classList.add(`${block}--open`);

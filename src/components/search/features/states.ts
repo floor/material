@@ -19,6 +19,7 @@ import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 import { hideFromTopLayer, showInTopLayer, onModalEscape, type ModalEscape } from "../../../core/dom/layer";
 import { activeElementOf } from "../../../core/dom/focus";
+import { effectiveZoom } from "../../../core/dom/scale";
 import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
 /**
  * Adds state management features to the search component
@@ -72,9 +73,17 @@ export const withStates =
     const surface = component.structure?.surface;
     if (!surface) return;
     const box = component.element.getBoundingClientRect();
-    surface.style.setProperty(property("top"), `${box.top}px`);
-    surface.style.setProperty(property("left"), `${box.left}px`);
-    surface.style.setProperty(property("width"), `${box.width}px`);
+    // The bar's rect is in visual pixels and the surface's own lengths are in
+    // the pixels it renders under: the surface sits in the bar's scaled
+    // frame (both are inside the same `.mtrl-scale` subtree, and its
+    // containing block is that subtree), so each length is the rect divided
+    // by the zoom the surface renders at. Written from the raw rect, a
+    // scaled surface covers half the bar's width and sits half the bar's
+    // offset from the scaled corner.
+    const zoom = effectiveZoom(surface);
+    surface.style.setProperty(property("top"), `${box.top / zoom}px`);
+    surface.style.setProperty(property("left"), `${box.left / zoom}px`);
+    surface.style.setProperty(property("width"), `${box.width / zoom}px`);
   };
   // A press on the scrim closes the docked view. A popover's backdrop is not
   // its own target, as a dialog's is: the press lands on whatever is under it,
