@@ -55,6 +55,14 @@ below are kept as they were published, and the release they announce as 1.0.0 is
   the card's last child now keeps the same 16 px at the bottom as on the other sides; a header
   followed by content or actions stays flush.
 
+- **A tooltip outside the top layer is placed correctly on a scrolled page (#84).**
+  The surface is fixed to the viewport in every path and takes the target's viewport rectangle,
+  but the placement added the document's scroll offset to it: on a page scrolled 300 px, the
+  tooltip sat one scroll distance away from its target, and a page scrolled sideways pushed it
+  aside the same way. The placement no longer adds the scroll, so the surface lands on its
+  target at any scroll position, in every placement. The top-layer path, the viewport clamps and
+  the transitions are unchanged.
+
 ## [3.0.4] - 2026-10-06
 
 ### Fixed
