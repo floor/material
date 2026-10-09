@@ -20,7 +20,7 @@ const COMMANDS = [
   "solid-ssr:floor", "vue-ssr:floor",
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
-  "consumer:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check",
+  "consumer:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check",
   "core:check", "readme-browser:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
 
