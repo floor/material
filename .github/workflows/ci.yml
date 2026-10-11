@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -179,7 +179,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
