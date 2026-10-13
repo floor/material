@@ -92,9 +92,9 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | Import | gzip |
 |--------|-----:|
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.4 kB |
-| `createButton`, without code splitting (the progress indicator included) | 13.7 kB |
+| `createButton`, without code splitting (the progress indicator included) | 13.8 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.9 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 127.0 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 127.1 kB |
 | `material/styles/base` | 3.0 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
 | `material/styles`, the full stylesheet | 62.7 kB |
