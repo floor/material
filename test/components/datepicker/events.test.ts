@@ -33,7 +33,7 @@ const start = new Date(2026, 8, 10);
 const end = new Date(2026, 8, 15);
 
 describe("datepicker event contract", () => {
-  test("setValue and clear are silent, as a native input set by script (FLO-328)", () => {
+  test("setValue and clear are silent, as a native input set by script", () => {
     const picker = mount({ selectionMode: "range" });
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
@@ -73,7 +73,7 @@ describe("datepicker event contract", () => {
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => { expect(payload.value).toEqual(picker.getValue()); events.push(payload); });
     day(picker, start);
-    // `iso` is the <m-datepicker> element's value (FLO-320)
+    // `iso` is the <m-datepicker> element's value
     expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026", iso: "2026-09-10" }]);
   });
 
@@ -86,7 +86,7 @@ describe("datepicker event contract", () => {
     picker.element.querySelector<HTMLButtonElement>('[data-action="open"]')!.click();
     picker.element.querySelector<HTMLButtonElement>('[data-action="open"]')!.click();
     picker.element.querySelector<HTMLButtonElement>('[data-action="open"]')!.click();
-    // A later task: in the one that opened it, a click outside is the opening click (FLO-548)
+    // A later task: in the one that opened it, a click outside is the opening click
     await new Promise((resolve) => setTimeout(resolve, 0));
     document.body.click();
     expect(opened).toEqual([{ value: [start, end] }, { value: [start, end] }, { value: [start, end] }]);

@@ -426,7 +426,7 @@ export interface SliderComponent {
 /**
  * Registers SliderConfig with the global defaults map, so
  * `setComponentDefaults("slider", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

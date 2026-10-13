@@ -56,7 +56,7 @@ export interface SnackbarEvent {
 /**
  * What each snackbar event hands its handler.
  *
- * FLO-114. `on`/`off` are generic over these keys rather than taking a
+ * `on`/`off` are generic over these keys rather than taking a
  * `SnackbarEventType` and one payload type for all four, so a handler is
  * checked against the event it is registered for. The four payloads are the
  * same shape today; the map is what makes them able to differ -- `reason` is
@@ -242,7 +242,7 @@ export interface BaseComponent {
   // pipe has built so far, whose `on` takes an EventCallback -- and `Function`
   // is a supertype of that, so under strictFunctionTypes a host promising to
   // call a handler with anything cannot accept one that takes a typed payload.
-  // That is what stopped the pipe in snackbar.ts:37 resolving. FLO-114.
+  // That is what stopped the pipe in snackbar.ts:37 resolving.
   on?: (event: string, handler: EventCallback) => unknown;
   off?: (event: string, handler: EventCallback) => unknown;
   getClass?: (name: string) => string;

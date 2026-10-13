@@ -71,7 +71,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/26/2026');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/27/2026');
-  // FLO-274: the months page horizontally, as m3.material.io's guidelines have it.
+  // The months page horizontally, as m3.material.io's guidelines have it.
   // With motion on, so the arrows take the sliding path (core:check reduces motion earlier).
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const month = () => page.locator('dialog [role="grid"]:not([aria-hidden])').getAttribute('aria-label');
@@ -104,7 +104,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   await page.locator('[data-action="next"]').click();
   assert.equal(await month(), 'November 2026', 'reduced motion changes the month without sliding');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  // FLO-275: the year picker scrolls vertically in the calendar's own height, opened
+  // The year picker scrolls vertically in the calendar's own height, opened
   // with the selected year in the middle, and has no paging arrows.
   const calendarHeight = await page.locator('.mtrl-datepicker__track').evaluate(el => el.getBoundingClientRect().height);
   await page.locator('[data-action="year"]').click();
@@ -118,7 +118,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(years.selected, '2026', 'the selected year is the current one');
   assert.ok(years.offCentre <= 30, `the selected year opens in the middle (${years.offCentre}px off)`);
   assert.equal(years.arrows, 0, 'no paging arrows on the year list');
-  // FLO-276: the full-screen range picker fills the viewport, opens on the value's
+  // The full-screen range picker fills the viewport, opens on the value's
   // month, and extends its month list as it scrolls without moving what is shown.
   await page.evaluate(() => {
     const state = window as unknown as PickerWindow; state.picker.destroy();
@@ -142,7 +142,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => (window as unknown as PickerWindow).picker.open());
   await page.locator('[aria-label="Close"]').click();
   assert.equal(await page.evaluate(() => document.querySelector('dialog')!.open), false, 'Close dismisses');
-  // FLO-277: the painted audit. Day states, container corners and height, outside and
+  // The painted audit. Day states, container corners and height, outside and
   // in-range colours, the range band's square ends, and right-to-left keys and chevrons.
   const role = (name: string) => page.evaluate(name => { const probe = document.createElement('i'); probe.style.color = `var(--mtrl-sys-color-${name})`; document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour; }, name);
   const mix = (name: string, percent: number) => page.evaluate(([name, percent]) => { const probe = document.createElement('i'); probe.style.color = `color-mix(in srgb, var(--mtrl-sys-color-${name}) ${percent}%, transparent)`; document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour; }, [name, percent] as const);
@@ -222,7 +222,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.date), '2026-09-14', 'right to left, ArrowRight goes back a day');
   assert.equal(await page.locator('[data-action="next"] svg').evaluate(el => getComputedStyle(el).transform), 'matrix(-1, 0, 0, 1, 0, 0)', 'right to left, the chevrons mirror');
   await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
-  // FLO-284: inside a shadow root, as in a web component. The document sees only
+  // Inside a shadow root, as in a web component. The document sees only
   // the host there, so focus is read from the picker's own root.
   await page.evaluate(() => {
     const state = window as unknown as PickerWindow; state.picker.destroy();

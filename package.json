@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.0.0-next.1",
+  "version": "3.0.5",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -20,7 +20,12 @@
     "vue",
     "svelte",
     "solid",
-    "design system"
+    "design system",
+    "material 3 expressive",
+    "m3 expressive",
+    "expressive motion",
+    "spring motion",
+    "motion"
   ],
   "sideEffects": [
     "**/*.css",
@@ -464,6 +469,7 @@
     "test": "bun test",
     "test:naming": "bun run scripts/check-test-naming.ts",
     "test:types": "bun run scripts/check-test-types.ts",
+    "ids:check": "bun run scripts/check-internal-ids.ts",
     "bench": "MTRL_BENCH=1 bun test test/benchmarks/",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
@@ -484,9 +490,12 @@
     "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "tabs:check": "bun run scripts/check-tabs.ts",
     "slider:check": "bun run scripts/check-slider.ts",
+    "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
+    "carousel:check": "bun run scripts/check-carousel.ts",
+    "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",

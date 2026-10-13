@@ -188,7 +188,7 @@ describe('Ripple Effect', () => {
     expect(destroyCounter.count).toBe(1);
   });
 });
-// FLO-268: only duration is read. The wave is the pressed state layer (FLO-260),
+// Only duration is read. The wave is the pressed state layer,
 // its opacity and motion drawn by the stylesheet; 3.0.0 removed the timing and
 // opacity options, which were never applied.
 describe('rippleConfig', () => {

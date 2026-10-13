@@ -1,6 +1,6 @@
 // test/elements/tag-map.test.ts
 //
-// FLO-328: every tag the elements define has an HTMLElementTagNameMap entry,
+// Every tag the elements define has an HTMLElementTagNameMap entry,
 // so `document.querySelector("m-switch")` is typed. The entries live beside
 // each element's type; this reads every defined tag from the specs and finds
 // its entry, so a new element without one fails here. The types themselves

@@ -1,6 +1,6 @@
 // test/core/dom/modal-escape.test.ts
 //
-// onModalEscape (FLO-548 family 6, FLO-556): Escape for the modals, handled as
+// onModalEscape (family 6): Escape for the modals, handled as
 // a key press. One bubble listener on the window serves a stack of modals:
 // it prevents the key (so the browser sends a modal <dialog> no `cancel`, and
 // its allowance of two refused cancels is never spent) and tells the topmost

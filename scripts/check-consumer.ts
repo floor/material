@@ -34,7 +34,7 @@ const scenarios = [
 ];
 try {
   // The types-only JSX entries resolve from the installed package, through its
-  // exports (FLO-333): a .tsx per framework opts in and uses a bare tag.
+  // exports: a.tsx per framework opts in and uses a bare tag.
   await mkdir(join(directory, "node_modules/@types"), { recursive: true });
   for (const name of ["react", "@types/react", "solid-js", "csstype"]) {
     await symlink(resolve("node_modules", name), join(directory, "node_modules", name), "dir").catch(() => {});
@@ -53,7 +53,7 @@ try {
   }
   console.log("JSX entries: material/react/jsx and material/solid/jsx type a bare tag from the packed package");
 
-  // The component subpaths are an explicit list since 3.0.0 (FLO-381): each one
+  // The component subpaths are an explicit list since 3.0.0: each one
   // resolves from the packed package, and the folders inside a component, which
   // the old `./components/*` pattern matched across slashes, do not.
   const componentSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
@@ -85,7 +85,7 @@ console.log(JSON.stringify(out));
     "folders inside a component that still resolve (or fail for another reason)");
   console.log(`Component subpaths: ${componentSubpaths.length} resolve to files in the packed package, ${nestedSubpaths.length} nested ones do not`);
 
-  // The core subpaths are an explicit list too (FLO-414): `material/core` and
+  // The core subpaths are an explicit list too: `material/core` and
   // its seven areas resolve, and no path under an area does. The old
   // `./core/*` pattern matched across slashes, so `core/compose/features`
   // resolved, and the README taught it; it is closed with the rest, and what
@@ -120,10 +120,10 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
   // text field 9,600 to 9,700 with no headroom left: next c7858870 measures 9,604 locally
-  // (FLO-416's multiline SSR fix), the forward merge 9,603; CI read just under 9,600.
-  // text field 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
+  // (the multiline SSR fix), the forward merge 9,603; CI read just under 9,600.
+  // text field 9,000 to 9,600 with the asterisk, the live error, the trailing button:
   // 8,953 to 9,520 against 7cd57a6.
-  // addClass from its subpath since 3.0.0 removed it from the root (FLO-351)
+  // addClass from its subpath since 3.0.0 removed it from the root
   // addClass 603 and button 8,447 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
   for (const [name, symbol, budget, from] of [
@@ -182,7 +182,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   `);
   await writeFile(join(directory, "lazy.html"), '<!doctype html><html><body><script type="module" src="./lazy.ts"></script></body></html>');
   input.lazy = join(directory, "lazy.html");
-  // The menu's submenu feature is a lazy chunk too (FLO-310). `?nested` gives
+  // The menu's submenu feature is a lazy chunk too. `?nested` gives
   // the menu nested items at creation; without it the items are flat, and
   // window.nest() gives it nested ones through setItems.
   await writeFile(join(directory, "menu.ts"), `

@@ -1,6 +1,6 @@
 // test/styles/tooltip-tokens.test.ts
 //
-// FLO-324: the tooltip against Compose's PlainTooltipTokens and
+// The tooltip against Compose's PlainTooltipTokens and
 // RichTooltipTokens. The plain variant had its own surface-container-high with
 // an outline, the base a 90% opacity and a shadow, and the rich variant only a
 // padding.

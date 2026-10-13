@@ -23,9 +23,9 @@ export const withVisibility = () => <C extends BadgeFeatureHost>(component: C): 
   // A badge is a count, and a count of nothing is not news. setLabel has
   // always hidden an empty or zero label; creation did not, so
   // createBadge({ label: 0 }) was visible while setLabel(0) on the same badge
-  // hid it. Same helper both sides now. FLO-108.
+  // hid it. Same helper both sides now.
   // A small badge is a dot and has no label: an empty one is its normal
-  // state, not "nothing to show", as setLabel already treats it (FLO-324)
+  // state, not "nothing to show", as setLabel already treats it
   const nothingToShow = component.config.variant !== "small" && isEmptyBadgeLabel(
     formatBadgeLabel(component.config.label ?? "", component.config.max)
   );
@@ -136,7 +136,7 @@ export const withPosition = (config: BadgeConfig) => <C extends BadgeFeatureHost
   
   // Positioned only when the badge can actually be attached. A target with no
   // parent cannot be wrapped -- withAttachment builds the wrapper and drops it
-  // -- so the badge would have claimed a position it never took. FLO-108.
+  // -- so the badge would have claimed a position it never took.
   if (config.target && config.target.parentNode) {
     component.element.classList.add(`${component.getClass('badge')}--positioned`);
   }
@@ -160,7 +160,7 @@ export const withMax = (config: BadgeConfig) => <C extends BadgeFeatureHost>(com
   
   // Overflow, from the same helper the setter uses, so the two cannot drift
   // apart again. Visibility is decided in withVisibility, which runs for
-  // every badge -- this feature returns early when there is no max. FLO-108.
+  // every badge -- this feature returns early when there is no max.
   if (config.label !== undefined) {
     const formattedLabel = formatBadgeLabel(config.label, config.max);
     component.element.textContent = formattedLabel;

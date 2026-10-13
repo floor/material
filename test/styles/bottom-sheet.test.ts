@@ -45,7 +45,7 @@ describe('bottom sheet stylesheet', () => {
     expect(value('.mtrl-bottom-sheet', 'align-items')).toBe('flex-end');
   });
 
-  // FLO-324: the handle is a 48dp button (Compose: 22dp vertical padding round
+  // The handle is a 48dp button (Compose: 22dp vertical padding round
   // the bar, and the minimum interactive size) drawing the bar
   test('the drag handle is a 48dp button drawing the 32 by 4dp bar in on-surface-variant', () => {
     expect(value('.mtrl-bottom-sheet__handle', 'width')).toBe('48px');

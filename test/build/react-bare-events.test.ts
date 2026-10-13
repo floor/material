@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 
-// FLO-334: material/react/jsx types a bare tag's events as React 19 delivers them
+// Material/react/jsx types a bare tag's events as React 19 delivers them
 // on a custom element: `onchange` (lower case) gets the element's own
 // CustomEvent, with its detail; `onChange` stays React's synthetic event,
 // which has none. If React changes this, the typing must follow.

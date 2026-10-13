@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * The package root's exports, pinned (FLO-351).
+ * The package root's exports, pinned.
  *
  * Every root export is public API. This reads them from src/index.ts with the
  * type checker, values and types, and records for each whether it is public or
@@ -19,7 +19,7 @@ export type RootExport = {
   name: string;
   /** class: a value and a type, so `new`, `instanceof` and type positions all need it */
   kind: "value" | "type" | "class";
-  /** deprecated: moving to a subpath (FLO-351); renamed: the root exports it under a new name (FLO-383) */
+  /** deprecated: moving to a subpath; renamed: the root exports it under a new name */
   status: "public" | "deprecated" | "renamed";
   /** Where to import a deprecated name from instead */
   path?: string;
@@ -33,7 +33,7 @@ const TABLE = join(ROOT, "scripts/fixtures/root-exports.md");
 /**
  * The core subpaths, `material/core/<name>`, in the order a name's path is
  * chosen. These seven are the whole public set: package.json lists each one
- * (no `./core/*` wildcard since 3.0.0, FLO-414), and test/core-exports.test.ts
+ * (no `./core/*` wildcard since 3.0.0), and test/core-exports.test.ts
  * holds the two lists together.
  */
 export const SUBPATHS = ["dom", "compose", "theme", "state", "utils", "canvas", "shapes"];

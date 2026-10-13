@@ -83,9 +83,9 @@ export const withController =
     if (selectedChip.isSelected()) selectSingle(selectedChip);
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
-    // mode. It used to be forced on every single-select set. FLO-257.
+    // mode. It used to be forced on every single-select set.
     // Nothing changed, so nothing is emitted, here or on the chip, and no
-    // onSelect is called. FLO-550.
+    // onSelect is called.
     if (config.selectionRequired && !selectedChip.isSelected() && getSelectedChips().length === 0) {
       selectedChip.setSelected(true);
       return true;
@@ -104,7 +104,7 @@ export const withController =
   };
 
   // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
-  // FLO-261). Its focus targets, in order: a one-action chip's cell, or the buttons of
+  // Its focus targets, in order: a one-action chip's cell, or the buttons of
   // a two-action chip (its action, then its remove or trailing button).
   const targets = (): HTMLElement[] =>
     component.chipInstances
@@ -180,7 +180,7 @@ export const withController =
 
       // Calculate scroll position to center the chip. No `behavior`: the
       // stylesheet scrolls a scrollable set smoothly, and the reduced-motion
-      // reset turns that off; an explicit "smooth" would override it (FLO-553).
+      // reset turns that off; an explicit "smooth" would override it.
       const containerRect = container.getBoundingClientRect();
       const chipRect = chipElement.getBoundingClientRect();
 
@@ -214,8 +214,8 @@ export const withController =
 
   // Takes the chip at `index` out of the set: its listener, the list, the
   // focused index and the tab stop. Focus that was on it moves to the chip
-  // that takes its place, or to the one before when it was the last (FLO-256);
-  // it used to fall to the page when the chip was destroyed directly (FLO-542).
+  // that takes its place, or to the one before when it was the last;
+  // it used to fall to the page when the chip was destroyed directly.
   // One shape for removeChip and for chip.destroy().
   const unlist = (index: number) => {
     const chips = component.chipInstances;
@@ -237,7 +237,7 @@ export const withController =
   };
 
   // chip.destroy() outside removeChip used to leave the chip in this list, so
-  // the set still counted it and the arrows stopped on it (FLO-533). It leaves
+  // the set still counted it and the arrows stopped on it. It leaves
   // the set first, without remove or change. removeChip has unlisted the chip
   // by the time it destroys it; the set's own teardown destroys every chip and
   // must not take this path.
@@ -355,7 +355,7 @@ export const withController =
   /**
    * Selects chips by their values
    * @param {string|string[]} values - Value or array of values to select
-   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control (FLO-328)
+   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control
    */
   const selectByValue = (
     values: string | string[],
@@ -401,7 +401,7 @@ export const withController =
 
   /**
    * Clears all selections
-   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control (FLO-328)
+   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control
    */
   const clearSelection = (triggerEvent = false) => {
     const selectedValues = getSelectedValues();

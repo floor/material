@@ -17,7 +17,7 @@ import { pascal } from "./element-modules";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
 const OPT_OUT = new Set(["carousel", "fab-menu"]);
-// Component names as the adapters export them: text field is TextField (FLO-383)
+// Component names as the adapters export them: text field is TextField
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }
@@ -77,7 +77,7 @@ for (const item of defaults) {
   if (item.element === "switch") markup += `\n<output id="checked">{checked}</output>`;
   pieces.push(markup);
 }
-// Named snippets (FLO-412). The component renders each one as a light child of the
+// Named snippets. The component renders each one as a light child of the
 // host, inside `<span style="display: contents" slot="…">`, on the server and in
 // the browser alike; the declarative root's named slot then shows it before any
 // script runs. The default cases above pass default children only.
@@ -97,6 +97,15 @@ const SLOTTED = SNIPPETS.flatMap((item) => Object.entries(item.slots).map(([slot
 for (const name of ["Card", "TopAppBar", "Button"]) used.add(name);
 for (const item of SNIPPETS) pieces.push(item.markup);
 pieces.push(`<Button id="globals" label="Globals" popover="auto" inputmode="numeric" enterkeyhint="send" itemprop="name" nonce="abc"></Button>`);
+// The shape toolbar: directly slotted selected icon buttons at two sizes and
+// one deeper in the overflow slot's content. The inert page below reads the
+// computed radii before any script runs — the adapter's server markup must
+// carry the marker, so the toolbar's pins apply before upgrade — and the
+// hydration page follows, where the server-only marker must not warn.
+const SHAPE_ICON = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
+const shapeBar = parseHTML(`<html><body><m-toolbar aria-label="Shapes"><m-icon-button id="shape-sel-s" toggle selected icon="${SHAPE_ICON}" aria-label="Selected s"></m-icon-button><m-icon-button id="shape-sel-m" toggle selected size="m" icon="${SHAPE_ICON}" aria-label="Selected m"></m-icon-button><m-icon-button id="shape-overflow" toggle selected icon="${SHAPE_ICON}" aria-label="Overflow"></m-icon-button></m-toolbar></body></html>`).document.body.firstElementChild as DomElement;
+const [shapeSelS, shapeSelM, shapeOverflow] = [...shapeBar.children].map((child) => renderNode(child as DomElement));
+pieces.push(`<Toolbar id="shape-toolbar" aria-label="Shapes">${shapeSelS}${shapeSelM}{#snippet overflow()}${shapeOverflow}{/snippet}</Toolbar>`);
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `<script lang="ts">
@@ -265,6 +274,24 @@ try {
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
   assert.deepEqual(await inert.evaluate(slotted, SLOTTED), expectedSlotted, "named snippets are slotted before script");
+  // The shape toolbar with the element script held back: the adapter's server
+  // markup must carry the marker, so the toolbar's pins apply before upgrade.
+  const shape = await inert.evaluate(() => {
+    const radius = (id: string): string => {
+      const host = document.getElementById(id);
+      const inner: Element | null = host?.shadowRoot?.querySelector(".mtrl-icon-button") ?? host ?? null;
+      return inner ? getComputedStyle(inner).borderTopLeftRadius : "missing";
+    };
+    return {
+      marked: ["shape-sel-s", "shape-sel-m", "shape-overflow"].every((id) => document.getElementById(id)?.hasAttribute("data-mtrl-icon-button") === true),
+      selS: radius("shape-sel-s"),
+      selM: radius("shape-sel-m"),
+      overflow: radius("shape-overflow"),
+    };
+  });
+  assert.equal(shape.marked, true, "the adapter markup carries the icon-button marker before upgrade");
+  assert.deepEqual([shape.selS, shape.selM, shape.overflow], ["20px", "28px", "12px"], "held-script markup pins direct items round, overflow content square");
+  console.log("svelte-ssr: held-script markup — direct items 20px/28px round, overflow 12px square, marker present");
   assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 
@@ -319,9 +346,9 @@ console.log(`named snippets: ${SLOTTED.map(({ host, slot }) => `${host.slice("sn
 console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no material/ssr or linkedom`);
 
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string): void => {
-  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker`);
   assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
-  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+  console.log(`known limit (expected to fail until the page-level integration): ${label}: ${observed}`);
 };
 
 const contextClient = await bundle("scripts/fixtures/svelte-ssr-context-client.ts", "browser");

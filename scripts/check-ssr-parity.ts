@@ -19,13 +19,13 @@ const allowed = exceptions as Exception[];
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
 assert.equal(engine, "chromium", "Structural parity is Chromium-only; use ssr:check for three-engine upgrade/paint coverage");
 const defaults = cases.filter(c => c.variant === "default");
-assert.equal(defaults.length, 37); // 36 elements, and the navigation bar (FLO-305)
+assert.equal(defaults.length, 37); // 36 elements, and the navigation bar
 assert.deepEqual(defaults.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
 const ICON = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
 const fixtures = [
   ...defaults,
   { element: "text-field", variant: "multiline value", html: '<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>' },
-  // FLO-555: the toolbar's shadow root holds the overflow button, which the
+  // The toolbar's shadow root holds the overflow button, which the
   // factory's roving sync reaches at creation on both sides.
   { element: "toolbar", variant: "overflow", html: `<m-toolbar aria-label="Actions"><m-icon-button icon="${ICON}" aria-label="Archive"></m-icon-button><m-icon-button icon="${ICON}" aria-label="Delete"></m-icon-button><m-menu slot="overflow"><m-menu-item value="copy">Copy</m-menu-item><m-menu-item value="paste">Paste</m-menu-item></m-menu></m-toolbar>` },
 ];

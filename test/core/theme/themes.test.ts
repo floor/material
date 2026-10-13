@@ -1,6 +1,6 @@
 // test/core/theme/themes.test.ts
 //
-// FLO-308: the generated themes, the role-to-token function they share with
+// The generated themes, the role-to-token function they share with
 // md3.io, and the checks the brief asks for: the files match a fresh
 // generation, the role set is baseline's, baseline stays within ΔE00 2 of M3's
 // Tonal Spot, every text pair reaches 4.5:1 (7:1 for highcontrast), each
@@ -90,7 +90,7 @@ describe("schemeToTokens", () => {
     ...overrides,
   });
 
-  // FLO-311: the themes no longer carry -rgb twins; one token per role.
+  // The themes no longer carry -rgb twins; one token per role.
   test("maps every role to --mtrl-sys-color-*, and emits no -rgb twin", () => {
     const tokens = schemeToTokens({ light: scheme({ primary: "#6750A4" }), dark: scheme() });
     expect(tokens.light["--mtrl-sys-color-primary"]).toBe("#6750a4");
@@ -136,7 +136,7 @@ describe("generated themes", () => {
     expect([...themeStyles, ...standaloneThemes].sort()).toEqual([...files].sort());
   });
 
-  test("3.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
+  test("3.0.0 removed the deprecated themes: no file, manifest entry or forward", () => {
     const removed = ["material", "winter", "browngreen", "legacy"];
     const files = readdirSync(THEMES_DIR).map((file) => file.slice(1, -".scss".length));
     const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");
@@ -200,7 +200,7 @@ describe("generated themes", () => {
   });
 });
 
-describe("fixed roles (FLO-315)", () => {
+describe("fixed roles", () => {
   const FIXED = THEME_ROLES.filter((role) => role.includes("-fixed"));
 
   test("twelve, and every theme declares them", () => {

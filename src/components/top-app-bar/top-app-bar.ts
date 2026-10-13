@@ -16,7 +16,7 @@ import { createConfig } from "./config";
 import type { TopAppBarComponent, TopAppBarConfig, TopAppBarType } from "./types";
 import { TOP_APP_BAR_DEFAULTS } from "./constants";
 
-// The one TopAppBarComponent declaration is the public one in types.ts (FLO-383); this
+// The one TopAppBarComponent declaration is the public one in types.ts; this
 // module re-exports it for the element, which imports it from here.
 export type { TopAppBarComponent };
 

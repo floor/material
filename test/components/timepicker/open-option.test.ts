@@ -1,6 +1,6 @@
 // The time picker's config option that opens it at creation is `open`, as on
 // the dialog and the drawer. It was `isOpen`, the name of the method that
-// reads the state (FLO-548).
+// reads the state.
 import { expect, test } from "bun:test";
 import createTimePicker from "../../../src/components/timepicker";
 import type { TimePickerConfig } from "../../../src/components/timepicker/types";

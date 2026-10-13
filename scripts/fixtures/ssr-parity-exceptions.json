@@ -5,7 +5,7 @@
     "property": "host/0/@tabindex",
     "server": null,
     "browser": "0",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the first enabled one, the first item, is the tab stop."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the first enabled one, the first item, is the tab stop."
   },
   {
     "element": "toolbar",
@@ -13,7 +13,7 @@
     "property": "host/1/@tabindex",
     "server": null,
     "browser": "-1",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
   },
   {
     "element": "toolbar",
@@ -21,7 +21,7 @@
     "property": "host/2/@tabindex",
     "server": null,
     "browser": "-1",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
   },
   {
     "element": "toolbar",
@@ -29,7 +29,7 @@
     "property": "host/0/@tabindex",
     "server": null,
     "browser": "0",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the first enabled one, the first item, is the tab stop."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the first enabled one, the first item, is the tab stop."
   },
   {
     "element": "toolbar",
@@ -37,7 +37,7 @@
     "property": "host/1/@tabindex",
     "server": null,
     "browser": "-1",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
   },
   {
     "element": "toolbar",
@@ -45,7 +45,7 @@
     "property": "host/2/@tabindex",
     "server": null,
     "browser": "-1",
-    "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
+    "issue": "The server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
   },
   {
     "element": "toolbar",
@@ -53,7 +53,7 @@
     "property": "host/shadow/0/0/1/@aria-haspopup",
     "server": "menu",
     "browser": "true",
-    "issue": "FLO-555: the overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
+    "issue": "The overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
   },
   {
     "element": "toolbar",
@@ -61,7 +61,7 @@
     "property": "host/shadow/0/0/1/@aria-haspopup",
     "server": "menu",
     "browser": "true",
-    "issue": "FLO-555: the overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
+    "issue": "The overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
   },
   {
     "element": "toolbar",
@@ -69,7 +69,7 @@
     "property": "host/shadow/0/0/1/@aria-controls",
     "server": null,
     "browser": "@id0",
-    "issue": "FLO-555: the menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
+    "issue": "The menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
   },
   {
     "element": "toolbar",
@@ -77,7 +77,7 @@
     "property": "host/shadow/0/0/1/@aria-controls",
     "server": null,
     "browser": "@id0",
-    "issue": "FLO-555: the menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
+    "issue": "The menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
   },
   {
     "element": "toolbar",
@@ -85,7 +85,7 @@
     "property": "host/shadow/0/0/1/@aria-expanded",
     "server": null,
     "browser": "false",
-    "issue": "FLO-555: the menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
+    "issue": "The menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
   },
   {
     "element": "toolbar",
@@ -93,6 +93,6 @@
     "property": "host/shadow/0/0/1/@aria-expanded",
     "server": null,
     "browser": "false",
-    "issue": "FLO-555: the menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
+    "issue": "The menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
   }
 ]

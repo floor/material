@@ -99,14 +99,12 @@ export const withAPI =
 
     // The emitter, as every component's: handlers get `{ value, max }`. These
     // were DOM CustomEvents on the element, so handlers got `event.detail`
-    // (FLO-295).
     const emitEvent = (name: string, payload: ProgressEventPayload): void => {
       comp.emit?.(name, payload);
     };
 
-    // One disabled state, however it is set (FLO-324): the manager writes
+    // One disabled state, however it is set: the manager writes
     // aria-disabled on the bar, as on any root that is not a form control
-    // (FLO-119)
     const setDisabled = (disabled: boolean): void => {
       if (disabled) options.disabled.disable();
       else options.disabled.enable();
@@ -178,7 +176,7 @@ export const withAPI =
         options.value.setValue(requested);
         // The state clamps to 0…max; aria, the label and change report that
         // value, as the bar draws it. setValue(150) drew 100 and said 150
-        // everywhere else (FLO-324).
+        // everywhere else.
         const value = options.value.getValue();
         if (prevValue !== value) {
           // Don't call updateProgress here as comp.setValue will handle the drawing

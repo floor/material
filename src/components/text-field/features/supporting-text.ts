@@ -84,7 +84,7 @@ export const withSupportingText =
     const COMPONENT = config.componentName || "text-field";
     let supportingElement: HTMLElement | null = null;
     // The helper sits in the supporting text row under the field, before the
-    // counter when there is one (FLO-300)
+    // counter when there is one
     const row = supportingRow(component.element, PREFIX, COMPONENT);
     const show = (element: HTMLElement): void => void row.ensure().prepend(element);
     // One id for the supporting text, whichever element currently shows it,
@@ -97,13 +97,13 @@ export const withSupportingText =
     };
 
     // The element is a polite live region, so an error is read when it appears,
-    // not only when the input is next focused (FLO-301). A region announces
+    // not only when the input is next focused. A region announces
     // changes to its text, so the element stays and its text changes in place.
     // One inserted already holding its text is often not announced, so when an
     // update at run time creates it, the text is written again on the next
     // frame: the same text, a new text node, which the region announces. The
     // text itself is there at once, as before. Created from the config, nothing
-    // is announced at load, and construction schedules nothing (FLO-362).
+    // is announced at load, and construction schedules nothing.
     let pendingFrame = 0;
     const cancelFill = (): void => {
       if (pendingFrame) cancelAnimationFrame(pendingFrame);
@@ -120,7 +120,7 @@ export const withSupportingText =
 
     // The helper's own colour only: the field's error state (the root --error
     // class, aria-invalid) belongs to withError, so replacing the text can't end
-    // an error the field is still in (FLO-303).
+    // an error the field is still in.
     const markError = (element: HTMLElement, isError: boolean): void => {
       element.classList.toggle(`${PREFIX}-${COMPONENT}__helper--error`, isError);
     };
@@ -156,7 +156,7 @@ export const withSupportingText =
       ...component,
       // A live read of the element on screen. It was a value, updated through
       // `this`, so a feature holding an earlier copy of the component (the
-      // error feature) read the element the field was created with (FLO-303).
+      // error feature) read the element the field was created with.
       get supportingTextElement(): HTMLElement | null {
         return supportingElement;
       },

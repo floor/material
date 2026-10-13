@@ -7,7 +7,7 @@
  *
  * A toggle button (for now from the button's global defaults: the element has
  * no toggle attribute) dispatches `change` with `{ selected, value }` from the
- * host on each click (FLO-380).
+ * host on each click.
  *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
@@ -40,7 +40,7 @@ const buttonSpec = {
     config: "text",
   },
   events: {
-    // A toggle button's `change`, with the button's value (FLO-380). The element
+    // A toggle button's `change`, with the button's value. The element
     // has no toggle attribute yet, so it fires for a toggle from the defaults.
     change: {
       detail: (payload) => {

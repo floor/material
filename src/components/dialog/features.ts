@@ -379,7 +379,7 @@ const addButton = (
     size,
   } = buttonConfig;
 
-  // size reaches the button; it was accepted and dropped (FLO-324)
+  // size reaches the button; it was accepted and dropped
   const button = createButton({
     text,
     variant,
@@ -390,7 +390,7 @@ const addButton = (
   // Button click handler with event-based communication
   // The forwarder hands a { event, element, originalEvent } payload, not the
   // DOM event itself. Destructured, so what reaches the declared contract
-  // below is the event it says it takes. FLO-114.
+  // below is the event it says it takes.
   button.on("click", ({ originalEvent: event }) => {
     let shouldClose = closeDialog;
 
@@ -444,7 +444,7 @@ export const withVisibility =
   // Initial state
   const isOpen = component.config.open === true;
 
-  // The state open() and close() change before they return (FLO-548). What
+  // The state open() and close() change before they return. What
   // follows a call is on these timers: the surface made visible and focus
   // trapped, `afteropen`, and the removal with `afterclose`. A call the other
   // way, or destroy(), cancels what is still pending.
@@ -1230,7 +1230,7 @@ export const withConfirm =
 
         // Settles once: a button's answer, or false when the dialog closes
         // any other way (Escape, the scrim, close()). It never resolved then,
-        // and the promise hung (FLO-324).
+        // and the promise hung.
         let settled = false;
         const settle = (answer: boolean): void => {
           if (settled) return;
@@ -1242,7 +1242,7 @@ export const withConfirm =
         component.on("close", onClose);
 
         // The dismissing action first, the confirming one last, as M3 orders
-        // a dialog's actions (FLO-324)
+        // a dialog's actions
         component.buttons.addButton({
           text: cancelText,
           variant: cancelVariant,

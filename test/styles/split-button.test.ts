@@ -56,7 +56,7 @@ describe('split button stylesheet', () => {
     // corners beside a full pill
     const inner: Record<string, string> = { xs: '4px', s: '4px', m: '8px', l: '12px', xl: '16px' };
     for (const [size, corner] of Object.entries(inner)) {
-      // Read through the shape scale's token (FLO-331)
+      // Read through the shape scale's token
       const fallback = `var(--mtrl-split-button-inner-shape, ${token(parseInt(corner, 10))})`;
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__leading`, 'border-start-end-radius')).toBe(fallback);
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing`, 'border-start-start-radius')).toBe(fallback);

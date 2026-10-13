@@ -1764,6 +1764,11 @@
       "status": "public"
     },
     {
+      "name": "LIST_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "ListComponent",
       "kind": "type",
       "status": "public"
@@ -1780,6 +1785,11 @@
     },
     {
       "name": "ListSlot",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListVariant",
       "kind": "type",
       "status": "public"
     },
@@ -1822,6 +1832,11 @@
     },
     {
       "name": "LIST_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_VARIANTS",
       "kind": "value",
       "status": "public"
     }

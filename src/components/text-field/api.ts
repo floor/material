@@ -35,7 +35,7 @@ type ComponentWithDensity = BaseComponent & {
 export const withAPI =
   ({ disabled, lifecycle }: ApiOptions) =>
   (component: ComponentWithDensity): TextFieldComponent => {
-    // A trailing icon button is disabled with the field (FLO-301)
+    // A trailing icon button is disabled with the field
     const setTrailingDisabled = (off: boolean): void => {
       // By tag, not instanceof: no global HTMLButtonElement is assumed (a server DOM)
       const icon = component.trailingIcon;
@@ -44,7 +44,7 @@ export const withAPI =
     return {
       element: component.element,
       // The container under the root: what a menu or popover anchors to, so the
-      // supporting text row never pushes it down (FLO-300)
+      // supporting text row never pushes it down
       field: component.field ?? component.element,
       input: component.input as HTMLInputElement | HTMLTextAreaElement,
 
@@ -186,7 +186,7 @@ export const withAPI =
       // Supporting text management (if present)
       // A live read, as for the icons: the features before this one spread the
       // component, so its supportingTextElement is a copy from when it was
-      // spread; the element in the field is the one to report (FLO-303).
+      // spread; the element in the field is the one to report.
       get supportingTextElement(): HTMLElement | null {
         return component.element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
       },
@@ -317,7 +317,7 @@ export const withAPI =
           component.density.set(density);
         }
         // The density feature runs before placement exists, so its own call to
-        // re-place never reached it; ask here, as the other setters do (FLO-378)
+        // re-place never reached it; ask here, as the other setters do
         component.schedulePositionUpdate?.();
         return this;
       },
@@ -357,7 +357,7 @@ export const withAPI =
         return this;
       },
 
-      // Required, with the label's asterisk (FLO-301)
+      // Required, with the label's asterisk
       setRequired(required: boolean): TextFieldComponent {
         component.setRequired?.(required);
         // The asterisk widens the label, and the outlined notch with it

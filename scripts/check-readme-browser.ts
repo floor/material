@@ -17,7 +17,8 @@
  * scripts/package-fixture.ts) and Chromium opens each one. An example passes when:
  *
  * - the text its mark names is visible;
- * - the page logged no error and threw none;
+ * - the page logged no error, logged no warning other than one listed in
+ *   ALLOWED_WARNINGS, and threw none;
  * - every `<m-…>` element in it is defined and has a shadow root with a box, so
  *   text left unstyled in a tag nothing registered does not pass;
  * - if it imports a stylesheet of the package, the theme reached the page
@@ -34,6 +35,9 @@ import { chromium } from "playwright";
 
 import { createPackageFixture } from "./package-fixture";
 import { FILES, parse } from "./readme-blocks";
+
+// Warnings an example is allowed to log. Each entry needs its reason beside it.
+const ALLOWED_WARNINGS: readonly string[] = [];
 
 const docs = await Promise.all(FILES.map(parse));
 const examples = docs.flatMap(doc => doc.blocks).filter(block => block.shows !== undefined);
@@ -84,7 +88,12 @@ try {
     const tab = await browser.newPage();
     const errors: string[] = [];
     tab.on("pageerror", error => errors.push(String(error)));
-    tab.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+    tab.on("console", message => {
+      const type = message.type();
+      if (type !== "error" && type !== "warning") return;
+      if (type === "warning" && ALLOWED_WARNINGS.includes(message.text())) return;
+      errors.push(message.text());
+    });
     try {
       await tab.goto(`http://127.0.0.1:${address.port}/readme-${index}.html`, { waitUntil: "load" });
       await tab.getByText(block.shows!, { exact: true }).first().waitFor({ state: "visible", timeout: 10_000 });

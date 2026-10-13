@@ -1,6 +1,6 @@
 // test/components/text-field/rtl.test.ts
 //
-// FLO-562: a direction set outside a shadow root cannot reach the [dir]
+// A direction set outside a shadow root cannot reach the [dir]
 // selectors in the stylesheet, so placement.ts sets --rtl from the computed
 // direction. It read the direction for the outlined variant only, so a filled
 // field in a right-to-left page kept its left-to-right layout: these pin the
@@ -26,7 +26,7 @@ import createTextField from "../../../src/components/text-field";
 const ICON = '<svg viewBox="0 0 24 24"></svg>';
 const RTL = "mtrl-text-field--rtl";
 
-// Filled needs something to place for placement to run at all (FLO-378)
+// Filled needs something to place for placement to run at all
 const mount = (config: Record<string, unknown> = {}) => {
   const field = createTextField({ label: "Name", ...config } as never) as never as Record<string, any>;
   document.body.append(field.element);
@@ -36,7 +36,7 @@ const mount = (config: Record<string, unknown> = {}) => {
 beforeEach(() => { document.body.innerHTML = ""; });
 afterAll(() => { dom.window.close(); });
 
-describe("the --rtl class follows the computed direction (FLO-562)", () => {
+describe("the --rtl class follows the computed direction", () => {
   for (const [name, config] of [
     ["a filled field with a leading icon", { variant: "filled", leadingIcon: ICON }],
     ["an outlined field", { variant: "outlined" }],
@@ -62,7 +62,7 @@ describe("the --rtl class follows the computed direction (FLO-562)", () => {
   }
 
   // A plain filled field has nothing to place and installs no observer
-  // (FLO-378). In a shadow root, where an ancestor's `dir` does not reach the
+  // In a shadow root, where an ancestor's `dir` does not reach the
   // stylesheet, its direction is read once, in the batch its creation joins.
   test("a plain filled field in a shadow root gets the class from its first batch, without being asked", async () => {
     const host = document.createElement("div");

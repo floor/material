@@ -212,7 +212,7 @@ describe('setupResponsiveBehavior', () => {
     expect(layoutOf(byValue(second, 'trips'))).toEqual(['icon-and-text']);
   });
 
-  // FLO-232: the layout followed a snapshot of the tabs taken at setup.
+  // The layout followed a snapshot of the tabs taken at setup.
   test('a tab added after setup follows the layout, at once and on the next resize', () => {
     setWidth(400);
     const tabs = mount();

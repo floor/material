@@ -5,7 +5,7 @@
 // constants from src — so rewriting the component left it green. That is F6,
 // and the time picker was one of the last four suites still doing it.
 //
-// It waited on N25 (FLO-101), the conformance work, which is now done: an
+// It waited on N25, the conformance work, which is now done: an
 // accessible input route, the AM/PM radiogroup and the M3 colour roles all
 // landed first, so these tests are not blessing behaviour known to diverge.
 //
@@ -72,7 +72,7 @@ describe("what a time picker is made of", () => {
   // The modal is attached at creation and hidden, rather than attached on
   // open. So "closed" is display:none, not absence -- which is what the
   // mock's own style.display assertions were getting at.
-  // FLO-278: a native modal <dialog>, named by its own title.
+  // A native modal <dialog>, named by its own title.
   test("it starts closed: a native dialog, attached, named by a title of its own", () => {
     const picker = mount({ title: "Alarm" });
     const other = mount({ title: "Alarm" });
@@ -115,7 +115,7 @@ describe("the time it starts with", () => {
     expect(time.seconds).toBe(45);
   });
 
-  // FLO-237: machine values match the form regardless of display format.
+  // Machine values match the form regardless of display format.
   test("getValue returns a 24-hour machine value", () => {
     expect(mount({ value: "14:30" }).getValue()).toBe("14:30");
   });
@@ -321,7 +321,7 @@ describe("events", () => {
     expect(closed).toHaveBeenCalled();
   });
 
-  test("setValue is silent, as a native input set by script (FLO-328)", () => {
+  test("setValue is silent, as a native input set by script", () => {
     const picker = mount();
     const changed = mock(() => {});
     picker.on("change", changed);
@@ -350,7 +350,7 @@ describe("events", () => {
     const picker = mount({ onOpen, onChange, onClose, type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
 
     picker.open();
-    picker.setValue("10:00"); // silent (FLO-328): onChange hears the user's OK
+    picker.setValue("10:00"); // silent: onChange hears the user's OK
     expect(onChange).not.toHaveBeenCalled();
     const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
     minutes.value = "20";
@@ -389,7 +389,7 @@ describe("destroy", () => {
 });
 
 
-describe("typed event payloads (FLO-114)", () => {
+describe("typed event payloads", () => {
   test("setValue is silent; an input edit committed by OK emits a machine value", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
     const changed = mock((_event: TimePickerValueEvent) => {});
@@ -397,15 +397,15 @@ describe("typed event payloads (FLO-114)", () => {
       expect(picker.on("change", changed)).toBe(picker);
       picker.setValue("14:45");
       // A format change is not a change of value, and the same value again is
-      // not a change either (FLO-281).
+      // not a change either.
       picker.setFormat(TIME_FORMAT.MILITARY);
       picker.setValue("14:45");
       const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
       minutes.value = "20";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
-      // setValue is silent (FLO-328); an edit is a draft, and OK commits it
-      // with one change (FLO-288), one object in the <m-timepicker>
-      // element's shape (FLO-320).
+      // setValue is silent; an edit is a draft, and OK commits it
+      // with one change, one object in the <m-timepicker>
+      // element's shape.
       expect(changed.mock.calls).toEqual([]);
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CONFIRM_BUTTON)!.click();
       expect(changed.mock.calls).toEqual([[{ value: "14:20" }]]);
@@ -437,7 +437,7 @@ describe("typed event payloads (FLO-114)", () => {
     } finally { picker.destroy(); }
   });
 
-  // FLO-278, FLO-548: Escape is a key press, for this picker only, and a backdrop click cancels.
+  // Escape is a key press, for this picker only, and a backdrop click cancels.
   test("cancel button, Escape and the backdrop cancel without payload", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
     const canceled = mock((..._args: unknown[]) => {});
@@ -532,7 +532,7 @@ describe("typed event payloads (FLO-114)", () => {
   });
 });
 
-describe("BEM element names (FLO-120)", () => {
+describe("BEM element names", () => {
   const prefix = "mtrl";
   test("keeps BEM hooks through rerenders and delegated actions", () => {
     const picker = mount({ title: "Appointment", value: "09:30:15", showSeconds: true });
@@ -551,7 +551,7 @@ describe("BEM element names (FLO-120)", () => {
       minutes.value = "45";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
       find<HTMLButtonElement>("period-pm").click();
-      // Drafts until OK (FLO-288).
+      // Drafts until OK.
       expect(picker.getTimeObject().minutes).toBe(30);
       expect(find("period-pm").classList.contains(`${prefix}-time-picker__period--selected`)).toBe(true);
       picker.setTitle("Updated");
@@ -571,7 +571,7 @@ describe("BEM element names (FLO-120)", () => {
   });
 });
 
-// FLO-278: each picker handles its own Escape and restores focus.
+// Each picker handles its own Escape and restores focus.
 describe("a native modal dialog", () => {
   test("Escape on one open picker leaves another open", () => {
     const first = mount(); const second = mount();

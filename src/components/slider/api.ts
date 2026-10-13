@@ -31,7 +31,7 @@ export interface ApiOptions {
   };
   appearance: {
     // SliderColor, not string: the appearance feature accepts only the four
-    // colour names, and a host declaring `string` cannot take it. FLO-114.
+    // colour names, and a host declaring `string` cannot take it.
     setColor: (color: SliderColor) => void;
     getColor: () => string;
     setSize: (size: SliderSize) => void;

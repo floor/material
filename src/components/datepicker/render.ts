@@ -18,7 +18,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
   /**
    * One month of days: a grid of 6 weeks. Only the current month takes the tab stop.
    * In the full-screen list a month shows its own days only, under a subhead, and its
-   * weekday row is for assistive tech (one visible row heads the list). FLO-276.
+   * weekday row is for assistive tech (one visible row heads the list).
    */
   const monthGrid = (year: number, month: number, current: boolean, list = false): HTMLElement => {
     const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${MONTH_NAMES[month]} ${year}`, "aria-describedby": `${state.id}-keyboard` });
@@ -65,7 +65,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     const header = make("div", "modal-header");
     // Full screen: a close (x) icon button and a Save text button above the headline
     // (m3.material.io: "Mobile full-screen pickers also have an additional close
-    // affordance (x) icon button and Save confirmation"). FLO-276.
+    // affordance (x) icon button and Save confirmation").
     if (fullscreen) {
       const save = button("save", "Save", "confirm") as HTMLButtonElement;
       save.disabled = confirmDisabled;
@@ -96,7 +96,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     // Full screen: one weekday row over a vertically scrolling list of months
     // (m3.material.io: "To navigate across months, scroll vertically"). Only the months
     // of state.listStart/listLength are rendered; the picker extends them as the list
-    // scrolls. FLO-276.
+    // scrolls.
     const weekdays = make("div", "weekdays", undefined, { "aria-hidden": "true" });
     for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0]));
     const list = make("div", "list");
@@ -114,7 +114,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     const nav = make("div", "navigation");
     nav.append(button("month-selector", MONTH_NAMES[state.currentMonth], "month", "Select month"), button("year-selector", String(state.currentYear), "year", "Select year"));
     header.append(nav);
-    // The year list scrolls (FLO-275), so it has no arrows to page it.
+    // The year list scrolls, so it has no arrows to page it.
     if (state.currentView !== "year") {
       const span = state.currentView === "day" ? "month" : "year";
       header.append(button("prev", "‹", "prev", `Previous ${span}`), button("next", "›", "next", `Next ${span}`));
@@ -124,7 +124,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       // The previous, current and next months side by side in a scroll-snapping track:
       // a horizontal swipe, trackpad or wheel pages the months natively (m3.material.io:
       // "To navigate across months, swipe horizontally"). Only the current month is
-      // reachable; its neighbours are inert and hidden from assistive tech. FLO-274.
+      // reachable; its neighbours are inert and hidden from assistive tech.
       const track = make("div", "track");
       for (const offset of [-1, 0, 1]) {
         const first = new Date(state.currentYear, state.currentMonth + offset, 1);
@@ -143,7 +143,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       const grid = make("div", months ? "months" : "years", undefined, { role: "group", "aria-label": months ? "Choose month" : "Choose year" });
       // Every year from minDate to maxDate, or Compose's default 1900-2100, in a list
       // that scrolls vertically (m3.material.io: "To navigate across years, scroll
-      // vertically"); it was ±10 years paged by the arrows. FLO-275.
+      // vertically"); it was ±10 years paged by the arrows.
       const first = state.minDate?.getFullYear() ?? 1900, last = state.maxDate?.getFullYear() ?? 2100;
       for (const value of months ? Array.from({ length: 12 }, (_, i) => i) : Array.from({ length: last - first + 1 }, (_, i) => first + i)) {
         const selected = value === (months ? state.currentMonth : state.currentYear);

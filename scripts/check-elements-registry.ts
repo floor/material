@@ -1,5 +1,5 @@
 // scripts/check-elements-registry.ts
-// FLO-380: every registered element has an explicit browser case. Model cases
+// Every registered element has an explicit browser case. Model cases
 // compare the notification with the live getter inside the dispatch handler.
 import assert from "node:assert/strict";
 import type { Page } from "playwright";

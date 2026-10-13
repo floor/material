@@ -1,4 +1,4 @@
-/** Search in the packed build: the open view's place in the page and the top layer (FLO-285). */
+/** Search in the packed build: the open view's place in the page and the top layer. */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
@@ -21,7 +21,7 @@ const mount = (page: Page, config: Parameters<typeof createSearch>[0], clip = fa
 
 const layout = (page: Page) => page.evaluate(() => {
   const root = document.querySelector<HTMLElement>(".mtrl-search")!;
-  // Before FLO-285 there was no surface: the root was the view.
+  // Before that change there was no surface: the root was the view.
   const surface = root.querySelector<HTMLElement>(".mtrl-search__surface") ?? root;
   const content = root.querySelector<HTMLElement>(".mtrl-search__content");
   const r = root.getBoundingClientRect(), s = surface.getBoundingClientRect();
@@ -48,7 +48,7 @@ const layout = (page: Page) => page.evaluate(() => {
  * The view is open and its opening is over. Opening puts focus back on the input in
  * the next animation frame (`expandToView`). Until that frame has run the view is not
  * settled: a press or a Tab that gets there first is followed by that focus, which
- * re-opens a view just dismissed (the 30s timeout of FLO-420) or takes focus back from
+ * re-opens a view just dismissed (the 30s timeout) or takes focus back from
  * the control it moved to. A frame requested now runs after the one the view asked for.
  */
 const opened = async (page: Page): Promise<void> => {
@@ -57,7 +57,7 @@ const opened = async (page: Page): Promise<void> => {
 };
 
 /**
- * FLO-514's acceptance: a view dismissed before its opening frame has run stays
+ * Acceptance: a view dismissed before its opening frame has run stays
  * dismissed. Opening defers `input.focus()` to the next animation frame; here that
  * frame is held until the scrim has been pressed, the order a slow frame produces.
  * Today the late focus opens the view again.
@@ -97,7 +97,7 @@ const dismissedBeforeItsOpeningFrame = async (page: Page): Promise<void> => {
   // Past the opening's frame, and past the 150ms a blur takes to close a view.
   await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
   assert.equal(await page.evaluate(() => document.querySelector(".mtrl-search--view") ? "view" : "bar"), "bar",
-    "FLO-514: a view dismissed before its opening frame stays dismissed");
+    "A view dismissed before its opening frame stays dismissed");
 };
 
 export async function checkSearch(page: Page): Promise<void> {
@@ -200,10 +200,10 @@ export async function checkSearch(page: Page): Promise<void> {
   await checkSearchTokens(page);
   await checkSearchVariants(page);
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
-  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal (FLO-285); 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions (FLO-286); the contained default and the divided variant, docked and full screen, and the results' reveal (FLO-287); minWidth and maxWidth (FLO-290).");
+  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal; 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions; the contained default and the divided variant, docked and full screen, and the results' reveal; minWidth and maxWidth.");
 }
 
-/** FLO-286: tap targets, focus ring, state layers, combobox semantics, divider and list items. */
+/** Tap targets, focus ring, state layers, combobox semantics, divider and list items. */
 async function checkSearchTokens(page: Page): Promise<void> {
   const avatar = '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">';
   const icon = '<svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/></svg>';
@@ -263,9 +263,9 @@ async function checkSearchTokens(page: Page): Promise<void> {
   assert.deepEqual([(await combobox()).expanded, (await combobox()).active], ["false", null], "collapsed, the combobox points at nothing");
 }
 
-/** FLO-287: contained (the default) and divided, docked and full screen, and the reveal. */
+/** Contained (the default) and divided, docked and full screen, and the reveal. */
 async function checkSearchVariants(page: Page): Promise<void> {
-  // FLO-290: minWidth and maxWidth apply; the M3 360-720dp by default.
+  // MinWidth and maxWidth apply; the M3 360-720dp by default.
   const width = (config: Parameters<typeof createSearch>[0]) => mount(page, config).then(() => page.locator(".mtrl-search").evaluate(el => el.getBoundingClientRect().width));
   assert.deepEqual([await width({}), await width({ maxWidth: 480 })], [720, 480], "maxWidth applies; 720dp by default");
   const open = async (config: Parameters<typeof createSearch>[0]) => {

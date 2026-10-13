@@ -4,7 +4,7 @@ import type { ElementComponent } from "../../../core/compose/component";
 import { addIdRef, removeIdRef, supportingRow } from "./field";
 
 /**
- * The character counter (FLO-300): at the end of the supporting text row
+ * The character counter: at the end of the supporting text row
  * whenever the input has a `maxlength`, as Material Web shows it, reading
  * `count/max`. It describes the input, so a screen reader hears it with the
  * field when it is focused rather than on every keystroke. It follows the

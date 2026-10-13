@@ -1,6 +1,6 @@
 // test/components/timepicker/draft.test.ts
 //
-// The time picker edits a draft (FLO-288). Every move of the dial was the
+// The time picker edits a draft. Every move of the dial was the
 // value, with a `change` each time, and Cancel kept it; in M3, Cancel
 // discards and OK commits, as the date picker already did.
 
@@ -79,7 +79,7 @@ describe("a draft until OK", () => {
     expect(p.dialog.querySelector<HTMLInputElement>('[data-type="hour"]')!.value).toBe("09");
   });
 
-  test("setValue commits directly, silently (FLO-328)", () => {
+  test("setValue commits directly, silently", () => {
     const p = setup();
     p.picker.setValue("11:00");
     expect(p.picker.getValue()).toBe("11:00");

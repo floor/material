@@ -56,7 +56,7 @@ interface ApiOptions {
     // `EventCallback`, not `Function`: getApiConfig in config.ts now supplies
     // the narrowed forwarder, and a parameter declared `Function` cannot
     // accept it. The whole chain -- InternalComponent, the forwarder it
-    // builds, and this -- is internal to the component. FLO-114.
+    // builds, and this -- is internal to the component.
     on: (event: string, handler: EventCallback) => void;
     off: (event: string, handler: EventCallback) => void;
   };
@@ -162,7 +162,7 @@ export const withAPI =
 
       // === Content Management ===
 
-      // These only warned (FLO-291).
+      // These only warned.
       setLeadingIcon(iconHtml: string) {
         options.content.setLeadingIcon(iconHtml);
         return this;

@@ -1,15 +1,21 @@
 // src/styles/elements/_list.scss
 // <m-list> before upgrade: a row per <m-list-item>, which is drawn on upgrade.
+@use '../abstract/base' as base;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
+@use '../abstract/variables' as v;
 @use 'config' as c;
 
 // As components/_list.scss: 8px above and below the rows, one-line rows
 // 56px, two-line 72px, a 1px divider and the subheader's padded line.
+// The undefined host is the box the upgraded list will be, so it rounds by
+// the same property. After upgrade the host does not paint: `::part(list)`
+// is `.mtrl-list` and carries the radius.
 @include c.host('list') {
   display: block;
   padding: 8px 0;
   background-color: t.color('surface');
+  border-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
 }
 
 @include c.declarations('list') {

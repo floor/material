@@ -35,7 +35,7 @@ const createTimePicker = (
       withLifecycle()
     )(baseConfig);
 
-    // A native modal dialog (FLO-278): showModal() puts it in the top layer with
+    // A native modal dialog: showModal() puts it in the top layer with
     // its ::backdrop scrim, makes the page inert and keeps focus inside, and its
     // cancel event is this picker's Escape. It was a portaled div with an inline
     // backdrop, no focus handling, and a document-wide Escape. `modalElement`
@@ -52,7 +52,7 @@ const createTimePicker = (
     const modalElement = dialogElement;
 
     // In the component's own element unless a container is given, as the
-    // other modals are (FLO-288): it was portaled to document.body, out of the
+    // other modals are: it was portaled to document.body, out of the
     // component's tree and any shadow root the component is in.
     const container =
       typeof baseConfig.container === "string"
@@ -99,7 +99,7 @@ const createTimePicker = (
 
     // Open when the factory returns, as every overlay's `open` option: the
     // state and `open` now, the surface a task later, where the caller has
-    // put the picker by then (FLO-548)
+    // put the picker by then
     if (baseConfig.open) (timePicker.open as (later?: boolean) => unknown)(true);
 
     return timePicker;

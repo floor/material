@@ -1,7 +1,7 @@
 // test/types/search-hosts.fixture.ts
 //
 // Search's internal hosts, narrowed to what their producers actually supply
-// (FLO-114). Nothing here runs; the assertions are the test.
+// Nothing here runs; the assertions are the test.
 //
 // Search contributed three errors and they were one failure with two
 // shadows: the `pipe()` overload at search.ts:54 could not resolve, so every

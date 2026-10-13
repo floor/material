@@ -25,9 +25,16 @@ const RECORDINGS = 3;
  * carousel and the page stood. A bare "Timeout 30000ms exceeded" from this check
  * (seen once, under load, after the uncontained traces) names neither.
  */
-const waitFor = async (page: Page, what: string, ready: () => unknown): Promise<void> => {
+function waitFor(page: Page, what: string, ready: () => unknown): Promise<void>;
+function waitFor<T>(page: Page, what: string, ready: (arg: T) => unknown, arg: T): Promise<void>;
+async function waitFor<T>(
+  page: Page,
+  what: string,
+  ready: (arg: T) => unknown,
+  arg?: T,
+): Promise<void> {
   try {
-    await page.waitForFunction(ready);
+    await page.waitForFunction(ready as Parameters<Page["waitForFunction"]>[0], arg);
   } catch (error) {
     const state = await page.evaluate(() => {
       const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
@@ -39,7 +46,7 @@ const waitFor = async (page: Page, what: string, ready: () => unknown): Promise<
     }).catch(() => "the page could not be read");
     throw new Error(`waiting for ${what}: ${String(error).split("\n")[0]} ${JSON.stringify(state)}`);
   }
-};
+}
 
 /** Packed carousel wheel input and per-frame velocity and snap restoration. */
 export async function checkCarouselWheel(page: Page): Promise<void> {
@@ -179,3 +186,308 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
   assert.deepEqual(failures, [], "carousel wheel browser regressions");
 }
+
+/**
+ * Uncontained carousel layout conformance check.
+ *
+ * Verifies that under the owner's exact settings (item width 280, gap 8, padding 16,
+ * captions on, snap on, 24 slides, 760 px container):
+ * - At slide 0 and slide 10, every item's visible width is the configured width (280)
+ *   or cut by the container edge (>= 50% visible where Material's figure shows > 50%);
+ * - No item is a sliver (< 50% visible while fully inside the container);
+ * - Consecutive visible items step by item + gap (288 px, tolerance 0.5 px);
+ * - The row does not terminate before the container's right edge;
+ * - No per-item clipPath shrinks an item's visible width below the above.
+ */
+export async function checkCarouselUncontained(
+  page: Page,
+  options: { screenshotDir?: string } = {},
+): Promise<void> {
+  const failures: string[] = [];
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  try {
+    await page.evaluate(() => {
+      const state = window as unknown as CarouselWindow & { uncontainedCarousel?: CarouselComponent };
+      state.uncontainedCarousel?.destroy?.();
+      document.body.replaceChildren();
+      document.body.style.cssText = "display:block;margin:0;padding:24px;background:#fdfcf4;";
+      window.scrollTo(0, 0);
+
+      const host = document.createElement("div");
+      host.id = "uncontained-carousel-host";
+      host.style.cssText = "width:760px;height:400px;position:relative;margin:0 auto;";
+      document.body.append(host);
+
+      const carousel = state.createCarousel({
+        variant: "uncontained",
+        itemWidth: 280,
+        gap: 8,
+        padding: 16,
+        snap: true,
+        slides: Array.from({ length: 24 }, (_, i) => ({
+          title: `Slide ${i + 1}`,
+          description: `Description ${i + 1}`,
+        })),
+      });
+      carousel.element.id = "uncontained-carousel";
+      carousel.element.style.cssText = "width:100%;height:100%;";
+      host.append(carousel.element);
+      state.uncontainedCarousel = carousel;
+    });
+
+    await waitFor(page, "uncontained carousel to lay its slides out", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller");
+      return el && el.scrollWidth > 760;
+    });
+
+    type MeasuredSlide = {
+      index: number;
+      left: number;
+      right: number;
+      width: number;
+      clipPath: string;
+      clippedWidth: number;
+      visibleWidth: number;
+      visibility: string;
+      isFullyInside: boolean;
+      cutsRightEdge: boolean;
+    };
+
+    const measureLayout = async (): Promise<{
+      containerWidth: number;
+      scrollLeft: number;
+      scrollWidth: number;
+      visibleItems: MeasuredSlide[];
+    }> => {
+      return page.evaluate(() => {
+        const scrollerEl = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+        const scrollerRect = scrollerEl.getBoundingClientRect();
+        const containerWidth = scrollerEl.clientWidth;
+        const scrollLeft = scrollerEl.scrollLeft;
+        const scrollWidth = scrollerEl.scrollWidth;
+
+        const items = Array.from(document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item"));
+        const measured: MeasuredSlide[] = [];
+
+        items.forEach((el, index) => {
+          const rect = el.getBoundingClientRect();
+          const style = window.getComputedStyle(el);
+          const visibility = style.visibility;
+          const clipPath = style.clipPath;
+          const left = rect.left - scrollerRect.left;
+          const right = rect.right - scrollerRect.left;
+          const width = rect.width;
+
+          let insetX = 0;
+          if (clipPath && clipPath.includes("inset(")) {
+            const match = clipPath.match(/inset\(([^)]+)\)/);
+            if (match) {
+              const parts = match[1]!.trim().split(/\s+/);
+              if (parts.length >= 2) {
+                insetX = parseFloat(parts[1]!) || 0;
+              }
+            }
+          }
+          const clippedWidth = Math.max(0, width - 2 * insetX);
+          const visibleLeft = Math.max(0, left + insetX);
+          const visibleRight = Math.min(containerWidth, right - insetX);
+          const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+
+          const isVisible = visibility !== "hidden" && right > 0 && left < containerWidth;
+          if (isVisible) {
+            measured.push({
+              index,
+              left,
+              right,
+              width,
+              clipPath,
+              clippedWidth,
+              visibleWidth,
+              visibility,
+              isFullyInside: left >= 0 && right <= containerWidth,
+              cutsRightEdge: right >= containerWidth && left < containerWidth,
+            });
+          }
+        });
+
+        return { containerWidth, scrollLeft, scrollWidth, visibleItems: measured };
+      });
+    };
+
+    if (options.screenshotDir) {
+      await mkdir(options.screenshotDir, { recursive: true });
+    }
+
+    // --- Slide 0 check ---
+    const slide0 = await measureLayout();
+    console.log(`[uncontained check] Slide 0: containerWidth=${slide0.containerWidth}, scrollLeft=${slide0.scrollLeft}, scrollWidth=${slide0.scrollWidth}`);
+    for (const item of slide0.visibleItems) {
+      console.log(`  Item ${item.index}: left=${item.left.toFixed(2)}, right=${item.right.toFixed(2)}, width=${item.width.toFixed(2)}, clipPath=${item.clipPath}, clippedWidth=${item.clippedWidth.toFixed(2)}, visibleWidth=${item.visibleWidth.toFixed(2)}`);
+    }
+
+    if (options.screenshotDir) {
+      await page.screenshot({ path: `${options.screenshotDir}/slide0-light.png` });
+      await page.evaluate(() => {
+        document.documentElement.dataset.theme = "baseline";
+        document.documentElement.dataset.themeMode = "dark";
+        document.documentElement.classList.add("dark-theme");
+        document.body.style.background = "#141318";
+      });
+      await page.waitForTimeout(50);
+      await page.screenshot({ path: `${options.screenshotDir}/slide0-dark.png` });
+      await page.evaluate(() => {
+        document.documentElement.dataset.themeMode = "light";
+        document.documentElement.classList.remove("dark-theme");
+        document.body.style.background = "#fdfcf4";
+      });
+      await page.waitForTimeout(50);
+    }
+
+    for (const item of slide0.visibleItems) {
+      if (item.clipPath && item.clippedWidth < 279.5 && !item.cutsRightEdge) {
+        failures.push(`Slide 0, item ${item.index}: clipPath (${item.clipPath}) shrunk item width to ${item.clippedWidth.toFixed(2)} px (expected 280 px)`);
+      }
+      if (item.isFullyInside && item.visibleWidth < 140) {
+        failures.push(`Slide 0, item ${item.index}: sliver detected inside container: visible width ${item.visibleWidth.toFixed(2)} px (< 50% of 280)`);
+      }
+      if (item.cutsRightEdge && item.visibleWidth < 140) {
+        failures.push(`Slide 0, item ${item.index}: cut-off item visible width ${item.visibleWidth.toFixed(2)} px (< 50% of 280 px)`);
+      }
+    }
+    for (let i = 1; i < slide0.visibleItems.length; i++) {
+      const step = slide0.visibleItems[i]!.left - slide0.visibleItems[i - 1]!.left;
+      if (Math.abs(step - 288) > 0.5) {
+        failures.push(`Slide 0: step between item ${slide0.visibleItems[i - 1]!.index} and ${slide0.visibleItems[i]!.index} is ${step.toFixed(2)} px (expected 288 ± 0.5 px)`);
+      }
+    }
+    const rightmost0 = Math.max(...slide0.visibleItems.map(item => item.right));
+    if (rightmost0 < slide0.containerWidth) {
+      failures.push(`Slide 0: row terminates before container right edge: rightmost visible item right is ${rightmost0.toFixed(2)} px vs container ${slide0.containerWidth} px`);
+    }
+
+    // --- Slide 10 check ---
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(10);
+    });
+    await waitFor(page, "scroll to reach slide 10 position", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller");
+      return el && Math.abs(el.scrollLeft - 2880) < 1;
+    });
+    await page.waitForTimeout(50);
+    const slide10 = await measureLayout();
+    console.log(`[uncontained check] Slide 10: containerWidth=${slide10.containerWidth}, scrollLeft=${slide10.scrollLeft}, scrollWidth=${slide10.scrollWidth}`);
+    for (const item of slide10.visibleItems) {
+      console.log(`  Item ${item.index}: left=${item.left.toFixed(2)}, right=${item.right.toFixed(2)}, width=${item.width.toFixed(2)}, clipPath=${item.clipPath}, clippedWidth=${item.clippedWidth.toFixed(2)}, visibleWidth=${item.visibleWidth.toFixed(2)}`);
+    }
+
+    if (options.screenshotDir) {
+      await page.screenshot({ path: `${options.screenshotDir}/slide10-light.png` });
+      await page.evaluate(() => {
+        document.documentElement.dataset.theme = "baseline";
+        document.documentElement.dataset.themeMode = "dark";
+        document.documentElement.classList.add("dark-theme");
+        document.body.style.background = "#141318";
+      });
+      await page.waitForTimeout(50);
+      await page.screenshot({ path: `${options.screenshotDir}/slide10-dark.png` });
+      await page.evaluate(() => {
+        document.documentElement.dataset.themeMode = "light";
+        document.documentElement.classList.remove("dark-theme");
+        document.body.style.background = "#fdfcf4";
+      });
+      await page.waitForTimeout(50);
+    }
+
+    for (const item of slide10.visibleItems) {
+      if (item.clipPath && item.clippedWidth < 279.5 && !item.cutsRightEdge) {
+        failures.push(`Slide 10, item ${item.index}: clipPath (${item.clipPath}) shrunk item width to ${item.clippedWidth.toFixed(2)} px (expected 280 px)`);
+      }
+      if (item.isFullyInside && item.visibleWidth < 140) {
+        failures.push(`Slide 10, item ${item.index}: sliver detected inside container: visible width ${item.visibleWidth.toFixed(2)} px (< 50% of 280)`);
+      }
+      if (item.cutsRightEdge && item.visibleWidth < 140) {
+        failures.push(`Slide 10, item ${item.index}: cut-off item visible width ${item.visibleWidth.toFixed(2)} px (< 50% of 280 px)`);
+      }
+    }
+    for (let i = 1; i < slide10.visibleItems.length; i++) {
+      const step = slide10.visibleItems[i]!.left - slide10.visibleItems[i - 1]!.left;
+      if (Math.abs(step - 288) > 0.5) {
+        failures.push(`Slide 10: step between item ${slide10.visibleItems[i - 1]!.index} and ${slide10.visibleItems[i]!.index} is ${step.toFixed(2)} px (expected 288 ± 0.5 px)`);
+      }
+    }
+    const rightmost10 = Math.max(...slide10.visibleItems.map(item => item.right));
+    if (rightmost10 < slide10.containerWidth) {
+      failures.push(`Slide 10: row terminates before container right edge: rightmost visible item right is ${rightmost10.toFixed(2)} px vs container ${slide10.containerWidth} px`);
+    }
+
+    // --- Keyboard navigation & focus reachability check ---
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);
+    });
+    await waitFor(page, "scroll to return to slide 0", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller");
+      return el && el.scrollLeft === 0;
+    });
+
+    // Focus the last fully visible item at slide 0 (item 1: 304..584 px inside 760 px container)
+    await page.evaluate(() => {
+      const items = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item");
+      items[1]!.focus();
+    });
+
+    for (let expected = 2; expected < 24; expected++) {
+      await page.keyboard.press("ArrowRight");
+      const activeIndex = await page.evaluate(() => {
+        const active = document.activeElement;
+        const items = Array.from(document.querySelectorAll("#uncontained-carousel .mtrl-carousel__item"));
+        return items.indexOf(active as HTMLElement);
+      });
+      if (activeIndex !== expected) {
+        failures.push(`Keyboard ArrowRight to item ${expected}: activeElement is item ${activeIndex}`);
+        break;
+      }
+      await waitFor(page, `item ${expected} to scroll into view`, (idx: number) => {
+        const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+        const item = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")[idx]!;
+        const sRect = scroller.getBoundingClientRect();
+        const iRect = item.getBoundingClientRect();
+        return iRect.right > sRect.left && iRect.left < sRect.right;
+      }, expected);
+    }
+
+    if (!failures.some(f => f.includes("Keyboard ArrowRight"))) {
+      for (let expected = 22; expected >= 0; expected--) {
+        await page.keyboard.press("ArrowLeft");
+        const activeIndex = await page.evaluate(() => {
+          const active = document.activeElement;
+          const items = Array.from(document.querySelectorAll("#uncontained-carousel .mtrl-carousel__item"));
+          return items.indexOf(active as HTMLElement);
+        });
+        if (activeIndex !== expected) {
+          failures.push(`Keyboard ArrowLeft to item ${expected}: activeElement is item ${activeIndex}`);
+          break;
+        }
+        await waitFor(page, `item ${expected} to scroll into view`, (idx: number) => {
+          const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+          const item = document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")[idx]!;
+          const sRect = scroller.getBoundingClientRect();
+          const iRect = item.getBoundingClientRect();
+          return iRect.right > sRect.left && iRect.left < sRect.right;
+        }, expected);
+      }
+    }
+
+  } finally {
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel?: CarouselComponent }).uncontainedCarousel?.destroy?.();
+      document.body.replaceChildren();
+    });
+    if (viewport) await page.setViewportSize(viewport);
+  }
+
+  assert.deepEqual(failures, [], `uncontained carousel browser regressions:\n${failures.join("\n")}`);
+}
+

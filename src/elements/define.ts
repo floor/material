@@ -130,6 +130,22 @@ export interface ElementSpec<C extends ElementComponent> {
   styles: readonly string[];
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
+  /**
+   * A boolean attribute the host carries from the moment it connects, whatever
+   * the tag prefix it was registered under. The library's sheets are built
+   * once and cannot know the prefix a page chose, so a compound selector
+   * that must recognise one of its own hosts — `::slotted([data-…])` in
+   * another element's sheet, which cannot spell the tag — matches this
+   * instead. Server rendering writes it into the declarative markup too, so
+   * it is there at first paint, before upgrade. The attribute is the
+   * library's own, in its reserved `data-mtrl-*` namespace: it is set on
+   * connection (and again on reconnect) but not observed, so a consumer that
+   * removes it while the host stays connected also removes the matching until
+   * the host reconnects. Do not mutate it.
+   *
+   * @internal Not part of the public API and may change without notice.
+   */
+  marker?: string;
   attributes?: Record<string, AttributeSpec<C>>;
   properties?: Record<string, PropertySpec<C>>;
   methods?: readonly string[];
@@ -151,7 +167,7 @@ export interface ElementSpec<C extends ElementComponent> {
    * The named slots the element reads: a child with `slot="<name>"` goes
    * there. Declared `as const`, so the adapters type them (a Svelte snippet,
    * a Vue slot) and describe() lists them. check-elements proves each is
-   * read and none other is (FLO-325).
+   * read and none other is.
    */
   slots?: readonly string[];
   form?: FormSpec<C>;
@@ -189,7 +205,7 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
  * The sheet every shadow root adopts first. The reduced-motion rule is the
  * document reset's (styles/base/_reset.scss), which does not match inside a
  * shadow tree: transitions are limited to the fades, animations end at once
- * (FLO-549). test/styles/reduced-motion.test.ts keeps the two copies equal.
+ * Test/styles/reduced-motion.test.ts keeps the two copies equal.
  * @internal
  */
 export const BASE_HOST_STYLES =
@@ -215,7 +231,7 @@ export type ElementAttributes<S> = {
 
 /**
  * Attributes as markup writes them (`supporting-text`), for a bare `m-*` tag
- * in JSX (`material/react/jsx`, `material/solid/jsx`, FLO-333).
+ * in JSX (`material/react/jsx`, `material/solid/jsx`).
  */
 export type ElementMarkup<S> = {
   [K in keyof Get<S, "attributes"> & string]?: Get<S, "attributes">[K] extends { type: infer T } ? ValueOf<T> : never;
@@ -258,7 +274,7 @@ export type ElementProps<S> = Omit<ElementAttributes<S>, keyof ElementProperties
   ElementProperties<S> &
   ElementSlotText<S>;
 
-/** The names of the element's named slots, from its spec's `slots` (FLO-325). */
+/** The names of the element's named slots, from its spec's `slots`. */
 export type ElementSlots<S> = S extends { slots: readonly (infer N extends string)[] } ? N : never;
 
 /** A named slot as a prop name (`header-action` → `headerAction`), for adapters whose slots are props. */
@@ -384,6 +400,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     connectedCallback(): void {
+      // On connect, not in the constructor, which must not gain attributes;
+      // and a host is never styled before it is connected.
+      if (spec.marker) this.toggleAttribute(spec.marker, true);
       removeDeclarativeTemplates(this);
       this.#upgradeProperties();
       if (!this.component) this.#build();
@@ -691,7 +710,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       else internals.setFormValue(value);
       // Not again while it stays valid: setting the validity was most of a
       // property set's cost, and a toggled checkbox that is not required
-      // stays valid (FLO-336). The internals say whether they already are;
+      // stays valid. The internals say whether they already are;
       // an invalid one is set every time, as its message or flags may change.
       const control = form.control?.(this.component);
       if (control) {

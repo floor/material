@@ -36,10 +36,10 @@ const slides = [
 ];
 
 /** JSDOM has no layout: give the scroller a size */
-const sized = (carousel: ReturnType<typeof createCarousel>, width: number) => {
+const sized = (carousel: ReturnType<typeof createCarousel>, width: number, height = 200) => {
   const scroller = carousel.element.querySelector('.mtrl-carousel__scroller') as HTMLElement;
   Object.defineProperty(scroller, 'clientWidth', { value: width, configurable: true });
-  Object.defineProperty(scroller, 'clientHeight', { value: 200, configurable: true });
+  Object.defineProperty(scroller, 'clientHeight', { value: height, configurable: true });
   return scroller;
 };
 
@@ -93,7 +93,7 @@ describe('carousel', () => {
     expect(carousel.getCurrentSlide()).toBe(0);
   });
 
-  test('a corner radius given in the config stays as given (FLO-331)', () => {
+  test('a corner radius given in the config stays as given', () => {
     const carousel = createCarousel({ slides, cornerRadius: 12 });
     sized(carousel, 600);
     carousel.addSlide({ image: 'd.jpg' });
@@ -115,7 +115,7 @@ describe('carousel', () => {
     expect((snaps[0] as HTMLElement).style.left).toBe('0px');
     const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
     expect(parseFloat(items[0]!.style.width)).toBeGreaterThan(200);
-    // The default corner reads the extra-large token (FLO-331)
+    // The default corner reads the extra-large token
     expect(items[0]!.style.clipPath).toContain(`round ${corner(28)}`);
     expect(carousel.element.style.getPropertyValue('--mtrl-carousel-corner')).toBe(corner(28));
     expect(carousel.getCurrentSlide()).toBe(1);
@@ -175,7 +175,7 @@ describe('carousel', () => {
 });
 
 
-// FLO-114: the real emitter behind the public event map.
+// The real emitter behind the public event map.
 describe('carousel event contract', () => {
   test('navigation emits only index changes, as value alone (3.0.0 dropped the doubled index), clamps boundaries and supports off', () => {
     const carousel = createCarousel({ slides });
@@ -254,7 +254,7 @@ describe('carousel event contract', () => {
 });
 
 
-// FLO-395: each negative case includes a positive wheel control, so the
+// Each negative case includes a positive wheel control, so the
 // original implementation cannot pass simply by ignoring every wheel event.
 describe('carousel opt-in wheel', () => {
   // Target-selection tests use reduced motion so navigation is synchronous;
@@ -556,3 +556,68 @@ describe('carousel opt-in wheel', () => {
     } finally { hero.carousel.destroy(); vertical.carousel.destroy(); }
   });
 });
+
+describe('carousel reduced motion variant preservation', () => {
+  beforeEach(() => {
+    Object.defineProperty(dom.window, 'matchMedia', {
+      value: (query: string) => ({
+        matches: query.includes('prefers-reduced-motion: reduce'),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+      configurable: true,
+    });
+  });
+
+  test('full-screen variant sizes item to container under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'full-screen', slides });
+    sized(carousel, 400, 600);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.height).toBe('600px');
+  });
+
+  test('hero variant keeps container or capped width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'hero', slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('600px');
+  });
+
+  test('hero-center variant keeps container or capped width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'hero-center', slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('600px');
+  });
+
+  test('multi-browse variant keeps preferred item width under reduced motion', () => {
+    const carousel = createCarousel({ variant: 'multi-browse', itemWidth: 280, slides });
+    sized(carousel, 600, 200);
+    carousel.addSlide({ image: 'd.jpg' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.width).toBe('280px');
+  });
+});
+
+describe('carousel uncontained accessibility and keyboard navigation', () => {
+  test('uncontained offscreen items do not have visibility hidden', () => {
+    const carousel = createCarousel({
+      variant: 'uncontained',
+      itemWidth: 280,
+      gap: 8,
+      padding: 16,
+      slides: Array.from({ length: 6 }, (_, i) => ({ title: `Slide ${i}` })),
+    });
+    document.body.appendChild(carousel.element);
+    sized(carousel, 760);
+    carousel.addSlide({ title: 'Slide 6' });
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    // Slide 3 is at start = 16 + 3 * 288 = 880px > container width 760px.
+    // It must remain reachable by keyboard and screen reader, not visibility: hidden.
+    expect(items[3]!.style.visibility).not.toBe('hidden');
+  });
+});
+

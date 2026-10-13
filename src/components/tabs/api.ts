@@ -65,7 +65,7 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
         prefix: component.config.prefix,
         variant: config.variant || component.config.variant,
         // The group's id, as the initial tabs have: without it an added tab's id
-        // was `tab--<value>`, colliding across tablists (FLO-229, FLO-263).
+        // was `tab--<value>`, colliding across tablists.
         groupId: component.groupId,
       };
       
@@ -150,7 +150,7 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
       // A value no tab carries clears the selection, the same as native
       // `<select>` setting selectedIndex = -1, and warns outside production.
       // It used to return with the previous tab still active, which is
-      // indistinguishable from a typo. FLO-106.
+      // indistinguishable from a typo.
       if (!targetTab) {
         if (typeof tabOrValue === 'string') {
           component.tabs.forEach(tab => tab.deactivate());
@@ -163,13 +163,13 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
       // not the application: a form restored from saved data must be able to
       // show a value that is currently disabled, which is how native select
       // and radio inputs behave. The guard that used to stand here refused,
-      // making tabs the odd one out of the four. FLO-106.
+      // making tabs the odd one out of the four.
 
       // Deactivate all tabs first
       component.tabs.forEach(tab => tab.deactivate());
 
       // Activate the target tab. Silently: a selection made from code emits
-      // no `change`, as on a native control; a click or a key does (FLO-328).
+      // no `change`, as on a native control; a click or a key does.
       targetTab.activate();
 
       return this;

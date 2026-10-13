@@ -11,7 +11,7 @@ import { CheckboxConfig, BaseComponent, ApiComponent, ApiOptions } from "./types
 export const defaultConfig: CheckboxConfig = {
   labelPosition: "end",
   // Space toggles a checkbox and Enter is left to its form, as natively and in
-  // WAI-ARIA (Dr Jones, FLO-265). The switch keeps both, as its m3 page says.
+  // WAI-ARIA (Dr Jones). The switch keeps both, as its m3 page says.
   enterToggles: false,
 };
 
@@ -42,7 +42,7 @@ const checkIcons = new WeakMap<Document, DocumentFragment>();
  * The check icon's nodes, built once per document with DOM APIs and cloned for each
  * checkbox: parsing the same markup through the HTML sink for every
  * instance was measurable, and a cached string would skip a Trusted Types
- * policy, where DOM APIs involve none (FLO-336). The nodes are those the
+ * policy, where DOM APIs involve none. The nodes are those the
  * markup parsed to, its whitespace included.
  */
 const createCheckIcon = (doc: Document): DocumentFragment => {

@@ -1,7 +1,7 @@
 // test/core-exports.test.ts
 //
-// FLO-414: `material/core/<area>` is an explicit list in the export map, as the
-// component subpaths are since FLO-381. The `./core/*` pattern it replaces
+// `material/core/<area>` is an explicit list in the export map, as the
+// component subpaths are since. The `./core/*` pattern it replaces
 // matched across slashes, so `material/core/compose/features` resolved, and the
 // README's "Building your own components" imported `withLifecycle()` from it
 // (as the 0.10.x README did). The contract is the seven areas and no path
@@ -21,7 +21,7 @@ const exported = Object.keys(pkg.exports as Record<string, unknown>);
 /** The documented core areas: README, the root-exports migration table, md3.io */
 const AREAS = ["canvas", "compose", "dom", "shapes", "state", "theme", "utils"];
 
-describe("the core subpaths (FLO-414)", () => {
+describe("the core subpaths", () => {
   test("the export map lists material/core and its seven areas, one by one", () => {
     expect(exported.filter((key) => key === "./core" || key.startsWith("./core/")).sort())
       .toEqual(["./core", ...AREAS.map((area) => `./core/${area}`)].sort());

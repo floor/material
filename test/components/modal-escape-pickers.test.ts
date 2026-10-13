@@ -1,6 +1,6 @@
 // test/components/modal-escape-pickers.test.ts
 //
-// FLO-548 family 6, part C: the time picker, the modal date picker and the
+// Family 6, part C: the time picker, the modal date picker and the
 // full-screen search on the Escape stack of core/dom/layer. Escape is a key
 // press, prevented, answered by the topmost modal only, and never the key
 // press that opened it. The docked date picker's outside click is told from

@@ -6,8 +6,8 @@
 //
 //   - ActiveIndicatorHeight is 3dp, and the secondary indicator's colour is the
 //     primary token (TabRow.kt:1080-1081), so the secondary's on-surface was wrong.
-//     Its height is the site's 2dp, where Compose takes the primary 3dp (FLO-262:
-//     m3.material.io wins).
+//     Its height is the site's 2dp, where Compose takes the primary 3dp
+//     (m3.material.io wins).
 //   - The fixed row divides evenly: tabWidth = tabRowWidth / tabCount (TabRow.kt:443-447).
 //   - The indicator floors at 24dp: maxOf(contentWidth, 24.dp) (TabRow.kt:461).
 //   - edgePadding applies at both edges, despite the token being named
@@ -82,7 +82,7 @@ describe('the indicator colour and shape follow the tokens', () => {
   });
 
   // m3.material.io tabs specs: shape "3, 3, 0, 0". Compose rounds all four; the site
-  // wins (FLO-262).
+  // wins.
   test('the primary indicator rounds its top corners only', () => {
     expect(decl(bodyOf(/tabs--primary .*__indicator$/), 'border-radius')).toBe('3px 3px 0 0');
   });

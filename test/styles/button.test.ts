@@ -80,7 +80,7 @@ describe('button stylesheet: shapes', () => {
   const shape = (v: string) => `var(--mtrl-button-shape, ${v})`;
   const pressedShape = (v: string) => `var(--mtrl-button-shape-pressed, ${v})`;
   const selectedShape = (v: string) => `var(--mtrl-button-shape-selected, ${v})`;
-  // Square and pressed are corner tokens (FLO-330); round is half the height
+  // Square and pressed are corner tokens; round is half the height
   const corner = (size: string, v: string) => `var(--mtrl-sys-shape-corner-${size}, ${v})`;
 
   test('square container shape per size', () => {
@@ -158,7 +158,7 @@ describe('button stylesheet: colour styles', () => {
     expect(value('.mtrl-button--xl.mtrl-button--outlined', 'border-width')).toBe('3px');
   });
 
-  // FLO-311: one ::before in currentColor for every style; the states change only
+  // One ::before in currentColor for every style; the states change only
   // its opacity. Each style's content role, set as `color`, is the layer's colour.
   test('state layers use the content colour at the hover, focus and pressed opacity', () => {
     expect(value('.mtrl-button::before', 'background-color')).toBe('currentColor');

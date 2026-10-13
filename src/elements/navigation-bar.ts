@@ -1,7 +1,7 @@
 // src/elements/navigation-bar.ts
 /**
  * `<m-navigation-bar>` with `<m-navigation-bar-item>` children: the M3
- * Expressive navigation bar (FLO-305).
+ * Expressive navigation bar.
  *
  * Each `<m-navigation-bar-item>` declares one destination, as the rail's items
  * do: `value`, `icon`, `selected-icon`, `badge` (empty: the dot), `badge-label`,

@@ -218,8 +218,8 @@ export const withRadio =
         radio.input.checked = known && radio.config.value === value;
       });
 
-      // An unknown value clears and warns (FLO-106). Silently: a programmatic
-      // change emits no `change`, as on a native control (FLO-328).
+      // An unknown value clears and warns. Silently: a programmatic
+      // change emits no `change`, as on a native control.
       if (!known && value !== null) warnUnknownValue('radios', value);
 
       return component;

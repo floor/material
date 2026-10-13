@@ -1,6 +1,6 @@
 // test/types/timepicker-element-events.fixture.ts
 //
-// FLO-547: <m-timepicker>'s component types `on` and `off` with the time
+// <m-timepicker>'s component types `on` and `off` with the time
 // picker's event map, as <m-search>'s does with its own. It took any string
 // and an untyped handler.
 import type { TimepickerElementComponent } from "../../src/elements/timepicker";

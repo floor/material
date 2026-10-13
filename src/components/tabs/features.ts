@@ -26,7 +26,7 @@ interface ComponentBase {
  * signature says so rather than taking `unknown`. The `preventDefault` check
  * stays because a tab's `click` listener is handed the button's wrapped
  * payload, which has no `preventDefault`. The DOM fallback passes a real
- * event, and keyboard activation passes null (FLO-114, FLO-523).
+ * event, and keyboard activation passes null.
  */
 const isCancelable = (event: Event | null): event is Event =>
   !!event && typeof event.preventDefault === "function";
@@ -37,7 +37,7 @@ const isCancelable = (event: Event | null): event is Event =>
 export interface TabsManagementConfig {
   /** Initial tabs to create */
   tabs?: TabConfig[];
-  /** Id for this tab group; allocated when omitted. FLO-229. */
+  /** Id for this tab group; allocated when omitted. */
   groupId?: string;
   /** Tab variant */
   variant?: string;
@@ -77,7 +77,7 @@ export const withTabsManagement =
   <T extends TabsManagementConfig & object>(config: T) =>
   <C extends ComponentBase>(component: C): C & TabsManagementComponent => {
     // One id per tablist. A page may pin it with `groupId` so ids stay
-    // stable across renders; otherwise it is allocated. FLO-229.
+    // stable across renders; otherwise it is allocated.
     const groupId = config.groupId ?? allocateTabsGroupId();
 
     const tabs: TabComponent[] = [];
@@ -94,7 +94,7 @@ export const withTabsManagement =
           prefix: config.prefix,
           variant: tabConfig.variant || config.variant,
           // Every tab in this group carries the group's id, which is what
-          // makes its element id unique across tablists. FLO-229.
+          // makes its element id unique across tablists.
           groupId,
         };
 
@@ -339,13 +339,13 @@ export const withIndicator =
       prefix: config.prefix,
       widthStrategy: indicatorConfig.widthStrategy || TABS_DEFAULTS.INDICATOR_WIDTH_STRATEGY,
       // Left undefined, the indicator takes its variant's height and the stylesheet's
-      // spring (FLO-262); given, they override them.
+      // spring; given, they override them.
       height: indicatorConfig.height,
       fixedWidth: indicatorConfig.fixedWidth || TABS_DEFAULTS.INDICATOR_FIXED_WIDTH,
       animationDuration: indicatorConfig.animationDuration,
       animationTiming: indicatorConfig.animationTiming,
       color: indicatorConfig.color,
-      // Accepted and never passed on (FLO-264).
+      // Accepted and never passed on.
       visible: indicatorConfig.visible,
       // Pass the tabs variant to the indicator
       variant: config.variant ?? "primary",

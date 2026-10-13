@@ -10,8 +10,8 @@
 // fix — a pseudo-element overlay would add nothing.
 //
 // The `touch-target` mixin is also covered here. Its only live caller is the text
-// field's trailing icon button (FLO-301); it is reachable from abstract/mixins too.
-// It centres physically now (`left: 50%`, FLO-592): a logical inline-start inset
+// field's trailing icon button; it is reachable from abstract/mixins too.
+// It centres physically now (`left: 50%`): a logical inline-start inset
 // pinned the box's inline-start edge to the centre, and the physical translate then
 // moved the whole box a further 24px past it — a full box-width off under RTL.
 import { describe, test, expect, beforeAll } from 'bun:test';

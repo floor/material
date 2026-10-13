@@ -1,4 +1,4 @@
-// FLO-259: a filter chip's trailing icon can have its own action (the m3.material.io
+// A filter chip's trailing icon can have its own action (the m3.material.io
 // chips' trailing icon "can be used to open a menu or remove the chip"), and a chip an
 // app makes draggable shows Compose's dragged state.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
@@ -69,7 +69,7 @@ describe("filter chip trailing action", () => {
     expect(price!.isSelected()).toBe(false);
     price!.focus();
     press(price!.trailingAction!, "ArrowRight");
-    expect(document.activeElement).toBe(size!.element); // a one-action chip's cell (FLO-261)
+    expect(document.activeElement).toBe(size!.element); // a one-action chip's cell
     price!.trailingAction!.click();
     expect(opened).toBe(1);
   });

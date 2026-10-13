@@ -223,7 +223,7 @@ export interface ButtonEventPayload<E extends Event = Event> {
   originalEvent: E;
 }
 
-/** A toggle button's `change` (FLO-380). */
+/** A toggle button's `change`. */
 export interface ButtonChangePayload {
   /** Whether the button is now selected */
   selected: boolean;
@@ -236,7 +236,7 @@ export interface ButtonChangePayload {
  *
  * `on` and `off` are generic over these keys, so a misspelled event name is a
  * compile error rather than a listener that never fires, and a handler's
- * payload is typed rather than `any`. FLO-114.
+ * payload is typed rather than `any`.
  *
  * Native forwarding and toggle selection are reported here. `mount` and `unmount` are *not* here: the lifecycle
  * feature keeps its own emitter and exposes them as `lifecycle.onMount` and
@@ -245,7 +245,7 @@ export interface ButtonChangePayload {
 export interface ButtonEvents {
   /**
    * A toggle button's selected state changed on a click. `value` is the
-   * button's value (`getValue()`), as every model event carries (FLO-380);
+   * button's value (`getValue()`), as every model event carries;
    * `selected` is the toggled state.
    */
   change: (payload: ButtonChangePayload) => void;
@@ -354,7 +354,7 @@ export interface ButtonComponent {
    */
   disable: () => ButtonComponent;
 
-  /** Whether the button is disabled (FLO-384) */
+  /** Whether the button is disabled */
   isDisabled: () => boolean;
 
   /**
@@ -531,7 +531,7 @@ export interface ButtonComponent {
 /**
  * Registers ButtonConfig with the global defaults map, so
  * `setComponentDefaults("button", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

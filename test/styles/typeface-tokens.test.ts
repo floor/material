@@ -1,4 +1,4 @@
-// FLO-330. The typeface was compiled into every component, so a theme could change
+// The typeface was compiled into every component, so a theme could change
 // only colours. m.typography now reads the role's face, M3's reference token
 // (display, headline and title the brand face, body and label the plain one), with
 // the compiled family as the fallback; base.css declares both faces.

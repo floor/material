@@ -321,7 +321,7 @@ const run = async (): Promise<void> => {
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
-    // Named slots as props reach the element's slots (FLO-333), each in a
+    // Named slots as props reach the element's slots, each in a
     // wrapper carrying slot="…"; the headline's nodes are not its attribute.
     const slotted = await page.evaluate(() => {
       const host = document.getElementById("dg");
@@ -334,7 +334,7 @@ const run = async (): Promise<void> => {
     check("dialog: headline and actions props reach their slots");
 
     // A change of the default slot's children keeps the named slots' wrappers
-    // and their nodes (FLO-334): they are rebuilt only when their prop changes.
+    // and their nodes: they are rebuilt only when their prop changes.
     const kept = await page.evaluate(async () => {
       const host = document.getElementById("dg") as HTMLElement;
       const before = { wrapper: host.querySelector('[slot="actions"]'), button: document.getElementById("dga") };

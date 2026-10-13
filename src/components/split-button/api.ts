@@ -62,7 +62,7 @@ export const withAPI =
       element,
       leadingElement: leading.element as HTMLButtonElement,
       trailingElement: trailing.element as HTMLButtonElement,
-      // Not a member (FLO-543): mtrl's own elements and tests reach it here
+      // Not a member: mtrl's own elements and tests reach it here
       [MENU]: menu,
 
       setItems(items: MenuContent[]): SplitButtonComponent {
@@ -158,7 +158,7 @@ export const withAPI =
 
     // A menu closed from the outside, by Escape or a click elsewhere, has to
     // bring the button's state back with it
-    // Runs for the menu made at creation, or by the first setItems (FLO-543)
+    // Runs for the menu made at creation, or by the first setItems
     const wire = (menu: MenuComponent): void => {
       // A trailing button that opens this component's own menu says so. The
       // menu's opener wiring sets a plain "true", so this comes after it.

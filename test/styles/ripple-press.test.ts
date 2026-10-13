@@ -1,4 +1,4 @@
-// FLO-260: the ripple is the press. Compose draws one pressed indication, the ripple at
+// The ripple is the press. Compose draws one pressed indication, the ripple at
 // 0.10; mtrl drew the wave at the hover opacity on top of a static 0.10 :active layer,
 // about 0.18 in all. The wave now draws at the pressed opacity, and a component with a
 // ripple leaves its static pressed layer to it; one without a ripple keeps it.

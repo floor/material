@@ -15,7 +15,7 @@ interface InputElementComponent extends ElementComponent {
   };
 }
 
-/** What an interactive trailing icon's `trailing` event carries (FLO-301) */
+/** What an interactive trailing icon's `trailing` event carries */
 export interface TextFieldTrailingPayload {
   /** The field's value when the icon was activated */
   value: string;
@@ -34,7 +34,7 @@ export interface TrailingIconConfig {
 
   /**
    * Makes the trailing icon a button with this accessible name: clear, show
-   * password, open a menu (FLO-301). M3 draws an interactive trailing icon as an
+   * password, open a menu. M3 draws an interactive trailing icon as an
    * icon button, as Compose's trailing slot holds an `IconButton`: a 40dp state
    * layer and a 48dp target. Activating it emits `trailing`. Without a label the
    * icon is decorative.
@@ -117,7 +117,7 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
     // with this slot, so `setTrailingIcon()` on a plain field did nothing at all
     // and said nothing about it.
     let slot: HTMLElement | null = null;
-    // The button's accessible name; empty, the icon is decorative (FLO-301)
+    // The button's accessible name; empty, the icon is decorative
     let label = config.trailingIconLabel ?? '';
 
     const activate = (event: MouseEvent): void => {
@@ -132,7 +132,7 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
         const element = document.createElement('span');
         element.className = className;
         // Decorative without a label: hidden from screen readers, as the leading
-        // icon is. An icon that acts takes trailingIconLabel and is a button (FLO-301)
+        // icon is. An icon that acts takes trailingIconLabel and is a button
         element.setAttribute('aria-hidden', 'true');
         return element;
       }

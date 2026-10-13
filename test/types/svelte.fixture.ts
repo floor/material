@@ -30,7 +30,7 @@ assert<Equals<SvelteProps<ButtonSpec>["class"], import("svelte/elements").ClassV
 // @ts-expect-error -- checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
 
-// Named slots are snippet props (FLO-325): each slot the element declares; a
+// Named slots are snippet props: each slot the element declares; a
 // text prop of the same name takes its text or a snippet.
 assert<Equals<ElementSlots<DialogSpec>, "headline" | "actions">>();
 assert<Equals<SvelteProps<DialogSpec>["actions"], Snippet | undefined>>();

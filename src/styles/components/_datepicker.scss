@@ -13,7 +13,7 @@ $component: '#{base.$prefix}-datepicker';
   width: 100%;
   max-width: 360px;
   // Where it shrinks to fit (an element's host), 280px as the text field,
-  // not its input's platform-dependent width (FLO-293).
+  // not its input's platform-dependent width.
   contain: inline-size;
   contain-intrinsic-inline-size: v.text-field('width');
   color: t.color('on-surface');
@@ -46,7 +46,6 @@ $component: '#{base.$prefix}-datepicker';
   &--modal { position: fixed; inset: 0; margin: auto; }
   // Full screen (m3.material.io: recommended on compact screens; the range picker's
   // form): the whole viewport, no corners, level 0 (range-selection.container tokens).
-  // FLO-276.
   &--fullscreen {
     width: 100%; max-width: none; height: 100%; max-height: none;
     border-radius: 0; box-shadow: none; overflow: hidden;
@@ -60,7 +59,7 @@ $component: '#{base.$prefix}-datepicker';
   }
   &__list { flex: 1; min-height: 0; position: relative; overflow-y: auto; overscroll-behavior: contain; }
   &__subhead { @include m.typography('title-small'); color: t.color('on-surface-variant'); padding: 20px 24px 8px; }
-  // Docked: corner-large (16dp), where the dialogs are extra-large. FLO-277.
+  // Docked: corner-large (16dp), where the dialogs are extra-large.
   &--docked { border-radius: v.shape('large'); }
   &--docked { position: absolute; inset: auto; top: 100%; inset-inline-start: 0; margin: 8px 0 0; z-index: v.z-index('dropdown'); }
   &__content { display: flex; flex-direction: column; }
@@ -88,10 +87,10 @@ $component: '#{base.$prefix}-datepicker';
   &__trigger, &__mode-toggle, &__prev, &__next, &__close { display: inline-flex; align-items: center; justify-content: center; }
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
-  // No bottom padding: the modal is Compose's 568dp, the footer included. FLO-277.
+  // No bottom padding: the modal is Compose's 568dp, the footer included.
   &__days { padding: 0 var(--#{$component}-grid-inset); }
   // The months' scroll-snapping track: one month per page, no visible scrollbar.
-  // Swipe, trackpad and wheel paging are the browser's own. FLO-274.
+  // Swipe, trackpad and wheel paging are the browser's own.
   &__track {
     display: flex; overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory; scrollbar-width: none;
@@ -104,7 +103,7 @@ $component: '#{base.$prefix}-datepicker';
   // The in-range band: a 40dp secondary-container strip, starting and ending at the
   // centre of the endpoint circles, square, under the selection (Compose's
   // drawRangeBackground); it was rounded to the cell edge. In-range days read
-  // on-secondary-container. FLO-277.
+  // on-secondary-container.
   &__cell--range {
     position: relative;
     background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px) no-repeat;
@@ -129,7 +128,7 @@ $component: '#{base.$prefix}-datepicker';
     @include m.typography('body-large');
     // ::before is the 40dp selection (fill, today's ring); ::after is the state layer
     // above it: on-surface-variant, on-primary on the selected day, at 0.08 hover and
-    // 0.10 focus and pressed, with md.comp.focus-ring 2dp outside it. FLO-277.
+    // 0.10 focus and pressed, with md.comp.focus-ring 2dp outside it.
     &::before, &::after { content: ''; position: absolute; z-index: -1; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; box-sizing: border-box; }
     --#{$component}-day-layer: #{t.color('on-surface-variant')};
     &:hover:not(:disabled)::after { background: color-mix(in srgb, var(--#{$component}-day-layer) #{v.state('hover-state-layer-opacity') * 100%}, transparent); }
@@ -143,7 +142,7 @@ $component: '#{base.$prefix}-datepicker';
   }
   &__months, &__years { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 16px 24px; }
   // The year list scrolls vertically within the calendar's own height (a weekday row
-  // and six weeks), so the picker keeps its size. FLO-275.
+  // and six weeks), so the picker keeps its size.
   &__years { position: relative; box-sizing: border-box; height: 336px; overflow-y: auto; overscroll-behavior: contain; }
   &__month, &__year {
     position: relative; isolation: isolate; min-width: 0; height: 48px; border: 0; background: transparent;
@@ -156,7 +155,7 @@ $component: '#{base.$prefix}-datepicker';
   &__fields { display: grid; gap: 16px; padding: 24px; }
   &__field { display: flex; flex-direction: column; }
   &__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 4px 12px; }
-  // The chevrons point the way the months go: mirrored right to left. FLO-277.
+  // The chevrons point the way the months go: mirrored right to left.
   &__prev svg, &__next svg { &:dir(rtl) { transform: scaleX(-1); } }
   &__cancel, &__confirm, &__save { @include m.typography('label-large'); padding: 0 12px; color: t.color('primary'); }
   &__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -1,4 +1,4 @@
-// A corner as the stylesheets write it since FLO-330: the M3 corner token, with the
+// A corner as the stylesheets write it: the M3 corner token, with the
 // compiled radius as the fallback. The steps are M3's shape scale (ShapeTokens).
 const STEPS: Record<number, string> = {
   0: 'none', 4: 'extra-small', 8: 'small', 12: 'medium',

@@ -6,7 +6,7 @@ import { callbacksFixture, wait } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
 
-// On the test's own clock (FLO-569): `afteropen` is on a timer that starts when
+// On the test's own clock: `afteropen` is on a timer that starts when
 // the 10ms show timer runs, so a real 30ms wait could end before it on a busy
 // runner. The fixture's own waits, after the test, stay on the real clock.
 test("all six dialog lifecycle events carry the finished dialog", () => {

@@ -1,7 +1,7 @@
 // test/styles/contrast-cascade.ts
 // Resolve theme colour custom properties the way the cascade does: selectors,
 // specificity, source order, the two media features, and inheritance from an
-// unthemed root. No browser. FLO-540.
+// unthemed root. No browser.
 export type Spec = [number, number, number];
 
 export type ElementState = {

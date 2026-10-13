@@ -1,4 +1,4 @@
-// FLO-114: compile the public component barrel, including its event map.
+// Compile the public component barrel, including its event map.
 // Runtime forwarding is covered by test/components/fab/behavior.fixture.ts.
 import {
   createExtendedFab,
@@ -52,7 +52,7 @@ fab.off("click", (event: MouseEvent) => event.preventDefault());
 // @ts-expect-error focus does not forward a keyboard event
 fab.on("focus", (_payload: ForwardedEventPayload<KeyboardEvent, HTMLButtonElement>) => {});
 
-// Collapse and expand reach the emitter too (FLO-319).
+// Collapse and expand reach the emitter too.
 fab.on("collapse", () => {});
 fab.on("expand", () => {});
 // @ts-expect-error collapse carries no payload
@@ -63,7 +63,7 @@ fab.on("mount", () => {});
 fab.element.addEventListener("collapse", () => {});
 fab.element.addEventListener("expand", () => {});
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<ExtendedFabEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<ExtendedFabEvents["swipe"]>[0], SwipePayload> = true;

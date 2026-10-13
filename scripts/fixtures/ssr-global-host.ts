@@ -1,5 +1,5 @@
 // scripts/fixtures/ssr-global-host.ts
-// Host attributes the SSR bridges must render (FLO-418). The framework emits
+// Host attributes the SSR bridges must render. The framework emits
 // them on the host; the shadow markup must not receive a copy.
 import assert from "node:assert/strict";
 

@@ -88,7 +88,7 @@ export const SELECT_DEFAULTS = {
 export const SELECT_CLASSES = {
   /** Container element */
   CONTAINER: 'select',
-  /** The text field (FLO-383: the key is two words; the value is select__text-field) */
+  /** The text field (the key is two words; the value is select__text-field) */
   TEXT_FIELD: 'select__text-field',
   /** Dropdown icon */
   DROPDOWN_ICON: 'select__dropdown-icon',

@@ -47,7 +47,7 @@ describe('rounded polygons', () => {
   test('rounding a corner replaces it with an arc on the rounding circle; smoothing adds flanks', () => {
     const rounded = roundedPolygon([1, 1, -1, 1, -1, -1, 1, -1], { radius: 0.5 });
     // without smoothing the flanks have no length: 4 arcs + 4 edges, the first
-    // arc split in two where the outline starts, as graphics-shapes does (FLO-346)
+    // arc split in two where the outline starts, as graphics-shapes does
     expect(rounded.cubics.length).toBe(9);
     expect(contiguous(rounded.cubics)).toBe(true);
     // the arc of the first corner (1, 1) is centred at (0.5, 0.5) with radius 0.5

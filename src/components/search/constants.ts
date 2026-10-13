@@ -136,7 +136,7 @@ export const SEARCH_CLASSES = {
   VIEW_DOCKED: "search--docked",
   VIEW_FULLSCREEN: "search--fullscreen",
 
-  // Style modifiers (FLO-287)
+  // Style modifiers
   VARIANT_CONTAINED: "search--contained",
   VARIANT_DIVIDED: "search--divided",
 

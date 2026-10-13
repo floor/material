@@ -36,7 +36,7 @@ export interface ToggleComponent {
  * `--selected` classes drive the selected colours and the shape swap.
  *
  * Emits a `change` event with `{ selected, value }` when the user toggles it;
- * `value` is the button's value, as `getValue()` returns it (FLO-380).
+ * `value` is the button's value, as `getValue()` returns it.
  * With `toggleOnClick: false` the click does nothing and a container
  * (button group) drives the state through `setSelected`.
  *

@@ -218,36 +218,36 @@ Thank you for contributing to material! Your efforts help make this library bett
 Releases are published by GitHub Actions with npm trusted publishing
 (`.github/workflows/publish.yml`); no npm token is involved.
 
-Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
-1.x library that lived under this name; the 3.0.0 pre-releases are on the
-`next` tag (`npm install material@next`).
+Install the stable release with `npm install material`.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
    into the version's section, and updates `README.md` and `npm-readme.md`
    where the release changes them. Merge it when CI passes.
 
-   **The 3.0.0 release pull request changes the install section** of both
-   files, between `<!-- install -->` and `<!-- /install -->`: the command
-   becomes `npm install material` and the paragraph about the `next` tag
-   goes. `bun run readme:check` holds the two to the version: it requires
-   `npm install material@next` while `package.json` is a 3.0.0 pre-release
-   and `npm install material` once it is not, so the pull request that sets
-   `3.0.0` is red until both files are changed.
+   **Keep the install sections consistent with the version**, between
+   `<!-- install -->` and `<!-- /install -->` in both files.
+   `bun run readme:check` requires `npm install material` for stable versions
+   and `npm install material@next` for a 3.0.0 pre-release. A stable version
+   must have no paragraph about the `next` tag in its install section.
 
    **Every release pull request refreshes the size table** of both files,
    between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`
    (under CI's Node 22: `npx -y -p node@22 -p npm@10 -- bun run size:check`),
-   in kB of 1,000 bytes to one decimal. Between releases `readme:check` lets a
-   figure be up to 2% (and at least 100 bytes) from the current build, so an
-   unrelated pull request does not fail on a rounding; it prints each row that
-   has drifted, and fails past the tolerance.
+   in kB of 1,000 bytes to one decimal. `readme:check` holds each figure to
+   exactly that measurement rounded to the printed decimal, so a pull request
+   that moves a bundle updates the table too, or fails naming the stated and
+   measured figures.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
    git tag -a vx.y.z -m "vx.y.z" <merge commit>
    git push origin vx.y.z
    ```
+
+   Tag only a commit on `main`: the workflow refuses a tag whose commit is not
+   an ancestor of `main`. A `v*` tag ruleset (only the owner creates matching
+   tags) is recommended.
 
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under

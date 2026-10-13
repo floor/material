@@ -61,7 +61,7 @@ function picker(hours = 10, minutes = 30, period: string = TIME_PERIOD.AM) {
   };
 }
 
-// AM/PM are radios in a group (FLO-233), so the selected state is
+// AM/PM are radios in a group, so the selected state is
 // aria-checked. It was aria-pressed while they were toggle buttons.
 const pressed = (el: HTMLElement) => el.getAttribute("aria-checked");
 const key = (el: HTMLElement, k: string) =>

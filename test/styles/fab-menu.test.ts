@@ -1,6 +1,6 @@
 // test/styles/fab-menu.test.ts
 //
-// The FAB menu stylesheet (FLO-306) against FabMenuBaselineTokens and the
+// The FAB menu stylesheet against FabMenuBaselineTokens and the
 // m3.material.io FAB menu specs: the close button, the list and its items,
 // the three colour sets, and reduced motion (no stagger, no movement, a fade).
 import { describe, test, expect, beforeAll } from 'bun:test';
@@ -37,7 +37,7 @@ describe('fab menu stylesheet', () => {
     const open = '.mtrl-fab-menu--list.mtrl-fab-menu--open .mtrl-fab-menu__fab';
     expect(value(open, 'width')).toBe('56px');
     expect(value(open, 'height')).toBe('56px');
-    // Half the close button: the corner lerps to 28dp (FLO-348). Towards the
+    // Half the close button: the corner lerps to 28dp. Towards the
     // full-shape 9999px it went round at once and, on closing, the spring's
     // undershoot took it below 0, a square corner.
     expect(value(open, 'border-radius')).toBe('28px');
@@ -54,6 +54,20 @@ describe('fab menu stylesheet', () => {
     expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'inset-inline-end')).toBe('0');
     expect(value('.mtrl-fab-menu--medium', 'width')).toBe('80px');
     expect(value('.mtrl-fab-menu--large', 'height')).toBe('96px');
+  });
+
+  test('bottom-start anchors the FAB, the list and the items to the inline start', () => {
+    const fab = '.mtrl-fab-menu--bottom-start .mtrl-fab.mtrl-fab-menu__fab';
+    const list = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__list';
+    const item = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__item';
+    expect(value(fab, 'inset-inline-start')).toBe('0');
+    expect(value(fab, 'inset-inline-end')).toBe('auto');
+    expect(value(list, 'inset-inline-start')).toBe('0');
+    expect(value(list, 'inset-inline-end')).toBe('auto');
+    expect(value(list, 'align-items')).toBe('flex-start');
+    expect(value(item, 'justify-content')).toBe('flex-start');
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-end')).toBe('var(--mtrl-fab-menu-margin)');
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-start')).toBeUndefined();
   });
 
   test('the list: 8dp above the close button, items 4dp apart, end-aligned', () => {
@@ -92,7 +106,7 @@ describe('fab menu stylesheet', () => {
     expect(transition).toContain('opacity 175ms');
     expect(transition).toContain('width 425ms');
     expect(value('.mtrl-fab-menu__item', 'transition-delay')).toBe('var(--mtrl-fab-menu-delay, 0ms)');
-    // A pill at every width, its content end-anchored and clipped at the start (FLO-348)
+    // A pill at every width, its content end-anchored and clipped at the start
     expect(value('.mtrl-fab-menu__item', 'width')).toBe('0');
     expect(value('.mtrl-fab-menu__item', 'overflow')).toBe('hidden');
     expect(value('.mtrl-fab-menu__item', 'justify-content')).toBe('flex-end');

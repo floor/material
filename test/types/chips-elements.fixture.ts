@@ -1,5 +1,5 @@
 // test/types/chips-elements.fixture.ts
-// FLO-380 PR 4: the element and adapters expose the remaining selection after removal.
+// PR 4: the element and adapters expose the remaining selection after removal.
 import type { ElementEvents, ChipsSpec } from "../../src/elements";
 import type { Chips as ReactChips } from "../../src/react";
 import type { Chips as SolidChips } from "../../src/solid";

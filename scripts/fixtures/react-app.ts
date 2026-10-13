@@ -18,7 +18,7 @@ const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 const FRUITS = ["Apple", "Apricot", "Banana"];
 // JSX accepts data-* on any element; createElement with an object literal does not.
 // Without onChange: a component whose element has a change event (Button, since
-// FLO-380) types its own onChange, which React's HTML attributes would contradict.
+// Types its own onChange, which React's HTML attributes would contradict.
 const dataTest = { "data-test": "1" } as Omit<React.HTMLAttributes<HTMLElement>, "onChange">;
 
 type Log = Array<{ id: string; detail: unknown }>;
@@ -147,7 +147,7 @@ export const App = (): React.ReactElement => {
     // Controlled: Escape closes the dialog, and onClose puts the state in step
     h(
       Dialog,
-      // Named slots as props (FLO-333): nodes for the headline, a component in actions
+      // Named slots as props: nodes for the headline, a component in actions
       {
         id: "dg", open: dialog, onClose: () => setDialog(false),
         headline: h("strong", null, "Discard draft?"),
@@ -168,7 +168,7 @@ export const App = (): React.ReactElement => {
       h(NavigationRailItem, { value: "sent", icon: ICON }, "Sent")
     ),
     h("output", { id: "rail" }, String(rail)),
-    // FLO-319: collapse and expand reach the adapter's handlers
+    // Collapse and expand reach the adapter's handlers
     h(ExtendedFab, { id: "xf", icon: ICON, onCollapse: () => setFab("collapsed"), onExpand: () => setFab("expanded") }, "Compose"),
     h("output", { id: "fab" }, fab),
     h(Datepicker, { id: "dt", variant: "modal", label: "Due", value: due, onChange: (e) => setDue(e.detail.value) }),

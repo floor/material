@@ -1,7 +1,7 @@
 import createChip from "./chip/chip";
 import type { AssistChipConfig, FilterChipConfig, InputChipConfig, SuggestionChipConfig, ChipComponent, ChipType } from "./types";
 
-/** Public factories cannot carry the set's private `onSelected` hook. FLO-518. */
+/** Public factories cannot carry the set's private `onSelected` hook. */
 const open = <T extends object>(config: T, type: ChipType): ChipComponent =>
   createChip({ ...config, type, onSelected: undefined });
 

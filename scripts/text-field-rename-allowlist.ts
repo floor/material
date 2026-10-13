@@ -1,15 +1,13 @@
 // What the text-field rename must not change, and what may still say the
-// one-word spelling after it. scripts/rename-text-field.ts and
-// test/canonical-text-field.test.ts both read this file.
+// one-word spelling after it. test/canonical-text-field.test.ts reads this
+// file.
 //
 // "One word" is the nine letters of textfield in any case, except the two-word
 // forms textField and TextField, which stay. A case-insensitive search cannot
 // tell those apart from Textfield, so the check looks at the matched letters.
 
 export const exemptFiles = [
-  "scripts/rename-text-field.ts",
   "scripts/text-field-rename-allowlist.ts",
-  "scripts/text-field-rename-entries.ts",
 ];
 
 /** Edited by hand after the script, so a later tree can cherry-pick that commit. */
@@ -156,7 +154,8 @@ const changelogLineKept = (line: string, inHistory: boolean): boolean => {
 /** True when this line is allowed to contain the one-word spelling. */
 export const lineKept = (file: string, line: string, inChangelogHistory: boolean): boolean => {
   if (exemptFiles.includes(file)) return true;
-  if (file === "CHANGELOG.md") return changelogLineKept(line, inChangelogHistory);
+  // The release-notes fixture is a CHANGELOG copy, with the same migration spellings.
+  if (file === "CHANGELOG.md" || file === "test/fixtures/release-notes-large.md") return changelogLineKept(line, inChangelogHistory);
   const rule = keeps.find((entry) => entry.file === file);
   if (!rule) return false;
   return covered(line, oneWordHits(line), rule.snippets);

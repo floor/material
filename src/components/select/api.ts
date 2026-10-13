@@ -15,7 +15,7 @@ export const withAPI =
     element: component.element,
     // withMenu warns and returns early without a text field, so a select that
     // reaches the API has it. The menu stays under its symbol, which the
-    // spread above carries: it is not a member (FLO-543).
+    // spread above carries: it is not a member.
     textField: component.textField!,
 
     getValue: options.select.getValue,

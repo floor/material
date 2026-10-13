@@ -10,9 +10,182 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 Up to 0.10.x the package was published as `mtrl`, from `floor/mtrl`: the sections for `[0.10.6]` and
 below are kept as they were published, and the release they announce as 1.0.0 is this one,
-`material` 3.0.0.
+`material` 3.0.0. Pull-request numbers in the sections published from `floor/mtrl` are
+`floor/mtrl`'s.
+
+`material` 3.0.0 is MIT; `material` 1.x was GPL-3.
 
 ## [Unreleased]
+
+## [3.0.5] - 2026-10-09
+
+### Changed
+
+- **`package.json` adds five keywords: `material 3 expressive`, `m3 expressive`, `expressive
+  motion`, `spring motion` and `motion`.** They are what npm's search reads. The library follows
+  the Material 3 Expressive tokens for sizes, shapes and colours, and takes the spring motion
+  tokens where a component's design uses them. The description, the README and the code are
+  unchanged.
+
+### Fixed
+
+- **A discrete slider's handle rests on the end stop at either end of the track, not past it
+  (#79).**
+  A discrete slider sets its stops in from the ends of the track by the end's own corner radius —
+  8, 12, 16 or 28 px at XS to XL — so its first and last stops sit inside the pill. The handle's
+  position dropped that inset at the first and last values, so at the minimum and the maximum its
+  centre sat on the track's very edge, a corner radius past the end stop, with the handle
+  straddling the end of the pill. Every value position now takes the inset, the ends included: the
+  handle's centre lands on the end stop, and the filled track stops with it, keeping the handle gap
+  it keeps everywhere else. A continuous slider spans the whole track as before; the interior
+  stops, every size and right-to-left are unchanged.
+
+- **A toolbar's overflow button draws its icon in the toolbar's own colour, not black (#81).**
+  The overflow icon's SVG carried no `fill`, so it painted the SVG initial black in every variant
+  and both themes, while the toolbar's other icons follow the button through
+  `fill="currentColor"`. On a dark or coloured toolbar the overflow button showed black dots. The
+  icon now carries `currentColor`, so it takes the colour its siblings take, in every theme and
+  under a custom `color`. A custom `overflowIcon` is drawn as you give it.
+
+- **A card whose header is its last child keeps the bottom padding of its other three sides
+  (#81).**
+  A card header takes the card's 16 px padding on the top, left and right and no bottom padding, so
+  content or actions can follow it flush. A card that was only a header — no content, no actions —
+  kept that zero, and its title and supporting text sat on the card's lower edge. A header that is
+  the card's last child now keeps the same 16 px at the bottom as on the other sides; a header
+  followed by content or actions stays flush.
+
+- **A tooltip outside the top layer is placed correctly on a scrolled page (#84).**
+  The surface is fixed to the viewport in every path and takes the target's viewport rectangle,
+  but the placement added the document's scroll offset to it: on a page scrolled 300 px, the
+  tooltip sat one scroll distance away from its target, and a page scrolled sideways pushed it
+  aside the same way. The placement no longer adds the scroll, so the surface lands on its
+  target at any scroll position, in every placement. The top-layer path, the viewport clamps and
+  the transitions are unchanged.
+
+## [3.0.4] - 2026-10-06
+
+### Fixed
+
+- **A tooltip's arrow is the colour of the tooltip's own surface, in every variant and both
+  themes (#77).**
+  The arrow grows out of the container, so it has to read as that surface. A rich tooltip paints
+  `surface-container`, but its arrow kept the base `inverse-surface`; a plain tooltip paints
+  `inverse-surface`, but its arrow still painted the `surface-container-high` of a surface the
+  variant had dropped. On each of the twelve placements that draw an arrow, the arrow showed as a
+  triangle in a colour that was not the tooltip's own. Every direction now takes its colour from
+  the variant's surface — `inverse-surface` by default and for plain, `surface-container` for rich.
+  Geometry, transitions and the surfaces themselves are unchanged.
+
+- **An uncontained carousel lays every item out at the configured item size, stepping by
+  `itemWidth + gap` and flowing past the container's edge (#78).**
+  The uncontained layout was placed through the multi-browse keyline model: after the first one or
+  two items, slides were scaled down toward a 10 px anchor, so each showed as a sliver a few pixels
+  wide and consecutive items stepped 28.8 px apart instead of 288. That bunched the tail of the row
+  into a fraction of its width and left the row ending well before the container's right edge.
+  Items are now laid out at the configured width, at `itemWidth + gap` steps, and cut only by the
+  container edge — never shrunk into a sliver. How much of an item the edge leaves showing depends
+  on the container width and the scroll position. An item that sits fully past the edge stays laid
+  out and is not hidden. Snap positions are those steps, so a slide's scroll offset is its index
+  times `itemWidth + gap`; the scrollable extent is wider, because the row is now as long as its
+  slides. The contained variants — multi-browse, hero, center-aligned hero and fullscreen — keep
+  their keyline layout, and under reduced motion they behave as before.
+
+## [3.0.3] - 2026-10-05
+
+### Fixed
+
+- **A selected toggle icon button inside a toolbar keeps its round shape.**
+  A standalone toggle morphs round to square when selected (icon buttons specs),
+  and toolbar items inherited that morph, so the selected Bold of a formatting
+  toolbar turned a rounded square — a shape the toolbars specs warn against in
+  the floating container. Selection inside a toolbar is shown by colour roles
+  alone (the toolbar token set has no item shape tokens), so the round radius
+  now stays in every state. Extending that to the pressed state — and to docked
+  as well as floating toolbars — is this library's choice (round stays round),
+  not something the specs ask for. The pin is each item's own resting radius,
+  on the bar's direct items only, whatever the tag prefix the elements were
+  registered under — the toolbar's sheet matches the marker attribute every
+  icon-button host of this library carries. The radius is right at first
+  paint on the paths the checks cover: elements created in the browser,
+  `renderElement()` output, and the server render of the React, Vue, Svelte
+  and Solid adapters, which all write the marker into their markup. Marker-less
+  markup still pins under the default `m-` prefix, where the sheet can spell
+  the tag. Standalone toggles, square buttons, the overflow menu's content and
+  explicit `--mtrl-button-shape-*` overrides are unchanged.
+
+- An internal marker attribute, `data-mtrl-icon-button`, now appears on icon buttons; it carries no public API.
+
+## [3.0.2] - 2026-10-04
+
+### Fixed
+
+- **A search text field with a trailing icon of its own (such as a clear button) no longer also shows the browser's clear button (#69).**
+  WebKit and Blink draw `::-webkit-search-cancel-button` into every `type="search"` input — a
+  user-agent shadow part `appearance: none` on the input does not remove — so a field with a
+  trailing icon showed two clears side by side at the input's end. A search field with a trailing
+  icon now hides the browser's button; a search field without one keeps it, its only clear
+  affordance.
+
+## [3.0.1] - 2026-10-03
+
+### Fixed
+
+- **A menu in a shadow root mirrors its submenu arrow under `dir="rtl"`.**
+  The arrow, the submenu item's padding and the menu's transform origin followed an ancestor
+  `dir`. That selector does not cross a shadow boundary, so `<m-menu>` kept the arrow on the
+  right. The same declarations now also match `mtrl-menu--rtl`, which the menu sets from the
+  computed direction.
+- **In right-to-left, a top-layer menu wider than its field now aligns to the field's start edge
+  (its right edge), mirroring left-to-right.**
+  Under a field narrower than the menu's 112px minimum, placement kept the field's left edge in
+  both directions. Right-to-left, a menu wider than the field now meets the field's right edge.
+  A menu as wide as the field still meets both edges, and a submenu still opens on its own side.
+- **A slider reserves its row before upgrade at every size, with and without a label.** The
+  pre-upgrade stylesheet gave every `<m-slider>` the 48px row of the unlabelled default size,
+  but a horizontal slider is taller once its script runs. With a `label` it is 76px at XS and
+  S, 80 at M, 96 at L and 136 at XL — the label's body-large 24px line and its 4px gutter over
+  the container. Without one it is the container's own height, which the factory sets to
+  `max(handle height, 48)`: 48, 52, 68 and 108. A labelled slider pushed what followed it down
+  by 28px or more mid-upgrade, and an unlabelled one at L or XL by 20px and 60px. The reserved
+  height is now keyed on the size (in any case, as the element reads it) and on whether the
+  host carries a label, with the label's line taken from the body-large typescale and the
+  container heights the factory sets. An empty `label=""` builds no label and takes its
+  container's row, like an unlabelled host. `preupgrade:check` now covers every size, with and
+  without a label, both label positions, an icon and an empty label; each passes with the
+  host's box equal before and after. A vertical slider's length is the page's, and numeric
+  sizes are not reserved.
+- **The outlined text field's notch leaves the floated label clear in forced colours.**
+  Forced colours repaints a declared-`transparent` border in the line's own colour, so the notch's
+  open top edge — the gap the floated label sits in — was drawn as part of the top line, straight
+  across the whole label, in the factory and in `<m-text-field>`, left-to-right and right-to-left,
+  and both when the script opened the notch and when the input's own state floated the label first
+  (a value set without an event, an autofilled field). Inside `@media (forced-colors: active)` an
+  open notch now has no top border at all, under the class the script sets and under the selectors
+  that read the input's own state; the leading and trailing segments still draw theirs, and nothing
+  outside the media query changes.
+- **Text fields keep neighbouring content in place when they upgrade under a tall page line height (#43).**
+  The pre-upgrade styles now reserve the host’s inherited line box around the field, including
+  compact, outlined and multiline fields, in both text directions.
+- **The default button group stays in place when it upgrades (#44).** A text strut
+  in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
+  move at default typography and the group's 8 px height growth at 24 px font
+  size with line-height 2, in LTR and RTL, including newline-indented item markup.
+  The strut applies only to the default and `s` sizes, keeping `xs` at its existing
+  2.703125 px inline-neighbour move instead of increasing it to 4 px.
+  Full size, density and content reservation is tracked separately in #49.
+
+## [3.0.0] - 2026-10-03
+
+`material` 3.0.0 is the first stable release of the library published as `mtrl` 0.10.x.
+The new package name is `material`. For upgrade steps, see
+[Migrating from 0.10.x](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md#migrating-from-010x) in the changelog.
+
+### Security
+
+- **A password or hidden field's value is no longer painted before it upgrades (#53).**
+  `material` 3.0.0-next.0 and `mtrl` 0.10.0 to 0.10.7 show a password or a hidden field's value in
+  clear text before the element upgrades; upgrading fixes it.
 
 ### Migrating from 0.10.x
 
@@ -98,12 +271,14 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 `component`, which was never sent.
 
 **Reserved before 3.0.0.** `mtrl` 0.10.7 marks deprecated, so your editor flags each use,
-`ProgressComponent`'s `canvas`, `resize`, `track`, `indicator` and `buffer` (the table above)
-and the slider's `components`, which is internal in 3.0.0 (use the slider's own API and
-`slider.element`). Nothing flags the other two, so search for them: an import from
-`mtrl/core/compose/features`, whose names are imported from `material/core/compose`, and a
+`ProgressComponent`'s `canvas`, `resize`, `track`, `indicator` and `buffer` (the table above).
+Nothing marks the other three, so search for them: the slider's `components`, which is
+internal in 3.0.0 and was never on the public `SliderComponent` type (TypeScript already
+rejects it; use the slider's own API and `slider.element`); an import from
+`mtrl/core/compose/features`, whose names are imported from `material/core/compose`; and a
 read of `tab.badge` without a guard, since it may be `undefined` until the badge is shown
-(`setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()` work either way).
+(a strict TypeScript project is already told; `setBadge()`, `getBadge()`, `showBadge()` and
+`hideBadge()` work either way).
 
 **Sass.** The two Sass rows above are for stylesheets that `@use` material's sources. The Sass sources
 ship for reference; configuring them with `@use … with` is not a supported API in material 3.0.0. Theme
@@ -111,10 +286,10 @@ with CSS custom properties.
 
 **Type changes the compiler reports.** Besides renames and removals, seven entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
-payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
-spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
-`string | null` (FLO-380); the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530); a standalone chip's `onChange` and `onClick` take their
+payload is wrapped; React's and Solid's `Button` type their own `onChange`, so a
+spread of full `HTMLAttributes` must omit it; `SelectChangeEvent["value"]` is
+`string | null`; the chip set's `change` listener takes one object, not an array
+and a second argument; a standalone chip's `onChange` and `onClick` take their
 event's payload; and `emit` on the card and the tabs takes only the
 component's own events, with their payloads. A config `on*` option is its event's listener
 type: `onConfirm: (time: string) => void`, search `onInput` / `onSubmit:
@@ -130,14 +305,14 @@ a listener annotated `(event: SearchEvent) => void` on those two is an error. Th
 `<m-search>` component's `on` and `off` take the same map with the element's names
 (`open` and `close` carry the `SearchStateEvent`), so a name outside it is an error too. The
 `<m-timepicker>` component's `on` and `off` take the time picker's event map
-(`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
+(`TimePickerEvents`) in place of any string and an untyped handler: a name outside
 it is an error, and each handler's argument is typed, so one annotated with another type, or
 an argument on `open`, `close` or `cancel`, is an error. The time picker's `isOpen` is a
-method (FLO-548): `picker.isOpen === true` and assigning it to a `boolean` are errors.
+method: `picker.isOpen === true` and assigning it to a `boolean` are errors.
 `SnackbarState` gains `"queued"`, so a `switch` over it that had to be exhaustive is not.
 The menu's and the select's `open` and `close` payloads (`MenuEvent`, `SelectEvent`) and the
 select's `change` payload (`SelectChangeEvent`) have no `preventDefault` and no
-`defaultPrevented` (FLO-548): none of these events could ever be cancelled, so
+`defaultPrevented`: none of these events could ever be cancelled, so
 `event.preventDefault()` in such a listener is an error. The menu's `select`, where it keeps
 the menu open, keeps both. `ProgressComponent` has no `canvas`, `resize`, `track`, `indicator`
 or `buffer`: reading one is an error (TS2339). An import from a path under a core area,
@@ -149,7 +324,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 - **An app with its own contrast switch** adds `import 'material/styles/contrast'` (and
   `material/themes/<name>-contrast` for a theme it imports on its own). Without that import,
-  `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
+  `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns.
   Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
   stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
   still selects high contrast from `material/styles/base`. Import `material/styles/contrast` after
@@ -157,6 +332,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   layer. The contrast colours are the same in either order. `data-theme-contrast` is read
   on the element that carries `data-theme`, or on the root when the page has no `data-theme`;
   on any other element it does nothing (that element inherits its themed ancestor's level).
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
@@ -172,12 +352,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
-- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
-  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
-  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
-  and give each select that should fill its container a width
-  (`.mtrl-select { width: 100%; }`).
-- **A text field with a prefix or a suffix has no inline padding (FLO-299).**
+- **A text field with a prefix or a suffix has no inline padding.**
   `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
   `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
   `--mtrl-text-field-suffix-width`, which the field writes on its root. A page rule that set
@@ -198,7 +373,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): material's
   stylesheet no longer declares the property, and a `var()` of an undeclared property without a
   fallback gives no value, so the radius is lost silently.
-- **`material/styles/base` no longer carries typography (FLO-539).** Without
+- **`material/styles/base` no longer carries typography.** Without
   `import 'material/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
   `.mtrl-text-center` / `left` / `right`, `.mtrl-font-thin` / `light` / `regular` /
   `medium` / `bold`, and `.mtrl-truncate`, `-2` and `-3` do nothing, and `h1`–`h6` and `p`
@@ -247,7 +422,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   set: `chip.isSelected()` inside them is the state before the click. A chip alone used to
   toggle and emit `change` first. Read the new state in `onChange` or a `change` listener,
   which follows.
-- **A chip's `change` is emitted only when the selection changed (FLO-550).** In a
+- **A chip's `change` is emitted only when the selection changed.** In a
   `selectionRequired` set, a click on the last selected chip is refused: it used to emit
   `change` on the chip and on the set, with the chip still selected, and call both `onChange`.
   It now emits none, the item's `onSelect` is not called, and `<m-chips>` dispatches no
@@ -256,18 +431,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
   page; the set then destroys it and emits its own `remove`. A listener added with `on` used
   to run after the set had destroyed and unlisted the chip.
-- **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
+- **The time picker's `isOpen` is a method, `isOpen()`.** A leftover
   `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
   function. Call it.
-- **The time picker's config option `isOpen` is `open` (FLO-548).** TypeScript reports a
+- **The time picker's config option `isOpen` is `open`.** TypeScript reports a
   leftover in an object literal. In JavaScript `createTimePicker({ isOpen: true })` is
   ignored: the picker stays closed (measured). `TIMEPICKER_DEFAULTS.IS_OPEN` is
   `TIMEPICKER_DEFAULTS.OPEN`; a leftover reads `undefined`.
-- **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
+- **A snackbar waiting behind another is `"queued"`, not `"visible"`.** Right after
   `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
   true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
   the state turning `"visible"`.
-- **A snackbar hidden while it is queued emits no `close` and no `dismiss` (FLO-548).** It
+- **A snackbar hidden while it is queued emits no `close` and no `dismiss`.** It
   was never open. It used to emit both, and was then shown anyway at its turn, with
   `state` `"hidden"` and no way to hide it (measured). It now leaves the queue.
 - **A docked date picker opened with `open()` from a click outside it stays open.** That
@@ -317,9 +492,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `getValueAttribute()` / `setValueAttribute()`. No `value` event is emitted.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
-  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-text-field>` the
-  `trailing-icon-label` attribute gives it, and the framework components take the same as the
-  `trailingIconLabel` prop. Without the label a trailing icon is decorative.
+  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-text-field>` and in
+  the framework components a trailing icon is decorative.
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
 - **`<m-button>`** dispatches `change` for a toggle button.
@@ -359,36 +533,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   longer needs to; code that relied on it still being true (two menus open at once for a
   moment, a toggle read just after a dismissal) now sees the closed state.
 
+- **List styles:** for a 0.10.x app, the default is the baseline list: square rows and
+  state layers in every state, with no gap. Neither variant gives the list container a
+  background or a radius. To opt into rounded rows with their own colour and a 2px gap,
+  set `variant: 'segmented'` (`<m-list variant="segmented">`). This choice is also needed
+  by a 3.0.0-next.1 user who wants to keep rounded rows; its rounded list container is gone
+  in both variants. The four row-shape properties apply only to `segmented`.
+- **Switch and text-button layouts changed after next.1.** At `font-size: 24px; line-height: 2`,
+  an upgraded unlabelled `<m-switch>` is 52 × 48px (was 52 × 56); with supporting text its
+  height is 56px (was 65). Default typography is unchanged. A text button with an icon now
+  reserves its upgraded insets before upgrade, removing shifts of 4px at default/XS/S,
+  24px at M, 72px at L and 104px at XL. Check neighbouring content in your layouts.
+
 ### Changed (breaking)
 
-- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
-  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
-  the areas it resolved a folder inside one, `material/core/compose/features`, which the
-  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
-  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
-  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
-  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
-  Migration:
-
-  | 0.10 | 3.0 |
-  |---|---|
-  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
-
-  Every name `material/core/compose/features` exported is an export of
-  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
-  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
-  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
-  was only in the nested path and is now exported from `material/core/compose`.
-- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
-  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
-  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
-  tied the public type to one way of drawing it. The objects are unchanged at run time;
-  the type no longer promises them, and how the indicator is drawn may change in a later
-  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
-  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
-  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
-  value, are unchanged.
-- **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
+- **Explicit contrast levels are opt-in.** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
   `material/styles/contrast` and `material/themes/<name>-contrast`. The full stylesheet `material/styles`
@@ -397,7 +556,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   the opt-in sheets share that cascade layer. The contrast colours are the same in either
   order (an explicit level is more specific than the standard rule, and the preference rule
   does not match once the attribute is set).
-- **Typography leaves `material/styles/base` (FLO-539).** The base no longer carries the type
+- **Typography leaves `material/styles/base`.** The base no longer carries the type
   classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
   `.mtrl-font-*`, `.mtrl-truncate*`), material's styles for `h1`–`h6` and `p`, or the
   `--mtrl-sys-typescale-*` tokens, except the three the `body` rule reads
@@ -408,11 +567,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
   because the property is undefined and the declaration is invalid at computed-value time
   (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
-- **Pre-upgrade rules leave the element CSS modules (FLO-546).** `material/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `material/elements/preupgrade.css` or `material/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
+- **Pre-upgrade rules leave the element CSS modules.** `material/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `material/elements/preupgrade.css` or `material/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
 
   **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `material/ssr` bridge, loads `material/elements/preupgrade.css` in `<head>`. With another tag prefix, a page that set it with `configure({ prefix })` inlines `preupgradeStyles(prefix)` from `material/elements/preupgrade`; the element CSS modules no longer apply these rules.
-- **Snackbar, time picker and date picker follow the overlays' one open and close rule
-  (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
+- **Snackbar, time picker and date picker follow the overlays' one open and close rule.** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
   state getter has changed and the event has been emitted; opening an open one and closing a
   closed one do nothing and emit nothing; `isOpen()` is a method on every overlay.
   - **Snackbar:** `state` is `"queued"` between `show()` and its turn on screen, then
@@ -433,11 +591,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     picker: the event that opened an overlay never dismisses it.
   - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
     delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
-- **material is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
+- **material is ESM-only.** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('material')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('material')` from CommonJS.
-- **The package root exports the components and the app-level helpers only (FLO-351).** The 137
+- **The package root exports the components and the app-level helpers only.** The 137
   internal names 0.10.4 deprecated on the root are gone from it: the composition core (`pipe`,
   `createBase`, the `with*` features), the DOM, timing and store helpers, and the progress
   indicator's canvas code. The root keeps the component factories and their types,
@@ -453,7 +611,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   The subpaths are ESM-only, as material 3.0.0 is. The root's export list is pinned
   (`bun run root-exports:check`), so a name cannot join it unnoticed.
-- **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
+- **The Vue peer dependency is `>=3.4.20`.** The Vue adapter's declarations
   import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
   On Vue below 3.4.20 a project with `skipLibCheck: false` fails to compile them
   (TS2724); with `skipLibCheck: true` every Vue component is `any`. Migration:
@@ -461,7 +619,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.** Earlier versions import
   `scheduler/tracing`, which the current `@types/scheduler` no longer declares, so they fail to
   compile with `skipLibCheck: false`, with or without material.
-- **Only the canonical names (FLO-383).** For every row below but the last two, 0.10.5 exported
+- **Only the canonical names.** For every row below but the last two, 0.10.5 exported
   both spellings, the old ones deprecated; material 3.0.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; the strings follow: see 'Text field in two words in every string' below. The declarations are renamed too, so the
   types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
@@ -487,7 +645,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
   were renamed.
-- **Text field in two words in every string (FLO-560).** FLO-383 renamed the identifiers
+- **Text field in two words in every string.** The identifiers were renamed
   (`createTextField`, `TextFieldConfig`, `defineTextField`); the strings now follow, so the name
   is written one way everywhere. The tag is `<m-text-field>`. The classes are `mtrl-text-field`,
   `mtrl-text-field__input`, `mtrl-text-field--focused` and so on, on the text field and inside
@@ -505,7 +663,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   selectors, `mtrl-textfield` with `mtrl-text-field` in CSS and class calls, `part(textfield)`
   with `part(text-field)`, and `/textfield` with `/text-field` in imports (0.10.7 resolves the
   new subpaths, so imports can move first).
-- **Time picker, select and radio events agree with their getters (FLO-380).**
+- **Time picker, select and radio events agree with their getters.**
 
   | Event | 0.10 payload | material 3.0.0 payload |
   |---|---|---|
@@ -532,7 +690,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setValue(null)` clears the selection, silently. `<m-radios>`'s `value = null`, which the
   React, Solid, Vue and Svelte `value` props drive, clears through it; in 0.10 that cleared
   with a development warning (`no option with value ""`).
-- **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
+- **Chip-set `add` and `remove` report the live selection.** Factory
   callbacks receive one object instead of a bare chip:
 
   | Event | 0.10 payload | material 3.0.0 payload |
@@ -551,7 +709,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `event.chipValue` (or `event.detail.chipValue` on the element). Read the
   remaining selection from `event.value` or `event.detail.value`. The exported
   `ChipsAddEvent` and `ChipsRemoveEvent` types describe the new factory payloads.
-- **Checkbox and switch `change.value` is boolean (FLO-380).** Factory payloads
+- **Checkbox and switch `change.value` is boolean.** Factory payloads
   and custom-element details now carry `{ checked, value, valueAttribute, nativeEvent }`;
   `value` matches the checked model, and `valueAttribute` holds the HTML string token.
   Native forms still submit that token only while checked; setters remain silent and
@@ -563,10 +721,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setValue(string)` emitted in 0.10 is gone.
   Migration: read checked state from `value` (or `checked`), and replace reads of the
   old string `value` with `valueAttribute`, including `event.detail` in adapters.
-- **List event types match native forwarding (FLO-380).** `scroll` carries
+- **List event types match native forwarding.** `scroll` carries
   `{ event, element, originalEvent }`; its nonexistent `component` field is removed.
   Migration: use `element` for the event root, or retain your list reference.
-- **Toggle buttons, chips and the carousel report `value` with `change` (FLO-380).** Every
+- **Toggle buttons, chips and the carousel report `value` with `change`.** Every
   model event carries `value` in the type `getValue()` returns, read at dispatch:
 
   | Component | `change` payload, 0.10 → material 3.0.0 |
@@ -588,7 +746,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   The icon button's DOM `toggle` event, deprecated in 0.10.0, is removed (below): `change`
   carries `{ selected, value }`.
 
-- **The chips set's `change` payload is a plain object and has one argument (FLO-530).**
+- **The chips set's `change` payload is a plain object and has one argument.**
   `chips.on("change", handler)` listeners and the config's `onChange` are passed
   `{ value, selected, changed }`. `value` keeps the set's single or multi value
   shape, `selected` keeps the selected chip values, and `changed` is the toggled
@@ -615,7 +773,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `event.includes("a")` | Throws a `TypeError`. In Bun (JavaScriptCore): `event.includes is not a function. (In 'event.includes("a")', 'event.includes' is undefined)`. |
   | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler is passed exactly one argument. |
 
-- **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
+- **Tabs `on` and `off` take a closed event map.** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
   (the native `FocusEvent`). `TabsConfig.on` accepts that same `change` handler.
@@ -641,7 +799,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the same, so untyped code that emits `'custom'` still reaches a listener registered for
     it. Keep your own events on an emitter of your own.
   - A component you build with `withEvents` keeps its open `emit(event: string, data)`.
-- **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
+- **Tab and panel ids are derived from the value with a safe encoding.** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and
   `tabpanelx-<group>-<encoded>`: `_` becomes `__` and every other character `_<hex code
@@ -656,18 +814,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   outside `[A-Za-z0-9_-]` must build those ids with `tabPanelIdFor` / `tabIdFor`; a hand-written
   `tabpanel-g-a.b` is otherwise never linked.
 - Menu items and search suggestions are present synchronously when their factories return,
-  including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
+  including in server-rendered shadow DOM. Migration: DOM inspection no longer needs
   a timer before reading initial items or suggestions. Menu positioning still waits for
   attachment; opening, focus, lazy submenus and suggestion updates keep their existing behavior.
-- **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
+- **Text field: a trailing icon without `trailingIconLabel` is decorative.** It is
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that
   built a clear or show-password control from that span with its own click listener lost it for
   screen-reader users. Migration: an interactive trailing icon needs `trailingIconLabel` (or
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
-  factory option, the `trailing-icon-label` attribute on `<m-text-field>` (FLO-532) and the
-  `trailingIconLabel` prop in the React, Vue, Svelte and Solid components; without it a trailing
-  icon is decorative.
-- **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
+  factory option: `<m-text-field>` and the React, Vue, Svelte and Solid components have no label
+  attribute or prop, so a trailing icon there is decorative.
+- **The dialog is open when `open()` returns, and closed when `close()` returns.**
   The rule, for the dialog first and for every overlay by material 3.0.0: when `open()` or `close()`
   returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
   or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
@@ -716,7 +873,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
-  - **Escape is handled as a key press, in both layers (FLO-556).** The dialog listens on the
+  - **Escape is handled as a key press, in both layers.** The dialog listens on the
     window and prevents the key, so the browser sends a `layer: "top"` dialog no `cancel` for
     it. `closeOnEscape: false` and a `beforeclose` listener that refuses now hold for any
     number of presses (see Fixed). Only the topmost open dialog answers; a key that something
@@ -726,7 +883,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     `preventDefault()` on it still refuses. A page listener that saw the native `cancel` on
     the factory's `<dialog>` for Escape sees one the dialog sends itself; a close request that
     is not a key press (a back gesture) still arrives as the browser's.
-- **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
+- **The menu is closed when `close()` returns.** The same rule as the dialog's, for
   the menu in both layers and for the two components that hold one, the select and the split
   button. `open()` already worked this way; `close()` set the state and emitted `close` on a
   50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
@@ -767,7 +924,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     cancelled. A leftover call throws; it never did anything. The menu's `select` keeps
     both: preventing it keeps a `closeOnSelect` menu open.
 - **The FAB menu is open when `open()` returns, and `open` on `<m-menu>` and
-  `<m-fab-menu>` is applied at once (FLO-548).** The last two parts of the overlays' rule.
+  `<m-fab-menu>` is applied at once.** The last two parts of the overlays' rule.
   Migration: read the state on the line after setting `open` on either element instead of
   waiting for its event, or call `show()` / `hide()`.
   - **FAB menu, `menu` presentation:** `open()` sets `isOpen()` and `aria-expanded` and
@@ -783,7 +940,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the sheets. It used to be applied a microtask later and to dispatch both. `show()`,
     `hide()`, `toggle()`, the anchor and the user still dispatch one event per opening and
     per closing.
-- **The modal sheets and the modal drawer handle Escape as a key press (FLO-548, FLO-556).**
+- **The modal sheets and the modal drawer handle Escape as a key press.**
   The bottom sheet, the side sheet and the drawer, when modal, join the dialog on one stack,
   in both layers. Migration: nothing, unless a page listener relied on what follows.
   - **A refusal holds.** With `layer: "top"`, a sheet with `closeOnEscape: false` and a
@@ -802,7 +959,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     as a `cancel` event on its `<dialog>`, where it listens.
   - A standard (not modal) sheet is unchanged: Escape closes it when pressed inside it.
 - **The pickers and the full-screen search handle Escape as a key press, and the time picker
-  is open when its factory returns (FLO-548).** The last modals to join the dialog's stack.
+  is open when its factory returns.** The last modals to join the dialog's stack.
   Migration: read `timePicker.isOpen()` right after creating it with `open: true` instead of
   waiting a task.
   - **Time picker, modal date picker, full-screen search:** Escape is prevented and answered
@@ -907,10 +1064,37 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   removes the set's option. A handler that calls `selectByValue(x, true)` for one fixed
   value runs twice — the change that was not that value, then the move onto it — and then
   stops, because `selectByValue` emits only when the selection changed.
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them.**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
 
 ### Removed
 
-- **`select.menu` and `splitButton.menu` (FLO-543).** The menu inside a select or a split button
+- **`select.menu` and `splitButton.menu`.** The menu inside a select or a split button
   is no longer a member of either: a public handle on an inner component is what would stop the
   menu from being loaded on demand later. Both were marked `@deprecated` in 0.10.6. A leftover
   `.menu` is a compile error in TypeScript; in JavaScript it reads `undefined` (measured), so a
@@ -922,25 +1106,25 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   | 0.10 | material 3.0.0 |
   |---|---|
-  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10 (FLO-117). `rawClass` was applied on 0.10.x. In material 3.0.0 `createElement` applies no class for it and, as for any option it does not know, writes it out as an attribute: `<div rawclass="legacy-a legacy-b">` (an array becomes `rawclass="a,b"`). The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, and a leftover there still does nothing, so for them only the type changes. |
-  | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours (FLO-324) |
-  | the tooltip's `rich` option | `variant: 'rich'`; `rich` was never read (FLO-324) |
+  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10. `rawClass` was applied on 0.10.x. In material 3.0.0 `createElement` applies no class for it and, as for any option it does not know, writes it out as an attribute: `<div rawclass="legacy-a legacy-b">` (an array becomes `rawclass="a,b"`). The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, and a leftover there still does nothing, so for them only the type changes. |
+  | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours |
+  | the tooltip's `rich` option | `variant: 'rich'`; `rich` was never read |
   | `TOOLTIP_DEFAULTS.RICH` (deprecated in 0.10.5) | nothing: it was the default of the removed `rich` option |
-  | checkbox `variant`, and its type `CheckboxVariant` (deprecated in 0.10.5) | nothing: M3 has one checkbox style (FLO-94, FLO-265) |
-  | list `prefix` | nothing: the prefix is fixed at build time (FLO-118) |
-  | radios `rippleConfig` | nothing: never applied; the stylesheet draws the state layer (FLO-266) |
-  | tabs `ResponsiveConfig.smallScreen.maxVisibleTabs` | nothing: it never had an effect; for more than four tabs, use a scrollable row (FLO-232) |
-  | time picker `closeOnSelect`, `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT` | nothing: never applied; the picker is confirmed with OK, as M3 specifies (FLO-281) |
-  | `SLIDER_MEASUREMENTS.TRACK_RADIUS`, `SMALL_TRACK_EXTERNAL_RADIUS`, `LARGE_TRACK_RADIUS_RATIO`, `HANDLE_GAP_PRESSED_REDUCTION`, `CENTER_GAP`, `EDGE_PADDING` | nothing: not read since FLO-250; the stylesheet and `getExternalTrackRadius` give the geometry |
-  | `TABS_DEFAULTS.INDICATOR_HEIGHT`, `INDICATOR_ANIMATION_DURATION`, `INDICATOR_ANIMATION_TIMING`, `ICON_SIZE` | `indicator.height` and `indicator.animationDuration` to override; nothing read these (FLO-262) |
-  | `TEXT_FIELD_CLASSES.LABEL_FLOATING` | nothing: a floating label is the field's `--populated` or `--focused` state (FLO-295) |
-  | `TIMEPICKER_SELECTORS.MODAL`, `DIAL_CANVAS`, `DIAL_HAND` | nothing: they matched no element (the dialog's `::backdrop`, the DOM dial, `__dial-track` and `__dial-handle`; FLO-278, FLO-279) |
+  | checkbox `variant`, and its type `CheckboxVariant` (deprecated in 0.10.5) | nothing: M3 has one checkbox style |
+  | list `prefix` | nothing: the prefix is fixed at build time |
+  | radios `rippleConfig` | nothing: never applied; the stylesheet draws the state layer |
+  | tabs `ResponsiveConfig.smallScreen.maxVisibleTabs` | nothing: it never had an effect; for more than four tabs, use a scrollable row |
+  | time picker `closeOnSelect`, `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT` | nothing: never applied; the picker is confirmed with OK, as M3 specifies |
+  | `SLIDER_MEASUREMENTS.TRACK_RADIUS`, `SMALL_TRACK_EXTERNAL_RADIUS`, `LARGE_TRACK_RADIUS_RATIO`, `HANDLE_GAP_PRESSED_REDUCTION`, `CENTER_GAP`, `EDGE_PADDING` | nothing: not read; the stylesheet and `getExternalTrackRadius` give the geometry |
+  | `TABS_DEFAULTS.INDICATOR_HEIGHT`, `INDICATOR_ANIMATION_DURATION`, `INDICATOR_ANIMATION_TIMING`, `ICON_SIZE` | `indicator.height` and `indicator.animationDuration` to override; nothing read these |
+  | `TEXT_FIELD_CLASSES.LABEL_FLOATING` | nothing: a floating label is the field's `--populated` or `--focused` state |
+  | `TIMEPICKER_SELECTORS.MODAL`, `DIAL_CANVAS`, `DIAL_HAND` | nothing: they matched no element (the dialog's `::backdrop`, the DOM dial, `__dial-track` and `__dial-handle`) |
   | FAB and extended FAB `variant: 'surface'`, `FAB_VARIANTS.SURFACE`, `EXTENDED_FAB_VARIANTS.SURFACE` (deprecated since 0.8) | a container or tone style (`'primary-container'`, `'primary'`, …). The `--surface` CSS is removed, so a leftover `'surface'` renders as the default `primary-container`. |
   | FAB `size: 'small'`, `FAB_SIZES.SMALL` (deprecated since 0.8); `FAB_CLASSES.SMALL`, `FAB_ICON_SIZES.SMALL` (deprecated in 0.10.5) | `'default'`, `'medium'` or `'large'`: M3 Expressive has no small FAB. The `--small` CSS is removed, so a leftover `'small'` renders at the default 56dp. The extended FAB's `small` size stays. |
   | a chip's `text` (`ChipConfig`, including a chip set's items) | `label`. A leftover `{ text }` now renders an empty chip, silently: no label and no error or warning. Search your chip configs and chip set items for `text:`. |
   | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` (since 0.3.2). A leftover is ignored: the indicator falls back to its variant's height (3px on a primary row, 2px on a secondary one) and automatic width. |
   | shape names `'cookie4'`, `'cookie9'` (`materialShape`, the shapes) | `'cookie4Sided'`, `'cookie9Sided'`, Compose's names (since 0.10.2). `materialShape('cookie4')` now throws (`TypeError: byName[name] is not a function`). |
-  | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`); their defaults `DEFAULT_RIPPLE_CONFIG.TIMING`, `.OPACITY` (button, icon button) and `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING`, `.RIPPLE_OPACITY` (deprecated in 0.10.5) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. The core's `RIPPLE_CONFIG.timing`, `.opacity`, `RIPPLE_TIMING` and `RIPPLE_SCHEMA`, on no public entry, go with them. |
+  | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`); their defaults `DEFAULT_RIPPLE_CONFIG.TIMING`, `.OPACITY` (button, icon button) and `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING`, `.RIPPLE_OPACITY` (deprecated in 0.10.5) | nothing: never applied; the stylesheet draws the wave's motion and opacity. `duration` stays. The core's `RIPPLE_CONFIG.timing`, `.opacity`, `RIPPLE_TIMING` and `RIPPLE_SCHEMA`, on no public entry, go with them. |
 
 - **material 3.0.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
   never used) is removed, and so is what was kept only for compatibility: material 3.0.0 has no deprecated
@@ -948,18 +1132,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   | 0.10 | material 3.0.0 |
   |---|---|
-  | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
-  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266) |
+  | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect |
+  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them |
   | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.6) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
-  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in material 3.0.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
-  | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
+  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in material 3.0.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
+  | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer |
   | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
-  | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
+  | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected. |
 
-- **Component subpaths export the component only, and are listed one by one (FLO-381).** The
+- **Component subpaths export the component only, and are listed one by one.** The
   internals 0.10.5 deprecated on `mtrl/components/<name>` are gone, with no replacement: card's
   `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation` (a no-op: the
-  variant sets the elevation, FLO-323) and the `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
+  variant sets the elevation) and the `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
   `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
   component types; switch's `withSupportingText` and `SupportingTextComponent`. Datepicker's
   `DEFAULT_DATE_FORMAT` leaves the component's index but stays public in its constants:
@@ -979,9 +1163,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
   `slider/features`, `textfield/features`. Every other `material/components/<name>` and
   `material/components/<name>/constants` that existed in 0.10 still resolves, except
-  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (FLO-382,
-  above).
-- **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
+  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (see below).
+- **Segmented buttons are removed.** `createSegmentedButton` and `createSegment`
   (deprecated since 0.8.0), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3
   replaced the segmented button with the connected button group. Migrate:
@@ -1002,10 +1185,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     if you need it.
   - The button group's `select(value)` now clears the selection when no button carries `value`,
     with a warning in development and no event, as the segmented button and the other selection
-    components do (FLO-328).
+    components do.
     On a `required` group, which cannot be emptied, it warns and leaves the selection as it was.
-- **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
-  (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
+- **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed.** 0.10 deprecated them; their files, `mtrl/themes/<name>` entries and
   their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
   four) on the root element gets the baseline colours in the OS's colour scheme, and
   `data-theme-mode` and `data-theme-contrast` on that element are ignored: an app with its own
@@ -1015,7 +1197,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   keeps its ancestor's colours. Migration: `material` → `baseline`,
   `winter` → `ocean`, `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme,
   or keep its colours as custom properties of your own).
-- **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
+- **The shape scale is M3's and nothing else.** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
   `--mtrl-sys-shape-corner-*` properties on `:root`. `v.shape('tiny')` and the rest now stop the
   build with an error naming the migration (as does any step not on the scale). Migrate:
@@ -1023,29 +1205,29 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - `pill`: use `full`, or half the component's height when its corners animate (a 9999px
     radius snaps when animated).
   - A theme setting `--mtrl-sys-shape-corner-pill` can drop it; nothing reads it.
-- **`$mtrl-sys-shape` is removed from `abstract/theme` (FLO-345).** Nothing read it. Use
+- **`$mtrl-sys-shape` is removed from `abstract/theme`.** Nothing read it. Use
   `v.shape(<step>)`.
 
 ### Added
 
-- **`<m-text-field>` can render its trailing icon as a button (FLO-532).** The new
-  `trailing-icon-label` attribute is the element's spelling of the factory's `trailingIconLabel`:
-  the trailing icon becomes a `<button>` with that accessible name, which emits `trailing`, and
-  the React, Vue, Svelte and Solid components take it as the `trailingIconLabel` prop. Without
-  the attribute, or with an empty value, the icon stays decorative and hidden from assistive
-  technology.
-- **Every `material/components/<name>` entry exports its factory both ways:** as the default
-  export and by its name (`import createButton from 'material/components/button'` and
-  `import { createButton } from 'material/components/button'` are the same function, and the
-  same one the root exports). 21 entries had only the default and gain the name; `chips` and
-  `divider` had only the name and gain the default. Nothing is removed.
-- **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
-- **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
+- **The list's `variant`: `'standard'` (the default) or `'segmented'`.** `createList({ variant })`,
+  with the type `ListVariant` and the constant `LIST_VARIANTS` (`STANDARD`, `SEGMENTED`) from
+  `material/components/list/constants` and `material/components/list`; an unknown value is the
+  default. `<m-list variant="segmented">` is the attribute, reflected by the `variant` property,
+  and the React, Vue, Svelte and Solid components take the same `variant` prop. The list's root
+  carries `mtrl-list--standard` or `mtrl-list--segmented`. Two new custom properties:
+  `--mtrl-list-segmented-gap` (2 px, the space between a segmented list's rows) and
+  `--mtrl-list-item-container-color`, the unselected row's colour in both variants (`surface`
+  by default in standard, `surface-container` in segmented); set it to `transparent` for rows
+  without their own colour. Like the four shape properties, the list reads them and declares
+  none, so set them on the list, on any ancestor, or on the `<m-list>` element.
+- **`isOpen()` on the snackbar and the date picker**, as on every other overlay.
+- **Split button `setItems(items)` and `getItems()`.** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
   `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
   menu, which then works as one created with items (and opens at once if the split button is
   expanded). `setItems([])` empties the menu and keeps it. After `destroy()` it does nothing.
-- **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
+- **The navigation bar.** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
   - **Geometry and colour:** 64dp on surface container; a 56×32 indicator on secondary container,
@@ -1064,7 +1246,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `TabsVariant`, `TooltipVariant`. New on `material` (already on the subpath): `BadgeVariant`,
   `CardVariant`, `CarouselVariant`, `DatePickerVariant`, `ExtendedFabVariant`, `FabVariant`,
   `IconButtonVariant`, `SearchVariant`, `SplitButtonVariant`, `ToolbarVariant`.
-- **Framework components accept the host element's HTML attributes (FLO-519).**
+- **Framework components accept the host element's HTML attributes.**
   React, Vue, Svelte and Solid props take that framework's `HTMLAttributes` as well
   as the component's own props. Where a name is both, the component's type wins, so
   a switch's `checked` stays a boolean and a button's `type` stays a string. The same
@@ -1080,80 +1262,52 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   (what `expand` and `collapse` carry). `material/elements` adds `SearchElementEvents`, the same
   map with `<m-search>`'s names (`change`, `select`, `open`, `close`).
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
-  button group (FLO-380); existing accessors remain. Button toggle `change`, card
+  button group; existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
   actual payload types, including both slider touch delivery shapes.
-- `material/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). `<m-toolbar>` renders a declarative shadow root like the other elements (FLO-387). Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in `material` 3.0.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` does nothing, so the page has no declarative roots and no error.
-- `material/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for a later 3.x release (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
-- `material/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
-- `material/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `material/ssr/vue` imports the server renderer from `vue/server-renderer`.
-- `material/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
-- Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
+- `material/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies. `<m-toolbar>` renders a declarative shadow root like the other elements. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback. The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute. Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in `material` 3.0.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` does nothing, so the page has no declarative roots and no error.
+- `material/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged. A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render. A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for a later 3.x release. The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
+- `material/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker. Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing.
+- `material/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged. A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `material/ssr/vue` imports the server renderer from `vue/server-renderer`.
+- `material/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged. Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
+- Per-element SSR opt-out: specs accept `ssr: false` or a synchronous host
   predicate. Carousel and FAB menu emit their host and light DOM without a
   declarative root; menu and split-button do the same for nested submenus. `<m-toolbar>`
-  renders a declarative shadow root (FLO-387). Async
+  renders a declarative shadow root. Async
   button/card global defaults conservatively use this fallback for the whole render.
   Eligible light-DOM descendants still render their own roots. Pre-upgrade CSS keeps
   the host's box until browser upgrade, and these paths no longer throw. React SSR
   honors the same opt-out without emitting an empty declarative template.
-- Element CSS also ships as `.css` files (`material/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
-- `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371). Chromium security and per-node parity checks cover all 36 element defaults (FLO-363).
-- `ssr:check` and `svelte-ssr:check` cover two more cases (FLO-412): a toolbar's server-rendered
+- Element CSS also ships as `.css` files (`material/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles.
+- `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium. Chromium security and per-node parity checks cover all 36 element defaults.
+- `ssr:check` and `svelte-ssr:check` cover two more cases: a toolbar's server-rendered
   icon buttons are measured across the upgrade (pixels, layout, and each button keeping its
   parser-created root), and Svelte named snippets (card `headline` and `actions`, top app bar
   `leading` and `trailing`) are checked as slotted before script and adopted by hydration.
+- **Every `material/components/<name>` entry exports its factory both ways:** as the default
+  export and by its name (`import createButton from 'material/components/button'` and
+  `import { createButton } from 'material/components/button'` are the same function, and the
+  same one the root exports). 21 entries had only the default and gain the name; `chips` and
+  `divider` had only the name and gain the default. Nothing is removed.
 
 ### Changed
 
-- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
-  `README.md` (install, one example, the component list, and links to md3.io); the full
-  README stays on GitHub. Nothing in the API changes.
-- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
-  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
-  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
-  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
-  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
-  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
-  reserved the old height gains 4px per labelled slider.
-- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
-  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
-  for writing custom elements of your own on material's machinery, are tagged
-  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
-  in a minor release. Nothing about them changes in this release. The elements material
-  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
-  events, and the `define…()` functions are covered by semantic versioning as before. If
-  you build your own elements on this API, pin the minor version (`~3.0.0`).
-- **Slider: the `components` bag is internal.** The slider's controller reads an older
-  `components` object as a fallback for its elements; nothing in the library fills it, the
-  public `SliderComponent` never had it, and it is now marked internal and outside the
-  public contract: it may go in any release. Use the slider's own API (`setValue()`,
-  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
-- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
-  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
-  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
-  release can create it only then. Nothing changes at run time in this release: the badge
-  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
-  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
-  exists yet or not, and check `tab.badge` for `undefined` before reading it.
-- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
-  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
-  interaction target that doesn't interfere with the chip's primary action (such as Edit or
-  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
-  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
-  at least 42px: the last 48px of the chip are the secondary action's target, by the
-  specification, and the chip's own action owns the rest, at least 40px. An input chip
-  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
-  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
-  chip whose label already filled the 88px floor is unchanged.
-- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
-- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
-  select that took its container's whole width (200px in a 200px container, 400px in a
-  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
-  them. The factory's select now sizes as they do. Migration: to keep a select filling its
-  container, give it the width: `select.element.style.width = '100%'` or the rule
-  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
-  no option for it.
-- **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
+- **Lists are the baseline list by default; the expressive style is `variant: 'segmented'`.**
+  A list has two styles, as on m3.material.io ("The standard and segmented styles are a visual
+  choice, and don't affect a list's behavior"). `standard`, the default, has square rows and
+  square state layers in every state, and no gap. `segmented` is the expressive list, as
+  Compose's `SegmentedListItem`: each row paints its own colour (`surface-container`;
+  `secondary-container` when selected) and its own shape (4 px where it meets another row,
+  16 px on the outer corners of the first and the last row, 12 px hovered, 16 px focused,
+  pressed or selected), with 2 px between rows. A divider or a subheader ends a group: the rows
+  beside it take their outer corners. A selected row is 16 px on every corner whatever its
+  place in the list. The four shape properties (`--mtrl-list-item-shape`,
+  `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`,
+  `--mtrl-list-item-shape-active`) apply to a segmented list; a standard list does not read them.
+  **The rounded list container of 3.0.0-next.1 is gone**, in both variants: the list has no
+  background and no radius of its own, so `--mtrl-list-item-shape-outer` rounds rows only, and
+  a list given a height scrolls in a square box.
+- **Text field: the spacing follows the M3 measurements.** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
   site gives only as diagrams.
@@ -1203,13 +1357,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     new line … These should be used instead of multi-line fields on the web",
     m3.material.io/components/text-fields/guidelines, "Input text"); Compose's 56dp is its
     multi-line field, which starts as one line and grows.
-- **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
+- **SSR docs: what the two style modes cost.** Inline styles stay the default. The
   README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
   cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
   for pages with many selects, or that mix large roots (text fields, dialogs) in turn; and
   the HTML is 0.5 to 0.9 MB uncompressed for 30 to 44 roots) and link mode's caveat (WebKit paints the roots unstyled until the
   stylesheets arrive). No code changes.
-- **What `open()` has done when it returns is documented and pinned by tests (FLO-543).** The
+- **What `open()` has done when it returns is documented and pinned by tests.** The
   surface may be painted after `open()` returns; the state is not deferred. On return: a
   select's `isOpen()` is true, its input has `aria-expanded="true"` and `open` has been emitted;
   a split button's `expand()` has set `isExpanded()` and emitted `expand` and `change`; a time
@@ -1217,9 +1371,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   dialog has run `beforeopen`, and with `layer: "top"` it is open and has emitted `open`. None
   of this changed in material 3.0.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
   select opens it and is not lost.
-- **SSR docs (FLO-419).** The README names every attribute whose value is markup, including `avatar` and `leading-avatar`, which are not a person's name or an image URL; `FabMenuConfig.closeIcon` is markup too. The React and Svelte bridges build the server-rendered shadow root without the context of providers above the component (FLO-517).
+- **SSR docs.** The README names every attribute whose value is markup, including `avatar` and `leading-avatar`, which are not a person's name or an image URL; `FabMenuConfig.closeIcon` is markup too. The React and Svelte bridges build the server-rendered shadow root without the context of providers above the component.
 - CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
-  `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,
+  `solid-ssr:floor` and `vue-ssr:floor`. Each reads the floor from `peerDependencies`,
   installs it without saving, runs the check and restores the installed version, so nothing after
   it runs on the floor version unnoticed.
 - **CI runs the same checks in less time.** The browser checks run in five groups instead of
@@ -1227,10 +1381,192 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   and their system packages come from a cache that every pull request can read (a slow Ubuntu
   mirror made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the
   commands CI runs and fails when one is dropped.
+- **An `<m-text-field type="hidden">` takes no space, before upgrade or after.** The upgraded
+  hidden field was an inline-block host taking a line box, with its `display: none` input inside;
+  it is now not rendered at all, as an element with the `hidden` attribute is not. Its value still
+  submits with its form and still reads from `value`. Every other type is unchanged.
+- **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
+  At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
+  unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
+  beside rises 4–4.5 px and what follows 8–9 px. At the default type nothing moves. Text beside
+  an unlabelled `<m-switch>` no longer moves when the element upgrades. Its pre-upgrade
+  baseline now matches the control's center; a supporting-text-only switch uses its text
+  baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
+  surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
+  baseline/center flex layouts are checked in both text directions.
+- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
+  `README.md` (install, one example, the component list, and links to md3.io); the full
+  README stays on GitHub. Nothing in the API changes.
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller.** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
+- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
+  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
+  interaction target that doesn't interfere with the chip's primary action (such as Edit or
+  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
+  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
+  at least 42px: the last 48px of the chip are the secondary action's target, by the
+  specification, and the chip's own action owns the rest, at least 40px. An input chip
+  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
+  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
+  chip whose label already filled the 88px floor is unchanged.
+- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
 
 ### Fixed
 
-- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
+- **A text field's leading or trailing icon with `hidden` is hidden (#60).** The parts' own
+  `display: flex` is an author rule, so it beat the user agent's `[hidden] { display: none }`
+  and the icon stayed displayed — 24×24 for a decorative icon, 40×40 for an interactive
+  trailing one — and the two parts now take the hidden state themselves; the padding the icon
+  reserved stays, as M3 has no hidden-icon state.
+- **A FAB menu at `bottom-start` opens its items into the page (#59).** The list, its
+  items and the FAB were anchored to the inline end, so at the start corner they
+  grew off the screen. They are now anchored to the inline start: left to right the
+  items open to the right, and right to left they open to the left.
+- **Text field: with reduced motion, the filled field's focus indicator no longer fades.** Its 0.2s transition was not in the field's reduced-motion rule, where the
+  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
+  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
+  browser's `ease`).
+- **Text field, right to left: a compact filled field with a leading icon keeps its compact
+  padding.** The right-to-left rule beside an icon set all four sides, so the
+  field took the default density's top and bottom padding and its text sat 2.5px low.
+- **A filled multiline text field's first line no longer runs under its floated label.** The textarea padded its text 12px from the top whatever the variant, and the
+  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
+  The first line now starts under the label, at the single-line field's text (the values are
+  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
+  upgrades, so a sibling on its line does not move when the element is defined.
+- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon.** The input's padding was sized from the affix alone. With a leading icon and a
+  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
+  a trailing icon with a suffix did the same at the other end; right to left, the padding was
+  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
+  whatever stands outside them, in both variants, both densities and both directions
+  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
+  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
+  label. It writes each affix's measured width on the field's root, as
+  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
+  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
+  longer follows the prefix, are under "Changed".
+- **A top-layer dialog that refuses Escape stays open, however often it is pressed.** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
+  listener that refused, the third Escape made the browser close the `<dialog>` while
+  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
+  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
+  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
+  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in material 3.0.0.
+- **Escape with a menu open inside a default-layer dialog closes the menu only.** It
+  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
+- **Chips: a chip destroyed while it has focus hands focus to its neighbour.**
+  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
+  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
+  the one before when it was the last, as it does when the set removes a chip.
+- **A dialog destroyed right after `open()` no longer locks the page's scroll.** The
+  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
+  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
+  with nothing left to undo it. `destroy()` now cancels what `open()` and
+  `close()` left pending, and removes the dialog's document listeners.
+- **Snackbar: a queued snackbar dropped from the queue can be shown again.** One
+  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
+  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
+  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
+  fix is in material 3.0.0.
+- **Date picker: `open()` called from a click outside a docked picker opens it.**
+  The same click then reached the picker's outside-click listener and closed it at once. A
+  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
+  the fix is in material 3.0.0.
+- **Snackbar: destroying the one on screen lets the next take its turn.**
+  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
+  it stayed queued until some other snackbar was shown. The queue now moves on, after its
+  usual gap.
+- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
+  search.** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
+  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
+  the stylesheet, so they glided with the reduced-motion preference on. They now name no
+  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
+  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
+  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
+  smoothly too.
+- **A chip destroyed on its own leaves its chip set.** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
+- Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents.
+- A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined.
+- **Single-select chip sets keep one selected chip.** Adding a chip
+  with `selected: true` selects it and deselects the previous chip, including
+  initial factory config and `<m-chip selected>` declarations. The last selected
+  chip wins; `add.value` reports the resulting selection. Programmatic additions
+  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
+  also replaces the previous selection silently. A chip the set has removed or
+  destroyed no longer clears that selection: destroying the chip drops the set's
+  hook. The public chip factories ignore a caller-supplied `onSelected`.
+- **Progress indicators size their canvas when they are created.** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
+- **Sliders, tabs and loading indicators take their first position from configuration.** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
+- Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content.
+- Elements construct on a server DOM (linkedom) without browser-only APIs.
+- Element teardown finishes cleanup after an individual cleanup throws.
+- Text field and select placement cancel and reset their shared measurement timer when the
+  last pending field is destroyed, allowing the next lifecycle to schedule again.
+- Prefilled multiline text fields render in SSR, including inside another custom element.
+- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
+  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
+  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
+  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
+- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
+  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
+  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
+  passes assert that no control of the fixture is under the pointer.
+- SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
+  indicators after the initial-size and placement fixes; their 22 resolved exceptions are removed.
+- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/`.
+- SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
+  SSR parity and benchmark tooling load the source renderer and source CSS registry.
+- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import.
+- **A FAB in a corner keeps that corner in every state (#54).** The state layer's mixin set
+  `position: relative` on its host. Written beside the state selector, that is `(0,2,0)`, so
+  a corner FAB's `:hover` outranked its corner class's `position: fixed` `(0,1,0)`: computed
+  `position` was `fixed` at rest and `relative` while hovered, focused or pressed, which took
+  the button out of its corner and into the page's flow. The mixin now writes the declaration
+  in `:where()`, which adds no specificity: any other position wins — the corner classes', or
+  the position a page gives its own fixed, absolute or sticky host — while a static host still
+  gets the position the layer's `::before` needs. The side sheet's close button, which had no
+  position of its own, now carries `position: relative`: without it a page rule like
+  `button { position: static }` made it static and anchored its state layer and its 48px target
+  to the sheet's container. FAB and extended FAB, factory and element, four corners,
+  left-to-right and right-to-left, the same at rest, hovered, focused and pressed.
+- **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
+  stylesheet now reserves the same inline padding as the upgraded button at the
+  default size and every explicit size, keeping the button and following content in
+  place. It had moved 4 px at the default, `xs` and `s` sizes, and 24, 72 and 104 px
+  at `m`, `l` and `xl`, where the layout-shift scores were 0.017, 0.091 and 0.180.
+- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"`.**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
   edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box
@@ -1240,15 +1576,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   physical offsets (`left: 50%`), as the icon button's own rule does, so the physical translate
   centres it in both directions; left-to-right measures the same as before. Only the trailing-icon
   target rule changes in the compiled sheet (2,744 rules before and after, one changed). The
-  mixin's only live user is the text field's trailing icon button, on the factory and — through
-  `trailing-icon-label`, FLO-532 — on `<m-text-field>` itself.
+  mixin's only live user is the text field's trailing icon button, which only the factory renders
+  (the `<m-text-field>` element has no attribute for the label that makes the icon a button).
 - **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
   buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
   target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
   own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
   the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
   least 48x48 CSS pixels."
-- **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
+- **A multiline text field uses the value it was created with.** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
   slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
@@ -1301,7 +1637,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
     at 12% with primary text.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
-- **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
+- **`<m-text-field>` in a right-to-left page is mirrored.** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
   not reach, and the class that stands in for it was set for the outlined variant only: a
   filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
@@ -1319,112 +1655,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   field does not watch for either. Also fixed, in the light DOM too: **right to left, a
   field with both a leading and a trailing icon** padded its text 16px on the leading icon's
   side, under the icon; it is 52px on both.
-- **Text field: with reduced motion, the filled field's focus indicator no longer fades
-  (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
-  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
-  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
-  browser's `ease`).
-- **Text field, right to left: a compact filled field with a leading icon keeps its compact
-  padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
-  field took the default density's top and bottom padding and its text sat 2.5px low.
-- **A filled multiline text field's first line no longer runs under its floated label
-  (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
-  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
-  The first line now starts under the label, at the single-line field's text (the values are
-  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
-  upgrades, so a sibling on its line does not move when the element is defined.
-- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
-  (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
-  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
-  a trailing icon with a suffix did the same at the other end; right to left, the padding was
-  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
-  whatever stands outside them, in both variants, both densities and both directions
-  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
-  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
-  label. It writes each affix's measured width on the field's root, as
-  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
-  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
-  longer follows the prefix, are under "Changed".
-- **A top-layer dialog that refuses Escape stays open, however often it is pressed
-  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
-  listener that refused, the third Escape made the browser close the `<dialog>` while
-  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
-  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
-  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
-  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
-  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in material 3.0.0.
-- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
-  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
-- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
-  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
-  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
-  the one before when it was the last, as it does when the set removes a chip.
-- **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
-  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
-  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
-  with nothing left to undo it. `destroy()` now cancels what `open()` and
-  `close()` left pending, and removes the dialog's document listeners.
-- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
-  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
-  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
-  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
-  fix is in material 3.0.0.
-- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
-  The same click then reached the picker's outside-click listener and closed it at once. A
-  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
-  the fix is in material 3.0.0.
-- **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
-  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
-  it stayed queued until some other snackbar was shown. The queue now moves on, after its
-  usual gap.
-- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
-  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
-  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
-  the stylesheet, so they glided with the reduced-motion preference on. They now name no
-  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
-  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
-  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
-  smoothly too.
-- **A chip destroyed on its own leaves its chip set (FLO-533).** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
-- Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
-- A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined (FLO-425).
-- **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
-  with `selected: true` selects it and deselects the previous chip, including
-  initial factory config and `<m-chip selected>` declarations. The last selected
-  chip wins; `add.value` reports the resulting selection. Programmatic additions
-  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
-  also replaces the previous selection silently. A chip the set has removed or
-  destroyed no longer clears that selection: destroying the chip drops the set's
-  hook. The public chip factories ignore a caller-supplied `onSelected`.
-- **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
-- **Sliders, tabs and loading indicators take their first position from configuration (FLO-369).** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
-- Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
-- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
-- Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
-- Text field and select placement cancel and reset their shared measurement timer when the
-  last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
-- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
-- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
-  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
-  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
-  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
-- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
-  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
-  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
-  passes assert that no control of the fixture is under the pointer.
-- SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
-  indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
-- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
-- SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
-  SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
-- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
-
-`material` 3.0.0 is MIT; `material` 1.x was GPL-3.
+- `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis,
+  regardless of its layout-shift score. Known movements name the sibling, axis and signed
+  measured value with a 0.5px tolerance; other movements in that row still fail. Filtered
+  runs enforce the same checks, and a disappeared defect requires removing its exception.
+  Consumer-typography switch cases also reject host movement or resizing over 0.5px.
 
 ## [3.0.0-next.1] - 2026-10-03
 
 The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
-entries are under Unreleased; this is what changed since `3.0.0-next.0`.
+entries are below; this is what changed since `3.0.0-next.0`.
 
 **Breaking since next.0**
 
@@ -1466,6 +1706,242 @@ entries are under Unreleased; this is what changed since `3.0.0-next.0`.
   created with; a select's selected option has one look in both layers; the package no
   longer carries a second README and licence under `dist/`.
 
+### Migrating from 0.10.x
+
+- **`material/core/<area>` only.** A path under an area no longer resolves:
+  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
+  (`withLifecycle` among them).
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
+
+### Changed (breaking)
+
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them.**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
+
+### Added
+
+- **Every `material/components/<name>` entry exports its factory both ways:** as the default
+  export and by its name (`import createButton from 'material/components/button'` and
+  `import { createButton } from 'material/components/button'` are the same function, and the
+  same one the root exports). 21 entries had only the default and gain the name; `chips` and
+  `divider` had only the name and gain the default. Nothing is removed.
+
+### Changed
+
+- **An `<m-text-field type="hidden">` takes no space, before upgrade or after.** The upgraded
+  hidden field was an inline-block host taking a line box, with its `display: none` input inside;
+  it is now not rendered at all, as an element with the `hidden` attribute is not. Its value still
+  submits with its form and still reads from `value`. Every other type is unchanged.
+
+- **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
+  At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
+  unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
+  beside rises 4–4.5 px and what follows 8–9 px. At the default type nothing moves. Text beside
+  an unlabelled `<m-switch>` no longer moves when the element upgrades. Its pre-upgrade
+  baseline now matches the control's center; a supporting-text-only switch uses its text
+  baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
+  surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
+  baseline/center flex layouts are checked in both text directions.
+- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
+- **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
+- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
+  `README.md` (install, one example, the component list, and links to md3.io); the full
+  README stays on GitHub. Nothing in the API changes.
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller.** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
+- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
+  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
+  interaction target that doesn't interfere with the chip's primary action (such as Edit or
+  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
+  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
+  at least 42px: the last 48px of the chip are the secondary action's target, by the
+  specification, and the chip's own action owns the rest, at least 40px. An input chip
+  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
+  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
+  chip whose label already filled the 88px floor is unchanged.
+- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
+
+### Fixed
+
+- **A FAB in a corner keeps that corner in every state (#54).** The state layer's mixin set
+  `position: relative` on its host. Written beside the state selector, that is `(0,2,0)`, so
+  a corner FAB's `:hover` outranked its corner class's `position: fixed` `(0,1,0)`: computed
+  `position` was `fixed` at rest and `relative` while hovered, focused or pressed, which took
+  the button out of its corner and into the page's flow. The mixin now writes the declaration
+  in `:where()`, which adds no specificity: any other position wins — the corner classes', or
+  the position a page gives its own fixed, absolute or sticky host — while a static host still
+  gets the position the layer's `::before` needs. The side sheet's close button, which had no
+  position of its own, now carries `position: relative`: without it a page rule like
+  `button { position: static }` made it static and anchored its state layer and its 48px target
+  to the sheet's container. FAB and extended FAB, factory and element, four corners,
+  left-to-right and right-to-left, the same at rest, hovered, focused and pressed.
+- **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
+  stylesheet now reserves the same inline padding as the upgraded button at the
+  default size and every explicit size, keeping the button and following content in
+  place. It had moved 4 px at the default, `xs` and `s` sizes, and 24, 72 and 104 px
+  at `m`, `l` and `xl`, where the layout-shift scores were 0.017, 0.091 and 0.180.
+- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"`.**
+  The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
+  with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
+  edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box
+  sat with its centre 48px left of the button's centre and its right edge 4px left of the button's
+  left edge, so the button's hit area was its own 40px box (plus the engine's one pixel), measured
+  by walking `elementFromPoint` out from each edge in headless Chromium. The mixin now anchors with
+  physical offsets (`left: 50%`), as the icon button's own rule does, so the physical translate
+  centres it in both directions; left-to-right measures the same as before. Only the trailing-icon
+  target rule changes in the compiled sheet (2,744 rules before and after, one changed). The
+  mixin's only live user is the text field's trailing icon button, which only the factory renders
+  (the `<m-text-field>` element has no attribute for the label that makes the icon a button).
+- **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
+  buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
+  target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
+  own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
+  the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
+  least 48x48 CSS pixels."
+- **A multiline text field uses the value it was created with.** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
+- **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
+  kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
+  slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
+  belongs between a label and the track, and with no label the root is now the track's width and
+  48px tall with the 32px track centred. M3 "Switch" -> Specs -> Measurements gives the track
+  32x52dp and "Target: Size 48dp", and no height for a label row; its Accessibility section:
+  "Don't apply density to switches by default — this lowers their targets below our best
+  practice of 48x48 CSS pixels." So the unlabelled row is 48 tall, and a labelled switch keeps
+  its 56px row, unchanged. A switch with supporting text and no label is not unlabelled: its
+  helper stands where the label would, keeping the 12px gap and the 56px row. A label made only
+  of spaces is not empty, so the factory still treats `label: " "` as a labelled switch (the
+  element trims its text, so this is the factory only). Factory and element, left-to-right and
+  right-to-left. Before upgrade,
+  write the tag with nothing between its tags: a whitespace-only text node (a space, a line
+  break) is not `:empty`, so such a host keeps the labelled layout although the element then
+  builds no label.
+- **A radio row grows with a wrapping label, and the circle stays centred on the label block.** The row was a fixed 48px, so a three-line label painted 12px above and below it, and two adjacent wrapping labels overlapped. The row is now at least 48px (`min-height`) with 4px of vertical padding, so it grows with the text and a one-line row stays 48px (circle 14px from the top and 10px from the inline start, text 12px from the top, 8px gap). The circle stays centred on the label block, as a labelled checkbox's box is. A horizontal group keeps `align-items: flex-start` and sets no `align-self`: options on one line share the start edge, and the next line starts after the tallest row. The pre-upgrade `<m-radio>` reserves the same minimum (`min-height: 48px`); a short label stays 48px.
+- **An unlabelled radio is centred in its 48px target.** The factory always appends `.mtrl-radios__text`, and an empty label still took the 8px inline-start margin, so the 40px control sat flush at the start: the 20px circle's centre was at 20 rather than 24 (inset 10/18) and the state layer's inset was 0/8. An empty text span now takes no space. The row would then be 40px wide, so the unlabelled row sets `min-width: 48px` and centres the control. The circle's inset is 14/14 and the state layer's inset is 4/4, in both directions. A label made only of spaces is not empty, so the factory still treats `label: " "` as a labelled option (the element trims its text, so this is the factory only). Material 3 radio button, Specs, Measurements: icon size 20dp, state layer size 40dp, target size 48dp.
+- **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
+  box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
+  (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
+  focus ring reached 16px before the root's edge. Factory and element, left-to-right and
+  right-to-left. With no label the root is its own target, so the box now keeps 15px on both
+  sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
+  ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
+  root hugs box, gap and label, is unchanged. Before upgrade, write the tag with nothing between
+  its tags: a whitespace-only text node (a space, a line break) is not `:empty`, so such a host
+  keeps the labelled layout although the element then builds no label.
+- **An `<m-icon-button>`'s icon keeps its size token.** The element's inner `<button>` kept Chrome's
+  default padding, `1px 6px`, because the page reset's `button { padding: 0 }` is not in the shadow
+  root's adopted stylesheets, while the factory, which the page's global stylesheet does reach,
+  computes `0px`. Where the container left no room for icon and padding, the icon, a shrinkable flex
+  item, was drawn under its token: outlined xs narrow 14 against 20, outlined s narrow 18 against 24,
+  filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
+  default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
+- The package no longer contains a second copy of the README and licence under `dist/`.
+- **Select: the menu, measured against the field in every layer.** Three defects from a
+  measurement of the select, in the factory's default layer (the menu inside the select's
+  element), with `layer: "top"`, and in `<m-select>`:
+  - **Right to left, the selected option's check mark was drawn over its text.** It stayed at
+    the item's right, where right-to-left text begins: 18px of overlap. It is at the item's
+    end in both directions. The same holds for a selected item of any menu.
+  - **The menu is its field's width in both layers.** In the default layer it kept a menu's
+    280px maximum, so under a 400px field it was 280px wide and stopped 120px short; in the
+    top layer it was 400px. The rule is one: the menu is as wide as its field (Compose's
+    exposed dropdown matches its anchor's width), and never under the 112px the M3 site gives
+    a menu as its minimum.
+  - **The selected option has one look, the M3 token's:** secondary-container with
+    on-secondary-container text (`md.comp.menu.list-item.selected.container.color` and
+    `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
+    at 12% with primary text.
+- **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
+- **`<m-text-field>` in a right-to-left page is mirrored.** A `dir="rtl"` on an
+  ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
+  not reach, and the class that stands in for it was set for the outlined variant only: a
+  filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
+  the wrong side, the text's padding unswapped), and an outlined one mirrored its label and
+  its outline's corners only. A field now takes the `mtrl-text-field--rtl` class from its
+  computed direction in both variants, and the stylesheet mirrors on that class or on an
+  ancestor's `dir`. The same holds for a text field built by the factory inside a shadow
+  root of your own. In the light DOM a plain filled field is still mirrored by the
+  stylesheet alone, with no style read: it reads its direction only inside a shadow root,
+  once, in the task that created it. **A plain filled field that is attached to a shadow
+  root in a later task than the one that created it, or whose host is not yet connected
+  when that task ends, is not mirrored until you call `updatePositions()`.** A direction
+  changed afterwards is likewise picked up only by the field's next placement
+  (`updatePositions()`, or a setter that places), as it was for the outlined variant; the
+  field does not watch for either. Also fixed, in the light DOM too: **right to left, a
+  field with both a leading and a trailing icon** padded its text 16px on the leading icon's
+  side, under the icon; it is 52px on both.
+- `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis,
+  regardless of its layout-shift score. Known movements name the sibling, axis and signed
+  measured value with a 0.5px tolerance; other movements in that row still fail. Filtered
+  runs enforce the same checks, and a disappeared defect requires removing its exception.
+  Consumer-typography switch cases also reject host movement or resizing over 0.5px.
+
+### Security
+
+- **A password or hidden field's value is no longer painted before it upgrades (#53).**
+  `material` 3.0.0-next.0 and `mtrl` 0.10.0 to 0.10.7 show a password or a hidden field's value in
+  clear text before the element upgrades; upgrading fixes it.
+
 ## [3.0.0-next.0] - 2026-10-02
 
 The first prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`).
@@ -1489,9 +1965,9 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
 - **`select.textfield`: 1.0 renames it `textField` and keeps no alias.** This corrects 0.10.5's
   note, which said `textfield` "remains as an alias through 1.x": in 1.0 `select.textfield` is
   `undefined`. 0.10.x has no `textField`, so rename it when you upgrade, as with
-  `SELECT_CLASSES.TEXTFIELD` (FLO-383).
+  `SELECT_CLASSES.TEXTFIELD` (#439).
 - **The icon button's DOM `toggle` event** is removed in 1.0: listen to `change`, which the
-  factory's button and `<m-icon-button>` have emitted since 0.10.0 (FLO-295). The deprecation,
+  factory's button and `<m-icon-button>` have emitted since 0.10.0 (#270). The deprecation,
   until now only in 0.10.0's notes, is on the `toggle` option and on the element's event.
 - **`RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION` and `.SIZE`** (`mtrl/components/radios/constants`):
   the radios have no such options, and nothing reads the keys. `DIRECTION` stays.
@@ -1502,7 +1978,7 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
 - **`select.menu` and `splitButton.menu`** (the inner menu component) are removed in 1.0. Use
   the component's own methods and events: on the select `open()`, `close()`, `isOpen()`,
   `getOptions()`, `setOptions()` and `open`, `close`, `change`; on the split button `expand()`,
-  `collapse()`, `isExpanded()` and `expand`, `collapse`, `select` (FLO-543).
+  `collapse()`, `isExpanded()` and `expand`, `collapse`, `select` (#468).
 - **Told in the TSDoc, for 1.0, values and payloads:**
   - the radio factory's `getValue()` returns `null` when nothing is selected, and `setValue`
     accepts `null` to clear;
@@ -1526,7 +2002,7 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
 
 ### Fixed
 
-- **Accessibility: reduced motion is honoured inside the elements (FLO-549).** With the system's
+- **Accessibility: reduced motion is honoured inside the elements (#471).** With the system's
   reduced-motion preference on, mtrl limits transitions to fades and ends animations at once,
   from a rule in the page's stylesheet. That rule did not reach an element's shadow root, so
   inside `<m-button>`, `<m-button-group>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`,
@@ -1536,12 +2012,12 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   names were reduced. Every element's shadow root now carries the same rule. The ripple and
   the motion driven from script (progress, loading indicator, carousel, date picker, FAB menu)
   already honoured the preference, and so did the factories outside a shadow root.
-- **Button group (FLO-537):** Pressing a button in a standard group briefly showed an ellipsis
+- **Button group (#469):** Pressing a button in a standard group briefly showed an ellipsis
   on a neighbour's label. The neighbour's width and padding now ease together, and the width
   returns to the label's own size when the press ends. In a right-to-left page the
   neighbour's padding now gives way on the side facing the pressed button; it was the
   opposite side.
-- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
+- **Tooltip placement (#455):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; the first placement under reduced motion is unchanged.
 
@@ -1555,12 +2031,12 @@ icon button.
 
 ### Added
 
-- **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
+- **Canonical names (#400):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
   writes "text field" as two words), `CardConfig`, `TopAppBarComponent` and
   `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
   factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
   declaration (`top-app-bar.ts` had a second); assignability is unchanged.
-- **"Text field" in two words everywhere in the API (FLO-383):** `TextFieldDensity`,
+- **"Text field" in two words everywhere in the API (#407):** `TextFieldDensity`,
   `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload` and
   `TextFieldTrailingPayload` (`mtrl/components/textfield`); `TEXT_FIELD_VARIANTS`, `_STATES`,
   `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS` and `_CLASSES`
@@ -1570,7 +2046,7 @@ icon button.
   `mtrl/vue`. Each is the same binding as the old spelling. Every exported identifier is two
   words; string values are unchanged: the `<m-textfield>` tag, CSS classes, event strings and
   the constants' values, as are folders.
-- **API gaps from the 1.0 audit (FLO-384).**
+- **API gaps from the 1.0 audit (#393).**
   - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
     FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
   - Exported beside their factories: `ButtonEvents` (`mtrl/components/button`), `MenuEvents`,
@@ -1582,7 +2058,7 @@ icon button.
     and deprecated (1.0 removes it).
   - The `mtrl/components/<name>/constants` subpaths' exports are pinned beside the indexes
     (`bun run component-exports:check`).
-- **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
+- **Contrast on every theme (#366).** `data-theme-contrast="standard"`, `"medium"`
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
   `prefers-contrast: more` selects high on every themed element independently; explicit
@@ -1596,7 +2072,7 @@ icon button.
   Hand-authored standard colors and success, warning and info roles stay unchanged.
   The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
-- **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
+- **Carousel: opt-in mouse wheel scrolling (#361).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
   Horizontal layouts accumulate wheel momentum and preserve glide velocity to the snap
   point at or beyond that distance, at least one item per notch. Targets advance
@@ -1610,26 +2086,26 @@ icon button.
   release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
   file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
   created by hand.
-- **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
+- **Text field: a required field's label ends in an asterisk (#336).** M3's text field
   guidelines mark a required field with an asterisk after its label; it is in the label's colour,
   as Material Web draws it, and hidden from screen readers, which the input's native `required`
   already tells. `setRequired()` and `isRequired()` move it with the input, and `<m-textfield>`'s
   `required` attribute does too. `noAsterisk: true` leaves it off, for a form that marks its
   optional fields instead.
-- **Text field: an interactive trailing icon is a button (FLO-301).** `trailingIconLabel` (or
+- **Text field: an interactive trailing icon is a button (#336).** `trailingIconLabel` (or
   `setTrailingIcon(html, label)`) renders the trailing icon as a `<button>` with that accessible
   name, as Compose's trailing slot holds an `IconButton`: a 40dp state layer, a 48dp target, a
   keyboard focus ring, in the tab order after the input and disabled with the field. Activating
   it emits `trailing` with `{ value, event }` and calls `onTrailingClick`. Without a label the icon
   stays the decorative span it was. (`<m-textfield>` and the framework adapters follow in a later
   release.)
-- **Text field: errors are announced when they appear (FLO-301).** The supporting text is a polite
+- **Text field: errors are announced when they appear (#336).** The supporting text is a polite
   live region, so an error set with `setError(true, message)` is read without the field being
   refocused. Its element now stays and its text changes in place.
 
 ### Changed
 
-- **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
+- **A plain filled text field sets no placement up (#350).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
   measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
   place. They now wait for the first setter that gives it something to place (variant, label,
@@ -1644,7 +2120,7 @@ icon button.
 
 ### Deprecated
 
-- **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
+- **The ripple defaults of options never applied (#223):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
   `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
   `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. They have no effect: the options they
   are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in
@@ -1659,21 +2135,21 @@ icon button.
   only.
 
 - **`SELECT_CLASSES.TEXTFIELD`** (`mtrl/components/select/constants`): 1.0 renames the key
-  `TEXT_FIELD`, as every text field name (FLO-383). The class string, `select__textfield`, stays.
+  `TEXT_FIELD`, as every text field name (#439). The class string, `select__textfield`, stays.
   Comments only; the new key is not on 0.10.x.
 
 - **`select.textfield`** (the select's property): renamed `textField` in 1.0, as every text field
-  name (FLO-383); `textfield` remains as an alias through 1.x. Comments only.
+  name (#454); `textfield` remains as an alias through 1.x. Comments only.
 
 - **`CardComponent`'s `loading`, `expandable` and `swipeable`** (`mtrl/components/card`): `createCard`
   never sets them; only the deprecated `withLoading`, `withExpandable` and `withSwipeable` features
-  add them. Removed in 1.0 with those features (FLO-381). Comments only.
+  add them. Removed in 1.0 with those features (#448). Comments only.
 
-- **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
+- **The text field's Sass map and function: `$textfield` and `textfield()` (#437).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.
 
-- **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
+- **The old names, renamed (#400):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
   `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
   rest of the old text field spelling: `TextfieldDensity`, `TextfieldEvents`, the three
@@ -1682,7 +2158,7 @@ icon button.
   `Textfield` adapter component and Vue's `MTextfield`. Each is flagged
   where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
   names.
-- **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
+- **Component internals on their subpaths (#359).** `mtrl/components/<name>` is public API, and
   some indexes re-exported implementation details. These are deprecated there and removed in
   1.0.0, with no replacement (they are internal):
   - **card:** `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation`, and the
@@ -1708,72 +2184,72 @@ icon button.
   now pinned (`bun run component-exports:check`).
 
 - `TOOLTIP_DEFAULTS.RICH` is deprecated: the tooltip's `rich` option, already deprecated, has no
-  effect, and 1.0 removes both (FLO-324).
+  effect, and 1.0 removes both (#435).
 
 ### Fixed
 
-- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
-- A search view dismissed before its opening focus frame runs stays closed (FLO-514).
+- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (#419). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; #422).
+- A search view dismissed before its opening focus frame runs stays closed (#419).
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found
   focus nowhere. It now waits for the opener's focus, after the same 450ms.
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
-  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  (#391). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
   now waits for the first item to take focus, which is what the arrows depend on.
-- The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
+- The search check in `core:check` no longer times out when a frame arrives late (#390). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
   once, which it could not tell from the input's blur before.
 - **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
-  (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
+  (#384).** They threw, or did nothing, because the id was put into a CSS selector.
 - CI's `static` job prints the output of a failing check again. Under the job's shell a failing
   check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
   else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
-  they have been since FLO-328 (FLO-384).
+  they have been since #293 (#393).
 
-- **Search keeps custom root classes (FLO-421).** Both contained and divided
+- **Search keeps custom root classes (#381).** Both contained and divided
   search variants apply the `class` option, including space-separated classes.
-- **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
+- **Tabs with quotes or backslashes in their value no longer fail to link panels (#379).**
   Panel lookup compares `aria-labelledby` directly with the tab id, so values
   that are CSS selector syntax are handled as data.
 
 - The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again
-  (three in a row fail); the assertions are unchanged (FLO-395).
-- **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
+  (three in a row fail); the assertions are unchanged (#374).
+- **Status text meets 4.5:1 (#369).** Success, warning and info are one fixed
   pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
   was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
   role and its on-role (light tone 40 on 100, dark tone 80 on 20). Ratios, old
   then new: light success 5.28 → 6.45, warning 3.35 → 6.48, info 6.47 unchanged;
   dark success 7.08 → 7.76, warning 8.57 → 7.76, info 7.75 → 7.69.
-- **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
+- **Custom root classes survive configuration (#365).** Top and bottom app bars,
   button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
   and selects now apply the `class` option to their root element, including
   space-separated classes. They read the normalized `className` field or forward
   it to their underlying control.
 
 - **Progress and loading indicators draw the theme of the section they're in, not only the
-  page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
+  page's (#356).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
   It now reads them on its own element, where the section's theme (or a shadow host's) inherits.
   A `data-theme` or `data-theme-mode` change on any element, not only `<html>` and `<body>`,
   redraws both indicators. `getThemeColor` takes an `element` option to read the theme where that
   element sits.
-- **`<m-dialog>`'s buttons and dividers are styled (FLO-386).** A shadow root adopts only the sheets
+- **`<m-dialog>`'s buttons and dividers are styled (#346).** A shadow root adopts only the sheets
   its element names, and the dialog named only its own: its action buttons (from `buttons` or the
   global defaults) rendered without the button stylesheet, 70 computed properties apart from the
   same button in the page, and its dividers without theirs. It now carries both. A new check,
   `shadow-styles:check`, fails on any component class drawn in a shadow root without its sheet,
   across all 36 elements.
-- **A FAB or icon button opening a menu keeps its shape while the menu is open (FLO-386).** The
+- **A FAB or icon button opening a menu keeps its shape while the menu is open (#346).** The
   menu gave any `<button>` opener the button's `--active` class, whose pressed rule turned the FAB
   menu's FAB from 16 to 8px corners and took its shadow away (`presentation: 'menu'`). Only an mtrl
   button, such as the split button's trailing button, keeps its pressed shape now; other openers
   get `mtrl-menu__opener--active`.
-- **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
+- **Text field: the leading icon is hidden from screen readers (#336).** It is decorative; the
   label names the field.
 
 ## [0.10.4] - 2026-10-01
@@ -1784,7 +2260,7 @@ picker's range band now runs to the container edge where a range wraps a week, a
 
 ### Deprecated
 
-- **137 internal names on the package root (FLO-351).** Every root export is public API, and the
+- **137 internal names on the package root (#331).** Every root export is public API, and the
   root re-exported all of `mtrl/core`: the composition core, DOM and timing helpers, the store,
   the progress indicator's canvas code. In 1.0.0 the root keeps the components, `configureHTML`,
   the theme helpers (`schemeToTokens`, `THEME_ROLES`) and the global defaults; everything else
@@ -1823,36 +2299,36 @@ deprecated ahead of 1.0.0.
 
 ### Added
 
-- **M3's two largest corner steps (FLO-345).** `extra-large-increased` (32px) and
+- **M3's two largest corner steps (#327).** `extra-large-increased` (32px) and
   `extra-extra-large` (48px), from Compose's `ShapeTokens`, join the shape scale:
   `v.shape('extra-large-increased')` in Sass, `--mtrl-sys-shape-corner-extra-large-increased` and
   `--mtrl-sys-shape-corner-extra-extra-large` on `:root`, and both in the `ShapeStep` type.
 
 ### Fixed
 
-- **A disabled, empty text field no longer shows its placeholder over the label (FLO-354).** The
+- **A disabled, empty text field no longer shows its placeholder over the label (#329).** The
   disabled input's `-webkit-text-fill-color` was inherited by the placeholder and painted over its
   transparent colour, in both variants and in every engine. The placeholder now shows only while
   the label floats (or when there is no label), disabled or not.
-- **A resting label no longer sits between the prefix and suffix (FLO-355).** An empty, unfocused
+- **A resting label no longer sits between the prefix and suffix (#329).** An empty, unfocused
   field with `prefixText` and `suffixText` showed "$ Name … USD". While the label rests in the input
   area it is now all that area shows; the prefix and suffix fade in as the label floats, in both
   variants, with or without an icon, enabled or disabled, and in `<m-textfield>`.
-- **The search bar's corners follow the theme (FLO-345).** The bar was rounded with the mtrl-only
+- **The search bar's corners follow the theme (#327).** The bar was rounded with the mtrl-only
   `pill` step (100px), so a theme's `--mtrl-sys-shape-corner-full` never reached it, and opening
   the view held the corners still before they snapped square. The bar is now M3's full corner
   as half its height, `min(var(--mtrl-sys-shape-corner-full, 9999px), 28px)`, and the corners
   ease from the first frame.
-- **The checkbox's 2px corner is a literal (FLO-345),** as `CheckboxTokens.ContainerShape` defines
+- **The checkbox's 2px corner is a literal (#327),** as `CheckboxTokens.ContainerShape` defines
   it outside the shape scale, instead of the mtrl-only `tiny` step.
 
 ### Deprecated
 
-- **The shape steps `extra-tiny`, `tiny` and `pill` (FLO-345)** are not on M3's scale and are
+- **The shape steps `extra-tiny`, `tiny` and `pill` (#327)** are not on M3's scale and are
   removed in 1.0.0, with their `--mtrl-sys-shape-corner-*` properties. Write `extra-tiny` and
   `tiny` as a literal radius; replace `pill` with `full`, or with half the component's height when
   its corners animate.
-- **The `$mtrl-sys-shape` map in `abstract/theme` (FLO-345)** is unused and removed in 1.0.0. Use
+- **The `$mtrl-sys-shape` map in `abstract/theme` (#327)** is unused and removed in 1.0.0. Use
   `v.shape()`.
 
 ## [0.10.2] - 2026-10-01
@@ -1863,7 +2339,7 @@ keyboard fixes in tabs and chips, and the chip set's keyboard switch typed.
 
 ### Added
 
-- **The 35 Material 3 Expressive shapes in `mtrl/core/shapes` (FLO-346).**
+- **The 35 Material 3 Expressive shapes in `mtrl/core/shapes` (#325).**
   - **Shapes:** every one of Compose Material 3's `MaterialShapes`, from `shapeCircle` and
     `shapeSquare` to `shapeCookie12Sided`, `shapePixelTriangle` and `shapeHeart`. Each is a
     `RoundedPolygon` normalised into the unit square, built once on first use.
@@ -1880,17 +2356,17 @@ keyboard fixes in tabs and chips, and the chip set's keyboard switch typed.
   - **`radialProfile`** now throws for a shape that is not star-shaped around its centroid, rather
     than return a wrong profile. Of the Material shapes, `puffy` and `pixelTriangle` are not.
   - Not exported from the package root.
-- **`chips.keyboard` is typed (FLO-352).** A chip set had `keyboard.enable()` and
+- **`chips.keyboard` is typed (#324).** A chip set had `keyboard.enable()` and
   `keyboard.disable()` at runtime without them in `ChipsComponent`, so TypeScript needed a cast to
   turn the arrow keys off.
 
 ### Fixed
 
-- **The loading indicator's shapes match Compose exactly (FLO-346).** Rounded polygons now start
+- **The loading indicator's shapes match Compose exactly (#325).** Rounded polygons now start
   their outline in the middle of the first corner's arc, as graphics-shapes does. Normalised from
   that outline, each shape is up to about 1.6% larger, and its outline starts where Compose's does. Its
   shapes' names are now `'cookie9Sided'` and `'cookie4Sided'` in `LOADING_INDICATOR_SHAPES`.
-- **Keyboard fixes in tabs and chips**, found while moving them onto `createRoving` (FLO-343, not
+- **Keyboard fixes in tabs and chips**, found while moving them onto `createRoving` (#323, not
   merged):
   - The arrows skip a tab marked `aria-disabled`, as they skip a disabled one.
   - In a right-to-left page, the arrows follow the reading direction inside `<m-chips>`: the
@@ -1907,10 +2383,10 @@ show their headline as a tooltip, and the published `package.json` is only what 
 ### Changed
 
 - **The FAB menu's `select` also carries `value`** (the item's id, as `id` does). It matches the
-  `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (FLO-320), so one handler
+  `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (#319), so one handler
   reads the same field from the factory and the element.
 
-- **The published `package.json` carries only what consumers use (FLO-350).** npm packs the
+- **The published `package.json` carries only what consumers use (#321).** npm packs the
   repository's root manifest, which since 0.10.0 also held the repository's `eslintConfig` and
   `typedocOptions`, beside its `scripts`. The release now builds as its own step and drops those
   three fields before publishing. Nothing a consumer reads changes.
@@ -1918,12 +2394,12 @@ show their headline as a tooltip, and the published `package.json` is only what 
 ### Fixed
 
 - **The dialog, the time picker and the sheets no longer show their headline as a tooltip
-  (FLO-347).** Their `title` option is the headline, and it was also written as the element's
+  (#318).** Their `title` option is the headline, and it was also written as the element's
   `title` attribute, so hovering anywhere in an open dialog showed the browser's native tooltip.
   The headline still names each surface through `aria-labelledby`. The dialog's role is
   unchanged: a basic dialog is an `alertdialog`, as the M3 site asks on the web, and a full-screen
   one is a `dialog`; `role` overrides it.
-- **The FAB menu's motion follows Compose (FLO-348).**
+- **The FAB menu's motion follows Compose (#320).**
   - The close button's corner now morphs from the FAB's 16, 20 or 28dp to 28dp. It was animated
     towards the full-shape 9999px, so it went round in one frame, and on closing the spring's
     undershoot squared it for about 120ms.
@@ -1973,7 +2449,7 @@ Each item's full entry, with the reason, is below.
 
 ### Added
 
-- **FAB menu: M3 Expressive's FAB menu (FLO-306).** `createFabMenu` makes a FAB that opens 2 to 6
+- **FAB menu: M3 Expressive's FAB menu (#312).** `createFabMenu` makes a FAB that opens 2 to 6
   related actions, in two presentations, as m3.material.io lays them out:
   - **List (compact windows).** The FAB turns into a 56dp round close button, pinned to its top
     trailing corner. Pill items (56dp high, a 24dp icon and a title-medium label) rise above it,
@@ -1994,7 +2470,7 @@ Each item's full entry, with the reason, is below.
     list the arrows wrap and Home and End go to the ends. Escape or Tab out closes the list on the
     FAB, and so does choosing an item. A press outside closes it.
   - **Events:** `select` with the item's `id`, plus `open` and `close`.
-- **`<m-fab-menu>` (FLO-306).** The FAB menu as an element and in every adapter.
+- **`<m-fab-menu>` (#312).** The FAB menu as an element and in every adapter.
   - `<m-fab-menu-item value icon>Label</m-fab-menu-item>` children declare the actions.
   - `icon` and `aria-label` go to the FAB. `color`, `size`, `presentation` and `placement` are the
     factory's options.
@@ -2008,7 +2484,7 @@ Each item's full entry, with the reason, is below.
 - **Size budgets for lazy chunks.** `scripts/size.ts` budgets what a component loads with
   `import()` apart from its initial graph: the menu's submenu feature, and the FAB menu's menu.
 
-- **Toolbar: M3 Expressive's docked and floating toolbars (FLO-304).** `createToolbar` makes
+- **Toolbar: M3 Expressive's docked and floating toolbars (#310).** `createToolbar` makes
   the docked toolbar (full width, 64dp, square corners, items spread or centred 32dp apart) or the
   floating one (a 64dp pill, 8dp padding, items 4dp apart, elevation level 1 unless
   `elevated: false`), horizontal or vertical, in `standard` (surface container) or `vibrant`
@@ -2021,7 +2497,7 @@ Each item's full entry, with the reason, is below.
   scrolls forward (40px threshold, window or `scrollTarget`). The element with the `toolbar` role
   is one tab stop: the arrow keys along the layout, Home and End, disabled items skipped, the keys
   left to a text field's caret.
-- **`<m-toolbar>` (FLO-304).** The toolbar as an element and in every adapter.
+- **`<m-toolbar>` (#311).** The toolbar as an element and in every adapter.
   - Its children are the items (`<m-icon-button>`, `<m-button>`, a text field). The toolbar walks
     their hosts as one tab stop; each host delegates focus to its control.
   - `slot="fab"` takes a FAB, beside the toolbar and outside its tab stop.
@@ -2040,18 +2516,18 @@ Each item's full entry, with the reason, is below.
   Home and End, disabled targets skipped (`disabled` or `aria-disabled`), text inputs keeping
   their keys.
 
-- **React and Solid: named slots as props (FLO-333).** A prop named after a slot the element
+- **React and Solid: named slots as props (#297).** A prop named after a slot the element
   declares takes nodes (`<Dialog actions={<Button>Discard</Button>}>`), rendered into a
   `<span slot="actions">` the component owns; `headerAction` is the `header-action` slot. A text
   prop of a slot's name (`headline` on the dialog, card and sheets, `subhead` on the card) takes
   its text, as the attribute, or nodes, into the slot. Typed per element, as in Svelte and Vue.
-- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the bare `m-*` tags in JSX (FLO-333).** Types only,
+- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the bare `m-*` tags in JSX (#297).** Types only,
   opt in once with `import type {} from "mtrl/react/jsx";` (or `mtrl/solid/jsx`): `<m-switch
   checked>` then type-checks, with each tag's attributes as markup writes them
   (`supporting-text`). Solid's entry also types `prop:` (the elements' live properties) and `on:`
   (their events). A separate entry, so an app without React or Solid is not affected.
 
-- **Named slots in the specs and the adapters (FLO-325).** An element spec declares `slots`, the
+- **Named slots in the specs and the adapters (#296).** An element spec declares `slots`, the
   named slots it reads (`slot="headline"`), and `describe()` lists them. Seven elements have them:
   the bottom app bar (`fab`), card (`avatar`, `header-action`, `headline`, `subhead`, `media`,
   `actions`), dialog (`headline`, `actions`), navigation rail (`header`), bottom and side sheet
@@ -2060,9 +2536,9 @@ Each item's full entry, with the reason, is below.
   (`headline` on the dialog, card and sheets, `subhead` on the card) takes its text or a snippet.
   Vue types them as the component's slots (`VueSlots`). check-elements proves every element renders
   exactly the slots it declares.
-- **Svelte: `bind:this` reads the element (FLO-325).** A component's `element` is its `<m-*>`
+- **Svelte: `bind:this` reads the element (#296).** A component's `element` is its `<m-*>`
   element, as Vue's template ref exposes it.
-- **The typeface and corner shapes are themeable (FLO-330).** Components read
+- **The typeface and corner shapes are themeable (#295).** Components read
   `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain` for their font family, following
   M3: display, headline and title roles use the brand face, and body and label use the plain
   one. They read `--mtrl-sys-shape-corner-*` for their corners. Each reference falls back to the
@@ -2077,58 +2553,58 @@ Each item's full entry, with the reason, is below.
     compiled.
   - The full stylesheet grows by about 1% (494 bytes gzipped).
 
-- **Elements: `::part` on every element (FLO-328).** Each piece of a component is a CSS part named
+- **Elements: `::part` on every element (#293).** Each piece of a component is a CSS part named
   after its BEM class without the prefix: the block by its name (`mtrl-button` is
   `::part(button)`), an element by its element name (`mtrl-switch__track` is `::part(track)`);
   modifiers name none. The piece holding the slot also takes the slot attribute's name, so
   `m-button::part(label)` styles the button's label. Each element's module doc lists its parts.
-- **Elements: `HTMLElementTagNameMap` entries for every `m-*` tag (FLO-328).**
+- **Elements: `HTMLElementTagNameMap` entries for every `m-*` tag (#293).**
   `document.querySelector("m-switch")` returns a `SwitchElement`, and `createElement` likewise; a
   declaration child (`m-tab`, `m-radio`, …) is `HTMLElement` with its attributes. The default `m-`
   prefix only.
 
-- **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
+- **`inertOutside(element)` (`mtrl/core/dom`) (#287).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
   clears exactly what it set. The modal sheets use it outside the top layer.
 
-- **Card: typed `on` / `off` and `CardEvents` (FLO-323).** The card always emitted `click`
+- **Card: typed `on` / `off` and `CardEvents` (#285).** The card always emitted `click`
   (clickable), `mouseenter`, `mouseleave`, `keydown`, `focus`, `blur` (interactive), `dragstart`
   and `dragend` (draggable), but its type declared no `on`, so TypeScript couldn't listen to them.
-- **Time picker: `format`, `type` and `orientation` take their string values (FLO-323).**
+- **Time picker: `format`, `type` and `orientation` take their string values (#285).**
   `format: '24h'`, `type: 'input'`, `orientation: 'horizontal'` and the setters' string forms
   type-check, as every other component's options do; the enums still work, and the getters
   still return them (`TimeFormat`, `TimePickerType`, `TimePickerOrientation`).
 
-- **Switch: `setError()` and `isError()` (FLO-318).** The switch's error state (its class and
+- **Switch: `setError()` and `isError()` (#284).** The switch's error state (its class and
   `aria-invalid`) now has one owner, as the text field's does.
 
-- **M3's fixed colour roles, in every theme (FLO-315).** `primary-fixed`, `primary-fixed-dim`,
+- **M3's fixed colour roles, in every theme (#283).** `primary-fixed`, `primary-fixed-dim`,
   `on-primary-fixed`, `on-primary-fixed-variant`, and the same four for `secondary` and
   `tertiary`: the accents that stay the same in light and dark. Baseline takes Compose's
   values; the generated themes Google's; the hand-kept themes (ocean, forest, spring, sunset,
   autumn) tones 90, 80, 10 and 30 of their own primary, secondary and tertiary, written by the
   theme generator. `THEME_ROLES` and `schemeToTokens` include them.
 
-- **Eight M3 scheme-variant themes, generated (FLO-308).** `neutral`, `vibrant`, `expressive`,
+- **Eight M3 scheme-variant themes, generated (#280).** `neutral`, `vibrant`, `expressive`,
   `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, M3's dynamic-scheme variants
   from its baseline seed `#6750A4`, light and dark (Tonal Spot is `baseline`, within ΔE00 1.31).
   Each ships only as its own entry, `mtrl/themes/<name>`, so it costs nothing until imported;
   the full stylesheet's themes are unchanged.
-- **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (FLO-308).** An M3 scheme's role
+- **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (#280).** An M3 scheme's role
   colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, one per role
-  (no `-rgb` twins, FLO-311). The themes are generated with it (`scripts/generate-themes.ts`, from Google's
+  (no `-rgb` twins, #281). The themes are generated with it (`scripts/generate-themes.ts`, from Google's
   material-color-utilities, a devDependency only) and md3.io's theme builder uses it too.
 
-- **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the
+- **Text field: a character counter (#278).** While the input has a `maxlength`, the
   supporting text row ends with `count/max`, as Material Web shows it. It follows typing,
   `setValue()` and a limit set or removed later (`<m-textfield maxlength>`), describes the input
   for screen readers, and takes the error colour while the field is in error.
-- **Text field: `field` (FLO-300).** The container under the root: the label, input, outline,
+- **Text field: `field` (#278).** The container under the root: the label, input, outline,
   icons and affixes, above the supporting text row. Anchor popovers to it.
-- **Menu: `positionTarget` (FLO-300).** The element a menu is placed against, when it is not
+- **Menu: `positionTarget` (#278).** The element a menu is placed against, when it is not
   its opener. The select passes its field, so the supporting text row never pushes the menu down.
 
-- **Pre-upgrade styles for server-rendered elements (FLO-293, SSR Phase A).** Until its script
+- **Pre-upgrade styles for server-rendered elements (#273, SSR Phase A).** Until its script
   defines it, a server-rendered element no longer shows as unstyled text that then jumps: rules
   scoped to `:not(:defined)` give each of the 34 elements its upgraded box, set its label in the
   final type style, hide declaration children (`<m-tab>`, `<m-menu-item>`, …) while keeping
@@ -2137,7 +2613,7 @@ Each item's full entry, with the reason, is below.
   prefix, and inside each element's CSS module. `bun run preupgrade:check` measures the layout
   shift of every element and of a React server render, which must stay under 0.01.
 
-- **Date picker: read-only, required and supporting text (FLO-289).** `readOnly` /
+- **Date picker: read-only, required and supporting text (#274).** `readOnly` /
   `setReadOnly()` keep the value and the calendar closed; `required` / `setRequired()` with
   `checkValidity()` and `reportValidity()`, as on native inputs (a modal variant's read-only
   input is otherwise outside constraint validation); `supportingText` / `setSupportingText()`
@@ -2150,7 +2626,7 @@ Each item's full entry, with the reason, is below.
 - **The documentation site is md3.io.** The package's `homepage`, the README and the contributing
   guide point to [md3.io](https://md3.io), which replaces mtrl.app; mtrl.app redirects there.
 
-- **Corners follow the shape tokens in 16 more components (FLO-331).** After FLO-330's scale, the
+- **Corners follow the shape tokens in 16 more components (#300).** After #295's scale, the
   literal radii read `--mtrl-sys-shape-corner-*` too: badge and switch (`full`), plain tooltip
   (`extra-small`), list selected row and video, navigation rail indicator, badge and modal
   container, drawer container and indicators, slider handle, track and value indicator, carousel
@@ -2162,7 +2638,7 @@ Each item's full entry, with the reason, is below.
   height), outer corners beside smaller inner ones, the tab indicator's 3dp, the segmented menu's
   24dp, the slider's 2dp inside corners, scrollbars. The full stylesheet grows by 120 bytes gzipped.
 
-- **Event payloads carry the element's `value` (FLO-320).** A handler reading `value` now works
+- **Event payloads carry the element's `value` (#289).** A handler reading `value` now works
   on the factory and on the element. The button group's `change` has `value`: a string or null for
   a single-select group, an array for a multi-select one. The split button's `select` has `value`,
   the chosen item's `id`. The chips set's `change` is one object with `value` (in the `value`
@@ -2174,23 +2650,23 @@ Each item's full entry, with the reason, is below.
   adds `date`, the factory's `Date` form, as a native input's `valueAsDate`. Search already
   carried the same `value`.
 
-- **Tooltip colours per M3 (FLO-324).** The plain tooltip is `inverse-surface` /
+- **Tooltip colours per M3 (#288).** The plain tooltip is `inverse-surface` /
   `inverse-on-surface`, opaque and without elevation (`PlainTooltipTokens`); the `plain` variant
   had its own `surface-container-high` with an outline, and every tooltip showed at 90% opacity
   with a shadow. The rich variant is `surface-container` with `on-surface-variant` text, medium
   corners, elevation 2, Body Medium and 320px wide at most (`RichTooltipTokens`); it was only a
   padding.
-- **Bottom sheet: the drag handle is a button (FLO-324).** As Compose's, it is reachable by
+- **Bottom sheet: the drag handle is a button (#288).** As Compose's, it is reachable by
   keyboard and activates: a partially open sheet expands, an expanded one closes. Its name says
   which ("Expand sheet" / "Close sheet"). It is 48dp tall, the bar in its middle, where it was
   36px of margin and bar.
-- **Standard sheets close on Escape only from inside (FLO-324).** A standard bottom or side sheet
+- **Standard sheets close on Escape only from inside (#288).** A standard bottom or side sheet
   sits beside the page, so Escape pressed elsewhere (closing a menu, say) no longer closes it;
   modal sheets are unchanged.
-- **Side sheet: the standard sheet is square (FLO-324).** Only the modal sheet rounds, on the
+- **Side sheet: the standard sheet is square (#288).** Only the modal sheet rounds, on the
   edge facing the page (MDC: docked `Corner.None`, modal `CornerLarge` inner edge).
 
-- **Baseline on M3's current baseline values (FLO-315).** It mixed the 2021 `surface`
+- **Baseline on M3's current baseline values (#283).** It mixed the 2021 `surface`
   `#FFFBFE` with newer roles. Every role now is Compose's `ColorLightTokens` /
   `ColorDarkTokens` value (primary `#6750A4`). Eleven change: light `surface` and
   `surface-bright` `#FEF7FF` (ΔE00 2.95, 4.31), `on-surface` `#1D1B20` (1.04),
@@ -2198,27 +2674,27 @@ Each item's full entry, with the reason, is below.
   `#141218` (2.84), `outline-variant` `#49454F` (8.53, the one clearly visible), `on-surface`
   and `inverse-surface` `#E6E0E9` (2.45), `inverse-on-surface` `#322F35` (2.46),
   `surface-bright` `#3B383E` (0.60).
-- **Typescale classes and `h1`–`h6`, `p` read the typescale tokens (FLO-315).**
+- **Typescale classes and `h1`–`h6`, `p` read the typescale tokens (#283).**
   `.mtrl-display-large` … `.mtrl-label-small` are emitted from the typescale map and set
   `font-family: var(--mtrl-sys-typescale-<role>-font)`, and the same for size, line height,
   tracking and weight, instead of `"Roboto", sans-serif` and pixel values; the document rules
   too. Setting `--mtrl-ref-typeface-brand` / `-plain`, or a size token, now reaches them.
 
-- **Button: one state layer in `currentColor` (FLO-311).** Each colour style and toggle state
+- **Button: one state layer in `currentColor` (#281).** Each colour style and toggle state
   drew its own hover, focus and pressed layer in its content role; the button now has one
   `::before` in `currentColor`, whose opacity alone changes (0.08, 0.10, 0.10). Every style
   already painted the layer in its content colour, so nothing looks different; a page that sets
   its own `color` on a button now gets a state layer in that colour too. `button.css` goes from
   23,254 to 13,635 bytes (2,591 to 2,188 gzipped).
 
-- **Themes regenerated from their seeds (FLO-308).** `desert`, `summer`, `brownbeige`,
+- **Themes regenerated from their seeds (#280).** `desert`, `summer`, `brownbeige`,
   `sageivory` and `tealcaramel` are now generated from their primary seeds with M3's tones, each
   keeping its second colour as a custom secondary; their hand-set values failed contrast (desert
   at 3.23:1, sageivory at 2.31:1). Every text pair now reaches 4.5:1. `highcontrast` is M3's
   high-contrast scheme (contrastLevel 1.0), 7:1 or more on every pair, which its old values missed.
   Their colours change. `autumn` drops its `quaternary-*` roles, which nothing used.
 
-- **Text field: the field and its supporting text row (FLO-300). DOM change.** The root now
+- **Text field: the field and its supporting text row (#278). DOM change.** The root now
   holds two children, as M3's anatomy has them: `__field`, the 56px container with the label,
   input, outline, icons and affixes, and, when there is supporting text or a counter,
   `__supporting`, a row in the flow under it with `__helper` at the start and `__counter` at the
@@ -2232,7 +2708,7 @@ Each item's full entry, with the reason, is below.
   (`.mtrl-select--open::before`, which the old indicator squashed to a 2px strip) is removed;
   a click outside closes the menu, as before.
 
-- **Menu: the submenu feature loads on demand (FLO-310).** It is a chunk of its own, no
+- **Menu: the submenu feature loads on demand (#279).** It is a chunk of its own, no
   longer part of every menu: 1.0–1.3 KB gzip less on the initial load of an app with a menu
   (Vite, `createMenu` and `<m-menu>`), and `bun run size` measures the menu at 12.0 KB
   instead of 12.8 KB. A menu with nested items starts loading the chunk when it is created,
@@ -2244,11 +2720,11 @@ Each item's full entry, with the reason, is below.
 - **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
   instead of as wide as its input's 20 average characters. Chrome measures that differently per
   platform for the same Roboto (167px on macOS, 220px on Linux), so the same page laid out
-  differently, and no pre-upgrade style could match it (FLO-293). A width from the page still
+  differently, and no pre-upgrade style could match it (#273). A width from the page still
   applies.
 
 - **Date picker: one `change` shape, one-day ranges, and a value typed by the mode
-  (FLO-295).** `change` carried `{ value, formattedValue }` from the API but
+  (#274).** `change` carried `{ value, formattedValue }` from the API but
   `{ value: start, rangeEndDate }` from the calendar, and a docked range emitted once for its
   start and again for its end. Every `change` is now `{ value, rangeEndDate, formattedValue }`,
   `value` as `getValue()` returns it, and a docked range emits once, when whole. In range mode
@@ -2258,7 +2734,7 @@ Each item's full entry, with the reason, is below.
   otherwise. Migration: read the range from `value` (`const [start, end] = value`), not from
   `value` plus `rangeEndDate`; a range with only its start now reads `[d, d]`.
 
-- **Icon button: `change` with `{ selected }`, and `toggle` deprecated (FLO-295).** A toggle
+- **Icon button: `change` with `{ selected }`, and `toggle` deprecated (#270).** A toggle
   icon button dispatched a DOM `toggle` on its element, which shares its name with the native
   ToggleEvent, so TypeScript typed its listeners wrongly. It now emits `change` through its
   emitter, as a switch or checkbox reports its state; `<m-icon-button>` dispatches `change`
@@ -2266,7 +2742,7 @@ Each item's full entry, with the reason, is below.
   `onChange` / `@change`. Migration: `<m-icon-button>` and `createIconButton`: `toggle` →
   `change` (`{ selected }`); `toggle` still fires, deprecated, until the next minor.
 
-- **Progress: `on()` uses the emitter, and handlers get `{ value, max }` (FLO-295).** They
+- **Progress: `on()` uses the emitter, and handlers get `{ value, max }` (#269).** They
   were DOM listeners on the element, handed a `CustomEvent` with the payload in `detail`,
   unlike every other component. Migration: `progress.on('change', (e) => e.detail.value)`
   becomes `progress.on('change', ({ value }) => value)`. `ProgressEvents` types the two
@@ -2274,7 +2750,7 @@ Each item's full entry, with the reason, is below.
 
 ### Changed (breaking, prerelease)
 
-- **Card semantics (FLO-109).** A card is an `article`, not a `region` landmark: one named region
+- **Card semantics (#308).** A card is an `article`, not a `region` landmark: one named region
   per card flooded landmark navigation. A `clickable` card stays a `button` with a tab stop, and
   Enter and Space activate it. `interactive` alone is now the hover and press states only: the
   card was a focusable `button` that did nothing on Enter or Space, and now takes no button role
@@ -2284,21 +2760,21 @@ Each item's full entry, with the reason, is below.
   `[role="region"]`, `[role="heading"]` or the subtitle's `h4` reads the card's `article` role and
   the `__header-title` / `__header-subtitle` classes.
 - **`disable()` on a root that is not a form control writes `aria-disabled`, not `disabled`
-  (FLO-119).** The shared disabled feature set a bare `disabled="true"` on a `div` root, which is
+  (#307).** The shared disabled feature set a bare `disabled="true"` on a `div` root, which is
   not valid there and tells assistive technology nothing. It now sets `aria-disabled="true"`,
   removed by `enable()`, and `isDisabled()` reads it. One rule for every component: a native
   control (a button) keeps its own `disabled`, and a component with an inner input disables the
-  input, as before. The progress indicator, which also wrote `aria-disabled` itself (FLO-324), now
+  input, as before. The progress indicator, which also wrote `aria-disabled` itself (#287), now
   gets it from the same rule; the date picker's root takes `aria-disabled` instead of `disabled`.
   Migration: a selector or a script reading `[disabled]` on these roots reads `[aria-disabled="true"]`
   (or the component's `--disabled` class, which is unchanged).
 
-- **Time picker `change` and `input` pass `{ value }` (FLO-320).** They passed the time as a
+- **Time picker `change` and `input` pass `{ value }` (#294).** They passed the time as a
   string; they now pass one object, the same shape as every other component's and the
   `<m-timepicker>` element's (`TimePickerValueEvent`), and so do `onChange` and `onInput`.
   Migration: `(time) => …` becomes `({ value }) => …`. `confirm` still passes the string.
 
-- **The `--mtrl-sys-color-*-rgb` custom properties are gone (FLO-311).** Every theme declared
+- **The `--mtrl-sys-color-*-rgb` custom properties are gone (#281).** Every theme declared
   each colour role twice, as `#6750a4` and as `103, 80, 164`, for `rgba(var(--…-rgb), a)`. No
   mtrl style reads the twins any more (`alpha()` builds on `color-mix` of the role), so the
   baseline, the status colours, the dark block and every theme in `mtrl/themes/*` drop them,
@@ -2306,7 +2782,7 @@ Each item's full entry, with the reason, is below.
   `var(--…-rgb)`, is removed with them. Migration: `rgba(var(--mtrl-sys-color-X-rgb), N)`
   becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
 
-- **Setters and selection methods no longer emit `change`, `input` or `select` (FLO-328).** As on
+- **Setters and selection methods no longer emit `change`, `input` or `select` (#293).** As on
   the platform, a change made by script is silent: only the user's click, key, drag or entry
   emits. A switch's `check()` emitted `change` while a text field's `setValue()` did not; they
   now agree. The methods whose behaviour changed:
@@ -2339,11 +2815,11 @@ Each item's full entry, with the reason, is below.
 
 ### Fixed
 
-- **A closed `<m-menu>` is out of the tab order (FLO-304).** The element keeps its closed menu in
+- **A closed `<m-menu>` is out of the tab order (#311).** The element keeps its closed menu in
   its shadow root, where the first item kept `tabindex="0"`: Tab stopped inside a menu nobody
   could see. A closed menu is now `visibility: hidden`, which also takes it out of the
   accessibility tree. A transition keeps it visible while it opens and closes.
-- **Menu and select: a long list stays in the viewport (FLO-272).** A select with a few hundred
+- **Menu and select: a long list stays in the viewport (#306).** A select with a few hundred
   options ran past the bottom of the screen: a menu mounted in its field (the select's default)
   skipped the viewport checks, and one flipped above its anchor kept its full height and was
   clamped over it. A menu above or below its anchor is now capped to the room on that side, the
@@ -2351,21 +2827,21 @@ Each item's full entry, with the reason, is below.
   in the top layer alike. An open menu also follows its anchor when a panel around it scrolls,
   not only the window; its own list scrolling does not move it.
 
-- **Menu: the divider no longer collapses in a menu that scrolls (FLO-273).** The list is a flex
+- **Menu: the divider no longer collapses in a menu that scrolls (#305).** The list is a flex
   column, and the divider, the one item without a minimum size, shrank to 0 once the list was
   taller than the menu: a long select showed the divider's margins but no line.
 
 - **Checkbox: the check icon without the HTML sink, and form sync without repeated validity
-  (FLO-336).** Each checkbox parsed the icon's markup through `innerHTML`; it is now built once with
+  (#304).** Each checkbox parsed the icon's markup through `innerHTML`; it is now built once with
   DOM APIs and cloned, the same nodes, so no Trusted Types policy is involved. A web component set
   its validity on its internals on every property set; it now skips it while the control stays
   valid, and the form value and validity still read exactly right straight after a set.
-- **Progress: the indeterminate circular indicator keeps its track (FLO-338).** It drew only the
+- **Progress: the indeterminate circular indicator keeps its track (#303).** It drew only the
   moving arc. M3 shows indeterminate indicators moving along a fixed track, and the Expressive
   `CircularWavyProgressIndicator` draws one; the track now runs around the rest of the circle,
   clear of both ends of the arc by the determinate gap, turning with it and never waved, flat and
   wavy alike.
-- **Text field: no computed-style read per field, and one layout pass for many (FLO-335).** Each
+- **Text field: no computed-style read per field, and one layout pass for many (#302).** Each
   field started a timer that read `getComputedStyle(input)` to guess an autofill from its
   background colour, a forced style recalculation per field. The stylesheet already runs an
   `onAutoFillStart` animation on `:-webkit-autofill`, which the input listens for; it now runs on
@@ -2374,45 +2850,45 @@ Each item's full entry, with the reason, is below.
   outlined notch and of prefix and suffix is batched: fields scheduled together are all measured,
   then all written, instead of one forced layout each.
 
-- **Svelte: callbacks are not snippets (FLO-334).** Any function prop but `children` and a
+- **Svelte: callbacks are not snippets (#299).** Any function prop but `children` and a
   lower-case `on…` was rendered as a named snippet, so `onClick`, `onChange` or a callback in a
   spread object was called during render. Only a prop named after a slot the element declares is
   a snippet now, as in React and Solid.
-- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the slot attribute, and React's events (FLO-334).**
+- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the slot attribute, and React's events (#299).**
   `<m-button label="Save">` type-checks: the slot attribute (`label`) is markup too. On a bare tag
   React 19 gives an `on<event>` prop in lower case the element's own event, so
   `onchange={(e) => e.detail.checked}` is typed; `onChange` stays React's synthetic event, which
   has no `detail`. React 18 sets no event props on a custom element.
-- **Solid: named slots keep their wrappers (FLO-334).** New default-slot children rebuilt every
+- **Solid: named slots keep their wrappers (#299).** New default-slot children rebuilt every
   named slot's wrapper; each is rebuilt only when its own prop changes now.
 
-- **Adapters: named slots and snippets are no longer dropped (FLO-325).** Vue rendered only the
+- **Adapters: named slots and snippets are no longer dropped (#296).** Vue rendered only the
   default slot, so `<template #actions>` disappeared; each named slot's nodes now carry
   `slot="<name>"`, and text is wrapped to carry it. Svelte passed a snippet to the attribute of its
   name (`headline`) and rendered none; each named snippet now renders into its slot. Svelte
   attachments (`{@attach}`) reach the element: they are symbol-keyed props, which the spread
   skipped.
 
-- **Elements: a slot's `label` is a real property (FLO-328).** `button.label = "Save"` created a
+- **Elements: a slot's `label` is a real property (#293).** `button.label = "Save"` created a
   plain JavaScript property and changed nothing (Solid, which always sets properties, hit it).
   On `<m-button>`, `<m-extended-fab>`, `<m-switch>` and `<m-checkbox>` the property now reads the
   `label` attribute, else the element's text, as `label` on a native `<option>`; setting it
   writes the attribute, which updates the text, also on an element created without one.
 
-- **Baseline declares the status colours (FLO-329).** The default theme had no `success`,
+- **Baseline declares the status colours (#291).** The default theme had no `success`,
   `warning` or `info` role, nor their `on-` pairs, which every generated theme has, so
   `createBadge({ color: 'success' })` (and warning, info) had no background under it. Baseline
   now declares them light and dark, in `mtrl/styles/base` and `mtrl/themes/baseline`, with the
   generated themes' values (one `status-roles-*` mixin in `_base-theme.scss` for both).
 
-- **`surface-variant` is a theme role (FLO-329).** The disabled filled card's container reads
+- **`surface-variant` is a theme role (#291).** The disabled filled card's container reads
   it (Compose's `FilledCardTokens.DisabledContainerColor`), and no theme declared it, so that
   card lost its background. It is in `THEME_ROLES` now, so `schemeToTokens` requires it (as
   `surfaceVariant` from material-color-utilities). The generated themes take
   material-color-utilities' value. Baseline takes Compose's (`#E7E0EC` light, `#49454F`
   dark), and each hand-kept theme takes tones 90 and 30 of its own neutral variant palette.
 
-- **The framework adapters tree-shake (FLO-327).** One component from `mtrl/react`, `mtrl/vue`,
+- **The framework adapters tree-shake (#290).** One component from `mtrl/react`, `mtrl/vue`,
   `mtrl/solid` or `mtrl/svelte` shipped the whole library: the switch was 174.9 KB gzip against
   11.7 KB for its element. Each adapter component is now its own module, importing only its
   element and that element's CSS; the index only re-exports, and the calls are `/*#__PURE__*/`.
@@ -2420,61 +2896,61 @@ Each item's full entry, with the reason, is below.
   `bun run adapters:size` checks it in CI with Bun (every component) and Vite (the switch, and a
   switch with a button).
 
-- **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
+- **Divider insets follow the writing direction (#288).** They were physical margins, so in
   right-to-left the start inset landed on the end; they are logical margins now.
 
-- **A small badge is visible when created (FLO-324).** Its empty label, a dot's normal state,
+- **A small badge is visible when created (#287).** Its empty label, a dot's normal state,
   counted as nothing to show, so `createBadge({ variant: 'small' })` started hidden;
   `setLabel` already knew better.
-- **Progress: one disabled state (FLO-324).** Created disabled, the bar had `aria-disabled`;
+- **Progress: one disabled state (#287).** Created disabled, the bar had `aria-disabled`;
   `disable()` later set only the class, and `enable()` left a creation-time `aria-disabled`
   behind. Both ways now set and clear the same state.
-- **Modal sheets outside the top layer are modal (FLO-324).** A bottom or side sheet with
+- **Modal sheets outside the top layer are modal (#287).** A bottom or side sheet with
   `variant: 'modal'` and no `layer: 'top'` kept neither Tab inside nor the page inert. While
   open, the page is inert and Tab wraps in the sheet; closing or destroying it restores the page.
-- **Dialog buttons: `size` applies (FLO-324).** It was accepted and dropped.
+- **Dialog buttons: `size` applies (#287).** It was accepted and dropped.
 
 - **Dialog: `confirm()` settles however the dialog closes, confirms last, and shows its message as
-  text (FLO-324).** It resolved only through its two buttons, so closing the dialog with Escape,
+  text (#286).** It resolved only through its two buttons, so closing the dialog with Escape,
   the scrim or `close()` left the promise pending forever; it now resolves `false` then. The
   confirming button came first; it now comes last, as M3 orders a dialog's actions. The message
   went into `innerHTML`; it is text now, so a message carrying user input can't inject markup.
-- **Progress: a value past the range is clamped everywhere (FLO-324).** `setValue(150)` drew 100
+- **Progress: a value past the range is clamped everywhere (#286).** `setValue(150)` drew 100
   but reported 150 in `aria-valuenow`, the label, `getValue()` and `change`; and a value past the
   range at creation was stored as given. The value is clamped to 0…max once, and that value is
   the one drawn, announced, labelled and emitted.
 
-- **Dead declarations removed (FLO-323).** The card wrote a `--mtrl-card-elevation` property on
+- **Dead declarations removed (#285).** The card wrote a `--mtrl-card-elevation` property on
   hover, drag and creation that no stylesheet read; elevation comes from the card's classes, so
   the writes and the unread default are gone. The bottom app bar's corners referenced an
   undefined `--mtrl-sys-shape-medium` (they rendered square, which is M3's); the declarations
   are gone.
 
-- **`<m-switch>`: `error` updates, and supporting text no longer ends the error (FLO-318).** The
+- **`<m-switch>`: `error` updates, and supporting text no longer ends the error (#284).** The
   `error` attribute had no update, so setting or removing it after creation did nothing; and
   `setSupportingText()` / `removeSupportingText()` set the error state themselves, so changing
   the text ended an error the switch was still in. `setError()` owns it now;
   `setSupportingText(text, true)` colours the text only, and a helper on screen follows the
   switch's error state.
 - **Extended FAB: `collapse` and `expand` reach `on()`, `<m-extended-fab>` and the adapters
-  (FLO-319).** They were only DOM events on the inner element, without `composed`, so they never
+  (#284).** They were only DOM events on the inner element, without `composed`, so they never
   left the element's shadow root and the emitter never had them. They now also go through the
   emitter (`ExtendedFabEvents` types them), the element re-dispatches them from the host, and
   the adapters get `onCollapse` / `onExpand`.
 
 - **Checkbox and switch: Space (and Enter, with `enterToggles`) activate the control as a click
-  does (FLO-316).** The key handler set `checked` by hand, so on a checkbox in the mixed state it
+  does (#282).** The key handler set `checked` by hand, so on a checkbox in the mixed state it
   left `indeterminate` true, keeping the dash and the mixed class, and it fired `change` with no
   `input` before it. It now clicks the input: `indeterminate` clears, `checked` toggles, `input`
   then `change` fire once, and a disabled control stays as it is.
 
 - **`--mtrl-sys-state-focus-state-layer-opacity` and `…-pressed-…` read 0.1, not 0.12
-  (FLO-311).** The baseline theme wrote the state opacities out by hand, with the Material 2
+  (#281).** The baseline theme wrote the state opacities out by hand, with the Material 2
   0.12 for focus and pressed, while every component compiles in M3's 0.1 from `$state`. Only
   CSS that read the custom properties saw 0.12. The theme now emits them from `$state`, so the
   two cannot drift again.
 
-- **Text field colours and states, per the M3 tokens (FLO-298).** The placeholder was always
+- **Text field colours and states, per the M3 tokens (#277).** The placeholder was always
   transparent; it shows in on-surface-variant while the field is focused or has no label. The
   outlined label rested at 50% opacity (under 4.5:1); it is on-surface-variant at full strength.
   The filled indicator is on-surface-variant, not outline; the filled field has a hover state (an
@@ -2488,7 +2964,7 @@ Each item's full entry, with the reason, is below.
   supporting text dims too.
 
 - **Text field: label rules that never matched, and supporting text and error state out of step
-  (FLO-303).** The label comes before the input, so every `input ~ label` rule matched nothing:
+  (#276).** The label comes before the input, so every `input ~ label` rule matched nothing:
   a value the script hadn't seen, or autofill, left the label resting over the text, and an input
   disabled directly kept a full-strength label. They key off the field with `:has()` now; the
   wrong autofill colours and backgrounds they carried are gone. `supportingTextElement` is the
@@ -2498,7 +2974,7 @@ Each item's full entry, with the reason, is below.
   the text only). `density` reaches the input. `<m-textfield>` drops its workaround for the
   error class.
 
-- **Event handlers typed `never` (FLO-295).** `EventCallback`, the handler type of every
+- **Event handlers typed `never` (#275).** `EventCallback`, the handler type of every
   `on()` that doesn't name its events, was `(...args: never[]) => void`, so a handler's
   inferred parameter was `never` and no payload could be read without a cast. It now gets
   `unknown`, to narrow; a handler that declares its payload type is accepted as before.
@@ -2506,10 +2982,10 @@ Each item's full entry, with the reason, is below.
   built on them (mtrl-addons' form and color picker, for one) gets `on` and `off` that check
   each event's name and payload. Without a map nothing changes.
 
-- **Types the runtime already took (FLO-295).** `DrawerConfig` has `ariaLabel`, which the drawer
+- **Types the runtime already took (#271).** `DrawerConfig` has `ariaLabel`, which the drawer
   always read; a segmented button's `mode` takes `'single'` / `'multi'` as well as the enum, as
   its `density` already did.
-- **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs
+- **Select's menu class and Progress's duplicate classes (#268).** Found by md3.io's docs
   audit. Since `class` stopped being prefixed, the select passed `select__menu` bare, so
   `.mtrl-select__menu` matched nothing; it is prefixed now, and the rules under it, which never
   applied (a 460px max width, a 4px margin, fade classes nothing set), are gone. Progress roots
@@ -2517,33 +2993,33 @@ Each item's full entry, with the reason, is below.
 
 ### Deprecated
 
-- **Chips set `change`: the array and the second argument (FLO-320).** The payload is still the
+- **Chips set `change`: the array and the second argument (#289).** The payload is still the
   array of selected values, and the changed value still comes second, so `(selectedValues,
   changedValue)` handlers keep working. Read `selected` and `changed` instead: both go in the next
   prerelease.
 
-- **Tooltip: `rich` (FLO-324).** It was never read. A rich tooltip is `variant: 'rich'`, and the
+- **Tooltip: `rich` (#288).** It was never read. A rich tooltip is `variant: 'rich'`, and the
   content is always text. Removed in 1.0.
 
-- **Dialog buttons: `color` (FLO-324).** It never had an effect: the button has no colour option,
+- **Dialog buttons: `color` (#287).** It never had an effect: the button has no colour option,
   and M3's dialog actions are text buttons in the dialog's own colours. Removed in 1.0.
 
-- **Card: `withElevation` (FLO-323).** It only wrote the unread `--mtrl-card-elevation`; it is a
+- **Card: `withElevation` (#285).** It only wrote the unread `--mtrl-card-elevation`; it is a
   no-op now, and the card no longer composes it. Removed in 1.0.
 
-- **Themes `material`, `winter`, `browngreen` and `legacy` (FLO-308).** Still importable and in
+- **Themes `material`, `winter`, `browngreen` and `legacy` (#280).** Still importable and in
   the full stylesheet in 0.10, removed in 1.0. Use `baseline` for `material` (which never matched
   it), `ocean` for `winter` and `brownbeige` for `browngreen`, their near-duplicates; `legacy` has
   no replacement.
 
-- **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
+- **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (#268).
 - **`getThemeColor('sys-color-X-rgb')`** (`mtrl/core/utils`): the `-rgb` twins are no longer
-  declared (FLO-311), so the call now derives the `'r, g, b'` triplet from `sys-color-X`. It
+  declared (#281), so the call now derives the `'r, g, b'` triplet from `sys-color-X`. It
   keeps working until the next major; read `getThemeColor('sys-color-X', { alpha })` instead.
 
 ### Removed
 
-- **`_bluekhaki.scss` and `_greenbeige.scss` (FLO-308).** Two theme sources that were never
+- **`_bluekhaki.scss` and `_greenbeige.scss` (#280).** Two theme sources that were never
   built, exported or referenced.
 
 ## [0.10.0-next.3] - 2026-09-29
@@ -2758,7 +3234,7 @@ the component's own root in every factory, inside shadow roots too.
   picker with no field of its own, opened by `show()`, the `open` attribute (reflected) or a
   `<label for>`, in the top layer. `value` is the model and the form value, a 24-hour
   `HH:MM` (`HH:MM:SS` with a `step` under a minute) as on `<input type=time>`, or `""`
-  until one is set or confirmed. The dial edits the factory's draft (FLO-288): `input`
+  until one is set or confirmed. The dial edits the factory's draft (#262): `input`
   (`{ value }`) as it moves, `change` (`{ value }`) when OK commits a different time (or
   fills an empty picker), and Cancel, Escape or the backdrop discard it. `format`, `type` (dial or input) and `orientation` change in place; `min`,
   `max` and `step` (seconds, as the minute or second step); `label`, `required`
@@ -2782,7 +3258,7 @@ the component's own root in every factory, inside shadow roots too.
   `activeElementOf(node)` in `core/dom`, and an overlay saves the focused element through
   open shadow roots with `deepActiveElement()`. `<m-navigation-rail>` and `<m-drawer>` drop
   the key handlers that covered for it.
-- **Search: events and controls found building `<m-search>` (FLO-291).** Enter on the
+- **Search: events and controls found building `<m-search>` (#264).** Enter on the
   suggestion the arrows reached selects it without first submitting the typed text; a click
   or a keystroke in an input that already has focus reopens the view; emptying the query
   (the clear button, Escape, `clear()`) emits `input` with the empty value before `clear`;
@@ -2794,10 +3270,10 @@ the component's own root in every factory, inside shadow roots too.
   `<m-search>` drops its two workarounds (the Enter filter, and `clear` mapped to `input`),
   its avatar is a button, and it takes `min-width` / `max-width` (pixels or a CSS length, in
   place), `no-clear-button`, `no-expand-on-focus` and `no-collapse-on-blur` (#263).
-- **Search: `minWidth` and `maxWidth` apply (FLO-290).** They were documented and given
+- **Search: `minWidth` and `maxWidth` apply (#261).** They were documented and given
   defaults, and nothing read them: the stylesheet's 360dp and 720dp applied whatever was
   passed. They now set `--mtrl-search-min-width` and `--mtrl-search-max-width` on the root.
-- **Search: the open view no longer moves or covers the page (FLO-285).** A docked view grew
+- **Search: the open view no longer moves or covers the page (#256).** A docked view grew
   in the page's flow and pushed everything below it down; a full-screen search covered the
   whole page even as a bar. Opening now shows the bar and its results in the top layer,
   over the bar's place, which the page keeps: docked under the bar over a 0.32 scrim (a
@@ -2805,7 +3281,7 @@ the component's own root in every factory, inside shadow roots too.
   is inert, Escape cancels). A clipping parent no longer hides the results. Moving focus to
   the view's own back or clear button no longer closes it, and hovering a suggestion no
   longer selects it for the next Tab.
-- **Search: accessibility and M3 tokens (FLO-286).** The input is a combobox that controls
+- **Search: accessibility and M3 tokens (#258).** The input is a combobox that controls
   the suggestions listbox (`role="combobox"`, `aria-expanded`, `aria-controls`,
   `aria-autocomplete="list"`), and the arrows move `aria-activedescendant` through the
   options; a polite status announces how many suggestions show. The icon buttons are 48dp
@@ -2829,15 +3305,15 @@ the component's own root in every factory, inside shadow roots too.
   attributes after creating the child; a clean rail now takes its `value` attribute again when
   the items are reconciled, so the default destination is selected once its item is complete.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
-  (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
+  (#254).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest
   step, a picked time outside the limits moves to the nearest one inside, and a typed time
   is held to them when committed (on change or Enter), not while typing. `setValue` is not
   held to them.
-- **Time picker: focus inside a shadow root (FLO-284).** The dial kept focus on its numbers
+- **Time picker: focus inside a shadow root (#254).** The dial kept focus on its numbers
   when its face changed, and closing returned focus to the opener, only when the document
   could see them; inside a web component it saw the host.
-- **Time picker: M3 sizes and colours in every variant (FLO-280).** Dial mode's boxes are
+- **Time picker: M3 sizes and colours in every variant (#250).** Dial mode's boxes are
   96x80dp in Display Large (114dp wide in the 24-hour vertical layout), the colon 24dp and
   on-surface. Input mode's fields are 96x72dp in Display Medium, labelled Hour and Minute
   below them, and the focused one turns primary-container inside a 2dp primary outline (the
@@ -2847,7 +3323,7 @@ the component's own root in every factory, inside shadow roots too.
   layouts the time still reads left to right and AM/PM moves to the other side. Dark
   colours come from the theme: the `prefers-color-scheme` overrides and the surface-tint
   overlay are gone, and so is the phone-width shrink of the fields.
-- **Date picker: focus inside a shadow root (FLO-284).** It read `document.activeElement`,
+- **Date picker: focus inside a shadow root (#253).** It read `document.activeElement`,
   which stops at the shadow host, so inside a web component Tab no longer wrapped in the
   modal, a swipe or the growing full-screen list lost the focused day, and closing could
   return focus to the host rather than the control that opened it. It now reads focus from
@@ -2856,14 +3332,14 @@ the component's own root in every factory, inside shadow roots too.
 ### Changed
 
 - **Search: the contained style by default, with `variant: 'divided'` for the baseline
-  (FLO-287).** M3 marks the divided style "not recommended, use contained" in M3 Expressive,
+  (#259).** M3 marks the divided style "not recommended, use contained" in M3 Expressive,
   and it was the only one mtrl drew. Contained keeps the bar's pill and filled container
   when focused and gives the results their own container: docked 2dp below the bar with
   12dp corners, full screen on `surface-container-low` with the bar inset 12dp. `variant:
   'divided'` (and `setVariant()`) keeps the look apps had. The results reveal on the
   emphasized decelerate curve, not with reduced motion; the never-driven `--expanding` and
   `--collapsing` classes are gone.
-- **Time picker: edits are a draft until OK (FLO-288).** Every move of the dial was the value,
+- **Time picker: edits are a draft until OK (#260).** Every move of the dial was the value,
   with a `change` each time, and Cancel kept it; in M3, Cancel discards and OK commits, as
   the date picker already did. While open, the dial, fields and AM/PM edit a draft,
   reported by a new `input` event (and `onInput`). OK commits it with one `change` (if it
@@ -2875,14 +3351,14 @@ the component's own root in every factory, inside shadow roots too.
   the page), so the root's `click` and `keydown` leave out the dialog's own, and Enter in
   its fields does not submit a surrounding form. New `disabled`, `enable()`, `disable()`
   and `isDisabled()`: a disabled picker does not open.
-- **Time picker: `change` fires once per new value (FLO-281).** `setFormat` no longer emits
+- **Time picker: `change` fires once per new value (#254).** `setFormat` no longer emits
   `change` (the value is 24-hour whatever the display, and it emitted without calling
   `onChange`), and `setValue` notifies only when the value differs, with the event and
   `onChange` together.
 
 ### Deprecated
 
-- **Time picker (FLO-281):** `closeOnSelect` (never applied; the picker is confirmed with
+- **Time picker (#254):** `closeOnSelect` (never applied; the picker is confirmed with
   OK), `TIMEPICKER_DIAL` (not the dial's geometry, which is CSS), `TIMEPICKER_Z_INDEX`
   (the native top layer needs none), `TIMEPICKER_CLASSES` (use `TIMEPICKER_SELECTORS`;
   its `DIAL_CENTER` and `PERIOD_ACTIVE` now name the classes the picker uses), and the
@@ -2907,7 +3383,7 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
   ("To navigate across months, scroll vertically"). The list renders a window of months
   around the focused one, within `minDate` and `maxDate`, and extends it by a year as it
   nears either end without moving what is shown. Selections are drafts until Save, as in
-  the modal (FLO-276).
+  the modal (#229).
 - **Elements: `<m-progress>`, `<m-loading-indicator>`, `<m-badge>` and `<m-divider>`**, and
   `Progress`, `LoadingIndicator`, `Badge` and `Divider` in the React, Vue, Svelte and Solid
   adapters. Progress takes `value` and `indeterminate` as live properties, the loading
@@ -2947,7 +3423,7 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
 
 ### Changed
 
-- **Time picker: an accessible DOM dial (FLO-279).** The clock dial is no longer a canvas
+- **Time picker: an accessible DOM dial (#237).** The clock dial is no longer a canvas
   hidden from assistive tech: it is a listbox of its numbers ("9 o'clock", "20 hours",
   "15 minutes"), reachable by Tab, moved through with the arrows and selected with Enter or
   Space, and a pointer can click or drag it. The hand, its 48dp handle and the on-primary
@@ -2955,7 +3431,7 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
   dial moves on to minutes once a pointer has picked the hour. Its colours come from the
   theme. In 24-hour mode noon and midnight now sit on the inner and outer rings at the top
   (the hand pointed at 00 at noon).
-- **Time picker: the dial's hour and minute boxes are radios (FLO-283).** In dial mode they
+- **Time picker: the dial's hour and minute boxes are radios (#239).** In dial mode they
   choose which part the dial sets, so they are a radiogroup of buttons named as Compose names
   them, with their value ("Select hour: 9 o'clock", "Select minutes: 35 minutes"): one tab
   stop, the arrows move the check. They are filled surface-container-highest, primary-container
@@ -2965,7 +3441,7 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
   (1900 to 2100 by default) in a vertically scrolling grid the height of the calendar, opened
   on the selected year, as the m3.material.io guidelines have it ("To navigate across
   years, scroll vertically"). It was ±10 years paged by the arrows, which the year view no
-  longer shows (FLO-275).
+  longer shows (#227).
 - **Elements: the model attribute is the default, as natively.** On `<m-switch>`,
   `<m-checkbox>`, `<m-radios>`, `<m-icon-button>`, `<m-slider>` (`value` and `second-value`),
   `<m-tabs>` and `<m-textfield>`, a change of `checked`, `selected` or `value` moves the live
@@ -2979,7 +3455,7 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
 - **Extended FAB: no manufactured `aria-label` (#232).** It is set only from `ariaLabel`. The
   factory copied `text` into it, which named `<m-extended-fab>`'s button
   "[object HTMLSlotElement]" until the element removed it again, and gave an extended FAB
-  with no text the name "action", as the FAB did before FLO-110. The visible text is the
+  with no text the name "action", as the FAB did before #148. The visible text is the
   name. A segmented button's text segment no longer copies its text into `aria-label`
   either; an icon-only segment is still named by its value.
 - **Text field: the outlined variant's floating label sits in a notch of the outline
@@ -2991,16 +3467,16 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
   per ancestor and a `themechange` listener for each field. The notch follows the label's
   text, density and direction; the outline is 1dp in `outline` at rest, `on-surface` on
   hover and 2dp `primary` on focus, in `error` for errors and `on-surface` at 12% disabled.
-- **Selection controls: one label type (FLO-282).** The checkbox, radio and switch labels are all Body
+- **Selection controls: one label type (#238).** The checkbox, radio and switch labels are all Body
   Large, a list item's headline. The radio label was Body Medium with a 1.2 line height, and
   the switch label Title Medium enlarged to 18px.
-- **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
+- **Time picker: a native modal dialog (#233).** It opens with `showModal()`, over a
   0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
   a click on the backdrop cancel that picker only (Escape closed every open picker, and the
   backdrop did not emit `cancel`). Each picker's title has its own id, the mode toggle keeps
   focus, and `isOpen: true` opens the picker as documented. `modalElement` is now the dialog
   itself.
-- **Date picker, measured against the M3 tokens (FLO-277).** Days show 0.08 hover, 0.10
+- **Date picker, measured against the M3 tokens (#230).** Days show 0.08 hover, 0.10
   pressed and 0.10 focus layers in `on-surface-variant` (`on-primary` on the selected day),
   with the 3dp focus ring. The docked calendar has 16dp corners, outside-month days are
   `on-surface` at 38%, in-range days `on-secondary-container`, and the range band starts
@@ -3462,7 +3938,13 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.5...HEAD
+[3.0.5]: https://github.com/floor/material/compare/v3.0.4...v3.0.5
+[3.0.4]: https://github.com/floor/material/compare/v3.0.3...v3.0.4
+[3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3
+[3.0.2]: https://github.com/floor/material/compare/v3.0.1...v3.0.2
+[3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
+[3.0.0]: https://github.com/floor/material/compare/v3.0.0-next.1...v3.0.0
 [3.0.0-next.1]: https://github.com/floor/material/compare/v3.0.0-next.0...v3.0.0-next.1
 [3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
 [0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6

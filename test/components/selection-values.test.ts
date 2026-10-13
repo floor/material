@@ -1,7 +1,7 @@
 // test/components/selection-values.test.ts
 //
 // One rule for setting a selection by code, across the four components that
-// hold one by value. FLO-106, and the decision recorded there is the spec:
+// hold one by value., and the decision recorded there is the spec:
 //
 //   - a disabled option CAN be selected by code -- `disabled` blocks the user,
 //     not the application, which is how native select and radio inputs behave;
@@ -17,7 +17,7 @@
 // Measured before the change: radios already did both; select selected a
 // disabled option but kept the previous one for an unknown value; tabs refused
 // a disabled tab and kept the previous one; segmented button refused both (its
-// cases now cover the connected button group that replaces it, FLO-382).
+// cases now cover the connected button group that replaces it).
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { JSDOM } from "jsdom";
@@ -147,7 +147,7 @@ describe("a disabled option can be selected by code", () => {
 });
 
 describe("a value no option carries clears the selection", () => {
-  test("radios clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
+  test("radios clears, warns once, and emits no change, as a programmatic change is silent", () => {
     const radios = createRadios({
       name: "size",
       options: [
@@ -169,7 +169,7 @@ describe("a value no option carries clears the selection", () => {
     expect(events).toEqual([]);
   });
 
-  test("select clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
+  test("select clears, warns once, and emits no change, as a programmatic change is silent", () => {
     const select = createSelect({
       label: "Size",
       options: [
@@ -190,7 +190,7 @@ describe("a value no option carries clears the selection", () => {
     expect(events).toEqual([]);
   });
 
-  test("tabs clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
+  test("tabs clears, warns once, and emits no change, as a programmatic change is silent", () => {
     const tabs = createTabs({
       tabs: [
         { value: "one", text: "One" },
@@ -210,7 +210,7 @@ describe("a value no option carries clears the selection", () => {
     expect(events).toEqual([]);
   });
 
-  test("connected button group clears, warns once, and emits no change, as a programmatic change is silent (FLO-328, FLO-382)", () => {
+  test("connected button group clears, warns once, and emits no change, as a programmatic change is silent", () => {
     const group = createButtonGroup({
       kind: "connected",
       selection: "multi",
@@ -234,8 +234,8 @@ describe("a value no option carries clears the selection", () => {
 
   // A required group cannot be emptied, and an unknown value is a caller error,
   // not a request to change the selection: it leaves the selection exactly as
-  // it was rather than collapsing it to one value (FLO-382).
-  test("a required connected button group keeps its whole selection, warns once, and emits no change (FLO-382)", () => {
+  // it was rather than collapsing it to one value.
+  test("a required connected button group keeps its whole selection, warns once, and emits no change", () => {
     const group = createButtonGroup({
       kind: "connected",
       selection: "multi",

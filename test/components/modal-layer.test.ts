@@ -117,7 +117,7 @@ describe("dialog, layer: top", () => {
     dialog.open();
     expect(calls).toEqual(["showModal"]);
     expect(dialog.element.hasAttribute("open")).toBe(true);
-    // Synchronous in the top layer: state and event are there on return (FLO-543)
+    // Synchronous in the top layer: state and event are there on return
     expect(dialog.isOpen()).toBe(true);
     expect(opened).toEqual(["open"]);
     dialog.close();
@@ -133,7 +133,7 @@ describe("dialog, layer: top", () => {
     dialog.open();
     // A later key press. A cancel in the task open() ran in is the one the
     // browser sends for the key that opened the dialog, which never closes it
-    // (FLO-548, dialog/open-contract.test.ts).
+    // (dialog/open-contract.test.ts).
     await after(0);
     const event = escape(dialog.element);
     expect(event.defaultPrevented).toBe(true);
@@ -232,7 +232,7 @@ describe.each([
     const { sheet, closes } = make();
     sheet.open();
     // A later close request. A cancel in the task open() ran in is the one the
-    // browser sends for the key that opened the sheet (FLO-548).
+    // browser sends for the key that opened the sheet.
     await after(0);
     expect(escape(sheet.element).defaultPrevented).toBe(true);
     expect(sheet.isOpen()).toBe(false);
@@ -312,7 +312,7 @@ describe("modal drawer, layer: top", () => {
     const { drawer, closes } = make();
     drawer.open();
     // A later close request: a cancel in the task open() ran in is the
-    // opening key's (FLO-548)
+    // opening key's
     await after(0);
     expect(escape(drawer.element).defaultPrevented).toBe(true);
     expect(drawer.isOpen()).toBe(false);
@@ -364,7 +364,7 @@ describe("modal drawer, layer: top", () => {
   });
 });
 
-// FLO-548 family 6, part B: Escape is a key press for the modal sheets and the
+// Family 6, part B: Escape is a key press for the modal sheets and the
 // modal drawer, in both layers, on the shared stack of core/dom/layer. The
 // key is prevented (no `cancel` from the browser, so a refusal holds for any
 // number of presses), only the topmost modal answers, and never for the key

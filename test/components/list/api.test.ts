@@ -200,7 +200,7 @@ describe('list public API', () => {
     const seen: string[] = [];
     let prevented = false;
     const handler = (event: SelectEvent<Person>): void => {
-      // `value`: the <m-list> element's field, the id as a string (FLO-320)
+      // `value`: the <m-list> element's field, the id as a string
       seen.push(`${event.item.id}:${first.getAllItems().length}:${event.value}`);
       if (event.item.id === 'alan') {
         event.preventDefault();
@@ -255,7 +255,7 @@ describe('the chaining methods hand back the list', () => {
     ['on', (list) => list.on('select', () => {})],
     ['off', (list) => list.off('select', () => {})],
     // These two were missed when the other seven were fixed in #125, and
-    // annotating the factory's return type in FLO-113 is what surfaced them:
+    // annotating the factory's return type is what surfaced them:
     // the declared ListComponent could not be satisfied while they handed back
     // the pipeline object.
     ['scrollToItem', (list) => { wireScrollIntoView(list); return list.scrollToItem('ada'); }],

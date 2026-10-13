@@ -309,7 +309,7 @@ describe('text-field', () => {
     expect(document.body.contains(field.element)).toBe(false);
   });
 
-  // FLO-105 — the icon, prefix and suffix setters used to do nothing unless the
+  // — the icon, prefix and suffix setters used to do nothing unless the
   // slot had been configured at creation, and after a remove they wrote into a
   // node that was no longer in the document. Both were silent: no error, no
   // element, nothing to tell a caller their code had not worked.
@@ -324,7 +324,7 @@ describe('text-field', () => {
   // The input carries `…-input--with-leading-icon`, which contains the slot
   // name as a substring, so a loose [class*=] match picks the input instead of
   // the slot. Match the slot's own class, which has no modifier in it.
-  // The slots live in the field, the container under the root (FLO-300).
+  // The slots live in the field, the container under the root.
   const slotEl = (field: { field: HTMLElement }, selector: string) =>
     ([...field.field.children] as HTMLElement[]).find(
       (el) => el.className.endsWith(selector) && !el.className.includes('--'),
@@ -486,7 +486,7 @@ describe('text field outline notch', () => {
 });
 
 
-// FLO-114: exercise the actual emitter for both input elements supported by the factory.
+// Exercise the actual emitter for both input elements supported by the factory.
 for (const inputType of ['text', 'multiline'] as const) {
   describe(`text field ${inputType} event contract`, () => {
     test('native input and change report the value, empty state and autofill flag', () => {

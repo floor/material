@@ -85,7 +85,7 @@ describe('state layer opacities follow M3', () => {
   });
 
   // Not search: its `--selected` suggestion is the option the arrows reach, the
-  // combobox's aria-activedescendant (FLO-286). That is keyboard focus, which
+  // combobox's aria-activedescendant. That is keyboard focus, which
   // commits nothing until Enter, so it takes the focus layer and the focus ring.
   test("search's reached suggestion is focus: 10% and the ring", () => {
     const reached = rulesOf('search').filter((rule) => /suggestion-item--selected/.test(withoutNegations(rule.selector)));

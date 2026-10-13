@@ -1,6 +1,6 @@
 // test/root-exports.test.ts
 //
-// FLO-351: every root export is public API. The list is pinned, so a name added
+// Every root export is public API. The list is pinned, so a name added
 // to or dropped from `material` fails here until the fixture is regenerated
 // (`bun run root-exports:update`) and the diff reviewed. 3.0.0 removed the
 // internals from the root; the migration table 0.10.4 published is frozen, and
@@ -14,7 +14,7 @@ const ROOT = join(import.meta.dir, "..");
 const now = readRootExports();
 const table = readMigrationTable(await Bun.file(join(ROOT, "scripts/fixtures/root-exports.md")).text());
 
-describe("the root exports (FLO-351)", () => {
+describe("the root exports", () => {
   test("match the pinned list: an added or removed name fails until the fixture is regenerated", async () => {
     const changes = diffRootExports(await readPinned(), now);
     expect(changes, `Run \`bun run root-exports:update\` if intended:\n${changes.join("\n")}`).toEqual([]);
@@ -39,7 +39,7 @@ describe("the root exports (FLO-351)", () => {
     expect(verifyMigrationTable(table, now)).toEqual([]);
   });
 
-  test("only the canonical names: the old spellings 0.10.5 renamed are gone (FLO-383)", () => {
+  test("only the canonical names: the old spellings 0.10.5 renamed are gone", () => {
     const names = new Set(now.map((e) => e.name));
     const renames = [["createTextfield", "createTextField"], ["TextfieldConfig", "TextFieldConfig"],
       ["TextfieldComponent", "TextFieldComponent"], ["CardSchema", "CardConfig"],
@@ -48,7 +48,7 @@ describe("the root exports (FLO-351)", () => {
   });
 });
 
-describe("the migration compiles (FLO-351)", () => {
+describe("the migration compiles", () => {
   const CONSUMER = join(ROOT, "test/__root-exports-consumer.ts");
   const fromRoot = "../src/index";
   const fromPath = (path: string) => (path === "material/core" ? "../src/core/index" : `../src/core/${path.slice("material/core/".length)}/index`);

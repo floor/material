@@ -2,7 +2,7 @@
 //
 // Core does not import from components.
 //
-// FLO-115. `core/config/global.ts` hardcoded a `ComponentConfigMap` naming
+// `core/config/global.ts` hardcoded a `ComponentConfigMap` naming
 // nine components and importing their config types, which inverted the
 // layering: mtrl-addons builds on core, and core was reaching down into
 // leaves. Each component now registers its own key by augmenting the
@@ -38,10 +38,10 @@ describe("core does not import from components", () => {
 
   // One file is knowingly excluded. `compose/features/badge.ts` imports
   // `createBadge` as a *value*, so core depends on a component at runtime --
-  // a worse instance of the same inversion than the config map FLO-115 names,
+  // a worse instance of the same inversion than the config map names,
   // and one that finding did not mention. Fixing it means deciding where
   // `withBadge` should live, which is a design decision rather than a
-  // cleanup, so it is recorded on FLO-115 and named here.
+  // cleanup, so it is recorded and named here.
   //
   // This list only shrinks. Adding to it means core reached into components
   // again, which is a regression, not a chore.

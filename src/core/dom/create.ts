@@ -69,7 +69,7 @@ export interface CreateElementOptions {
   /**
    * Inline styles. Object only: a style string is written verbatim to the
    * style attribute, so one interpolated value can carry extra declarations
-   * (FLO-111). Assigning per property confines a value to that property.
+   * Assigning per property confines a value to that property.
    */
   style?: Partial<CSSStyleDeclaration>;
   // Data attributes
@@ -169,7 +169,7 @@ const PASSIVE_TOUCH_EVENTS = new Set(["touchstart", "touchmove"]);
  * One shape for every forwarded native event, emitted by `setupEventForwarding`
  * below as `{ event, element, originalEvent: event }`. Eleven components
  * configure `forwardEvents`, so this lives here rather than being redeclared
- * per component: FLO-114 gives each component a typed event map, and without
+ * per component: each component has a typed event map, and without
  * a shared payload that would mean the same three fields written out again in
  * every one of them.
  *
@@ -330,7 +330,7 @@ export const createElement = (
   // interpolated value carry any number of further declarations -- enough to
   // build a full-viewport overlay out of what a caller thought was a colour.
   // The CSSOM property setter parses one value and drops it if it does not
-  // fit, so this route cannot be widened the same way. FLO-111.
+  // fit, so this route cannot be widened the same way.
   if (options.style) {
     Object.assign(element.style, options.style);
   }
@@ -345,7 +345,7 @@ export const createElement = (
   if (options.ariaHidden !== undefined)
     element.setAttribute("aria-hidden", String(options.ariaHidden));
 
-  // Apply classes (FLO-117: as given, not prefixed)
+  // Apply classes (as given, not prefixed)
   const classSource = options.className || options.class;
   if (classSource) addClass(element, classSource);
 
@@ -366,7 +366,7 @@ export const createElement = (
     if (!(key in RESERVED_OPTIONS) && !EVENT_HANDLER_ATTRIBUTE.test(key)) {
       const value = options[key as keyof CreateElementOptions];
       // A boolean attribute given `false` is left off: the parser reads any
-      // value, "false" included, as the attribute being present. FLO-240.
+      // value, "false" included, as the attribute being present.
       if (value != null && !omitsAttribute(key, value)) {
         const text = String(value);
         element.setAttribute(

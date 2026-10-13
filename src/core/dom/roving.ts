@@ -16,7 +16,7 @@ export const isTextEditable = (element: EventTarget | null | undefined): boolean
 };
 
 /**
- * Whether a focus target is disabled: natively, as `aria-disabled` (FLO-119),
+ * Whether a focus target is disabled: natively, as `aria-disabled`,
  * or, for a web component's host, by its `disabled` attribute.
  */
 const isDisabled = (element: HTMLElement): boolean =>

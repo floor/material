@@ -14,7 +14,7 @@ export interface BaseComponentConfig {
   // it and nothing would change. The prefix is fixed at build time: the class
   // helpers read it from a module constant, and honouring a per-instance
   // prefix would mean threading it through the hottest path in the library.
-  // FLO-118. It reopens at 3.0.0 with the `mtrl` to `material` rename.
+  // It reopens at 3.0.0 with the `mtrl` to `material` rename.
   class?: string | string[]; // Support both string and array
   className?: string | string[]; // Alternative to class
   parent?: HTMLElement | string | null; // Parent element to append to (element or selector)
@@ -25,7 +25,7 @@ export interface BaseComponentConfig {
   tabIndex?: number; // Keyboard navigation order (-1 to remove from tab order, 0+ for custom order)
   // Inline styles. Object only: a style string is written verbatim to the
   // style attribute, so one interpolated value can carry extra declarations
-  // (FLO-111). Assigning per property confines a value to that property.
+  // Assigning per property confines a value to that property.
   style?: Partial<CSSStyleDeclaration>;
   // Data attributes
   data?: Record<string, string>; // Data attributes (e.g., { name: 'value' } → data-name="value")
@@ -134,7 +134,7 @@ export const createElementConfig = (
     /**
      * Styles the component computes for itself, as properties. Merged under
      * `config.style`, so a consumer's own style still wins. Added with
-     * FLO-111: menu built these into the style *attribute* as a joined
+     * Menu built these into the style *attribute* as a joined
      * string, where CSS text has no camelCase and `maxHeight` was silently
      * dropped by the parser.
      */

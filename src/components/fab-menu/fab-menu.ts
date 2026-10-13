@@ -130,7 +130,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     element.setAttribute("role", "menuitem");
     element.tabIndex = -1;
     // The item is the pill, whose width reveals it; its content keeps its
-    // natural width, anchored to the end, as Compose's Row is (FLO-348)
+    // natural width, anchored to the end, as Compose's Row is
     const content = document.createElement("span");
     content.className = `${block}__item-content`;
     if (item.icon) {

@@ -136,7 +136,7 @@ export const App = defineComponent(() => {
       ]),
       h("output", { id: "pet" }, String(pet.value)),
       // Controlled: Escape closes the dialog, and onClose puts the state in step
-      // Named slots (FLO-325): a text headline, a component in actions
+      // Named slots: a text headline, a component in actions
       h(MDialog, { id: "dg", open: dialog.value, onClose: () => (dialog.value = false) }, {
         default: () => "Your changes will be lost.",
         headline: () => "Discard draft?",

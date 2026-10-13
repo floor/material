@@ -6,18 +6,22 @@ import {
   createComponentConfig,
   createElementConfig as coreCreateElementConfig,
 } from "../../core/config/component";
+import { LIST_VARIANTS } from "./constants";
 import type {
   ListConfig,
   ListFeatureHost,
   ListItem,
   ListRenderer,
   ListSelection,
+  ListVariant,
 } from "./types";
 
 /**
  * Default configuration for the List component
  */
 export const defaultConfig: Partial<ListConfig<ListItem>> = {
+  variant: LIST_VARIANTS.STANDARD,
+
   // Static data
   items: [],
 
@@ -44,7 +48,11 @@ export const createBaseConfig = (
   // as a fallback rather than an assertion, so the invariant is made true here
   // instead of asserted about code somewhere else.
   const merged = createComponentConfig(defaultConfig, config, "list");
-  return { ...merged, items: merged.items ?? [] };
+  // An unknown variant is the default.
+  const variant = Object.values(LIST_VARIANTS).includes(merged.variant as ListVariant)
+    ? (merged.variant as ListVariant)
+    : LIST_VARIANTS.STANDARD;
+  return { ...merged, variant, items: merged.items ?? [] };
 };
 
 /**

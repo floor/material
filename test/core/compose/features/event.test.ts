@@ -2,7 +2,7 @@
 //
 // This suite used to replace src/core/state/emitter with a stand-in through
 // `mock.module` and assert that each method forwarded to it. Two problems, both
-// F6 / FLO-93: nothing here exercised the real emitter, so "on forwards to on"
+// F6: nothing here exercised the real emitter, so "on forwards to on"
 // held whether or not subscription actually worked; and `mock.module` is
 // process wide, so the stand-in was installed for every test file loaded after
 // this one. Its fake `on` returned the emitter rather than an unsubscribe

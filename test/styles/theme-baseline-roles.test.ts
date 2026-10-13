@@ -1,4 +1,4 @@
-// FLO-329. Baseline, the default theme, declared no success, warning or info roles
+// Baseline, the default theme, declared no success, warning or info roles
 // (nor their on- pairs), though every generated theme has them from
 // status-colors-light() and status-colors-dark(). The badge reads them, so
 // createBadge({ color: 'success' }) had no background under the default theme.

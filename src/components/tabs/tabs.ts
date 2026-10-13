@@ -73,7 +73,7 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
         const result = original.apply(component, args);
         syncTabStops(component);
         // Panels follow a selection made from code as they follow a click; only
-        // the click path updated them. FLO-263.
+        // the click path updated them.
         if (method === 'setActiveTab') updateTabPanels(component);
         return result;
       };

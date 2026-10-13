@@ -12,6 +12,21 @@
   vertical-align: middle;
   gap: 12px;
   white-space: nowrap;
+
+  // Only the small/default size is reserved here. Other sizes retain their
+  // original baseline until their size reservation is addressed in #49.
+  &:not([size]), &[size='s'] {
+    vertical-align: baseline;
+    align-items: baseline;
+
+    // Preserve the inherited line box without adding inline space or a gap.
+    &::before {
+      content: " ";
+      white-space: pre;
+      width: 0;
+      margin-inline-end: -12px;
+    }
+  }
 }
 
 @include c.declarations('button-group') {

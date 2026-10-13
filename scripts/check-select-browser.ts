@@ -132,7 +132,7 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
 
 /**
  * An unsized select is as wide as an unsized text field: 280px
- * (`TextFieldDefaults.MinWidth`, FLO-293), whatever holds it, and the same
+ * (`TextFieldDefaults.MinWidth`), whatever holds it, and the same
  * for the factory and for `<m-select>`. The factory's select took its
  * container's width (`.mtrl-select { width: 100% }`): 200, 400 and 1000px
  * here, where the text field and `<m-select>` were 280 in all three.

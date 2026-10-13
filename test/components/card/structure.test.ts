@@ -54,7 +54,7 @@ const byId = (card: { element: HTMLElement }, id: string | null) =>
 beforeEach(() => { document.body.innerHTML = ''; });
 
 describe('card role and ARIA', () => {
-  // FLO-109: a card is an article, a clickable one a focusable button; an
+  // A card is an article, a clickable one a focusable button; an
   // interactive one has the states only, not a control's role or tab stop
   test('a card is an article, a clickable one a focusable button, an interactive one neither', () => {
     expect(createCard().element.getAttribute('role')).toBe('article');
@@ -67,7 +67,7 @@ describe('card role and ARIA', () => {
     expect(interactive.element.classList.contains('mtrl-card--interactive')).toBe(true);
   });
 
-  // FLO-109: the title is the heading, the subtitle its text, and a content
+  // The title is the heading, the subtitle its text, and a content
   // block no landmark
   test('the header title is a real h3, the subtitle a paragraph, and neither header nor content has a role', () => {
     const header = createCardHeader({ title: 'Trip', subtitle: 'Three days' });
@@ -253,7 +253,7 @@ describe('card behaviour', () => {
     expect(clicks).toBe(2);
   });
 
-  // FLO-323: the card wrote --mtrl-card-elevation on creation, hover and drag,
+  // The card wrote --mtrl-card-elevation on creation, hover and drag,
   // and no stylesheet read it. Elevation is the variant's class, which the
   // stylesheet styles, with its hover and --dragging states.
   test('elevation is the variant class; no unread elevation property is written', () => {

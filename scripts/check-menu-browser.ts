@@ -1,5 +1,5 @@
 // scripts/check-menu-browser.ts
-/** FLO-367: synchronous content keeps menu opening, positioning and focus intact. */
+/** Synchronous content keeps menu opening, positioning and focus intact. */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createMenu from "../src/components/menu";
@@ -67,5 +67,5 @@ export async function checkMenu(page: Page): Promise<void> {
   });
   assert.deepEqual(placed, [140, 120, true], "initially visible menu measures the attached opener");
   await page.evaluate(() => { (window as unknown as MenuWindow).menu.destroy(); document.body.replaceChildren(); });
-  console.log("Passed packed menu: synchronous items and tab stops; deferred opening, keyboard focus, navigation, Escape restoration and initially visible positioning (FLO-367).");
+  console.log("Passed packed menu: synchronous items and tab stops; deferred opening, keyboard focus, navigation, Escape restoration and initially visible positioning.");
 }

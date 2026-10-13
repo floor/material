@@ -30,7 +30,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     state.timeChanges = [];
     state.timeDrafts = [];
     state.timePicker.on("change", ({ value }) => { state.timeChanges.push(value); });
-    // Edits are a draft until OK (FLO-288): they show in `input`.
+    // Edits are a draft until OK: they show in `input`.
     state.timePicker.on("input", ({ draftValue }) => { state.timeDrafts.push(draftValue); });
     state.timePicker.on("confirm", ({ value }) => { state.confirmedTime = value; });
     state.timePicker.open();
@@ -72,7 +72,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     };
   });
   assert.deepEqual(styles, { dialog: "flex", radius: "28px", content: "flex", inputs: "flex", faceWidth: "256px", periodDirection: "column", actions: "flex", buttons: "8px" });
-  // FLO-279: the DOM dial. Its hand, handle and on-primary labels sit where the
+  // The DOM dial. Its hand, handle and on-primary labels sit where the
   // value is, the 24h rings are right at noon and midnight, the keyboard selects,
   // a drag picks and moves on to minutes, and the spring takes the short way.
   const hand = () => dialog.locator(".mtrl-time-picker__dial-face").evaluate(face => {
@@ -84,7 +84,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await dialog.locator(".mtrl-time-picker__toggle-type").click();
   await dialog.locator(".mtrl-time-picker__hours").click();
   assert.deepEqual(await hand(), { angle: 270, radius: 101, label: "Hour", selected: "9 o'clock" }, "9:35 puts the hand at nine, on the outer ring");
-  // FLO-283: in dial mode the boxes are radios, filled primary-container when
+  // In dial mode the boxes are radios, filled primary-container when
   // checked; the arrows move the check, the focus and the dial.
   const selector = (unit: string) => dialog.locator(`.mtrl-time-picker__${unit}`).evaluate(element => {
     // Painted, so rgb() and color(srgb ...) serialisations compare equal.
@@ -169,7 +169,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await dialog.locator(".mtrl-time-picker__period").count(), 0);
   assert.deepEqual(await page.locator('[class*="mtrl-time-picker"]').evaluateAll(elements => elements.flatMap(element => [...element.classList].filter(name => /^mtrl-time-picker-[^-]/.test(name)))), []);
   await dialog.locator(".mtrl-time-picker__cancel").click();
-  // FLO-278: a native modal dialog. Opened from a trigger, it is :modal over a 0.32
+  // A native modal dialog. Opened from a trigger, it is :modal over a 0.32
   // scrim, takes focus, and Escape closes it alone and returns focus.
   await page.evaluate(() => {
     const state = window as unknown as TimePickerWindow;
@@ -195,11 +195,11 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.locator(".mtrl-time-picker__dialog").count(), 0);
   await checkTimePickerTokens(page);
   await checkTimePickerShadow(page);
-  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant (FLO-280), focus inside a shadow root (FLO-284), edits as a draft until OK (FLO-288), and teardown.");
+  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant, focus inside a shadow root, edits as a draft until OK, and teardown.");
 }
 
 /**
- * FLO-280: the TimeSelector, TimeInput and PeriodSelector tokens, measured in each
+ * The TimeSelector, TimeInput and PeriodSelector tokens, measured in each
  * variant: dial 12h and 24h, input, horizontal, and right to left.
  */
 async function checkTimePickerTokens(page: Page): Promise<void> {
@@ -265,7 +265,7 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
 }
 
 /**
- * FLO-284: inside a shadow root, as in a web component, where the document sees
+ * Inside a shadow root, as in a web component, where the document sees
  * only the host. The dial keeps focus on its numbers when its face changes, and
  * closing returns focus to the opener inside the root.
  */

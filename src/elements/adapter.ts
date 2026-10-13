@@ -20,6 +20,17 @@ export interface ComponentSpec {
   name: string;
   /** `false`: the server never marks the host. A function still can. Absent means it does. */
   ssr?: boolean | ((host: HTMLElement) => boolean);
+  /**
+   * The prefix-independent attribute the element's host carries once connected
+   * (`data-mtrl-icon-button`). The renderer, the element class and every
+   * adapter read it from this spec, so a future element with a marker needs no
+   * adapter change. The server writes it beside `data-mtrl-ssr`; styles match
+   * slotted hosts with it where the sheet cannot spell their tag.
+   *
+   * @internal A host attribute an element carries so another element's sheet
+   * can match it; not part of the public API and may change without notice.
+   */
+  marker?: string;
   attributes?: Record<string, { type: AttributeType }>;
   properties?: Record<string, unknown>;
   events?: Record<string, unknown>;
@@ -95,7 +106,7 @@ export interface Described {
   form: boolean;
   /** Live property name to the attribute it shadows (`checked` → the `checked` attribute). */
   shadowedBy: Map<string, AttributeProp>;
-  /** The named slots, as `slot="…"` names them (FLO-325). */
+  /** The named slots, as `slot="…"` names them. */
   slots: readonly string[];
 }
 

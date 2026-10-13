@@ -32,7 +32,7 @@ describe('side sheet stylesheet', () => {
     expect(value('.mtrl-side-sheet--standard .mtrl-side-sheet__container', 'box-shadow')).toBeUndefined();
   });
 
-  // FLO-324: only the modal sheet rounds, on the edge facing the page; the
+  // Only the modal sheet rounds, on the edge facing the page; the
   // standard one is square (MDC Sheet.Side.Docked.Container.Shape = Corner.None)
   test('a modal sheet rounds only the corners facing the page, at CornerLarge; a standard one none', () => {
     // docked to the trailing edge: the leading corners round

@@ -304,7 +304,7 @@ describe('addScrollIndicators', () => {
     expect(button(second, 'right').parentNode).toBe(second.element);
   });
 
-  // FLO-553: an explicit behavior overrides the stylesheet, and with it the
+  // An explicit behavior overrides the stylesheet, and with it the
   // reduced-motion reset. The scroller's own scroll-behavior decides.
   test('the scroll buttons scroll by 100px and name no behaviour', () => {
     const tabs = mount();

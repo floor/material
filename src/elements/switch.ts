@@ -20,6 +20,9 @@ const switchSpec = {
   name: "switch",
   create: (config) => createSwitch(config as SwitchConfig),
   styles: ["switch"],
+  // The host must use the control's baseline and box, without an inline-block
+  // line box that grows when surrounding text has a taller line height.
+  hostStyles: ":host{display:inline-flex}",
   attributes: {
     checked: { type: "boolean", config: "checked", update: (c, v) => void c.setValue(!!v) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
@@ -27,7 +30,7 @@ const switchSpec = {
     value: { type: "string", config: "value", update: (c, v) => void c.setValueAttribute(String(v ?? "")) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
-    // The error state has one owner, setError; the text only takes its colour (FLO-318)
+    // The error state has one owner, setError; the text only takes its colour
     error: { type: "boolean", config: "error", update: (c, v) => void c.setError(!!v) },
     "supporting-text": {
       type: "string",
