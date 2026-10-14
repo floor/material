@@ -9,10 +9,11 @@
  * attribute is the trailing icon's markup and `trailing-icon-label` its
  * button's accessible name: without the label the icon is decorative.
  *
- * `label`, `type` and `trailing-icon-label` have no setter on the text field:
- * changing one recreates it, keeping the value. A field created without a
- * label has no label element to update, and `type="multiline"` swaps the
- * input for a textarea.
+ * Changing `label` or `type` recreates the field and keeps the value.
+ * Changing `trailing-icon-label` updates the existing icon in place, so the
+ * button, the input and focus stay. A field created without a label has no
+ * label element to update, and `type="multiline"` swaps the input for a
+ * textarea.
  *
  * Parts: `text-field`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
  * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
@@ -107,11 +108,19 @@ const textFieldSpec = {
       update: (c, v) => void (v ? c.setTrailingIcon(String(v)) : c.removeTrailingIcon()),
     },
     /**
-     * The trailing icon button's accessible name (FLO-532): with it the icon
-     * is a button that emits `trailing`; without it, or with an empty value,
-     * the icon is decorative and hidden from assistive technology (FLO-301).
+     * The trailing icon button's accessible name. With it the icon is a button
+     * that emits `trailing`; without it, or with an empty value, the icon is
+     * decorative. A change updates the existing icon through the factory setter.
      */
-    "trailing-icon-label": { type: "string", config: "trailingIconLabel" },
+    "trailing-icon-label": {
+      type: "string",
+      config: "trailingIconLabel",
+      update: (c, v, host) => {
+        const icon = host.getAttribute("trailing-icon");
+        if (!icon) return;
+        c.setTrailingIcon(icon, v === null ? "" : String(v));
+      },
+    },
     maxlength: { type: "number", config: "maxLength", update: inputAttribute("maxlength") },
     pattern: { type: "string", config: "pattern", update: inputAttribute("pattern") },
     // The input's required and the label's asterisk together
