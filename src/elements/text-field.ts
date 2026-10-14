@@ -15,6 +15,9 @@
  * label element to update, and `type="multiline"` swaps the input for a
  * textarea.
  *
+ * A click, Enter or Space on the trailing icon button dispatches `trailing`
+ * from the host, with the factory's `{ value, event }`, bubbling and composed.
+ *
  * Parts: `text-field`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
  * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
  * `outline-trailing`.
@@ -23,7 +26,7 @@
  */
 
 import createTextField from "../components/text-field";
-import type { TextFieldComponent, TextFieldConfig } from "../components/text-field/types";
+import type { TextFieldComponent, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 /** The text field, with the methods the element adds to it. */
@@ -139,6 +142,14 @@ const textFieldSpec = {
   events: {
     input: { detail: (payload) => ({ value: (payload as { value: string }).value }) },
     change: { detail: (payload) => ({ value: (payload as { value: string }).value }) },
+    // Beside the value: activating the icon leaves the default value in force.
+    trailing: {
+      detail: (payload) => {
+        const { value, event } = payload as TextFieldTrailingPayload;
+        return { value, event };
+      },
+      state: true,
+    },
   },
   form: {
     value: (c) => c.getValue(),
