@@ -17,6 +17,7 @@ import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextFieldTrailing, trailingActivation, trailingFocus } from "./check-text-field-trailing";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
@@ -4163,7 +4164,7 @@ try {
   //   abstract/_config.scss:26, abstract/_mixins.scss:353, abstract/_variables.scss:345  (the export, the definition, the token)
   // so the button is the only target the mixin draws, and it is measured here
   // in both directions, on the factory and on `<m-text-field>` through its
-  // `trailing-icon-label` attribute (FLO-532).
+  // `trailing-icon-label` attribute.
   await fresh(page, `<section id="tt-field"></section>`);
   {
     const measured = await page.evaluate(async () => {
@@ -4269,15 +4270,15 @@ try {
     check("text field: the trailing icon button's 48 px target is centred on the button in both directions");
   }
 
-  // ---------------------------------------------------------------- text field: the trailing icon's label attribute (FLO-532)
+  // ---------------------------------------------------------------- text field: the trailing icon's label attribute
   // `<m-text-field trailing-icon-label>` is the element's spelling of the
-  // factory's `trailingIconLabel` (FLO-301): with it the trailing icon is a
-  // button named by the value, reachable by assistive technology, and the 48
-  // px target case above measures it on the element too. Without it — and with
-  // an empty value, which the factory reads as no label — the icon stays a
-  // decorative span hidden from assistive technology. The attribute is
-  // config-only, as `label` and `type` are: a change after upgrade recreates
-  // the component from the attributes, keeping the value.
+  // factory's `trailingIconLabel`: with it the trailing icon is a button named
+  // by the value, reachable by assistive technology, and the 48 px target case
+  // above measures it on the element too. Without it — and with an empty
+  // value, which the factory reads as no label — the icon stays a decorative
+  // span hidden from assistive technology. A change of the label updates the
+  // existing icon through the factory setter. Activating the button dispatches
+  // `trailing` from the host.
   await fresh(page, `<m-text-field id="tl" label="Email" trailing-icon='${ICON}'></m-text-field>`);
   {
     type TrailingHost = HTMLElement & { value: string };
@@ -4332,6 +4333,35 @@ try {
     assert.equal(await value(), "typed");
     check("text field: removing trailing-icon-label makes the icon decorative again, and keeps the value (element)");
   }
+
+  // Click, Enter and Space dispatch `trailing`. Renaming a focused button
+  // keeps that button, the input and document.activeElement.
+  await fresh(page, `<m-text-field id="tl-act" label="Password" type="password" value="secret" trailing-icon='${ICON}' trailing-icon-label="Show password"></m-text-field>`);
+  {
+    const activation = await trailingActivation(page, "tl-act");
+    assert.deepEqual(activation.events, [
+      { value: "secret", eventType: "click", bubbles: true, composed: true },
+      { value: "secret", eventType: "click", bubbles: true, composed: true },
+      { value: "secret", eventType: "click", bubbles: true, composed: true },
+    ]);
+    check("text field: click, Enter and Space each dispatch trailing with the value, bubbling and composed");
+
+    const focus = await trailingFocus(page, "tl-act");
+    assert.deepEqual(focus, {
+      focusedBefore: true,
+      sameButton: true,
+      oldConnected: true,
+      sameInput: true,
+      focusedAfter: true,
+      activeSame: true,
+      documentActive: "M-TEXT-FIELD",
+      label: "Hide password",
+      value: "secret",
+    });
+    check("text field: renaming the focused trailing button keeps the button, the input and focus");
+  }
+
+  await checkTextFieldTrailing(browser, check);
 
   // ---------------------------------------------------------------- progress
   await fresh(
