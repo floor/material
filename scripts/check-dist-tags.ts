@@ -6,6 +6,7 @@
  * `npm install material`, and nobody meant that.
  *
  *   bun run scripts/check-dist-tags.ts
+ *   bun run scripts/check-dist-tags.ts --tags <file.json>
  *
  * Exit 1 with one clear line when `next` exists and is older than `latest`;
  * exit 0 otherwise, printing the tags. The comparison is semver, so a
@@ -13,8 +14,13 @@
  * `3.0.6-next.0` is above it. A missing `next` (or a missing `latest`) is not
  * a failure: the tag may simply not exist yet.
  *
- * The tags come from the registry's abbreviated packument, the same metadata
- * `npm dist-tag` and `npm install` read; no npm CLI is needed.
+ * With `--tags`, the tags come from that JSON file — read once, with no retry.
+ * Without it, they come from the registry's abbreviated packument, the same
+ * metadata `npm dist-tag` and `npm install` read (no npm CLI needed). The
+ * registry can still answer with the previous tags right after a publish, so
+ * the registry path re-reads a few times with a wait between and fails only
+ * when `next` is still behind after the last read; the total wait stays under
+ * about two minutes.
  */
 
 export interface DistTags {
@@ -43,12 +49,74 @@ export const readDistTags = async (name = "material"): Promise<DistTags> => {
   return packument["dist-tags"] ?? {};
 };
 
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+export interface CheckOptions {
+  /** Reads in all, counting the first: 1 is "no retry" (the fixture path). */
+  tries?: number;
+  /** The wait between reads; the default keeps five reads under two minutes. */
+  waitMs?: number;
+  /** Injectable so a test does not wait. */
+  sleep?: (ms: number) => Promise<void>;
+}
+
+export interface CheckResult {
+  /** The last tags read. */
+  tags: DistTags;
+  /** The failure line for those tags, or undefined when they are in order. */
+  problem: string | undefined;
+  /** How many reads it took. */
+  reads: number;
+}
+
+/**
+ * Reads the tags until they are in order, at most `tries` times with `waitMs`
+ * between reads. Right after `npm publish` the registry can answer with the
+ * previous tags for a short while, and failing on that first stale read would
+ * fail a good publish; a `next` that is still behind after the last read fails
+ * with the same message as before.
+ */
+export const checkTags = async (read: () => Promise<DistTags>, options: CheckOptions = {}): Promise<CheckResult> => {
+  const { tries = 5, waitMs = 20_000, sleep: wait = sleep } = options;
+  let reads = 0;
+  for (;;) {
+    const tags = await read();
+    reads++;
+    const problem = nextBehindLatest(tags);
+    if (!problem || reads >= tries) return { tags, problem, reads };
+    await wait(waitMs);
+  }
+};
+
+/** A dist-tags JSON file, read once: a fixture is the whole answer, so no retry. */
+export const readTagsFile = async (path: string): Promise<DistTags> => {
+  const parsed = await Bun.file(path).json() as unknown;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new TypeError(`Not a dist-tags JSON object: ${path}`);
+  }
+  return parsed as DistTags;
+};
+
 if (import.meta.main) {
-  const tags = await readDistTags();
-  console.log(`dist-tags: ${JSON.stringify(tags)}`);
-  const problem = nextBehindLatest(tags);
-  if (problem) {
-    console.error(problem);
-    process.exit(1);
+  const args = process.argv.slice(2);
+  if (args.length !== 0 && !(args.length === 2 && args[0] === "--tags" && args[1])) {
+    console.error("Usage: check-dist-tags.ts [--tags <file.json>]");
+    process.exit(2);
+  }
+  if (args.length === 2) {
+    const tags = await readTagsFile(args[1]);
+    console.log(`dist-tags (${args[1]}): ${JSON.stringify(tags)}`);
+    const problem = nextBehindLatest(tags);
+    if (problem) {
+      console.error(problem);
+      process.exit(1);
+    }
+  } else {
+    const result = await checkTags(readDistTags);
+    console.log(`dist-tags: ${JSON.stringify(result.tags)}${result.reads > 1 ? ` (${result.reads} reads: the registry was still propagating)` : ""}`);
+    if (result.problem) {
+      console.error(result.problem);
+      process.exit(1);
+    }
   }
 }

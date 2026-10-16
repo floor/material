@@ -6,7 +6,16 @@
 // it right after `npm publish`). The comparison is semver, prereleases
 // included.
 import { describe, expect, test } from "bun:test";
-import { nextBehindLatest } from "../../scripts/check-dist-tags";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { checkTags, nextBehindLatest } from "../../scripts/check-dist-tags";
+
+/** The registry state of 2026-10-16 morning: next behind latest. */
+const MORNING = { legacy: "1.0.4", next: "3.0.0-next.1", latest: "3.0.5" };
+
+/** No real waiting in a test. */
+const noSleep = (): Promise<void> => Promise.resolve();
 
 describe("nextBehindLatest", () => {
   test("flags a next that sorts below latest", () => {
@@ -28,5 +37,52 @@ describe("nextBehindLatest", () => {
     expect(nextBehindLatest({ latest: "3.0.5" })).toBeUndefined();
     expect(nextBehindLatest({ next: "3.0.6-next.0" })).toBeUndefined();
     expect(nextBehindLatest({})).toBeUndefined();
+  });
+});
+
+describe("the CLI with --tags", () => {
+  test("reads the fixture and exits 1 on the morning state, without the registry", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dist-tags-"));
+    const file = join(dir, "morning.json");
+    writeFileSync(file, JSON.stringify(MORNING));
+    const root = new URL("../..", import.meta.url).pathname;
+    const proc = Bun.spawn(["bun", "run", "scripts/check-dist-tags.ts", "--tags", file], {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [code, out, err] = await Promise.all([
+      proc.exited,
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+    ]);
+    expect(code).toBe(1);
+    expect(out).toContain(file);
+    expect(err).toContain("next (3.0.0-next.1) is behind latest (3.0.5)");
+  });
+});
+
+describe("checkTags retries a lagging registry", () => {
+  test("a stale read then a fresh one passes, after two reads", async () => {
+    const answers = [MORNING, { legacy: "1.0.4", next: "3.0.6-next.0", latest: "3.0.5" }];
+    const result = await checkTags(async () => answers.shift() ?? answers[0]!, { tries: 5, sleep: noSleep });
+    expect(result.problem).toBeUndefined();
+    expect(result.reads).toBe(2);
+    expect(result.tags.next).toBe("3.0.6-next.0");
+  });
+
+  test("a registry that stays stale fails after the last read, not the first", async () => {
+    let calls = 0;
+    const result = await checkTags(async () => (calls++, MORNING), { tries: 3, sleep: noSleep });
+    expect(result.problem).toContain("next (3.0.0-next.1) is behind latest (3.0.5)");
+    expect(calls).toBe(3);
+    expect(result.reads).toBe(3);
+  });
+
+  test("one read, no retry, when tries is 1 (the fixture path)", async () => {
+    let calls = 0;
+    const result = await checkTags(async () => (calls++, MORNING), { tries: 1, sleep: noSleep });
+    expect(result.problem).toBeDefined();
+    expect(calls).toBe(1);
   });
 });

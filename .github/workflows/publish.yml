@@ -4,10 +4,14 @@
 # provenance. A pre-release version (x.y.z-next.N) goes under the `next`
 # dist-tag, anything else under `latest`.
 #
-# Two jobs, so the OIDC token exists in as few steps as possible: `verify` runs
+# Two jobs do the publishing, so the OIDC token exists in as few steps as
+# possible: `verify` runs
 # the checks, the build, the published-manifest step and `npm pack`, and uploads
 # the tarball; `publish` alone holds `id-token: write` and downloads the tarball,
 # re-checks its version and publishes it — no checkout, no install, no build.
+# A third job, `dist-tags`, re-reads the registry after the publish and fails if
+# `next` was left behind `latest`; nothing needs it, so its failure is loud but
+# blocks neither the publish nor the GitHub Release.
 # The tag's commit must be on main and the version must be package.json's; a
 # tag ruleset protecting v* (only the owner creates them) is recommended.
 # The step "A material release is 3.0.0 or later" refuses a `material` version
@@ -136,13 +140,19 @@ jobs:
           esac
           npm publish "$tgz" --provenance --access public --tag "$dist"
 
-      # The state this publish left, not the publish itself: once npm has the
-      # version, `next` must not sort below `latest` (a stable release whose
-      # old `next` tag stays behind would leave `material@next` older than
-      # `material`). The check runs after `npm publish`, so it fails loudly
-      # and can never block a publish; it reads the registry again and does
-      # not change which tag was chosen. It needs this repository's checkout
-      # and Bun, only to run scripts/check-dist-tags.ts.
+  # The state a publish left, checked loudly but blocking nothing: once npm has
+  # the version, `next` must not sort below `latest` (a stable release whose
+  # old `next` tag stays behind would leave `material@next` older than
+  # `material`). Its own job, needing only `publish`, so a failure fails this
+  # job alone — it can neither block the publish (already done) nor skip the
+  # GitHub Release (which needs `publish`, not this). The check re-reads the
+  # registry with a bounded retry, because the registry can still answer with
+  # the previous tags right after a publish; it never changes which tag was
+  # chosen.
+  dist-tags:
+    needs: publish
+    runs-on: ubuntu-24.04
+    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
