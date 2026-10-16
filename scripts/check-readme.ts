@@ -44,6 +44,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import * as sass from "sass";
 
 import { createPackageFixture, run } from "./package-fixture";
 import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
@@ -259,6 +260,15 @@ try {
   for (const doc of docs) {
     for (const block of doc.blocks) {
       const where = `${block.file}:${block.line}`;
+      if (block.lang === "scss") {
+        try {
+          sass.compileString(block.code, {
+            loadPaths: [join(directory, "node_modules")], logger: sass.Logger.silent,
+          });
+        } catch (error) {
+          fail(`${where}: Sass example does not compile against the packed package: ${error}`);
+        }
+      }
       if (["typescript", "ts", "tsx"].includes(block.lang)) {
         const previous = doc.blocks[doc.blocks.indexOf(block) - 1];
         scripts.push({ block, code: block.continues ? `${previous.code}\n${block.code}` : block.code, tsx: block.lang === "tsx" });
