@@ -108,6 +108,14 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       button.element.addEventListener(type, (event) => baseComponent.emit?.(type, event));
     }
 
+    // The badge goes on the tab's icon, else its label, as the tabs specs anchor
+    // it. Both sit inside the button, so the anchor has a parent whether or not
+    // the tab is in the list yet.
+    const badgeAnchor = (): HTMLElement =>
+      button.element.querySelector<HTMLElement>(`.${baseComponent.getClass("button__icon")}`) ??
+      button.element.querySelector<HTMLElement>(`.${baseComponent.getClass("button__text")}`) ??
+      button.element;
+
     // Create the tab component with enhanced API
     const tab: TabComponent = {
       ...baseComponent,
@@ -219,10 +227,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           // so the target has a parent whether or not the tab is in the list yet
           // (withAttachment places a badge only against a parented target), and
           // the button stays the row's flex item.
-          const anchor =
-            this.element.querySelector<HTMLElement>(`.${this.getClass("button__icon")}`) ??
-            this.element.querySelector<HTMLElement>(`.${this.getClass("button__text")}`) ??
-            this.element;
+          const anchor = badgeAnchor();
           const badgeConfig = {
             label: content,
             standalone: false,
@@ -302,6 +307,15 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         // An icon-only tab is named by `ariaLabel`; a visually hidden label names
         // the rest. What stood here could never set a name (icon-only means no
         // text) and removed the one `ariaLabel` gave.
+
+        // The badge wraps the icon, else the label, and the tab can lose or gain
+        // its icon after the badge was placed: wrapped in what is there now.
+        const wrapper = this.badge?.wrapper;
+        const anchor = badgeAnchor();
+        if (wrapper && anchor !== this.element && wrapper.firstElementChild !== anchor) {
+          wrapper.replaceWith(...Array.from(wrapper.childNodes));
+          this.badge?.attachTo(anchor);
+        }
       },
     };
 
