@@ -6,6 +6,7 @@ import type {
   TextFieldVariant,
   TextFieldEvents,
 } from "./types";
+import { checkTrailingLabel } from "./features/trailing-icon";
 
 /**
  * Component interface with density feature
@@ -329,6 +330,12 @@ export const withAPI =
       // Event handling
       on<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.on?.(event, handler);
+        // A direct env check is removed by production bundlers; raw ESM may have no process.
+        try {
+          if (process.env.NODE_ENV !== "production" && event === "trailing" && component.trailingIcon?.tagName === "SPAN" && !(handler as typeof handler & { __mtrlBridge?: boolean }).__mtrlBridge) {
+            checkTrailingLabel(component.element);
+          }
+        } catch { /* A diagnostic must not break a field without a Node environment. */ }
         return this;
       },
 

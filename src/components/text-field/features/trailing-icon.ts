@@ -4,6 +4,18 @@ import { BaseComponent, ElementComponent } from '../../../core/compose/component
 
 import { setHTML } from "../../../core/dom/html";
 import { fieldOf } from './field';
+import { warnDev } from '../../../core/utils/warn';
+
+let warned: WeakSet<HTMLElement> | undefined;
+/** Development diagnostic, shared by the factory and its element host. */
+export const checkTrailingLabel = (element: HTMLElement): void => {
+  const host = (element.getRootNode() as ShadowRoot).host as (HTMLElement & { component?: { element: HTMLElement } }) | undefined;
+  if (host?.component?.element === element) element = host;
+  if ((warned ??= new WeakSet()).has(element)) return;
+  warned.add(element);
+  warnDev('text field', 'Missing trailingIconLabel / trailing-icon-label.');
+};
+
 /**
  * Extended element component with input field
  */

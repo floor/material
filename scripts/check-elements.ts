@@ -18,6 +18,7 @@ import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkTextFieldTrailing, trailingActivation, trailingFocus } from "./check-text-field-trailing";
+import { checkTextFieldWarning } from "./check-text-field-warning";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
@@ -4362,6 +4363,8 @@ try {
   }
 
   await checkTextFieldTrailing(browser, check);
+  await checkTextFieldWarning(browser);
+  check("text field: an unlabeled trailing listener warns once in development, never in production");
 
   // ---------------------------------------------------------------- progress
   await fresh(
