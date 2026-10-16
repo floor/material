@@ -213,7 +213,12 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
 
       // Badge methods
       setBadge(content) {
-        if (!this.badge) {
+        // Also recreate when the badge there is has no wrapper: one created
+        // while this tab's element was detached was never inserted anywhere
+        // (withAttachment drops a parentless target), and content updates
+        // cannot attach it. Against a parented target the new badge wraps the
+        // button in place.
+        if (!this.badge || !this.badge.wrapper) {
           const badgeConfig = {
             label: content,
             standalone: false,

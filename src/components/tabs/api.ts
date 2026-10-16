@@ -74,15 +74,22 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
         mergedConfig.value = ''; // Default empty value
       }
       
-      // Create the tab
-      const tab = createTab(mergedConfig);
-      
+      // Create the tab without its badge: withAttachment places one only
+      // against a parented target, which the button is not until the append
+      // below. Set right after the tab joins the list, as the initial tabs are.
+      const tab = createTab({ ...mergedConfig, badge: undefined });
+
       // Add to internal tabs array
       component.tabs.push(tab);
-      
+
       // Add to DOM
       const targetContainer = component.tabsContainer;
       targetContainer.appendChild(tab.element);
+
+      // The config badge, created against a button that is now in the list
+      if (mergedConfig.badge !== undefined) {
+        tab.setBadge(mergedConfig.badge);
+      }
       
       // One listener: on() when the tab has it, the DOM otherwise. Both at once
       // ran handleTabClick twice per click.
