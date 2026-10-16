@@ -15,8 +15,10 @@ const STEP_NAME = "A material release is 3.0.0 or later";
 
 interface Step { name?: string; run?: string }
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
-const workflow = YAML.parse(await Bun.file(".github/workflows/publish.yml").text()) as { jobs: { publish: { steps: Step[] } } };
-const step = workflow.jobs.publish.steps.find(candidate => candidate.name === STEP_NAME);
+const workflow = YAML.parse(await Bun.file(".github/workflows/publish.yml").text()) as {
+  jobs: { verify: { steps: Step[] }; publish: { needs?: string; steps: Step[] } };
+};
+const step = workflow.jobs.verify.steps.find(candidate => candidate.name === STEP_NAME);
 
 /** Runs the step's text under `sh`, with `name` and `version` written to a package.json in a fresh directory. */
 const runStep = async (name: string, version: string): Promise<{ code: number; stdout: string; stderr: string }> => {
@@ -37,13 +39,15 @@ describe("publish.yml's material major guard", () => {
     expect(step, `publish.yml has no step named "${STEP_NAME}"`).toBeDefined();
   });
 
-  // The guard is only a guard if it runs before anything can publish: its index
-  // in the job's steps is lower than that of the first step whose `run`
-  // contains `npm publish`, so moving it after "Publish" fails here.
+  // The guard is only a guard if it runs before anything can publish: the job
+  // whose steps run `npm publish` needs `verify`, and the guard is a step of
+  // `verify`, whose own steps cannot publish. Moving the guard into a job that
+  // `publish` does not need, or `npm publish` into `verify`, fails here.
   test("the guard runs before anything that publishes", () => {
-    const steps = workflow.jobs.publish.steps;
-    const publishIndex = steps.findIndex(candidate => candidate.run?.includes("npm publish"));
-    expect(steps.findIndex(candidate => candidate.name === STEP_NAME)).toBeLessThan(publishIndex);
+    const publishIndex = workflow.jobs.publish.steps.findIndex(candidate => candidate.run?.includes("npm publish"));
+    expect(publishIndex).toBeGreaterThanOrEqual(0);
+    expect(workflow.jobs.publish.needs).toBe("verify");
+    expect(workflow.jobs.verify.steps.some(candidate => candidate.run?.includes("npm publish"))).toBe(false);
   });
 
   // The package name decides: `mtrl` publishes any version, `material` only 3

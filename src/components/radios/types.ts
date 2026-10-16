@@ -193,7 +193,7 @@ export interface RadiosComponent {
    */
   disable: () => RadiosComponent;
 
-  /** Whether the whole group is disabled (FLO-384) */
+  /** Whether the whole group is disabled */
   isDisabled: () => boolean;
   
   /**

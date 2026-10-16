@@ -1,6 +1,6 @@
 // test/components/menu/close-contract.test.ts
 //
-// FLO-548, the overlays' open / close contract, for the menu and the two
+// The overlays' open / close contract, for the menu and the two
 // components that hold one (select, split button): when open() or close()
 // returns, isOpen() has changed and the event has been emitted. The class,
 // the fade and the removal follow. Open on an open menu and close on a closed

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-// The opt-in JSX entries (FLO-333): each fixture compiles on its own, since an
+// The opt-in JSX entries: each fixture compiles on its own, since an
 // augmentation, once imported, applies to the whole program.
 const tsc = (file: string, jsx: string[]): { code: number; output: string } => {
   const result = Bun.spawnSync([

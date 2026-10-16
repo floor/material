@@ -60,7 +60,7 @@ try {
         await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
         assert.equal(await page.evaluate(() => document.body.firstElementChild!.querySelectorAll(":scope > template[shadowrootmode]").length), 0, `${name}/${fixture.name}: leftover template`);
         // The upgrade sets the roving tabindex on the toolbar's default-slot
-        // targets (FLO-387). The server wrote none, so that light DOM changes.
+        // targets. The server wrote none, so that light DOM changes.
         if (fixture.name !== "toolbar") assert.equal(await page.evaluate(() => document.body.firstElementChild!.innerHTML), before, `${name}/${fixture.name}: light DOM preserved`);
         assert.deepEqual(errors, [], `${name}/${fixture.name}: browser errors`);
       }

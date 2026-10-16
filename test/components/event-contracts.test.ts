@@ -15,7 +15,7 @@ import createDatePicker from "../../src/components/datepicker";
 import createTimePicker from "../../src/components/timepicker";
 const mount = callbacksFixture();
 
-test("button toggle change carries selected and the button's value, as getValue() reads it (FLO-380)", () => {
+test("button toggle change carries selected and the button's value, as getValue() reads it", () => {
   const c = mount(createButton({ toggle: true, value: "bold" }));
   const seen: unknown[] = [];
   c.on("change", payload => seen.push([payload, c.getValue()]));

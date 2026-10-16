@@ -20,7 +20,7 @@ const NOTCH_PADDING = 4;
  * The fields waiting for a placement pass, each a read that returns its
  * write. Fields scheduled in the same task are measured together, then
  * written together: one layout for all of them, not one per field, whose
- * reads and writes interleaved (FLO-335).
+ * reads and writes interleaved.
  */
 const pending = new Set<() => () => void>();
 let flushing: ReturnType<typeof setTimeout> | null = null;
@@ -76,7 +76,7 @@ export const withPlacement =
     let destroyed = false;
     // The observers and the resize listener are installed on the first request
     // for placement, not at construction: a field with nothing to place does not
-    // observe itself (FLO-378). Every setter that can give it something to place
+    // observe itself. Every setter that can give it something to place
     // (variant, label, icons, prefix, suffix, required, density) asks.
     let listening = false;
     const ensureListening = (): void => {
@@ -117,7 +117,7 @@ export const withPlacement =
         outline.appendChild(segment);
         if (part === "notch") notch = segment;
       }
-      // Beside the input, in the field (FLO-300)
+      // Beside the input, in the field
       if (component.input) component.input.after(outline);
       else component.element.appendChild(outline);
     };
@@ -130,7 +130,7 @@ export const withPlacement =
     /**
      * Reads what placing the notch and padding the input beside a prefix or
      * suffix needs, and returns the write that applies it: the batch runs every
-     * field's read before any field's write (FLO-335).
+     * field's read before any field's write.
      */
     const measure = (): (() => void) => {
       if (destroyed || !component.element || !component.element.isConnected) return () => {};
@@ -156,7 +156,7 @@ export const withPlacement =
         // Size the notch to the floated label and open it while the label floats
         if (isOutlined) ensureOutline();
         // Both variants: the stylesheet's mirror follows --rtl where an
-        // ancestor's `dir` cannot reach, inside a shadow root (FLO-562)
+        // ancestor's `dir` cannot reach, inside a shadow root
         element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         if (outline && notch) {
           if (labelWidth > 0) notch.style.width = `${labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2}px`;
@@ -165,7 +165,7 @@ export const withPlacement =
 
         // The prefix and suffix widths, for the stylesheet: it adds each to
         // the inset its side has (an icon, the density, the direction) to pad
-        // the input (FLO-299). The label is the stylesheet's alone.
+        // the input. The label is the stylesheet's alone.
         affixes.forEach((width, end) => {
           if (width !== undefined) element.style.setProperty(`--${PREFIX}-${COMPONENT}-${end ? "suffix" : "prefix"}-width`, `${width}px`);
         });
@@ -220,7 +220,7 @@ export const withPlacement =
 
     // A filled field with no prefix, suffix or leading icon has nothing to
     // place: the label sits where the stylesheet puts it. Its observers and
-    // its first measure wait for a request (FLO-378).
+    // its first measure wait for a request.
     // A filled field with only a leading icon is a no-op too, but stays on the
     // measuring side. The rest: the first placement in the next batch with the
     // other fields created in this task.
@@ -230,7 +230,7 @@ export const withPlacement =
       has("with-leading-icon") ||
       component.element.querySelector(`.${PREFIX}-${COMPONENT}__prefix, .${PREFIX}-${COMPONENT}__suffix`) !== null;
     // Unless it is in a shadow root, where an ancestor's `dir` does not reach
-    // the stylesheet: there one measure sets --rtl (FLO-562). Asked in the
+    // the stylesheet: there one measure sets --rtl. Asked in the
     // batch, as the field has no root yet; a root with a host is a shadow root.
     const inShadowRoot = (): (() => void) => ((component.element.getRootNode() as ShadowRoot).host ? measure() : () => {});
     if (needsPlacement) schedulePositionUpdate();

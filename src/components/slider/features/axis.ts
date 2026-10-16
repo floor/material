@@ -7,7 +7,7 @@ import type { SliderConfig } from "../types";
  * layout direction is RTL). Vertical runs bottom to top -- "zero is at the bottom"
  * (m3.material.io slider guidelines) -- unless `topToBottom` is set, the flag
  * Compose's VerticalSlider takes; Compose defaults it to true, the site to the
- * opposite, and the site wins. FLO-251, FLO-252.
+ * opposite, and the site wins.
  *
  * `start` is the CSS property a position along the track is written to, `size` the
  * one a length along it is, and `cross` the thickness.

@@ -42,7 +42,7 @@ describe('datepicker input', () => {
   });
 });
 
-// FLO-289: the field's read-only, required and supporting-text states.
+// The field's read-only, required and supporting-text states.
 describe('datepicker field states', () => {
   const mount = (config: Parameters<typeof createDatePicker>[0] = {}) => {
     const picker = createDatePicker(config);

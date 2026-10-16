@@ -179,7 +179,7 @@ describe('select', () => {
 // ArrowDown opens the menu -- so the refusing half had no test, and it is the
 // half that keeps a select from behaving like a text field.
 // What the three events hand their handlers. `SelectEvents` has been typed
-// since before FLO-114, but nothing asserted that the payloads actually match
+// since before, but nothing asserted that the payloads actually match
 // it -- and one of them does not.
 describe('what open, close and change hand a handler', () => {
   test('change carries the value and text of the chosen option', async () => {
@@ -209,12 +209,12 @@ describe('what open, close and change hand a handler', () => {
     await wait(300);
 
     for (const key of ['open', 'close']) {
-      // No preventDefault / defaultPrevented since FLO-548: neither event can be cancelled
+      // No preventDefault / defaultPrevented: neither event can be cancelled
       expect(Object.keys(seen[key]).sort()).toEqual(['originalEvent', 'select']);
     }
   });
 
-  test('.select is the finished public select -- FLO-236', async () => {
+  test('.select is the finished public select', async () => {
     const select = await mount();
     const seen: import('../../../src/components/select/types').SelectEvent[] = [];
     select.on('open', event => { seen.push(event); });

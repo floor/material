@@ -5,7 +5,7 @@
 // and under `strictFunctionTypes` a host promising to call a method with
 // *anything* cannot accept one that takes typed parameters — which is what
 // made the pipe in menu.ts fail to resolve, typing every stage after it
-// `unknown` and producing menu's other three errors (FLO-114).
+// `unknown` and producing menu's other three errors.
 //
 // The signatures are now taken from the implementations in `features/`. They
 // are asserted here because the placeholder they replaced was accepted by

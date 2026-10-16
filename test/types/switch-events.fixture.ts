@@ -1,4 +1,4 @@
-// FLO-114: public switch event names and the actual native/programmatic payload.
+// Public switch event names and the actual native/programmatic payload.
 import createSwitch, {
   SWITCH_EVENTS,
   type SwitchComponent,
@@ -10,7 +10,7 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const control = createSwitch();
-// FLO-267: focus and blur are emitted too.
+// Focus and blur are emitted too.
 export const emittedEvents: Equals<keyof SwitchEvents, "change" | "focus" | "blur" | "tap" | "swipe"
 > = true;
 export const callbackPayload: Equals<
@@ -61,7 +61,7 @@ control.on("change", payload => payload.target.checked);
 // @ts-expect-error nativeEvent is an Event, not an arbitrary object
 export const invalidNativeEvent: SwitchChangePayload = { checked: true, value: true, valueAttribute: "yes", nativeEvent: {} };
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<SwitchEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<SwitchEvents["swipe"]>[0], SwipePayload> = true;

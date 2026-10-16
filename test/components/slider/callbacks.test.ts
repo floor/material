@@ -8,7 +8,7 @@ const mount = callbacksFixture();
 test("slider setters and keyboard events expose the finished slider", async () => {
   const seen: SliderEvent[] = [];
   const slider = mount(createSlider({ value: 20, secondValue: 80, range: true, on: { change: event => { seen.push(event); } } }));
-  // Setters are silent unless asked (FLO-328).
+  // Setters are silent unless asked.
   slider.setValue(30, true);
   slider.setSecondValue(70, true);
   await wait();

@@ -77,7 +77,7 @@ export interface WithElementOptions {
   tabIndex?: number; // Keyboard navigation order (-1 to remove from tab order, 0+ for custom order)
   // Inline styles. Object only: a style string is written verbatim to the
   // style attribute, so one interpolated value can carry extra declarations
-  // (FLO-111). Assigning per property confines a value to that property.
+  // Assigning per property confines a value to that property.
   style?: Partial<CSSStyleDeclaration>;
   // Data attributes
   data?: Record<string, string>; // Data attributes (e.g., { name: 'value' } → data-name="value")
@@ -137,7 +137,7 @@ export const createBase = <T extends BaseConfig & object = BaseConfig & object>(
   // Generic over the config, so a component keeps the type it was created
   // with. Declared as BaseComponent it was widened to a Record here, and
   // every reader downstream saw `unknown` for its own options — which is why
-  // the hand-written pre-API interfaces could never match (FLO-235).
+  // the hand-written pre-API interfaces could never match.
   config: config as BaseComponent["config"] & T,
   componentName: config.componentName,
   ...withPrefix(config.prefix || "mtrl"),

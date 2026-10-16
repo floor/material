@@ -99,7 +99,7 @@ const secondsOf = (time: string | undefined): number | undefined => {
 };
 
 /**
- * The limits `minTime` and `maxTime` set (FLO-281). Missing or invalid bounds
+ * The limits `minTime` and `maxTime` set. Missing or invalid bounds
  * leave the day open at that end.
  */
 export const limitsOf = (minTime?: string, maxTime?: string): TimeLimits => ({
@@ -118,7 +118,7 @@ export const secondsOfTime = (time: TimeValue): number =>
 /**
  * The nearest selectable time: inside the limits and on the minute and second
  * steps. A time before the earliest moves up to the first step at or after it,
- * one after the latest down to the last step at or before it (FLO-281).
+ * one after the latest down to the last step at or before it.
  */
 export const constrainTime = (
   time: TimeValue,

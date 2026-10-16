@@ -22,7 +22,7 @@ $supporting-row: 20px;
   width: v.text-field('width');
   height: v.text-field('height');
   // The input's line, where the upgraded field's text is: 24px down under a
-  // label (FLO-299). The half pixel is the line's baseline, as measured: with
+  // label. The half pixel is the line's baseline, as measured: with
   // it, the sibling on this line does not move at upgrade.
   padding: 24.5px (v.text-field('padding-horizontal') + $trailing) 0 v.text-field('padding-horizontal');
   border-radius: v.text-field('border-radius') v.text-field('border-radius') 0 0;
@@ -90,7 +90,7 @@ $supporting-row: 20px;
     }
   }
 
-  // The supporting text row (FLO-300): upgraded, the field gets a row under
+  // The supporting text row: upgraded, the field gets a row under
   // it, 4dp and a 16dp body-small line, when it has supporting text or a
   // counter (a maxlength). The host reserves the row as a transparent bottom
   // border, so the fill stays on the 56px field (clipped to the padding box)

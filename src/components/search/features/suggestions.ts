@@ -24,7 +24,7 @@ interface SuggestionsHost {
     // passes an element of `getSuggestions()`, which is `SearchSuggestion[]`.
     // A host declaring the wider union promises to hand the producer a plain
     // string, which it cannot take -- contravariant and unsound, and the
-    // second of the two roots behind search's cascade. FLO-114.
+    // second of the two roots behind search's cascade.
     selectSuggestion: (suggestion: SearchSuggestion) => void;
   };
   // SearchStructure, not a loose record: the record said
@@ -139,7 +139,7 @@ export const withSuggestions =
     });
     label.append(...highlightMatch(suggestion.text, query));
 
-    // A second line: M3's two-line list item (FLO-291). Text, not markup.
+    // A second line: M3's two-line list item. Text, not markup.
     if (suggestion.supportingText) {
       item.classList.add(getClass(`${SEARCH_CLASSES.SUGGESTION_ITEM}--two-line`));
       const supporting = createElement({ tag: "span", className: getClass(SEARCH_CLASSES.SUGGESTION_SUPPORTING), container: label });
@@ -178,7 +178,7 @@ export const withSuggestions =
     // The list is drawn anew with nothing highlighted.
     highlightedIndex = -1;
     component.structure?.input.removeAttribute("aria-activedescendant");
-    // The count is announced as it changes, while the list shows (FLO-286).
+    // The count is announced as it changes, while the list shows.
     const status = component.structure?.status;
     const count = suggestions.length;
     if (status) status.textContent = count && component.states?.isExpanded() ? `${count} suggestion${count === 1 ? "" : "s"}` : "";
@@ -209,7 +209,7 @@ export const withSuggestions =
 
       // Hover is only a look (:hover). It set the keyboard highlight, which Tab
       // and Enter act on, so a list opening under a still pointer had a
-      // suggestion chosen by the next Tab. FLO-285.
+      // suggestion chosen by the next Tab.
 
       suggestionsList.appendChild(item);
     });
@@ -273,7 +273,6 @@ export const withSuggestions =
 
         // Scroll into view if needed. No `behavior`: the list's stylesheet
         // scrolls it smoothly, and the reduced-motion reset turns that off
-        // (FLO-553).
         (newItem as HTMLElement).scrollIntoView({ block: "nearest" });
       }
     }

@@ -1,6 +1,6 @@
 // test/components/is-disabled.test.ts
 //
-// FLO-384: every component that can be disabled answers isDisabled(), reading
+// Every component that can be disabled answers isDisabled(), reading
 // the state its own disable() and enable() set, and the config's `disabled`.
 import { describe, expect, test } from "bun:test";
 import { callbacksFixture } from "./callbacks.fixture";
@@ -35,7 +35,7 @@ const factories: Array<[string, (disabled: boolean) => Disableable]> = [
   ["tab", (disabled) => createTab({ text: "Trips", value: "trips", disabled })],
 ];
 
-describe("isDisabled() on every component that can be disabled (FLO-384)", () => {
+describe("isDisabled() on every component that can be disabled", () => {
   for (const [name, create] of factories) {
     test(`${name}: follows disable(), enable() and the disabled config`, () => {
       const component = mount(create(false));
@@ -49,7 +49,7 @@ describe("isDisabled() on every component that can be disabled (FLO-384)", () =>
   }
 });
 
-test("createTab is exported from the tabs entry: the factory a tablist uses for its tabs (FLO-384)", () => {
+test("createTab is exported from the tabs entry: the factory a tablist uses for its tabs", () => {
   expect(createTab).toBe(tabFactory);
   const tab = mount(createTab({ text: "Hotels", value: "hotels" }));
   expect(tab.element.getAttribute("role")).toBe("tab");

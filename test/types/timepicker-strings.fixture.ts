@@ -1,6 +1,6 @@
 // test/types/timepicker-strings.fixture.ts
 //
-// FLO-323: format, type and orientation were TypeScript enums only, so
+// Format, type and orientation were TypeScript enums only, so
 // `format: '24h'` was a type error, unlike every other component's string
 // options. They take the enum or its string value now; the getters still
 // return the enum.

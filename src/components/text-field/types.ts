@@ -87,12 +87,12 @@ export interface TextFieldConfig {
   /** Placeholder text */
   placeholder?: string;
 
-  /** Whether input is required; the label gets an asterisk (FLO-301) */
+  /** Whether input is required; the label gets an asterisk */
   required?: boolean;
 
   /**
    * No asterisk on a required field: M3 lets a form whose fields are mostly
-   * required mark its optional ones instead (FLO-301)
+   * required mark its optional ones instead
    */
   noAsterisk?: boolean;
 
@@ -121,7 +121,7 @@ export interface TextFieldConfig {
    * Makes the trailing icon a button with this accessible name (clear, show
    * password, …), emitting `trailing` when activated. Without it the icon is
    * decorative. M3 draws an interactive trailing icon as an icon button, as
-   * Compose's trailing slot holds an `IconButton` (FLO-301).
+   * Compose's trailing slot holds an `IconButton`.
    */
   trailingIconLabel?: string;
 
@@ -164,7 +164,7 @@ export interface TextFieldFocusPayload {
 
 /** Events emitted by the text input feature. setValue() is silent. */
 export interface TextFieldEvents {
-  /** The trailing icon button was activated (`trailingIconLabel`; FLO-301) */
+  /** The trailing icon button was activated (`trailingIconLabel`) */
   trailing: (payload: TextFieldTrailingPayload) => void;
   input: (payload: TextFieldValuePayload) => void;
   change: (payload: TextFieldValuePayload) => void;
@@ -181,7 +181,7 @@ export interface TextFieldComponent {
 
   /**
    * The container: label, input, outline, icons and affixes, above the
-   * supporting text row. Anchor popovers to it (FLO-300).
+   * supporting text row. Anchor popovers to it.
    */
   field: HTMLElement;
 
@@ -237,7 +237,7 @@ export interface TextFieldComponent {
   /** Removes the trailing icon */
   removeTrailingIcon: () => TextFieldComponent;
 
-  /** Makes the field required or optional, the label's asterisk with it (FLO-301) */
+  /** Makes the field required or optional, the label's asterisk with it */
   setRequired: (required: boolean) => TextFieldComponent;
 
   /** Whether the field is required */
@@ -297,7 +297,7 @@ export interface TextFieldComponent {
   /** Disables the text field */
   disable: () => TextFieldComponent;
 
-  /** Whether the text field is disabled (FLO-384) */
+  /** Whether the text field is disabled */
   isDisabled: () => boolean;
 
   /** Destroys the text field component and cleans up resources */
@@ -374,7 +374,7 @@ export interface BaseComponent {
 /**
  * Registers TextFieldConfig with the global defaults map, so
  * `setComponentDefaults("text-field", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

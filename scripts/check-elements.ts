@@ -16,9 +16,10 @@ import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
-import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
+import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -98,7 +99,7 @@ const check = (name: string): void => {
 };
 
 /**
- * FLO-320: one handler reading `value` works on both flavours. Clicks the
+ * One handler reading `value` works on both flavours. Clicks the
  * shadow-root targets of element `id` in turn (a selector and the index of the
  * match) and returns what a factory handler (on the host's component) and a
  * DOM listener each read.
@@ -120,7 +121,7 @@ const payloadParity = (page: Page, id: string, event: string, targets: Array<[st
 
 /**
  * The same proof for a pair of event names, or for an action that is not a
- * click (FLO-320 part 2): `act` runs in the page with `host` in scope, the
+ * click (part 2): `act` runs in the page with `host` in scope, the
  * factory handler listens on `factory` (an expression of `host`), and reads
  * `field`, the element's `value` unless it has another name.
  */
@@ -164,7 +165,7 @@ try {
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
 
-  // FLO-380: each model payload agrees with the public getter during dispatch.
+  // Each model payload agrees with the public getter during dispatch.
   await fresh(page, `<m-timepicker id="event-time"></m-timepicker>
     <m-select id="event-select" value="a"><m-select-option value="a">Alpha</m-select-option><m-select-option value="">None</m-select-option></m-select>
     <m-radios id="event-radios"><m-radio value="a">Alpha</m-radio><m-radio value="">None</m-radio></m-radios>`);
@@ -296,7 +297,7 @@ try {
     assert.equal(state.wifi, null);
     check("switch: setting the property fires no event and updates the form value");
 
-    // FLO-328: the methods are silent too; the model still follows them
+    // The methods are silent too; the model still follows them
     // (form value, dirty) without the event, and reset returns to the default.
     const methods = await page.evaluate(() => {
       type Switch = HTMLElement & { checked: boolean; toggle(): void; check(): void; uncheck(): void };
@@ -333,7 +334,7 @@ try {
     assert.equal(await page.evaluate(() => (document.getElementById("s") as HTMLElement & { checked: boolean }).checked), true);
     check("switch: an outer <label for> toggles it");
 
-    // FLO-328: the slot's attribute is a real property.
+    // The slot's attribute is a real property.
     const label = await page.evaluate(async () => {
       type Labelled = HTMLElement & { label: string | null };
       const slotted = document.getElementById("s") as Labelled;
@@ -378,7 +379,7 @@ try {
     assert.equal(disabled, true);
     check("switch: the disabled attribute disables the inner input");
 
-    // FLO-318: error updates through setError; supporting text never ends it
+    // Error updates through setError; supporting text never ends it
     const errors = await page.evaluate(() => {
       const s = document.getElementById("s") as HTMLElement & { component: { isError: () => boolean } };
       s.removeAttribute("disabled");
@@ -675,7 +676,7 @@ try {
     assert.equal(await page.getByRole("button", { name: "Renamed" }).count(), 1);
     check("button: a label attribute change updates the name");
 
-    // FLO-328: the slot's attribute is a real property, as `label` is on a native <option>.
+    // The slot's attribute is a real property, as `label` is on a native <option>.
     const label = await page.evaluate(async () => {
       type Labelled = HTMLElement & { label: string | null };
       const attr = document.getElementById("attr") as Labelled;
@@ -721,7 +722,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("button: renders as the factory does with the global stylesheet");
 
-    // FLO-380: a toggle button's change crosses to the host with the button's value,
+    // A toggle button's change crosses to the host with the button's value,
     // the getter's value read inside the listener. The element has no toggle
     // attribute yet, so the toggle comes from scoped global defaults.
     const toggled = await page.evaluate(() => {
@@ -745,7 +746,7 @@ try {
       }
     });
     assert.deepEqual(toggled, [[{ selected: true, value: "bold" }, "bold"], [{ selected: false, value: "bold" }, "bold"]]);
-    check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it (FLO-380)");
+    check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it");
   }
 
   // Leading icon: the start inset and the end inset match in both directions
@@ -885,7 +886,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295). 3.0.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
+      // `change`. 3.0.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -896,7 +897,7 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    // FLO-380: change carries the button's value beside selected.
+    // Change carries the button's value beside selected.
     assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
     check("icon button: a click dispatches one change from the host with { selected, value } and no toggle; click stays native");
@@ -1128,7 +1129,7 @@ try {
     assert.equal(clicks, 1);
     check("extended fab: a click reaches the host once, not re-dispatched");
 
-    // FLO-319: collapse and expand leave the shadow root, from the host, once each
+    // Collapse and expand leave the shadow root, from the host, once each
     const toggles = await page.evaluate(() => {
       const eb = document.getElementById("eb") as HTMLElement & { collapse: () => void; expand: () => void };
       const seen: string[] = [];
@@ -1154,6 +1155,93 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("extended fab: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- fab corners
+  // A FAB in a corner keeps that corner in every state. The state layer sets
+  // `position: relative` on its host; written inside a state rule that is
+  // (0,2,0), so it outranked the corner class (0,1,0) and the button left its
+  // corner for the flow while hovered, focused or pressed. Both components,
+  // element and factory, four corners, left-to-right and right-to-left.
+  const corners = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+  const fabState = (id: string): Promise<{ position: string; box: number[] }> =>
+    page.evaluate((id) => {
+      const host = document.getElementById(id) as HTMLElement;
+      const el = (host.shadowRoot?.querySelector("button") as HTMLElement | null) ?? host;
+      const r = el.getBoundingClientRect();
+      return { position: getComputedStyle(el).position, box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)] };
+    }, id);
+  const deepFocus = (): Promise<{ id: string | null; focusVisible: boolean } | null> =>
+    page.evaluate(() => {
+      let el: Element | null = document.activeElement;
+      while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+      if (!el || el === document.body) return null;
+      const root = el.getRootNode();
+      const host = (root instanceof ShadowRoot ? root.host : el) as HTMLElement;
+      return { id: host.id || null, focusVisible: el.matches(":focus-visible") };
+    });
+  const focusByTab = async (id: string): Promise<boolean> => {
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    for (let press = 0; press < 8; press++) {
+      await page.keyboard.press("Tab");
+      const active = await deepFocus();
+      if (active?.id === id) return active.focusVisible;
+    }
+    return false;
+  };
+  const settle = (): Promise<unknown> => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
+  for (const dir of ["ltr", "rtl"] as const) {
+    for (const [kind, tag] of [["fab", "m-fab"], ["extended-fab", "m-extended-fab"]] as const) {
+      const label = (corner: string): string => (kind === "fab" ? `Fab ${corner}` : `Ext ${corner}`);
+      for (const form of ["element", "factory"] as const) {
+        const ids = corners.map((corner) => `${kind}-${form}-${corner}`);
+        const markup = form === "element"
+          ? corners.map((corner, index) => kind === "fab"
+              ? `<${tag} id="${ids[index]}" position="${corner}" aria-label="${label(corner)}" icon='${ICON}'></${tag}>`
+              : `<${tag} id="${ids[index]}" position="${corner}" icon='${ICON}'>${label(corner)}</${tag}>`
+            ).join("")
+          : `<section id="factory"></section>`;
+        await fresh(page, `<div dir="${dir}">${markup}</div>`);
+        if (form === "factory") {
+          await page.evaluate(({ kind, corners, icon }) => {
+            const w = window as unknown as Win & {
+              mtrl: { createFab: (config: object) => { element: HTMLElement }; createExtendedFab: (config: object) => { element: HTMLElement } };
+            };
+            for (const corner of corners) {
+              const made = kind === "fab"
+                ? w.mtrl.createFab({ position: corner, icon, ariaLabel: `Fab ${corner}` })
+                : w.mtrl.createExtendedFab({ position: corner, icon, text: `Ext ${corner}` });
+              made.element.id = `${kind}-factory-${corner}`;
+              document.getElementById("factory")?.append(made.element);
+            }
+          }, { kind, corners: [...corners], icon: ICON });
+          await settle();
+        }
+        for (const [index] of corners.entries()) {
+          const id = ids[index]!;
+          const rest = await fabState(id);
+          assert.equal(rest.position, "fixed", `${id}: the corner class is not fixed at rest`);
+          const [left, top, width, height] = rest.box;
+          const centre = { x: left + width / 2, y: top + height / 2 };
+          await page.mouse.move(centre.x, centre.y);
+          await settle();
+          const hovered = await fabState(id);
+          assert.deepEqual(hovered, rest, `${id} left its corner while hovered: ${JSON.stringify(hovered)}`);
+          await page.mouse.move(450, 350);
+          assert.equal(await focusByTab(id), true, `${id}: Tab does not focus it with :focus-visible`);
+          const focused = await fabState(id);
+          assert.deepEqual(focused, rest, `${id} left its corner while focused: ${JSON.stringify(focused)}`);
+          await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+          await page.mouse.move(centre.x, centre.y);
+          await page.mouse.down();
+          const pressed = await fabState(id);
+          await page.mouse.up();
+          assert.deepEqual(pressed, rest, `${id} left its corner while pressed: ${JSON.stringify(pressed)}`);
+          await page.mouse.move(450, 350);
+        }
+        check(`${kind} (${form}, ${dir}): every corner keeps its position and box at rest, hovered, focused and pressed`);
+      }
+    }
   }
 
   // ---------------------------------------------------------------- checkbox
@@ -1218,7 +1306,7 @@ try {
     assert.deepEqual(cleared, { indeterminate: false, checked: true });
     check("checkbox: indeterminate is a live property, cleared by a click");
 
-    // FLO-316: Space on a mixed box activates it as a click does
+    // Space on a mixed box activates it as a click does
     await page.evaluate(() => {
       const w = window as unknown as Win;
       const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean; checked: boolean };
@@ -1303,7 +1391,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("checkbox: renders as the factory does with the global stylesheet");
 
-    // FLO-336: the check icon, built with DOM APIs, is the DOM its old markup
+    // The check icon, built with DOM APIs, is the DOM its old markup
     // parsed to, in the browser too (the svg's xmlns in the XMLNS namespace).
     const icon = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
@@ -1320,7 +1408,7 @@ try {
     assert.equal(icon, true);
     check("checkbox: the check icon is the DOM its markup parsed to");
 
-    // FLO-336: the form state stays exact and synchronous, while a checkbox
+    // The form state stays exact and synchronous, while a checkbox
     // that stays valid does not set its validity again on every set.
     const sync = await page.evaluate(() => {
       const form = document.createElement("form");
@@ -1784,7 +1872,7 @@ try {
     assert.deepEqual(reset, { t: "new@b.c", p: "second" });
     check("text field: form.reset() restores the value attribute");
 
-    // FLO-335: an autofill fills the input without an input event and starts
+    // An autofill fills the input without an input event and starts
     // the stylesheet's onAutoFillStart animation; the label then floats, as
     // over a typed value. Simulated: the value set silently, the animation's
     // animationstart dispatched, as Chromium's :autofill would. The float
@@ -1999,7 +2087,7 @@ try {
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("text field: renders as the factory does with the global stylesheet, filled and outlined");
 
-    // FLO-305: <m-navigation-bar> renders as the factory does with the global
+    // <m-navigation-bar> renders as the factory does with the global
     // stylesheet, and a click on a destination dispatches change once with its value
     const navBar = await page.evaluate(async (icon) => {
       const w = window as unknown as Win & { mtrl: { createNavigationBar: (c: object) => { element: HTMLElement; destroy: () => void } } };
@@ -2044,9 +2132,9 @@ try {
     }, ICON);
     assert.deepEqual(navBar.element, navBar.factory, "the element renders as the factory");
     assert.deepEqual(navBar.changes, ["search", "value:search"]);
-    check("navigation bar: renders as the factory does with the global stylesheet; a click dispatches change with the value (FLO-305)");
+    check("navigation bar: renders as the factory does with the global stylesheet; a click dispatches change with the value");
 
-    // FLO-354, FLO-355: inside the shadow root too, a resting label is all the
+    // Inside the shadow root too, a resting label is all the
     // input area shows — no placeholder (even disabled), no prefix or suffix —
     // and the affixes appear once the label floats.
     const resting = await page.evaluate(async () => {
@@ -2078,11 +2166,13 @@ try {
     }
     check("text field: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
 
-    // FLO-299: the layout against the M3 measurements, inside the shadow root
+    // The layout against the M3 measurements, inside the shadow root
     await checkTextFieldLayout(page, "element");
-    check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
+    check("text field: the layout at the M3 measurements, 112 fields, in both directions");
     await checkTextFieldReducedMotion(page, "element", null);
-    check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
+    check("text field: the filled indicator's fade stops with reduced motion");
+    await checkTextFieldSearchCancel(page, "element");
+    check("text field: a search field's own trailing icon hides the browser's clear button");
 
     // The select's menu in the top layer, inside the shadow root: its width, its
     // selected option's mark in both directions, and its colours
@@ -2090,7 +2180,7 @@ try {
     await checkSelectWidth(page, "element");
     check("select: the menu is its field's width, the selected mark at the item's end in both directions, the selected option on secondary-container");
 
-    // FLO-301: the required attribute moves the input's required and the label's asterisk together
+    // The required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = '<m-text-field id="rq" label="Email"></m-text-field>';
@@ -2219,7 +2309,178 @@ try {
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
-    // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
+    // Forced colours repaints a declared-`transparent` border in the
+    // line's own colour, so with the notch open the top line was drawn through
+    // the floated label. In the mode the floated label must be clear of the
+    // line, and the outline must still be drawn: the leading and trailing
+    // segments' top borders and every segment's bottom read computed, because
+    // the input's own forced border paints the same rows the top and bottom
+    // edges do and cannot stand in for them. The floated label is held from a
+    // value, from the input's own state (a value set with no event, which the
+    // script has not seen), and in the focused, error, disabled, required and
+    // multiline states. Its own context, forced colours being one.
+    const forcedContext = await browser.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 1200 } });
+    const forcedPage = await forcedContext.newPage();
+    await forcedPage.goto(`http://127.0.0.1:${server.port}`);
+    await forcedPage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const forcedFields = await forcedPage.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement; input: HTMLInputElement } } };
+      const host = document.getElementById("host") as HTMLElement;
+      const attrs = 'variant="outlined" label="Label" value="Ada" style="width:280px"';
+      host.innerHTML = `<div style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fl"></div>
+          <m-text-field id="fc-el" ${attrs}></m-text-field>
+        </div>
+        <div dir="rtl" style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fr"></div>
+          <m-text-field id="fc-er" ${attrs}></m-text-field>
+        </div>
+        <div id="fc-states" style="padding:24px;display:grid;gap:24px;width:280px"></div>`;
+      for (const id of ["fc-fl", "fc-fr"]) {
+        const factory = w.mtrl.createTextField({ variant: "outlined", label: "Label", value: "Ada" });
+        factory.element.style.width = "280px";
+        (document.getElementById(id) as HTMLElement).append(factory.element);
+      }
+      // The floated label from the input's own state, and each outlined state
+      // the mode must keep clear: focused (the 2px line), error, disabled,
+      // required (the asterisk) and multiline.
+      const stateBox = document.getElementById("fc-states") as HTMLElement;
+      const stateField = (id: string, config: object) => {
+        const field = w.mtrl.createTextField({ variant: "outlined", label: "Label", ...config });
+        field.element.id = id;
+        field.element.style.width = "280px";
+        stateBox.append(field.element);
+        return field;
+      };
+      const noEvent = stateField("fc-nv", {});
+      const focused = stateField("fc-foc", {});
+      stateField("fc-err", { error: true, value: "Ada" });
+      stateField("fc-dis", { disabled: true, value: "Ada" });
+      stateField("fc-req", { required: true, value: "Ada" });
+      stateField("fc-ml", { type: "multiline", value: "Ada" });
+      // placement.ts, the labels' float and the border transitions
+      await new Promise((r) => setTimeout(r, 600));
+      // A value with no event floats the label and opens the notch through the
+      // input's own state: the script's --notched is never set, so the
+      // stylesheet's fallback selector is what must leave the label clear in
+      // the mode. Focus follows placement for the same reason: the class the
+      // script reads arrives with the browser's focus.
+      noEvent.input.value = "Ada";
+      focused.input.focus({ preventScroll: true });
+      await new Promise((r) => setTimeout(r, 400));
+      const box = (el: Element): { left: number; right: number; top: number; bottom: number } => {
+        const { left, right, top, bottom } = el.getBoundingClientRect();
+        return { left, right, top, bottom };
+      };
+      const edge = (el: HTMLElement): { top: string; topWidth: number; bottom: string; bottomWidth: number } => {
+        const style = getComputedStyle(el);
+        return {
+          top: style.borderTopStyle,
+          topWidth: parseFloat(style.borderTopWidth),
+          bottom: style.borderBottomStyle,
+          bottomWidth: parseFloat(style.borderBottomWidth),
+        };
+      };
+      const measure = (id: string) => {
+        const field = document.getElementById(id) as HTMLElement;
+        const root = (field.shadowRoot?.firstElementChild as HTMLElement | null) ?? field;
+        const label = root.querySelector("label") as HTMLElement;
+        const segment = (part: string): HTMLElement => root.querySelector(`[class*="text-field__outline-${part}"]`) as HTMLElement;
+        return {
+          root: box(root),
+          label: box(label),
+          line: getComputedStyle(segment("leading")).borderTopColor,
+          edges: {
+            leading: edge(segment("leading")),
+            notch: edge(segment("notch")),
+            trailing: edge(segment("trailing")),
+          },
+        };
+      };
+      return {
+        "factory ltr": measure("fc-fl"),
+        "factory rtl": measure("fc-fr"),
+        "element ltr": measure("fc-el"),
+        "element rtl": measure("fc-er"),
+        "value with no event": measure("fc-nv"),
+        focused: measure("fc-foc"),
+        error: measure("fc-err"),
+        disabled: measure("fc-dis"),
+        required: measure("fc-req"),
+        multiline: measure("fc-ml"),
+      };
+    });
+    const forcedPng = (await forcedPage.screenshot()).toString("base64");
+    const forced = await forcedPage.evaluate(async ({ png, fields }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const px = (x: number, y: number): number[] =>
+        Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3));
+      const drawn = (style: string, width: number): boolean => style !== "none" && width >= 1;
+      return Object.entries(fields).map(([name, field]) => {
+        const line = (field.line.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+        const near = (pixel: number[]): boolean => pixel.every((v, i) => Math.abs(v - (line[i] ?? 0)) <= 16);
+        const row = Math.round(field.root.top);
+        const middle = Math.round(field.root.top + (field.root.bottom - field.root.top) / 2);
+        let run = 0;
+        let longest = 0;
+        for (let x = Math.ceil(field.label.left); x <= Math.floor(field.label.right); x++) {
+          run = near(px(x, row)) ? run + 1 : 0;
+          longest = Math.max(longest, run);
+        }
+        return {
+          name,
+          line: field.line,
+          onLabel: field.label.top < field.root.top && field.label.bottom > field.root.top,
+          longest,
+          width: Math.floor(field.label.right) - Math.ceil(field.label.left) + 1,
+          drawn: {
+            "the leading segment's top edge": drawn(field.edges.leading.top, field.edges.leading.topWidth),
+            "the trailing segment's top edge": drawn(field.edges.trailing.top, field.edges.trailing.topWidth),
+            "the leading side": near(px(field.root.left, middle)),
+            "the trailing side": near(px(field.root.right - 1, middle)),
+            "the bottom edge": [field.edges.leading, field.edges.notch, field.edges.trailing]
+              .every((edge) => drawn(edge.bottom, edge.bottomWidth)),
+          },
+        };
+      });
+    }, { png: forcedPng, fields: forcedFields });
+    const forcedFailures: string[] = [];
+    for (const field of forced) {
+      const edges = Object.entries(field.drawn);
+      const missing = edges.filter(([, isDrawn]) => !isDrawn).map(([edge]) => edge);
+      console.log(`  forced colours ${field.name}: the outline's colour runs ${field.longest}px of ${field.width}px across the label; ${edges.length - missing.length}/${edges.length} edges drawn`);
+      if (!field.onLabel) forcedFailures.push(`${field.name}: the label is not floated onto the top edge`);
+      if (field.longest >= 8) forcedFailures.push(`${field.name}: the outline crosses the floated label (${field.longest}px of ${field.width}px in ${field.line})`);
+      if (missing.length > 0) forcedFailures.push(`${field.name}: the outline is not drawn on ${missing.join(", ")}`);
+    }
+    for (const line of forcedFailures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(forcedFailures, [], "forced colours: the notch leaves the floated label clear and the outline drawn");
+    await forcedContext.close();
+    // :autofill and :-webkit-autofill cannot be produced from a page: the
+    // browser fills a field, not a script (Playwright does not autofill). The
+    // two selectors are asserted on the compiled sheets instead: in the mode,
+    // each opens the notch with no top edge. `border-top-style:none` on the
+    // input-state selectors exists only inside the media query, so the exact
+    // rule is what is looked for — factory sheet and element sheet alike.
+    const inputStateRule = [
+      ".mtrl-text-field__input:not(:placeholder-shown)~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:-webkit-autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+    ].join(",") + "{border-top-style:none}";
+    for (const file of ["dist/styles.css", "dist/elements/css/text-field.css"]) {
+      const sheet = await Bun.file(file).text();
+      assert(sheet.includes(inputStateRule), `forced colours: ${file} opens the input-state notch with no top edge`);
+    }
+    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn");
+
+    // A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class
     // placement.ts sets from the computed direction. Four fields under
     // <div dir="rtl"> — filled and outlined, each a factory in the light DOM
@@ -2329,7 +2590,7 @@ try {
       rtlFailures.push(`filled element, leading icon and prefix: the input's padding ${iconPrefix.paddingLeft}/${iconPrefix.paddingRight} is not the twin's ${mirror.iconPrefixTwin.paddingRight}/${mirror.iconPrefixTwin.paddingLeft} swapped`);
     assert.deepEqual(rtlFailures, [], rtlFailures.join("\n"));
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
-    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined (FLO-562)");
+    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
@@ -2346,6 +2607,74 @@ try {
     });
     assert.deepEqual(layout, { inline: "inline-block", width: 400, focused: "INPUT", blurred: null });
     check("text field: an inline-block host whose width the field fills; focus() and blur() reach the input");
+
+    // [#60] `hidden` on an icon part must hide it. The parts' own
+    // `display: flex` is an author rule, so it beats the user agent's
+    // `[hidden] { display: none }` and the icon stays displayed — a hidden
+    // interactive icon keeps its 40px box. The padding the icon's presence
+    // reserved stays: M3 has no hidden-icon state ("Left/right padding with
+    // icons 12dp", "Padding between icons and text 16dp"), and Compose's icon
+    // slot keeps its room whatever it draws. Factory and element, both icons
+    // and an interactive trailing one; the no-icon field is the reference.
+    const iconHidden = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-text-field id="h-both" variant="filled" label="Both" value="Ada" leading-icon='${icon}' trailing-icon='${icon}'></m-text-field>
+        <m-text-field id="h-none" variant="filled" label="None" value="Ada"></m-text-field>`;
+      const factoryBoth = w.mtrl.createTextField({ variant: "filled", label: "Both", value: "Ada", leadingIcon: icon, trailingIcon: icon });
+      const factoryButton = w.mtrl.createTextField({ variant: "filled", label: "Clear", value: "Ada", trailingIcon: icon, trailingIconLabel: "Clear" });
+      const factoryNone = w.mtrl.createTextField({ variant: "filled", label: "None", value: "Ada" });
+      host.append(factoryBoth.element, factoryButton.element, factoryNone.element);
+      await new Promise((r) => setTimeout(r, 50));
+      const rootOf = (el: HTMLElement): HTMLElement => (el.shadowRoot?.firstElementChild as HTMLElement | null) ?? el;
+      const iconsOf = (root: HTMLElement): HTMLElement[] =>
+        ["leading-icon", "trailing-icon"]
+          .map((part) => root.querySelector(`[class*="text-field__${part}"]`) as HTMLElement | null)
+          .filter((el): el is HTMLElement => el !== null);
+      const pads = (root: HTMLElement): number[] => {
+        const style = getComputedStyle(root.querySelector("input") as HTMLInputElement);
+        return [style.paddingLeft, style.paddingRight].map((p) => Math.round(parseFloat(p) * 100) / 100);
+      };
+      const fields: Array<[string, HTMLElement]> = [
+        ["factory, both icons", factoryBoth.element],
+        ["factory, interactive trailing", factoryButton.element],
+        ["factory, no icon", factoryNone.element],
+        ["element, both icons", document.getElementById("h-both") as HTMLElement],
+        ["element, no icon", document.getElementById("h-none") as HTMLElement],
+      ];
+      const before: Record<string, number[]> = {};
+      for (const [name, el] of fields) before[name] = pads(rootOf(el));
+      for (const [, el] of fields) for (const el2 of iconsOf(rootOf(el))) el2.hidden = true;
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const after: Record<string, { display: string[]; box: number[][]; padding: number[] }> = {};
+      for (const [name, el] of fields) {
+        const root = rootOf(el);
+        after[name] = {
+          display: iconsOf(root).map((el2) => getComputedStyle(el2).display),
+          box: iconsOf(root).map((el2) => {
+            const r = el2.getBoundingClientRect();
+            return [Math.round(r.width * 100) / 100, Math.round(r.height * 100) / 100];
+          }),
+          padding: pads(root),
+        };
+      }
+      return { before, after };
+    }, ICON);
+    const hiddenFailures: string[] = [];
+    for (const [name, { display, box, padding }] of Object.entries(iconHidden.after)) {
+      display.forEach((value, i) => {
+        if (value !== "none") hiddenFailures.push(`${name}: hidden icon ${i} computes display: ${value}`);
+      });
+      box.forEach(([width, height], i) => {
+        if (width !== 0 || height !== 0) hiddenFailures.push(`${name}: hidden icon ${i} is ${width}x${height}`);
+      });
+      const [start, end] = iconHidden.before[name];
+      if (padding[0] !== start || padding[1] !== end)
+        hiddenFailures.push(`${name}: the input's padding moved ${start}/${end} -> ${padding[0]}/${padding[1]}`);
+      console.log(`  hidden icon ${name}: padding ${start}/${end} -> ${padding[0]}/${padding[1]}, ${display.length} icon(s) ${display.join("/")}`);
+    }
+    assert.deepEqual(hiddenFailures, [], hiddenFailures.join("\n"));
+    check("text field: a leading or trailing icon with hidden is not displayed, and the padding it reserved stays (#60)");
   }
 
   // ---------------------------------------------------------------- tabs
@@ -3034,10 +3363,10 @@ try {
     assert.deepEqual(single, { factory: ["b", "a"], element: ["b", "a"] });
     const multi = await payloadParity(page, "pm", "change", [["button", 1], ["button", 0], ["button", 1]]);
     assert.deepEqual(multi, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
-    check("button group: a change handler reading value reads the same on the factory and the element (FLO-320)");
+    check("button group: a change handler reading value reads the same on the factory and the element");
   }
 
-  // ---------------------------------------------------------------- button group press, labels stay whole (FLO-537)
+  // ---------------------------------------------------------------- button group press, labels stay whole
   // Motion on: a width that starts at `auto` cannot ride the spatial spring,
   // so a neighbour's width used to jump while its padding was still easing and
   // the truncated label showed an ellipsis. Sample every frame from pointer
@@ -3066,7 +3395,7 @@ try {
         const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLButtonElement[];
         const group = buttons[0]?.parentElement as HTMLElement;
         const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false, presses: 0 };
-        (window as unknown as { __flo537: typeof state }).__flo537 = state;
+        (window as unknown as { __pressProbe: typeof state }).__pressProbe = state;
         const sample = (): void => {
           state.frames.push({
             phase: state.phase,
@@ -3122,11 +3451,11 @@ try {
         return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
       };
       const framesOf = (): Promise<Frame[]> =>
-        page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+        page.evaluate(() => (window as unknown as { __pressProbe: { frames: Frame[] } }).__pressProbe.frames);
       const settled = (): Promise<unknown> =>
-        page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+        page.waitForFunction(() => (window as unknown as { __pressProbe: { pressSettled: boolean } }).__pressProbe.pressSettled);
       const finished = (): Promise<unknown> =>
-        page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
+        page.waitForFunction(() => (window as unknown as { __pressProbe: { done: boolean } }).__pressProbe.done);
 
       const press = async (name: string): Promise<Frame[]> => {
         await install();
@@ -3162,7 +3491,7 @@ try {
           if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
         });
         const pressFrames = frames.filter((frame) => frame.phase === "press").length;
-        console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
+        console.log(`  pressProbe ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
         const previous = worst.get(id);
         const previousPx = previous ? Number.parseInt(previous, 10) : 0;
         if (worstShort > previousPx) worst.set(id, `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`);
@@ -3214,7 +3543,7 @@ try {
         const button = host.shadowRoot?.querySelector("button") as HTMLElement;
         return { width: button.getBoundingClientRect().width, inline: button.style.width };
       });
-      console.log(`  flo537 relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
+      console.log(`  pressProbe relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
       if (afterRelabel.inline !== "") failures.push(`relabel: inline width stayed "${afterRelabel.inline}"`);
       if (afterRelabel.width <= beforeRelabel + 1) failures.push(`relabel: width ${afterRelabel.width.toFixed(2)} did not grow from ${beforeRelabel.toFixed(2)}`);
       judge("l relabel", "ExtraBold", await press("ExtraBold"));
@@ -3224,7 +3553,7 @@ try {
       const bold = await buttonBox("Bold");
       await page.mouse.move(bold.x, bold.y);
       await page.mouse.down();
-      await page.waitForFunction(() => (window as unknown as { __flo537: { frames: unknown[] } }).__flo537.frames.length >= 3);
+      await page.waitForFunction(() => (window as unknown as { __pressProbe: { frames: unknown[] } }).__pressProbe.frames.length >= 3);
       await page.mouse.up();
       const italic = await buttonBox("Italic");
       await page.mouse.move(italic.x, italic.y);
@@ -3294,9 +3623,9 @@ try {
       await inlineCleared();
       await page.emulateMedia({ reducedMotion: "no-preference" });
 
-      console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
-      assert.equal(failures.length, 0, `button group press (FLO-537):\n${failures.join("\n")}`);
-      check("button group: a press never ellipsizes a label, at every size, with motion on (FLO-537)");
+      console.log(`  pressProbe worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
+      assert.equal(failures.length, 0, `button group press:\n${failures.join("\n")}`);
+      check("button group: a press never ellipsizes a label, at every size, with motion on");
     } finally {
       await page.emulateMedia({ reducedMotion: null });
     }
@@ -3338,7 +3667,7 @@ try {
     assert.equal(await single.getByRole("gridcell", { name: "First", selected: false }).count(), 1);
     assert.equal(await single.getByRole("gridcell", { name: "Last", selected: true }).count(), 1);
     assert.equal(await page.evaluate(() => (document.getElementById("ss") as Chips).value), "last");
-    check("chips: the last selected declaration wins in a single-select set (FLO-518)");
+    check("chips: the last selected declaration wins in a single-select set");
     check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
 
     await page.evaluate(() => {
@@ -3536,7 +3865,7 @@ try {
     assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
     check("chips: scrollable, label and aria-label update the set in place");
 
-    // FLO-550: a refused deselect changes nothing, so the host dispatches nothing.
+    // A refused deselect changes nothing, so the host dispatches nothing.
     const refusedDeselect = await page.evaluate(async () => {
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
       const host = document.createElement("m-chips") as Chips;
@@ -3596,7 +3925,7 @@ try {
     assert.deepEqual(chipsSingle, { factory: ["b", "a"], element: ["b", "a"] });
     const chipsMulti = await payloadParity(page, "cm", "change", [['[data-value="b"]', 0], ['[data-value="a"]', 0], ['[data-value="b"]', 0]]);
     assert.deepEqual(chipsMulti, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
-    check("chips: a change handler reading value reads the same on the factory and the element (FLO-320)");
+    check("chips: a change handler reading value reads the same on the factory and the element");
 
     await fresh(page, `<section id="factory"></section>`);
     const parity = await page.evaluate(async () => {
@@ -3818,11 +4147,11 @@ try {
     check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
   }
 
-  // ---------------------------------------------------------------- text field: the trailing icon button's 48 px target (FLO-592)
+  // ---------------------------------------------------------------- text field: the trailing icon button's 48 px target
   // M3 "Text fields" -> Specs: an interactive trailing icon is an icon button
   // with a 48 x 48 dp target (checkTextFieldA11y measures the 40 dp round state
   // layer it centres in). The target must sit on the button's centre in both
-  // directions: FLO-592 measured it 48 px to the left in RTL, where the
+  // directions: measured it 48 px to the left in RTL, where the
   // `touch-target` mixin's inline-start inset met a physical translate.
   //
   // The mixin's live users, `git grep -n "touch-target" -- src/styles`:
@@ -4007,7 +4336,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("progress: linear and circular render as the factory does with the global stylesheet");
 
-    // FLO-338: the indeterminate circular indicator keeps its track. Its
+    // The indeterminate circular indicator keeps its track. Its
     // colour is read from a determinate indicator at 0, all track; the
     // indeterminate one, element and factory, must show pixels of it.
     const track = await page.evaluate(async () => {
@@ -4122,7 +4451,7 @@ try {
     check("loading indicator: renders as the factory does with the global stylesheet");
   }
 
-  // ---------------------------------------------------------- canvas theme (FLO-389)
+  // ---------------------------------------------------------- canvas theme
   // A theme set on a section, with :root light: the canvases draw the
   // section's colours, factory and element, and follow a theme change on it.
   await fresh(
@@ -4286,7 +4615,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("badge: renders as the factory does with the global stylesheet");
 
-    // FLO-329: baseline declared no status roles, so these had no background.
+    // Baseline declared no status roles, so these had no background.
     const status = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
       return Object.fromEntries(["success", "warning", "info"].map((color) => {
@@ -4849,7 +5178,7 @@ try {
     check("bottom app bar: renders as the factory does with the global stylesheet");
   }
 
-  // ---------------------------------------------------------------- toolbar (FLO-304)
+  // ---------------------------------------------------------------- toolbar
   await fresh(
     page,
     `<div class="stage"><button id="before">Before</button>
@@ -5002,7 +5331,9 @@ try {
     check("toolbar: renders as the factory does with the global stylesheet");
   }
 
-  // FLO-387: the rows the roving rule must get right. Read in the same turn as
+  await checkToolbarItemShape(page, check);
+
+  // The rows the roving rule must get right. Read in the same turn as
   // connect, before the browser's own slotchange microtask.
   {
     const roving = await page.evaluate((icon) => {
@@ -5242,7 +5573,7 @@ try {
     check("list: rows match the factory's size and colours, selected and not");
   }
 
-  // Expressive list shape (m3.material.io/components/lists/specs, 2026-10-02).
+  // The segmented list's shape (m3.material.io/components/lists/specs, 2026-10-02).
   // An unselected row is 4px where it meets another row and 16px on the outer
   // corners of a run; hover is 12px; focus and press are 16px. A selected row
   // is 16px on every corner, including hover, focus and press. The state layer
@@ -5256,7 +5587,7 @@ try {
       Privacy: "4px 4px 16px 16px",
     };
     const markup = (dir: string): string =>
-      `<div dir="${dir}"><m-list id="shape-${dir}" aria-label="Element ${dir}" value="c">${
+      `<div dir="${dir}"><m-list id="shape-${dir}" variant="segmented" aria-label="Element ${dir}" value="c">${
         items.map((label, i) => `<m-list-item value="${"abcd"[i]}">${label}</m-list-item>`).join("")
       }</m-list></div>`;
     type RowShape = {
@@ -5331,6 +5662,7 @@ try {
           await page.evaluate(({ dir, items }) => {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const list = w.mtrl.createList({
+              variant: "segmented",
               ariaLabel: `Factory ${dir}`,
               trackSelection: true,
               items: items.map((headline, i) => ({ id: "abcd"[i], headline })),
@@ -5431,8 +5763,8 @@ try {
       Delta: "16px 16px 4px 4px",
       Echo: "4px 4px 16px 16px",
     };
-    const runsMarkup = (dir: string): string => `<div dir="${dir}">
-      <m-list aria-label="Runs element ${dir}">
+    const runsMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div dir="${dir}">
+      <m-list variant="segmented" aria-label="Runs element ${dir}">
         <m-list-item value="a">Alpha</m-list-item>
         <m-list-item value="b">Bravo</m-list-item>
         <m-list-item kind="divider"></m-list-item>
@@ -5441,22 +5773,22 @@ try {
         <m-list-item value="d">Delta</m-list-item>
         <m-list-item value="e" disabled>Echo</m-list-item>
       </m-list>
-      <m-list aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
-      <m-list aria-label="Ends element ${dir}">
+      <m-list variant="segmented" aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
+      <m-list variant="segmented" aria-label="Ends element ${dir}">
         <m-list-item value="f">First</m-list-item>
         <m-list-item value="l">Last</m-list-item>
       </m-list>
-      <m-list aria-label="Trail element ${dir}">
+      <m-list variant="segmented" aria-label="Trail element ${dir}">
         <m-list-item value="a">Alpha</m-list-item>
         <m-list-item value="b">Bravo</m-list-item>
         <m-list-item value="c">Charlie</m-list-item>
       </m-list>
-      <m-list aria-label="Square element ${dir}">
+      <m-list variant="segmented" aria-label="Square element ${dir}">
         <m-list-item value="1">One</m-list-item>
         <m-list-item value="2">Two</m-list-item>
         <m-list-item value="3">Three</m-list-item>
       </m-list>
-      <m-list aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
+      <m-list variant="segmented" aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
     </div><section id="factory"></section>`;
     type ShapeRow = { headline: string; row: string; action: string; layer: string; opacity: string; focusVisible: boolean };
     const readRows = (listName: string): Promise<ShapeRow[]> => page.evaluate((listName) => {
@@ -5489,7 +5821,8 @@ try {
         if (row.layer !== row.row) failures.push(`${where} ${headline} layer ${row.layer} != row ${row.row}`);
       }
     };
-    const park = (): Promise<void> => page.mouse.move(880, 680);
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
     const named = (listName: string, item: string) =>
       page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
     const focusNamed = async (listName: string, item: string): Promise<void> => {
@@ -5536,7 +5869,7 @@ try {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const host = document.getElementById("factory") as HTMLElement;
             const add = (ariaLabel: string, items: object[]): void => {
-              host.append(w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element);
+              host.append(w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element);
             };
             add(`Runs factory ${dir}`, [
               { id: "a", headline: "Alpha" },
@@ -5659,10 +5992,10 @@ try {
     }
 
     // The four are read, not declared, so they inherit: :root, a wrapper, the
-    // <m-list> host and ::part(list). A list with nothing set keeps 4 / 16 / 12 / 16.
+    // <m-list> host and ::part(list). A segmented list with nothing set keeps 4 / 16 / 12 / 16.
     const PROPS = ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"];
-    const inheritMarkup = (dir: string): string => `<div id="wrap" dir="${dir}">
-      <m-list aria-label="Inherit element ${dir}">
+    const inheritMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div id="wrap" dir="${dir}">
+      <m-list variant="segmented" aria-label="Inherit element ${dir}">
         <m-list-item value="1">One</m-list-item>
         <m-list-item value="2">Two</m-list-item>
         <m-list-item value="3">Three</m-list-item>
@@ -5691,7 +6024,7 @@ try {
       await park();
       matches(where, await readRows(listName), { One: "16px 16px 4px 4px", Two: "4px 4px 4px 4px", Three: "4px 4px 16px 16px" }, failures);
       const block = await containerOf(listName);
-      if (block !== R16) failures.push(`${where} container ${block} != ${R16}`);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
       await named(listName, "One").hover();
       matches(where, await readRows(listName), { One: R12 }, failures);
       await park();
@@ -5744,6 +6077,7 @@ try {
               const wrap = document.getElementById("wrap") as HTMLElement;
               wrap.querySelector("m-list")?.remove();
               wrap.append(w.mtrl.createList({
+                variant: "segmented",
                 ariaLabel: `Inherit factory ${dir}`,
                 trackSelection: true,
                 items: [
@@ -5770,9 +6104,11 @@ try {
     }
   }
 
-  // The container uses the rows' outer property. The focus ring stays whole.
+  // The list has no radius and no background of its own: the outer property
+  // rounds the first and the last row only. The focus ring stays whole.
   {
     const R16 = "16px 16px 16px 16px";
+    const ZERO = "0px 0px 0px 0px";
     const PAGE = [255, 0, 170];
     const near = (pixel: number[], color: number[], tol: number): boolean =>
       pixel.every((channel, index) => Math.abs(channel - color[index]) <= tol);
@@ -5780,8 +6116,9 @@ try {
       const rows = (n: number): string => Array.from({ length: n }, (_, i) =>
         `<m-list-item value="${i}">Row ${i + 1}</m-list-item>`).join("");
       const list = (name: string, body: string): string =>
-        `<m-list aria-label="${name} element ${dir}">${body}</m-list>`;
+        `<m-list variant="segmented" aria-label="${name} element ${dir}">${body}</m-list>`;
       return `<div id="stage" dir="${dir}" style="background:#ff00aa;padding:16px">
+        <div id="park" style="height:24px"></div>
         <div id="elements">
           ${list("Box", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item value=\"c\">Charlie</m-list-item>")}
           ${list("Outer", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
@@ -5835,7 +6172,7 @@ try {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const host = document.getElementById("factory") as HTMLElement;
             const add = (ariaLabel: string, items: object[]): HTMLElement => {
-              const list = w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element;
+              const list = w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element;
               host.append(list);
               return list;
             };
@@ -5853,6 +6190,7 @@ try {
             add(`Scroll factory ${dir}`, Array.from({ length: 10 }, (_, i) => ({ id: String(i), headline: `Row ${i + 1}` })));
             const nest = add(`Nest factory ${dir}`, [{ id: "a", headline: "Alpha" }]);
             const inner = w.mtrl.createList({
+              variant: "segmented",
               ariaLabel: `Inner factory ${dir}`, trackSelection: true, items: [{ id: "i", headline: "Inner" }],
             }).element;
             nest.querySelector('[role="listitem"]')?.append(inner);
@@ -5863,6 +6201,7 @@ try {
             const nest = document.querySelector(`[aria-label="Nest element ${dir}"]`);
             const row = nest?.shadowRoot?.querySelector('[role="listitem"]');
             const inner = document.createElement("m-list");
+            inner.setAttribute("variant", "segmented");
             inner.setAttribute("aria-label", `Inner element ${dir}`);
             const item = document.createElement("m-list-item");
             item.setAttribute("value", "i");
@@ -5873,7 +6212,7 @@ try {
         }
         await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
         const read = (): Promise<{
-          box: string; overflow: string; hostRadius: string; hostBackground: string;
+          box: string; background: string; overflow: string; hostRadius: string; hostBackground: string;
           outerFirst: string; outerLast: string; lead: string; tail: string; head: string;
           off: string; pick: string; solo: string; inset: string; nest: string; inner: string;
         }> => page.evaluate((names) => {
@@ -5903,6 +6242,7 @@ try {
           const boxRoot = rootOf(names.box);
           return {
             box: four(getComputedStyle(boxRoot)),
+            background: getComputedStyle(boxRoot).backgroundColor,
             overflow: getComputedStyle(boxRoot).overflow,
             hostRadius: four(getComputedStyle(boxHost)),
             hostBackground: getComputedStyle(boxHost).backgroundColor,
@@ -5930,13 +6270,16 @@ try {
           inset: name("Inset"), nest: name("Nest"),
         });
         const failures: string[] = [];
+        // Off the rows: the pointer is where the previous pass left it.
+        await page.locator("#park").hover();
         const got = await read();
-        if (got.box !== R16) failures.push(`${where} container ${got.box}`);
+        if (got.box !== ZERO) failures.push(`${where} container ${got.box}`);
+        if (got.background !== "rgba(0, 0, 0, 0)") failures.push(`${where} container background ${got.background}`);
         if (got.overflow !== "auto") failures.push(`${where} overflow ${got.overflow}`);
         if (kind === "element") {
           if (got.hostRadius !== "0px 0px 0px 0px") failures.push(`${where} host radius ${got.hostRadius}`);
           if (got.hostBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} host background ${got.hostBackground}`);
-        } else if (got.hostRadius !== R16) failures.push(`${where} factory radius ${got.hostRadius}`);
+        }
         if (got.outerFirst !== "16px 16px 4px 4px") failures.push(`${where} outer first ${got.outerFirst}`);
         await page.evaluate((label) => {
           const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
@@ -5944,7 +6287,7 @@ try {
           root.style.setProperty("--mtrl-list-item-shape-outer", "0");
         }, name("Outer"));
         const squared = await read();
-        if (squared.box === "0px 0px 0px 0px") failures.push(`${where} zeroing one list squared the other`);
+        if (squared.solo !== R16) failures.push(`${where} zeroing one list squared another: ${squared.solo}`);
         const outerZero = await page.evaluate((label) => {
           const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
           const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
@@ -5973,11 +6316,11 @@ try {
           const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
           return { container: four(getComputedStyle(root)), rows };
         }, name("Outer"));
-        if (outerWide.container !== "28px 28px 28px 28px" || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
+        if (outerWide.container !== ZERO || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
           failures.push(`${where} outer 28px container ${outerWide.container} rows ${outerWide.rows.join(" | ")}`);
         }
-        assert.deepEqual(failures.slice(), [], `${where}: the container follows the outer property`);
-        check(`list: ${where}, the container is 16px and follows the outer property`);
+        assert.deepEqual(failures.slice(), [], `${where}: the container is square and unpainted`);
+        check(`list: ${where}, the container has no radius and no background; the outer property rounds the rows`);
 
         const focusNamed = async (label: string, item: string): Promise<void> => {
           await page.evaluate(() => {
@@ -6058,45 +6401,19 @@ try {
         if (got.pick !== R16) failures.push(`${where} selected first ${got.pick}`);
         if (got.solo !== R16) failures.push(`${where} single ${got.solo}`);
         if (got.inset !== R16) failures.push(`${where} inset divider ${got.inset}`);
-        if (got.nest !== R16 || got.inner !== R16) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
-        const at = async (scroll: "start" | "middle" | "end"): Promise<void> => {
-          await page.evaluate(({ label, scroll }) => {
-            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
-            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
-            root.style.maxHeight = "140px";
-            if (scroll === "start") root.scrollTop = 0;
-            else if (scroll === "middle") root.scrollTop = root.scrollHeight / 2;
-            else root.scrollTop = root.scrollHeight;
-            for (const el of [document.documentElement, document.body]) {
-              el.style.overflow = "visible";
-              el.style.position = "static";
-              el.style.top = "auto";
-            }
-            const scrolling = document.scrollingElement ?? document.documentElement;
-            window.scrollTo({ top: Math.max(0, scrolling.scrollTop + root.getBoundingClientRect().top - 24), left: 0, behavior: "instant" });
-          }, { label: name("Scroll"), scroll });
-          const spot = await page.evaluate((label) => {
-            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
-            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
-            const box = root.getBoundingClientRect();
-            if (box.top < 0) throw new Error(`scrolled list is above the viewport at ${box.top}`);
-            return {
-              scrollTop: root.scrollTop,
-              page: [box.left - 6, box.top + 8],
-              top: [box.left + 1, box.top + 1],
-              bottom: [box.left + 1, box.bottom - 2],
-              end: [box.right - 2, box.top + 1],
-            };
-          }, name("Scroll"));
-          const [background, top, bottom, end] = await pixels([spot.page, spot.top, spot.bottom, spot.end]);
-          for (const [place, pixel] of [["top", top], ["bottom", bottom], ["end", end]] as const) {
-            if (!near(pixel, background, 2)) failures.push(`${where} scrolled ${scroll} ${place} ${pixel.join(",")} page ${background.join(",")} scroll ${spot.scrollTop}`);
-          }
-        };
-        await at("start");
-        await at("middle");
-        await at("end");
-        assert.deepEqual(failures.slice(), [], `${where}: the container's edges`);
+        if (got.nest !== ZERO || got.inner !== ZERO) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
+        // A list given a max-height scrolls inside a square scrollport: the list
+        // has no radius, so rows scrolled to its edge are cut straight.
+        const scrolled = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.maxHeight = "140px";
+          root.scrollTop = root.scrollHeight;
+          const style = getComputedStyle(root);
+          return { scrolls: root.scrollTop > 0, radius: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ") };
+        }, name("Scroll"));
+        if (!scrolled.scrolls || scrolled.radius !== ZERO) failures.push(`${where} scrolled list scrolls=${scrolled.scrolls} radius ${scrolled.radius}`);
+        assert.deepEqual(failures.slice(), [], `${where}: the rows beside structure, and the scrollport`);
         check(`list: ${where}, a divider, a header, a disabled row, a selected row, one row, an inset divider, a nested list, and a scrolled list`);
       }
     }
@@ -6109,6 +6426,252 @@ try {
       document.body.style.position = saved.bodyPosition;
       document.body.style.top = saved.bodyTop;
     }, savedDocument);
+  }
+
+  // ---------------------------------------------------------------- list variants
+  // `variant`: standard (the default) and segmented. Per variant, direction and
+  // layer (factory, <m-list>): every corner of the row and of its state layer
+  // at rest, hovered, keyboard-focused, pressed and selected, on the first, a
+  // middle, the last and a single row; the gap between the rows' boxes; the
+  // row's colour; and a list that paints no background. Standard: 0 everywhere.
+  {
+    const ZERO = "0px 0px 0px 0px";
+    const R12 = "12px 12px 12px 12px";
+    const R16 = "16px 16px 16px 16px";
+    const TOP = "16px 16px 4px 4px";
+    const BOTTOM = "4px 4px 16px 16px";
+    type Variant = "standard" | "segmented";
+    type Row = { headline: string; row: string; action: string; layer: string; background: string };
+    type Look = { rows: Row[]; gaps: number[]; container: string; containerBackground: string; classes: string };
+    const body = {
+      Trio: [["a", "First"], ["b", "Middle"], ["c", "Last"]],
+      Single: [["s", "Single"]],
+      Split: [["a", "Alpha"], ["b", "Bravo"], ["", "divider"], ["c", "Charlie"], ["d", "Delta"], ["", "subheader"], ["e", "Echo"], ["f", "Foxtrot"]],
+    } as const;
+    const markup = (dir: string, variant: Variant | null): string => `<div id="park" style="height:24px"></div><div dir="${dir}" style="padding:16px">
+      <div id="elements">${Object.entries(body).map(([name, rows]) =>
+        `<m-list ${variant ? `variant="${variant}" ` : ""}aria-label="${name}">${rows.map(([value, label]) =>
+          label === "divider" || label === "subheader"
+            ? `<m-list-item kind="${label}">${label === "subheader" ? "Group" : ""}</m-list-item>`
+            : `<m-list-item value="${value}">${label}</m-list-item>`).join("")}</m-list>`).join("")}</div>
+      <section id="factory"></section>
+    </div>`;
+    const look = (listName: string): Promise<Look> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      const content = root.querySelector('[class*="list__content"]') as HTMLElement;
+      const boxes = [...content.children].map((child) => child.getBoundingClientRect());
+      return {
+        rows: [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+          const action = row.querySelector("button") as HTMLElement;
+          return {
+            headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+            row: four(getComputedStyle(row)),
+            action: four(getComputedStyle(action)),
+            layer: four(getComputedStyle(action, "::before")),
+            background: getComputedStyle(row).backgroundColor,
+          };
+        }),
+        gaps: boxes.slice(1).map((box, index) => Math.round((box.top - boxes[index].bottom) * 100) / 100),
+        container: four(getComputedStyle(root)),
+        containerBackground: getComputedStyle(root).backgroundColor,
+        classes: [...root.classList].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      };
+    }, listName);
+    const role = (name: string): Promise<string> => page.evaluate((name) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = `var(--mtrl-sys-color-${name})`;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return color;
+    }, name);
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
+    const button = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName, exact: true }).getByRole("button", { name: item, exact: true });
+    const blur = (): Promise<void> => page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+      active?.blur();
+    });
+    const focusItem = async (listName: string, item: string): Promise<void> => {
+      await blur();
+      for (let i = 0; i < 24; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const control = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = control?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          return control?.matches(":focus-visible") === true && headline === item;
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+
+    for (const variant of ["standard", "segmented", "default"] as const) {
+      const segmented = variant === "segmented";
+      for (const dir of ["ltr", "rtl"] as const) {
+        for (const kind of ["element", "factory"] as const) {
+          const where = `${variant} ${kind} ${dir}`;
+          await fresh(page, markup(dir, variant === "default" ? null : variant));
+          if (kind === "factory") {
+            await page.evaluate(({ body, variant }) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const host = document.getElementById("factory") as HTMLElement;
+              for (const [ariaLabel, rows] of Object.entries(body)) {
+                host.append(w.mtrl.createList({
+                  ...(variant === "default" ? {} : { variant }),
+                  ariaLabel,
+                  trackSelection: true,
+                  items: rows.map(([id, headline]) => headline === "divider" ? { kind: "divider" }
+                    : headline === "subheader" ? { kind: "subheader", headline: "Group" } : { id, headline }),
+                }).element);
+              }
+              document.getElementById("elements")?.remove();
+            }, { body, variant });
+          }
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+          const failures: string[] = [];
+          const surface = await role("surface");
+          const container = await role("surface-container");
+          const selectedColor = await role("secondary-container");
+          const expectLook = (state: string, got: Look, want: Record<string, string>, selected?: string): void => {
+            for (const row of got.rows) {
+              const radius = want[row.headline];
+              if (!radius) { failures.push(`${where} ${state}: unexpected row ${row.headline}`); continue; }
+              if (row.row !== radius) failures.push(`${where} ${state} ${row.headline} row ${row.row} != ${radius}`);
+              if (row.action !== radius) failures.push(`${where} ${state} ${row.headline} action ${row.action} != ${radius}`);
+              if (row.layer !== radius) failures.push(`${where} ${state} ${row.headline} layer ${row.layer} != ${radius}`);
+              const color = row.headline === selected ? selectedColor : segmented ? container : surface;
+              if (row.background !== color) failures.push(`${where} ${state} ${row.headline} background ${row.background} != ${color}`);
+            }
+            const gap = segmented ? 2 : 0;
+            if (got.gaps.some((value) => value !== gap)) failures.push(`${where} ${state} gaps ${got.gaps.join(",")} != ${gap}`);
+            if (got.container !== ZERO) failures.push(`${where} ${state} list radius ${got.container}`);
+            if (got.containerBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} ${state} list background ${got.containerBackground}`);
+            const modifier = `mtrl-list--${segmented ? "segmented" : "standard"}`;
+            if (got.classes !== modifier) failures.push(`${where} ${state} classes "${got.classes}" != ${modifier}`);
+          };
+          const shape = (value: string): string => (segmented ? value : ZERO);
+          const rest: Record<string, Record<string, string>> = {
+            Trio: { First: shape(TOP), Middle: shape("4px 4px 4px 4px"), Last: shape(BOTTOM) },
+            Single: { Single: shape(R16) },
+            // A divider or a subheader ends a group: the rows beside it take their outer corners.
+            Split: { Alpha: shape(TOP), Bravo: shape(BOTTOM), Charlie: shape(TOP), Delta: shape(BOTTOM), Echo: shape(TOP), Foxtrot: shape(BOTTOM) },
+          };
+          await park();
+          for (const listName of ["Trio", "Single", "Split"]) expectLook("rest", await look(listName), rest[listName]);
+          for (const [listName, item] of [["Trio", "First"], ["Trio", "Middle"], ["Trio", "Last"], ["Single", "Single"]] as const) {
+            await button(listName, item).hover();
+            expectLook(`${item} hovered`, await look(listName), { ...rest[listName], [item]: shape(R12) });
+            await park();
+            await focusItem(listName, item);
+            expectLook(`${item} focused`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await blur();
+            const box = await button(listName, item).boundingBox();
+            if (!box) throw new Error(`no box for ${listName} / ${item}`);
+            await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            await page.mouse.down();
+            expectLook(`${item} pressed`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await page.mouse.up();
+            // The press selected the row. Selected is the active shape on every
+            // corner, whatever the row's index, hovered or not.
+            expectLook(`${item} selected and hovered`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            await park();
+            await blur();
+            expectLook(`${item} selected`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            // A second press deselects it: back to the rest shape of its index.
+            await button(listName, item).click();
+            await park();
+            await blur();
+            expectLook(`${item} deselected`, await look(listName), rest[listName]);
+          }
+          assert.deepEqual(failures, [], `${where}: the rows' and state layers' corners, the gap and the colours`);
+          check(segmented
+            ? `list: ${where}, rows 4 / 16 outer / 12 hovered / 16 focused, pressed and selected, 2px apart, on surface-container; a divider and a subheader end a group; the list paints nothing`
+            : `list: ${where}, every corner 0 in every state, no gap, and the list paints nothing`);
+        }
+      }
+    }
+
+    // The row's colour is --mtrl-list-item-container-color in both variants, and
+    // inherits: `transparent` on a wrapper leaves the unselected rows unpainted.
+    for (const variant of ["standard", "segmented"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        await fresh(page, `<div id="tint" style="--mtrl-list-item-container-color:transparent">${markup("ltr", variant)}</div>`);
+        if (kind === "factory") {
+          await page.evaluate((variant) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            document.getElementById("factory")?.append(w.mtrl.createList({
+              variant, ariaLabel: "Trio", trackSelection: true,
+              items: [{ id: "a", headline: "First" }, { id: "b", headline: "Middle" }, { id: "c", headline: "Last" }],
+            }).element);
+            document.getElementById("elements")?.remove();
+          }, variant);
+        }
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+        await park();
+        const clear = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(clear, ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"], `${variant} ${kind}: transparent rows`);
+        await button("Trio", "Middle").click();
+        await park();
+        await blur();
+        const picked = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(picked, ["rgba(0, 0, 0, 0)", await role("secondary-container"), "rgba(0, 0, 0, 0)"], `${variant} ${kind}: the selected row keeps its colour`);
+        await page.evaluate(() => document.getElementById("tint")?.style.setProperty("--mtrl-list-item-container-color", "rgb(1, 2, 3)"));
+        const tinted = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(tinted, ["rgb(1, 2, 3)", await role("secondary-container"), "rgb(1, 2, 3)"], `${variant} ${kind}: a colour on a wrapper`);
+        check(`list: ${variant} ${kind}, --mtrl-list-item-container-color set to transparent on a wrapper paints no row background; the selected row keeps secondary-container`);
+      }
+    }
+
+    // The attribute and the property reflect each other; a change recreates the
+    // list with the variant's class; an unknown value is the default.
+    await fresh(page, `<m-list id="v" aria-label="Reflect"><m-list-item value="a">Alpha</m-list-item><m-list-item value="b">Bravo</m-list-item></m-list>`);
+    const reflected = await page.evaluate(async () => {
+      const list = document.getElementById("v") as HTMLElement & { variant: string | null; value: string | null };
+      const settle = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+      const state = (): string => [
+        String(list.variant), String(list.getAttribute("variant")),
+        [...(list.shadowRoot?.querySelector(".mtrl-list")?.classList ?? [])].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      ].join(" | ");
+      const seen: string[] = [state()];
+      list.value = "b";
+      list.variant = "segmented";
+      await settle();
+      seen.push(state(), `kept ${list.value}`);
+      list.setAttribute("variant", "standard");
+      await settle();
+      seen.push(state());
+      list.variant = "expressive";
+      await settle();
+      seen.push(state());
+      list.setAttribute("variant", "segmented");
+      await settle();
+      seen.push(state());
+      list.variant = null;
+      await settle();
+      seen.push(state());
+      return seen;
+    });
+    assert.deepEqual(reflected, [
+      "null | null | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "kept b",
+      "standard | standard | mtrl-list--standard",
+      "expressive | expressive | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "null | null | mtrl-list--standard",
+    ]);
+    check("list: variant is an attribute and a property that reflect each other; a change keeps the selection; an unknown value is standard");
   }
 
   // ---------------------------------------------------------------- list defaults
@@ -6327,7 +6890,7 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index). 3.0.0 dropped the doubled detail.index.
+    // Value is the model (the index). 3.0.0 dropped the doubled detail.index.
     assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
@@ -6430,7 +6993,7 @@ try {
     check("carousel: items match the factory's sizes, masks, positions and colours");
   }
 
-  // FLO-395: declarative opt-in and toggling without recreating the factory.
+  // Declarative opt-in and toggling without recreating the factory.
   await fresh(page, `<m-carousel id="wheel-carousel" wheel item-width="200" style="width:600px;height:240px">
     ${Array.from({ length: 8 }, (_, i) => slide(String(i), `Slide ${i}`)).join("")}
   </m-carousel>`);
@@ -6963,7 +7526,7 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
-    // The menu's "close" comes with Enter (FLO-548; it came 50ms after), and the select
+    // The menu's "close" comes with Enter (it came 50ms after), and the select
     // looks at its focused styling again 10ms after that: read once the menu has closed
     // and that turn has passed, or the class read is the one left from the open menu.
     await until(() => page.evaluate(() =>
@@ -7005,7 +7568,7 @@ try {
     await returnsFocus("dialog", "createDialog");
     check("factories in a shadow root: a dialog returns focus to its opener inside the shadow root");
 
-    // The event that opened an overlay never dismisses it (FLO-548). A dialog
+    // The event that opened an overlay never dismisses it. A dialog
     // opened from an Escape keydown gets its Escape listener (or, in the top
     // layer, becomes the browser's topmost modal) while that key press is
     // still being handled. Both layers are read before the assertion, so a
@@ -7048,8 +7611,8 @@ try {
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
 
-    // Escape is handled as a key press, in both layers (FLO-548 family 6,
-    // FLO-556): prevented, so the browser sends a top-layer dialog no `cancel`
+    // Escape is handled as a key press, in both layers: prevented, so the browser
+    // sends a top-layer dialog no `cancel`
     // and never forces one closed. With focus on a child and on the body; a
     // dialog that refuses, by option and by beforeclose, for five presses (the
     // browser forced the third); a menu open inside it, which takes the key;
@@ -7190,7 +7753,7 @@ try {
     );
     check("dialog: Escape closes it from a child and from the body, a refusal holds for five presses, a menu inside takes the key first, and a forced close leaves the page clean");
 
-    // Which event is "the one that opened it" (FLO-548): the one whose dispatch
+    // Which event is "the one that opened it": the one whose dispatch
     // had begun when open() ran, told by a capture listener on the window that
     // numbers events, not by time or by the task. Each form opens a dialog from
     // an Escape keydown and then sends a second one in the same task: the first
@@ -7268,7 +7831,7 @@ try {
     );
     check("dialog: only the event in flight when open() ran is ignored: from a child, the body, the window's listeners, a shadow root, after a promise, and with other dialogs open");
 
-    // The same for the modal sheets and the modal drawer (FLO-548 family 6 B):
+    // The same for the modal sheets and the modal drawer (family 6 B):
     // Escape as a key press, from wherever focus is; a refusal held for five
     // presses; the key press that opened it; and, in the top layer, a close
     // the browser makes without asking, after which it opens again. Every
@@ -7355,7 +7918,7 @@ try {
     check("sheets and drawer: Escape closes a modal one from wherever focus is, a refusal holds for five presses, the key press that opened it does not close it, and a forced close is followed");
 
     // And for the time picker, the modal date picker and the full-screen search
-    // (FLO-548 family 6 C): Escape with focus on the body; the key press that
+    // (family 6 C): Escape with focus on the body; the key press that
     // opened it, then the next; and one opened above a dialog, which takes the
     // key first. All read before the assertion.
     const pickerEscapes = async (kind: "time picker" | "date picker" | "search"): Promise<Record<string, unknown>> => {
@@ -7500,7 +8063,7 @@ try {
     });
     check("date picker, docked: the click that opened it leaves it open, and the next click outside closes it once");
 
-    // The same sentence for the menu (FLO-548): its click-outside and Escape
+    // The same sentence for the menu: its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that
     // event is still on its way up to the document. Every form is read before
@@ -7665,6 +8228,203 @@ try {
     check("factories in a shadow root: a snackbar's action takes focus and hands it back to the opener");
   }
 
+  // A [dir=rtl] ancestor outside a shadow root does not reach the
+  // menu sheet. The arrow sits at the item's inline end, as the factory
+  // already does: 12px from the right left-to-right, 16px from the left
+  // right-to-left. The item is clicked before the submenu's side is read.
+  // That side is the placement script's physical right at the first level,
+  // in both directions, including the factory under dir="rtl"; the element
+  // matches the factory. The inline end would be a new side. A top-layer
+  // select under a field narrower than 112px keeps the edge the 200px
+  // field's menu keeps in that direction.
+  {
+    type ArrowRow = { name: string; dir: "ltr" | "rtl"; side: string; inset: number; submenuSide: string; paddingLeft: string; paddingRight: string };
+    type FieldRow = { name: string; dir: "ltr" | "rtl"; width: number; leftDelta: number; rightDelta: number; menuWidth: number; fieldWidth: number };
+    const menuRtl = await page.evaluate(async () => {
+      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      const round = (n: number) => Math.round(n * 100) / 100;
+      const host = document.getElementById("host") as HTMLElement;
+      const w = window as unknown as {
+        mtrl: {
+          createMenu: (config: Record<string, unknown>) => { element: HTMLElement; open: () => void; destroy: () => void };
+          createSelect: (config: Record<string, unknown>) => {
+            element: HTMLElement; open: () => void; close: () => void; destroy: () => void;
+            textField: { field: HTMLElement };
+          };
+        };
+      };
+      const items = [
+        { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+        { id: "copy", text: "Copy" },
+      ];
+      const arrowOf = (item: HTMLElement) => {
+        const box = item.getBoundingClientRect();
+        const after = getComputedStyle(item, "::after");
+        const width = parseFloat(after.width);
+        let fromLeft = NaN;
+        let fromRight = NaN;
+        if (after.left !== "auto") {
+          fromLeft = parseFloat(after.left);
+          fromRight = box.width - fromLeft - width;
+        } else {
+          fromRight = parseFloat(after.right);
+          fromLeft = box.width - fromRight - width;
+        }
+        const style = getComputedStyle(item);
+        return {
+          side: fromRight < fromLeft - 0.5 ? "right" : "left",
+          inset: round(Math.min(fromLeft, fromRight)),
+          paddingLeft: style.paddingLeft,
+          paddingRight: style.paddingRight,
+        };
+      };
+      const submenuSideOf = (item: HTMLElement) => {
+        const submenu = (item.getRootNode() as ParentNode).querySelector(".mtrl-menu--submenu");
+        const itemBox = item.getBoundingClientRect();
+        const sub = submenu?.getBoundingClientRect();
+        return !sub ? "missing" : sub.left >= itemBox.right - 2 ? "right" : sub.right <= itemBox.left + 2 ? "left" : "overlap";
+      };
+      const arrows: ArrowRow[] = [];
+      const clear = () => { host.replaceChildren(); };
+      for (const spec of [
+        { name: "factory ltr", path: "factory", dir: "ltr", where: "page" },
+        { name: "factory rtl", path: "factory", dir: "rtl", where: "ancestor" },
+        { name: "element ltr", path: "element", dir: "ltr", where: "page" },
+        { name: "element rtl", path: "element", dir: "rtl", where: "ancestor" },
+        { name: "element host rtl", path: "element", dir: "rtl", where: "host" },
+      ] as const) {
+        clear();
+        const cell = document.createElement("div");
+        if (spec.where !== "host") cell.dir = spec.dir;
+        cell.style.cssText = "position:absolute;left:280px;top:80px";
+        host.append(cell);
+        const opener = document.createElement("button");
+        opener.id = spec.name.replace(/ /g, "-");
+        opener.textContent = "Open";
+        cell.append(opener);
+        let item: HTMLElement;
+        let destroy = () => {};
+        if (spec.path === "factory") {
+          const menu = w.mtrl.createMenu({ opener, items, layer: "top" });
+          destroy = () => menu.destroy();
+          menu.open();
+          await sleep(400);
+          item = menu.element.querySelector(".mtrl-menu__item--submenu") as HTMLElement;
+        } else {
+          const element = document.createElement("m-menu");
+          element.setAttribute("anchor", opener.id);
+          if (spec.where === "host") element.setAttribute("dir", "rtl");
+          const parent = document.createElement("m-menu-item");
+          parent.setAttribute("value", "share");
+          parent.setAttribute("label", "Share");
+          const child = document.createElement("m-menu-item");
+          child.setAttribute("value", "link");
+          child.setAttribute("label", "Copy link");
+          parent.append(child);
+          element.append(parent);
+          cell.append(element);
+          await sleep(50);
+          const menu = (element as unknown as { component: { element: HTMLElement; show: () => void; destroy?: () => void } }).component;
+          destroy = () => menu.destroy?.();
+          menu.show();
+          await sleep(400);
+          item = menu.element.querySelector(".mtrl-menu__item--submenu") as HTMLElement;
+        }
+        const arrow = arrowOf(item);
+        item.click();
+        for (let i = 0; i < 20 && submenuSideOf(item) === "missing"; i++) await sleep(50);
+        arrows.push({ name: spec.name, dir: spec.dir, ...arrow, submenuSide: submenuSideOf(item) });
+        destroy();
+      }
+      const fields: FieldRow[] = [];
+      const edges = (scope: ParentNode, fieldEl: Element, menuSelector: string) => {
+        const field = fieldEl.getBoundingClientRect();
+        const menu = (scope.querySelector(menuSelector) as HTMLElement).getBoundingClientRect();
+        return {
+          leftDelta: round(menu.left - field.left),
+          rightDelta: round(field.right - menu.right),
+          menuWidth: round(menu.width),
+          fieldWidth: round(field.width),
+        };
+      };
+      for (const dir of ["ltr", "rtl"] as const) for (const width of [80, 200]) {
+        clear();
+        const cell = document.createElement("div");
+        cell.dir = dir;
+        cell.style.cssText = "position:absolute;left:280px;top:80px";
+        host.append(cell);
+        const select = w.mtrl.createSelect({
+          label: "Pet", value: "a", layer: "top",
+          options: [{ id: "a", text: "Alpha" }, { id: "b", text: "Beta" }],
+        });
+        select.element.style.width = `${width}px`;
+        cell.append(select.element);
+        select.open();
+        await sleep(400);
+        fields.push({ name: `select factory ${width} ${dir}`, dir, width, ...edges(cell, select.textField.field, ".mtrl-select__menu") });
+        select.close();
+        select.destroy();
+        clear();
+        const element = document.createElement("m-select");
+        element.setAttribute("label", "Pet");
+        element.setAttribute("value", "a");
+        element.style.width = `${width}px`;
+        for (const [id, text] of [["a", "Alpha"], ["b", "Beta"]] as const) {
+          const option = document.createElement("m-select-option");
+          option.setAttribute("value", id);
+          option.setAttribute("label", text);
+          element.append(option);
+        }
+        cell.replaceChildren();
+        host.append(cell);
+        cell.append(element);
+        await sleep(80);
+        const component = (element as unknown as { component: { open: () => void; close: () => void; destroy?: () => void } }).component;
+        component.open();
+        await sleep(400);
+        const scope = element.shadowRoot as ShadowRoot;
+        fields.push({
+          name: `select element ${width} ${dir}`, dir, width,
+          ...edges(scope, scope.querySelector(".mtrl-text-field__field") as HTMLElement, ".mtrl-select__menu"),
+        });
+        component.close();
+        component.destroy?.();
+      }
+      clear();
+      return { arrows, fields };
+    }) as { arrows: ArrowRow[]; fields: FieldRow[] };
+    const menuFailures: string[] = [];
+    const factorySide = Object.fromEntries(menuRtl.arrows.filter((row) => row.name.startsWith("factory")).map((row) => [row.dir, row.submenuSide]));
+    for (const row of menuRtl.arrows) {
+      console.log(`  rtl menu ${row.name}: arrow ${row.inset}px from the ${row.side} (padding ${row.paddingLeft}/${row.paddingRight}), submenu ${row.submenuSide}`);
+      const end = row.dir === "rtl" ? "left" : "right";
+      const inset = row.dir === "rtl" ? 16 : 12;
+      if (row.side !== end || Math.abs(row.inset - inset) > 1)
+        menuFailures.push(`${row.name}: arrow ${row.inset}px from the ${row.side}, expected ${inset}px from the ${end}`);
+      if (row.submenuSide === "missing")
+        menuFailures.push(`${row.name}: submenu did not open`);
+      else if (row.submenuSide !== factorySide[row.dir])
+        menuFailures.push(`${row.name}: submenu opens on the ${row.submenuSide}, the factory opens on the ${factorySide[row.dir]}`);
+    }
+    const wide = (name: string, dir: "ltr" | "rtl") => menuRtl.fields.find((row) => row.name === `select ${name} 200 ${dir}`)!;
+    for (const row of menuRtl.fields) {
+      console.log(`  rtl menu ${row.name}: field ${row.fieldWidth} menu ${row.menuWidth} left ${row.leftDelta} right ${row.rightDelta}`);
+      if (row.width !== 80) continue;
+      const control = wide(row.name.includes("element") ? "element" : "factory", row.dir);
+      // The 200px menu meets both edges. The 80px menu is wider than its field,
+      // so it keeps the inline-start edge that control meets: the left, or the
+      // right when the direction is right to left.
+      const edge = row.dir === "rtl" ? "right" : "left";
+      const delta = edge === "right" ? row.rightDelta : row.leftDelta;
+      if (Math.abs(control.leftDelta) > 0.5 || Math.abs(control.rightDelta) > 0.5)
+        menuFailures.push(`${row.name}: the 200px control does not meet both edges (left ${control.leftDelta}, right ${control.rightDelta})`);
+      if (Math.abs(delta) > 0.5)
+        menuFailures.push(`${row.name}: menu meets the ${edge === "right" ? "left" : "right"} (left ${row.leftDelta}, right ${row.rightDelta}), expected the ${edge}, as the 200px control does`);
+    }
+    assert.deepEqual(menuFailures, [], menuFailures.join("\n"));
+    check("menu: the submenu arrow is at the inline end across the shadow boundary, and a narrow top-layer menu keeps the wide field's edge ");
+  }
+
   // ---------------------------------------------------------------- menu in the top layer
   // `layer: "top"` renders the menu next to its opener and shows it as a
   // popover: inside the opener's shadow root, with that root's adopted menu
@@ -7744,7 +8504,7 @@ try {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
           const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
-          // What the state above cannot tell (FLO-551: open and connected, with no focus):
+          // What the state above cannot tell (open and connected, with no focus):
           // whether the surface is shown and focusable, and whether the page reported errors.
           const surface = await page.evaluate(() => {
             const element = (window as unknown as TopWin).__tl.menu.element;
@@ -7958,7 +8718,7 @@ try {
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
 
       // By key and by hover. The submenu is a feature the menu loads on
-      // demand (FLO-310); each way in must reach it. Opened by key, Share
+      // demand; each way in must reach it. Opened by key, Share
       // has focus: ArrowRight opens its submenu on the first item, ArrowLeft
       // closes it and goes back to Share. Resting the pointer on Share opens it.
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
@@ -8004,7 +8764,7 @@ try {
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
 
-      // ArrowUp on the opener opens the menu on its last item (FLO-524), for the
+      // ArrowUp on the opener opens the menu on its last item, for the
       // factory, in a shadow root and in light DOM. The opener puts focus there
       // 100ms after the key; the menu's own initial focus, 20ms later, used to move
       // it to the first item. The fixed wait is the assertion: focus is still on the
@@ -8023,7 +8783,7 @@ try {
     }
   }
 
-  // ---------------------------------------------------------------- FAB menu (FLO-306)
+  // ---------------------------------------------------------------- FAB menu
   await fresh(
     page,
     `<div class="stage" style="padding-top:260px"><button id="fm-before">Before</button>
@@ -8126,7 +8886,7 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
-      // The menu's "close" comes with the click since FLO-548 (it came on a 50ms timer),
+      // The menu's "close" comes with the click since then (it came on a 50ms timer),
       // so this loop should find the attribute gone at once; it stays as the guard it
       // was. The assertion below reports an `open` that stayed.
       for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
@@ -8135,7 +8895,7 @@ try {
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
     check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
 
-    // FLO-548: `open` by attribute or property is applied in the attribute
+    // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
     // each, and the state and the attribute are there when they return. In the
     // menu presentation too, where the surface comes from a module of its own.
@@ -8192,7 +8952,7 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("FAB menu: renders as the factory does with the global stylesheet");
 
-    // FLO-348: the motion, frame by frame. The transitions are paused and seeked,
+    // The motion, frame by frame. The transitions are paused and seeked,
     // so every frame is read exactly, whatever the machine's speed.
     const motion = await page.evaluate(async () => {
       const fm = document.getElementById("fm") as Fm;
@@ -8253,7 +9013,145 @@ try {
     check("FAB menu: the close corner lerps to 28px, colours stay in range, items reveal as end-anchored pills with overshoot");
   }
 
-  // ---------------------------------------------------------------- chips right to left (FLO-343 follow-up)
+  // A placed FAB menu opens into the page. The list, the items and the FAB were
+  // anchored to the inline end, so at bottom-start they crossed the start edge,
+  // left to right and right to left. bottom-end already opens inward.
+  {
+    const placements = ["bottom-end", "bottom-start"] as const;
+    const failures: string[] = [];
+    const rows: string[] = [];
+    const note = (name: string, problems: string[]): void => {
+      const line = problems.length ? `FAIL ${name}: ${problems.join("; ")}` : `ok ${name}`;
+      rows.push(line);
+      console.log(`  ${line}`);
+      if (problems.length) failures.push(line);
+    };
+    const three = `<m-fab-menu-item value="reply" icon='${ICON}'>Reply</m-fab-menu-item><m-fab-menu-item value="forward">Forward</m-fab-menu-item><m-fab-menu-item value="archive">Archive</m-fab-menu-item>`;
+    const placed = async (dir: "ltr" | "rtl", form: "element" | "factory", placement: "bottom-end" | "bottom-start", size: "default" | "large"): Promise<{
+      view: { width: number; height: number };
+      fab: { left: number; right: number; top: number; bottom: number; width: number };
+      boxes: { text: string; left: number; right: number; top: number; bottom: number; width: number; height: number }[];
+      motion?: { closed: { left: number; right: number; width: number }; opening: { left: number; right: number; width: number }[]; closing: { left: number; right: number; width: number }[] };
+    }> => {
+      const markup = form === "element"
+        ? `<div dir="${dir}"><m-fab-menu id="placed" placement="${placement}" presentation="list" size="${size}" icon='${ICON}' aria-label="Compose">${three}</m-fab-menu></div>`
+        : `<div dir="${dir}" id="placed-slot"></div>`;
+      await fresh(page, markup);
+      return page.evaluate(async ({ form, placement, size, icon, motion }) => {
+        type Made = { element: HTMLElement; open: () => void; close: () => void };
+        type Host = HTMLElement & { show: () => void; hide: () => void };
+        const w = window as unknown as Win & { mtrl: { createFabMenu: (config: object) => Made } };
+        const items = [
+          { id: "reply", text: "Reply", icon },
+          { id: "forward", text: "Forward" },
+          { id: "archive", text: "Archive" },
+        ];
+        let root: HTMLElement;
+        let open: () => void;
+        let close: () => void;
+        if (form === "factory") {
+          const made = w.mtrl.createFabMenu({ placement, presentation: "list", size, icon, ariaLabel: "Compose", items });
+          made.element.id = "placed";
+          document.getElementById("placed-slot")?.append(made.element);
+          root = made.element;
+          open = () => made.open();
+          close = () => made.close();
+        } else {
+          const host = document.getElementById("placed") as Host;
+          root = host.shadowRoot?.querySelector(".mtrl-fab-menu") as HTMLElement;
+          open = () => host.show();
+          close = () => host.hide();
+        }
+        const buttons = () => [...root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item")];
+        const fabOf = () => root.querySelector(".mtrl-fab-menu__fab") as HTMLElement;
+        const boxOf = (el: HTMLElement) => {
+          const box = el.getBoundingClientRect();
+          return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+        };
+        const settle = async (): Promise<void> => {
+          for (const end = Date.now() + 2000; Date.now() < end;) {
+            for (const animation of root.getAnimations({ subtree: true })) animation.finish();
+            if (buttons().length === 3 && buttons().every((item) => item.getBoundingClientRect().width > 40)) return;
+            await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          }
+        };
+        const seek = async (): Promise<{ left: number; right: number; width: number }[]> => {
+          await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          const animations = root.getAnimations({ subtree: true });
+          const frames: { left: number; right: number; width: number }[] = [];
+          for (let t = 0; t <= 700; t += 50) {
+            for (const animation of animations) { animation.pause(); animation.currentTime = t; }
+            const box = fabOf().getBoundingClientRect();
+            frames.push({ left: box.left, right: box.right, width: box.width });
+          }
+          for (const animation of animations) animation.finish();
+          return frames;
+        };
+        if (!motion) {
+          open();
+          await settle();
+          const fab = boxOf(fabOf());
+          return {
+            view: { width: innerWidth, height: innerHeight },
+            fab: { left: fab.left, right: fab.right, top: fab.top, bottom: fab.bottom, width: fab.width },
+            boxes: buttons().map((item) => ({ text: (item.textContent ?? "").trim(), ...boxOf(item) })),
+          };
+        }
+        const closed = boxOf(fabOf());
+        open();
+        const opening = await seek();
+        close();
+        const closing = await seek();
+        return {
+          view: { width: innerWidth, height: innerHeight },
+          fab: { left: closed.left, right: closed.right, top: closed.top, bottom: closed.bottom, width: closed.width },
+          boxes: [],
+          motion: { closed: { left: closed.left, right: closed.right, width: closed.width }, opening, closing },
+        };
+      }, { form, placement, size, icon: ICON, motion: size === "large" });
+    };
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        for (const placement of placements) {
+          const measured = await placed(dir, form, placement, "default");
+          const problems: string[] = [];
+          const outerIsLeft = (dir === "ltr" && placement === "bottom-start") || (dir === "rtl" && placement === "bottom-end");
+          if (measured.boxes.length !== 3) problems.push(`expected 3 items, got ${measured.boxes.length}`);
+          for (const box of measured.boxes) {
+            const outside = box.left < -0.5 || box.right > measured.view.width + 0.5 || box.top < -0.5 || box.bottom > measured.view.height + 0.5;
+            if (outside) problems.push(`${box.text} ${box.left.toFixed(1)},${box.top.toFixed(1)} ${box.width.toFixed(1)}×${box.height.toFixed(1)} is outside ${measured.view.width}×${measured.view.height}`);
+            if (outerIsLeft && box.left < measured.fab.left - 0.5) problems.push(`${box.text} left ${box.left.toFixed(1)} is left of the FAB ${measured.fab.left.toFixed(1)}`);
+            if (!outerIsLeft && box.right > measured.fab.right + 0.5) problems.push(`${box.text} right ${box.right.toFixed(1)} is right of the FAB ${measured.fab.right.toFixed(1)}`);
+          }
+          note(`FAB menu ${placement} (${form}, ${dir})`, problems);
+        }
+      }
+    }
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        const measured = await placed(dir, form, "bottom-start", "large");
+        const problems: string[] = [];
+        const motion = measured.motion;
+        if (!motion) problems.push("no motion sample");
+        else {
+          const edge = dir === "ltr" ? "left" : "right";
+          const drift = (frames: { left: number; right: number }[]) => Math.max(...frames.map((frame) => Math.abs(frame[edge] - motion.closed[edge])));
+          const widths = [...motion.opening, ...motion.closing].map((frame) => frame.width);
+          const openingDrift = drift(motion.opening);
+          const closingDrift = drift(motion.closing);
+          if (openingDrift > 0.5) problems.push(`opening, the ${edge} edge moves ${openingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (closingDrift > 0.5) problems.push(`closing, the ${edge} edge moves ${closingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (Math.max(...widths) - Math.min(...widths) < 20) problems.push(`the FAB did not shrink: width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+          console.log(`  motion bottom-start (${form}, ${dir}): closed ${edge} ${motion.closed[edge].toFixed(1)} width ${motion.closed.width.toFixed(1)}; opening drift ${openingDrift.toFixed(2)}px; closing drift ${closingDrift.toFixed(2)}px; width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+        }
+        note(`FAB menu bottom-start motion (${form}, ${dir})`, problems);
+      }
+    }
+    assert.equal(failures.length, 0, rows.join("\n"));
+    check("FAB menu: bottom-end and bottom-start open into the page, in both directions, factory and element");
+  }
+
+  // ---------------------------------------------------------------- chips right to left (follow-up)
   // <m-chips> renders its chips in a shadow root: a `dir="rtl"` above the host
   // reverses Left and Right there too, which closest("[dir]") did not see.
   await fresh(
@@ -8370,7 +9268,7 @@ try {
     const settle = (): Promise<unknown> => wait(450);
     // `settle()` is the menu's open or close transition. What the next step needs
     // comes on the menu's own timers and frames (focus 120ms after opening, the
-    // "close" event with a dismissal since FLO-548, focus back on the anchor a frame later, a
+    // "close" event with a dismissal since, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
     // wait, for 5s at most. When it never comes, the failure says at which step,
@@ -8410,7 +9308,7 @@ try {
        </m-menu>`
     );
     await listen("mm", ["open", "close", "select"]);
-    // A close takes effect in the call (FLO-548): asserted on the line after the action, before
+    // A close takes effect in the call: asserted on the line after the action, before
     // the fixed wait, not waited for. A poll here would pass a close that had become late.
     const closed = async (step: string): Promise<void> =>
       assert.deepEqual(await menuState(), { open: false, attribute: false }, `${step}: <m-menu> is closed when the action returns`);
@@ -8449,7 +9347,7 @@ try {
     // A menu opened with a key puts focus on its first item on a timer, about 120ms
     // after the key. A fixed wait is not that moment: on a runner whose main thread
     // paused for a third of a second, the keys below got there first, were handled
-    // with no item focused, and focus ended one item short (FLO-423).
+    // with no item focused, and focus ended one item short.
     const focusOn = async (label: string): Promise<void> => {
       for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
     };
@@ -8465,7 +9363,7 @@ try {
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
 
-    // ArrowUp on the anchor opens the menu on its last item (FLO-524). The anchor puts
+    // ArrowUp on the anchor opens the menu on its last item. The anchor puts
     // focus there 100ms after the key, and the menu's own initial focus, which runs
     // 20ms later, used to move it to the first item. The fixed wait is the assertion:
     // focus is still on the last item once every opening timer has run.
@@ -8512,8 +9410,8 @@ try {
     ]);
     check("menu: nested items open a submenu in the top layer; its item selects and closes once");
 
-    // By key and by hover, as the factory: the submenu is loaded on demand
-    // (FLO-310), and each way in must reach it
+    // By key and by hover, as the factory: the submenu is loaded on demand,
+    // and each way in must reach it
     const openSubmenus = (): Promise<number> =>
       page.evaluate(() =>
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
@@ -8550,7 +9448,7 @@ try {
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
 
-    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // Acceptance: arrows pressed before the menu's initial focus are not
     // undone by it. A menu opened with a key focuses its first item on a 100ms
     // timer; here that timer is held until the arrows have been handled, the order
     // fast keys (or a paused page) produce. Today the timer then puts focus back
@@ -8598,8 +9496,8 @@ try {
       await settle();
       await log();
       // The known bug is this one move, back to the first item. Any other change of
-      // focus is not FLO-515 and fails as usual.
-      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      // focus is not the known bug and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "The menu's initial focus moved focus back to the first item, after arrows had moved it on");
       assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
     })();
 
@@ -8610,7 +9508,7 @@ try {
     await closed("menu, hide()");
     await settle();
     // The attribute, and the property that reflects it, are applied in the
-    // attribute callback (FLO-548): the menu is open, or closed, on the next
+    // attribute callback: the menu is open, or closed, on the next
     // line, and nothing is dispatched. It was applied a microtask later, and
     // dispatched `open` and `close`.
     const byAttribute = await page.evaluate(() => {
@@ -8827,7 +9725,7 @@ try {
     assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
     check("select: <label for> focuses the combobox");
 
-    // FLO-543: the attribute reaches the select's menu, which has no public
+    // The attribute reaches the select's menu, which has no public
     // member for it; the menu is under mtrl's symbol, found by its description.
     const placed = await page.evaluate(() => {
       const el = document.getElementById("ms") as Host;
@@ -8892,7 +9790,7 @@ try {
     assert.deepEqual(selectParity.element, selectParity.factory);
     check("select: the closed field renders as the factory's in light DOM");
 
-    // FLO-272: a long list stays in the viewport, scrolling, on the side of
+    // A long list stays in the viewport, scrolling, on the side of
     // the field with room: near the bottom it opens above, near the top
     // below; the factory's in-field menu and the element's top-layer one.
     const long = await page.evaluate(async () => {
@@ -8959,7 +9857,7 @@ try {
     });
     check("select: a long list stays in the viewport and scrolls, above the field near the bottom and below it near the top");
 
-    // FLO-272: an open menu follows its field when a panel around it
+    // An open menu follows its field when a panel around it
     // scrolls, not only the window; the menu's own list scrolling does not move it.
     const follows = await page.evaluate(async () => {
       type Opener = { open: () => unknown; close: () => unknown; element: HTMLElement };
@@ -9042,7 +9940,7 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      // The inner menu is not a member (FLO-543): it is under mtrl's symbol, found by its description
+      // The inner menu is not a member: it is under mtrl's symbol, found by its description
       const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       menu.on("close", () => void w.__closes++);
     });
@@ -9104,7 +10002,7 @@ try {
     await splitClosed("a click on an item", 4);
     await settle();
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
-    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value (FLO-320)");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value");
     assert.deepEqual(await splitState(), { open: false, closes: 4 });
     check("split button: a click outside closes it once; a click on an item selects once");
 
@@ -9160,7 +10058,7 @@ try {
     check("split button: the closed button renders as the factory's in light DOM");
   }
 
-  // ---------------------------------------------------------------- tooltip placement during the entrance transition (FLO-535)
+  // ---------------------------------------------------------------- tooltip placement during the entrance transition
   {
     type Direction = "top" | "bottom" | "left" | "right";
     type Case = { name: string; position: Direction; x: number; y: number; text: string; layer?: "top"; edge?: boolean; wrapped?: boolean };
@@ -9277,11 +10175,11 @@ try {
       if (Math.abs(measured.widthReadWhenPlaced - measured.naturalWidth) > 1) failures.push(`${scenario.name}: placement width ${measured.widthReadWhenPlaced.toFixed(2)} differs from layout width ${measured.naturalWidth}`);
     }
     await page.emulateMedia({ reducedMotion: null });
-    assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
+    assert.equal(failures.length, 0, `tooltip placement:\n${failures.join("\n")}`);
     check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
   }
 
-  // ---------------------------------------------------------------- reduced motion inside a shadow root (FLO-549)
+  // ---------------------------------------------------------------- reduced motion inside a shadow root
   // The document's reduced-motion reset does not reach a shadow tree. The
   // button's corner morph and the group's width springs are not fades, so
   // under the preference they must not be in the computed transition list.
@@ -9362,10 +10260,9 @@ try {
     });
 
     // Where the factory without a layer puts it, on the body with the global
-    // stylesheet, hovered on the same target alongside the element's. That
-    // tooltip is `position: fixed` at page coordinates, so with the page
-    // scrolled it sits the scroll offset below its place: the top-layer one
-    // is compared with it less the scroll.
+    // stylesheet, hovered on the same target alongside the element's. Both
+    // tooltips are `position: fixed` and placed in viewport coordinates, so
+    // with the page scrolled the two are compared directly.
     await page.evaluate(() => {
       const w = window as unknown as PopWin & { __unlayered: Tip };
       w.__unlayered = w.mtrl.createTooltip({ target: w.__pop.root.getElementById("pt-save"), text: "Save the file" });
@@ -9376,7 +10273,7 @@ try {
         const { top, left, width, height } = tip.element.getBoundingClientRect();
         const style = getComputedStyle(tip.element);
         const result = {
-          rect: { top: top - window.scrollY, left, width, height },
+          rect: { top, left, width, height },
           style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
           classes: [...tip.element.classList].sort().join(" "),
         };
@@ -9639,7 +10536,7 @@ try {
     });
     check("snackbar: its text and message change in place, action recreates");
 
-    // FLO-548: a snackbar shown behind another is queued, not open. Its state
+    // A snackbar shown behind another is queued, not open. Its state
     // turns visible and `open` is dispatched together, at its turn.
     const queued = await page.evaluate(async () => {
       type Bar = HTMLElement & { open: boolean; show: () => void; hide: () => void; component: { state: string } };
@@ -10144,7 +11041,7 @@ try {
     assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
     check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
 
-    // FLO-386: <m-dialog>'s action buttons (here from the global defaults) and
+    // <m-dialog>'s action buttons (here from the global defaults) and
     // its dividers are mtrl buttons and dividers drawn in its shadow root. Their
     // sheets used to be missing there, so the buttons rendered unstyled: 70
     // computed properties apart from the same button in the page.
@@ -10180,7 +11077,7 @@ try {
     });
     assert.deepEqual(nested.button.inDialog, nested.button.inPage, "the dialog's button is styled as a button in the page");
     assert.deepEqual(nested.divider.inDialog, nested.divider.inPage, "the dialog's divider is styled as a divider in the page");
-    check("dialog element: its buttons and dividers carry their own sheets in its shadow root (FLO-386)");
+    check("dialog element: its buttons and dividers carry their own sheets in its shadow root");
 
     // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
     // display:contents wrapper: its action is a Tab stop, its fixed box is placed
@@ -10886,7 +11783,7 @@ try {
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
   }
 
-  // ---------------------------------------------------------------- named slots (FLO-325)
+  // ---------------------------------------------------------------- named slots
   // Each element's `slots` are the named slots it reads, and no other: given
   // a child per declared name, its shadow root has exactly those named
   // <slot>s, and each child is assigned to one.
@@ -10922,7 +11819,7 @@ try {
   }
 
   // ---------------------------------------------------------------- parts
-  // FLO-328: every piece is a part named after its BEM class without the
+  // Every piece is a part named after its BEM class without the
   // prefix; the element holding the slot is also the slot attribute's part.
   await fresh(
     page,
@@ -10967,7 +11864,7 @@ try {
     check("parts: page CSS styles m-button::part(label) and (icon), m-switch::part(track) and a helper added later, m-tabs::part(indicator)");
   }
 
-  // ---------------------------------------------------------------- FLO-320: payload parity, part 2
+  // ---------------------------------------------------------------- payload parity, part 2
   await fresh(
     page,
     `<m-navigation-rail id="pr" aria-label="Rail" value="a">
@@ -11003,7 +11900,7 @@ try {
     );
     // The factory's `value` stays a Date: its `iso` is the element's `value`,
     // and the element's `date` is the factory's Date.
-    // Entered by hand: setValue is silent (FLO-328).
+    // Entered by hand: setValue is silent.
     const enter = (text: string): string =>
       `const input = host.shadowRoot.querySelector("input"); input.value = "${text}"; input.dispatchEvent(new Event("change", { bubbles: true }));`;
     const date = enter("09/12/2026");
@@ -11021,7 +11918,7 @@ try {
     assert.deepEqual(
       await eventParity(page, "ptp", {
         factoryEvent: "change", elementEvent: "change", factory: "host.component.picker",
-        // Committed by OK: setValue is silent (FLO-328).
+        // Committed by OK: setValue is silent.
         act: `const p = host.component.picker; p.setType("input"); p.open();
           const set = (type, v) => { const f = p.dialogElement.querySelector('[data-type="' + type + '"]'); f.value = v; f.dispatchEvent(new Event("change", { bubbles: true })); };
           set("hour", "10"); set("minute", "45");
@@ -11029,7 +11926,7 @@ try {
       }),
       { factory: ["10:45"], element: ["10:45"] }, "time picker",
     );
-    check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element (FLO-320)");
+    check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element");
   }
 
   // ---------------------------------------------------------------- theme
@@ -11052,7 +11949,7 @@ try {
     check("theme: a theme on the document reaches the shadow root");
   }
 
-  // FLO-330: the typeface and the corners are tokens, the compiled values their
+  // The typeface and the corners are tokens, the compiled values their
   // fallback. Unset, a button and a card render as before; set on the document,
   // the tokens reach an element's shadow root and a factory alike.
   await fresh(
@@ -11113,7 +12010,7 @@ try {
   }
 
   // ---------------------------------------------------------------- the sheets' and the dialog's close target
-  // FLO-579: the side sheet's and the dialog's close buttons are hand-built
+  // The side sheet's and the dialog's close buttons are hand-built
   // 40 x 40 buttons with no expanded target, so a click a few pixels outside
   // them does not reach them. m3.material.io, Density: "The default target size
   // should be at least 48x48 CSS pixels". The case, ltr and rtl: on every side
@@ -11232,6 +12129,71 @@ try {
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
+  }
+
+  // ---------------------------------------------------------------- the side-sheet close under a page reset
+  // Round 2 (#55): the close button got its `position` only from the state
+  // layer's zero-specificity `:where()` rule, which a page rule like
+  // `button { position: static }` (0,0,1) outranks. The button then went
+  // static: the layer (`inset: 0`) covered the nearest positioned ancestor —
+  // the whole sheet panel — and the 48 px target centred on that ancestor.
+  // The button now carries its own `position: relative`, so both stay on it.
+  await page.addStyleTag({ content: "button { position: static }" });
+  await fresh(page, `<div id="reset-ltr" dir="ltr"></div><div id="reset-rtl" dir="rtl"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Close = { element: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: { createSideSheet: (config: object) => Close } };
+      const failures: string[] = [];
+      const measured: string[] = [];
+      const round = (value: number): string => value.toFixed(2);
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.getElementById(`reset-${dir}`) as HTMLElement;
+        const sheet = w.mtrl.createSideSheet({ title: "Data tools", variant: "standard", content: "<p>Data tools</p>", width: 360, container: wrap });
+        sheet.open();
+        await new Promise((r) => setTimeout(r, 700));
+        const button = sheet.element.querySelector(".mtrl-side-sheet__close") as HTMLElement;
+        const box = button.getBoundingClientRect();
+        const position = getComputedStyle(button).position;
+        measured.push(`side sheet ${dir}: close button ${round(box.width)} x ${round(box.height)} at position ${position}`);
+        if (position === "static") failures.push(`side sheet ${dir}: the close button is static under a page 'button { position: static }'`);
+        const layer = getComputedStyle(button, "::before");
+        measured.push(`side sheet ${dir}: layer ${layer.width} x ${layer.height} at position ${layer.position}`);
+        if (Math.abs(parseFloat(layer.width) - box.width) > 0.5 || Math.abs(parseFloat(layer.height) - box.height) > 0.5) {
+          failures.push(`side sheet ${dir}: the layer is ${layer.width} x ${layer.height}, not the button's own ${round(box.width)} x ${round(box.height)}`);
+        }
+        const reaches = (x: number, y: number): boolean => {
+          const el = document.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        const cx = (box.left + box.right) / 2;
+        const cy = (box.top + box.bottom) / 2;
+        for (const side of ["left", "right", "top", "bottom"] as const) {
+          const at = (d: number): [number, number] =>
+            side === "left" ? [box.left - d, cy] : side === "right" ? [box.right + d, cy] : side === "top" ? [cx, box.top - d] : [cx, box.bottom + d];
+          const [x3, y3] = at(3);
+          if (!reaches(x3, y3)) failures.push(`side sheet ${dir}: the hit 3 px past the ${side} edge does not reach the button`);
+          // As in the case above: a 48 box centred on the 40 px button changes
+          // the hit exactly 4 px out; a target that escaped to the ancestor
+          // changes it at the button's own edge instead.
+          let change: number | null = null;
+          for (let d = 1; d <= 64; d++) {
+            const [x, y] = at(d);
+            if (!reaches(x, y)) { change = d; break; }
+          }
+          if (change !== null && change < 4) failures.push(`side sheet ${dir}: the target's hit changes ${change} px past the ${side} edge, under the 4 px a 48 box needs`);
+          measured.push(`side sheet ${dir}: target hit changes ${change === null ? "> 64 px" : `${change} px`} past the ${side} edge`);
+        }
+        sheet.close();
+        sheet.destroy();
+        sheet.element.remove();
+      }
+      return { failures, measured };
+    });
+    for (const line of measured.measured) console.log(`  ${line}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("side sheet: under a page 'button { position: static }', the close button keeps its own position, layer and 48 px target, ltr and rtl");
   }
 
   assert.deepEqual(errors, [], "no page errors");

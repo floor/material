@@ -31,7 +31,7 @@ export interface TimePickerEvents {
   /**
    * The committed 24-hour value (HH:MM, or HH:MM:SS with showSeconds), also
    * submitted by the form: once when OK commits a different time. setValue is
-   * silent (FLO-328). Moves on the dial or in the fields are `input` (FLO-288).
+   * silent. Moves on the dial or in the fields are `input`.
    */
   change: (event: TimePickerValueEvent) => void;
   /** The committed value and draft as the dial, fields or AM/PM change. */
@@ -41,7 +41,7 @@ export interface TimePickerEvents {
   open: () => void;
   close: () => void;
   cancel: () => void;
-  /** Root events; the dialog is inside the root (FLO-288), so its clicks and keys reach these too. */
+  /** Root events; the dialog is inside the root, so its clicks and keys reach these too. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
   tap: (payload: TimePickerTapPayload) => void;
@@ -81,7 +81,7 @@ export enum TIME_FORMAT {
   MILITARY = '24h'
 }
 
-/** A time format as the enum or its string value, `'12h'` or `'24h'` (FLO-323) */
+/** A time format as the enum or its string value, `'12h'` or `'24h'` */
 export type TimeFormat = TIME_FORMAT | `${TIME_FORMAT}`;
 /** A time picker type as the enum or its string value, `'dial'` or `'input'` */
 export type TimePickerType = TIME_PICKER_TYPE | `${TIME_PICKER_TYPE}`;
@@ -122,7 +122,7 @@ export interface TimePickerConfig {
    * Type of time picker to display
    * @default TIME_PICKER_TYPE.DIAL
    */
-  // The enum or its string value, as the other components take theirs (FLO-323)
+  // The enum or its string value, as the other components take theirs
   type?: TimePickerType;
 
   /**
@@ -210,20 +210,20 @@ export interface TimePickerConfig {
    * Whether the time picker is open when the factory returns: `isOpen()` is
    * true and `open` has been emitted (to `onOpen`). Its surface is shown a
    * task later, in the place the picker has been put by then, or in the body.
-   * It was `isOpen`, the name of the method that reads the state (FLO-548).
+   * It was `isOpen`, the name of the method that reads the state.
    * @default false
    */
   open?: boolean;
 
   /**
-   * Whether the picker is disabled: it does not open (FLO-288)
+   * Whether the picker is disabled: it does not open
    * @default false
    */
   disabled?: boolean;
 
   /**
    * Where the dialog is appended. By default it stays in the component's own
-   * element, as the other modals' do (FLO-288); it was document.body.
+   * element, as the other modals' do; it was document.body.
    * @default the component's element
    */
   container?: string | HTMLElement;
@@ -246,7 +246,7 @@ export interface TimePickerConfig {
 
   /**
    * `input` listener registered at creation, as the draft changes while the
-   * picker is open (FLO-288).
+   * picker is open.
    */
   onInput?: TimePickerEvents["input"];
 
@@ -300,7 +300,7 @@ export type ResolvedTimePickerConfig = TimePickerConfig &
       | "prefix"
     >
   > & {
-    /** The dialog title's id, unique per picker (FLO-278). */
+    /** The dialog title's id, unique per picker. */
     titleId?: string;
   };
 
@@ -427,7 +427,7 @@ export interface TimePickerComponent {
    */
   getTitle: () => string;
 
-  /** Enables the picker (FLO-288) */
+  /** Enables the picker */
   enable: () => TimePickerComponent;
 
   /** Disables the picker: it does not open, and an open one is cancelled */

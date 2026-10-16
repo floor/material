@@ -10,7 +10,7 @@
 // carried null behind a type that promised otherwise. Falsy either way, so
 // nothing rendered wrong, but a consumer testing `=== false` got nothing back.
 //
-// Found while clearing this file for strictNullChecks (FLO-114).
+// Found while clearing this file for strictNullChecks.
 
 import { describe, test, expect } from "bun:test";
 import { generateCalendarDates } from "../../../src/components/datepicker/utils";

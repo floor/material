@@ -25,22 +25,22 @@ export type {
   TabChangeEventData,
   TabEvents,
   TabsEvents,
-  // Public: TabsConfig.indicator takes it (FLO-381 keeps it)
+  // Public and kept: TabsConfig.indicator takes it
   IndicatorConfig,
 } from "./types";
 
 // Public and documented (md3.io tabs); a responsive option on createTabs
-// replaces it in a later 3.x release (FLO-381)
+// replaces it in a later 3.x release
 export { setupResponsiveBehavior };
-// Public: a page that writes its own panels names them with the derived ids (FLO-430)
+// Public: a page that writes its own panels names them with the derived ids
 export { tabIdFor, tabPanelIdFor };
 export type { ResponsiveConfig } from "./responsive";
-// Public: TabsComponent.getIndicator returns it (FLO-381)
+// Public: TabsComponent.getIndicator returns it
 export type { TabIndicator } from "./indicator";
 
 // Default export
 export default createTabs;
 export { createTabs };
 
-// A single tab, for a tablist built by hand or `addTab` with an instance (FLO-384)
+// A single tab, for a tablist built by hand or `addTab` with an instance
 export { createTab } from "./tab";

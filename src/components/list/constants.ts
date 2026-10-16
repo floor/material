@@ -17,6 +17,17 @@ export const LIST_DEFAULTS = {
 } as const;
 
 /**
+ * List variants (m3.material.io lists)
+ * - STANDARD: the baseline list: no container, square rows (default)
+ * - SEGMENTED: the expressive list: each row paints its own container and
+ *   shape, 2px apart
+ */
+export const LIST_VARIANTS = {
+  STANDARD: 'standard',
+  SEGMENTED: 'segmented'
+} as const;
+
+/**
  * List types for rendering and behavior
  */
 export const LIST_TYPES = {

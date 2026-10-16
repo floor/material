@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Tabs laid out in a real browser.
 //
-// FLO-241. `.mtrl-tabs` is `flex-direction: column` so that a scroll container
+// `.mtrl-tabs` is `flex-direction: column` so that a scroll container
 // sits above the divider. Without `scrollable` the component builds no scroll
 // container and the tab buttons are direct children of the root, so they
 // inherited that column and **stacked vertically** — while the rule right
@@ -152,7 +152,7 @@ try {
     checks += 2;
   }
 
-  // FLO-262: the painted indicator, the stacked icon and the interaction states,
+  // The painted indicator, the stacked icon and the interaction states,
   // against m3.material.io tabs specs.
   await page.evaluate(() => { document.documentElement.dir = "ltr"; });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -226,8 +226,8 @@ try {
   assert.equal(ring, `3px solid ${colours.secondary} -3px`, "focused tab: a 3dp secondary ring drawn inward");
   checks += 3;
 
-  // FLO-417: a tab value is data, so quotes in its id must not enter a CSS selector.
-  // FLO-430: the id is derived, a"b -> tabx-special-a_22_b, with no character
+  // A tab value is data, so quotes in its id must not enter a CSS selector.
+  // The id is derived, a"b -> tabx-special-a_22_b, with no character
   // an id reference cannot carry.
   const quotedValue = await page.evaluate(() => {
     const value = 'a"b';

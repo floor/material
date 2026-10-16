@@ -34,7 +34,7 @@ for (const prefix of [PREFIX]) {
     expect(group.element.style.getPropertyValue(`--${prefix}-button-group-radius`)).toBe('24px');
   });
 
-  // FLO-323: the card's --card-elevation writes were read by no stylesheet
+  // The card's --card-elevation writes were read by no stylesheet
   // and are gone; elevation is its classes.
   test(`${prefix}: the card writes no custom property, at creation, hover or drag`, () => {
     const card = attach(createCard({ prefix, variant: 'elevated', interactive: true, draggable: true }));

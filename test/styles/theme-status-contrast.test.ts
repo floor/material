@@ -1,4 +1,4 @@
-// FLO-407. Success, warning and info are one fixed pair per mode, shared by every
+// Success, warning and info are one fixed pair per mode, shared by every
 // theme (status-roles-light / status-roles-dark). on-warning on warning was 3.35:1
 // in every light theme. Each pair has to reach 4.5:1 in light and dark. These are
 // the standard-contrast values: the high-contrast theme uses them too, and a 7:1

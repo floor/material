@@ -1,6 +1,6 @@
 // test/types/card-events.fixture.ts
 //
-// FLO-323: the card composes withEvents and emits click (clickable), the
+// The card composes withEvents and emits click (clickable), the
 // interactive events, and dragstart/dragend (draggable), but its public type
 // declared no on/off, so none of them could be listened to from TypeScript.
 import createCard, { type CardComponent, type CardEvents } from "../../src/components/card";
@@ -21,7 +21,7 @@ card.on("clik", () => {});
 // @ts-expect-error dragstart carries { event }, not the DragEvent itself
 card.on("dragstart", (event: DragEvent) => event.dataTransfer);
 
-// FLO-380: gestures are not model notifications and retain normalized metadata.
+// Gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<CardEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<CardEvents["swipe"]>[0], SwipePayload> = true;
@@ -31,6 +31,6 @@ card.on("expandedChanged", payload => payload.expanded).off("expandedChanged", p
 // @ts-expect-error expansion is presentation state, not a model value
 card.on("expandedChanged", payload => payload.value);
 
-// FLO-381: createCard never set loading, expandable or swipeable, and 3.0.0 has
+// CreateCard never set loading, expandable or swipeable, and 3.0.0 has
 // no public way to add them, so CardComponent does not declare them.
 export const noEnhancerMembers: Equals<Extract<keyof CardComponent, "loading" | "expandable" | "swipeable">, never> = true;

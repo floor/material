@@ -71,11 +71,11 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
       withElement(getElementConfig(baseConfig)), // Create DOM element
       withLifecycle(), // Features register cleanup on the shared lifecycle
       withVariant(baseConfig), // Apply variant styling (filled/outlined)
-      withField(baseConfig), // The container the features below draw into (FLO-300)
+      withField(baseConfig), // The container the features below draw into
       withTextInput(baseConfig), // Add input element
-      withDensity(baseConfig), // Apply density level, to the input too: it has to exist first (FLO-303)
+      withDensity(baseConfig), // Apply density level, to the input too: it has to exist first
       withTextLabel(baseConfig), // Add text label
-      withRequired(baseConfig), // The required asterisk on the label (FLO-301)
+      withRequired(baseConfig), // The required asterisk on the label
       withLeadingIcon(baseConfig), // Add leading icon (if specified)
       withTrailingIcon(baseConfig), // Add trailing icon (if specified)
       withPrefixText(baseConfig), // Add prefix text (if specified)
@@ -84,7 +84,7 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
       withError(baseConfig), // Add error state management
       // After withError: it reads the live supportingTextElement of the feature
       // before it, which a spread in between would copy into a snapshot
-      withCounter(baseConfig), // The character counter, while the input has a maxlength (FLO-300)
+      withCounter(baseConfig), // The character counter, while the input has a maxlength
       withDisabled(baseConfig), // Add disabled state management
       withPlacement(), // Add dynamic positioning for elements
       (comp) => withAPI(getApiConfig(comp))(comp) // Add public API

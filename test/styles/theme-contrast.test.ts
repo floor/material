@@ -1,5 +1,5 @@
 // test/styles/theme-contrast.test.ts
-// FLO-406: audit the shipped CSS, including inherited baseline and status roles.
+// Audit the shipped CSS, including inherited baseline and status roles.
 import { describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 import { themeStyles, standaloneThemes } from '../../scripts/style-manifest';
@@ -79,7 +79,7 @@ describe('every theme contrast level', () => {
       // The brief preserves standard and status colors. Keep the strict bound
       // visible as an expected failure for precisely these existing exceptions;
       // a fix makes test.failing fail too, requiring this list to be revisited.
-      // The status colours of FLO-407 (#369) pass at standard and medium; only
+      // The status colours of #369 pass at standard and medium; only
       // light high (7:1) still falls short for them.
       const preservedFailure = (fg: string) =>
         (mode === 'light' && level === 'high' && ['on-warning', 'on-success', 'on-info'].includes(fg));

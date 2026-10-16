@@ -3,7 +3,7 @@
 import type { ElementComponent } from "../../../core/compose/component";
 
 /**
- * The text field's anatomy, as M3 draws it (FLO-300): the root holds the
+ * The text field's anatomy, as M3 draws it: the root holds the
  * field — the 56dp container with its label, input, outline, icons and
  * affixes — and, under it, the supporting text row with the helper at the
  * start and the character counter at the end. The row is in the flow, so a

@@ -48,14 +48,14 @@ $component: '#{base.$prefix}-checkbox';
 
   // The box: 18dp, a 2dp corner and a 2dp on-surface-variant outline, with no fill
   // until selected (CheckboxTokens, md-comp-checkbox). It carried a
-  // surface-container-highest fill and an outline-coloured stroke. FLO-265.
+  // surface-container-highest fill and an outline-coloured stroke.
   &__icon {
     position: relative;
     flex-shrink: 0;
     width: 18px;
     height: 18px;
     box-sizing: border-box;
-    // CheckboxTokens.ContainerShape: 2dp, outside the shape scale (FLO-345)
+    // CheckboxTokens.ContainerShape: 2dp, outside the shape scale
     border-radius: 2px;
     background-color: transparent;
     border: 2px solid t.color('on-surface-variant');
@@ -134,7 +134,7 @@ $component: '#{base.$prefix}-checkbox';
   }
 
   // Error (m3: "those states on error"): the outline, the selected container and
-  // every state layer are error, the check and dash on-error. FLO-265.
+  // every state layer are error, the check and dash on-error.
   &--error {
     .#{$component}__icon {
       border-color: t.color('error');
@@ -158,7 +158,7 @@ $component: '#{base.$prefix}-checkbox';
   // Disabled state. Per role, not a blanket opacity: CheckboxTokens gives the
   // unselected outline and the selected container OnSurface at 0.38, and the selected
   // checkmark Surface at full opacity. The indeterminate dash follows the check: it
-  // was an on-primary dash on a transparent box, which painted nothing. FLO-265.
+  // was an on-primary dash on a transparent box, which painted nothing.
   &--disabled {
     .#{$component}__input {
       cursor: not-allowed;
@@ -191,7 +191,7 @@ $component: '#{base.$prefix}-checkbox';
   // State layers (md-comp-checkbox). Unselected: on-surface on hover and focus, and
   // the outline turns on-surface; selected: primary. A press takes the colour of the
   // state it leads to (unselected presses primary, selected presses on-surface), and
-  // error is error throughout. Checked hover used the pressed opacity. FLO-265.
+  // error is error throughout. Checked hover used the pressed opacity.
   &:not(&--disabled) {
     $input: '.#{$component}__input';
     $layer: '.#{$component}__icon::before';

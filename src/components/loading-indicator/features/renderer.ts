@@ -25,7 +25,7 @@ import {
 import { sampleProfile } from '../../../core/shapes/material';
 
 // The shapes the indicator draws, by name: only these, so the indicator does
-// not carry the other Material shapes (FLO-346)
+// not carry the other Material shapes
 const indicatorShapes: Partial<Record<MaterialShapeName, () => RoundedPolygon>> = {
   circle: shapeCircle,
   oval: shapeOval,

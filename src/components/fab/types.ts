@@ -255,7 +255,6 @@ export interface FabConfig {
   /**
    * Accessible name. Required: an icon-only control has no text for a screen
    * reader to announce, so without this it is just "button" (WCAG 4.1.2).
-   * FLO-110.
    */
   ariaLabel: string;
 
@@ -367,7 +366,7 @@ export interface FabConfig {
  *
  * `on` and `off` are generic over these keys, so a misspelled event name is a
  * compile error rather than a listener that never fires, and the handler's
- * payload is typed rather than `Function`'s implicit `any`. FLO-114.
+ * payload is typed rather than `Function`'s implicit `any`.
  */
 export interface FabEvents extends TouchEvents {
   /** The FAB was clicked. Not forwarded while the FAB is disabled. */
@@ -500,7 +499,7 @@ export interface FabComponent {
    */
   disable: () => FabComponent;
 
-  /** Whether the FAB is disabled (FLO-384) */
+  /** Whether the FAB is disabled */
   isDisabled: () => boolean;
 
   /**

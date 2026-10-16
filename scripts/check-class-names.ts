@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Every class the components ask for is defined by the stylesheets.
 //
-// Written for the BEM migration (FLO-120), which renames element classes on
+// Written for the BEM migration, which renames element classes on
 // both sides at once -- `mtrl-dialog-header` to `mtrl-dialog__header` -- and
 // silently produces an unstyled component if the two sides disagree.
 //

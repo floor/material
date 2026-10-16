@@ -1,8 +1,8 @@
 // test/canonical-text-field.test.ts
 //
-// FLO-383: every exported identifier writes "text field" as two words.
+// Every exported identifier writes "text field" as two words.
 // 0.10.5 exported both spellings; 3.0.0 has only the canonical ones. The strings
-// follow (FLO-560): the tag, the classes and the constants' values are
+// follow: the tag, the classes and the constants' values are
 // text-field too. The list below pins that the old identifier spellings are
 // gone. The guard under it pins that the one-word spelling does not return.
 import { expect, test } from "bun:test";
@@ -31,7 +31,7 @@ const ENTRIES: Record<string, Array<[old: string, to: string]>> = {
   "src/vue/index.ts": [["MTextfield", "MTextField"]],
 };
 
-test("3.0.0 exports only the canonical names: every old spelling is gone from its entry (FLO-383)", () => {
+test("3.0.0 exports only the canonical names: every old spelling is gone from its entry", () => {
   const files = Object.keys(ENTRIES).map((file) => join(ROOT, file));
   const program = ts.createProgram(files, {
     strict: true, skipLibCheck: true, noEmit: true, jsx: ts.JsxEmit.ReactJSX,
@@ -53,7 +53,7 @@ test("3.0.0 exports only the canonical names: every old spelling is gone from it
 }, 60_000);
 
 // The one-word spelling is the nine letters in any case except textField and
-// TextField. The allowlist is the same data the rename script reads.
+// TextField.
 test("no tracked path or line keeps the one-word spelling outside the allowlist", () => {
   const listed = spawnSync("git", ["ls-files", "-z"], { cwd: ROOT, encoding: "utf8" });
   if (listed.status !== 0) throw new Error(listed.stderr || "git ls-files failed");

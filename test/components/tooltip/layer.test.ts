@@ -75,6 +75,7 @@ afterEach(() => {
   removePopover();
   document.body.replaceChildren();
   Reflect.deleteProperty(dom.window, "scrollY");
+  Reflect.deleteProperty(dom.window, "scrollX");
 });
 
 /** A target at a known place in a wrapper, the page scrolled by 500px. */
@@ -108,11 +109,15 @@ describe("tooltip layer: top", () => {
     tooltip.element.getBoundingClientRect = () =>
       ({ width: 180, height: 36 }) as DOMRect;
     tooltip.show(true);
+    // The target's viewport rectangle is top 100, bottom 140, left 400,
+    // right 500; the surface's layout size is 200x40 and the offset 8. The
+    // page is scrolled by 500 (setup), which placement ignores: the surface is
+    // `position: fixed`, so its top/left are viewport coordinates.
     const placements = [
-      ["top", 552, 350], ["top-start", 552, 400], ["top-end", 552, 300],
-      ["right", 600, 508], ["right-start", 600, 508], ["right-end", 600, 508],
-      ["bottom", 648, 350], ["bottom-start", 648, 400], ["bottom-end", 648, 300],
-      ["left", 600, 192], ["left-start", 600, 192], ["left-end", 600, 192],
+      ["top", 52, 350], ["top-start", 52, 400], ["top-end", 52, 300],
+      ["right", 100, 508], ["right-start", 100, 508], ["right-end", 100, 508],
+      ["bottom", 148, 350], ["bottom-start", 148, 400], ["bottom-end", 148, 300],
+      ["left", 100, 192], ["left-start", 100, 192], ["left-end", 100, 192],
     ] as const;
     for (const [position, top, left] of placements) {
       tooltip.setPosition(position);
@@ -121,14 +126,33 @@ describe("tooltip layer: top", () => {
     }
   });
 
-  test("without a layer the tooltip is on the body, with no popover, at document coordinates", () => {
+  test("without a layer the tooltip is on the body, with no popover, at viewport coordinates", () => {
     const { target } = setup();
     const tooltip = make({ target });
     expect(tooltip.element.parentNode).toBe(document.body);
     tooltip.show(true);
     expect(tooltip.element.hasAttribute("popover")).toBe(false);
-    expect(tooltip.element.style.top).toBe(`${140 + 500 + 8}px`);
+    // The surface is `position: fixed`, so the page's scroll is not added to
+    // the target's viewport rectangle
+    expect(tooltip.element.style.top).toBe(`${140 + 8}px`);
+    expect(tooltip.element.style.left).toBe(`${200 + 100 / 2}px`);
     expect(popoverCalls).toEqual([]);
+  });
+
+  test("keeps its offset from the target when the page scrolls", () => {
+    const { target } = setup();
+    const tooltip = make({ target });
+    const scrollTo = (y: number, x: number) => {
+      Object.defineProperty(dom.window, "scrollY", { value: y, configurable: true });
+      Object.defineProperty(dom.window, "scrollX", { value: x, configurable: true });
+    };
+    scrollTo(0, 0);
+    tooltip.show(true);
+    const atTop = { top: tooltip.element.style.top, left: tooltip.element.style.left };
+    scrollTo(500, 700);
+    tooltip.updatePosition();
+    expect({ top: tooltip.element.style.top, left: tooltip.element.style.left }).toEqual(atTop);
+    expect(atTop).toEqual({ top: `${140 + 8}px`, left: `${200 + 100 / 2}px` });
   });
 
   test("renders after its target as a manual popover, at viewport coordinates", () => {
@@ -207,6 +231,6 @@ describe("tooltip layer: top", () => {
     expect(tooltip.element.parentNode).toBe(document.body);
     expect(tooltip.element.hasAttribute("popover")).toBe(false);
     tooltip.show(true);
-    expect(tooltip.element.style.top).toBe(`${140 + 500 + 8}px`);
+    expect(tooltip.element.style.top).toBe(`${140 + 8}px`);
   });
 });

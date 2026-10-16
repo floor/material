@@ -76,7 +76,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
     // For better accessibility
     if (baseConfig.value) {
       // The group id makes this unique across tablists. Without it two
-      // groups sharing a value produced duplicate ids. FLO-229.
+      // groups sharing a value produced duplicate ids.
       baseComponent.element.setAttribute(
         "id",
         tabIdFor(baseConfig.groupId ?? "", baseConfig.value)
@@ -103,7 +103,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         baseComponent.emit("click", event);
       }
     });
-    // TAB_EVENTS declares focus and blur; nothing emitted them (FLO-264).
+    // TAB_EVENTS declares focus and blur; nothing emitted them.
     for (const type of ["focus", "blur"] as const) {
       button.element.addEventListener(type, (event) => baseComponent.emit?.(type, event));
     }
@@ -292,7 +292,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         this.element.classList.add(`${this.getClass("tab")}--${layoutClass}`);
         // An icon-only tab is named by `ariaLabel`; a visually hidden label names
         // the rest. What stood here could never set a name (icon-only means no
-        // text) and removed the one `ariaLabel` gave. FLO-263.
+        // text) and removed the one `ariaLabel` gave.
       },
     };
 

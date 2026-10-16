@@ -1,6 +1,6 @@
 // test/types/snackbar-events.fixture.ts
 //
-// Snackbar's typed event map (FLO-114). Nothing here runs; the assertions are
+// Snackbar's typed event map. Nothing here runs; the assertions are
 // the test.
 //
 // Snackbar is a different starting point from button's. Its public `on`

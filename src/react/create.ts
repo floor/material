@@ -53,7 +53,7 @@ type BaseProps<S> = ElementProps<S> & DefaultProps<S> & EventProps<S>;
 /**
  * Each named slot as a prop taking nodes (`actions={<Button />}`), rendered
  * into a `<span slot="…">` the adapter owns; a text prop of the same name
- * (`headline`) takes its text or nodes (FLO-333).
+ * (`headline`) takes its text or nodes.
  */
 type SlotProps<S> = { [K in ElementSlotProp<S>]?: React.ReactNode };
 
@@ -213,7 +213,12 @@ export const createComponent = <S, E extends HTMLElement>(
     const tag = `${getPrefix()}-${spec.name}`;
     const template = shadow(tag, attributesAndProps, React.createElement(React.Fragment, null, children as React.ReactNode, ...named));
     const hostProps: Record<string, unknown> = { ...attributesAndProps, ref };
-    if (template != null) hostProps[RENDERED_HOST_ATTRIBUTE] = "";
+    if (template != null) {
+      hostProps[RENDERED_HOST_ATTRIBUTE] = "";
+      // The marker is server HTML too: styles match the host before upgrade
+      // where the sheet cannot spell its (possibly custom-prefixed) tag.
+      if (spec.marker) hostProps[spec.marker] = "";
+    }
     // The attribute is server HTML. React records an extra attribute as a
     // hydration difference and does not remove it. `suppressHydrationWarning`
     // is on the client vnode of a host the server can mark (`ssr` is not

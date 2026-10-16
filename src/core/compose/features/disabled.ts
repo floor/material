@@ -104,7 +104,7 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
         } else {
           // A root that is not a form control has no `disabled`: the bare
           // attribute is not valid there and tells assistive technology
-          // nothing. aria-disabled does (FLO-119).
+          // nothing. aria-disabled does.
           component.element.setAttribute('aria-disabled', 'true');
         }
         
@@ -131,7 +131,7 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
 
         // A root that is not a form control carries no `disabled` property, so
         // the aria-disabled `disable()` writes is the record of the state:
-        // `toggle()` branches on it (FLO-119).
+        // `toggle()` branches on it.
         return component.element.getAttribute('aria-disabled') === 'true';
       }
     };

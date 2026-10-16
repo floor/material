@@ -1,4 +1,4 @@
-// FLO-114: describe the API, calendar and interactive-root events as emitted.
+// Describe the API, calendar and interactive-root events as emitted.
 import createDatePicker, {
   type DatePickerComponent, type DatePickerEvents, type DatePickerValue,
   type DatePickerChangePayload, type DatePickerVisibilityPayload,
@@ -30,7 +30,7 @@ picker.on("click", payload => payload.event.clientX);
 picker.on("keydown", payload => payload.originalEvent.key);
 picker.on("tap", payload => payload.preventDefault());
 picker.on("swipe", payload => payload.direction);
-// FLO-295: one change shape, whoever commits the value.
+// One change shape, whoever commits the value.
 export const range: DatePickerChangePayload = { value: [new Date(), new Date()], rangeEndDate: new Date(), formattedValue: "range", iso: "2026-09-10/2026-09-15" };
 export const single: DatePickerChangePayload = { value: new Date(), rangeEndDate: null, formattedValue: "date", iso: "2026-09-10" };
 export const cleared: DatePickerChangePayload = { value: null, rangeEndDate: null, formattedValue: "", iso: "" };

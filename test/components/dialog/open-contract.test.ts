@@ -1,6 +1,6 @@
 // test/components/dialog/open-contract.test.ts
 //
-// FLO-548, the overlays' open / close contract, for the dialog: when open() or
+// The overlays' open / close contract, for the dialog: when open() or
 // close() returns, isOpen() has changed and the event has been emitted (the
 // cancellable before* first). Classes, painting and the focus trap follow.
 // Open on an open dialog and close on a closed one do nothing and emit nothing.
@@ -46,7 +46,7 @@ Object.defineProperty(dom.window.HTMLElement.prototype, 'offsetHeight', { get: (
 import createDialog from '../../../src/components/dialog';
 import type { DialogConfig, DialogComponent } from '../../../src/components/dialog/types';
 
-// The clock is the tests' own (FLO-569). `afteropen` is on a timer that starts
+// The clock is the tests' own. `afteropen` is on a timer that starts
 // only when the 10ms show timer has run, so waiting on the wall clock for it
 // raced: a stall after open() delays the first timer, the second starts from
 // there, and a real 80ms wait can end before it. `after(ms)` moves the fake
@@ -357,7 +357,7 @@ describe('dialog: open means it can be dismissed', () => {
   /**
    * The listeners the dialog holds on the document and on the window, by
    * type: the scrim's mouseup is on the document, Escape on the window
-   * (FLO-548 family 6).
+   * (family 6).
    */
   const watchDocument = () => {
     const held = new Map<string, Set<unknown>>();
@@ -508,7 +508,7 @@ describe('dialog: open means it can be dismissed', () => {
   });
 });
 
-// FLO-556 and family 6: Escape is handled as a key press, in both layers. The
+// And family 6: Escape is handled as a key press, in both layers. The
 // key is prevented, so in the top layer the browser sends the <dialog> no
 // `cancel` and its allowance (it forces the third refused cancel in a row) is
 // never spent: closeOnEscape: false and a refusing beforeclose hold for any

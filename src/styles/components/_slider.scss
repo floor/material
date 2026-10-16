@@ -5,14 +5,14 @@
 @use '../../styles/abstract/mixins' as m;
 @use '../../styles/abstract/theme' as t;
 
-// Motion (FLO-250). A value change that does not follow a pointer -- a tap on the
+// Motion. A value change that does not follow a pointer -- a tap on the
 // track, a key, setValue() -- carries the handle, the value indicator and the track
 // to the new value on the default spatial spring, as the m3.material.io sliders
 // video shows: a tap slides the handle over, peaking about 300ms in with a 3-5%
 // overshoot and settled by 450ms. The default spatial spring peaks at about 270ms
 // with 1.5% and settles in 450ms; the fast one (140ms, 9%) was visibly too strong. The controller sets
 // `--settling` for those changes alone, so a drag follows the pointer and a layout
-// render (the first one, a resize) never moves anything (FLO-249).
+// render (the first one, a resize) never moves anything.
 //
 // The value indicator grows out of the handle and shrinks back into it: in on
 // motionDurationMedium4 emphasized decelerate, out on motionDurationShort3
@@ -39,7 +39,7 @@ $component: '#{base.$prefix}-slider';
   // inactive track and the ticks on the active track take its container colour
   // (secondaryContainer). A stylesheet overrides them per slider with
   // --<prefix>-slider-color, --<prefix>-slider-container-color and, for the ticks on
-  // the active track alone, --<prefix>-slider-on-color. FLO-250.
+  // the active track alone, --<prefix>-slider-on-color.
   --#{base.$prefix}-slider-track-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
   --#{base.$prefix}-slider-inactive-track-color: var(--#{base.$prefix}-slider-container-color, #{t.color('secondary-container')});
   --#{base.$prefix}-slider-tick-color: var(--#{base.$prefix}-slider-on-color, var(--#{base.$prefix}-slider-inactive-track-color));
@@ -55,7 +55,7 @@ $component: '#{base.$prefix}-slider';
   }
   
   // Label
-  // Body Large, as the checkbox, radio and switch labels (FLO-587).
+  // Body Large, as the checkbox, radio and switch labels.
   &__label {
     display: block;
     @include m.typography('body-large');
@@ -84,7 +84,7 @@ $component: '#{base.$prefix}-slider';
   // An icon outside the track sits level with it, before or after it (the M3
   // guidelines' icons at either end); the label spans the track's column, above or
   // below. It used to be absolutely placed at a fixed top on the start side, so
-  // iconPosition and labelPosition changed nothing on screen. FLO-107.
+  // iconPosition and labelPosition changed nothing on screen.
   &--icon {
     display: grid;
     grid-template-columns: 40px minmax(0, 1fr);
@@ -327,7 +327,7 @@ $component: '#{base.$prefix}-slider';
     .#{$component}__value--visible { transition: $settle-position, $bubble-transition-visible; }
   }
 
-  // Vertical (FLO-252): the same parts turned a quarter. withTracks and the
+  // Vertical: the same parts turned a quarter. withTracks and the
   // controller write positions along the axis -- to bottom, or to top with
   // topToBottom -- and thicknesses across it; the length is the slider's height.
   &--vertical {

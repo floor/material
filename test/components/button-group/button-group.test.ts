@@ -498,8 +498,8 @@ describe("Button Group Component", () => {
 // forwarded payload object instead -- `{ event, element, originalEvent }` --
 // because the handler read its argument as though it were the DOM event.
 // So `.target`, `.preventDefault()` and everything else on it were absent,
-// and the declared type said otherwise. Found by typing button's event map
-// (FLO-114); nothing here asserted the field's contents before.
+// and the declared type said otherwise. Found by typing button's event map.
+// Nothing here asserted the field's contents before.
 describe("the event a group reports carries a real DOM event", () => {
   it("originalEvent is an Event, not the forwarded payload", () => {
     const group = createButtonGroup({ buttons: [{ text: "A", value: "a" }] });
@@ -601,14 +601,14 @@ describe("Button group selection (Material 3 kinds)", () => {
     group.destroy();
   });
 
-  it("change carries value in the element's shape: a string or null when single, an array when multi (FLO-320)", () => {
+  it("change carries value in the element's shape: a string or null when single, an array when multi", () => {
     const single = createButtonGroup({ selection: "single", buttons: items });
     const multi = createButtonGroup({ selection: "multi", buttons: items });
     const values: unknown[] = [];
     single.on("change", (event) => values.push(event.value));
     multi.on("change", (event) => values.push(event.value));
     single.buttons[1].element.click();
-    single.buttons[1].element.click(); // a second click clears a single group; deselect() is silent (FLO-328)
+    single.buttons[1].element.click(); // a second click clears a single group; deselect() is silent
     multi.buttons[1].element.click();
     multi.buttons[0].element.click();
     // "explore" starts selected
@@ -617,7 +617,7 @@ describe("Button group selection (Material 3 kinds)", () => {
     multi.destroy();
   });
 
-  it("programmatic select, deselect and toggle honour single mode, silently (FLO-328)", () => {
+  it("programmatic select, deselect and toggle honour single mode, silently", () => {
     const group = createButtonGroup({ selection: "single", buttons: items });
     const changes: string[][] = [];
     group.on("change", (event) => changes.push(event.values));
@@ -660,7 +660,7 @@ describe("Button group selection (Material 3 kinds)", () => {
     const group = createButtonGroup({ kind: "connected", size: "m", buttons: items.slice(0, 2) });
     expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("56px");
     expect(group.element.style.getPropertyValue("--mtrl-button-group-gap")).toBe("2px");
-    // The corners read the shape scale's tokens (FLO-331)
+    // The corners read the shape scale's tokens
     expect(group.element.style.getPropertyValue("--mtrl-button-group-inner-corner")).toBe(corner(8));
     expect(group.element.style.getPropertyValue("--mtrl-button-group-pressed-corner")).toBe(corner(4));
     const standard = createButtonGroup({ kind: "standard", size: "xs", buttons: items.slice(0, 2) });

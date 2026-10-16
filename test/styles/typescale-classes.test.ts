@@ -1,6 +1,6 @@
 // test/styles/typescale-classes.test.ts
 //
-// FLO-315: the typescale classes (.mtrl-display-large … .mtrl-label-small) and
+// The typescale classes (.mtrl-display-large ….mtrl-label-small) and
 // the document rules (h1–h6, p) read their role's custom properties, so a
 // typeface or size set on the tokens reaches them. They hardcoded Roboto and
 // pixel values before.

@@ -1,7 +1,7 @@
 // src/components/chips/config.ts
 import type { EventCallback } from "../../core/state/emitter";
 // Class names are written out in full. The class helpers no longer add the
-// `mtrl-` prefix for you (FLO-117), so a modifier built here carries it.
+// `mtrl-` prefix for you, so a modifier built here carries it.
 import { PREFIX } from "../../core/config";
 import {
   createComponentConfig,
@@ -65,7 +65,7 @@ export const getElementConfig = (config: ChipsConfig) => {
 
   return createElementConfig(config, {
     tag: "div",
-    // A grid of chip cells (the m3.material.io chips' web roles, FLO-261), where
+    // A grid of chip cells (the m3.material.io chips' web roles), where
     // aria-multiselectable is allowed and says whether several cells can be selected.
     attributes: {
       role: "grid",

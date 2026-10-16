@@ -80,7 +80,7 @@ describe('search', () => {
     expect(onInput).toHaveBeenCalledTimes(1);
   });
 
-  test('setValue updates the input silently, and emits input only when asked (FLO-328)', async () => {
+  test('setValue updates the input silently, and emits input only when asked', async () => {
     const search = await mount();
     const inputs = mock((_event: unknown) => {});
     search.on('input', inputs);
@@ -112,7 +112,7 @@ describe('search', () => {
     expect(search.getValue()).toBe('');
     expect(inputOf(search).value).toBe('');
     expect(search.element.classList.contains('mtrl-search--populated')).toBe(false);
-    // A programmatic clear is silent (FLO-328).
+    // A programmatic clear is silent.
     expect(onClear).not.toHaveBeenCalled();
     expect(inputs).not.toHaveBeenCalled();
     search.setValue('again');
@@ -219,7 +219,7 @@ describe('search', () => {
 });
 
 // The focused state had no coverage at all -- not one mention of focus in this
-// file before FLO-114 typed withStates. It is one of the four state methods
+// file before withStates was typed. It is one of the four state methods
 // the input feature drives, and the only one nothing reached.
 describe('the focused state', () => {
   const focusClass = 'mtrl-search--focused';

@@ -41,7 +41,7 @@ let nextTabsGroupId = 0;
 /**
  * A fresh id for a tab group, so two tablists can share tab values.
  *
- * FLO-229. A tab's id was `tab-<value>`, which meant two groups on one page
+ * A tab's id was `tab-<value>`, which meant two groups on one page
  * with a value in common produced duplicate ids -- and, because panels were
  * resolved across the whole document, each group showed and hid the other's
  * panels. The group id is what makes both unique.
@@ -51,7 +51,7 @@ export function allocateTabsGroupId(): string {
 }
 
 /**
- * A value as part of an id (FLO-430). An id reference (`aria-controls`,
+ * A value as part of an id. An id reference (`aria-controls`,
  * `aria-labelledby`) is a space-separated list, so a value with a space or a
  * newline cannot go into an id raw. A value of `[A-Za-z0-9_-]` only is kept as
  * it is, so most ids are unchanged; any other value is encoded, `_` as `__` and
@@ -66,14 +66,14 @@ const derive = (prefix: string, groupId: string, value: string): string =>
 
 /**
  * A tab's element id within its group: `tab-<groupId>-<value>` for a value of
- * `[A-Za-z0-9_-]`, and `tabx-<groupId>-<encoded value>` otherwise (FLO-430).
+ * `[A-Za-z0-9_-]`, and `tabx-<groupId>-<encoded value>` otherwise.
  */
 export const tabIdFor = (groupId: string, value: string): string => derive("tab", groupId, value);
 
 /**
  * The panel id a group looks for when a page does not label its panels:
  * `tabpanel-<groupId>-<value>`, or `tabpanelx-<groupId>-<encoded value>` for a
- * value with other characters, as {@link tabIdFor} derives the tab's (FLO-430).
+ * value with other characters, as {@link tabIdFor} derives the tab's.
  */
 export const tabPanelIdFor = (groupId: string, value: string): string => derive("tabpanel", groupId, value);
 
@@ -82,7 +82,7 @@ const tabGroups = new WeakMap<HTMLElement, string>();
 
 /**
  * Records a tab's value and group on its element: the value as `data-value`,
- * which the panel lookup reads instead of parsing the id (FLO-430).
+ * which the panel lookup reads instead of parsing the id.
  */
 export function registerTab(element: HTMLElement, groupId: string, value: string): void {
   element.setAttribute("data-value", value);
@@ -106,7 +106,7 @@ export function findRegisteredPanel(tab: HTMLElement): HTMLElement | null {
   if (labelled) return labelled;
 
   // The conventional panel id, from the tab's value and group rather than
-  // parsed out of its id (FLO-430)
+  // parsed out of its id
   const value = tab.getAttribute("data-value");
   const groupId = tabGroups.get(tab);
   if (value !== null && groupId !== undefined) {
@@ -143,7 +143,7 @@ export function updateTabPanels(component: TabsHost): void {
   // every `[role="tabpanel"]` in the document and matched by stripping `tab-`
   // off each panel's aria-labelledby, so two groups sharing a value showed and
   // hid each other's panels -- a visible defect, not only an accessibility
-  // one. FLO-229.
+  // one.
   //
   // Callers pass either the component or a plain `{ tabs, getActiveTab }`
   // literal -- features.ts does the latter -- so read the tabs from whichever
@@ -173,7 +173,7 @@ export function updateTabPanels(component: TabsHost): void {
   }
 }
 
-/** A tab the arrows reach: not disabled natively, nor by aria-disabled (FLO-119). */
+/** A tab the arrows reach: not disabled natively, nor by aria-disabled. */
 const isEnabledTab = (tab: TabComponent): boolean =>
   !(tab.element as HTMLButtonElement).disabled && tab.element.getAttribute("aria-disabled") !== "true";
 
@@ -199,7 +199,7 @@ export function syncTabStops(component: TabsHost): void {
  * with it; Space or Enter, through the native button, selects the focused tab.
  * That is m3.material.io's model ("Don't use Space/Enter for navigating tabs")
  * and material-web's default. `autoActivate` selects on every move instead. When
- * focus leaves the tablist, the tab stop returns to the selected tab. FLO-263.
+ * focus leaves the tablist, the tab stop returns to the selected tab.
  * @param component - Tabs component
  * @param options - `autoActivate`: select the tab an arrow key moves to
  */

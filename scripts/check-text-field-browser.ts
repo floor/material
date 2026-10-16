@@ -1,5 +1,5 @@
 /**
- * The text field's label rules, rendered from the packed CSS (FLO-303).
+ * The text field's label rules, rendered from the packed CSS.
  *
  * The label comes before the input in the DOM, so every `__input… ~ __label`
  * rule matched nothing: the label floated only through the script's --empty
@@ -66,7 +66,7 @@ type Probe = { element: HTMLElement; input: HTMLInputElement; setError: (e: bool
 
 /**
  * The text field's colours and states against the Compose tokens, rendered
- * from the packed CSS (FLO-298). Each expected colour is the theme role
+ * from the packed CSS. Each expected colour is the theme role
  * resolved in the same page, so the check follows the theme, not a hex.
  */
 export async function checkTextFieldTokens(page: Page): Promise<void> {
@@ -165,7 +165,7 @@ type AnatomyWindow = Window & {
 };
 
 /**
- * The field and its supporting text row (FLO-300): the field stays 56px and
+ * The field and its supporting text row: the field stays 56px and
  * lines up with a button; only the row adds height, 4dp plus its lines; a
  * long helper wraps and pushes what follows; a select's menu opens against
  * the field, not under its helper.
@@ -234,8 +234,8 @@ export async function checkTextFieldAnatomy(page: Page): Promise<void> {
 }
 
 /**
- * While the label rests in the input area it is all that area shows (FLO-354,
- * FLO-355): in both variants, with and without a leading icon, enabled,
+ * While the label rests in the input area it is all that area shows.
+ * In both variants, with and without a leading icon, enabled,
  * disabled, empty or with a value, no painted placeholder overlaps the label's
  * text, and the prefix and suffix show only once the label has floated. The
  * disabled input's -webkit-text-fill-color is inherited by the placeholder and
@@ -299,7 +299,7 @@ export async function checkTextFieldPlaceholder(page: Page): Promise<void> {
 }
 
 /**
- * The accessibility the text field draws (FLO-301), measured in the browser:
+ * The accessibility the text field draws, measured in the browser:
  * an interactive trailing icon is an icon button with a 48dp target and a 40dp
  * round state layer, after the input in the tab order, with a focus ring only
  * from the keyboard; decorative icons take no focus; and a required outlined
@@ -377,7 +377,7 @@ export async function checkTextFieldA11y(page: Page): Promise<void> {
 }
 
 /**
- * Placement set up late equals placement set up at creation (FLO-378). A plain
+ * Placement set up late equals placement set up at creation. A plain
  * filled field installs no observers and measures nothing until a setter gives
  * it something to place; each of those setters must leave the field exactly as
  * a field created with that config: notch, input padding, label place and
@@ -470,7 +470,7 @@ type LayoutRow = {
 };
 
 /**
- * The text field's layout against the M3 measurements (FLO-299), rendered from
+ * The text field's layout against the M3 measurements, rendered from
  * the packed CSS: filled and outlined, default and compact, left to right and
  * right to left, built by the factory or as `<m-text-field>`. Every distance is
  * from the container's start edge (its end edge for `…End`), so one expectation
@@ -478,7 +478,7 @@ type LayoutRow = {
  *
  * Right to left is a `dir` on an ancestor of the field: for `<m-text-field>`
  * that ancestor is outside the shadow root, where the stylesheet's `[dir]`
- * selectors do not reach (FLO-562).
+ * selectors do not reach.
  */
 export async function checkTextFieldLayout(page: Page, api: "factory" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
@@ -682,7 +682,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
 }
 
 /**
- * The filled field's focus indicator and reduced motion (FLO-299): its fade
+ * The filled field's focus indicator and reduced motion: its fade
  * runs on the motion tokens, and with `prefers-reduced-motion: reduce` it does
  * not run, as the label, the outline, the icons and the affixes already do not.
  * No M3 source gives a number here: the tokens are the library's.
@@ -721,4 +721,102 @@ export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "
   await page.emulateMedia({ reducedMotion: restore });
   assert.equal(reduced.duration, "0s", `with reduced motion the indicator has no transition (${reduced.property} ${reduced.duration})`);
   console.log(`Passed text field reduced motion (${api}): the filled indicator fades on the motion tokens, and not at all with reduced motion.`);
+}
+
+/** The part of a DevTools DOM node this check walks. */
+type DevtoolsNode = {
+  nodeId: number;
+  nodeName: string;
+  attributes?: string[];
+  children?: DevtoolsNode[];
+  shadowRoots?: DevtoolsNode[];
+};
+
+/** The UA cancel button under `input`: a shadow part no page selector or style read can see. */
+const devtoolsCancelButton = (node: DevtoolsNode): DevtoolsNode | null => {
+  const attributes = node.attributes ?? [];
+  for (let i = 0; i < attributes.length; i += 2) if (attributes[i] === "pseudo" && attributes[i + 1] === "-webkit-search-cancel-button") return node;
+  for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])]) {
+    const found = devtoolsCancelButton(child);
+    if (found) return found;
+  }
+  return null;
+};
+
+/**
+ * Chromium draws its own clear button into a `type="search"` input — the
+ * `::-webkit-search-cancel-button` shadow part, which `appearance: none` on
+ * the input does not remove. A field that draws a trailing icon of its own
+ * shows both (the double × on md3.io's Search scenario), so it must hide the
+ * browser's; a search field without one keeps it. The part lives in the
+ * input's user-agent shadow root, invisible to `getComputedStyle` on the
+ * input, so its computed display is read over the DevTools protocol (this
+ * check is Chromium's; the part is Blink's and WebKit's).
+ */
+export async function checkTextFieldSearchCancel(page: Page, api: "factory" | "element"): Promise<void> {
+  const ids = await page.evaluate(async (api) => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+    const stage = document.createElement("div");
+    stage.id = "search-cancel-stage";
+    document.body.append(stage);
+    const mounted: { destroy: () => void }[] = [];
+    const make = (id: string, config: Record<string, string>) => {
+      const cell = document.createElement("div");
+      cell.style.cssText = "width:280px;margin:0 0 8px";
+      stage.append(cell);
+      if (api === "factory") {
+        const field = (window as unknown as FieldWindow).inputs.createTextField({ label: "Search", value: "Trail", ...config } as never);
+        field.element.id = id;
+        cell.append(field.element);
+        mounted.push({ destroy: () => field.destroy() });
+      } else {
+        const host = document.createElement("m-text-field");
+        for (const [key, value] of Object.entries({ label: "Search", value: "Trail", ...config })) host.setAttribute(key.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`), value);
+        host.id = id;
+        cell.append(host);
+      }
+    };
+    make("search-cancel-with-icon", { type: "search", trailingIcon: icon, trailingIconLabel: "Clear" });
+    make("search-cancel-without-icon", { type: "search" });
+    // Past the element upgrade and the field's placement pass
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    (window as unknown as FieldWindow).fields = mounted;
+    return ["search-cancel-with-icon", "search-cancel-without-icon"];
+  }, api);
+
+  const client = await page.context().newCDPSession(page);
+  await client.send("DOM.enable");
+  await client.send("CSS.enable");
+  const { root } = await client.send("DOM.getDocument", { depth: -1, pierce: true }) as unknown as { root: DevtoolsNode };
+  // The input under each mounted field, by the nearest ancestor or host id
+  const inputs = new Map<string, DevtoolsNode>();
+  const visit = (node: DevtoolsNode, owner: string): void => {
+    let current = owner;
+    const attributes = node.attributes ?? [];
+    for (let i = 0; i < attributes.length; i += 2) if (attributes[i] === "id" && ids.includes(attributes[i + 1]!)) current = attributes[i + 1]!;
+    if (node.nodeName === "INPUT") inputs.set(current, node);
+    for (const child of node.children ?? []) visit(child, current);
+    for (const shadow of node.shadowRoots ?? []) visit(shadow, current);
+  };
+  visit(root, "");
+  const display = async (id: string): Promise<string> => {
+    const input = inputs.get(id);
+    assert.ok(input, `${id}: the field's input is in the DevTools tree`);
+    const cancel = devtoolsCancelButton(input);
+    assert.ok(cancel, `${id}: Chromium's search cancel button is under the input`);
+    const { computedStyle } = await client.send("CSS.getComputedStyleForNode", { nodeId: cancel.nodeId }) as unknown as { computedStyle: { name: string; value: string }[] };
+    return computedStyle.find((entry) => entry.name === "display")?.value ?? "";
+  };
+  const withIcon = await display("search-cancel-with-icon");
+  const withoutIcon = await display("search-cancel-without-icon");
+  await client.detach();
+  await page.evaluate(() => {
+    const state = window as unknown as FieldWindow;
+    state.fields.forEach((field) => field.destroy());
+    state.fields = [];
+    document.getElementById("search-cancel-stage")?.remove();
+  });
+  assert.equal(withIcon, "none", `the field's own trailing icon must hide the browser's clear button (display: ${withIcon})`);
+  assert.notEqual(withoutIcon, "none", "a field with no trailing icon of its own keeps the browser's clear button");
+  console.log(`Passed text field search (${api}): a trailing icon of its own hides the browser's clear button; without one the field keeps it.`);
 }

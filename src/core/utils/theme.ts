@@ -20,7 +20,7 @@ const setupThemeObserver = (): void => {
   });
 
   // A theme is data-theme / data-theme-mode on <html>, on <body>, or on any
-  // element below them: a themed section, a card, a dark panel (FLO-389).
+  // element below them: a themed section, a card, a dark panel.
   // The subtree takes them all in; the filter keeps it to those attributes.
   themeObserver.observe(document.documentElement, {
     attributes: true,
@@ -65,7 +65,7 @@ const hexToTriplet = (value: string): string | null => {
 
 /**
  * Reads --<prefix>-<name> where `element` sits, so a theme set on any
- * ancestor, or on a shadow host, applies (FLO-389). Without a connected
+ * ancestor, or on a shadow host, applies. Without a connected
  * element: from the active theme (<body>), then from :root.
  */
 const readVar = (name: string, element?: Element | null): string => {
@@ -89,7 +89,7 @@ const readVar = (name: string, element?: Element | null): string => {
  * @param {ThemeChangeCallback} [options.onThemeChange] - Optional callback for theme changes
  * @returns {string} The color value (hex, rgb, or rgba)
  *
- * The themes declare no `--<prefix>-sys-color-*-rgb` twins (FLO-311), and material 3.0.0
+ * The themes declare no `--<prefix>-sys-color-*-rgb` twins, and material 3.0.0
  * no longer derives them: read `sys-color-X`, with `alpha` for rgba().
  *
  * @example

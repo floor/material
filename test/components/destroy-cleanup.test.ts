@@ -1,6 +1,6 @@
 // test/components/destroy-cleanup.test.ts
 //
-// FLO-104 / N30: whether components skip their own cleanup on destroy was
+// / N30: whether components skip their own cleanup on destroy was
 // unverified. Three earlier attempts to check every component at once were
 // each confounded — a wrapper swap missed captured references, a mount-based
 // check tripped over N29, and an event-based check could not detect the known
@@ -9,7 +9,7 @@
 // This one observes only what a component cannot hide: what is left in the
 // document after `destroy()`. Nothing is swapped, nothing is mounted, and no
 // internal is read — the public factory is called, the component is destroyed,
-// and the document is inspected. N29 is fixed (FLO-103), which is what makes
+// and the document is inspected. N29 is fixed, which is what makes
 // the direct approach available now.
 //
 // Reading `component.resources` does NOT work as a check, and that is worth

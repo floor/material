@@ -26,7 +26,7 @@ describe('reduced motion', () => {
   });
 });
 
-// FLO-549. The reset above is a document rule, and a document rule does not
+// The reset above is a document rule, and a document rule does not
 // match inside a shadow tree: an element's shadow root adopts its host sheet,
 // the ripple's and its component entries, none of which carried it. The host
 // sheet holds a copy, and this keeps the two from drifting.

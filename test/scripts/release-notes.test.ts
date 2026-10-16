@@ -96,4 +96,145 @@ test("the real CHANGELOG has a section for the package's version", async () => {
   const pkg = await Bun.file(new URL("../../package.json", import.meta.url)).json();
   const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
   expect(changelogSection(changelog, pkg.version).length).toBeGreaterThan(0);
+  const intro = changelogSection(changelog, "3.0.0").split("### Security")[0];
+  expect(intro).toContain("[Migrating from 0.10.x](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md#migrating-from-010x) in the changelog");
+});
+
+test("the stable release notes contain no internal ticket references", async () => {
+  const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
+  expect(changelogSection(changelog, "3.0.0")).not.toMatch(/FLO\x2d/);
+});
+
+test("3.0.0 includes every complete prerelease entry exactly once in its subsection", async () => {
+  const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
+  const entriesBySubsection = (section: string): Map<string, string[]> => {
+    const sections = section.split(/^### (.+)$/m);
+    const result = new Map<string, string[]>();
+    for (let index = 1; index < sections.length; index += 2) {
+      const entries = [...sections[index + 1].matchAll(/^- [\s\S]*?(?=^- |$(?![\s\S]))/gm)]
+        .map(match => match[0].replace(/\s+/g, " ").trim());
+      result.set(sections[index], entries);
+    }
+    return result;
+  };
+  const stable = entriesBySubsection(changelogSection(changelog, "3.0.0"));
+  const prerelease = entriesBySubsection(changelogSection(changelog, "3.0.0-next.1"));
+  const superseded = [
+    // Replaced by "Lists are the baseline list by default; the expressive style is `variant: 'segmented'`."
+    "A list row takes the expressive shape.",
+    // The same later entry removes the rounded container in both variants.
+    "The list's container is rounded, 16 px, by the same property as the rows' outer corners",
+  ];
+  for (const opening of superseded) {
+    const prefix = `- **${opening}**`;
+    expect((prerelease.get("Changed") ?? []).filter(entry => entry.startsWith(prefix))).toHaveLength(1);
+    expect([...stable.values()].flat().filter(entry => entry.includes(`**${opening}**`))).toHaveLength(0);
+  }
+  expect([...prerelease.values()].flat().length).toBeGreaterThan(0);
+  const missingOrRepeated = [...prerelease].flatMap(([subsection, entries]) =>
+    entries.flatMap(entry => {
+      if (subsection === "Changed" && superseded.some(opening => entry.startsWith(`- **${opening}**`))) return [];
+      const count = (stable.get(subsection) ?? []).filter(candidate => candidate === entry).length;
+      return count === 1 ? [] : [{ subsection, entry, count }];
+    }),
+  );
+  expect(missingOrRepeated).toEqual([]);
+});
+
+describe("release body size", () => {
+  const fixture = Bun.file(new URL("../fixtures/release-notes-large.md", import.meta.url));
+  const legacyFooter = (version: string): string =>
+    "\n\n---\n\n" +
+    `npm: [\`material@${version}\`](https://www.npmjs.com/package/material/v/${version}) · Docs: [md3.io](https://md3.io) · ` +
+    "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)\n\n" +
+    "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
+    "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).\n";
+
+  const omitted = (names: string, version = "3.0.0"): string =>
+    names + " are not shown here: GitHub limits a release to 125,000 characters.\n\n" +
+    `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)` + legacyFooter(version);
+
+  test("real release notes over the cap name omitted entries and keep the full footer", async () => {
+    // A copy of the 3.0.0 notes, with internal ticket references removed.
+    const section = changelogSection(await fixture.text(), "3.0.0");
+    expect(section.length).toBeGreaterThan(130_000);
+    expect(section.length).toBeLessThan(140_000);
+    for (const version of ["3.0.0", "3.1.0-next.2"]) {
+      const output = releaseNotes(`## [${version}]\n\n${section}\n`, version);
+      const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)\n`;
+      const cut = section.indexOf("\n### Fixed");
+      expect(cut).toBeGreaterThan(100_000);
+      const count = section.slice(cut).match(/^- /gm)!.length;
+      const closing = omitted(`The fixes (\`### Fixed\`, ${count} entries)`, version);
+      expect(output).toBe(section.slice(0, cut).trimEnd() + "\n\n" + closing);
+      const security = section.slice(section.indexOf("### Security"), section.indexOf("### Migrating"));
+      expect(security).toContain("(#53)");
+      expect(output).toContain(security);
+      expect([...output.matchAll(/^### (.+)$/gm)].map(match => match[1])).toEqual([
+        "Security", "Migrating from 0.10.x", "Changed (breaking)", "Removed", "Added", "Changed",
+      ]);
+      expect(output.length).toBeLessThan(125_000);
+      expect(output).toEndWith(legacyFooter(version));
+      // The omitted suffix starts at a heading; including its entire subsection is too large.
+      expect(section.slice(cut).trimStart()).toStartWith("### Fixed\n");
+      expect((section + "\n\n" + link).length).toBeGreaterThanOrEqual(125_000);
+    }
+  });
+
+  test("the same real fixture below the cap keeps today's output byte for byte", async () => {
+    const section = changelogSection(await fixture.text(), "3.0.0");
+    const under = section.slice(0, section.indexOf("\n### Fixed")).trimEnd();
+    const expected = under + legacyFooter("3.0.0");
+    expect(expected.length).toBeLessThan(125_000);
+    expect(releaseNotes(`## [3.0.0]\n\n${under}\n`, "3.0.0")).toBe(expected);
+  });
+
+  test("the cap includes the omission notice, tag link and normal footer", () => {
+    const kept = "### Security\n\n- Upgrade.";
+    const heading = "\n\n### Added\n\n- ";
+    const section = kept + heading + "x".repeat(125_000 - legacyFooter("3.0.0").length - kept.length - heading.length);
+    expect((section + legacyFooter("3.0.0")).length).toBe(125_000);
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output.length).toBeLessThan(125_000);
+    expect(output).toBe(kept + "\n\n" + omitted("The subsections (`### Added`, 1 entry)"));
+  });
+
+  test("an oversized subsection falls back to the link, never a heading inside a fenced example", () => {
+    const section = "### Added\n\n" + "x".repeat(120_000) + "\n\n~~~markdown\n### Example heading\n" + "y".repeat(10_000) + "\n~~~";
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output).toBe(omitted("The subsections (`### Added`, 0 entries)"));
+  });
+
+  test("Security stays whole when it and the summary exceed the cap, then the notes cut after it", () => {
+    const summary = "First stable release.\n\n";
+    const security = "### Security\n\n- " + "x".repeat(125_000) + "\n\n#### Mitigation\n\n- Upgrade to the fixed release.";
+    const section = summary + security + "\n\n### Changed\n\n- A small change.";
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output).toBe(summary + security + "\n\n" + omitted("The subsections (`### Changed`, 1 entry)"));
+    expect(output.length).toBeGreaterThan(125_000);
+  });
+
+  test("a nested heading never lets the cap retain only part of a subsection", () => {
+    const kept = "Summary.\n\n### Security\n\n- Upgrade.";
+    const section = kept + "\n\n### Changed\n\n- A small change.\n\n#### Details\n\n" + "x".repeat(125_000);
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      kept + "\n\n" + omitted("The subsections (`### Changed`, 1 entry)"),
+    );
+  });
+
+  test("Security at the end cannot be dropped to satisfy the cap", () => {
+    const section = "Summary.\n\n### Changed\n\n" + "x".repeat(125_000) + "\n\n### Security\n\n- Upgrade.";
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)" + legacyFooter("3.0.0"),
+    );
+  });
+  test("multiple omissions count top-level bullets only, outside fenced examples", () => {
+    const kept = "Summary.\n\n### Security\n\n- Upgrade.";
+    const section = kept + "\n\n### Added\n\n- " + "x".repeat(125_000) +
+      "\n  - Nested detail.\n\n~~~md\n- Example bullet.\n### Example heading\n~~~\n\n### Fixed\n\n- One.\n- Two.";
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      kept + "\n\n" + omitted("The subsections (`### Added`, 1 entry; `### Fixed`, 2 entries)"),
+    );
+  });
+
 });

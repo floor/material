@@ -1,6 +1,6 @@
 // test/components/navigation-bar/bar.fixture.ts
 //
-// The navigation bar's behaviour (FLO-305); its geometry, colours, keyboard and
+// The navigation bar's behaviour; its geometry, colours, keyboard and
 // scrolling are measured in a browser by scripts/check-navigation-bar.ts.
 import { beforeEach, afterEach, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';

@@ -1,7 +1,7 @@
 // test/components/prefixed-classes.test.ts
 //
-// FLO-295, from md3.io's docs audit: since `class` stopped being prefixed
-// (FLO-117), two components passed their own class names through it bare. The
+// From md3.io's docs audit: since `class` stopped being prefixed
+// Two components passed their own class names through it bare. The
 // select's menu carried `select__menu`, so `.mtrl-select__menu` matched
 // nothing, and progress roots carried `progress progress--linear` beside the
 // prefixed copies.

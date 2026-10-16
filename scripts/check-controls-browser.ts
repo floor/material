@@ -19,7 +19,7 @@ const style = (page: Page, selector: string, property: string, pseudo?: string):
 const role = (page: Page, name: string): Promise<string> =>
   page.evaluate((name) => { const probe = document.createElement("i"); probe.style.color = `var(--mtrl-sys-color-${name})`; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c; }, name);
 
-/** FLO-267: the switch handle in both directions, its icons, states, focus ring and label side. */
+/** The switch handle in both directions, its icons, states, focus ring and label side. */
 async function checkSwitch(page: Page): Promise<number> {
   const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
   let checks = 0;
@@ -84,7 +84,7 @@ async function checkSwitch(page: Page): Promise<number> {
   return checks;
 }
 
-/** FLO-265: the checkbox box, its state layers, focus ring, error and disabled indeterminate states. */
+/** The checkbox box, its state layers, focus ring, error and disabled indeterminate states. */
 async function checkCheckbox(page: Page): Promise<number> {
   await page.evaluate(() => {
     const state = window as unknown as ControlsWindow;
@@ -151,7 +151,7 @@ async function checkCheckbox(page: Page): Promise<number> {
   return 17;
 }
 
-/** FLO-266: the radio ring and dot, state layers, keyboard-only focus, and the label gap in both directions. */
+/** The radio ring and dot, state layers, keyboard-only focus, and the label gap in both directions. */
 async function checkRadios(page: Page): Promise<number> {
   const mount = (dir: "ltr" | "rtl") => page.evaluate((dir) => {
     const state = window as unknown as ControlsWindow;

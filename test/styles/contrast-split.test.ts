@@ -1,5 +1,5 @@
 // test/styles/contrast-split.test.ts
-// FLO-540. Today's resolved colours are test/styles/fixtures/contrast-states.json,
+// Today's resolved colours are test/styles/fixtures/contrast-states.json,
 // generated from origin/next at ORIGIN_COMMIT (emit "all", byte-identical to
 // that build). With the contrast sheet loaded, every state matches the fixture.
 // Without it, standard and OS-preference states still match; an explicit
@@ -109,8 +109,8 @@ describe("explicit contrast levels are opt-in", () => {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
-    // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299),
-    // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
+    // The hash is this sheet with the text field's layout at the M3 measurements,
+    // its insets mirrored by one block, the unlabelled checkbox's centring
     // (styles/components/_checkbox.scss), the icon button's inner padding
     // (styles/components/_icon-button.scss), the unlabelled switch's 52 x 48 box
     // (styles/components/_switch.scss), the close target of the side sheet and the
@@ -121,14 +121,38 @@ describe("explicit contrast levels are opt-in", () => {
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
-    // (styles/abstract/_mixins.scss, FLO-592).
-    // The list row's expressive corners, read from four list custom properties
-    // that the list does not declare, so they inherit, with keyboard focus on
-    // the row action, and the container rounded by the same outer property
+    // (styles/abstract/_mixins.scss).
+    // The list's two variants: standard has no container and square rows;
+    // segmented rows read six list custom properties that the list does not
+    // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
+    // The state layer's position sits in `:where()`, so a corner FAB's fixed
+    // outranks it and a positioned host keeps its position
+    // (styles/abstract/_mixins.scss).
+    // The text field's hidden icon parts: `[hidden]` on the leading and
+    // trailing parts (styles/components/_text-field.scss).
+    // A FAB menu at bottom-start anchors its list, its items and its FAB to
+    // the inline start (styles/components/_fab-menu.scss).
+    // The outlined field's open notch stays unpainted in forced colours,
+    // from the script's class and the input's own state.
+    // The menu's submenu arrow also mirrors inside a shadow root.
+    // A search field's own trailing icon hides the browser's clear button
+    // (styles/components/_text-field.scss).
+    // A toolbar keeps its round icon buttons round in every state: the
+    // morph targets read the icon button's own shape override, which the
+    // toolbar context pins to the resting radius of the bar's direct items
+    // only, the slotted selectors matching the marker attribute the host
+    // carries whatever its tag prefix, with the default tag as a second arm
+    // so marker-less markup still pins under it (styles/components/_icon-button.scss,
+    // styles/components/_toolbar.scss).
+    // The tooltip's arrow reads one custom property set by the variant whose
+    // surface it grows from, replacing the twelve plain-arrow overrides
+    // (styles/components/_tooltip.scss).
+    // A card header that is the card's last child keeps the 16px padding
+    // (styles/components/_card.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("eb8919f3d6b2fbd26089acb58a4aae44a382b23bd40163aa6141877cbd4d6d5f");
-    expect(css.length).toBe(526446);
+      .toBe("4006a5a28f22c74630c35ce77aed7f5a59376a86e49983e9ffc7164e11b73fd7");
+    expect(css.length).toBe(529534);
   });
 
   test("today's sheets still resolve to the fixture", () => {

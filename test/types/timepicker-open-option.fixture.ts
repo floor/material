@@ -1,6 +1,6 @@
 // test/types/timepicker-open-option.fixture.ts
 //
-// FLO-548: the time picker's option is `open`; `isOpen` is the method only.
+// The time picker's option is `open`; `isOpen` is the method only.
 import createTimePicker from "../../src/components/timepicker";
 
 const picker = createTimePicker({ open: true });

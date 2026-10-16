@@ -3,6 +3,13 @@
 # npmjs.com for the package), no token is stored, and the release carries
 # provenance. A pre-release version (x.y.z-next.N) goes under the `next`
 # dist-tag, anything else under `latest`.
+#
+# Two jobs, so the OIDC token exists in as few steps as possible: `verify` runs
+# the checks, the build, the published-manifest step and `npm pack`, and uploads
+# the tarball; `publish` alone holds `id-token: write` and downloads the tarball,
+# re-checks its version and publishes it — no checkout, no install, no build.
+# The tag's commit must be on main and the version must be package.json's; a
+# tag ruleset protecting v* (only the owner creates them) is recommended.
 # The step "A material release is 3.0.0 or later" refuses a `material` version
 # below 3: this same file is the `material` repository's release workflow, and
 # npm's trusted publisher cannot tell the two lines apart (it knows the
@@ -18,25 +25,25 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  # Everything that runs this repository's code, with no OIDC token around to
+  # leak: the checks, the build, and the pack.
+  verify:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      # The actions are pinned by commit; the version comment says which release it is.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          bun-version: "1.4"
+          fetch-depth: 0   # the tagged commit is checked against origin/main
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+          bun-version: "1.4.2"
 
-      # trusted publishing needs npm 11.5.1 or later
-      - run: npm install -g npm@latest
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22.23.3"
 
       - name: The tag must be the package version
         run: |
@@ -46,6 +53,11 @@ jobs:
             echo "tag v$tag does not match package.json version $version" >&2
             exit 1
           fi
+
+      # Only a commit on main is releaseable: a tag on an unmerged branch must not publish.
+      - name: The tagged commit must be on main
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::the tag is not on main"; exit 1; }
 
       - name: A material release is 3.0.0 or later
         run: |
@@ -65,7 +77,7 @@ jobs:
 
       - run: bun run build
 
-      # npm publishes from the repository root, so the manifest it packs is the root
+      # npm packs from the repository root, so the manifest it packs is the root
       # package.json: drop what only the repository uses. prepublishOnly goes with the
       # scripts, which is why the build runs as its own step above.
       # The README it packs is the root README.md too: npm's page gets the short one,
@@ -79,14 +91,50 @@ jobs:
           npm pkg delete scripts eslintConfig typedocOptions
           cp npm-readme.md README.md
 
-      - name: Publish
+      # Packed once, here, with the npm the Node 22 above ships; this exact file
+      # is what publish uploads and npm gets.
+      - name: Pack the tarball
+        run: npm pack
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: material-*.tgz
+          if-no-files-found: error
+
+  # Only the token, a Node with the pinned npm, and the tarball verify built.
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22.23.3"
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later; pinned, bump on purpose.
+      - run: npm install -g npm@11.21.0
+
+      - name: Publish the tarball
         run: |
-          version="$(node -p "require('./package.json').version")"
+          tgz="$(ls material-*.tgz)"
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(tar -xzOf "$tgz" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')"
+          if [ "$tag" != "$version" ]; then
+            echo "the tarball holds $version, not v$tag" >&2
+            exit 1
+          fi
           case "$version" in
-            *-*) tag=next ;;
-            *) tag=latest ;;
+            *-*) dist=next ;;
+            *) dist=latest ;;
           esac
-          npm publish --provenance --access public --tag "$tag"
+          npm publish "$tgz" --provenance --access public --tag "$dist"
 
   # The GitHub Release for the tag, once npm has the version: its CHANGELOG.md
   # section and a footer (scripts/release-notes.ts). A pre-release is marked one
@@ -94,15 +142,15 @@ jobs:
   # stops. Only this job writes to the repository, with the workflow's own token.
   github-release:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
+          bun-version: "1.4.2"
 
       - name: Create the GitHub Release
         env:

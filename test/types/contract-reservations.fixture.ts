@@ -1,7 +1,7 @@
 // test/types/contract-reservations.fixture.ts
 //
 // What 3.0.0 takes out of the public contract so that later size work is not a
-// breaking change (FLO-568's levers). Each is a statement about a public type,
+// breaking change (the levers). Each is a statement about a public type,
 // with no runtime to assert, so it is pinned here. Nothing in this file runs;
 // the assertions are the test.
 //

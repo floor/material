@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * The framework adapters tree-shake (FLO-327): importing one component from
+ * The framework adapters tree-shake: importing one component from
  * `material/react`, `material/vue`, `material/solid` or `material/svelte` ships that
  * component's element and CSS, and the adapter's runtime, not the library.
  *
@@ -13,11 +13,11 @@
  *
  * Measured with brotli (quality 11, what a CDN serves), not gzip: a gate on
  * deltas between bundles of very different sizes must not depend on gzip's
- * 32 KB window (FLO-332). Minified, the React adapter adds +2712 B to select
+ * 32 KB window. Minified, the React adapter adds +2712 B to select
  * and +2709 B to switch; gzip measured them +1866 and +959, because in
  * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
  * element code it compresses against. Brotli measures +878 and +872. React
- * stays under 1.1 KB, and so does Solid (datepicker +1072, FLO-374). Vue's
+ * stays under 1.1 KB, and so does Solid (datepicker +1072). Vue's
  * declarative-shadow hook measured +1205 on split-button and the bottom app
  * bar. Svelte's branch is larger; the largest measured is the Svelte switch
  * + button pair, +1587.

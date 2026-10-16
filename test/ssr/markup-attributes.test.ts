@@ -5,6 +5,7 @@ import "./css.fixture";
 import { configureHTML } from "../../src/core/dom/html";
 import { declarations, elements } from "../../src/elements";
 import { renderElement } from "../../src/ssr";
+import { changelogSection } from "../../scripts/release-notes";
 
 const PROBE = "<mtrl-markup-probe></mtrl-markup-probe>";
 const PROBE_ATTR = "&lt;mtrl-markup-probe&gt;&lt;/mtrl-markup-probe&gt;";
@@ -154,18 +155,18 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
   const changelog = readFileSync("CHANGELOG.md", "utf8");
   const react = readFileSync("src/ssr/react.ts", "utf8");
   const svelte = readFileSync("src/ssr/svelte.ts", "utf8");
-  const unreleased = changelog.split("## [Unreleased]")[1]?.split("\n## [")[0] ?? "";
-  for (const text of [readme, unreleased]) {
+  const release = changelogSection(changelog, "3.0.0");
+  for (const text of [readme, release]) {
     expect(text).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
     expect(text).toContain("material/ssr is server-only");
   }
   expect(readme).toContain("https://md3.io/docs/server-rendering/");
-  expect(unreleased).toContain("a button has no label slot with an empty fallback but has one with a text fallback");
+  expect(release).toContain("a button has no label slot with an empty fallback but has one with a text fallback");
   const shadowRoot = "server-rendered shadow root is built in a separate render, without the context of providers above the component";
-  for (const text of [unreleased, react, svelte]) {
+  for (const text of [release, react, svelte]) {
     expect(text).toContain(shadowRoot);
     expect(text).toContain("The Vue and Solid bridges see the provided value in both the shadow root and light DOM.");
   }
-  expect(unreleased).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");
+  expect(release).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");
   expect(readme).not.toContain("The Solid, Vue and Svelte bridges are not affected.");
 });

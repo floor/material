@@ -615,6 +615,11 @@
     "status": "public"
   },
   {
+    "name": "ListVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "LoadEvent",
     "kind": "type",
     "status": "public"

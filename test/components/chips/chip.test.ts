@@ -102,7 +102,7 @@ describe("Material chip factories", () => {
     });
   }
   for (const factory of [createFilterChip, createInputChip]) {
-    test(`${factory.name}: change carries the chip's value, as getValue() reads it in the handler (FLO-380)`, () => {
+    test(`${factory.name}: change carries the chip's value, as getValue() reads it in the handler`, () => {
       const seen: unknown[] = [];
       const valued = mount(factory({ label: "Vegetarian", value: "veg", ripple: false }));
       valued.on("change", payload => seen.push([payload.value, valued.getValue(), payload.selected]));
@@ -136,7 +136,7 @@ describe("Material chip factories", () => {
     expect(remove.getAttribute("aria-label")).toBe("Remove Ada");
     remove.click();
     expect(requests).toEqual([chip]); expect(clicks).toBe(0); expect(chip.isSelected()).toBe(false);
-    // Input chips are always removable, and on its own a chip leaves the page (FLO-257).
+    // Input chips are always removable, and on its own a chip leaves the page.
     expect(chip.element.isConnected).toBe(false);
     chip.setLabel("Grace"); expect(remove.getAttribute("aria-label")).toBe("Remove Grace");
     chip.disable(); expect(remove.disabled).toBe(true); remove.click(); expect(requests).toHaveLength(1);
@@ -168,7 +168,7 @@ describe("chips-container integration", () => {
     const set = group([{ type: "assist", label: "Action" }, { type: "suggestion", label: "Suggest" }, { type: "filter", label: "Filter" }, { type: "input", label: "Input" }]);
     for (const chip of set.getChips()) chip.action.click();
     expect(set.getSelectedValues()).toEqual(["filter", "input"]);
-    // Grid cells (FLO-261): a one-action filter cell carries aria-selected; the input
+    // Grid cells: a one-action filter cell carries aria-selected; the input
     // chip has two actions, so its checkbox action carries the state; assist and
     // suggestion cells carry none.
     const [assist, suggest, filter, input] = set.getChips();
@@ -181,7 +181,7 @@ describe("chips-container integration", () => {
     const set = group([{ label: "Filter" }, { type: "input", label: "Input" }]);
     const [filter, input] = set.getChips();
     filter.focus();
-    // The focused target is the filter chip's cell (FLO-261).
+    // The focused target is the filter chip's cell.
     expect(document.activeElement).toBe(filter.element);
     filter.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     expect(set.getSelectedValues()).toEqual(["filter"]);
@@ -193,7 +193,7 @@ describe("chips-container integration", () => {
     const set = group([{ label: "First" }, { label: "Disabled", disabled: true }, { label: "Last" }]);
     const [first, , last] = set.getChips();
     first.focus();
-    // One-action chips are focused as their cells (FLO-261).
+    // One-action chips are focused as their cells.
     first.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
     expect(document.activeElement).toBe(last.element);
     last.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));

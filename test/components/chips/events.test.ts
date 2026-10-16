@@ -196,7 +196,7 @@ describe("chips container events", () => {
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight" }));
-    // Enter goes to the focused chip cell (FLO-261: the set is a grid of cells).
+    // Enter goes to the focused chip cell (the set is a grid of cells).
     document.activeElement!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     expect(events).toEqual([[{ value: ["a"], selected: ["a"], changed: "a" }]]);
   });
@@ -205,7 +205,7 @@ describe("chips container events", () => {
     const events: Parameters<ChipsEvents["change"]>[] = [];
     const chips = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
-    // A programmatic change emits no change, as on a native control (FLO-328).
+    // A programmatic change emits no change, as on a native control.
     chips.selectByValue("a").selectByValue("b").setValue("a").clearSelection();
     expect(chips.getSelectedValues()).toEqual([]);
     expect(events).toEqual([]);
@@ -213,7 +213,7 @@ describe("chips container events", () => {
     expect(events).toEqual([[{ value: "a", selected: ["a"], changed: null }]]);
   });
 
-  test("change is one object with the element's value (FLO-320)", () => {
+  test("change is one object with the element's value", () => {
     const read: unknown[] = [];
     const single = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     const multi = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }, { ripple: false }] });
@@ -225,7 +225,7 @@ describe("chips container events", () => {
     multi.getChips()[0].element.click();
     multi.getChips()[1].element.click();
     multi.selectByValue(["a"]);
-    // clearSelection() and selectByValue() are silent (FLO-328): clicks only.
+    // clearSelection() and selectByValue() are silent: clicks only.
     expect(read).toEqual([
       { value: "b", selected: ["b"], changed: "b" },
       { value: ["a"], selected: ["a"], changed: "a" },

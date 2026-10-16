@@ -43,7 +43,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 export const fullOnlyStyles: string[] = [];
 
 // Themes in the full stylesheet, each also shipped as `material/themes/<name>`.
-// 3.0.0 removed the material, winter, browngreen and legacy themes (FLO-308, FLO-428).
+// 3.0.0 removed the material, winter, browngreen and legacy themes.
 export const themeStyles = [
   "baseline", "ocean", "desert", "forest", "sunset", "spring", "summer",
   "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast",
@@ -51,7 +51,7 @@ export const themeStyles = [
 
 // Themes shipped only as `material/themes/<name>`, outside the full stylesheet, so
 // an app pays for one only by importing it: the M3 scheme variants generated
-// by scripts/generate-themes.ts (FLO-308). Every theme file is in exactly one
+// by scripts/generate-themes.ts. Every theme file is in exactly one
 // of the two lists (test/core/theme).
 export const standaloneThemes = [
   "neutral", "vibrant", "expressive", "fidelity", "content", "monochrome",
@@ -69,7 +69,7 @@ export const baseStyles = [
 export const contrastStyle = "contrast";
 
 // The type classes, text utilities, heading styles and typescale tokens that
-// left the base (FLO-539). Emitted in the base cascade layer: see build-styles.
+// left the base. Emitted in the base cascade layer: see build-styles.
 export const typographyStyles = [
   "base/typescale", "base/typography",
 ];

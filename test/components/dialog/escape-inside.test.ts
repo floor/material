@@ -1,6 +1,6 @@
 // test/components/dialog/escape-inside.test.ts
 //
-// FLO-548 family 6: Escape belongs to the innermost thing that is open. A menu
+// Family 6: Escape belongs to the innermost thing that is open. A menu
 // open inside a dialog closes on Escape and the dialog stays; the next Escape
 // closes the dialog. The dialog's Escape listener is on the window, after the
 // menu's on the document, and leaves a key the menu has used.

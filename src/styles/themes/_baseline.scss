@@ -1,7 +1,7 @@
 // src/styles/themes/_baseline.scss
 // Medium/high contrast: Tonal Spot from seed #6750a4, secondary from #625b71, tertiary from #7d5260.
 // M3's baseline scheme, light and dark: the values of Compose's ColorLightTokens and
-// ColorDarkTokens (the published baseline, primary #6750A4), FLO-315.
+// ColorDarkTokens (the published baseline, primary #6750A4),
 @use "../abstract/base" as *;
 @use "base-theme" as *;
 @use "../abstract/variables" as v;
@@ -16,7 +16,7 @@
     --#{$prefix}-sys-color-on-error: #FFFFFF;
     --#{$prefix}-sys-color-error-container: #F9DEDC;
     --#{$prefix}-sys-color-on-error-container: #410E0B;
-    // Success, warning and info, as every generated theme has them (FLO-329):
+    // Success, warning and info, as every generated theme has them:
     // the badge's status colours had no background under the default theme
     @include status-roles-light;
     // Key colors
@@ -35,7 +35,7 @@
     --#{$prefix}-sys-color-tertiary-container: #ffd8e4;
     --#{$prefix}-sys-color-on-tertiary-container: #31111d;
 
-    // Fixed accents: the same in light and dark (M3 fixed roles, FLO-315;
+    // Fixed accents: the same in light and dark (M3 fixed roles;
     // Compose ColorLightTokens / ColorDarkTokens, tones 90, 80, 10 and 30)
     --#{$prefix}-sys-color-primary-fixed: #eaddff;
     --#{$prefix}-sys-color-primary-fixed-dim: #d0bcff;
@@ -55,7 +55,7 @@
     --#{$prefix}-sys-color-surface-dim: #ded8e1;
     --#{$prefix}-sys-color-surface-bright: #fef7ff;
     // Compose ColorLightTokens.SurfaceVariant = NeutralVariant90; the filled
-    // card's disabled container reads it (FilledCardTokens, FLO-329)
+    // card's disabled container reads it (FilledCardTokens)
     --#{$prefix}-sys-color-surface-variant: #e7e0ec;
     --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
     --#{$prefix}-sys-color-surface-container-low: #f7f2fa;
@@ -105,7 +105,7 @@
     --#{$prefix}-sys-color-tertiary-container: #633b48;
     --#{$prefix}-sys-color-on-tertiary-container: #ffd8e4;
 
-    // Fixed accents: the same in light and dark (M3 fixed roles, FLO-315;
+    // Fixed accents: the same in light and dark (M3 fixed roles;
     // Compose ColorLightTokens / ColorDarkTokens, tones 90, 80, 10 and 30)
     --#{$prefix}-sys-color-primary-fixed: #eaddff;
     --#{$prefix}-sys-color-primary-fixed-dim: #d0bcff;

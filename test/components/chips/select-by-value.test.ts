@@ -1,7 +1,7 @@
 // test/components/chips/select-by-value.test.ts
 //
 // selectByValue is public and had no coverage at all. It is also where the two
-// null comparisons live that FLO-114 had to make explicit: a chip yields null
+// null comparisons live that had to be made explicit: a chip yields null
 // from getValue() when it has neither a value nor text to derive one from, and
 // the code asked `valueArray.includes(chipValue)` with that null in hand.
 //
@@ -71,7 +71,7 @@ describe("selectByValue", () => {
 
   // Exclusive is the default for a single-select chip set: selecting one
   // clears whatever was selected before.
-  // Sets are multi-select by default since FLO-257; replacing is single-select's rule.
+  // Sets are multi-select by default since; replacing is single-select's rule.
   test("in single-select, selecting replaces the previous selection", () => {
     const chips = mount({ chips: THREE, multiSelect: false });
 

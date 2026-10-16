@@ -58,7 +58,7 @@ describe('datepicker outside click', () => {
     let closes = 0;
     picker.on('close', () => closes++);
 
-    // The click that opens it is the only one it ignores (FLO-548): told by
+    // The click that opens it is the only one it ignores: told by
     // the order events were dispatched in, not by the task
     document.body.addEventListener('click', () => { picker.open(); }, { once: true });
     clickOutside();

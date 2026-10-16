@@ -1,6 +1,6 @@
 // test/components/text-field/behaviour.test.ts
 //
-// FLO-303: the supporting text and error state stayed in step only when the
+// The supporting text and error state stayed in step only when the
 // error feature and the API happened to hold the same copy of the component,
 // and density ran before the input it styles existed.
 
@@ -37,7 +37,7 @@ const hasError = (field: { element: HTMLElement }) => field.element.classList.co
 beforeEach(() => { document.body.innerHTML = ""; });
 afterAll(() => dom.window.close());
 
-describe("text field supporting text and error state (FLO-303)", () => {
+describe("text field supporting text and error state", () => {
   test("ending an error restores helper text set through the API", () => {
     const field = mount();
     field.setSupportingText("Helper");
@@ -84,7 +84,7 @@ describe("text field supporting text and error state (FLO-303)", () => {
   });
 });
 
-describe("text field density reaches the input (FLO-303)", () => {
+describe("text field density reaches the input", () => {
   test("data-density is set on the input as well as the root", () => {
     const field = mount({ density: "compact" });
     expect(field.element.getAttribute("data-density")).toBe("compact");

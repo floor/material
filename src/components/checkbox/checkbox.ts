@@ -68,7 +68,7 @@ const enhanceWithCheckable = <C extends BaseComponent & InputComponent>(componen
   // A click has already cleared the property by the time change is emitted.
   enhanced.on?.('change', syncIndeterminate);
 
-  // Error: a class for the stylesheet and aria-invalid for assistive tech. FLO-265.
+  // Error: a class for the stylesheet and aria-invalid for assistive tech.
   enhanced.setError = (error: boolean) => {
     enhanced.element.classList.toggle(`${config.prefix}-checkbox--error`, error);
     if (error) enhanced.input.setAttribute('aria-invalid', 'true');

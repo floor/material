@@ -17,7 +17,7 @@ import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpeners } from "./check-menu-opener-browser";
-import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkMenu } from "./check-menu-browser";
@@ -41,7 +41,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'material'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'material'; window.createSearch = createSearch;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'material'; window.createSelect = createSelect;`);
-  // createMenu for the menu checks, and the openers for FLO-386's: one import, two windows
+  // createMenu for the menu checks, and the openers for it: one import, two windows
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
@@ -114,6 +114,7 @@ try {
   await checkTextFieldA11y(page);
   await checkTextFieldLatePlacement(page);
   await checkTextFieldLayout(page, "factory");
+  await checkTextFieldSearchCancel(page, "factory");
   await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
   await checkControls(page);

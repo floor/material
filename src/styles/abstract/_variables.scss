@@ -85,7 +85,7 @@ $motion: (
   'spring-fast-spatial-easing': spring-linear($spring-fast-spatial-points),
   // The same spring with its progress clamped to 1, for colours: Compose's
   // Color.lerp clamps the fraction, so an overshooting spring never takes a
-  // colour past its target (FLO-348)
+  // colour past its target
   'spring-fast-spatial-clamped-easing': spring-linear($spring-fast-spatial-points, $clamp: true),
   'spring-slow-spatial-duration': 625ms,
   'spring-slow-spatial-easing': linear(0.0, 0.056, 0.182, 0.335, 0.488, 0.624, 0.738, 0.827, 0.895, 0.943, 0.975, 0.996, 1.007, 1.013, 1.015, 1.015, 1.013, 1.011, 1.008, 1.006, 1.004, 1.003, 1.002, 1.001, 1),
@@ -214,7 +214,7 @@ $typescale: (
   )
 ) !default;
 
-// M3's shape scale, Compose ShapeTokens, and nothing else (FLO-345)
+// M3's shape scale, Compose ShapeTokens, and nothing else
 $shape: (
   'none': 0,
   'extra-small': 4px,
@@ -226,7 +226,7 @@ $shape: (
   'large-increased': 20px,
   'extra-large': 28px,
   // Compose ShapeTokens.CornerValueExtraLargeIncreased and
-  // CornerValueExtraExtraLarge (FLO-345)
+  // CornerValueExtraExtraLarge
   'extra-large-increased': 32px,
   'extra-extra-large': 48px,
   'full': 9999px
@@ -390,12 +390,12 @@ $spacing-scale: (
   @return map.get($typescale, $scale);
 }
 
-// A corner as its token, the compiled value as the fallback (FLO-330): an app or
+// A corner as its token, the compiled value as the fallback: an app or
 // theme sets --{prefix}-sys-shape-corner-<size> (base/_tokens.scss declares them)
 @function shape($size) {
   @if not map.has-key($shape, $size) {
     @error "No shape step '#{$size}'. M3's scale: #{map.keys($shape)}. "
-      + "extra-tiny, tiny and pill were removed in material 3.0.0: write a literal radius, or use full (FLO-345).";
+      + "extra-tiny, tiny and pill were removed in material 3.0.0: write a literal radius, or use full.";
   }
   @return var(--#{$prefix}-sys-shape-corner-#{$size}, #{map.get($shape, $size)});
 }
@@ -450,7 +450,7 @@ $text-field: (
   // than text fields", text fields guidelines, "Input text").
   'height-multiline': 100px,
   // Where the first line starts, which a sibling on the field's line aligns
-  // to: the single-line field's text (FLO-299). 16px, the content padding
+  // to: the single-line field's text. 16px, the content padding
   // (TextFieldPadding), outlined or without a label; under a filled field's
   // floated label, 8px and the label's 16px line.
   'padding-top-multiline': 16px,
@@ -468,7 +468,7 @@ $text-field: (
 ) !default;
 
 /// A text field measurement: `v.text-field('height')`. 0.10's `$textfield` and
-/// `textfield()` are removed in material 3.0.0 (FLO-383).
+/// `textfield()` are removed in material 3.0.0.
 @function text-field($key) {
   @if $key == 'border-radius' { @return shape('extra-small'); }
   @return map.get($text-field, $key);

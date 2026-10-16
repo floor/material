@@ -1,6 +1,6 @@
 // test/core/dom/style-injection.test.ts
 //
-// FLO-111. `createElement` accepted `style` as a string and wrote it with
+// `createElement` accepted `style` as a string and wrote it with
 // `setAttribute("style", ...)`. A style attribute takes a whole CSS string, so
 // a caller interpolating one value -- `style: "color: " + userInput` -- hands
 // the parser however many declarations that value contains. Verified in

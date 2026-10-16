@@ -1,8 +1,8 @@
 // test/components/timepicker/accessible-route.test.ts
 //
 // Dr Jones decided (2026-09-20) that the text-input mode is the time picker's
-// accessible route. Since FLO-279 the dial is accessible as well, and since
-// FLO-283 its hour and minute boxes are radios, as in Compose. M3 says the same thing — manual entry through text input rather
+// accessible route. The dial is accessible as well, and
+// its hour and minute boxes are radios, as in Compose. M3 says the same thing — manual entry through text input rather
 // than exclusively the dial, with the input selector reachable from the dial
 // through the keyboard icon.
 //
@@ -95,7 +95,7 @@ describe("in input mode the time fields are named inputs", () => {
     expect(c.querySelector("[role=radio][data-type]")).toBeNull();
   });
 
-  // FLO-280: M3 labels the input mode's fields below them.
+  // M3 labels the input mode's fields below them.
   test("each field has a visible label below it, tied to it", () => {
     const c = picker({ ...input, showSeconds: true });
     const labels = Array.from(c.querySelectorAll<HTMLLabelElement>(`.${PREFIX}-time-picker__input-label`));
@@ -113,7 +113,7 @@ describe("in input mode the time fields are named inputs", () => {
   });
 });
 
-// FLO-283: in dial mode the boxes only choose what the dial sets, so they are
+// In dial mode the boxes only choose what the dial sets, so they are
 // radios named as Compose names them, with the value they show.
 describe("in dial mode the hour and minute boxes are radios", () => {
   const boxes = (c: HTMLElement) => Array.from(c.querySelectorAll<HTMLButtonElement>("[data-type]"));
@@ -167,7 +167,7 @@ describe("in dial mode the hour and minute boxes are radios", () => {
   });
 });
 
-// FLO-279: the dial is a listbox of its numbers, reachable and operable by keyboard;
+// The dial is a listbox of its numbers, reachable and operable by keyboard;
 // it was a canvas hidden from assistive technology.
 describe("the dial is an accessible control", () => {
   test("a listbox named Hour, its numbers options named as times, one tab stop", () => {

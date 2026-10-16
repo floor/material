@@ -67,7 +67,7 @@ describe('disabled states use the per-role tokens', () => {
   });
 
   test('checkbox: the selected container takes on-surface 38% and the checkmark surface', () => {
-    // The rule covers checked and indeterminate alike (FLO-265).
+    // The rule covers checked and indeterminate alike.
     const checked = find('checkbox', /--disabled .*:checked ~ .mtrl-checkbox__icon,/)[0];
     expect(declaration(checked, 'background-color')).toBe(onSurface(38));
     const check = find('checkbox', /--disabled .mtrl-checkbox__icon svg$/)[0];

@@ -32,18 +32,18 @@ concurrency:
 jobs:
   # Types, the strictness ratchets, lint and test-file naming, run side by side.
   static:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
-      - uses: actions/cache@v4
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      - name: Types, ratchets, lint, test naming and test types (in parallel)
+      - name: Types, ratchets, lint, test naming, test types and internal ids (in parallel)
         # The step's shell stops at the first failing command (bash -e), in the
         # background shells too. `|| status=$?` keeps a failing script from ending
         # its shell before the status is written: without it a failure printed
@@ -51,13 +51,13 @@ jobs:
         run: |
           logs=$(mktemp -d)
           pids=()
-          for script in ts:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types ids:check; do
             (status=0; bun run "$script" > "$logs/$script.log" 2>&1 || status=$?; echo "$status" > "$logs/$script.status") &
             pids+=($!)
           done
           wait "${pids[@]}" || true
           failed=0
-          for script in ts:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types ids:check; do
             status=$(cat "$logs/$script.status" 2> /dev/null || echo "not recorded")
             echo "::group::$script (exit $status)"
             cat "$logs/$script.log" || true
@@ -69,13 +69,13 @@ jobs:
         run: bun run name:check
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
-      - uses: actions/cache@v4
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -85,20 +85,20 @@ jobs:
 
   # The build alone, so the jobs that read dist/ start as soon as it exists.
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
-      - uses: actions/cache@v4
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       - name: Build
         run: bun run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: dist
@@ -107,18 +107,18 @@ jobs:
   # The checks that read the built package, on the build's dist/.
   package:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
-      - uses: actions/cache@v4
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
@@ -126,9 +126,9 @@ jobs:
         run: bun run elements-css:check
       - name: Build and consumer tooling types
         run: bun run tooling:check
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 22
+          node-version: "22.23.3"
       - name: Component classes match the stylesheets
         run: bun run classes:check
       - name: Packed SSR on Node and Bun, and browser isolation
@@ -151,7 +151,7 @@ jobs:
   # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # A group takes about four minutes. A runner that stalls fails here, and is
     # run again, instead of holding the pull request for most of an hour.
     timeout-minutes: 20
@@ -167,7 +167,7 @@ jobs:
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
           - group: components
             browsers: chromium
-            checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check readme-browser:check
+            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check carousel:check toolbar-card:check core:check readme-browser:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check
@@ -176,22 +176,22 @@ jobs:
             checks: ssr:check
     name: browser (${{ matrix.group }})
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.4"
-      - uses: actions/cache@v4
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 22
+          node-version: "22.23.3"
       - uses: ./.github/actions/browsers
         with:
           browsers: ${{ matrix.browsers }}
@@ -204,7 +204,7 @@ jobs:
           done
       - name: Browser comparison artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: browser-comparisons-${{ matrix.group }}
           path: |
@@ -227,7 +227,7 @@ jobs:
   check:
     if: always()
     needs: [static, tests, build, package, browser]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Every job passed
         run: |

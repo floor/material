@@ -61,7 +61,7 @@ export const withStates =
     return component.getClass ? component.getClass(className) : className;
   };
 
-  // The open view (FLO-285). It was in the page's flow, so a docked view pushed
+  // The open view. It was in the page's flow, so a docked view pushed
   // the page down, and a full-screen search covered the page even collapsed.
   // Now the bar and its results show in the top layer together, over the bar's
   // place: docked under the bar's width over a scrim, full screen as a modal
@@ -85,7 +85,7 @@ export const withStates =
   };
   // Escape on a full-screen view, from anywhere in it but the input (which
   // clears its text first), is a key press handled for the topmost open modal
-  // (FLO-548). What is not a key press still arrives as the modal dialog's
+  // What is not a key press still arrives as the modal dialog's
   // cancel; the browser's cancel in the task the view opened in is the opening
   // key's, when the page stopped that key press before it reached the window.
   let escape: ModalEscape | undefined;
@@ -271,7 +271,7 @@ export const withStates =
     }
   };
 
-  /** Sets the variant, contained or divided (FLO-287). */
+  /** Sets the variant, contained or divided. */
   const setVariant = (variant: SearchVariant): void => {
     if (variant === currentVariant) return;
     component.element.classList.replace(

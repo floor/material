@@ -18,12 +18,13 @@ export const PUBLISH_STEP = "The published manifest and README";
 // Bun parses YAML; the installed @types/bun does not declare it yet.
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
 
-/** The commands of that step, as the workflow file has them. */
+/** The commands of that step, as the workflow file has them. The step lives in `verify`,
+ *  the job that packs the tarball (and holds no id-token). */
 export async function publishStepCommands(): Promise<string> {
   const workflow = YAML.parse(await Bun.file(".github/workflows/publish.yml").text()) as {
-    jobs: { publish: { steps: { name?: string; run?: string }[] } };
+    jobs: { verify: { steps: { name?: string; run?: string }[] } };
   };
-  const step = workflow.jobs.publish.steps.find(candidate => candidate.name === PUBLISH_STEP);
+  const step = workflow.jobs.verify.steps.find(candidate => candidate.name === PUBLISH_STEP);
   assert(step?.run, `publish.yml has no step named "${PUBLISH_STEP}" with a run script`);
   return step.run;
 }

@@ -54,7 +54,7 @@ export interface SwitchConfig {
 
   /**
    * Icon HTML in the unselected handle, which then grows to 24dp (M3's icons on
-   * both states). FLO-267.
+   * both states).
    */
   unselectedIcon?: string;
 
@@ -80,7 +80,7 @@ export interface SwitchChangePayload {
   nativeEvent?: Event;
 }
 
-/** Emitter events: change, and the input's focus and blur (FLO-267). */
+/** Emitter events: change, and the input's focus and blur. */
 export interface SwitchEvents extends TouchEvents {
   change: (payload: SwitchChangePayload) => void;
   focus: (event: FocusEvent) => void;
@@ -136,7 +136,7 @@ export interface SwitchComponent {
   /** Removes supporting text */
   removeSupportingText: () => SwitchComponent;
 
-  /** Puts the switch in or out of the error state: its class and aria-invalid (FLO-318) */
+  /** Puts the switch in or out of the error state: its class and aria-invalid */
   setError: (error: boolean) => SwitchComponent;
 
   /** Whether the switch is in the error state */
@@ -154,7 +154,7 @@ export interface SwitchComponent {
   /** Disables the switch */
   disable: () => SwitchComponent;
 
-  /** Whether the switch is disabled (FLO-384) */
+  /** Whether the switch is disabled */
   isDisabled: () => boolean;
 
   /** Destroys the switch component and cleans up resources */
@@ -232,7 +232,7 @@ export type ApiComponent = BaseComponent &
 /**
  * Registers SwitchConfig with the global defaults map, so
  * `setComponentDefaults("switch", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

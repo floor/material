@@ -17,7 +17,7 @@ const fixtures = cases.filter(c => c.variant === "default");
 // Hosts that opt out of SSR: the server emits the authored host and light DOM.
 const FALLBACK = ["carousel", "fab-menu"];
 // Light children that have their own declarative roots and are measured across
-// the upgrade (FLO-412). The toolbar renders its own root (FLO-387); its icon
+// the upgrade. The toolbar renders its own root; its icon
 // buttons still do, and each must upgrade in place.
 const RENDERED_CHILDREN: Record<string, string> = { toolbar: "m-icon-button" };
 assert.deepEqual(fixtures.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
@@ -134,7 +134,7 @@ try {
       style.sheet!.disabled = false;
       // Turning the sheet back on restyles the root from its unstyled values, which starts
       // every transition the root allows. Under reduced motion the host rule lets colours
-      // fade (FLO-549), so an extended FAB's label was still fading when WebKit took the
+      // fade, so an extended FAB's label was still fading when WebKit took the
       // "before" screenshot (422 pixels). The probe is this check's own doing: resolve the
       // style again and finish what it started, so the screenshot shows the settled root.
       signature();
@@ -167,7 +167,7 @@ try {
     } else {
       assert(firstPaint.root && firstPaint.rules > 0 && firstPaint.styled, `${engine}/${fixture.element}: unstyled no-JS root ${JSON.stringify(firstPaint)}`);
       // Child roots used to be recorded only for an opted-out host. The toolbar
-      // has its own root now, and its icon buttons are still measured (FLO-412).
+      // has its own root now, and its icon buttons are still measured.
       if (children) {
         roots = await inert.evaluate(selector => Array.from(document.querySelectorAll(`#stage > :first-child ${selector}`),
           child => (child.shadowRoot?.querySelector("style")?.sheet?.cssRules.length ?? 0) > 0), children);

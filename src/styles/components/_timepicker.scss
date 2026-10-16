@@ -13,7 +13,7 @@ $component: '#{base.$prefix}-time-picker';
   position: relative;
   display: inline-block;
   
-  // A native modal <dialog> (FLO-278): the browser centres it in the top layer and
+  // A native modal <dialog>: the browser centres it in the top layer and
   // draws ::backdrop; the scrim is scrim at 0.32, as for every M3 dialog.
   &__dialog {
     box-sizing: border-box;
@@ -160,7 +160,7 @@ $component: '#{base.$prefix}-time-picker';
       }
     }
 
-    // Dial mode: the boxes are radios (FLO-283). TimeSelector tokens: an 8dp
+    // Dial mode: the boxes are radios. TimeSelector tokens: an 8dp
     // surface-container-highest container with an on-surface label, filled
     // primary-container when selected; state layers in the label colour.
     &:not([type="number"]) {
@@ -242,7 +242,7 @@ $component: '#{base.$prefix}-time-picker';
         background-color: t.alpha('on-surface-variant', v.state('pressed-state-layer-opacity'));
       }
 
-      // No time in this half of the day is inside minTime/maxTime (FLO-281).
+      // No time in this half of the day is inside minTime/maxTime.
       &[aria-disabled="true"] {
         opacity: 0.38;
         cursor: default;
@@ -279,7 +279,7 @@ $component: '#{base.$prefix}-time-picker';
     
   }
 
-  // The DOM dial (FLO-279), m3.material.io's clock dial: a 256dp surface-container-
+  // The DOM dial, m3.material.io's clock dial: a 256dp surface-container-
   // highest face with Body Large numbers, a 2dp primary track, an 8dp centre dot and
   // a 48dp primary handle; under the handle the numbers read on-primary. One
   // animated angle and radius place the track, the handle and that clipped copy, so
@@ -334,7 +334,7 @@ $component: '#{base.$prefix}-time-picker';
     // md.comp.focus-ring on the focused number.
     &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
 
-    // Outside minTime/maxTime or off the step (FLO-281): M3's disabled content,
+    // Outside minTime/maxTime or off the step: M3's disabled content,
     // at 38%.
     &[aria-disabled="true"] { opacity: 0.38; cursor: default; }
   }
@@ -518,7 +518,7 @@ $component: '#{base.$prefix}-time-picker';
 
 
 // The dial's angle and radius animate as values, so the hand, the handle and the
-// clipped labels move together on one spring (FLO-279).
+// clipped labels move together on one spring.
 @property --#{$component}-angle { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
 @property --#{$component}-radius { syntax: '<length>'; inherits: true; initial-value: 101px; }
 

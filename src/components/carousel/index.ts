@@ -14,6 +14,6 @@ export type {
   CarouselChangePayload,
   CarouselSlide,
   CarouselVariant,
-  // Public: CarouselComponent.slides is typed with it (FLO-381 keeps it)
+  // Public and kept: CarouselComponent.slides is typed with it
   SlidesAPI,
 } from "./types";

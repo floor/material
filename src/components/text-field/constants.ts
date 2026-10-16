@@ -60,7 +60,7 @@ const TEXT_FIELD_EVENTS = {
   FOCUS: "focus",
   /** Fired when text field loses focus */
   BLUR: "blur",
-  /** Fired when the trailing icon button is activated (`trailingIconLabel`; FLO-301) */
+  /** Fired when the trailing icon button is activated (`trailingIconLabel`) */
   TRAILING: "trailing",
   /** Legacy name, not emitted; listen for keydown on the input and check key === "Enter" */
   ENTER: "enter",
@@ -157,7 +157,7 @@ const TEXT_FIELD_CLASSES = {
   MULTILINE: "text-field--multiline",
 } as const;
 
-// Every exported identifier writes "text field" as two words (FLO-383); the
+// Every exported identifier writes "text field" as two words; the
 // values (class names, event strings) are unchanged.
 export {
   TEXT_FIELD_VARIANTS,

@@ -1,4 +1,4 @@
-// FLO-539. Typography leaves material/styles/base. The build writes the moved
+// Typography leaves material/styles/base. The build writes the moved
 // rules to dist/styles/typography.css; these tests compile the same sources
 // the build emits (the tests job has no dist/).
 import { describe, expect, test } from "bun:test";

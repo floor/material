@@ -24,7 +24,7 @@ beforeAll(() => {
 });
 
 describe('menu stylesheet', () => {
-  // FLO-273: in a scrolling menu the divider kept flex-shrink 1 and collapsed
+  // In a scrolling menu the divider kept flex-shrink 1 and collapsed
   test('the divider does not shrink in a menu that scrolls', () => {
     expect(value('.mtrl-menu__divider', 'flex-shrink')).toBe('0');
   });
@@ -67,7 +67,7 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__item:focus-visible::before, .mtrl-menu__item--active::before', 'opacity')).toBe('0.1');
     expect(value('.mtrl-menu__item:focus::before', 'opacity')).toBeUndefined();
     expect(value('.mtrl-menu__item:focus', 'outline')).toBe('none');
-    // the hover and pressed layers are unaffected (the pressed one yields to a ripple, FLO-260)
+    // the hover and pressed layers are unaffected (the pressed one yields to a ripple)
     expect(value('.mtrl-menu__item:hover::before', 'opacity')).toBe('0.08');
     expect(value('.mtrl-menu__item:active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
   });
@@ -93,7 +93,7 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu', 'transition')).toBe('transform 250ms cubic-bezier(0.3, 0, 0, 1), opacity 250ms cubic-bezier(0.3, 0, 0, 1), visibility 250ms');
     expect(value('.mtrl-menu--visible', 'transition')).toBeUndefined();
     // Closed, out of the tab order and the accessibility tree; the transition
-    // keeps it visible while it moves (FLO-304)
+    // keeps it visible while it moves
     expect(value('.mtrl-menu', 'visibility')).toBe('hidden');
     expect(value('.mtrl-menu--visible', 'visibility')).toBe('visible');
     expect(css).not.toContain('!important');

@@ -3,7 +3,7 @@
 // Writes test/fixtures/material-shapes.json: the 35 Material 3 Expressive
 // shapes as Compose Material 3 itself builds them, the independent reference
 // test/core/material-shapes.test.ts holds src/core/shapes/material.ts to
-// (FLO-346). Not part of CI: run it when the port follows a newer Compose, and
+// Not part of CI: run it when the port follows a newer Compose, and
 // commit the fixture.
 //
 // The `Shapes` object below is Compose's MaterialShapes builders, copied

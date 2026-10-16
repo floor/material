@@ -38,6 +38,6 @@ type TabsInstanceProps = InstanceType<typeof MTabs>["$props"];
 assert<Equals<TabsInstanceProps["modelValue"], string | null | undefined>>();
 export const tab: typeof MTab = null as unknown as import("vue").FunctionalComponent<TabAttributes>;
 
-// Named slots (FLO-325): the default one and each slot the element declares.
+// Named slots: the default one and each slot the element declares.
 assert<Equals<VueSlots<DialogSpec>, SlotsType<{ default?: () => VNodeChild } & { headline?: () => VNodeChild; actions?: () => VNodeChild }>>>();
 assert<Equals<VueSlots<SwitchSpec>, SlotsType<{ default?: () => VNodeChild } & Record<never, never>>>>();

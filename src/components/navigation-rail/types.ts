@@ -16,7 +16,7 @@ export interface NavigationRailItemConfig {
 }
 export interface NavigationRailSelectEvent {
     id: string;
-    /** The id again, as the `value` of the `<m-navigation-rail>` element's `change` (FLO-320) */
+    /** The id again, as the `value` of the `<m-navigation-rail>` element's `change` */
     value: string;
     index: number;
     originalEvent: MouseEvent;
@@ -84,7 +84,7 @@ export interface NavigationRailComponent {
 /**
  * Registers NavigationRailConfig with the global defaults map, so
  * `setComponentDefaults("navigation-rail", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

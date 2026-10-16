@@ -36,7 +36,7 @@ $component: '#{base.$prefix}-ripple';
     // Active ripple
     &.active {
       animation: #{$component}-expand 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
-      // The wave is the pressed state layer (FLO-260), as Compose's ripple is.
+      // The wave is the pressed state layer, as Compose's ripple is.
       opacity: v.state('pressed-state-layer-opacity');
     }
     

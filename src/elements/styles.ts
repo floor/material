@@ -77,10 +77,11 @@ const PREUPGRADE_LAYER = "mtrl.preupgrade";
 
 /**
  * On a host the server rendered with a declarative shadow root.
- * No `data-mtrl-*` name is used anywhere else: component `data-*` names
- * (`data-id`, `data-density`, `data-theme`) are that component's own state,
- * and a page's `data-ssr` must not be this contract. Inert after upgrade,
- * because the rollback rule is `:not(:defined)`.
+ * The `data-mtrl-*` namespace is the library's own: this attribute, and the
+ * elements' `marker` reflections (define.ts), which no component or page
+ * writes. Component `data-*` names (`data-id`, `data-density`, `data-theme`)
+ * are that component's own state, and a page's `data-ssr` must not be this
+ * contract. Inert after upgrade, because the rollback rule is `:not(:defined)`.
  */
 export const RENDERED_HOST_ATTRIBUTE = "data-mtrl-ssr";
 

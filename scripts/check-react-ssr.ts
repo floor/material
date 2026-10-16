@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-react-ssr.ts
 // Built-package SSR, parser consumption, hydration and browser isolation on both React versions.
-// Known limit (FLO-517): material/ssr/react children cannot see providers above their host until upgrade.
+// Known limit: material/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -40,9 +40,9 @@ const browser = await chromium.launch();
 const summaries: object[] = [];
 const contextFailures: string[] = [];
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {
-  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker`);
   assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
-  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+  console.log(`known limit (expected to fail until the page-level integration): ${label}: ${observed}`);
 };
 await mkdir("analysis/react-ssr", { recursive: true });
 try {
@@ -247,7 +247,27 @@ try {
       assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
       assert.equal(await inert.getByRole("tab", { name: "Trips", selected: true }).count(), 1, "Declaration children reach the renderer");
       assert.equal(await inert.getByRole("switch", { name: "Wi-Fi" }).isChecked(), true);
+      // The shape toolbar with the element script held back: the adapter's
+      // server markup must carry the marker, so the toolbar's pins apply
+      // before upgrade — direct items round at their own sizes, the
+      // overflow slot's content square.
+      const shape = await inert.evaluate(() => {
+        const radius = (id: string): string => {
+          const host = document.getElementById(id);
+          const inner: Element | null = host?.shadowRoot?.querySelector(".mtrl-icon-button") ?? host ?? null;
+          return inner ? getComputedStyle(inner).borderTopLeftRadius : "missing";
+        };
+        return {
+          marked: ["shape-sel-s", "shape-sel-m", "shape-overflow"].every((id) => document.getElementById(id)?.hasAttribute("data-mtrl-icon-button") === true),
+          selS: radius("shape-sel-s"),
+          selM: radius("shape-sel-m"),
+          overflow: radius("shape-overflow"),
+        };
+      });
       await inert.close();
+      assert.equal(shape.marked, true, `React ${version}: the adapter markup carries the icon-button marker before upgrade`);
+      assert.deepEqual([shape.selS, shape.selM, shape.overflow], ["20px", "28px", "12px"], `React ${version}: held-script markup pins direct items round, overflow content square`);
+      console.log(`React ${version}: held-script markup — direct items 20px/28px round, overflow 12px square, marker present`);
       const page = await browser.newPage();
       const warnings: string[] = [], errors: string[] = [];
       page.on("console", message => { if (["warning", "error"].includes(message.type())) warnings.push(message.text()); });

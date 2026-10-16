@@ -62,16 +62,16 @@ const inDialog = (event: Event, prefix: string): boolean =>
  */
 export const getContainerConfig = (config: ResolvedTimePickerConfig) => {
   // `title` is the headline: passed on, it became the native tooltip over
-  // the whole surface (FLO-347). The headline names it through aria-labelledby.
+  // the whole surface. The headline names it through aria-labelledby.
   return createElementConfig({ ...config, title: undefined }, {
     tag: "div",
-    // The dialog semantics are the native <dialog>'s, not this host's. FLO-278.
+    // The dialog semantics are the native <dialog>'s, not this host's.
     className: [
       config.class,
       config.open ? `${config.prefix}-time-picker--open` : "",
     ],
     // The root's own events, not the dialog's, which now sits inside the root
-    // (FLO-288) and has its own actions.
+    // And has its own actions.
     forwardEvents: {
       click: (_component, event) => !inDialog(event, config.prefix),
       keydown: (_component, event) => !inDialog(event, config.prefix),
