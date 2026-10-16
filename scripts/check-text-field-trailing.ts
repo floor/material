@@ -115,6 +115,53 @@ export const trailingFocus = async (page: Page, id: string): Promise<TrailingFoc
     };
   }, id);
 
+/** Attribute changes on an upgraded field, including one rendered by an adapter. */
+export const trailingAttributeOrder = async (page: Page, id: string): Promise<Array<{ sequence: string; ok: boolean; actual: unknown }>> => {
+  const results = [];
+  for (const [sequence, expected] of [
+    ["label then icon", "Show password"],
+    ["change label while icon absent", "Hide password"],
+    ["remove label while icon absent", null],
+    ["icon then label", "Show password"],
+  ] as const) {
+    const actual = await page.evaluate(({ id, icon, sequence }) => {
+      const host = document.getElementById(id) as HTMLElement;
+      const input = host.shadowRoot!.querySelector("input");
+      // Clear factory label state while the icon exists, then begin absent.
+      host.setAttribute("trailing-icon", icon);
+      host.removeAttribute("trailing-icon-label");
+      host.removeAttribute("trailing-icon");
+      if (sequence === "label then icon") {
+        host.setAttribute("trailing-icon-label", "Show password");
+        host.setAttribute("trailing-icon", icon);
+      } else if (sequence === "icon then label") {
+        host.setAttribute("trailing-icon", icon);
+        host.setAttribute("trailing-icon-label", "Show password");
+      } else {
+        host.setAttribute("trailing-icon", icon);
+        host.setAttribute("trailing-icon-label", "Show password");
+        host.removeAttribute("trailing-icon");
+        if (sequence === "remove label while icon absent") host.removeAttribute("trailing-icon-label");
+        else host.setAttribute("trailing-icon-label", "Hide password");
+        host.setAttribute("trailing-icon", icon);
+      }
+      const slot = host.shadowRoot!.querySelector(".mtrl-text-field__trailing-icon");
+      return {
+        tag: slot?.tagName ?? null,
+        label: slot?.getAttribute("aria-label") ?? null,
+        hidden: slot?.getAttribute("aria-hidden") ?? null,
+        sameInput: input === host.shadowRoot!.querySelector("input"),
+      };
+    }, { id, icon: TRAILING_ICON, sequence });
+    const accessibleButtons = await page.getByRole("button", expected ? { name: expected, exact: true } : {}).count();
+    const ok = actual.sameInput && (expected
+      ? actual.tag === "BUTTON" && actual.label === expected && actual.hidden === null && accessibleButtons === 1
+      : actual.tag === "SPAN" && actual.label === null && actual.hidden === "true" && accessibleButtons === 0);
+    results.push({ sequence, ok, actual: { ...actual, accessibleButtons, expected } });
+  }
+  return results;
+};
+
 const same = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
 
 /**
@@ -202,8 +249,10 @@ export const checkTextFieldTrailing = async (browser: Browser, check: (name: str
           const focusOk = focus.focusedBefore && focus.sameButton && focus.oldConnected && focus.sameInput && focus.focusedAfter && focus.activeSame
             && focus.documentActive === "M-TEXT-FIELD" && focus.label === "Hide password" && focus.value === "secret";
           report(focusOk, `${name} Show password -> Hide password ${JSON.stringify(focus)}`);
+          const order = await trailingAttributeOrder(page, "named");
+          for (const result of order) report(result.ok, `${name} ${result.sequence} ${JSON.stringify(result.actual)}`);
           assert.deepEqual(errors, [], `${name} page errors`);
-          if (eventsOk && focusOk && errors.length === 0) check(`text field trailing: ${name} dispatches trailing and keeps the focused button`);
+          if (eventsOk && focusOk && order.every(result => result.ok) && errors.length === 0) check(`text field trailing: ${name} dispatches trailing and keeps the focused button`);
         } finally {
           await page.close();
         }

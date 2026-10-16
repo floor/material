@@ -108,7 +108,7 @@ const textFieldSpec = {
     "trailing-icon": {
       type: "string",
       config: "trailingIcon",
-      update: (c, v) => void (v ? c.setTrailingIcon(String(v)) : c.removeTrailingIcon()),
+      update: (c, v, host) => void (v ? c.setTrailingIcon(String(v), host.getAttribute("trailing-icon-label") ?? "") : c.removeTrailingIcon()),
     },
     /**
      * The trailing icon button's accessible name. With it the icon is a button
