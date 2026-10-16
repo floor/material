@@ -17,6 +17,30 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-16
+
+### Added
+
+- **Sass consumers can choose which contrast rules to compile with `$contrast-emit` (#95).**
+  Configure `material/src/styles/themes` or `material/src/styles/main` with `@use … with`
+  before loading other material theme modules. `all` (the default) emits explicit medium/high
+  contrast attributes and the system contrast preference; `explicit` emits only the attribute
+  rules; `preference` emits only the preference rules; `none` emits neither. Every mode keeps
+  standard light and dark roles. In the twelve-theme bundle, `none` saves 117,184 raw bytes and
+  8,177 gzip bytes (level 9) compared with `all`, by dropping both contrast activation families.
+  Default output and prebuilt CSS are unchanged; other Sass configuration remains unsupported.
+
+- **`<m-text-field>` accepts `trailing-icon-label` to name its trailing icon button (#37).**
+  With a non-empty label, the icon is a button that dispatches `trailing` from the host on click,
+  Enter or Space. The event bubbles and is composed; its detail is `{ value, event }`, carrying
+  the field's current value and the original activation event. Changing the label updates the
+  existing button in place and keeps the input and focus. A missing or empty label leaves the
+  icon decorative: an `aria-hidden` span, outside the accessibility tree.
+
+### Documentation
+
+- Added `MIGRATING.md`, verified against published 3.0.5, and linked it from both READMEs (#97).
+
 ## [3.0.6] - 2026-10-16
 
 ### Fixed
@@ -3955,7 +3979,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.6...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/floor/material/compare/v3.0.6...v3.1.0
 [3.0.6]: https://github.com/floor/material/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/floor/material/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/floor/material/compare/v3.0.3...v3.0.4
