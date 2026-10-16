@@ -18,6 +18,14 @@
 //   scrollable=false  flexDirection=column  tops=[0,17,34]  lefts=[0,0,0]
 //   scrollable=true   flexDirection=column  tops=[0,0,0]    lefts=[52,142,232]
 //
+// A badge given in a tab's config also has a section here. `createTab` called
+// `setBadge` before the tab's button was appended to the list, and
+// `withAttachment` wraps only a parented target — so the badge component
+// existed (its value read back fine) while the DOM held none of it. Measured
+// on main, the factory's config and `<m-tab badge>` mounts held zero elements
+// whose class contains "badge", shadow roots included; only a `setBadge` call
+// made after the tab was placed attached.
+//
 //   bun run scripts/check-tabs.ts
 
 import assert from "node:assert/strict";
@@ -31,6 +39,17 @@ const bundle = await Bun.build({
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
 
+// The element route. The tabs live in the host's shadow root, whose sheets
+// are the build's compiled scss, so this bundle takes the css from dist and
+// the element from src.
+const elementBundle = await Bun.build({
+  entrypoints: ["scripts/fixtures/tabs-element.ts"],
+  target: "browser",
+  minify: false,
+});
+assert(elementBundle.success, String(elementBundle.logs));
+const elementJs = await elementBundle.outputs[0].text();
+
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
@@ -38,7 +57,18 @@ const server = Bun.serve({
     const path = new URL(request.url).pathname;
     if (path === "/tabs.js")
       return new Response(js, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/tabs-element.js")
+      return new Response(elementJs, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/element")
+      return new Response(
+        `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
+<style>body{margin:0}main{width:600px}</style></head><body><main id="host">
+<m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8">Trips</m-tab>
+<m-tab value="h">Hotels</m-tab></m-tabs>
+<script type="module" src="/tabs-element.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html" } }
+      );
     return new Response(
       `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0}main{width:600px}</style></head><body><main id="host"></main>
@@ -256,11 +286,98 @@ try {
   }, "quoted tab value links to its selected panel");
   checks++;
 
+  // A badge from a tab's config: on the tab it was declared on, with its
+  // value, visible. Measured on every mount before anything is asserted, so
+  // one failing run records all of them.
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  const badgeMount = { scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] };
+  await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), badgeMount);
+  await page.waitForTimeout(80);
+  const badgeOf = () => page.evaluate(() => {
+    const badge = document.querySelector<HTMLElement>(".mtrl-badge");
+    const tab = badge?.closest(".mtrl-badge__wrapper")?.querySelector<HTMLElement>('[role="tab"]');
+    return {
+      badgeCount: document.querySelectorAll(".mtrl-badge").length,
+      text: badge?.textContent?.trim() ?? null,
+      onTab: tab?.textContent?.trim() ?? null,
+      visible: badge ? getComputedStyle(badge).display !== "none" : false,
+    };
+  });
+  const fromConfig = await badgeOf();
+
+  // setBadge after creation, against a target already in the list. This one
+  // attached before the fix and must keep doing so.
+  await page.evaluate(() => {
+    (window as unknown as { mount: (c: unknown) => void }).mount({ scrollable: false });
+    const tabs = (window as unknown as { t: { getTabs: () => Array<{ setBadge: (v: number) => unknown }> } }).t.getTabs();
+    tabs[2].setBadge(3);
+  });
+  await page.waitForTimeout(80);
+  const afterCreation = await badgeOf();
+
+  // The element route: `<m-tab badge="8">` reads the badge into the same
+  // factory's config, but the tabs live in the host's shadow root — counted
+  // deep, shadow roots included, as the reported defect was counted.
+  const elementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const elementErrors: string[] = [];
+  elementPage.on("pageerror", (error) => elementErrors.push(error.message));
+  await elementPage.goto(`http://127.0.0.1:${server.port}/element`);
+  await elementPage.waitForFunction(() =>
+    !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
+    !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
+  await elementPage.waitForTimeout(80);
+  const fromElement = await elementPage.evaluate(() => {
+    const badges: { text: string; onTab: string | null; visible: boolean }[] = [];
+    const walk = (root: ParentNode): void => {
+      for (const badge of root.querySelectorAll<HTMLElement>(".mtrl-badge")) {
+        const tab = badge.closest(".mtrl-badge__wrapper")?.querySelector<HTMLElement>('[role="tab"]');
+        badges.push({
+          text: badge.textContent?.trim() ?? "",
+          onTab: tab?.textContent?.trim() ?? null,
+          visible: getComputedStyle(badge).display !== "none",
+        });
+      }
+      for (const el of root.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
+    };
+    walk(document);
+    return badges;
+  });
+  await elementPage.close();
+
+  const place = (badge: { onTab: string | null; text: string | null }): string =>
+    `on "${badge.onTab ?? "no tab"}" (${JSON.stringify(badge.text)})`;
+  console.log(
+    `badges measured: config ${fromConfig.badgeCount} ${place(fromConfig)}, ` +
+    `setBadge later ${afterCreation.badgeCount} ${place(afterCreation)}, ` +
+    `element ${fromElement.length} ${place(fromElement[0] ?? { onTab: null, text: null })}`
+  );
+
+  assert.equal(fromConfig.badgeCount, 1, `config badge: ${fromConfig.badgeCount} badges in the DOM, want 1`);
+  assert.equal(fromConfig.text, "8", "config badge: the label it was given");
+  assert.equal(fromConfig.onTab, "Trips", "config badge: on the tab it was declared on");
+  assert.ok(fromConfig.visible, "config badge: visible");
+  checks += 4;
+  assert.equal(afterCreation.badgeCount, 1, `setBadge after creation: ${afterCreation.badgeCount} badges in the DOM, want 1`);
+  assert.equal(afterCreation.text, "3", "setBadge after creation: the label it was given");
+  assert.equal(afterCreation.onTab, "Hotels", "setBadge after creation: on the tab it was set on");
+  checks += 3;
+  assert.equal(fromElement.length, 1, `element badge: ${fromElement.length} badges, shadow roots included, want 1`);
+  assert.equal(fromElement[0]?.text, "8", "element badge: the label its attribute gave");
+  assert.equal(fromElement[0]?.onTab, "Trips", "element badge: on the tab that carries the attribute");
+  assert.ok(fromElement[0]?.visible, "element badge: visible");
+  checks += 4;
+  assert.deepEqual(elementErrors, [], `element page errors: ${elementErrors.join(", ")}`);
+
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
   console.log(
     `Passed ${checks} tabs checks: fixed tabs in an evenly divided row, ` +
       `scrollable tabs in their scroller, both directions, divider and indicator out of flow, ` +
-      `the M3 indicator per variant, a centred stacked icon, inactive state colours and the focus ring.`
+      `the M3 indicator per variant, a centred stacked icon, inactive state colours and the focus ring, ` +
+      `a config badge on its tab by factory, element and later setBadge.`
   );
 } finally {
   await browser.close();
