@@ -10029,7 +10029,7 @@ try {
        ${COVER}
        <div id="bfactory"></div>`
     );
-    await listen("sb", ["click", "select"]);
+    await listen("sb", ["click", "select", "open", "close"]);
     await page.evaluate(() => {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
@@ -10052,7 +10052,7 @@ try {
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
     await menuFocused("split button, the trailing button clicked");
-    assert.deepEqual((await log()).map((e) => e.type), ["click"], "the leading button's click only");
+    assert.deepEqual(await log(), [{ type: "click", detail: null }, { type: "open", detail: {} }], "the leading button's click, then one open");
     assert.deepEqual(await surface("sb", '[role="menu"]'), OPEN, "split button: the menu");
     check("split button: click is the leading action's; the trailing button opens the menu in its shadow root, above z-index 9999");
 
@@ -10063,16 +10063,21 @@ try {
     await splitClosed("Enter on an item", 1);
     await settle();
     await focusIs("split button, Enter on an item", "More options");
-    assert.deepEqual(await log(), [{ type: "select", detail: { value: "pdf" } }]);
+    assert.deepEqual(await log(), [
+      { type: "select", detail: { value: "pdf" } },
+      { type: "close", detail: {} },
+    ]);
     assert.deepEqual(await splitState(), { open: false, closes: 1 });
     assert.equal(await focused(), "More options", "focus is back on the trailing button");
     await page.keyboard.press("Enter");
     await settle();
     await menuFocused("split button, Enter on the trailing button");
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
     await page.keyboard.press("Escape");
     await splitClosed("Escape", 2);
     await settle();
     await focusIs("split button, Escape", "More options");
+    assert.deepEqual(await log(), [{ type: "close", detail: {} }]);
     assert.deepEqual(await splitState(), { open: false, closes: 2 });
     assert.equal(await focused(), "More options");
     check("split button: arrows and Enter select once, close once and return focus; Escape closes");
@@ -10080,12 +10085,15 @@ try {
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
     await menuFocused("split button, the trailing button clicked, before the click outside");
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
     await outside();
     await splitClosed("a click outside", 3);
     await settle();
+    assert.deepEqual(await log(), [{ type: "close", detail: {} }]);
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
     await menuFocused("split button, the trailing button clicked, before the item click");
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
     await page.evaluate(() => {
       const w = window as unknown as Win & { __splitValues: unknown[] };
       w.__splitValues = [];
@@ -10095,7 +10103,10 @@ try {
     await clickIn("sb", '[data-id="draft"]');
     await splitClosed("a click on an item", 4);
     await settle();
-    assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
+    assert.deepEqual(await log(), [
+      { type: "select", detail: { value: "draft" } },
+      { type: "close", detail: {} },
+    ], "no click event from the menu");
     assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value");
     assert.deepEqual(await splitState(), { open: false, closes: 4 });
     check("split button: a click outside closes it once; a click on an item selects once");

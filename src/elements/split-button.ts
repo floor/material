@@ -10,8 +10,9 @@
  * shadow root.
  *
  * `click` is the native one, for the leading action only: a click on the
- * trailing button or in the menu stops at the shadow root. Choosing an item
- * dispatches `select` with its value.
+ * trailing button or in the menu stops at the shadow root. `open` and `close`
+ * are dispatched as the menu opens and closes, and `select` with the item's
+ * value when one is chosen.
  *
  * The factory creates its menu only when it has items: going from no items
  * to some, or back, recreates it. `variant`, `size`, `trailing-label` and
@@ -23,11 +24,27 @@
  */
 
 import createSplitButton from "../components/split-button";
-import type { SplitButtonComponent, SplitButtonConfig, SplitButtonEvent } from "../components/split-button/types";
+import type { SplitButtonComponent, SplitButtonConfig, SplitButtonEvent, SplitButtonEventType } from "../components/split-button/types";
 import type { MenuContent } from "../components/menu/types";
 import { innerMenu } from "../components/menu/inner";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { declaredMenuItems, defineMenuItem } from "./menu";
+
+/** The factory's events, and the element's own names for two of them. */
+export type SplitButtonElementEventType = SplitButtonEventType | "open" | "close";
+
+/** The split button, with the element's events. */
+export interface SplitButtonElementComponent extends Omit<SplitButtonComponent, "on" | "off"> {
+  /** Subscribes by the element's event names (`open`, `close`) as well as the factory's. */
+  on: (event: SplitButtonElementEventType, handler: (event: SplitButtonEvent) => void) => SplitButtonElementComponent;
+  off: (event: SplitButtonElementEventType, handler: (event: SplitButtonEvent) => void) => SplitButtonElementComponent;
+}
+
+/** The factory's events each element event is made of. */
+const ALIASES: Record<string, readonly SplitButtonEventType[]> = {
+  open: ["expand"],
+  close: ["collapse"],
+};
 
 const itemTag = (host: HTMLElement): string => host.localName.replace(/split-button$/, "menu-item");
 
@@ -41,12 +58,23 @@ const labelOf = (host: HTMLElement): string =>
     .trim();
 
 /** The items last applied to each button, which an update compares against. */
-const applied = new WeakMap<SplitButtonComponent, string>();
+const applied = new WeakMap<SplitButtonElementComponent, string>();
 
-const create = (config: SplitButtonConfig): SplitButtonComponent => {
+const create = (config: SplitButtonConfig): SplitButtonElementComponent => {
   const button = createSplitButton({ ...config, layer: "top" });
-  applied.set(button, JSON.stringify(config.items ?? []));
-  return button;
+  const { on, off } = button;
+  const component: SplitButtonElementComponent = Object.assign(button, {
+    on: (event: SplitButtonElementEventType, handler: (event: SplitButtonEvent) => void) => {
+      for (const name of ALIASES[event] ?? [event]) on(name as SplitButtonEventType, handler);
+      return component;
+    },
+    off: (event: SplitButtonElementEventType, handler: (event: SplitButtonEvent) => void) => {
+      for (const name of ALIASES[event] ?? [event]) off(name as SplitButtonEventType, handler);
+      return component;
+    },
+  });
+  applied.set(component, JSON.stringify(config.items ?? []));
+  return component;
 };
 
 const readSplitButton = (host: HTMLElement): Config => {
@@ -58,7 +86,7 @@ const readSplitButton = (host: HTMLElement): Config => {
  * Applies the label and the items in place. Returns false when the menu has
  * to come or go, which only a new split button does.
  */
-const updateSplitButton = (host: HTMLElement, c: SplitButtonComponent): boolean => {
+const updateSplitButton = (host: HTMLElement, c: SplitButtonElementComponent): boolean => {
   const items: MenuContent[] = declaredMenuItems(host, itemTag(host));
   const menu = innerMenu(c);
   if (!items.length !== !menu) return false;
@@ -100,6 +128,8 @@ const splitButtonSpec = {
     },
   },
   events: {
+    open: { detail: () => ({}), state: true },
+    close: { detail: () => ({}), state: true },
     select: {
       detail: (payload) => {
         const item = (payload as SplitButtonEvent).item;
@@ -118,12 +148,12 @@ const splitButtonSpec = {
     return () => c.element.removeEventListener("click", contain);
   },
   observeChildren: updateSplitButton,
-} satisfies ElementSpec<SplitButtonComponent>;
+} satisfies ElementSpec<SplitButtonElementComponent>;
 
-export const splitButtonElement = defineElement<SplitButtonComponent>(splitButtonSpec);
+export const splitButtonElement = defineElement<SplitButtonElementComponent>(splitButtonSpec);
 export type SplitButtonSpec = typeof splitButtonSpec;
 /** `<m-split-button>` as a ref or a query returns it. */
-export type SplitButtonElement = ElementInstance<SplitButtonSpec, SplitButtonComponent>;
+export type SplitButtonElement = ElementInstance<SplitButtonSpec, SplitButtonElementComponent>;
 
 /** Registers `<m-split-button>` and `<m-menu-item>` (or with another prefix). */
 export const defineSplitButton = (options?: DefineOptions): string => {

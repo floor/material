@@ -121,7 +121,7 @@ export type { FabMenuSpec, FabMenuElement, FabMenuItemAttributes, FabMenuElement
 export { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 export type { SelectSpec, SelectElement, SelectOptionAttributes } from "./select";
 export { splitButtonElement, defineSplitButton } from "./split-button";
-export type { SplitButtonSpec, SplitButtonElement } from "./split-button";
+export type { SplitButtonSpec, SplitButtonElement, SplitButtonElementComponent, SplitButtonElementEventType } from "./split-button";
 export { tooltipElement, defineTooltip } from "./tooltip";
 export type { TooltipSpec, TooltipElement } from "./tooltip";
 export { toolbarElement, defineToolbar } from "./toolbar";
