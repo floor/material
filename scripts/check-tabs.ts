@@ -63,7 +63,7 @@ const server = Bun.serve({
     if (path === "/element")
       return new Response(
         `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
-<style>body{margin:0}main{width:600px}</style></head><body><main id="host">
+<style>body{margin:0}main{width:600px}m-tabs{display:block}</style></head><body><main id="host">
 <m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8">Trips</m-tab>
 <m-tab value="h">Hotels</m-tab></m-tabs>
 <script type="module" src="/tabs-element.js"></script></body></html>`,
@@ -86,6 +86,12 @@ window.mount = (config) => {
     );
   },
 });
+
+type Box = { l: number; r: number; t: number; b: number };
+type Measured = {
+  text: string; onTab: string | null; visible: boolean; widths: number[];
+  badge: Box; tab: Box | null; anchor: (Box & { kind: string }) | null;
+};
 
 type Geometry = {
   direction: string;
@@ -290,6 +296,36 @@ try {
   // value, visible. Measured on every mount before anything is asserted, so
   // one failing run records all of them.
   await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  // Run in the page: every badge under `root` (shadow roots included), with the
+  // tab it is on, its anchor (the icon, else the label), and the widths of the
+  // row's tabs. The tab is the badge's ancestor, or, when the wrapper sits
+  // outside the button, the button inside the wrapper.
+  const measureBadges = `(root) => {
+    const r = (el) => { const b = el.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom }; };
+    const out = [];
+    const walk = (node) => {
+      for (const badge of node.querySelectorAll(".mtrl-badge")) {
+        const wrapper = badge.closest(".mtrl-badge__wrapper");
+        const tab = badge.closest('[role="tab"]') ?? wrapper?.querySelector('[role="tab"]');
+        const icon = tab?.querySelector(".mtrl-button__icon");
+        const label = tab?.querySelector(".mtrl-button__text");
+        const row = tab?.closest(".mtrl-tabs");
+        out.push({
+          text: badge.textContent.trim(),
+          onTab: label?.textContent.trim() ?? tab?.getAttribute("aria-label") ?? null,
+          visible: getComputedStyle(badge).display !== "none",
+          widths: [...(row?.querySelectorAll('[role="tab"]') ?? [])].map((t) => Math.round(t.getBoundingClientRect().width)),
+          badge: r(badge),
+          tab: tab ? r(tab) : null,
+          anchor: icon ? { kind: "icon", ...r(icon) } : label ? { kind: "label", ...r(label) } : null,
+        });
+      }
+      for (const el of node.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
+    };
+    walk(root);
+    return out;
+  }`;
+
   const badgeMount = { scrollable: false, tabs: [
     { text: "Flights", value: "f", state: "active" },
     { text: "Trips", value: "t", badge: 8 },
@@ -297,16 +333,10 @@ try {
   ] };
   await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), badgeMount);
   await page.waitForTimeout(80);
-  const badgeOf = () => page.evaluate(() => {
-    const badge = document.querySelector<HTMLElement>(".mtrl-badge");
-    const tab = badge?.closest(".mtrl-badge__wrapper")?.querySelector<HTMLElement>('[role="tab"]');
-    return {
-      badgeCount: document.querySelectorAll(".mtrl-badge").length,
-      text: badge?.textContent?.trim() ?? null,
-      onTab: tab?.textContent?.trim() ?? null,
-      visible: badge ? getComputedStyle(badge).display !== "none" : false,
-    };
-  });
+  const badgeOf = async () => {
+    const all = await page.evaluate(`(${measureBadges})(document)`) as Measured[];
+    return { badgeCount: all.length, ...(all[0] ?? { text: null, onTab: null, visible: false, widths: [] as number[], badge: null, tab: null, anchor: null }) };
+  };
   const fromConfig = await badgeOf();
 
   // setBadge after creation, against a target already in the list. This one
@@ -330,30 +360,33 @@ try {
     !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
     !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
   await elementPage.waitForTimeout(80);
-  const fromElement = await elementPage.evaluate(() => {
-    const badges: { text: string; onTab: string | null; visible: boolean }[] = [];
-    const walk = (root: ParentNode): void => {
-      for (const badge of root.querySelectorAll<HTMLElement>(".mtrl-badge")) {
-        const tab = badge.closest(".mtrl-badge__wrapper")?.querySelector<HTMLElement>('[role="tab"]');
-        badges.push({
-          text: badge.textContent?.trim() ?? "",
-          onTab: tab?.textContent?.trim() ?? null,
-          visible: getComputedStyle(badge).display !== "none",
-        });
-      }
-      for (const el of root.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
-    };
-    walk(document);
-    return badges;
-  });
+  const fromElement = await elementPage.evaluate(`(${measureBadges})(document)`) as Measured[];
   await elementPage.close();
 
+  // A stacked icon tab and a scrollable row, measured the same way.
+  const svg = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+  await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), { scrollable: false, tabs: [
+    { text: "Flights", value: "f", icon: svg, state: "active" },
+    { text: "Trips", value: "t", icon: svg, badge: 8 },
+    { text: "Hotels", value: "h", icon: svg },
+  ] });
+  await page.waitForTimeout(80);
+  const stackedBadge = await badgeOf();
+  await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), { scrollable: true, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  const scrollingBadge = await badgeOf();
+  console.log(`widths, badge on Trips: fixed ${JSON.stringify(fromConfig.widths)}, fixed stacked icon ${JSON.stringify(stackedBadge.widths)}, scrollable ${JSON.stringify(scrollingBadge.widths)}, element ${JSON.stringify(fromElement[0]?.widths)}`);
+  console.log(`stacked icon: widths ${JSON.stringify(stackedBadge.widths)} anchor ${stackedBadge.anchor?.kind}; scrollable: widths ${JSON.stringify(scrollingBadge.widths)} anchor ${scrollingBadge.anchor?.kind}`);
   const place = (badge: { onTab: string | null; text: string | null }): string =>
     `on "${badge.onTab ?? "no tab"}" (${JSON.stringify(badge.text)})`;
   console.log(
-    `badges measured: config ${fromConfig.badgeCount} ${place(fromConfig)}, ` +
+    `badges measured: config ${fromConfig.badgeCount} ${place(fromConfig)} widths ${JSON.stringify(fromConfig.widths)}, ` +
     `setBadge later ${afterCreation.badgeCount} ${place(afterCreation)}, ` +
-    `element ${fromElement.length} ${place(fromElement[0] ?? { onTab: null, text: null })}`
+    `element ${fromElement.length} ${place(fromElement[0] ?? { onTab: null, text: null })} widths ${JSON.stringify(fromElement[0]?.widths)}`
   );
 
   assert.equal(fromConfig.badgeCount, 1, `config badge: ${fromConfig.badgeCount} badges in the DOM, want 1`);
@@ -361,6 +394,36 @@ try {
   assert.equal(fromConfig.onTab, "Trips", "config badge: on the tab it was declared on");
   assert.ok(fromConfig.visible, "config badge: visible");
   checks += 4;
+  const even = (label: string, widths: number[]): void => {
+    assert.ok(widths.length === 3 && widths.every((w) => Math.abs(w - widths[0]) <= 1),
+      `${label}: every tab in the fixed row has the same width, widths ${JSON.stringify(widths)}`);
+    checks++;
+  };
+  even("config badge", fromConfig.widths);
+  // The element builds a scrollable row (no attribute for the fixed form), whose tabs are
+  // sized by content, so only the fixed factory row is held to equal widths.
+  // Where the badge sits on its tab, as the tabs specs give it: inside the
+  // tab, on the label with 4dp between them, or on the stacked icon.
+  const sits = (label: string, m: { badge: Box | null; tab: Box | null; anchor: (Box & { kind: string }) | null }, kind: string): void => {
+    assert.ok(m.badge && m.tab && m.anchor, `${label}: badge, tab and anchor present`);
+    const { badge, tab, anchor } = m as { badge: Box; tab: Box; anchor: Box & { kind: string } };
+    assert.equal(anchor.kind, kind, `${label}: anchored on the ${kind}`);
+    assert.ok(badge.l >= tab.l - 1 && badge.r <= tab.r + 1 && badge.t >= tab.t - 1 && badge.b <= tab.b + 1,
+      `${label}: badge inside its tab, badge ${JSON.stringify(badge)} tab ${JSON.stringify(tab)}`);
+    if (kind === "label") {
+      assert.ok(Math.abs(badge.l - anchor.r - 4) <= 1, `${label}: 4dp between the label and the badge, got ${badge.l - anchor.r}`);
+    } else {
+      assert.ok(badge.l < anchor.r && badge.r > anchor.l && badge.t < anchor.b && badge.b > anchor.t,
+        `${label}: badge overlaps the icon, badge ${JSON.stringify(badge)} icon ${JSON.stringify(anchor)}`);
+    }
+    checks += 3;
+  };
+  sits("config badge", fromConfig, "label");
+  sits("element badge", fromElement[0] as Measured, "label");
+
+  even("stacked icon badge", stackedBadge.widths);
+  sits("stacked icon badge", stackedBadge, "icon");
+  sits("scrollable badge", scrollingBadge, "label");
   assert.equal(afterCreation.badgeCount, 1, `setBadge after creation: ${afterCreation.badgeCount} badges in the DOM, want 1`);
   assert.equal(afterCreation.text, "3", "setBadge after creation: the label it was given");
   assert.equal(afterCreation.onTab, "Hotels", "setBadge after creation: on the tab it was set on");
