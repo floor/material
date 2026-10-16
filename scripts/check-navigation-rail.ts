@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import assert from 'node:assert/strict';
+import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -143,3 +144,5 @@ finally {
     await browser.close();
     server.stop(true);
 }
+
+await checkRailHeaderFab();

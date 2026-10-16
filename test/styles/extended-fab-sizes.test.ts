@@ -33,8 +33,8 @@ for (const [size, height, icon, padding, gap, radius, fontSize, lineHeight, weig
 test('small is the configuration default and fallback geometry', () => {
   expect(createBaseConfig().size).toBe('small');
   expect(value(root, 'height')).toBe('var(--mtrl-extended-fab-height, 56px)');
-  expect(value(root, 'padding')).toBe('0 var(--mtrl-extended-fab-padding, 16px)');
-  expect(value(root, 'gap')).toBe('var(--mtrl-extended-fab-gap, 8px)');
+  expect(value(root, 'padding')).toBe('0 var(--mtrl-extended-fab-compact, var(--mtrl-extended-fab-padding, 16px))');
+  expect(value(root, 'gap')).toBe('var(--mtrl-extended-fab-compact, var(--mtrl-extended-fab-gap, 8px))');
   expect(value(`${root}__text`, 'font-size')).toBe('16px');
   expect(value(`${root}__text`, 'margin')).toBe('0');
   expect(css).not.toContain('margin-left: 12px');
@@ -48,11 +48,14 @@ test('icon wrapper and SVG follow the size without extra padding', () => {
 });
 test('collapsed uses the corresponding FAB box with no residual spacing or icon scaling', () => {
   const selector = `${root}--collapsed`;
-  expect(value(selector, 'width')).toBe('var(--mtrl-extended-fab-height, 56px)');
-  expect(value(selector, 'min-width')).toBe('var(--mtrl-extended-fab-height, 56px)');
-  expect(value(selector, 'padding')).toBe('0');
-  expect(value(selector, 'gap')).toBe('0');
+  // Explicit collapse and the rail's inherited presentation share zero
+  // width/spacing; min-width keeps each size at its corresponding FAB box.
+  expect(value(selector, '--mtrl-extended-fab-compact')).toBe('0');
+  expect(value(root, 'width')).toBe('var(--mtrl-extended-fab-compact, auto)');
+  expect(value(root, 'min-width')).toBe('var(--mtrl-extended-fab-height, 56px)');
+  expect(value(`${root}--fluid`, 'width')).toBe('var(--mtrl-extended-fab-compact, 100%)');
   expect(value(`${selector} ${root}__icon`, 'transform')).toBe('scale(1)');
-  expect(value(`${selector} ${root}__text`, 'width')).toBe('0');
-  expect(value(`${selector} ${root}__text`, 'opacity')).toBe('0');
+  expect(value(`${root}__text`, 'width')).toBe('var(--mtrl-extended-fab-compact, auto)');
+  expect(value(`${root}__text`, 'max-width')).toBe('var(--mtrl-extended-fab-compact, 280px)');
+  expect(value(`${root}__text`, 'opacity')).toBe('var(--mtrl-extended-fab-compact, 1)');
 });
