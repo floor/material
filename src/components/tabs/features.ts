@@ -98,23 +98,14 @@ export const withTabsManagement =
           groupId,
         };
 
-        // Create the tab without its badge. A badge wraps the tab's button,
-        // and withAttachment places one only against a target that has a
-        // parent — which the button has not, until the append below. A badge
-        // created here was never inserted anywhere; it is set right after the
-        // tab joins the list.
-        const tab = createTab({ ...mergedConfig, badge: undefined });
+        // Create the tab
+        const tab = createTab(mergedConfig);
 
         // Add to internal tabs array
         tabs.push(tab);
 
         // Add to DOM
         tabsContainer.appendChild(tab.element);
-
-        // The config badge, created against a button that is now in the list
-        if (mergedConfig.badge !== undefined) {
-          tab.setBadge(mergedConfig.badge);
-        }
       });
     }
 

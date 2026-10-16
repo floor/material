@@ -150,9 +150,12 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_tooltip.scss).
     // A card header that is the card's last child keeps the 16px padding
     // (styles/components/_card.scss).
+    // A tab's badge sits on the tab's icon (6dp overlap) or label (4dp gap), the
+    // anchor it wraps inside the button, not at the button's corner
+    // (styles/components/_tabs.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4006a5a28f22c74630c35ce77aed7f5a59376a86e49983e9ffc7164e11b73fd7");
-    expect(css.length).toBe(529534);
+      .toBe("2ad9c5bc2cd0d4dd22575b46a43c0c5ac216830f002a06e12796bc0c3606f853");
+    expect(css.length).toBe(529613);
   });
 
   test("today's sheets still resolve to the fixture", () => {

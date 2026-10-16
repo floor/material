@@ -213,16 +213,20 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
 
       // Badge methods
       setBadge(content) {
-        // Also recreate when the badge there is has no wrapper: one created
-        // while this tab's element was detached was never inserted anywhere
-        // (withAttachment drops a parentless target), and content updates
-        // cannot attach it. Against a parented target the new badge wraps the
-        // button in place.
-        if (!this.badge || !this.badge.wrapper) {
+        if (!this.badge) {
+          // The badge goes on the tab's icon, else its label, as the tabs specs
+          // anchor it, not around the whole button. Both sit inside the button,
+          // so the target has a parent whether or not the tab is in the list yet
+          // (withAttachment places a badge only against a parented target), and
+          // the button stays the row's flex item.
+          const anchor =
+            this.element.querySelector<HTMLElement>(`.${this.getClass("button__icon")}`) ??
+            this.element.querySelector<HTMLElement>(`.${this.getClass("button__text")}`) ??
+            this.element;
           const badgeConfig = {
             label: content,
             standalone: false,
-            target: this.element,
+            target: anchor,
             prefix: baseConfig.prefix,
             ...(baseConfig.badgeConfig || {}),
           };
