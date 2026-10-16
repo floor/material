@@ -50,6 +50,9 @@ const elementBundle = await Bun.build({
 assert(elementBundle.success, String(elementBundle.logs));
 const elementJs = await elementBundle.outputs[0].text();
 
+// The icon an <m-tab icon> declares, for the element page that starts stacked.
+const elementIcon = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
@@ -60,11 +63,11 @@ const server = Bun.serve({
     if (path === "/tabs-element.js")
       return new Response(elementJs, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
-    if (path === "/element")
+    if (path === "/element" || path === "/element-icon")
       return new Response(
         `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0}main{width:600px}m-tabs{display:block}</style></head><body><main id="host">
-<m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8">Trips</m-tab>
+<m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8"${path === "/element-icon" ? ` icon='${elementIcon}'` : ""}>Trips</m-tab>
 <m-tab value="h">Hotels</m-tab></m-tabs>
 <script type="module" src="/tabs-element.js"></script></body></html>`,
         { headers: { "Content-Type": "text/html" } }
@@ -90,7 +93,7 @@ window.mount = (config) => {
 type Box = { l: number; r: number; t: number; b: number };
 type Measured = {
   text: string; onTab: string | null; visible: boolean; widths: number[];
-  badge: Box; tab: Box | null; anchor: (Box & { kind: string }) | null;
+  badge: Box; tab: Box | null; anchor: (Box & { kind: string }) | null; kids: number;
 };
 
 type Geometry = {
@@ -318,6 +321,7 @@ try {
           badge: r(badge),
           tab: tab ? r(tab) : null,
           anchor: icon ? { kind: "icon", ...r(icon) } : label ? { kind: "label", ...r(label) } : null,
+          kids: wrapper ? wrapper.children.length : 0,
         });
       }
       for (const el of node.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
@@ -335,7 +339,7 @@ try {
   await page.waitForTimeout(80);
   const badgeOf = async () => {
     const all = await page.evaluate(`(${measureBadges})(document)`) as Measured[];
-    return { badgeCount: all.length, ...(all[0] ?? { text: null, onTab: null, visible: false, widths: [] as number[], badge: null, tab: null, anchor: null }) };
+    return { badgeCount: all.length, ...(all[0] ?? { text: null, onTab: null, visible: false, widths: [] as number[], badge: null, tab: null, anchor: null, kids: 0 }) };
   };
   const fromConfig = await badgeOf();
 
@@ -361,6 +365,9 @@ try {
     !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
   await elementPage.waitForTimeout(80);
   const fromElement = await elementPage.evaluate(`(${measureBadges})(document)`) as Measured[];
+  await elementPage.evaluate((icon) => document.querySelector('m-tab[value="t"]')!.setAttribute("icon", icon), elementIcon);
+  await elementPage.waitForTimeout(300);
+  const elementIconAdded = (await elementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
   await elementPage.close();
 
   // A stacked icon tab and a scrollable row, measured the same way.
@@ -379,6 +386,49 @@ try {
   ] });
   await page.waitForTimeout(80);
   const scrollingBadge = await badgeOf();
+
+  // Right-to-left: the same two rows, the badge on the mirrored side.
+  type Win = { mount: (c: unknown) => void; t: { getTabs: () => Array<{ setIcon: (v: string) => unknown }> } };
+  const stackedMount = { scrollable: false, tabs: [
+    { text: "Flights", value: "f", icon: svg, state: "active" },
+    { text: "Trips", value: "t", icon: svg, badge: 8 },
+    { text: "Hotels", value: "h", icon: svg },
+  ] };
+  const mountIn = (c: unknown) => page.evaluate((c) => (window as unknown as Win).mount(c), c);
+  await page.evaluate(() => { document.documentElement.dir = "rtl"; });
+  await mountIn(badgeMount);
+  await page.waitForTimeout(80);
+  const rtlInline = await badgeOf();
+  await mountIn(stackedMount);
+  await page.waitForTimeout(80);
+  const rtlStacked = await badgeOf();
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+
+  // The anchor follows the tab's icon: the badge was placed on the icon or the
+  // label when it was created, and the tab can lose or gain its icon after.
+  await mountIn(stackedMount);
+  await page.waitForTimeout(80);
+  await page.evaluate(() => (window as unknown as Win).t.getTabs()[1].setIcon(""));
+  await page.waitForTimeout(300);
+  const iconRemoved = await badgeOf();
+  await mountIn(badgeMount);
+  await page.waitForTimeout(80);
+  await page.evaluate((icon) => (window as unknown as Win).t.getTabs()[1].setIcon(icon), svg);
+  await page.waitForTimeout(300);
+  const iconAdded = await badgeOf();
+
+  const iconElementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  iconElementPage.on("pageerror", (error) => elementErrors.push(error.message));
+  await iconElementPage.goto(`http://127.0.0.1:${server.port}/element-icon`);
+  await iconElementPage.waitForFunction(() =>
+    !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
+    !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
+  await iconElementPage.waitForTimeout(80);
+  const elementStacked = (await iconElementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
+  await iconElementPage.evaluate(() => document.querySelector('m-tab[value="t"]')!.removeAttribute("icon"));
+  await iconElementPage.waitForTimeout(300);
+  const elementIconRemoved = (await iconElementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
+  await iconElementPage.close();
   console.log(`widths, badge on Trips: fixed ${JSON.stringify(fromConfig.widths)}, fixed stacked icon ${JSON.stringify(stackedBadge.widths)}, scrollable ${JSON.stringify(scrollingBadge.widths)}, element ${JSON.stringify(fromElement[0]?.widths)}`);
   console.log(`stacked icon: widths ${JSON.stringify(stackedBadge.widths)} anchor ${stackedBadge.anchor?.kind}; scrollable: widths ${JSON.stringify(scrollingBadge.widths)} anchor ${scrollingBadge.anchor?.kind}`);
   const place = (badge: { onTab: string | null; text: string | null }): string =>
@@ -404,19 +454,24 @@ try {
   // sized by content, so only the fixed factory row is held to equal widths.
   // Where the badge sits on its tab, as the tabs specs give it: inside the
   // tab, on the label with 4dp between them, or on the stacked icon.
-  const sits = (label: string, m: { badge: Box | null; tab: Box | null; anchor: (Box & { kind: string }) | null }, kind: string): void => {
+  const sits = (label: string, m: { badge: Box | null; tab: Box | null; anchor: (Box & { kind: string }) | null; kids: number }, kind: string, dir: "ltr" | "rtl" = "ltr"): void => {
     assert.ok(m.badge && m.tab && m.anchor, `${label}: badge, tab and anchor present`);
     const { badge, tab, anchor } = m as { badge: Box; tab: Box; anchor: Box & { kind: string } };
     assert.equal(anchor.kind, kind, `${label}: anchored on the ${kind}`);
+    assert.equal(m.kids, 2, `${label}: the badge's wrapper holds the ${kind} and the badge, holds ${m.kids} children`);
     assert.ok(badge.l >= tab.l - 1 && badge.r <= tab.r + 1 && badge.t >= tab.t - 1 && badge.b <= tab.b + 1,
       `${label}: badge inside its tab, badge ${JSON.stringify(badge)} tab ${JSON.stringify(tab)}`);
+    // Measured from the anchor's inline end: its right edge in LTR, its left in RTL.
     if (kind === "label") {
-      assert.ok(Math.abs(badge.l - anchor.r - 4) <= 1, `${label}: 4dp between the label and the badge, got ${badge.l - anchor.r}`);
+      const gap = dir === "ltr" ? badge.l - anchor.r : anchor.l - badge.r;
+      assert.ok(Math.abs(gap - 4) <= 1, `${label}, ${dir}: 4dp between the label and the badge, got ${gap}`);
     } else {
+      const overlap = dir === "ltr" ? anchor.r - badge.l : badge.r - anchor.l;
+      assert.ok(Math.abs(overlap - 6) <= 1, `${label}, ${dir}: 6dp overlap at the icon's inline-end corner, got ${overlap}`);
       assert.ok(badge.l < anchor.r && badge.r > anchor.l && badge.t < anchor.b && badge.b > anchor.t,
         `${label}: badge overlaps the icon, badge ${JSON.stringify(badge)} icon ${JSON.stringify(anchor)}`);
     }
-    checks += 3;
+    checks += 4;
   };
   sits("config badge", fromConfig, "label");
   sits("element badge", fromElement[0] as Measured, "label");
@@ -424,6 +479,22 @@ try {
   even("stacked icon badge", stackedBadge.widths);
   sits("stacked icon badge", stackedBadge, "icon");
   sits("scrollable badge", scrollingBadge, "label");
+  // The new rows: each recorded, so one failing run lists every one.
+  const failures: string[] = [];
+  const soft = (what: string, run: () => void): void => {
+    try { run(); } catch (error) { failures.push(`${what}: ${(error as Error).message.split("\n")[0]}`); }
+  };
+  soft("RTL inline", () => sits("RTL inline badge", rtlInline, "label", "rtl"));
+  soft("RTL stacked", () => sits("RTL stacked badge", rtlStacked, "icon", "rtl"));
+  soft("RTL widths", () => even("RTL badge", rtlInline.widths));
+  soft("icon removed by setIcon", () => sits("setIcon(\"\") on a stacked badged tab", iconRemoved, "label"));
+  soft("icon added by setIcon", () => sits("setIcon(svg) on a text-only badged tab", iconAdded, "icon"));
+  soft("icon attribute removed", () => sits("m-tab icon attribute removed", elementIconRemoved as Measured, "label"));
+  soft("icon attribute added", () => sits("m-tab icon attribute added", elementIconAdded as Measured, "icon"));
+  soft("element starts stacked", () => sits("m-tab icon attribute at the start", elementStacked as Measured, "icon"));
+  console.log(`RTL: inline ${JSON.stringify(rtlInline.badge)} label ${JSON.stringify(rtlInline.anchor)}; stacked ${JSON.stringify(rtlStacked.badge)} icon ${JSON.stringify(rtlStacked.anchor)}`);
+  console.log(`anchors: icon removed ${iconRemoved.anchor?.kind}/${iconRemoved.kids} kids, icon added ${iconAdded.anchor?.kind}/${iconAdded.kids} kids, attribute removed ${elementIconRemoved?.anchor?.kind}/${elementIconRemoved?.kids} kids, attribute added ${elementIconAdded?.anchor?.kind}/${elementIconAdded?.kids} kids`);
+  assert.deepEqual(failures, [], `${failures.length} badge rows failed:\n  ${failures.join("\n  ")}`);
   assert.equal(afterCreation.badgeCount, 1, `setBadge after creation: ${afterCreation.badgeCount} badges in the DOM, want 1`);
   assert.equal(afterCreation.text, "3", "setBadge after creation: the label it was given");
   assert.equal(afterCreation.onTab, "Hotels", "setBadge after creation: on the tab it was set on");
