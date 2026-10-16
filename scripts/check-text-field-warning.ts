@@ -26,8 +26,8 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
     const page = await browser.newPage();
     try {
       await page.setContent("<!doctype html><html><body></body></html>");
-      // Explicit build modes need no process shim; raw browser ESM stays unsubstituted.
-      if (mode === "missing-env") await page.evaluate(() => { Object.assign(window, { process: { env: null } }); });
+      // Preserve warnDev's runtime process guard; raw browser ESM stays unsubstituted.
+      if (mode !== "raw-browser") await page.evaluate(mode => { Object.assign(window, { process: { env: mode === "missing-env" ? null : { NODE_ENV: mode } } }); }, mode);
       await page.addScriptTag({ content: js });
       const rows = await page.evaluate(() => (window as unknown as { warningRows: WarningRow[] }).warningRows);
       for (const row of rows) {

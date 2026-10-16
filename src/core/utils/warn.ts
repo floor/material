@@ -5,12 +5,20 @@
 // `selectedIndex = -1`. Clearing silently is indistinguishable from a typo,
 // so it warns -- but only where a warning helps, which is not production.
 //
-// tsc leaves the environment read intact; a consumer's bundler can replace it.
-// Catch missing process/env in raw browser ESM: a diagnostic must not throw.
+// The guard is written defensively rather than as a bare
+// `process.env.NODE_ENV`. The ESM modules are emitted by tsc, which
+// substitutes nothing (a consumer's bundler may). A consumer loading them straight into a
+// browser has no `process`, and a bare read would throw where the library is
+// only trying to warn. The cost of `typeof process` is that raw-browser ESM
+// gets no warning; throwing instead would be worse.
 
 const isDevelopment = (): boolean => {
   try {
-    return process.env.NODE_ENV !== "production";
+    return (
+      typeof process !== "undefined" &&
+      process.env != null &&
+      process.env.NODE_ENV !== "production"
+    );
   } catch {
     return false;
   }

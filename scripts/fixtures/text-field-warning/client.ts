@@ -1,6 +1,7 @@
 import createTextField from "../../../dist/components/text-field/index.js";
 import { textFieldElement } from "../../../dist/elements/text-field.js";
 import { registerStyles } from "../../../dist/elements/styles.js";
+import { warnDev } from "../../../dist/core/utils/warn.js";
 
 registerStyles(Object.fromEntries(["ripple", "text-field"].map(name => [name, ""])));
 textFieldElement.define();
@@ -20,6 +21,13 @@ const run = (name: string, expected: number, scenario: () => boolean): WarningRo
 };
 
 const rows: WarningRow[] = [];
+rows.push(run("shared helper without process", 0, () => {
+  const descriptor = Object.getOwnPropertyDescriptor(window, "process");
+  Reflect.deleteProperty(window, "process");
+  try { warnDev("probe", "a bundled warning without process"); }
+  finally { if (descriptor) Object.defineProperty(window, "process", descriptor); }
+  return true;
+}));
 for (const label of [undefined, "", "Reveal"]) {
   rows.push(run(`factory label ${JSON.stringify(label)}`, label ? 0 : 1, () => {
     const field = createTextField({ trailingIcon: icon, trailingIconLabel: label, value: "secret" });
