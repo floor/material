@@ -2779,7 +2779,8 @@ try {
       return {
         sameComponent: t.component === kept.component,
         sameFocus: t.shadowRoot?.activeElement === kept.focused,
-        labels: buttons.map((b) => b.textContent?.replace(/\s+/g, " ").trim()),
+        // The label, not the button: the badge now sits in the button, on the label or icon
+        labels: buttons.map((b) => (b.querySelector(".mtrl-button__text") ?? b).textContent?.replace(/\s+/g, " ").trim()),
         badges: t.component.getTabs().map((tab) => tab.getBadge()),
         disabled: buttons.map((b) => b.hasAttribute("disabled") || b.getAttribute("aria-disabled") === "true"),
       };

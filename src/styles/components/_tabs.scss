@@ -291,21 +291,36 @@ $container: "#{base.$prefix}-tabs";
         @include m.visually-hidden;
     }
 
-    // Badge positioning (2. Badge - optional). The layout modifier is on the tab
-    // itself, so these hang off &, not off a nested tab.
-    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 4px;
-        right: 4px;
+    // Badge positioning (2. Badge - optional). The badge wraps the tab's icon, else
+    // its label, inside the button (tab.ts), so the wrapper is the anchor box.
+    // m3.material.io/components/tabs/specs, Measurements: "Padding between inline
+    // text and badge 4dp" and "Overlap of badge on stacked icon 6dp".
+    // Measured from the anchor's inline end, so it mirrors in right-to-left:
+    // m3.material.io/components/badges/guidelines, "Change the position of the badge
+    // for right-to-left languages." Physical sides under [dir='rtl'], as the other
+    // components do: a bundler lowers a logical inset into :lang() lists.
+    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right,
+    &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
+        top: 0;
+        right: auto;
+        left: calc(100% - 6px);
+
+        @include m.rtl {
+            right: calc(100% - 6px);
+            left: auto;
+        }
     }
 
     &--text-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 8px;
-        right: 8px;
-    }
+        top: 50%;
+        right: auto;
+        left: calc(100% + 4px);
+        transform: translateY(-50%);
 
-    &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 4px;
-        right: calc(50% - 20px);
+        @include m.rtl {
+            right: calc(100% + 4px);
+            left: auto;
+        }
     }
 
     // ACTIVE TAB STATES - PRIMARY VARIANT
