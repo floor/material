@@ -75,3 +75,10 @@ test("no tracked path or line keeps the one-word spelling outside the allowlist"
   }
   expect({ count: found.length, first: found.slice(0, 15) }).toEqual({ count: 0, first: [] });
 }, 60_000);
+
+test("the migration guide permits named historical spellings without exempting other prose or source", () => {
+  const mapping = "`createTextfield` → `createTextField`";
+  expect(lineKept("MIGRATING.md", mapping, false)).toBe(true);
+  expect(lineKept("MIGRATING.md", "unlisted text" + "field prose", false)).toBe(false);
+  expect(lineKept("src/example.ts", mapping, false)).toBe(false);
+});

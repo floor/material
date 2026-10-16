@@ -150,9 +150,12 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_tooltip.scss).
     // A card header that is the card's last child keeps the 16px padding
     // (styles/components/_card.scss).
+    // A collapsed rail header supplies the extended FAB compact presentation
+    // through an inherited property, including across its shadow root
+    // (styles/components/_navigation-rail.scss, styles/components/_extended-fab.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4006a5a28f22c74630c35ce77aed7f5a59376a86e49983e9ffc7164e11b73fd7");
-    expect(css.length).toBe(529534);
+      .toBe("7202c3ee25955b784c3f5867c244145a7c79f4e31a94a8808bff0bf45fed6bc4");
+    expect(css.length).toBe(529765);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -17,6 +17,47 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-16
+
+### Added
+
+- **Sass consumers can choose which contrast rules to compile with `$contrast-emit` (#95).**
+  Configure `material/src/styles/themes` or `material/src/styles/main` with `@use … with`
+  before loading other material theme modules. `all` (the default) emits explicit medium/high
+  contrast attributes and the system contrast preference; `explicit` emits only the attribute
+  rules; `preference` emits only the preference rules; `none` emits neither. Every mode keeps
+  standard light and dark roles. In the twelve-theme bundle, `none` saves 117,184 raw bytes and
+  8,177 gzip bytes (level 9) compared with `all`, by dropping both contrast activation families.
+  Default output and prebuilt CSS are unchanged; other Sass configuration remains unsupported.
+
+- **`<m-text-field>` accepts `trailing-icon-label` to name its trailing icon button (#37).**
+  With a non-empty label, the icon is a button that dispatches `trailing` from the host on click,
+  Enter or Space. The event bubbles and is composed; its detail is `{ value, event }`, carrying
+  the field's current value and the original activation event. Changing the label updates the
+  existing button in place and keeps the input and focus. A missing or empty label leaves the
+  icon decorative: an `aria-hidden` span, outside the accessibility tree.
+
+### Documentation
+
+- Added `MIGRATING.md`, verified against published 3.0.5, and linked it from both READMEs (#97).
+
+## [3.0.6] - 2026-10-16
+
+### Fixed
+
+- **An extended FAB in a collapsed navigation rail's header shrinks to its icon button instead of
+  being clipped (#93).**
+  A collapsed rail is 96 px wide, but an extended FAB placed in its header kept its expanded
+  width — padding, gap and a label up to 280 px — so the rail's edge cut it off and the label
+  read "Ad…". This held for a FAB built by the factory as well as for an `<m-extended-fab>`
+  element slotted into the header, because the element draws its button inside its own shadow
+  root. The rail's header now hands the collapsed state down as an inherited CSS custom property
+  that the extended FAB reads, so the button drops its padding, gap and label, stays at its size's
+  height, and fits inside the rail in both text directions. Expanding the rail restores the full
+  FAB. The FAB keeps compacting when its element is upgraded, replaced or rebuilt, and it fires
+  no new events; a FAB method you call yourself keeps the events it had. A standalone extended FAB
+  with the `--collapsed` modifier draws the same compact button.
+
 ## [3.0.5] - 2026-10-09
 
 ### Changed
@@ -3938,7 +3979,9 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.5...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/floor/material/compare/v3.0.6...v3.1.0
+[3.0.6]: https://github.com/floor/material/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/floor/material/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/floor/material/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/floor/material/compare/v3.0.2...v3.0.3

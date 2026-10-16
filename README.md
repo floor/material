@@ -194,7 +194,34 @@ Import the typography stylesheet when the page uses the type classes, relies on 
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
-The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in `material` 3.0.0. Theme with CSS custom properties.
+From 3.1.0, Sass consumers can choose which contrast rules to compile with `$contrast-emit`. Configure the public themes entry in your application stylesheet:
+
+```scss
+@use "material/src/styles/themes" with ($contrast-emit: none);
+```
+
+Compile with Dart Sass and add your dependencies directory to its load paths, for example:
+
+```sh
+sass --load-path=node_modules app.scss app.css
+```
+
+For the full stylesheet, use this entry instead:
+
+```scss
+@use "material/src/styles/main" with ($contrast-emit: none);
+```
+
+| Value | Rules emitted alongside the standard light and dark roles |
+|-------|----------------------------------------------------------|
+| `all` (default) | Explicit medium/high contrast attributes and the system contrast preference |
+| `explicit` | Explicit medium/high contrast attributes only |
+| `preference` | The system contrast preference only |
+| `none` | Standard roles only; no contrast attributes or preference rules |
+
+Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Other Sass configuration remains unsupported. Theme with CSS custom properties.
+
+Material describes [three contrast levels](https://m3.material.io/styles/color/system/how-the-system-works) to accommodate different vision needs. Its [color contrast guidance](https://m3.material.io/foundations/designing/color-contrast) explains the role of contrast in readability. Choosing `none` keeps standard colors but removes responses to both explicit contrast choices and the system preference.
 
 The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
 
@@ -507,11 +534,9 @@ Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` 
 
 ## Upgrading
 
-`material` 3.0.0 removes what `mtrl` 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the migration guide. Each step is in the changelog:
+Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material`. The [migration guide](MIGRATING.md), verified against 3.0.5, starts with silent theme fallbacks and lists renamed and removed APIs, with their replacements.
 
-- `mtrl` 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
-- `mtrl` 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
-- `mtrl` 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
+Earlier upgrades have their own notes: [from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x) and [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
 
 ## Where this came from
 

@@ -108,7 +108,7 @@ Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` 
 
 ## Upgrading
 
-Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` and follow the [migration guide](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x).
+Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` and follow the [migration guide](https://github.com/floor/material/blob/main/MIGRATING.md), verified against 3.0.5. It starts with silent theme fallbacks and lists renamed and removed APIs, with their replacements.
 
 ## Where this came from
 

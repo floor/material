@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.0.5",
+  "version": "3.1.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -481,6 +481,7 @@
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
+    "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
     "component-exports:update": "bun run scripts/component-exports.ts --update",

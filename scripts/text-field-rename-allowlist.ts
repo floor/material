@@ -43,6 +43,12 @@ export const patternProtections: Array<{ file: string; snippet: string; reason: 
 /** A line may keep a one-word hit only when every hit sits inside one of these snippets. */
 export const keeps: Array<{ file: string; snippets: string[]; reason: string }> = [
   {
+    file: "MIGRATING.md",
+    snippets: ["Textfield", "TEXTFIELD", "textfieldElement", "$textfield", "textfield()",
+      "'textfield'", "{ textfield:", "select.textfield", "<m-textfield>", "mtrl-textfield", "::part(textfield)", "/textfield"],
+    reason: "documents the retired spellings alongside their canonical replacements",
+  },
+  {
     file: "src/styles/components/_timepicker.scss",
     snippets: ["-moz-appearance: textfield"],
     reason: "CSS keyword, not the component name",
