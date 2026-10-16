@@ -534,11 +534,9 @@ Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` 
 
 ## Upgrading
 
-`material` 3.0.0 removes what `mtrl` 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the migration guide. Each step is in the changelog:
+Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material`. The [migration guide](MIGRATING.md), verified against 3.0.5, starts with silent theme fallbacks and lists renamed and removed APIs, with their replacements.
 
-- `mtrl` 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
-- `mtrl` 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
-- `mtrl` 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
+Earlier upgrades have their own notes: [from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x) and [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
 
 ## Where this came from
 
