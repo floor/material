@@ -23,7 +23,11 @@ const buttonSpec = {
   name: "button",
   create: (config) => createButton({ ...(config as ButtonConfig), type: "button" }),
   styles: ["progress", "button"],
-  hostStyles: ":host{vertical-align:middle}",
+  // inline-block, the shared host display, builds a line box from the page's
+  // line-height. At 24px / 2 that box is 48px, so a 40px button grows and its
+  // baseline leaves the label. inline-flex is the button's own box, which the
+  // pre-upgrade rule already reserves.
+  hostStyles: ":host{display:inline-flex;vertical-align:middle}",
   attributes: {
     variant: { type: "string", config: "variant", update: (c, v) => void c.setVariant(String(v ?? "filled")) },
     size: { type: "string", config: "size", update: (c, v) => void c.setSize(String(v ?? "s")) },
