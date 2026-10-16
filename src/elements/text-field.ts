@@ -150,11 +150,6 @@ const textFieldSpec = {
         return { value, event };
       },
       state: true,
-      ...(typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production" ? {
-        listen: (host: HTMLElement): void => {
-          if (host.getAttribute("trailing-icon") && !host.getAttribute("trailing-icon-label")) checkTrailingLabel(host);
-        },
-      } : {}),
     },
   },
   form: {
@@ -174,6 +169,14 @@ const textFieldSpec = {
     return () => c.input.removeEventListener("input", stop);
   },
 } satisfies ElementSpec<TextFieldElementComponent>;
+
+try {
+  if (process.env.NODE_ENV !== "production") Object.assign(textFieldSpec.events.trailing, {
+    listen: (host: HTMLElement): void => {
+      if (host.getAttribute("trailing-icon") && !host.getAttribute("trailing-icon-label")) checkTrailingLabel(host);
+    },
+  });
+} catch { /* Raw browser ESM has no process. */ }
 
 export const textFieldElement = defineElement<TextFieldElementComponent>(textFieldSpec);
 export type TextFieldSpec = typeof textFieldSpec;

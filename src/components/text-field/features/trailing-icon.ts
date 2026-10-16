@@ -14,7 +14,7 @@ export const checkTrailingLabel = (element: HTMLElement): void => {
   const owner = host?.component?.element === element ? host : element;
   if ((warned ??= new WeakSet()).has(owner)) return;
   warned.add(owner);
-  warnDev('text field', 'A trailing listener needs trailingIconLabel (trailing-icon-label on <m-text-field>); without a label the icon is decorative and aria-hidden.');
+  warnDev('text field', 'A trailing listener needs trailingIconLabel / trailing-icon-label.');
 };
 
 /**

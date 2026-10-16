@@ -80,7 +80,7 @@ rows.push(run("element decorative/no listener", 0, () => {
 }));
 rows.push(run("element null listener", 0, () => {
   const host = document.createElement("m-text-field"); host.setAttribute("trailing-icon", icon);
-  document.body.append(host); host.addEventListener("trailing", null); host.remove(); return true;
+  document.body.append(host); (host as EventTarget).addEventListener("trailing", null); host.remove(); return true;
 }));
 rows.push(run("element and factory listeners share one warning", 1, () => {
   const host = document.createElement("m-text-field"); host.setAttribute("trailing-icon", icon); document.body.append(host);

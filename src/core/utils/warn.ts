@@ -47,10 +47,3 @@ export const warnDev = (component: string, message: string): void => {
   if (!isDevelopment()) return;
   console.warn(`[mtrl] ${component}: ${message}`);
 };
-
-// The element bridge forwards factory events even without an application listener.
-let forwarded: WeakSet<object> | undefined;
-export const forwardedListeners = {
-  add(listener: object): void { (forwarded ??= new WeakSet()).add(listener); },
-  has(listener: object): boolean { return forwarded?.has(listener) ?? false; },
-};

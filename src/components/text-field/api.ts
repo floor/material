@@ -6,7 +6,6 @@ import type {
   TextFieldVariant,
   TextFieldEvents,
 } from "./types";
-import { forwardedListeners } from "../../core/utils/warn";
 import { checkTrailingLabel } from "./features/trailing-icon";
 
 /**
@@ -331,11 +330,12 @@ export const withAPI =
       // Event handling
       on<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.on?.(event, handler);
-        if (typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production") {
-          if (event === "trailing" && component.trailingIcon?.getAttribute("aria-hidden") === "true" && !forwardedListeners.has(handler)) {
+        // A direct env check is removed by production bundlers; raw ESM may have no process.
+        try {
+          if (process.env.NODE_ENV !== "production" && event === "trailing" && component.trailingIcon?.getAttribute("aria-hidden") === "true" && !(handler as typeof handler & { __mtrlForwarded?: boolean }).__mtrlForwarded) {
             checkTrailingLabel(component.element);
           }
-        }
+        } catch { /* A diagnostic must not break a field without a Node environment. */ }
         return this;
       },
 

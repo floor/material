@@ -23,7 +23,6 @@
 
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
-import { forwardedListeners } from "../core/utils/warn";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -567,9 +566,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
         };
-        if (typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production") {
-          forwardedListeners.add(handler);
-        }
+        try {
+          if (process.env.NODE_ENV !== "production") Object.assign(handler, { __mtrlForwarded: true });
+        } catch { /* Raw browser ESM has no process. */ }
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));
       }
@@ -728,13 +727,15 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
   }
 
-  if (typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production") {
-    const add = MElement.prototype.addEventListener;
-    MElement.prototype.addEventListener = function (this: MElement, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-      Reflect.apply(add, this, [type, listener, options]);
-      if (listener) spec.events?.[type]?.listen?.(this);
-    };
-  }
+  try {
+    if (process.env.NODE_ENV !== "production") {
+      const add = MElement.prototype.addEventListener;
+      MElement.prototype.addEventListener = function (this: MElement, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
+        Reflect.apply(add, this, [type, listener, options]);
+        if (listener) spec.events?.[type]?.listen?.(this);
+      };
+    }
+  } catch { /* Raw browser ESM has no process. */ }
 
   const proto = MElement.prototype as unknown as Record<string, unknown>;
   for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {

@@ -7,11 +7,11 @@ import type { WarningRow } from "./fixtures/text-field-warning/client";
 
 export async function checkTextFieldWarning(browser: Browser, source = false): Promise<void> {
   const failures: string[] = [];
-  for (const mode of ["development", "production"] as const) {
+  for (const mode of ["development", "production", "raw-browser", "missing-env"] as const) {
     const result = await Bun.build({
       entrypoints: [resolve(import.meta.dir, "fixtures/text-field-warning/client.ts")],
       target: "browser", format: "iife", minify: true,
-      define: { "process.env.NODE_ENV": JSON.stringify(mode) },
+      define: { "process.env.NODE_ENV": JSON.stringify(mode === "production" ? mode : "development") },
       plugins: source ? [{ name: "warning-source", setup(build) {
         build.onResolve({ filter: /\.\.\/\.\.\/\.\.\/dist\// }, ({ path }) => ({ path: resolve(import.meta.dir, "../src", path.split("dist/")[1].replace(/\.js$/, ".ts")) }));
       } }] : [],
@@ -23,10 +23,11 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
     try {
       await page.setContent("<!doctype html><html><body></body></html>");
       // The existing warning helper intentionally requires process; raw browser ESM is silent.
-      await page.evaluate(mode => { Object.assign(window, { process: { env: { NODE_ENV: mode } } }); }, mode);
+      if (mode !== "raw-browser") await page.evaluate(mode => { Object.assign(window, { process: { env: mode === "missing-env" ? null : { NODE_ENV: mode } } }); }, mode);
       await page.addScriptTag({ content: js });
       const rows = await page.evaluate(() => (window as unknown as { warningRows: WarningRow[] }).warningRows);
       for (const row of rows) {
+        if (mode === "raw-browser" || mode === "missing-env") row.expected = 0;
         console.log(`${mode}: ${JSON.stringify(row)}`);
         if (row.count !== row.expected || !row.unchanged || row.messages.some(message => !message.includes("trailingIconLabel") || !message.includes("trailing-icon-label"))) failures.push(`${mode}: ${row.name}: expected ${row.expected}, got ${row.count}; unchanged=${row.unchanged}`);
       }
