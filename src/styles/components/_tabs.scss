@@ -295,16 +295,20 @@ $container: "#{base.$prefix}-tabs";
     // its label, inside the button (tab.ts), so the wrapper is the anchor box.
     // m3.material.io/components/tabs/specs, Measurements: "Padding between inline
     // text and badge 4dp" and "Overlap of badge on stacked icon 6dp".
-    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 0;
-        right: auto;
-        left: calc(100% - 6px);
-    }
-
+    // Measured from the anchor's inline end, so it mirrors in right-to-left:
+    // m3.material.io/components/badges/guidelines, "Change the position of the badge
+    // for right-to-left languages." Physical sides under [dir='rtl'], as the other
+    // components do: a bundler lowers a logical inset into :lang() lists.
+    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right,
     &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
         top: 0;
         right: auto;
         left: calc(100% - 6px);
+
+        @include m.rtl {
+            right: calc(100% - 6px);
+            left: auto;
+        }
     }
 
     &--text-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
@@ -312,6 +316,11 @@ $container: "#{base.$prefix}-tabs";
         right: auto;
         left: calc(100% + 4px);
         transform: translateY(-50%);
+
+        @include m.rtl {
+            right: calc(100% + 4px);
+            left: auto;
+        }
     }
 
     // ACTIVE TAB STATES - PRIMARY VARIANT

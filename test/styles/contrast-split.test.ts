@@ -152,10 +152,10 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_card.scss).
     // A tab's badge sits on the tab's icon (6dp overlap) or label (4dp gap), the
     // anchor it wraps inside the button, not at the button's corner
-    // (styles/components/_tabs.scss).
+    // (styles/components/_tabs.scss). It mirrors under [dir='rtl'] (the same file).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("2ad9c5bc2cd0d4dd22575b46a43c0c5ac216830f002a06e12796bc0c3606f853");
-    expect(css.length).toBe(529613);
+      .toBe("bda2bfd11fb4eedb37563c35393130befcdf7a856890571c65dbff24f4d9b42c");
+    expect(css.length).toBe(529905);
   });
 
   test("today's sheets still resolve to the fixture", () => {
