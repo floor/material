@@ -2,8 +2,11 @@
 // --source reproduces RED/GREEN without a full library build; CI checks dist.
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
+import { writeFile } from "node:fs/promises";
+import { gzipSync } from "node:zlib";
 import { chromium, type Browser } from "playwright";
 import type { WarningRow } from "./fixtures/text-field-warning/client";
+import { createPackageFixture } from "./package-fixture";
 
 export async function checkTextFieldWarning(browser: Browser, source = false): Promise<void> {
   const failures: string[] = [];
@@ -35,6 +38,24 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
     } finally { await page.close(); }
   }
   assert.deepEqual(failures, [], "trailing listener warnings");
+  // Keep the root figure visible even if a component budget stops size:check first.
+  if (!source) {
+    const fixture = await createPackageFixture();
+    try {
+      const entry = resolve(fixture.directory, "all-js.ts");
+      await writeFile(entry, "export * from 'material';");
+      for (const mode of ["default", "production"] as const) {
+        const result = await Bun.build({ entrypoints: [entry], format: "esm", target: "browser", minify: true,
+          define: mode === "production" ? { "process.env.NODE_ENV": '"production"' } : {},
+        });
+        assert(result.success && result.outputs.length === 1, String(result.logs));
+        const code = await result.outputs[0].text();
+        const diagnosticIncluded = code.includes("Missing trailingIconLabel");
+        console.log(`warning all-js ${mode}: ${JSON.stringify({ raw: Buffer.byteLength(code), gzip: gzipSync(code, { level: 9 }).length, diagnosticIncluded })}`);
+        if (mode === "production") assert(!diagnosticIncluded, "root production bundle strips the diagnostic");
+      }
+    } finally { await fixture.cleanup(); }
+  }
   console.log(`Text field warning checks passed (${source ? "source" : "dist"})`);
 }
 
