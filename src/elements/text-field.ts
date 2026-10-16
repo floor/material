@@ -26,6 +26,7 @@
  */
 
 import createTextField from "../components/text-field";
+import { checkTrailingLabel } from "../components/text-field/features/trailing-icon";
 import type { TextFieldComponent, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
@@ -149,6 +150,11 @@ const textFieldSpec = {
         return { value, event };
       },
       state: true,
+      ...(typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production" ? {
+        listen: (host: HTMLElement): void => {
+          if (host.getAttribute("trailing-icon") && !host.getAttribute("trailing-icon-label")) checkTrailingLabel(host);
+        },
+      } : {}),
     },
   },
   form: {

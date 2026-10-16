@@ -6,6 +6,8 @@ import type {
   TextFieldVariant,
   TextFieldEvents,
 } from "./types";
+import { forwardedListeners } from "../../core/utils/warn";
+import { checkTrailingLabel } from "./features/trailing-icon";
 
 /**
  * Component interface with density feature
@@ -329,6 +331,11 @@ export const withAPI =
       // Event handling
       on<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.on?.(event, handler);
+        if (typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production") {
+          if (event === "trailing" && component.trailingIcon?.getAttribute("aria-hidden") === "true" && !forwardedListeners.has(handler)) {
+            checkTrailingLabel(component.element);
+          }
+        }
         return this;
       },
 
