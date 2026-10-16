@@ -153,9 +153,12 @@ describe("explicit contrast levels are opt-in", () => {
     // A tab's badge sits on the tab's icon (6dp overlap) or label (4dp gap), the
     // anchor it wraps inside the button, not at the button's corner
     // (styles/components/_tabs.scss). It mirrors under [dir='rtl'] (the same file).
+    // A collapsed rail header supplies the extended FAB compact presentation
+    // through an inherited property, including across its shadow root
+    // (styles/components/_navigation-rail.scss, styles/components/_extended-fab.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("bda2bfd11fb4eedb37563c35393130befcdf7a856890571c65dbff24f4d9b42c");
-    expect(css.length).toBe(529905);
+      .toBe("33ce4577fae72d0d7bac83c6d5a2bc478b9fda99ed71b41a1424869d0ca28faf");
+    expect(css.length).toBe(530136);
   });
 
   test("today's sheets still resolve to the fixture", () => {
