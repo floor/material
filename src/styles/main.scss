@@ -1,5 +1,8 @@
 // src/styles/main.scss
 
+// Configure before any theme module is loaded.
+@forward "themes/base-theme" show $contrast-emit;
+
 // Import Sass modules
 @use "sass:map";
 @use "sass:list" as sasslist;

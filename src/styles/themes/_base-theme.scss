@@ -1,12 +1,18 @@
 // src/styles/themes/_base-theme.scss
 @use 'sass:map';
+@use 'sass:list';
 @use '../abstract/base' as *;
 
-// Build switch, not a public API (the README's Sass `@use … with` is unsupported).
+// Public compilation option, forwarded by the themes and main Sass entries.
 // all: explicit attribute rules and the prefers-contrast block (the full stylesheet).
 // explicit: the attribute rules only (material/styles/contrast, material/themes/<name>-contrast).
 // preference: the prefers-contrast block only (material/styles/base, material/themes/<name>).
+// none: standard roles only, with neither activation family.
 $contrast-emit: all !default;
+
+@if not list.index((all, explicit, preference, none), $contrast-emit) {
+  @error "$contrast-emit must be all, explicit, preference, or none.";
+}
 
 // Base theme definition with common properties and structure
 @mixin create-theme($name) {
@@ -80,7 +86,7 @@ $contrast-emit: all !default;
       }
     }
   }
-  @if $contrast-emit != preference {
+  @if $contrast-emit == all or $contrast-emit == explicit {
     #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
       @include contrast-modes($name, $shared);
     }
@@ -90,7 +96,7 @@ $contrast-emit: all !default;
       }
     }
   }
-  @if $contrast-emit != explicit {
+  @if $contrast-emit == all or $contrast-emit == preference {
     @media (prefers-contrast: more) {
       #{$scope}:not([data-theme-contrast]) {
         @include contrast-modes($name, $high);

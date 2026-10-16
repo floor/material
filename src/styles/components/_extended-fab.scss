@@ -43,10 +43,13 @@ $sizes: (
   );
   
   // Small is the default; modifiers supply the expressive dimensions.
+  // A collapsed navigation rail supplies compact presentation across slots
+  // and shadow roots, including when an element rebuilds its inner button.
+  width: var(--#{base.$prefix}-extended-fab-compact, auto);
   height: var(--#{base.$prefix}-extended-fab-height, 56px);
   min-width: var(--#{base.$prefix}-extended-fab-height, 56px);
-  padding: 0 var(--#{base.$prefix}-extended-fab-padding, 16px);
-  gap: var(--#{base.$prefix}-extended-fab-gap, 8px);
+  padding: 0 var(--#{base.$prefix}-extended-fab-compact, var(--#{base.$prefix}-extended-fab-padding, 16px));
+  gap: var(--#{base.$prefix}-extended-fab-compact, var(--#{base.$prefix}-extended-fab-gap, 8px));
   border-radius: var(--#{base.$prefix}-extended-fab-radius, #{f.get-shape('large')});
 
   // Transition for dimension changes
@@ -104,7 +107,9 @@ $sizes: (
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 280px;
+    width: var(--#{base.$prefix}-extended-fab-compact, auto);
+    max-width: var(--#{base.$prefix}-extended-fab-compact, 280px);
+    opacity: var(--#{base.$prefix}-extended-fab-compact, 1);
     margin: 0;
     transition: 
       max-width 0.3s v.motion('easing-standard'),
@@ -119,7 +124,7 @@ $sizes: (
   }
   
   &--fluid {
-    width: 100%;
+    width: var(--#{base.$prefix}-extended-fab-compact, 100%);
   }
   
   // Expressive container and tone styles; primary-container is the default.
@@ -148,10 +153,8 @@ $sizes: (
 
   // Collapsed state
   &--collapsed {
-    width: var(--#{base.$prefix}-extended-fab-height, 56px);
-    min-width: var(--#{base.$prefix}-extended-fab-height, 56px);
-    padding: 0;
-    gap: 0;
+    // The minimum width above keeps the compact button at its size's height.
+    --#{base.$prefix}-extended-fab-compact: 0;
     
     .#{$component}__icon {
       margin: 0;
@@ -159,9 +162,6 @@ $sizes: (
     }
     
     .#{$component}__text {
-      opacity: 0;
-      max-width: 0;
-      width: 0;
       margin: 0;
       transition: 
         opacity 0.1s v.motion('easing-disappear'),

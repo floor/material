@@ -28,7 +28,7 @@ export function preupgradeStylesheet(rules: string, banner: string): string {
 }
 
 /** Which part of `create-theme-contrast` a compilation emits. See `$contrast-emit`. */
-export type ContrastEmit = "all" | "preference" | "explicit";
+export type ContrastEmit = "all" | "preference" | "explicit" | "none";
 
 export function sassOptions(): sass.StringOptions<"sync"> {
   return { loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent };

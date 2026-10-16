@@ -46,6 +46,9 @@ $snap: 0s linear $midpoint;
   // the 48dp menu button in the collapsed rail; expanded content aligns with
   // the 20dp item margin.
   &__header {
+    // Inherited through the header slot and the FAB's own shadow root. Only
+    // extended FABs consume it; no child method or event is involved.
+    --#{base.$prefix}-extended-fab-compact: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -55,7 +58,10 @@ $snap: 0s linear $midpoint;
     padding-inline-start: 24px;
     transition: padding-inline-start $spatial;
   }
-  &--expanded &__header { padding-inline-start: 20px; }
+  &--expanded &__header {
+    --#{base.$prefix}-extended-fab-compact: initial;
+    padding-inline-start: 20px;
+  }
   &__toggle {
     display: grid;
     place-items: center;
