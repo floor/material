@@ -8,7 +8,8 @@ textFieldElement.define();
 export interface WarningRow { name: string; count: number; expected: number; messages: string[]; unchanged: boolean }
 
 const icon = "<svg></svg>";
-const production = process.env.NODE_ENV === "production";
+let production = false;
+try { production = process.env.NODE_ENV === "production"; } catch { /* Raw browser ESM. */ }
 const run = (name: string, expected: number, scenario: () => boolean): WarningRow => {
   const messages: string[] = [];
   const warn = console.warn;

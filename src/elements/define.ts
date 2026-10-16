@@ -567,7 +567,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
         };
         try {
-          if (process.env.NODE_ENV !== "production") Object.assign(handler, { __mtrlForwarded: true });
+          if (process.env.NODE_ENV !== "production") Object.assign(handler, { __mtrlBridge: true });
         } catch { /* Raw browser ESM has no process. */ }
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));

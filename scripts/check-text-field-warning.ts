@@ -11,19 +11,20 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
     const result = await Bun.build({
       entrypoints: [resolve(import.meta.dir, "fixtures/text-field-warning/client.ts")],
       target: "browser", format: "iife", minify: true,
-      define: { "process.env.NODE_ENV": JSON.stringify(mode === "production" ? mode : "development") },
+      define: mode === "development" || mode === "production" ? { "process.env.NODE_ENV": JSON.stringify(mode) } : { "process.env.NODE_ENV": "globalThis.process.env.NODE_ENV" },
       plugins: source ? [{ name: "warning-source", setup(build) {
         build.onResolve({ filter: /\.\.\/\.\.\/\.\.\/dist\// }, ({ path }) => ({ path: resolve(import.meta.dir, "../src", path.split("dist/")[1].replace(/\.js$/, ".ts")) }));
       } }] : [],
     });
     assert(result.success, String(result.logs));
     const js = await result.outputs[0].text();
-    if (mode === "production") assert(!js.includes("A trailing listener needs"), "warning is stripped from the production bundle");
+    const diagnosticPresent = js.includes("Missing trailingIconLabel");
+    assert.equal(diagnosticPresent, mode !== "production", "diagnostic is present in development bundles and stripped from production");
     const page = await browser.newPage();
     try {
       await page.setContent("<!doctype html><html><body></body></html>");
-      // The existing warning helper intentionally requires process; raw browser ESM is silent.
-      if (mode !== "raw-browser") await page.evaluate(mode => { Object.assign(window, { process: { env: mode === "missing-env" ? null : { NODE_ENV: mode } } }); }, mode);
+      // Explicit build modes need no process shim; raw browser ESM stays unsubstituted.
+      if (mode === "missing-env") await page.evaluate(() => { Object.assign(window, { process: { env: null } }); });
       await page.addScriptTag({ content: js });
       const rows = await page.evaluate(() => (window as unknown as { warningRows: WarningRow[] }).warningRows);
       for (const row of rows) {

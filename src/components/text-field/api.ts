@@ -332,7 +332,7 @@ export const withAPI =
         component.on?.(event, handler);
         // A direct env check is removed by production bundlers; raw ESM may have no process.
         try {
-          if (process.env.NODE_ENV !== "production" && event === "trailing" && component.trailingIcon?.getAttribute("aria-hidden") === "true" && !(handler as typeof handler & { __mtrlForwarded?: boolean }).__mtrlForwarded) {
+          if (process.env.NODE_ENV !== "production" && event === "trailing" && component.trailingIcon?.tagName === "SPAN" && !(handler as typeof handler & { __mtrlBridge?: boolean }).__mtrlBridge) {
             checkTrailingLabel(component.element);
           }
         } catch { /* A diagnostic must not break a field without a Node environment. */ }

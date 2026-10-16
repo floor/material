@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import createTextField from "../../../src/components/text-field";
 import { callbacksFixture } from "../callbacks.fixture";
+import { warnDev } from "../../../src/core/utils/warn";
 
 const mount = callbacksFixture();
 const icon = "<svg></svg>";
@@ -70,4 +71,21 @@ test("production is silent for an unlabeled trailing listener", () => {
   process.env.NODE_ENV = "production";
   mount(createTextField({ trailingIcon: icon })).on("trailing", () => {});
   expect(messages).toEqual([]);
+});
+
+test("the shared warning helper preserves development, production and absent environment behavior", () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "process")!;
+  for (const [value, count] of [
+    [{ env: { NODE_ENV: "development" } }, 1],
+    [{ env: { NODE_ENV: "production" } }, 0],
+    [undefined, 0], [{}, 0], [{ env: null }, 0],
+    [{ get env() { throw new Error("inaccessible environment"); } }, 0],
+  ] as const) {
+    messages.length = 0;
+    try {
+      Object.defineProperty(globalThis, "process", { configurable: true, value });
+      warnDev("probe", "diagnostic");
+    } finally { Object.defineProperty(globalThis, "process", original); }
+    expect(messages).toHaveLength(count);
+  }
 });

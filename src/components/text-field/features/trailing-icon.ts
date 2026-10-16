@@ -9,12 +9,11 @@ import { warnDev } from '../../../core/utils/warn';
 let warned: WeakSet<HTMLElement> | undefined;
 /** Development diagnostic, shared by the factory and its element host. */
 export const checkTrailingLabel = (element: HTMLElement): void => {
-  const root = element.getRootNode() as ShadowRoot;
-  const host = root.host as (HTMLElement & { component?: { element: HTMLElement } }) | undefined;
-  const owner = host?.component?.element === element ? host : element;
-  if ((warned ??= new WeakSet()).has(owner)) return;
-  warned.add(owner);
-  warnDev('text field', 'A trailing listener needs trailingIconLabel / trailing-icon-label.');
+  const host = (element.getRootNode() as ShadowRoot).host as (HTMLElement & { component?: { element: HTMLElement } }) | undefined;
+  if (host?.component?.element === element) element = host;
+  if ((warned ??= new WeakSet()).has(element)) return;
+  warned.add(element);
+  warnDev('text field', 'Missing trailingIconLabel / trailing-icon-label.');
 };
 
 /**
