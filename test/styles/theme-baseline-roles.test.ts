@@ -5,8 +5,9 @@
 // The test also found surface-variant, read by the filled card and declared by
 // no theme; it is a theme role now.
 // Every colour role a shipped stylesheet reads must be declared by baseline, in
-// each block that sets its colours: the :root default, the prefers-color-scheme
-// dark block, .dark-theme, and the selectable [data-theme=baseline] light and dark.
+// each block that sets its colours: the :where(:root) default, the
+// prefers-color-scheme dark block, :where(.dark-theme), and the
+// selectable [data-theme=baseline] light and dark.
 import { describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 import { colorBlocks, resolvedColorBody } from './theme-css';
@@ -60,8 +61,8 @@ describe('baseline declares every colour role the stylesheets read', () => {
 
     test(`${name}: light and dark blocks were found`, () => {
       const selectors = [...found.keys()];
-      expect(selectors).toContain(':root');
-      expect(selectors).toContain('.dark-theme');
+      expect(selectors).toContain(':where(:root)');
+      expect(selectors).toContain(':where(.dark-theme)');
       expect(selectors.some(selector => /prefers-color-scheme:\s*dark/.test(selector))).toBe(true);
       expect(selectors.some(selector => selector.includes('[data-theme=baseline]') && !selector.includes('dark'))).toBe(true);
       expect(selectors.some(selector => selector.includes('[data-theme=baseline]') && selector.includes('[data-theme-mode=dark]'))).toBe(true);
