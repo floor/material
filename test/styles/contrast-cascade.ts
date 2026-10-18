@@ -68,7 +68,7 @@ type Simple =
   | { kind: "root" }
   | { kind: "class"; name: string }
   | { kind: "attr"; name: string; value: string | null }
-  | { kind: "is" | "not"; args: string[] };
+  | { kind: "is" | "not" | "where"; args: string[] };
 
 function parseCompound(selector: string): Simple[] {
   const parts: Simple[] = [];
@@ -78,8 +78,8 @@ function parseCompound(selector: string): Simple[] {
     if (s[i] === " " || s[i] === "\n" || s[i] === "\t") {
       throw new Error(`descendant combinator in ${selector}`);
     }
-    if (s.startsWith(":is(", i) || s.startsWith(":not(", i)) {
-      const kind = s.startsWith(":is(", i) ? "is" : "not";
+    if (s.startsWith(":is(", i) || s.startsWith(":not(", i) || s.startsWith(":where(", i)) {
+      const kind = s.startsWith(":is(", i) ? "is" : s.startsWith(":not(", i) ? "not" : "where";
       const open = i + kind.length + 1;
       const end = matchParen(s, open);
       parts.push({ kind, args: splitTop(s.slice(open + 1, end), ",").map(arg => arg.trim()).filter(Boolean) });
@@ -126,7 +126,7 @@ function selectorUnsupported(selector: string): boolean {
     for (const part of list) {
       if (part.kind === "class" && part.name !== "dark-theme") return true;
       if (part.kind === "attr" && !THEME_ATTRS.has(part.name)) return true;
-      if (part.kind === "is" || part.kind === "not") {
+      if (part.kind === "is" || part.kind === "not" || part.kind === "where") {
         for (const arg of part.args) if (selectorUnsupported(arg)) return true;
       }
     }
@@ -151,16 +151,18 @@ function matches(selector: string, el: ElementState): boolean {
     else if (part.kind === "attr") { if (!attrMatches(part.name, part.value, el)) return false; }
     else {
       const any = part.args.some(arg => matches(arg, el));
-      if (part.kind === "is" ? !any : any) return false;
+      // :where matches like :is; the difference is specificity, not matching.
+      if (part.kind === "not" ? any : !any) return false;
     }
   }
   return true;
 }
 
-/** Specificity is static: `:is()` and `:not()` take their most specific argument. */
+/** Specificity is static: `:is()` and `:not()` take their most specific argument; `:where()` is always zero. */
 export function selectorSpec(selector: string): Spec {
   let spec: Spec = [0, 0, 0];
   for (const part of parseCompound(selector)) {
+    if (part.kind === "where") continue;
     if (part.kind === "is" || part.kind === "not") {
       let best: Spec = [0, 0, 0];
       for (const arg of part.args) {
