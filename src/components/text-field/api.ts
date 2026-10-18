@@ -39,10 +39,8 @@ export const withAPI =
     // The field keeps its root and token list throughout its lifetime.
     const element = component.element;
     const classes = element.classList;
-    // The element bridge supplies a stable identity across rebuilds, before any
-    // application subscription; factory-only fields use their own root element.
-    let warningHost: HTMLElement | undefined;
-    const variantClass = (variant: TextFieldVariant): string => component.getClass(`${component.config?.componentName || "text-field"}--${variant}`);
+    const fieldClass = component.getClass("text-field");
+    const variantClass = (variant: TextFieldVariant): string => `${fieldClass}--${variant}`;
     const schedulePlacement = (): void => {
       if (component.updateElementPositions) component.schedulePositionUpdate?.();
     };
@@ -266,7 +264,7 @@ export const withAPI =
 
           // Update empty state based on value or autofill
           classes.toggle(
-            component.getClass("text-field--empty"),
+            `${fieldClass}--empty`,
             !(hasValue || isAutofilled)
           );
         }
@@ -305,9 +303,11 @@ export const withAPI =
         // ESM safe; the separate literal check lets bundlers erase the entire branch,
         // including its try/catch, in production.
         if (event === "trailing" && /*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+          // Keep the bridge identity on the owned root only in development, so
+          // production has no otherwise-unused per-instance warning state.
           const host = (handler as typeof handler & { __h?: HTMLElement }).__h;
-          if (host) warningHost = host;
-          else if (component.trailingIcon?.tagName === "SPAN") checkTrailingLabel(warningHost ?? element);
+          if (host) (element as HTMLElement & { __h?: HTMLElement }).__h = host;
+          else if (component.trailingIcon?.tagName === "SPAN") checkTrailingLabel((element as HTMLElement & { __h?: HTMLElement }).__h ?? element);
         }
         return this;
       },
