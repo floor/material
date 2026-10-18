@@ -22,7 +22,7 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import * as sass from "sass";
 
-const options = { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent } as const;
+const options: sass.StringOptions<"sync"> = { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent };
 
 /** Both orders must behave identically; baseline last is the order that broke. */
 const ORDERS: Record<string, string> = {
