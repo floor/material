@@ -63,15 +63,21 @@ const server = Bun.serve({
     if (path === "/tabs-element.js")
       return new Response(elementJs, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
-    if (path === "/element" || path === "/element-icon")
+    if (path === "/element" || path === "/element-icon") {
+      // ?dir=html puts rtl on the document, ?dir=container on the container the
+      // element sits in: ordinary ways a page gives <m-tabs> its direction.
+      const query = new URL(request.url).searchParams;
+      const dir = query.get("dir");
+      const icon = path === "/element-icon" || query.has("icon");
       return new Response(
-        `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
-<style>body{margin:0}main{width:600px}m-tabs{display:block}</style></head><body><main id="host">
-<m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8"${path === "/element-icon" ? ` icon='${elementIcon}'` : ""}>Trips</m-tab>
+        `<!doctype html><html${dir === "html" ? ' dir="rtl"' : ""}><head><link rel="stylesheet" href="/styles.css">
+<style>body{margin:0}main{width:600px}m-tabs{display:block}</style></head><body><main id="host"${dir === "container" ? ' dir="rtl"' : ""}>
+<m-tabs value="f"><m-tab value="f">Flights</m-tab><m-tab value="t" badge="8"${icon ? ` icon='${elementIcon}'` : ""}>Trips</m-tab>
 <m-tab value="h">Hotels</m-tab></m-tabs>
 <script type="module" src="/tabs-element.js"></script></body></html>`,
         { headers: { "Content-Type": "text/html" } }
       );
+    }
     return new Response(
       `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0}main{width:600px}</style></head><body><main id="host"></main>
@@ -429,6 +435,28 @@ try {
   await iconElementPage.waitForTimeout(300);
   const elementIconRemoved = (await iconElementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
   await iconElementPage.close();
+
+  // <m-tabs> takes its direction from the page, not from an attribute of its
+  // own: rtl on the document, or on the container it sits in. The element's tabs
+  // live in a shadow root, which a `dir` outside it does not reach by selector.
+  const elementRtl: Array<{ name: string; direction: string; m: Measured | undefined }> = [];
+  for (const where of ["html", "container"]) {
+    for (const stackedRow of [false, true]) {
+      const rtlPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+      rtlPage.on("pageerror", (error) => elementErrors.push(error.message));
+      await rtlPage.goto(`http://127.0.0.1:${server.port}/element?dir=${where}${stackedRow ? "&icon" : ""}`);
+      await rtlPage.waitForFunction(() =>
+        !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
+        !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
+      await rtlPage.waitForTimeout(300);
+      elementRtl.push({
+        name: `<m-tabs> under ${where} dir=rtl, ${stackedRow ? "stacked" : "inline"}`,
+        direction: await rtlPage.evaluate(() => getComputedStyle(document.querySelector("m-tabs")!).direction),
+        m: (await rtlPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0],
+      });
+      await rtlPage.close();
+    }
+  }
   console.log(`widths, badge on Trips: fixed ${JSON.stringify(fromConfig.widths)}, fixed stacked icon ${JSON.stringify(stackedBadge.widths)}, scrollable ${JSON.stringify(scrollingBadge.widths)}, element ${JSON.stringify(fromElement[0]?.widths)}`);
   console.log(`stacked icon: widths ${JSON.stringify(stackedBadge.widths)} anchor ${stackedBadge.anchor?.kind}; scrollable: widths ${JSON.stringify(scrollingBadge.widths)} anchor ${scrollingBadge.anchor?.kind}`);
   const place = (badge: { onTab: string | null; text: string | null }): string =>
@@ -492,6 +520,13 @@ try {
   soft("icon attribute removed", () => sits("m-tab icon attribute removed", elementIconRemoved as Measured, "label"));
   soft("icon attribute added", () => sits("m-tab icon attribute added", elementIconAdded as Measured, "icon"));
   soft("element starts stacked", () => sits("m-tab icon attribute at the start", elementStacked as Measured, "icon"));
+  for (const { name, direction, m } of elementRtl) {
+    soft(name, () => {
+      assert.equal(direction, "rtl", `${name}: computed direction`);
+      sits(name, m as Measured, name.endsWith("stacked") ? "icon" : "label", "rtl");
+    });
+  }
+  console.log(`<m-tabs> RTL: ${elementRtl.map(({ name, m }) => `${name} badge ${JSON.stringify(m?.badge)} anchor ${JSON.stringify(m?.anchor)}`).join("; ")}`);
   console.log(`RTL: inline ${JSON.stringify(rtlInline.badge)} label ${JSON.stringify(rtlInline.anchor)}; stacked ${JSON.stringify(rtlStacked.badge)} icon ${JSON.stringify(rtlStacked.anchor)}`);
   console.log(`anchors: icon removed ${iconRemoved.anchor?.kind}/${iconRemoved.kids} kids, icon added ${iconAdded.anchor?.kind}/${iconAdded.kids} kids, attribute removed ${elementIconRemoved?.anchor?.kind}/${elementIconRemoved?.kids} kids, attribute added ${elementIconAdded?.anchor?.kind}/${elementIconAdded?.kids} kids`);
   assert.deepEqual(failures, [], `${failures.length} badge rows failed:\n  ${failures.join("\n  ")}`);
