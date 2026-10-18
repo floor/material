@@ -18,6 +18,7 @@ import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkTextFieldTrailing, trailingActivation, trailingFocus } from "./check-text-field-trailing";
+import { checkTextFieldWarning } from "./check-text-field-warning";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
@@ -2780,7 +2781,8 @@ try {
       return {
         sameComponent: t.component === kept.component,
         sameFocus: t.shadowRoot?.activeElement === kept.focused,
-        labels: buttons.map((b) => b.textContent?.replace(/\s+/g, " ").trim()),
+        // The label, not the button: the badge now sits in the button, on the label or icon
+        labels: buttons.map((b) => (b.querySelector(".mtrl-button__text") ?? b).textContent?.replace(/\s+/g, " ").trim()),
         badges: t.component.getTabs().map((tab) => tab.getBadge()),
         disabled: buttons.map((b) => b.hasAttribute("disabled") || b.getAttribute("aria-disabled") === "true"),
       };
@@ -4362,6 +4364,8 @@ try {
   }
 
   await checkTextFieldTrailing(browser, check);
+  await checkTextFieldWarning(browser);
+  check("text field: an unlabeled trailing listener warns once in development, never in production");
 
   // ---------------------------------------------------------------- progress
   await fresh(

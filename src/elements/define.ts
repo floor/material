@@ -64,6 +64,8 @@ export interface EventSpec {
    * `expanded`), not of the model: dispatching it leaves the element clean.
    */
   state?: boolean;
+  /** @internal Development diagnostic for a direct application listener. */
+  listen?: (host: HTMLElement) => void;
 }
 
 export interface SlotSpec {
@@ -564,6 +566,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
         };
+        if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") Object.assign(handler, { __h: this });
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));
       }
@@ -720,6 +723,15 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         }
       }
     }
+  }
+
+  // Keep the raw-ESM environment probe removable together with this dev-only hook.
+  if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+    const add = MElement.prototype.addEventListener;
+    MElement.prototype.addEventListener = function (this: MElement, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
+      Reflect.apply(add, this, [type, listener, options]);
+      if (listener) spec.events?.[type]?.listen?.(this);
+    };
   }
 
   const proto = MElement.prototype as unknown as Record<string, unknown>;

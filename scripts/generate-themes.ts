@@ -156,12 +156,12 @@ export const standardTokens = (name: string, source: string): ModeTokens => {
       .map(([, role, value]) => [`--#{$prefix}-sys-color-${role}`,
         (value.length === 4 ? "#" + [...value.slice(1)].map(c => c + c).join("") : value).toLowerCase()]),
   );
-  const light = read(name === "baseline" ? ":root" : `[data-theme=${name}]`);
+  const light = read(name === "baseline" ? ":where(:root)" : `[data-theme=${name}]`);
   const inherited = name === "baseline" ? { light: {}, dark: {} }
     : standardTokens("baseline", readFileSync("src/styles/themes/_baseline.scss", "utf8"));
   return {
     light: { ...inherited.light, ...light },
-    dark: { ...inherited.dark, ...light, ...read(name === "baseline" ? ".dark-theme" : `[data-theme=${name}][data-theme-mode=dark]`) },
+    dark: { ...inherited.dark, ...light, ...read(name === "baseline" ? ":where(.dark-theme)" : `[data-theme=${name}][data-theme-mode=dark]`) },
   };
 };
 

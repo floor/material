@@ -78,7 +78,7 @@ const colorBlocks = (css: string) => {
 const standardSelectors = (theme: string) => [
   `[data-theme=${theme}]`,
   `[data-theme=${theme}][data-theme-mode=dark]`,
-  ...(theme === 'baseline' ? [':root', '@media (prefers-color-scheme: dark) :root', '.dark-theme'] : []),
+  ...(theme === 'baseline' ? [':where(:root)', '@media (prefers-color-scheme: dark) :where(:root)', ':where(.dark-theme)'] : []),
 ];
 
 describe('theme status contrast', () => {

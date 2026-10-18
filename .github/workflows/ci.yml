@@ -170,7 +170,7 @@ jobs:
             checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check carousel:check toolbar-card:check core:check readme-browser:check
           - group: styles
             browsers: chromium
-            checks: preupgrade:check tokens:check contrast-emit:check
+            checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check
           - group: ssr
             browsers: chromium firefox webkit
             checks: ssr:check

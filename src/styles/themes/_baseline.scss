@@ -145,8 +145,13 @@
     --#{$prefix}-sys-color-inverse-primary: #6750a4;
 }
 
-// Apply baseline light theme to :root by default
-:root {
+// Apply baseline light theme to :root by default. `:where()` keeps these
+// declarations at zero specificity: `:root` and `[data-theme="name"]` share
+// specificity (0,1,0), so an unconditional :root block wins wherever baseline
+// is emitted after another theme (an app compiling the partials in its own
+// order). At (0,0,0) a selected theme always wins, in any order, while the
+// roles a theme does not declare still inherit from here.
+:where(:root) {
     @include baseline-light-variables;
 
     // Apply dark theme based on system preference
@@ -155,8 +160,12 @@
     }
 }
 
-// Dark theme class for manual switching
-.dark-theme {
+// Dark theme class for manual switching. `:where()` for the same reason: a
+// page that selected a theme uses data-theme-mode="dark" instead, and a stray
+// dark-theme class on a themed element must not override it. On an unthemed
+// page (or a nested container, where nothing else declares the roles) the
+// class behaves exactly as before.
+:where(.dark-theme) {
     @include baseline-dark-variables;
 }
 

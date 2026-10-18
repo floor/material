@@ -6,6 +6,7 @@ import type {
   TextFieldVariant,
   TextFieldEvents,
 } from "./types";
+import { warnDev } from "../../core/utils/warn";
 
 /**
  * Component interface with density feature
@@ -35,6 +36,14 @@ type ComponentWithDensity = BaseComponent & {
 export const withAPI =
   ({ disabled, lifecycle }: ApiOptions) =>
   (component: ComponentWithDensity): TextFieldComponent => {
+    // The field keeps its root and token list throughout its lifetime.
+    const element = component.element;
+    const classes = element.classList;
+    const fieldClass = component.getClass("text-field");
+    const variantClass = (variant: TextFieldVariant): string => `${fieldClass}--${variant}`;
+    const schedulePlacement = (): void => {
+      if (component.updateElementPositions) component.schedulePositionUpdate?.();
+    };
     // A trailing icon button is disabled with the field
     const setTrailingDisabled = (off: boolean): void => {
       // By tag, not instanceof: no global HTMLButtonElement is assumed (a server DOM)
@@ -42,10 +51,10 @@ export const withAPI =
       if (icon?.tagName === "BUTTON") (icon as HTMLButtonElement).disabled = off;
     };
     return {
-      element: component.element,
+      element: element,
       // The container under the root: what a menu or popover anchors to, so the
       // supporting text row never pushes it down
-      field: component.field ?? component.element,
+      field: component.field ?? element,
       input: component.input as HTMLInputElement | HTMLTextAreaElement,
 
       // Value management
@@ -72,32 +81,26 @@ export const withAPI =
 
       // Variant management
       setVariant(variant: TextFieldVariant): TextFieldComponent {
-        const PREFIX = component.config?.prefix || "mtrl";
-        const COMPONENT = component.config?.componentName || "text-field";
 
         // Remove existing variant classes
-        component.element.classList.remove(
-          `${PREFIX}-${COMPONENT}--filled`,
-          `${PREFIX}-${COMPONENT}--outlined`
+        classes.remove(
+          variantClass("filled"),
+          variantClass("outlined")
         );
 
         // Add the new variant class
-        component.element.classList.add(`${PREFIX}-${COMPONENT}--${variant}`);
+        classes.add(variantClass(variant));
 
         // Update positioning after variant change
-        if (component.updateElementPositions) {
-          component.schedulePositionUpdate?.();
-        }
+        schedulePlacement();
 
         return this;
       },
 
       getVariant(): TextFieldVariant {
-        const PREFIX = component.config?.prefix || "mtrl";
-        const COMPONENT = component.config?.componentName || "text-field";
 
         if (
-          component.element.classList.contains(`${PREFIX}-${COMPONENT}--outlined`)
+          classes.contains(variantClass("outlined"))
         ) {
           return "outlined";
         }
@@ -109,9 +112,7 @@ export const withAPI =
       setLabel(text: string): TextFieldComponent {
         component.label?.setText(text);
         // Update positions after changing label
-        if (component.updateElementPositions) {
-          component.schedulePositionUpdate?.();
-        }
+        schedulePlacement();
         return this;
       },
 
@@ -133,9 +134,7 @@ export const withAPI =
         if (component.setLeadingIcon) {
           component.setLeadingIcon(html);
           // Update positions after changing icon
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -144,9 +143,7 @@ export const withAPI =
         if (component.removeLeadingIcon) {
           component.removeLeadingIcon();
           // Update positions after removing icon
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -165,9 +162,7 @@ export const withAPI =
         if (component.setTrailingIcon) {
           component.setTrailingIcon(html, label);
           // Update positions after changing icon
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -176,9 +171,7 @@ export const withAPI =
         if (component.removeTrailingIcon) {
           component.removeTrailingIcon();
           // Update positions after removing icon
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -188,19 +181,15 @@ export const withAPI =
       // component, so its supportingTextElement is a copy from when it was
       // spread; the element in the field is the one to report.
       get supportingTextElement(): HTMLElement | null {
-        return component.element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
+        return element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
       },
       setSupportingText(text: string, isError?: boolean): TextFieldComponent {
-        if (component.setSupportingText) {
-          component.setSupportingText(text, isError);
-        }
+        component.setSupportingText?.(text, isError);
         return this;
       },
 
       removeSupportingText(): TextFieldComponent {
-        if (component.removeSupportingText) {
-          component.removeSupportingText();
-        }
+        component.removeSupportingText?.();
         return this;
       },
 
@@ -218,9 +207,7 @@ export const withAPI =
         if (component.setPrefixText) {
           component.setPrefixText(text);
           // Update positions after changing prefix
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -229,9 +216,7 @@ export const withAPI =
         if (component.removePrefixText) {
           component.removePrefixText();
           // Update positions after removing prefix
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -250,9 +235,7 @@ export const withAPI =
         if (component.setSuffixText) {
           component.setSuffixText(text);
           // Update positions after changing suffix
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -261,9 +244,7 @@ export const withAPI =
         if (component.removeSuffixText) {
           component.removeSuffixText();
           // Update positions after removing suffix
-          if (component.updateElementPositions) {
-            component.schedulePositionUpdate?.();
-          }
+          schedulePlacement();
         }
         return this;
       },
@@ -271,9 +252,9 @@ export const withAPI =
       // Update positioning manually (useful after DOM updates)
       updatePositions(): TextFieldComponent {
         // Check for autofill before updating positions
-        if (component.input && component.element) {
+        if (component.input) {
           const hasValue =
-            component.input.value && component.input.value.length > 0;
+            component.input.value;
           let isAutofilled = false;
           try {
             isAutofilled = component.input.matches?.(":-webkit-autofill") || false;
@@ -282,28 +263,19 @@ export const withAPI =
           }
 
           // Update empty state based on value or autofill
-          if (hasValue || isAutofilled) {
-            component.element.classList.remove(
-              `${component.config?.prefix || "mtrl"}-text-field--empty`
-            );
-          } else {
-            component.element.classList.add(
-              `${component.config?.prefix || "mtrl"}-text-field--empty`
-            );
-          }
+          classes.toggle(
+            `${fieldClass}--empty`,
+            !(hasValue || isAutofilled)
+          );
         }
 
-        if (component.updateElementPositions) {
-          component.updateElementPositions();
-        }
+        component.updateElementPositions?.();
         return this;
       },
 
       // Error state management
       setError(error: boolean, message?: string): TextFieldComponent {
-        if (component.setError) {
-          component.setError(error, message);
-        }
+        component.setError?.(error, message);
         return this;
       },
 
@@ -313,9 +285,7 @@ export const withAPI =
 
       // Density management
       setDensity(density: string): TextFieldComponent {
-        if (component.density?.set) {
-          component.density.set(density);
-        }
+        component.density?.set?.(density);
         // The density feature runs before placement exists, so its own call to
         // re-place never reached it; ask here, as the other setters do
         component.schedulePositionUpdate?.();
@@ -329,6 +299,16 @@ export const withAPI =
       // Event handling
       on<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.on?.(event, handler);
+        // warnDev retains its defensive environment guard. The pure probe keeps raw
+        // ESM safe; the separate literal check lets bundlers erase the entire branch,
+        // including its try/catch, in production.
+        if (event === "trailing" && /*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+          // Keep the bridge identity on the owned root only in development, so
+          // production has no otherwise-unused per-instance warning state.
+          const host = (handler as typeof handler & { __h?: HTMLElement }).__h;
+          if (host) (element as HTMLElement & { __h?: HTMLElement }).__h = host;
+          else if (component.trailingIcon?.tagName === "SPAN") checkTrailingLabel((element as HTMLElement & { __h?: HTMLElement }).__h ?? element);
+        }
         return this;
       },
 
@@ -374,3 +354,12 @@ export const withAPI =
       },
     };
   };
+
+const warned = /*#__PURE__*/ new WeakSet<HTMLElement>();
+/** Development diagnostic, shared by the factory and its element host. */
+export const checkTrailingLabel = (element: HTMLElement): void => {
+  if (!warned.has(element)) {
+    warned.add(element);
+    warnDev('text-field', 'Set trailingIconLabel/trailing-icon-label');
+  }
+};
