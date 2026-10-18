@@ -31,8 +31,8 @@ export const colorBlocks = (css: string) => {
 };
 export const standardRoles = (css: string, theme: string, dark: boolean): Record<string, string> => {
   const blocks = colorBlocks(css);
-  const light = blocks.find(b => b.selector === `[data-theme=${theme}]` || (theme === 'baseline' && b.selector === ':root'))!;
-  const night = blocks.find(b => b.selector === `[data-theme=${theme}][data-theme-mode=dark]` || (theme === 'baseline' && b.selector === '.dark-theme'))!;
+  const light = blocks.find(b => b.selector === `[data-theme=${theme}]` || (theme === 'baseline' && b.selector === ':where(:root)'))!;
+  const night = blocks.find(b => b.selector === `[data-theme=${theme}][data-theme-mode=dark]` || (theme === 'baseline' && b.selector === ':where(.dark-theme)'))!;
   return { ...light.roles, ...(dark ? night.roles : {}) };
 };
 export const resolvedColorBody = (css: string, theme: string, selector: string, body: string): string => {
