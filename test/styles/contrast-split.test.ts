@@ -150,6 +150,9 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_tooltip.scss).
     // A card header that is the card's last child keeps the 16px padding
     // (styles/components/_card.scss).
+    // A tab's badge sits on the tab's icon (6dp overlap) or label (4dp gap), the
+    // anchor it wraps inside the button, not at the button's corner
+    // (styles/components/_tabs.scss). It mirrors under [dir='rtl'] (the same file).
     // A collapsed rail header supplies the extended FAB compact presentation
     // through an inherited property, including across its shadow root
     // (styles/components/_navigation-rail.scss, styles/components/_extended-fab.scss).
@@ -157,8 +160,8 @@ describe("explicit contrast levels are opt-in", () => {
     // a selected theme outranks them in any import order while undeclared
     // roles still inherit (styles/themes/_baseline.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("f2528534d3a55184a5d4a91b7b180c306ba54a1327a8859b368b3c1fccbd7de7");
-    expect(css.length).toBe(529789);
+      .toBe("5408d373fdea9ff19dce540dc53bb1103a3b207c11c4b5f58330f1303a85398e");
+    expect(css.length).toBe(530160);
   });
 
   test("today's sheets still resolve to the fixture", () => {
