@@ -108,13 +108,12 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       button.element.addEventListener(type, (event) => baseComponent.emit?.(type, event));
     }
 
-    // The badge goes on the tab's icon, else its label, as the tabs specs anchor
-    // it. Both sit inside the button, so the anchor has a parent whether or not
-    // the tab is in the list yet.
+    // The badge's anchor: the icon, else the label (the icon comes first in the
+    // button), both inside it, so the anchor has a parent before the tab is listed.
     const badgeAnchor = (): HTMLElement =>
-      button.element.querySelector<HTMLElement>(`.${baseComponent.getClass("button__icon")}`) ??
-      button.element.querySelector<HTMLElement>(`.${baseComponent.getClass("button__text")}`) ??
-      button.element;
+      button.element.querySelector<HTMLElement>(
+        `.${baseComponent.getClass("button__icon")},.${baseComponent.getClass("button__text")}`
+      ) ?? button.element;
 
     // Create the tab component with enhanced API
     const tab: TabComponent = {
@@ -222,16 +221,10 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       // Badge methods
       setBadge(content) {
         if (!this.badge) {
-          // The badge goes on the tab's icon, else its label, as the tabs specs
-          // anchor it, not around the whole button. Both sit inside the button,
-          // so the target has a parent whether or not the tab is in the list yet
-          // (withAttachment places a badge only against a parented target), and
-          // the button stays the row's flex item.
-          const anchor = badgeAnchor();
           const badgeConfig = {
             label: content,
             standalone: false,
-            target: anchor,
+            target: badgeAnchor(),
             prefix: baseConfig.prefix,
             ...(baseConfig.badgeConfig || {}),
           };
@@ -308,12 +301,11 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         // the rest. What stood here could never set a name (icon-only means no
         // text) and removed the one `ariaLabel` gave.
 
-        // The badge wraps the icon, else the label, and the tab can lose or gain
-        // its icon after the badge was placed: wrapped in what is there now.
+        // The tab can lose or gain its icon: wrap what it holds now.
         const wrapper = this.badge?.wrapper;
         const anchor = badgeAnchor();
         if (wrapper && anchor !== this.element && wrapper.firstElementChild !== anchor) {
-          wrapper.replaceWith(...Array.from(wrapper.childNodes));
+          wrapper.replaceWith(...wrapper.childNodes);
           this.badge?.attachTo(anchor);
         }
       },
