@@ -157,9 +157,12 @@ describe("explicit contrast levels are opt-in", () => {
     // A collapsed rail header supplies the extended FAB compact presentation
     // through an inherited property, including across its shadow root
     // (styles/components/_navigation-rail.scss, styles/components/_extended-fab.scss).
+    // Baseline's defaults sit in `:where(:root)` and `:where(.dark-theme)`, so
+    // a selected theme outranks them in any import order while undeclared
+    // roles still inherit (styles/themes/_baseline.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("bd91c26b51bf3eefbec3dbdb73de638e232c821d55f4c5598319966852e759ee");
-    expect(css.length).toBe(530419);
+      .toBe("112dd0c19fb3a57b987767fb178be8c2f01991385645849f9203dc669c92fcb9");
+    expect(css.length).toBe(530443);
   });
 
   test("today's sheets still resolve to the fixture", () => {
