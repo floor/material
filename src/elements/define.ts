@@ -566,7 +566,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
         };
-        if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") Object.assign(handler, { __bridge: this });
+        if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") Object.assign(handler, { __h: this });
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));
       }

@@ -36,10 +36,13 @@ type ComponentWithDensity = BaseComponent & {
 export const withAPI =
   ({ disabled, lifecycle }: ApiOptions) =>
   (component: ComponentWithDensity): TextFieldComponent => {
+    // The field keeps its root and token list throughout its lifetime.
+    const element = component.element;
+    const classes = element.classList;
     // The element bridge supplies a stable identity across rebuilds, before any
     // application subscription; factory-only fields use their own root element.
     let warningHost: HTMLElement | undefined;
-    const variantClass = (variant: TextFieldVariant): string => `${component.config?.prefix || "mtrl"}-${component.config?.componentName || "text-field"}--${variant}`;
+    const variantClass = (variant: TextFieldVariant): string => component.getClass(`${component.config?.componentName || "text-field"}--${variant}`);
     const schedulePlacement = (): void => {
       if (component.updateElementPositions) component.schedulePositionUpdate?.();
     };
@@ -50,10 +53,10 @@ export const withAPI =
       if (icon?.tagName === "BUTTON") (icon as HTMLButtonElement).disabled = off;
     };
     return {
-      element: component.element,
+      element: element,
       // The container under the root: what a menu or popover anchors to, so the
       // supporting text row never pushes it down
-      field: component.field ?? component.element,
+      field: component.field ?? element,
       input: component.input as HTMLInputElement | HTMLTextAreaElement,
 
       // Value management
@@ -82,13 +85,13 @@ export const withAPI =
       setVariant(variant: TextFieldVariant): TextFieldComponent {
 
         // Remove existing variant classes
-        component.element.classList.remove(
+        classes.remove(
           variantClass("filled"),
           variantClass("outlined")
         );
 
         // Add the new variant class
-        component.element.classList.add(variantClass(variant));
+        classes.add(variantClass(variant));
 
         // Update positioning after variant change
         schedulePlacement();
@@ -99,7 +102,7 @@ export const withAPI =
       getVariant(): TextFieldVariant {
 
         if (
-          component.element.classList.contains(variantClass("outlined"))
+          classes.contains(variantClass("outlined"))
         ) {
           return "outlined";
         }
@@ -180,7 +183,7 @@ export const withAPI =
       // component, so its supportingTextElement is a copy from when it was
       // spread; the element in the field is the one to report.
       get supportingTextElement(): HTMLElement | null {
-        return component.element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
+        return element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
       },
       setSupportingText(text: string, isError?: boolean): TextFieldComponent {
         component.setSupportingText?.(text, isError);
@@ -262,8 +265,8 @@ export const withAPI =
           }
 
           // Update empty state based on value or autofill
-          component.element.classList.toggle(
-            `${component.config?.prefix || "mtrl"}-text-field--empty`,
+          classes.toggle(
+            component.getClass("text-field--empty"),
             !(hasValue || isAutofilled)
           );
         }
@@ -301,10 +304,10 @@ export const withAPI =
         // warnDev retains its defensive environment guard. The pure probe keeps raw
         // ESM safe; the separate literal check lets bundlers erase the entire branch,
         // including its try/catch, in production.
-        if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production" && event === "trailing") {
-          const host = (handler as typeof handler & { __bridge?: HTMLElement }).__bridge;
+        if (event === "trailing" && /*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+          const host = (handler as typeof handler & { __h?: HTMLElement }).__h;
           if (host) warningHost = host;
-          else if (component.trailingIcon?.tagName === "SPAN") checkTrailingLabel(warningHost ?? component.element);
+          else if (component.trailingIcon?.tagName === "SPAN") checkTrailingLabel(warningHost ?? element);
         }
         return this;
       },
@@ -355,7 +358,8 @@ export const withAPI =
 const warned = /*#__PURE__*/ new WeakSet<HTMLElement>();
 /** Development diagnostic, shared by the factory and its element host. */
 export const checkTrailingLabel = (element: HTMLElement): void => {
-  if (warned.has(element)) return;
-  warned.add(element);
-  warnDev('text field', 'Missing trailingIconLabel / trailing-icon-label.');
+  if (!warned.has(element)) {
+    warned.add(element);
+    warnDev('text-field', 'Set trailingIconLabel/trailing-icon-label');
+  }
 };
