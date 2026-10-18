@@ -566,9 +566,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
         };
-        try {
-          if (process.env.NODE_ENV !== "production") Object.assign(handler, { __mtrlBridge: true });
-        } catch { /* Raw browser ESM has no process. */ }
+        if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") Object.assign(handler, { __bridge: this });
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));
       }
@@ -727,15 +725,14 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
   }
 
-  try {
-    if (process.env.NODE_ENV !== "production") {
-      const add = MElement.prototype.addEventListener;
-      MElement.prototype.addEventListener = function (this: MElement, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-        Reflect.apply(add, this, [type, listener, options]);
-        if (listener) spec.events?.[type]?.listen?.(this);
-      };
-    }
-  } catch { /* Raw browser ESM has no process. */ }
+  // Keep the raw-ESM environment probe removable together with this dev-only hook.
+  if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+    const add = MElement.prototype.addEventListener;
+    MElement.prototype.addEventListener = function (this: MElement, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
+      Reflect.apply(add, this, [type, listener, options]);
+      if (listener) spec.events?.[type]?.listen?.(this);
+    };
+  }
 
   const proto = MElement.prototype as unknown as Record<string, unknown>;
   for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {

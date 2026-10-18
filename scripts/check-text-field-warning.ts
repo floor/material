@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { chromium, type Browser } from "playwright";
+import { build as buildVite } from "vite";
 import type { WarningRow } from "./fixtures/text-field-warning/client";
 import { createPackageFixture } from "./package-fixture";
 
@@ -42,17 +43,29 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
   if (!source) {
     const fixture = await createPackageFixture();
     try {
-      const entry = resolve(fixture.directory, "all-js.ts");
-      await writeFile(entry, "export * from 'material';");
-      for (const mode of ["default", "production"] as const) {
-        const result = await Bun.build({ entrypoints: [entry], format: "esm", target: "browser", minify: true,
-          define: mode === "production" ? { "process.env.NODE_ENV": '"production"' } : {},
-        });
-        assert(result.success && result.outputs.length === 1, String(result.logs));
-        const code = await result.outputs[0].text();
-        const diagnosticIncluded = code.includes("Missing trailingIconLabel");
-        console.log(`warning all-js ${mode}: ${JSON.stringify({ raw: Buffer.byteLength(code), gzip: gzipSync(code, { level: 9 }).length, diagnosticIncluded })}`);
-        if (mode === "production") assert(!diagnosticIncluded, "root production bundle strips the diagnostic");
+      for (const [name, source] of [["all-js", "export * from 'material';"], ["text-field", "export { createTextField } from 'material';"]]) {
+        const entry = resolve(fixture.directory, `${name}.ts`);
+        await writeFile(entry, source);
+        for (const mode of ["default", "production"] as const) {
+          const result = await Bun.build({ entrypoints: [entry], format: "esm", target: "browser", minify: true,
+            define: mode === "production" ? { "process.env.NODE_ENV": '"production"' } : {},
+          });
+          assert(result.success && result.outputs.length === 1, String(result.logs));
+          const code = await result.outputs[0].text();
+          const diagnosticIncluded = code.includes("Missing trailingIconLabel");
+          console.log(`warning ${name} ${mode}: ${JSON.stringify({ raw: Buffer.byteLength(code), gzip: gzipSync(code, { level: 9 }).length, diagnosticIncluded })}`);
+          if (mode === "production") assert(!diagnosticIncluded, `${name} production bundle strips the diagnostic`);
+        }
+        if (name === "text-field") {
+          const result = await buildVite({ root: fixture.directory, configFile: false, envFile: false, logLevel: "error",
+            define: { "process.env.NODE_ENV": '"production"' }, build: { write: false, minify: true, lib: { entry, formats: ["es"] } },
+          });
+          assert(!("on" in result), "Unexpected Vite watcher");
+          const chunks = (Array.isArray(result) ? result : [result]).flatMap(output => output.output).filter(output => output.type === "chunk");
+          const diagnosticIncluded = chunks.some(chunk => chunk.code.includes("Missing trailingIconLabel"));
+          console.log(`warning text-field Vite production: ${JSON.stringify({ gzip: chunks.reduce((sum, chunk) => sum + gzipSync(chunk.code, { level: 9 }).length, 0), diagnosticIncluded })}`);
+          assert(!diagnosticIncluded, "Vite production bundle strips the diagnostic");
+        }
       }
     } finally { await fixture.cleanup(); }
   }
