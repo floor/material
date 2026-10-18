@@ -2,6 +2,25 @@ import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
 import { readdir } from "node:fs/promises";
 
+/** Drop runtime prose without losing the annotations consumers need for tree shaking. */
+export function printRuntimeModule(filename: string, text: string): string {
+  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  const comments = new Map<number, number>();
+  function visit(node: ts.Node): void {
+    for (const position of [node.pos, node.end]) {
+      for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
+        if (!/[@#]__PURE__/.test(text.slice(range.pos, range.end))) comments.set(range.pos, range.end);
+      }
+    }
+    node.getChildren(file).forEach(visit);
+  }
+  visit(file);
+  for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
+    text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
+  }
+  return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
+}
+
 /** Emit the original module graph so consumers can tree-shake and code-split it. */
 export function buildModules(outdir: string) {
   const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
@@ -68,14 +87,12 @@ export function buildModules(outdir: string) {
     for (const edit of edits.sort((a, b) => b.start - a.start)) {
       text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
     }
-    // The printer drops every comment, `/*#__PURE__*/` too, and bundlers need
-    // it to drop an unused adapter component: a module carrying one
-    // keeps the compiler's output, which is only the generated header there.
-    if (filename.endsWith(".js") && !text.includes("#__PURE__")) {
+    if (filename.endsWith(".js")) {
       // Avoid shipping API prose twice while keeping ESM readable for debugging.
-      text = ts.createPrinter({ removeComments: true }).printFile(
-        ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
-      );
+      text = text.includes("__PURE__") ? printRuntimeModule(filename, text)
+        : ts.createPrinter({ removeComments: true }).printFile(
+          ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
+        );
     }
     ts.sys.writeFile(filename, text);
   });

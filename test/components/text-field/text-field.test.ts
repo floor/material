@@ -166,6 +166,22 @@ describe('text-field', () => {
     expect(field.getDensity()).toBe('default');
   });
 
+  test('variant and empty-state classes stay in sync after API updates', () => {
+    const field = mount({ label: 'Email' });
+    // JSDOM does not model autofill; hold it absent for this state transition.
+    field.input.matches = () => false;
+    field.setVariant('outlined').updatePositions();
+    expect(field.getVariant()).toBe('outlined');
+    expect(field.element.classList.contains('mtrl-text-field--outlined')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--filled')).toBe(false);
+    field.setValue('hello').updatePositions().setVariant('filled');
+    expect(field.getVariant()).toBe('filled');
+    expect(field.element.classList.contains('mtrl-text-field--filled')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--outlined')).toBe(false);
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(false);
+  });
+
   test('setAttribute, getAttribute and removeAttribute act on the input', () => {
     const field = mount({ label: 'x' });
     field.setAttribute('autocomplete', 'email');
