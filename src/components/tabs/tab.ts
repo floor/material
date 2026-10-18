@@ -108,6 +108,13 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       button.element.addEventListener(type, (event) => baseComponent.emit?.(type, event));
     }
 
+    // The badge's anchor: the icon, else the label (the icon comes first in the
+    // button), both inside it, so the anchor has a parent before the tab is listed.
+    const badgeAnchor = (): HTMLElement =>
+      button.element.querySelector<HTMLElement>(
+        `.${baseComponent.getClass("button__icon")},.${baseComponent.getClass("button__text")}`
+      ) ?? button.element;
+
     // Create the tab component with enhanced API
     const tab: TabComponent = {
       ...baseComponent,
@@ -217,7 +224,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           const badgeConfig = {
             label: content,
             standalone: false,
-            target: this.element,
+            target: badgeAnchor(),
             prefix: baseConfig.prefix,
             ...(baseConfig.badgeConfig || {}),
           };
@@ -293,6 +300,14 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         // An icon-only tab is named by `ariaLabel`; a visually hidden label names
         // the rest. What stood here could never set a name (icon-only means no
         // text) and removed the one `ariaLabel` gave.
+
+        // The tab can lose or gain its icon: wrap what it holds now.
+        const wrapper = this.badge?.wrapper;
+        const anchor = badgeAnchor();
+        if (wrapper && anchor !== this.element && wrapper.firstElementChild !== anchor) {
+          wrapper.replaceWith(...wrapper.childNodes);
+          this.badge?.attachTo(anchor);
+        }
       },
     };
 

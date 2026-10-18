@@ -89,7 +89,13 @@ const tabsSpec = {
   name: "tabs",
   create: (config) => createTabs(config as TabsConfig),
   styles: ["badge", "progress", "button", "tabs"],
-  hostStyles: ":host{display:block}",
+  // A `dir` on the page does not reach the [dir='rtl'] mirror of the tab badges
+  // (styles/components/_tabs.scss) inside the shadow root; the host's direction
+  // does. Not in the component sheet: a bundler lowers :dir() into :lang() lists.
+  hostStyles:
+    ":host{display:block}" +
+    ":host(:dir(rtl)) :is(.mtrl-tab--icon-only,.mtrl-tab--icon-and-text) .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% - 6px);left:auto}" +
+    ":host(:dir(rtl)) .mtrl-tab--text-only .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% + 4px);left:auto}",
   attributes: {
     variant: { type: "string", config: "variant" },
     value: { type: "string" },

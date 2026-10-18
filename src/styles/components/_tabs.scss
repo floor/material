@@ -291,21 +291,30 @@ $container: "#{base.$prefix}-tabs";
         @include m.visually-hidden;
     }
 
-    // Badge positioning (2. Badge - optional). The layout modifier is on the tab
-    // itself, so these hang off &, not off a nested tab.
-    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 4px;
-        right: 4px;
+    // Badge on the icon, else the label (tab.ts): 6dp over the icon, 4dp after the
+    // label, mirrored in RTL (m3.material.io/components/{tabs/specs,badges/guidelines}).
+    &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right,
+    &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
+        top: 0;
+        right: auto;
+        left: calc(100% - 6px);
+
+        @include m.rtl {
+            right: calc(100% - 6px);
+            left: auto;
+        }
     }
 
     &--text-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 8px;
-        right: 8px;
-    }
+        top: 50%;
+        right: auto;
+        left: calc(100% + 4px);
+        transform: translateY(-50%);
 
-    &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
-        top: 4px;
-        right: calc(50% - 20px);
+        @include m.rtl {
+            right: calc(100% + 4px);
+            left: auto;
+        }
     }
 
     // ACTIVE TAB STATES - PRIMARY VARIANT
