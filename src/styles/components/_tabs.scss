@@ -9,17 +9,6 @@
 $component: "#{base.$prefix}-button.#{base.$prefix}-tab";
 $container: "#{base.$prefix}-tabs";
 
-// Right to left: an ancestor's dir, which needs no script, and --rtl on the tabs,
-// which tabs/features.ts sets from the computed direction for tabs in a shadow
-// root, where a dir outside it does not reach. Physical sides, as a bundler
-// lowers a logical inset and :dir() into :lang() lists that miss dir="rtl".
-@mixin mirrored {
-    [dir='rtl'] &,
-    .#{$container}--rtl & {
-        @content;
-    }
-}
-
 // Tabs Container Styles (1. Container)
 .#{$container} {
     position: relative;
@@ -302,20 +291,15 @@ $container: "#{base.$prefix}-tabs";
         @include m.visually-hidden;
     }
 
-    // Badge positioning (2. Badge - optional). The badge wraps the tab's icon, else
-    // its label, inside the button (tab.ts), so the wrapper is the anchor box.
-    // m3.material.io/components/tabs/specs, Measurements: "Padding between inline
-    // text and badge 4dp" and "Overlap of badge on stacked icon 6dp".
-    // Measured from the anchor's inline end, so it mirrors in right-to-left:
-    // m3.material.io/components/badges/guidelines, "Change the position of the badge
-    // for right-to-left languages." Mirrored below, under [dir='rtl'] or --rtl.
+    // Badge on the icon, else the label (tab.ts): 6dp over the icon, 4dp after the
+    // label, mirrored in RTL (m3.material.io/components/{tabs/specs,badges/guidelines}).
     &--icon-only .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right,
     &--icon-and-text .#{base.$prefix}-badge__wrapper .#{base.$prefix}-badge--top-right {
         top: 0;
         right: auto;
         left: calc(100% - 6px);
 
-        @include mirrored {
+        @include m.rtl {
             right: calc(100% - 6px);
             left: auto;
         }
@@ -327,7 +311,7 @@ $container: "#{base.$prefix}-tabs";
         left: calc(100% + 4px);
         transform: translateY(-50%);
 
-        @include mirrored {
+        @include m.rtl {
             right: calc(100% + 4px);
             left: auto;
         }

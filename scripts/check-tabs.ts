@@ -439,7 +439,7 @@ try {
   // <m-tabs> takes its direction from the page, not from an attribute of its
   // own: rtl on the document, or on the container it sits in. The element's tabs
   // live in a shadow root, which a `dir` outside it does not reach by selector.
-  const elementRtl: Array<{ name: string; direction: string; m: Measured | undefined }> = [];
+  const elementRtl: Array<{ name: string; direction: string; expected: "ltr" | "rtl"; m: Measured | undefined }> = [];
   for (const where of ["html", "container"]) {
     for (const stackedRow of [false, true]) {
       const rtlPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
@@ -448,12 +448,19 @@ try {
       await rtlPage.waitForFunction(() =>
         !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
         !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
-      await rtlPage.waitForTimeout(300);
-      elementRtl.push({
-        name: `<m-tabs> under ${where} dir=rtl, ${stackedRow ? "stacked" : "inline"}`,
-        direction: await rtlPage.evaluate(() => getComputedStyle(document.querySelector("m-tabs")!).direction),
-        m: (await rtlPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0],
-      });
+      // No resize or rebuild: native host directionality also follows live dir changes.
+      for (const [step, dir] of (["rtl", "ltr", "rtl"] as const).entries()) {
+        await rtlPage.evaluate(({ where, dir }) => {
+          (where === "html" ? document.documentElement : document.querySelector("main")!).setAttribute("dir", dir);
+        }, { where, dir });
+        await rtlPage.waitForTimeout(100);
+        elementRtl.push({
+          name: `<m-tabs> under ${where} dir=${dir} step ${step}, ${stackedRow ? "stacked" : "inline"}`,
+          direction: await rtlPage.evaluate(() => getComputedStyle(document.querySelector("m-tabs")!).direction),
+          expected: dir,
+          m: (await rtlPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0],
+        });
+      }
       await rtlPage.close();
     }
   }
@@ -520,10 +527,10 @@ try {
   soft("icon attribute removed", () => sits("m-tab icon attribute removed", elementIconRemoved as Measured, "label"));
   soft("icon attribute added", () => sits("m-tab icon attribute added", elementIconAdded as Measured, "icon"));
   soft("element starts stacked", () => sits("m-tab icon attribute at the start", elementStacked as Measured, "icon"));
-  for (const { name, direction, m } of elementRtl) {
+  for (const { name, direction, expected, m } of elementRtl) {
     soft(name, () => {
-      assert.equal(direction, "rtl", `${name}: computed direction`);
-      sits(name, m as Measured, name.endsWith("stacked") ? "icon" : "label", "rtl");
+      assert.equal(direction, expected, `${name}: computed direction`);
+      sits(name, m as Measured, name.endsWith("stacked") ? "icon" : "label", expected);
     });
   }
   console.log(`<m-tabs> RTL: ${elementRtl.map(({ name, m }) => `${name} badge ${JSON.stringify(m?.badge)} anchor ${JSON.stringify(m?.anchor)}`).join("; ")}`);

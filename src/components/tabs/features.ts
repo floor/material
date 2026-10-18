@@ -398,24 +398,8 @@ export const withIndicator =
       scrollContainer.addEventListener("scroll", updateIndicator);
     }
 
-    // Watch for window resize to update indicator, and for tabs in a shadow root
-    // to take their direction: a dir outside it cannot match [dir='rtl'], so the
-    // stylesheet also matches --rtl. In the light DOM [dir] reaches it, and a class
-    // would outlast a later direction.
-    const mirror = () => {
-      const root = component.element;
-      root.classList.toggle(
-        `${config.prefix}-tabs--rtl`,
-        !!(root.getRootNode() as ShadowRoot).host && getComputedStyle(root).direction === "rtl"
-      );
-    };
-    const resizeObserver =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => {
-            mirror();
-            updateIndicator();
-          })
-        : null;
+    // Watch for window resize to update indicator
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateIndicator) : null;
 
     resizeObserver?.observe(scrollContainer);
 
