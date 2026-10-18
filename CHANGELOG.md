@@ -17,6 +17,55 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-10-18
+
+Components that tell you what's wrong.
+
+### Features
+
+- **A text field with a `trailing` listener but an unlabeled trailing icon now warns in
+  development (#100).**
+  The trailing icon's click only reaches an application when the icon is a button, and a button
+  needs a name: registering a `trailing` listener — a factory or config callback, or a listener
+  added straight on `<m-text-field>` — without setting `trailingIconLabel` /
+  `trailing-icon-label` prints one warning that says to set it. The warning is shared across
+  subscriptions, rebuilds and reconnects, and the element's own bridge does not count as an
+  application listener. Production builds carry none of it: the diagnostic and its state are
+  stripped, so it costs no bytes and no runtime in what you ship.
+
+- **`<m-split-button>` dispatches `open` and `close` when its menu opens and closes (#99).**
+  The same names `<m-menu>` and `<m-fab-menu>` already use, with an empty detail, fired from the
+  host as the trailing button's menu expands and collapses: once per transition, whether the
+  close comes from choosing an item, Escape or a click outside. `select` with its `{ value }`
+  payload, the leading button's native `click` and the factory surface are unchanged, and no
+  attribute or method is added.
+
+### Fixes
+
+- **A badge given in a tab's config is attached, and it mirrors in RTL (#92).**
+  A badge configured on a tab was dropped before; it now wraps the tab's icon, or its label when
+  there is no icon, inside the button, so fixed tab rows keep their widths. The badge mirrors to
+  the correct side in right-to-left, including in `<m-tabs>` under an inherited direction —
+  `<html dir="rtl">` or a `dir="rtl"` container — through native `:host(:dir(rtl))` rules, with
+  no observer or listener, following live `dir` changes.
+
+- **Baseline's `:root` defaults no longer override a selected theme, in any import order (#101).**
+  Baseline emitted its light and dark defaults on `:root` and `.dark-theme` unconditionally, and
+  `:root` and `[data-theme="name"]` share specificity, so an app compiling the theme partials
+  with baseline after its own themes got baseline's colours on themed pages — including
+  baseline's dark palette under a dark OS preference. The defaults are now emitted at zero
+  specificity (`:where(:root)`, `:where(.dark-theme)`): a selected theme always wins, while the
+  roles a theme does not declare still inherit from baseline, and an unthemed page is unchanged.
+
+### Internal
+
+- **CI fails loudly when npm's `next` dist-tag falls behind `latest` (#94).**
+  A `dist-tags` job runs after every publish and re-reads the registry, failing the run — never
+  the publish, and never skipping the GitHub Release — when `material@next` would install an
+  older build than `material@latest`. The same check runs locally with
+  `bun run check:dist-tags` (or against a saved state with `--tags <file>`). CI only; nothing in
+  the package changed.
+
 ## [3.1.0] - 2026-10-16
 
 ### Added
@@ -3979,7 +4028,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/floor/material/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/floor/material/compare/v3.0.6...v3.1.0
 [3.0.6]: https://github.com/floor/material/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/floor/material/compare/v3.0.4...v3.0.5
