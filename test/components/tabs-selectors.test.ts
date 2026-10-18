@@ -108,12 +108,14 @@ describe('tabs: the stylesheet targets classes the component emits', () => {
 
   test('the badge offsets hang off the tab itself, for all three layouts', () => {
     const badgeRules = selectors().filter((s) => /badge--top-right/.test(s));
-    // Each layout has its own rule and its mirror under [dir=rtl].
-    const mirrored = badgeRules.filter((s) => /^\[dir=/.test(s));
+    // Each layout has its own rule and its mirror, under [dir=rtl] and under the
+    // tabs' --rtl (a tab in a shadow root, which a dir outside it does not reach).
+    const mirror = /^(\[dir=[^\]]*\]|\.mtrl-tabs--rtl) /;
+    const mirrored = badgeRules.filter((s) => mirror.test(s));
     expect(badgeRules.length - mirrored.length).toBe(3);
-    expect(mirrored.length).toBe(3);
+    expect(mirrored.length).toBe(6);
     for (const rule of badgeRules) {
-      const selector = rule.replace(/^\[dir=[^\]]*\] /, '');
+      const selector = rule.replace(mirror, '');
       expect(/mtrl-tab--(icon-only|text-only|icon-and-text)/.test(selector)).toBe(true);
       expect((selector.match(/mtrl-button\.mtrl-tab/g) ?? []).length).toBeLessThanOrEqual(1);
     }
