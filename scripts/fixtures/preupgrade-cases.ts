@@ -24,6 +24,11 @@ export interface PreupgradeCase {
   /** Define button/text-field neighbours before measuring a switch upgrade. */
   prepareNeighbors?: boolean;
   strictBox?: boolean;
+  /**
+   * The host's own height, whatever the page's typography: the control's box
+   * that the upgraded host and its pre-upgrade rule must both be.
+   */
+  hostHeight?: number;
   knownMoves?: readonly KnownMove[];
 }
 
@@ -299,6 +304,33 @@ for (const dir of ["ltr", "rtl"]) {
         html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
         strictBox: true,
       });
+    }
+  }
+}
+
+// The upgraded host is the control's own flex box: neither its box nor the
+// baseline of a neighbour on its line may follow the page's line height.
+// Every host, both directions, in inline flow and in a baseline flex row.
+const ownBoxHosts: Record<string, number> = {
+  "icon-button": 40, "button-group": 40, "split-button": 40, datepicker: 96, checkbox: 48, select: 56,
+};
+for (const [element, height] of Object.entries(ownBoxHosts)) {
+  const row = cases.find(c => c.element === element && c.variant === "default")!;
+  for (const dir of ["ltr", "rtl"]) {
+    for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+      const [size, line] = typography.split("/");
+      const style = typography === "default" ? "" : `font-size:${size}px;line-height:${line}`;
+      for (const layout of ["inline", "baseline"]) {
+        const inline = layout === "inline";
+        const host = row.html.replace(`<m-${element}`, `<m-${element} id="subject"`);
+        cases.push({
+          element, variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
+          html: `<div dir="${dir}" style="${inline ? "" : "display:flex;gap:16px;align-items:baseline"}">${inline ? '<span id="lead">Text before </span>' : ""}${host}${inline ? '<span id="next"> text after</span>' : '<m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field>'}</div>`,
+          style, width: 850, host: "#subject", strictBox: true, hostHeight: height,
+          siblings: inline ? ["#lead", "#next", "#inline", "#block"] : ["#button", "#field", "#inline", "#block"],
+          prepareNeighbors: !inline,
+        });
+      }
     }
   }
 }
