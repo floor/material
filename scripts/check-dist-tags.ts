@@ -21,10 +21,10 @@
  * always has. Without it, they come from the registry's abbreviated
  * packument, the same metadata `npm dist-tag` and `npm install` read (no npm
  * CLI needed), whose version keys tell whether a prerelease above `latest`
- * exists. The registry can still answer with the previous tags right after a
- * publish, so the registry path re-reads a few times with a wait between and
- * fails only when the tags are still misleading after the last read; the total
- * wait stays under about two minutes.
+ * exists. The registry can answer with the previous tags for many minutes
+ * after a publish (a 2026-10-19 release took about twelve), so the registry
+ * path re-reads for up to fifteen minutes and fails only when the tags are
+ * still misleading after the last read.
  */
 
 export interface DistTags {
@@ -91,7 +91,7 @@ const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(r
 export interface CheckOptions {
   /** Reads in all, counting the first: 1 is "no retry" (the fixture path). */
   tries?: number;
-  /** The wait between reads; the default keeps five reads under two minutes. */
+  /** The wait between reads; the default keeps sixteen reads over fifteen minutes. */
   waitMs?: number;
   /** Injectable so a test does not wait. */
   sleep?: (ms: number) => Promise<void>;
@@ -110,14 +110,14 @@ export interface CheckResult {
 
 /**
  * Reads the packument until the tags are in order, at most `tries` times with
- * `waitMs` between reads. Right after `npm publish` the registry can answer
- * with the previous tags for a short while, and failing on that first stale
+ * `waitMs` between reads; the defaults re-read for fifteen minutes, because a
+ * publish can take that long to become visible. Failing on the first stale
  * read would fail a good publish; a `next` that is still behind after the last
  * read fails with the same message as before. A behind `next` that the
  * packument shows is stale passes at once: waiting cannot make it misleading.
  */
 export const checkTags = async (read: () => Promise<Packument>, options: CheckOptions = {}): Promise<CheckResult> => {
-  const { tries = 5, waitMs = 20_000, sleep: wait = sleep } = options;
+  const { tries = 16, waitMs = 60_000, sleep: wait = sleep } = options;
   let reads = 0;
   for (;;) {
     const packument = await read();
@@ -129,6 +129,10 @@ export const checkTags = async (read: () => Promise<Packument>, options: CheckOp
     await wait(waitMs);
   }
 };
+
+/** The line the registry path prints; the propagation note appears only after a re-read. */
+export const summaryLine = (result: CheckResult): string =>
+  `dist-tags: ${JSON.stringify(result.tags)}${result.reads > 1 ? ` (${result.reads} reads: the registry was still propagating)` : ""}`;
 
 /** A dist-tags JSON file, read once: a fixture is the whole answer, so no retry. */
 export const readTagsFile = async (path: string): Promise<DistTags> => {
@@ -155,7 +159,7 @@ if (import.meta.main) {
     }
   } else {
     const result = await checkTags(readPackument);
-    console.log(`dist-tags: ${JSON.stringify(result.tags)}${result.reads > 1 ? ` (${result.reads} reads: the registry was still propagating)` : ""}`);
+    console.log(summaryLine(result));
     if (result.skip) console.log(result.skip);
     if (result.problem) {
       console.error(result.problem);

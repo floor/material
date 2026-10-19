@@ -11,7 +11,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkTags, judgeNext, nextBehindLatest } from "../../scripts/check-dist-tags";
+import { checkTags, judgeNext, nextBehindLatest, summaryLine } from "../../scripts/check-dist-tags";
 
 /** The registry state of 2026-10-16 morning: next behind latest. */
 const MORNING = { legacy: "1.0.4", next: "3.0.0-next.1", latest: "3.0.5" };
@@ -141,5 +141,27 @@ describe("checkTags retries a lagging registry", () => {
     expect(result.problem).toBeUndefined();
     expect(calls).toBe(1);
     expect(result.reads).toBe(1);
+  });
+});
+
+describe("the propagation window", () => {
+  test("the default re-reads for fifteen minutes", async () => {
+    let calls = 0;
+    const waits: number[] = [];
+    const result = await checkTags(async () => (calls++, { tags: MORNING }), {
+      sleep: async ms => {
+        waits.push(ms);
+      },
+    });
+    expect(result.problem).toBeDefined();
+    expect(calls).toBe(16);
+    expect(waits).toEqual(Array(15).fill(60_000));
+    expect(waits.reduce((total, ms) => total + ms, 0)).toBe(15 * 60_000);
+  });
+
+  test("the summary keeps the propagation note only after a re-read", () => {
+    const base = { tags: MORNING, problem: undefined, skip: undefined };
+    expect(summaryLine({ ...base, reads: 1 })).not.toContain("reads:");
+    expect(summaryLine({ ...base, reads: 3 })).toContain("(3 reads: the registry was still propagating)");
   });
 });
