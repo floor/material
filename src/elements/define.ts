@@ -210,12 +210,70 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
  * Test/styles/reduced-motion.test.ts keeps the two copies equal.
  * @internal
  */
-export const BASE_HOST_STYLES =
-  ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
+const BASE_HOST_DISPLAY = ":host{display:inline-block}";
+const BASE_HOST_ALWAYS =
+  ":host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
   "@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility!important;scroll-behavior:auto!important}}";
+export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
 
-/** Internal shared host CSS, in browser cascade order. */
-export const hostStyleText = (spec: { hostStyles?: string }): string => BASE_HOST_STYLES + (spec.hostStyles ?? "");
+/**
+ * True when `hostStyles` carries an unconditional top-level rule with the bare
+ * `:host` selector whose block declares `display` — the element's own default
+ * display. Only such a rule counts: inside an at-rule block the declaration is
+ * conditional, and a conditional (`:host([dir])`) or descendant
+ * (`:host .label`) selector leaves the base declaration as the element's
+ * default elsewhere — neither makes it dead. Nested content inside the host block (an at-rule or a
+ * nesting selector) disqualifies it too, conservatively: with nesting present
+ * the base stays provably correct for the states the nested rules govern.
+ */
+const ownsHostDisplay = (hostStyles: string): boolean => {
+  // Comments and strings are scanned out first: a comment can carry a
+  // `}:host{display:…}` that no rule contains, and a quoted brace or
+  // semicolon would skew both the depth count and the declaration match.
+  const css = hostStyles
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, "");
+  let depth = 0;
+  for (let i = 0; i < css.length; i++) {
+    const char = css[i]!;
+    if (char === "{") { depth++; continue; }
+    if (char === "}") { depth--; continue; }
+    if (char !== ":" || depth !== 0 || !css.startsWith(":host", i)) continue;
+    // The selector must be the bare `:host` (not `:host(…)` or `:host .x`)
+    // starting its own top-level rule (not a compound like `x :host`).
+    let block = i + 5;
+    while (/\s/.test(css[block] ?? "")) block++;
+    if (css[block] !== "{") continue;
+    let before = i;
+    while (before > 0 && /\s/.test(css[before - 1]!)) before--;
+    if (before > 0 && css[before - 1] !== "}") continue;
+    // Conservative: only a closed, unnested block counts. A nested block —
+    // a nested at-rule or a nesting selector like `&[open]` — governs some
+    // states and not others, so beside it the base stays provably correct.
+    let flat = "";
+    let closed = false;
+    for (let j = block + 1; j < css.length; j++) {
+      const char2 = css[j]!;
+      if (char2 === "}") { closed = true; break; }
+      if (char2 === "{") { flat = ""; break; }
+      flat += char2;
+    }
+    if (closed && /(?:^|;)\s*display\s*:/.test(flat)) return true;
+  }
+  return false;
+};
+
+/**
+ * Internal shared host CSS, in browser cascade order. Beside a bare `:host`
+ * display rule the base display declaration is dead (the later rule wins at
+ * equal specificity) and would ride in every server-rendered root's inline
+ * sheet, so it is not shipped for such an element — today the button (#42)
+ * and the switch, whose inline-flex rule has made it dead since it landed.
+ */
+export const hostStyleText = (spec: { hostStyles?: string }): string => {
+  const own = spec.hostStyles ?? "";
+  return (ownsHostDisplay(own) ? BASE_HOST_ALWAYS : BASE_HOST_STYLES) + own;
+};
 
 // ---------------------------------------------------------------------------
 // Types derived from a spec, for the elements and the framework adapters.

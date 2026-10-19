@@ -241,15 +241,34 @@ for (const dir of ["ltr", "rtl"]) {
         });
       }
     }
-    // All controls upgrade together here: the button's own baseline is a
-    // separate follow-up, rather than a reason to weaken the switch-only rows.
+    // All controls upgrade together here, as on a real page: every one of them
+    // must hold the box and baseline it reserved, so no sibling move is known.
     cases.push({
       element: "switch", variant: `peer upgrades; ${dir}; baseline; ${typography}`,
       html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
       style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
-      knownMoves: [{ sibling: "#button", axis: "y",
-        value: ({ default: 1.296875, "12/1": 1.828125, "12/2": 1.828125, "24/1": -1.34375, "24/2": -7 } as Record<string, number>)[typography],
-        reason: "Button pre-upgrade baseline under consumer typography: floor/material#42." }],
+    });
+    // The same row with a leading icon: an inline-flex host exposes its first
+    // item's baseline, which is the icon's here, not the label's. Both sides of
+    // the upgrade must expose that one baseline, so the icon twin is measured
+    // beside the label twin rather than assumed to agree with it.
+    cases.push({
+      element: "switch", variant: `peer upgrades; ${dir}; baseline; ${typography}; button icon`,
+      html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button" icon="${ICON}">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
+      style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
+    });
+  }
+  // The baseline move scales with the control's height: 1.3 px at xs growing
+  // to 7.3 px at xl on main (floor/material#50's measurements — the offset
+  // between an inline-block's last-line baseline and the reserved box's
+  // first-item baseline grows as the label sits further from either edge).
+  // Measure each size's twin, so the fix is shown at every height rather
+  // than inferred from the default size.
+  for (const size of ["xs", "m", "l", "xl"]) {
+    cases.push({
+      element: "switch", variant: `peer upgrades; ${dir}; baseline; default; button size=${size}`,
+      html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button" size="${size}">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
+      width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
     });
   }
   // State-specific controls at the typography that exposed the host line box.
@@ -260,16 +279,27 @@ for (const dir of ["ltr", "rtl"]) {
   }
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
-    const button = element === "button";
-    const reason = "Button host grows at 24px/2: floor/material#42.";
-    const knownMoves: KnownMove[] = button ? ["#inline", "#block"].map(sibling => ({
-      sibling, axis: "y" as const, value: 8, reason,
-    })) : [];
-    if (button) knownMoves.push({ subject: true, value: 8, reason });
     cases.push({ ...row, variant: `${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
-      host: "#subject", width: 850, style: "font-size:24px;line-height:2",
-      knownMoves });
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
+  }
+  // The icon button's host under the same tall line height: the leading icon
+  // must not change the reservation the text button keeps.
+  for (const variant of ["icon", "size=m icon"]) {
+    const row = cases.find(row => row.element === "button" && row.variant === variant)!;
+    cases.push({ ...row, variant: `${variant}; ${dir}; 24/2`,
+      html: `<div style="display:flex">${row.html.replace("<m-button", '<m-button id="subject" dir="' + dir + '"')}</div>`,
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
+  }
+  // The xs control is the one remaining height the tall line box can outgrow
+  // (32 px under the 48 px strut at 24/2; m, l and xl stand taller than the
+  // strut both sides of the upgrade): its host must keep the reservation
+  // exactly as the s-size twin does.
+  {
+    const row = cases.find(row => row.element === "button" && row.variant === "size=xs")!;
+    cases.push({ ...row, variant: `size=xs; ${dir}; 24/2`,
+      html: `<div style="display:flex">${row.html.replace("<m-button", '<m-button id="subject" dir="' + dir + '"')}</div>`,
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
   }
 }
 

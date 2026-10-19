@@ -64,6 +64,42 @@ test("fresh detached registries, exact descriptors, consistent window facade and
   }
 });
 
+test("the base display declaration ships only beside an element without its own", () => {
+  const base = ":host{display:inline-block}";
+  // A bare :host display rule replaces the base declaration: beside it the
+  // base is dead at equal specificity and would ride in every
+  // server-rendered root's inline sheet.
+  expect(hostStyleText({ hostStyles: ":host{display:inline-flex}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle;display:block}" })).not.toStartWith(base);
+  // Only the bare selector counts: a conditional or a descendant rule leaves
+  // the base as the element's default display elsewhere, so it still ships.
+  expect(hostStyleText({ hostStyles: ":host([type='hidden' i]){display:none}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host>*{width:100%}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}:host .x{display:flex}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{--x-display:none}" })).toStartWith(base);
+  // A display rule inside an at-rule block applies only under the condition,
+  // and a comment is not a rule at all — beside either, the base still ships.
+  expect(hostStyleText({ hostStyles: "@media (min-width:1000px){.x{}:host{display:block}}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: "/* example }:host{display:flex} */" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{content:\";display:none\"}" })).toStartWith(base);
+  // Nested content inside the host block governs some states and not others,
+  // so it disqualifies the rule outright: the base still ships.
+  expect(hostStyleText({ hostStyles: ":host{@media (min-width:1000px){color:red;display:block}}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{&[open]{color:red;display:block}}" })).toStartWith(base);
+  // Mixed rules: one flat bare :host display rule among conditionals strips;
+  // conditionals alone do not.
+  expect(hostStyleText({ hostStyles: ":host([dir=rtl]){color:red}:host{display:grid}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host([dir=rtl]){display:grid}:host .x{display:block}" })).toStartWith(base);
+  // Strings and comments are gone before the scan, so braces and semicolons
+  // inside them neither open blocks nor pose as declarations.
+  expect(hostStyleText({ hostStyles: ":host{display:grid;content:\"{}\"}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{content:\"{}\"}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{/* } */display:flex}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: "/* } */:host{display:flex}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}" })).toStartWith(base);
+  expect(hostStyleText({})).toStartWith(base);
+});
+
 test("attribute mapping, slot, setup parts, event bridge and exact fallback styles", () => {
   registerStyles({ ripple: "/* ripple */", probe: "/* first */" });
   registerStyles({ probe: "/* override */" });

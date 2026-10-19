@@ -23,7 +23,14 @@ const buttonSpec = {
   name: "button",
   create: (config) => createButton({ ...(config as ButtonConfig), type: "button" }),
   styles: ["progress", "button"],
-  hostStyles: ":host{vertical-align:middle}",
+  // The host must be the button's own flex box, mirroring the pre-upgrade
+  // rule: an inline-block host builds its line box from the page's typography
+  // (a 48px strut at 24px / line-height 2, 8px over the control) and exposes a
+  // different baseline than the inline-flex box the rule reserves. The base
+  // display declaration it replaces is not shipped beside it (define.ts drops
+  // it beside a bare :host display rule) — dead at equal specificity, it would
+  // ride in every server-rendered root's inline sheet.
+  hostStyles: ":host{display:inline-flex;vertical-align:middle}",
   attributes: {
     variant: { type: "string", config: "variant", update: (c, v) => void c.setVariant(String(v ?? "filled")) },
     size: { type: "string", config: "size", update: (c, v) => void c.setSize(String(v ?? "s")) },
