@@ -1,13 +1,8 @@
-// src/styles/elements/_button-group.scss
-// <m-button-group> before upgrade: a box per <m-button-group-item>, the size
-// of the button drawn on upgrade.
 @use 'sass:list';
 @use 'sass:map';
 @use '../abstract/variables' as v;
 @use 'config' as c;
 
-// BUTTON_GROUP_SIZE_TOKENS and getSizeStyles: height, standard gap, button
-// inset (padding plus outline), typescale, icon the icon button renders.
 $sizes: (
   'xs': (32px, 18px, 13px, 'label-large', 20px),
   's': (40px, 12px, 17px, 'label-large', 24px),
@@ -18,7 +13,7 @@ $sizes: (
 $densities: ('comfortable': 4px, 'compact': 8px);
 $icon-first: ':has(> [icon]:empty:first-child)';
 
-@mixin item($size, $font: true, $weight: true) {
+@mixin item($size, $font: true, $letter: true, $weight: true) {
   $t: map.get($sizes, $size);
   $type: map.get(v.$typescale, list.nth($t, 4));
   height: list.nth($t, 1);
@@ -26,7 +21,7 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   @if $font {
     font-size: map.get($type, 'font-size');
     line-height: map.get($type, 'line-height');
-    letter-spacing: map.get($type, 'letter-spacing');
+    @if $letter { letter-spacing: map.get($type, 'letter-spacing'); }
   }
   @if $weight { font-weight: map.get($type, 'font-weight'); }
 }
@@ -37,9 +32,6 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   gap: 12px;
   white-space: nowrap;
 
-  // An icon button's baseline is the bottom of its icon: a strut that tall at
-  // the row's top. Without content no box is drawn, so text groups keep their
-  // items' baseline and height.
   &::before {
     width: 0;
     height: 32px;
@@ -56,7 +48,6 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   &[size='xs'] { gap: 18px; }
   &:is([size='m'], [size='l'], [size='xl']) { gap: 8px; }
 
-  // The small size, written or not; the sizes below outrank it.
   @each $density, $step in $densities {
     &[density='#{$density}'] > * { height: 40px - $step; }
   }
@@ -68,22 +59,23 @@ $icon-first: ':has(> [icon]:empty:first-child)';
       > * {
         @if $size == 'xs' { @include item($size, $font: false, $weight: false); }
         @else if $size == 'm' { @include item($size, $weight: false); }
-        @else { @include item($size); }
+        @else { @include item($size, $letter: false, $weight: false); }
       }
 
       @each $density, $step in $densities {
         &[density='#{$density}'] > * { height: list.nth($t, 1) - $step; }
       }
 
-      // Half the group plus half the icon; the margin cancels the gap it sits in.
       &::before {
         height: list.nth($t, 1) * 0.5 + list.nth($t, 5) * 0.5;
-        margin-inline-end: -1 * list.nth($t, 2);
+        @if $size == 'xs' { margin-inline-end: -1 * list.nth($t, 2); }
       }
     }
   }
 
-  // Density lowers the group by its step, and the icon's bottom by half of it.
+  &:is([size='m'], [size='l'], [size='xl'])::before { margin-inline-end: -8px; }
+  &:is([size='l'], [size='xl']) > * { letter-spacing: 0; font-weight: 400; }
+
   @each $density, $step in $densities {
     &[density='#{$density}']::before { margin-block-start: $step * -0.5; }
   }
@@ -97,11 +89,9 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   font-family: var(--mtrl-ref-typeface-plain,Roboto,sans-serif);
   @include item('s');
 
-  // The connected 48px minimum below still wins on order, at the same weight.
   &[icon]:empty { min-width: 0; padding: 0; aspect-ratio: 1; }
 }
 
-// Connected groups close the gap; xs and s keep a 48dp minimum per button.
 @include c.host('button-group') {
   &[kind='connected'] {
     gap: 2px;
