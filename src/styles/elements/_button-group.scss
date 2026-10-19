@@ -19,10 +19,11 @@
     vertical-align: baseline;
     align-items: baseline;
 
-    // Preserve the inherited line box without adding inline space or a gap.
+    // A zero-width first item: the group's baseline is the buttons' and its
+    // height theirs, not a line box from the page's typography. The negative
+    // margin cancels the gap this item would add.
     &::before {
-      content: " ";
-      white-space: pre;
+      content: "";
       width: 0;
       margin-inline-end: -12px;
     }

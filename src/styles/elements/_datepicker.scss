@@ -9,7 +9,7 @@
 // As components/_datepicker.scss: the text field's width, the label 4px above
 // the 56px field, and 4px + one body-small line under it.
 @include c.host('datepicker') {
-  display: inline-block;
+  display: inline-flex;
   box-sizing: border-box;
   width: v.text-field('width');
   vertical-align: baseline;

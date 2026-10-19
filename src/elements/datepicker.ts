@@ -108,6 +108,7 @@ const datepickerSpec = {
   name: "datepicker",
   create: (config) => create(config as DatePickerConfig),
   styles: ["datepicker"],
+  hostStyles: ":host{display:inline-flex}",
   attributes: {
     variant: { type: "string", config: "variant" },
     "selection-mode": { type: "string", config: "selectionMode" },

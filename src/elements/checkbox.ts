@@ -19,6 +19,7 @@ const checkboxSpec = {
   name: "checkbox",
   create: (config) => createCheckbox(config as CheckboxConfig),
   styles: ["checkbox"],
+  hostStyles: ":host{display:inline-flex}",
   attributes: {
     checked: { type: "boolean", config: "checked", update: (c, v) => void c.setValue(!!v) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
