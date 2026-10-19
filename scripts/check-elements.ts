@@ -985,7 +985,14 @@ try {
           const host = document.getElementById(`ip-${index}`) as HTMLElement;
           const element = host.shadowRoot?.querySelector("button") as HTMLElement;
           const twin = w.mtrl.createIconButton({ icon, variant: c.variant, size: c.size, width: c.width, ariaLabel: "Icon" }).element;
-          factory.append(twin);
+          // The element's button is a flex item of the host, which is the
+          // control's own inline-flex box. Blockified display and automatic
+          // minimums belong to that context, not to the page reset, so the
+          // twin gets the same context rather than being compared as a block.
+          const holder = document.createElement("span");
+          holder.style.display = "inline-flex";
+          factory.append(holder);
+          holder.append(twin);
           // Every standard property the element's button computes differently
           // from the factory twin's: the page reset's work, which the shadow
           // sheet has to repeat for the two to render alike.
