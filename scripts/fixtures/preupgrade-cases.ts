@@ -312,14 +312,18 @@ for (const dir of ["ltr", "rtl"]) {
 
 // The upgraded host is the control's own flex box: neither its box nor the
 // baseline of a neighbour on its line may follow the page's line height.
-// Every host, both directions, in inline flow and in a baseline flex row.
+// Every host, in inline flow and in a baseline flex row. Height is a vertical
+// measure, so rtl repeats ltr only at the page default and at the one line
+// box taller than the smallest control (24px/2); the other typographies stay
+// in ltr, where the defect and its mirror are visible.
 const ownBoxHosts: Record<string, number> = {
   "icon-button": 40, "button-group": 40, "split-button": 40, datepicker: 96, checkbox: 48, select: 56,
 };
 for (const [element, height] of Object.entries(ownBoxHosts)) {
   const row = cases.find(c => c.element === element && c.variant === "default")!;
   for (const dir of ["ltr", "rtl"]) {
-    for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const typographies = dir === "ltr" ? ["default", "12/1", "12/2", "24/1", "24/2"] : ["default", "24/2"];
+    for (const typography of typographies) {
       const [size, line] = typography.split("/");
       const style = typography === "default" ? "" : `font-size:${size}px;line-height:${line}`;
       for (const layout of ["inline", "baseline"]) {
