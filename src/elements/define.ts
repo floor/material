@@ -133,6 +133,12 @@ export interface ElementSpec<C extends ElementComponent> {
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   /**
+   * The host's display rule comes from `hostStyles` (which must then declare
+   * one), so the base `:host{display:inline-block}` declaration it overrides
+   * is not shipped. Per element: the base stays the default for the rest.
+   */
+  omitBaseHostDisplay?: boolean;
+  /**
    * A boolean attribute the host carries from the moment it connects, whatever
    * the tag prefix it was registered under. The library's sheets are built
    * once and cannot know the prefix a page chose, so a compound selector
@@ -210,12 +216,21 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
  * Test/styles/reduced-motion.test.ts keeps the two copies equal.
  * @internal
  */
-export const BASE_HOST_STYLES =
-  ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
+const BASE_HOST_DISPLAY = ":host{display:inline-block}";
+const BASE_HOST_ALWAYS =
+  ":host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
   "@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility!important;scroll-behavior:auto!important}}";
+export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
 
-/** Internal shared host CSS, in browser cascade order. */
-export const hostStyleText = (spec: { hostStyles?: string }): string => BASE_HOST_STYLES + (spec.hostStyles ?? "");
+/**
+ * Internal shared host CSS, in browser cascade order. An element whose
+ * `hostStyles` declares the host's real display rule sets
+ * `omitBaseHostDisplay` so the base display declaration it overrides (dead at
+ * equal specificity) is not shipped beside it — in server-rendered inline
+ * style mode that declaration would ride in every root's sheet.
+ */
+export const hostStyleText = (spec: { hostStyles?: string; omitBaseHostDisplay?: boolean }): string =>
+  (spec.omitBaseHostDisplay ? BASE_HOST_ALWAYS : BASE_HOST_STYLES) + (spec.hostStyles ?? "");
 
 // ---------------------------------------------------------------------------
 // Types derived from a spec, for the elements and the framework adapters.
