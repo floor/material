@@ -217,15 +217,39 @@ const BASE_HOST_ALWAYS =
 export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
 
 /**
- * True when `hostStyles` carries a rule with the bare `:host` selector whose
- * block declares `display` — the element's own default display. Only the bare
- * selector counts: a conditional (`:host([dir])`) or a descendant
- * (`:host .label`) rule leaves the base declaration as the element's default
- * elsewhere, so it does not make it dead.
+ * True when `hostStyles` carries an unconditional top-level rule with the bare
+ * `:host` selector whose block declares `display` — the element's own default
+ * display. Only such a rule counts: inside an at-rule block the declaration is
+ * conditional, and a conditional (`:host([dir])`) or descendant
+ * (`:host .label`) selector leaves the base declaration as the element's
+ * default elsewhere — neither makes it dead.
  */
-const ownsHostDisplay = (hostStyles: string): boolean =>
-  [...hostStyles.matchAll(/(?:^|}):host\{([^{}]*)\}/g)].some(([, block]) =>
-    /(?:^|;)\s*display\s*:/.test(block));
+const ownsHostDisplay = (hostStyles: string): boolean => {
+  // Comments and strings are scanned out first: a comment can carry a
+  // `}:host{display:…}` that no rule contains, and a quoted brace or
+  // semicolon would skew both the depth count and the declaration match.
+  const css = hostStyles
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, "");
+  let depth = 0;
+  for (let i = 0; i < css.length; i++) {
+    const char = css[i]!;
+    if (char === "{") { depth++; continue; }
+    if (char === "}") { depth--; continue; }
+    if (char !== ":" || depth !== 0 || !css.startsWith(":host", i)) continue;
+    // The selector must be the bare `:host` (not `:host(…)` or `:host .x`)
+    // starting its own top-level rule (not a compound like `x :host`).
+    let block = i + 5;
+    while (/\s/.test(css[block] ?? "")) block++;
+    if (css[block] !== "{") continue;
+    let before = i;
+    while (before > 0 && /\s/.test(css[before - 1]!)) before--;
+    if (before > 0 && css[before - 1] !== "}") continue;
+    const end = css.indexOf("}", block);
+    if (end !== -1 && /(?:^|;)\s*display\s*:/.test(css.slice(block + 1, end))) return true;
+  }
+  return false;
+};
 
 /**
  * Internal shared host CSS, in browser cascade order. Beside a bare `:host`

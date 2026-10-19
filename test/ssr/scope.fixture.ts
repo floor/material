@@ -77,6 +77,11 @@ test("the base display declaration ships only beside an element without its own"
   expect(hostStyleText({ hostStyles: ":host>*{width:100%}" })).toStartWith(base);
   expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}:host .x{display:flex}" })).toStartWith(base);
   expect(hostStyleText({ hostStyles: ":host{--x-display:none}" })).toStartWith(base);
+  // A display rule inside an at-rule block applies only under the condition,
+  // and a comment is not a rule at all — beside either, the base still ships.
+  expect(hostStyleText({ hostStyles: "@media (min-width:1000px){.x{}:host{display:block}}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: "/* example }:host{display:flex} */" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{content:\";display:none\"}" })).toStartWith(base);
   expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}" })).toStartWith(base);
   expect(hostStyleText({})).toStartWith(base);
 });
