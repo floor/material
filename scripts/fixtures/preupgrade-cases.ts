@@ -29,6 +29,8 @@ export interface PreupgradeCase {
    * that the upgraded host and its pre-upgrade rule must both be.
    */
   hostHeight?: number;
+  /** How long to let timers run after the upgrade; the six host rows upgrade synchronously. */
+  settleMs?: number;
   knownMoves?: readonly KnownMove[];
 }
 
@@ -326,7 +328,7 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
         cases.push({
           element, variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
           html: `<div dir="${dir}" style="${inline ? "" : "display:flex;gap:16px;align-items:baseline"}">${inline ? '<span id="lead">Text before </span>' : ""}${host}${inline ? '<span id="next"> text after</span>' : '<m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field>'}</div>`,
-          style, width: 850, host: "#subject", strictBox: true, hostHeight: height,
+          style, width: 850, host: "#subject", strictBox: true, hostHeight: height, settleMs: 100,
           siblings: inline ? ["#lead", "#next", "#inline", "#block"] : ["#button", "#field", "#inline", "#block"],
           prepareNeighbors: !inline,
         });

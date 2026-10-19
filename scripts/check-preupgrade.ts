@@ -321,8 +321,10 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
-    // Factories that finish their layout on a later frame or timer.
-    await p.waitForTimeout(300);
+    // Factories that finish their layout on a later frame or timer. The host
+    // rows upgrade synchronously and ask for a shorter wait; the whole check
+    // must fit the browser job's budget.
+    await p.waitForTimeout(item?.settleMs ?? 300);
     await settle(p);
     const after = await snapshot(p, hosts, siblings);
     assert.deepEqual(errors, [], `${path}: page errors`);
@@ -336,6 +338,10 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
   const results: Result[] = [];
   for (const [index, item] of cases.entries()) {
     if (only.length && !only.includes(item.element)) continue;
+    // A row that pins an absolute host box asserts the stylesheet itself: with
+    // no stylesheet its height is the defect, and the mutation run would spend
+    // a second browser page per row measuring a number it does not assert.
+    if (!preupgrade && item.hostHeight !== undefined) continue;
     const [before, after] = await measure(`/${index}`, preupgrade, item.host ?? "#stage > :first-child", "/elements.js", item);
     const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
     const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
