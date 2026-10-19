@@ -69,14 +69,14 @@ describe("preupgrade sibling exceptions", () => {
   });
 });
 
-const widthReason = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
-const sizeReason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+const widthReason = "A platform-dependent width reading.";
+const sizeReason = "A pinned size defect.";
 const siblingPin = (axis: "x" | "y", value: number, tolerance?: number): KnownSiblingMove => ({
   sibling: "#inline", axis, value, ...(tolerance === undefined ? {} : { tolerance }),
   reason: axis === "x" ? widthReason : sizeReason,
 });
 const xsRow = (dx: number, dy = -2.703125, blockY = -8) => ({
-  name: "button-group [size=xs; ltr; default]", score: 0.0058,
+  name: "pinned row", score: 0.0058,
   moves: [{ dx, dy }, { dx: 0, dy: blockY }],
   knownMoves: [
     siblingPin("x", -0.40625, 0.375),
@@ -86,7 +86,7 @@ const xsRow = (dx: number, dy = -2.703125, blockY = -8) => ({
 });
 
 describe("a pin with its own tolerance", () => {
-  test("accepts both platform readings of the extra-small inline shift", () => {
+  test("accepts both readings inside the band", () => {
     for (const dx of [-0.0625, -0.75]) {
       const result = markOf(xsRow(dx), true);
       expect(result.mark).toBe("known");
@@ -99,12 +99,6 @@ describe("a pin with its own tolerance", () => {
         { sibling: "#block", axis: "y" as const, value: -8, reason: sizeReason }],
     }, true);
     expect(rtl.mark).toBe("known");
-    const linuxRtl = markOf({
-      ...xsRow(0.75),
-      knownMoves: [siblingPin("x", 0.40625, 0.375), siblingPin("y", -2.703125),
-        { sibling: "#block", axis: "y" as const, value: -8, reason: sizeReason }],
-    }, true);
-    expect(linuxRtl.mark).toBe("known");
   });
   test("the default half-pixel rule still calls the smaller reading a disappeared defect", () => {
     const knownMoves = [siblingPin("x", -0.75)];
@@ -112,7 +106,7 @@ describe("a pin with its own tolerance", () => {
     expect(result.mark).toBe("FAIL");
     expect(result.note).toContain("defect disappeared");
   });
-  test("a reading one pixel past either platform fails, and so does a vanished move", () => {
+  test("a reading one pixel past either end fails, and so does a vanished move", () => {
     for (const dx of [-0.0625 - 1, -0.75 - 1]) {
       const result = markOf(xsRow(dx), true);
       expect(result.mark).toBe("FAIL");
@@ -128,20 +122,33 @@ describe("a pin with its own tolerance", () => {
     expect(result.note).toContain("#inline y -3.703125px: expected -2.703125px ± 0.5px");
     expect(result.note).not.toContain("± 0.375px");
   });
-  test("the extra-small rows carry that band, and only on inline x", () => {
-    const rows = cases.filter(row => row.element === "button-group" && row.variant.startsWith("size=xs"));
-    expect(rows.map(row => row.variant)).toEqual(["size=xs; ltr; default", "size=xs; rtl; default"]);
-    for (const row of rows) {
-      const pins = (row.knownMoves ?? []).filter((pin): pin is KnownSiblingMove => "sibling" in pin);
-      const x = pins.filter(pin => pin.axis === "x");
-      expect(x).toEqual([{
-        sibling: "#inline", axis: "x",
-        value: row.variant.includes("ltr") ? -0.40625 : 0.40625,
-        tolerance: 0.375, reason: widthReason,
-      }]);
-      expect(pins.filter(pin => pin.tolerance !== undefined)).toEqual(x);
-      expect(pins.some(pin => pin.axis === "y" && pin.tolerance === undefined)).toBe(true);
+});
+
+describe("the button group matrix", () => {
+  const matrix = cases.filter(row => row.element === "button-group" && /^(?:xs|s|m|l|xl); /.test(row.variant));
+  test("covers every size, density, kind, button, direction and typography once", () => {
+    expect(matrix).toHaveLength(5 * 3 * 2 * 2 * 2 * 5);
+    expect(new Set(matrix.map(row => row.variant)).size).toBe(matrix.length);
+    const shapes = new Set(matrix.map(row => {
+      const match = /^(xs|s|m|l|xl); (default|comfortable|compact); (standard|connected); (text|icon); (ltr|rtl); (default|12\/1|12\/2|24\/1|24\/2)$/.exec(row.variant);
+      expect(match, row.variant).not.toBeNull();
+      return match!.slice(1).join(";");
+    }));
+    expect(shapes.size).toBe(matrix.length);
+    for (const row of matrix) {
+      expect(row.strictBox, row.variant).toBe(true);
+      expect(row.knownMoves, row.variant).toBeUndefined();
+      // The container height the size and density fix, on both sides of the
+      // upgrade; and the group upgrades synchronously, as the host rows do.
+      expect(row.hostHeight, row.variant).toBe(
+        ({ xs: 32, s: 40, m: 56, l: 96, xl: 136 } as Record<string, number>)[row.variant.split(";")[0]]
+          - ({ default: 0, comfortable: 4, compact: 8 } as Record<string, number>)[row.variant.split(";")[1].trim()],
+      );
+      expect(row.settleMs, row.variant).toBe(100);
     }
+  });
+  test("keeps no main-baseline exception on the element", () => {
+    expect(cases.filter(row => row.element === "button-group" && (row.knownMoves?.length ?? 0) > 0)).toEqual([]);
   });
 });
 
