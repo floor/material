@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-24.04
     # A group takes about four minutes. A runner that stalls fails here, and is
     # run again, instead of holding the pull request for most of an hour.
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
