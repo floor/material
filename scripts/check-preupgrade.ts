@@ -292,6 +292,8 @@ interface Result {
   siblings?: readonly string[];
   knownMoves?: readonly KnownMove[];
   boxMove?: number;
+  /** The host's own height the control fixes, whatever the page's typography. */
+  hostHeight?: number;
   /** The button's own box, for the subject check. */
   subjectMove?: number;
 }
@@ -319,8 +321,10 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
-    // Factories that finish their layout on a later frame or timer.
-    await p.waitForTimeout(300);
+    // Factories that finish their layout on a later frame or timer. The host
+    // rows upgrade synchronously and ask for a shorter wait; the whole check
+    // must fit the browser job's budget.
+    await p.waitForTimeout(item?.settleMs ?? 300);
     await settle(p);
     const after = await snapshot(p, hosts, siblings);
     assert.deepEqual(errors, [], `${path}: page errors`);
@@ -334,6 +338,10 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
   const results: Result[] = [];
   for (const [index, item] of cases.entries()) {
     if (only.length && !only.includes(item.element)) continue;
+    // A row that pins an absolute host box asserts the stylesheet itself: with
+    // no stylesheet its height is the defect, and the mutation run would spend
+    // a second browser page per row measuring a number it does not assert.
+    if (!preupgrade && item.hostHeight !== undefined) continue;
     const [before, after] = await measure(`/${index}`, preupgrade, item.host ?? "#stage > :first-child", "/elements.js", item);
     const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
     const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
@@ -342,6 +350,7 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
       name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0],
       moved, moves, siblings: item.siblings, knownMoves: item.knownMoves,
       boxMove: item.strictBox ? box : undefined,
+      hostHeight: preupgrade ? item.hostHeight : undefined,
       subjectMove: item.element === "button" ? box : undefined,
     });
   }
@@ -355,9 +364,14 @@ const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
 const report = (results: Result[], checkMoves: boolean): string[] => {
   const failed: string[] = [];
   for (const r of results) {
-    const { mark, note } = checkMoves && r.boxMove !== undefined && r.boxMove > MOVE_LIMIT
-      ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
-      : markOf(r, checkMoves);
+    const height = r.hostHeight === undefined ? ""
+      : Math.abs(r.before.h - r.hostHeight) > MOVE_LIMIT || Math.abs(r.after.h - r.hostHeight) > MOVE_LIMIT
+        ? `  (host is ${size(r.before)} before and ${size(r.after)} after; expected height ${r.hostHeight}px ± ${MOVE_LIMIT}px)`
+        : "";
+    const { mark, note } = height ? { mark: "FAIL" as const, note: height }
+      : checkMoves && r.boxMove !== undefined && r.boxMove > MOVE_LIMIT
+        ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
+        : markOf(r, checkMoves);
     if (mark === "FAIL") failed.push(r.name);
     const box = r.subjectMove !== undefined ? `  box shift ${r.subjectMove.toFixed(2)}px` : "";
     console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}`);

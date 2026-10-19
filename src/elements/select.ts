@@ -115,7 +115,7 @@ const selectSpec = {
   styles: ["text-field", "menu", "select"],
   // The field fills a host given a width, as a native select does; the
   // listbox beside it sizes itself
-  hostStyles: ":host>:first-child{width:100%}",
+  hostStyles: ":host{display:inline-flex}:host>:first-child{width:100%}",
   attributes: {
     variant: {
       type: "string",

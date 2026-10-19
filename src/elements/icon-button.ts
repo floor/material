@@ -30,7 +30,9 @@ const iconButtonSpec = {
   // No aria-label given is an empty one: the factory then sets none.
   create: (config) => createIconButton({ ariaLabel: "", ...(config as Partial<IconButtonConfig>), type: "button" }),
   styles: ["icon-button"],
-  hostStyles: ":host{vertical-align:middle}",
+  // The zero-width first item stretches to the control's height, so the
+  // host's baseline is its bottom edge, as the pre-upgrade box's is.
+  hostStyles: ":host{display:inline-flex;vertical-align:middle}:host::before{content:'';align-self:stretch;width:0}",
   // The toolbar's sheet pins a directly slotted host's morph targets through
   // `::slotted([data-mtrl-icon-button])`: the tag is the page's choice of
   // prefix, the marker is this library's, and the size selectors beside it

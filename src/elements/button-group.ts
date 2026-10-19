@@ -145,6 +145,7 @@ const buttonGroupSpec = {
   name: "button-group",
   create: (config) => createButtonGroup(config as ButtonGroupConfig),
   styles: ["progress", "button", "icon-button", "button-group"],
+  hostStyles: ":host{display:inline-flex}",
   attributes: {
     variant: { type: "string", config: "variant", update: (c, v) => void c.setVariant(String(v ?? "outlined") as ButtonGroupVariant) },
     kind: { type: "string", config: "kind" },

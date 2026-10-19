@@ -109,7 +109,7 @@ const splitButtonSpec = {
   },
   create: (config) => create(config as SplitButtonConfig),
   styles: ["progress", "button", "menu", "split-button"],
-  hostStyles: ":host{vertical-align:middle}",
+  hostStyles: ":host{display:inline-flex;vertical-align:middle}",
   attributes: {
     // Read with the text by `config`: the attribute wins over the text.
     label: { type: "string", update: (c, _v, host) => void c.setText(labelOf(host)) },
