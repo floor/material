@@ -64,6 +64,23 @@ test("fresh detached registries, exact descriptors, consistent window facade and
   }
 });
 
+test("the base display declaration ships only beside an element without its own", () => {
+  const base = ":host{display:inline-block}";
+  // A bare :host display rule replaces the base declaration: beside it the
+  // base is dead at equal specificity and would ride in every
+  // server-rendered root's inline sheet.
+  expect(hostStyleText({ hostStyles: ":host{display:inline-flex}" })).not.toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle;display:block}" })).not.toStartWith(base);
+  // Only the bare selector counts: a conditional or a descendant rule leaves
+  // the base as the element's default display elsewhere, so it still ships.
+  expect(hostStyleText({ hostStyles: ":host([type='hidden' i]){display:none}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host>*{width:100%}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}:host .x{display:flex}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{--x-display:none}" })).toStartWith(base);
+  expect(hostStyleText({ hostStyles: ":host{vertical-align:middle}" })).toStartWith(base);
+  expect(hostStyleText({})).toStartWith(base);
+});
+
 test("attribute mapping, slot, setup parts, event bridge and exact fallback styles", () => {
   registerStyles({ ripple: "/* ripple */", probe: "/* first */" });
   registerStyles({ probe: "/* override */" });

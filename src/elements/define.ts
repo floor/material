@@ -133,12 +133,6 @@ export interface ElementSpec<C extends ElementComponent> {
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   /**
-   * The host's display rule comes from `hostStyles` (which must then declare
-   * one), so the base `:host{display:inline-block}` declaration it overrides
-   * is not shipped. Per element: the base stays the default for the rest.
-   */
-  omitBaseHostDisplay?: boolean;
-  /**
    * A boolean attribute the host carries from the moment it connects, whatever
    * the tag prefix it was registered under. The library's sheets are built
    * once and cannot know the prefix a page chose, so a compound selector
@@ -223,14 +217,27 @@ const BASE_HOST_ALWAYS =
 export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
 
 /**
- * Internal shared host CSS, in browser cascade order. An element whose
- * `hostStyles` declares the host's real display rule sets
- * `omitBaseHostDisplay` so the base display declaration it overrides (dead at
- * equal specificity) is not shipped beside it — in server-rendered inline
- * style mode that declaration would ride in every root's sheet.
+ * True when `hostStyles` carries a rule with the bare `:host` selector whose
+ * block declares `display` — the element's own default display. Only the bare
+ * selector counts: a conditional (`:host([dir])`) or a descendant
+ * (`:host .label`) rule leaves the base declaration as the element's default
+ * elsewhere, so it does not make it dead.
  */
-export const hostStyleText = (spec: { hostStyles?: string; omitBaseHostDisplay?: boolean }): string =>
-  (spec.omitBaseHostDisplay ? BASE_HOST_ALWAYS : BASE_HOST_STYLES) + (spec.hostStyles ?? "");
+const ownsHostDisplay = (hostStyles: string): boolean =>
+  [...hostStyles.matchAll(/(?:^|}):host\{([^{}]*)\}/g)].some(([, block]) =>
+    /(?:^|;)\s*display\s*:/.test(block));
+
+/**
+ * Internal shared host CSS, in browser cascade order. Beside a bare `:host`
+ * display rule the base display declaration is dead (the later rule wins at
+ * equal specificity) and would ride in every server-rendered root's inline
+ * sheet, so it is not shipped for such an element — today the button (#42)
+ * and the switch, whose inline-flex rule has made it dead since it landed.
+ */
+export const hostStyleText = (spec: { hostStyles?: string }): string => {
+  const own = spec.hostStyles ?? "";
+  return (ownsHostDisplay(own) ? BASE_HOST_ALWAYS : BASE_HOST_STYLES) + own;
+};
 
 // ---------------------------------------------------------------------------
 // Types derived from a spec, for the elements and the framework adapters.
