@@ -251,6 +251,19 @@ for (const dir of ["ltr", "rtl"]) {
       style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
     });
   }
+  // The baseline move scales with the control's height: 1.3 px at xs growing
+  // to 7.3 px at xl on main (floor/material#50's measurements — the offset
+  // between an inline-block's last-line baseline and the reserved box's
+  // first-item baseline grows as the label sits further from either edge).
+  // Measure each size's twin, so the fix is shown at every height rather
+  // than inferred from the default size.
+  for (const size of ["xs", "m", "l", "xl"]) {
+    cases.push({
+      element: "switch", variant: `peer upgrades; ${dir}; baseline; default; button size=${size}`,
+      html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button" size="${size}">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
+      width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
+    });
+  }
   // State-specific controls at the typography that exposed the host line box.
   for (const row of switchRows.filter(row => /(?:checked|disabled|icon)$/.test(row.variant) && row.variant.includes("unlabelled"))) {
     cases.push({ ...row, variant: `${row.variant}; ${dir}; 24/2`,
@@ -268,6 +281,16 @@ for (const dir of ["ltr", "rtl"]) {
   for (const variant of ["icon", "size=m icon"]) {
     const row = cases.find(row => row.element === "button" && row.variant === variant)!;
     cases.push({ ...row, variant: `${variant}; ${dir}; 24/2`,
+      html: `<div style="display:flex">${row.html.replace("<m-button", '<m-button id="subject" dir="' + dir + '"')}</div>`,
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
+  }
+  // The xs control is the one remaining height the tall line box can outgrow
+  // (32 px under the 48 px strut at 24/2; m, l and xl stand taller than the
+  // strut both sides of the upgrade): its host must keep the reservation
+  // exactly as the s-size twin does.
+  {
+    const row = cases.find(row => row.element === "button" && row.variant === "size=xs")!;
+    cases.push({ ...row, variant: `size=xs; ${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace("<m-button", '<m-button id="subject" dir="' + dir + '"')}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
   }
