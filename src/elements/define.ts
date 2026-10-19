@@ -222,7 +222,9 @@ export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
  * display. Only such a rule counts: inside an at-rule block the declaration is
  * conditional, and a conditional (`:host([dir])`) or descendant
  * (`:host .label`) selector leaves the base declaration as the element's
- * default elsewhere — neither makes it dead.
+ * default elsewhere — neither makes it dead. Nested content inside the host block (an at-rule or a
+ * nesting selector) disqualifies it too, conservatively: with nesting present
+ * the base stays provably correct for the states the nested rules govern.
  */
 const ownsHostDisplay = (hostStyles: string): boolean => {
   // Comments and strings are scanned out first: a comment can carry a
@@ -245,8 +247,18 @@ const ownsHostDisplay = (hostStyles: string): boolean => {
     let before = i;
     while (before > 0 && /\s/.test(css[before - 1]!)) before--;
     if (before > 0 && css[before - 1] !== "}") continue;
-    const end = css.indexOf("}", block);
-    if (end !== -1 && /(?:^|;)\s*display\s*:/.test(css.slice(block + 1, end))) return true;
+    // Conservative: only a closed, unnested block counts. A nested block —
+    // a nested at-rule or a nesting selector like `&[open]` — governs some
+    // states and not others, so beside it the base stays provably correct.
+    let flat = "";
+    let closed = false;
+    for (let j = block + 1; j < css.length; j++) {
+      const char2 = css[j]!;
+      if (char2 === "}") { closed = true; break; }
+      if (char2 === "{") { flat = ""; break; }
+      flat += char2;
+    }
+    if (closed && /(?:^|;)\s*display\s*:/.test(flat)) return true;
   }
   return false;
 };
