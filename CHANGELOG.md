@@ -17,6 +17,45 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-10-19
+
+No layout jump at upgrade.
+
+### Fixes
+
+- **`<m-button>` keeps its box and baseline at upgrade (#42).**
+  The upgraded host is now the control's own flex box — `display:inline-flex;
+  vertical-align:middle` — the box the pre-upgrade rule already reserves. An
+  `inline-block` host builds its line box from the page's typography: at
+  `font-size:24px; line-height:2` the 48px strut stood 8px over the 40px control
+  and moved the whole line below it, and its last-line-box baseline sat
+  differently from the inline-flex box's first-item baseline (−7px at 24/2,
+  ±1.3–1.8px at the other measured typographies, with or without a leading
+  icon). Height and baseline now hold on both sides of the upgrade at every
+  measured typography, and the button keeps the spec's height per size.
+
+- **Six more upgraded hosts stop growing with the page's line height (#51).**
+  `m-icon-button`, `m-button-group`, `m-split-button`, `m-datepicker` (docked),
+  `m-checkbox` and `m-select` hosts are their control's own flex box instead of
+  an inline-block line box, so the page's line strut no longer reaches the
+  control: at 24px/2 the icon button and the split button stood 48px tall over
+  40px controls, the group's pre-upgrade text item laid out a 48px line, the
+  docked datepicker carried a 99px line box over its 96px control, and the
+  checkbox and the select grew a pixel. The icon-button host keeps its
+  bottom-edge baseline through a zero-width stretch item, matching its
+  pre-upgrade box; every host holds its height and baseline across the upgrade.
+
+- **`<m-button-group>` reserves its sizes, density, spacing and icons before
+  upgrade (#49).**
+  The pre-upgrade sheet now reserves every size, density, the standard and the
+  connected between-space, and text and icon buttons, in LTR and RTL, at the
+  five typographies the issue measures — of the 600 measured combinations, 590
+  moved on main (worst 401.66px); none moves now. The packed tarball outgrew
+  its ceiling: measured 1,078,362 bytes under Node 22.23.3 / npm 10.9.9, the
+  ceiling moves 1,078,000 → 1,090,000 bytes by the size script's own rule
+  (measured plus 1%, to the next thousand), on the owner's authorization — the
+  one budget this change outgrew.
+
 ## [3.2.0] - 2026-10-18
 
 Components that tell you what's wrong.
@@ -4028,7 +4067,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/floor/material/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/floor/material/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/floor/material/compare/v3.0.6...v3.1.0
 [3.0.6]: https://github.com/floor/material/compare/v3.0.5...v3.0.6
