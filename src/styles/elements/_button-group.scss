@@ -6,12 +6,8 @@
 @use '../abstract/variables' as v;
 @use 'config' as c;
 
-// As BUTTON_GROUP_SIZE_TOKENS and getSizeStyles in components/button-group:
-// the container height, the standard group's between-space, the button's
-// horizontal inset (padding plus transparent outline), its label typescale
-// and the icon size the icon button renders (its own scale: xs 20, s 24,
-// m 24, l 32, xl 40). Density lowers the height 4px a step. Written per
-// size, not kept in custom properties, which the rollback cannot revert.
+// BUTTON_GROUP_SIZE_TOKENS and getSizeStyles: height, standard gap, button
+// inset (padding plus outline), typescale, icon the icon button renders.
 $sizes: (
   'xs': (32px, 18px, 13px, 'label-large', 20px),
   's': (40px, 12px, 17px, 'label-large', 24px),
@@ -20,13 +16,8 @@ $sizes: (
   'xl': (136px, 8px, 67px, 'headline-large', 40px),
 );
 $densities: ('comfortable': 4px, 'compact': 8px);
-// The small size, written or not; the sizes with a zero-width baseline item;
-// a group whose first item is an icon button.
-$small: ':is(:not([size]), [size=\'s\'])';
-$line: ':is(:not([size]), [size=\'xs\'], [size=\'s\'])';
-$icon-only: ':has(> [icon]:empty:first-child)';
+$icon-first: ':has(> [icon]:empty:first-child)';
 
-/// The item's box and label for one size.
 @mixin item($size, $font: true, $weight: true) {
   $t: map.get($sizes, $size);
   $type: map.get(v.$typescale, list.nth($t, 4));
@@ -46,26 +37,29 @@ $icon-only: ':has(> [icon]:empty:first-child)';
   gap: 12px;
   white-space: nowrap;
 
-  // The zero-width first item gives these sizes the buttons' baseline and
-  // their height, not a line box from the page's typography.
-  &#{$line} {
-    align-items: baseline;
-
-    // No inline space, no gap: the group is the buttons' own row.
-    &::before { content: ""; width: 0; margin-inline-end: -12px; }
+  // An icon button's baseline is the bottom of its icon: a strut that tall at
+  // the row's top. Without content no box is drawn, so text groups keep their
+  // items' baseline and height.
+  &::before {
+    width: 0;
+    height: 32px;
+    margin-inline-end: -12px;
+    align-self: flex-start;
   }
 
-  // An icon button's baseline after upgrade is the bottom edge of its icon, so
-  // the host's before ends where that icon does: half the group's height plus
-  // half the icon.
-  &#{$icon-only} {
+  &#{$icon-first} {
     align-items: center;
 
-    &::before { content: ""; width: 0; align-self: flex-start; }
+    &::before { content: ""; }
   }
 
   &[size='xs'] { gap: 18px; }
   &:is([size='m'], [size='l'], [size='xl']) { gap: 8px; }
+
+  // The small size, written or not; the sizes below outrank it.
+  @each $density, $step in $densities {
+    &[density='#{$density}'] > * { height: 40px - $step; }
+  }
 
   @each $size in ('xs', 'm', 'l', 'xl') {
     &[size='#{$size}'] {
@@ -81,41 +75,17 @@ $icon-only: ':has(> [icon]:empty:first-child)';
         &[density='#{$density}'] > * { height: list.nth($t, 1) - $step; }
       }
 
-      // An icon button's baseline: half the group's height plus half the icon.
-      &:where(#{$icon-only})::before {
+      // Half the group plus half the icon; the margin cancels the gap it sits in.
+      &::before {
         height: list.nth($t, 1) * 0.5 + list.nth($t, 5) * 0.5;
-      }
-
-      @if $size == 'xs' {
-        // The line-box stand-in and an icon's share this size's gap.
-        &::before { margin-inline-end: -1 * list.nth($t, 2); }
-      } @else {
-        // The baseline stand-in cancels this size's gap. :where() lets the
-        // connected 2px override win below.
-        &:where(#{$icon-only})::before { margin-inline-end: -1 * list.nth($t, 2); }
+        margin-inline-end: -1 * list.nth($t, 2);
       }
     }
   }
 
-  // The small size, written or not, its density and an icon button's baseline.
-  &#{$small} {
-    $t: map.get($sizes, 's');
-
-    &:where(#{$icon-only})::before {
-      height: list.nth($t, 1) * 0.5 + list.nth($t, 5) * 0.5;
-    }
-
-    @each $density, $step in $densities {
-      &[density='#{$density}'] > * { height: list.nth($t, 1) - $step; }
-    }
-  }
-
-  // Density lowers the group by its step, and the icon's bottom by half of it:
-  // two rules serve every size.
+  // Density lowers the group by its step, and the icon's bottom by half of it.
   @each $density, $step in $densities {
-    &[density='#{$density}']:where(#{$icon-only})::before {
-      margin-block-start: $step * -0.5;
-    }
+    &[density='#{$density}']::before { margin-block-start: $step * -0.5; }
   }
 }
 
@@ -127,19 +97,15 @@ $icon-only: ':has(> [icon]:empty:first-child)';
   font-family: var(--mtrl-ref-typeface-plain,Roboto,sans-serif);
   @include item('s');
 
-  // An icon button is the container's height, square, with no padding. This
-  // reset outranks the per-size padding rule; the connected 48px minimum below
-  // still wins on order, at the same weight.
+  // The connected 48px minimum below still wins on order, at the same weight.
   &[icon]:empty { min-width: 0; padding: 0; aspect-ratio: 1; }
 }
 
-// Connected groups close the gap at every size; xs and s keep a 48dp
-// minimum width per button.
+// Connected groups close the gap; xs and s keep a 48dp minimum per button.
 @include c.host('button-group') {
   &[kind='connected'] {
     gap: 2px;
 
-    // The zero-width first item cancels this gap, not the standard one.
     &::before { margin-inline-end: -2px; }
   }
 
