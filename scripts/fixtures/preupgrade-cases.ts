@@ -307,25 +307,6 @@ for (const dir of ["ltr", "rtl"]) {
 // formatted markup too: whitespace between items must not add inline width.
 const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
 for (const dir of ["ltr", "rtl"]) {
-  // Keep xs no worse than main while its size reservation remains in #49.
-  // Main moves the inline neighbour up 2.703125px and the block up 8px.
-  // The same main baseline also shifts the inline neighbour on x with the
-  // platform font: 0.0625px here, 0.75px on Linux. The pin value is their
-  // midpoint, ±0.40625, and the band is ±0.375px, so both readings pass, a
-  // reading that has gone fails, and one extra pixel fails.
-  const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
-  const width = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
-  const inlineX = dir === "ltr" ? -0.40625 : 0.40625;
-  cases.push({
-    ...buttonGroup, variant: `size=xs; ${dir}; default`,
-    html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
-    width: 850, style: `direction:${dir}`,
-    knownMoves: [
-      { sibling: "#inline", axis: "x", value: inlineX, tolerance: 0.375, reason: width },
-      { sibling: "#inline", axis: "y", value: -2.703125, reason },
-      { sibling: "#block", axis: "y", value: -8, reason },
-    ],
-  });
   for (const typography of ["default", "24/2"]) {
     for (const formatted of [false, true]) {
       const html = formatted
@@ -366,6 +347,70 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
           siblings: inline ? ["#lead", "#next", "#inline", "#block"] : ["#button", "#field", "#inline", "#block"],
           prepareNeighbors: !inline,
         });
+      }
+    }
+  }
+}
+
+// Every combination the issue measures: five sizes, three densities, standard
+// and connected groups, text and icon buttons, both directions and five
+// consumer typographies. The host is the items' row and gap, so each
+// combination is its own strict row.
+type ButtonGroupButton = "text" | "icon";
+type ButtonGroupDensity = "default" | "comfortable" | "compact";
+type ButtonGroupKind = "standard" | "connected";
+type ButtonGroupSize = "xs" | "s" | "m" | "l" | "xl";
+type Typography = "default" | "12/1" | "12/2" | "24/1" | "24/2";
+
+const buttonGroupItems = (button: ButtonGroupButton): string =>
+  ["One", "Two", "Three"].map((label, index) => button === "text"
+    ? `<m-button-group-item value="${index}">${label}</m-button-group-item>`
+    : `<m-button-group-item value="${index}" icon="${ICON}" aria-label="${label}"></m-button-group-item>`
+  ).join("");
+
+// As BUTTON_GROUP_SIZE_TOKENS and DENSITY_STEPS in components/button-group:
+// the container height, 4px less per density step. Every row must hold it on
+// both sides of the upgrade, whatever the page's typography.
+const buttonGroupHeights: Record<ButtonGroupSize, number> = {
+  xs: 32, s: 40, m: 56, l: 96, xl: 136,
+};
+const buttonGroupDensitySteps: Record<ButtonGroupDensity, number> = {
+  default: 0, comfortable: 4, compact: 8,
+};
+
+const buttonGroupMatrixRow = (
+  size: ButtonGroupSize, density: ButtonGroupDensity, kind: ButtonGroupKind,
+  button: ButtonGroupButton, dir: "ltr" | "rtl", typography: Typography,
+): PreupgradeCase => {
+  const attributes = [
+    `size="${size}"`,
+    density === "default" ? "" : `density="${density}"`,
+    kind === "connected" ? 'kind="connected" selection="single"' : "",
+    'aria-label="Actions"',
+  ].filter(Boolean).join(" ");
+  const [fontSize, lineHeight] = typography.split("/");
+  return {
+    element: "button-group",
+    variant: `${size}; ${density}; ${kind}; ${button}; ${dir}; ${typography}`,
+    html: `<m-button-group ${attributes}>${buttonGroupItems(button)}</m-button-group>`,
+    style: `direction:${dir};${typography === "default" ? "" : `font-size:${fontSize}px;line-height:${lineHeight}`}`,
+    width: 850,
+    strictBox: true,
+    hostHeight: buttonGroupHeights[size] - buttonGroupDensitySteps[density],
+    // The group upgrades synchronously, as the six host rows do.
+    settleMs: 100,
+  };
+};
+
+for (const size of ["xs", "s", "m", "l", "xl"] as const) {
+  for (const density of ["default", "comfortable", "compact"] as const) {
+    for (const kind of ["standard", "connected"] as const) {
+      for (const button of ["text", "icon"] as const) {
+        for (const dir of ["ltr", "rtl"] as const) {
+          for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"] as const) {
+            cases.push(buttonGroupMatrixRow(size, density, kind, button, dir, typography));
+          }
+        }
       }
     }
   }

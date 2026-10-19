@@ -1,41 +1,103 @@
-// src/styles/elements/_button-group.scss
-// <m-button-group> before upgrade: a box per <m-button-group-item>, the size
-// of its button, which is drawn on upgrade.
+@use 'sass:list';
+@use 'sass:map';
 @use '../abstract/variables' as v;
-@use '../abstract/mixins' as m;
 @use 'config' as c;
 
-// As components/_button-group.scss: the standard group's 12px between
-// outlined buttons of the small size.
+$sizes: (
+  'xs': (32px, 18px, 13px, 'label-large', 20px),
+  's': (40px, 12px, 17px, 'label-large', 24px),
+  'm': (56px, 8px, 25px, 'title-medium', 24px),
+  'l': (96px, 8px, 50px, 'headline-small', 32px),
+  'xl': (136px, 8px, 67px, 'headline-large', 40px),
+);
+$densities: ('comfortable': 4px, 'compact': 8px);
+$icon-first: ':has(> [icon]:empty:first-child)';
+
+@mixin item($size, $font: true, $letter: true, $weight: true) {
+  $t: map.get($sizes, $size);
+  $type: map.get(v.$typescale, list.nth($t, 4));
+  height: list.nth($t, 1);
+  padding: 0 list.nth($t, 3);
+  @if $font {
+    font-size: map.get($type, 'font-size');
+    line-height: map.get($type, 'line-height');
+    @if $letter { letter-spacing: map.get($type, 'letter-spacing'); }
+  }
+  @if $weight { font-weight: map.get($type, 'font-weight'); }
+}
+
 @include c.host('button-group') {
   display: inline-flex;
-  vertical-align: middle;
+  vertical-align: baseline;
   gap: 12px;
   white-space: nowrap;
 
-  // Only the small/default size is reserved here. Other sizes retain their
-  // original baseline until their size reservation is addressed in #49.
-  &:not([size]), &[size='s'] {
-    vertical-align: baseline;
-    align-items: baseline;
+  &::before {
+    width: 0;
+    height: 32px;
+    margin-inline-end: -12px;
+    align-self: flex-start;
+  }
 
-    // A zero-width first item: the group's baseline is the buttons' and its
-    // height theirs, not a line box from the page's typography. The negative
-    // margin cancels the gap this item would add.
-    &::before {
-      content: "";
-      width: 0;
-      margin-inline-end: -12px;
+  &#{$icon-first} {
+    align-items: center;
+
+    &::before { content: ""; }
+  }
+
+  &[size='xs'] { gap: 18px; }
+  &:is([size='m'], [size='l'], [size='xl']) { gap: 8px; }
+
+  @each $density, $step in $densities {
+    &[density='#{$density}'] > * { height: 40px - $step; }
+  }
+
+  @each $size in ('xs', 'm', 'l', 'xl') {
+    &[size='#{$size}'] {
+      $t: map.get($sizes, $size);
+
+      > * {
+        @if $size == 'xs' { @include item($size, $font: false, $weight: false); }
+        @else if $size == 'm' { @include item($size, $weight: false); }
+        @else { @include item($size, $letter: false, $weight: false); }
+      }
+
+      @each $density, $step in $densities {
+        &[density='#{$density}'] > * { height: list.nth($t, 1) - $step; }
+      }
+
+      &::before {
+        height: list.nth($t, 1) * 0.5 + list.nth($t, 5) * 0.5;
+        @if $size == 'xs' { margin-inline-end: -1 * list.nth($t, 2); }
+      }
     }
+  }
+
+  &:is([size='m'], [size='l'], [size='xl'])::before { margin-inline-end: -8px; }
+  &:is([size='l'], [size='xl']) > * { letter-spacing: 0; font-weight: 400; }
+
+  @each $density, $step in $densities {
+    &[density='#{$density}']::before { margin-block-start: $step * -0.5; }
   }
 }
 
 @include c.declarations('button-group') {
   display: inline-flex;
   align-items: center;
-  box-sizing: border-box;
-  height: v.button('height-s');
-  padding: 0 v.button('padding-s');
-  border: v.button('outline-width-s') solid transparent;
-  @include m.typography('label-large');
+  flex: none;
+  min-width: 58px;
+  font-family: var(--mtrl-ref-typeface-plain,Roboto,sans-serif);
+  @include item('s');
+
+  &[icon]:empty { min-width: 0; padding: 0; aspect-ratio: 1; }
+}
+
+@include c.host('button-group') {
+  &[kind='connected'] {
+    gap: 2px;
+
+    &::before { margin-inline-end: -2px; }
+  }
+
+  &:is(:not([size]), [size='xs'], [size='s'])[kind='connected'] > * { min-width: 48px; }
 }

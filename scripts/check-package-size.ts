@@ -184,7 +184,11 @@ try {
   // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
   // and the manifest without its repository-only fields: 1,066,725 with main at 593162e0 in, same packer.
   // Under 1,078,000, so the ceiling stays.
-  assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
+  // #49's button-group pre-upgrade reservation: 1,078,362 at 45615776, Node
+  // 22.23.3 / npm 10.9.9, against 1,078,000; main's sheet at that head packs
+  // 1,076,913. The rule for explicit ceilings (measured plus 1%, up to the
+  // next 1,000, per scripts/size.ts) is 1,090,000.
+  assert(pack.size < 1_090_000, "npm tarball exceeds 1,090,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
