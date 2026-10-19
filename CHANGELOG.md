@@ -53,8 +53,8 @@ No layout jump at upgrade.
   moved on main (worst 401.66px); none moves now. The packed tarball outgrew
   its ceiling: measured 1,078,362 bytes under Node 22.23.3 / npm 10.9.9, the
   ceiling moves 1,078,000 → 1,090,000 bytes by the size script's own rule
-  (measured plus 1%, to the next thousand), on the owner's authorization — the
-  one budget this change outgrew.
+  (measured plus 1%, to the next thousand), the one budget this change
+  outgrew.
 
 ## [3.2.0] - 2026-10-18
 
