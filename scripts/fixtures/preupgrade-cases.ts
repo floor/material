@@ -369,6 +369,24 @@ for (const direction of ["vertical", "horizontal"] as const) {
   });
 }
 
+// Indented markup is the normal authoring shape: a group whose only content is
+// a newline and spaces has no option, and `:empty` does not see it (CSS counts
+// formatting whitespace as content). The strut must follow an actual option,
+// not the absence of children; otherwise this row reads 36px before upgrade
+// and 12px after, and the text and following block move up 24px, as the
+// compact empty tag did.
+for (const dir of ["ltr", "rtl"] as const) {
+  for (const direction of ["vertical", "horizontal"] as const) {
+    cases.push({
+      element: "radios", variant: `empty whitespace; ${dir}; ${direction}; baseline; 12/1`,
+      html: `<div dir="${dir}" style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}>\n    </m-radios><span id="next">Next</span></div>`,
+      style: "font-size:12px;line-height:1",
+      width: 850, host: "#subject", strictBox: true, settleMs: 100,
+      siblings: ["#next", "#inline", "#block"],
+    });
+  }
+}
+
 // Every combination the issue measures: five sizes, three densities, standard
 // and connected groups, text and icon buttons, both directions and five
 // consumer typographies. The host is the items' row and gap, so each
