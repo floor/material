@@ -164,8 +164,8 @@ describe("explicit contrast levels are opt-in", () => {
     // the attribute form, at the same specificity (styles/abstract/_mixins.scss,
     // src/elements/define.ts), with the card, app bars and badge converted.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6ac1a6bf79cde1535a0febbbaa82a1bd4fdf2ea039273e88d860d92b4dc783cd");
-    expect(css.length).toBe(533286);
+      .toBe("04b71e2c0ccb0f00e9c15441430626ec95140cb293597b18861ce8e94d972e57");
+    expect(css.length).toBe(533648);
   });
 
   test("today's sheets still resolve to the fixture", () => {

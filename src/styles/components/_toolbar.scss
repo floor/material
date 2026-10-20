@@ -176,12 +176,15 @@ $component: '#{base.$prefix}-toolbar';
       transform: translateX(calc(100% + var(--#{$component}-margin)));
     }
 
-    &.#{$component}--start:dir(rtl) {
-      transform: translateX(calc(100% + var(--#{$component}-margin)));
-    }
+    // The edge it leaves is physical: start and end trade sides in right-to-left.
+    @include m.rtl {
+      &.#{$component}--start {
+        transform: translateX(calc(100% + var(--#{$component}-margin)));
+      }
 
-    &.#{$component}--end:dir(rtl) {
-      transform: translateX(calc(-100% - var(--#{$component}-margin)));
+      &.#{$component}--end {
+        transform: translateX(calc(-100% - var(--#{$component}-margin)));
+      }
     }
 
     // In the flow there is no edge to leave by
