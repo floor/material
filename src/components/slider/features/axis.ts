@@ -19,9 +19,18 @@ export interface SliderAxis {
   cross: "width" | "height";
 }
 
-/** Whether the slider sits in a right-to-left layout: the nearest `dir` decides. */
-export const isRtl = (element: Element): boolean =>
-  element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+/**
+ * Whether the slider sits in a right-to-left layout: the computed direction,
+ * which inherits into a shadow root, where a `[dir]` ancestor selector cannot
+ * reach (the same computed-direction source the element base reflects). A DOM
+ * that does not resolve `direction` (JSDOM) falls back to the nearest `dir`.
+ */
+export const isRtl = (element: Element): boolean => {
+  const direction = globalThis.getComputedStyle?.(element).direction;
+  return direction
+    ? direction === "rtl"
+    : element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+};
 
 export const getAxis = (
   config: Pick<SliderConfig, "orientation" | "topToBottom">,
