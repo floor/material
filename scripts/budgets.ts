@@ -46,7 +46,8 @@ export const SSR_PAGE = {
 
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
 export const TARBALL_BYTES = 1_090_000;
-export const UNPACKED_BYTES = 6_458_000;
+// The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
+export const UNPACKED_BYTES = 6_524_000;
 
 /** check-slider.ts: its own build of the slider element entry. */
 export const SLIDER_INLINE_GZIP = 13_400;

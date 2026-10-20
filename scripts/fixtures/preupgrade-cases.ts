@@ -21,7 +21,7 @@ export interface PreupgradeCase {
   host?: string;
   siblings?: readonly string[];
   width?: number;
-  /** Define button/text-field neighbours before measuring a switch upgrade. */
+  /** Define button/text-field neighbours (and switch for tabs) before measuring. */
   prepareNeighbors?: boolean;
   strictBox?: boolean;
   /**
@@ -300,6 +300,27 @@ for (const dir of ["ltr", "rtl"]) {
     cases.push({ ...row, variant: `size=xs; ${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace("<m-button", '<m-button id="subject" dir="' + dir + '"')}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2" });
+  }
+}
+
+// Tabs must expose the same baseline as their empty reserved box. Measure the
+// issue's baseline row both with settled neighbours and with a shared upgrade;
+// a stable height alone misses the host and the whole row moving vertically.
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, line] = typography.split("/");
+    for (const icon of [false, true]) {
+      for (const prepareNeighbors of [false, true]) {
+        cases.push({
+          element: "tabs",
+          variant: `baseline; ${dir}; ${typography}; ${icon ? "icon" : "text"}; ${prepareNeighbors ? "tabs upgrade" : "peer upgrades"}`,
+          html: `<div dir="${dir}" style="display:flex;gap:8px;align-items:baseline"><m-tabs id="subject" value="a" style="width:360px;flex-shrink:0"><m-tab value="a"${icon ? ` icon="${ICON}"` : ""}>Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs><m-switch id="switch">Wi-Fi</m-switch><m-text-field id="field" label="Name"></m-text-field></div>`,
+          style: typography === "default" ? "" : `font-size:${size}px;line-height:${line}`,
+          width: 850, host: "#subject", siblings: ["#switch", "#field", "#inline", "#block"],
+          strictBox: true, hostHeight: icon ? 64 : 48, settleMs: 100, prepareNeighbors,
+        });
+      }
+    }
   }
 }
 

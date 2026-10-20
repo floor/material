@@ -512,9 +512,20 @@ try {
   }
 
   // Sum the entry's static dependency graph, not just its tiny re-export stub.
+  // Built with a relative entrypoint from the fixture's own directory: the
+  // bundler derives chunk names from the module path it is handed, and an
+  // absolute path in a fresh fixture moved the measured bytes a few gzipped
+  // bytes every run (floor/material#131).
   const splitDir = join(temporary, "split");
-  const split = await Bun.build({ entrypoints: [join(temporary, "button.ts")], outdir: splitDir,
-    format: "esm", target: "browser", minify: true, splitting: true });
+  const splitCwd = process.cwd();
+  process.chdir(temporary);
+  let split;
+  try {
+    split = await Bun.build({ entrypoints: ["button.ts"], outdir: splitDir,
+      format: "esm", target: "browser", minify: true, splitting: true });
+  } finally {
+    process.chdir(splitCwd);
+  }
   assert(split.success, String(split.logs));
   const byPath = new Map(split.outputs.map(output => [output.path, output]));
   const initial = new Set<string>();
