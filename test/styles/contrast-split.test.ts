@@ -163,9 +163,11 @@ describe("explicit contrast levels are opt-in", () => {
     // `[dir='rtl']`, through the host's class: `:where(:host(.mtrl-rtl))` beside
     // the attribute form, at the same specificity (styles/abstract/_mixins.scss,
     // src/elements/define.ts), with the card, app bars and badge converted.
+    // The side sheet mirrors its closed transform and solid overshoot cover
+    // on the logical docked edge (styles/components/_side-sheet.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6ac1a6bf79cde1535a0febbbaa82a1bd4fdf2ea039273e88d860d92b4dc783cd");
-    expect(css.length).toBe(533286);
+      .toBe("779329acebe7b02c0d6f691f067bd22a42b8846cea30fb68d8f3f4dcbdfd03ee");
+    expect(css.length).toBe(534827);
   });
 
   test("today's sheets still resolve to the fixture", () => {

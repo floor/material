@@ -155,10 +155,18 @@ $component: "#{base.$prefix}-side-sheet";
         // Cover the gap the spring's overshoot opens at the docked edge
         &.#{$component}--end .#{$component}__container {
             box-shadow: m.$sheet-overshoot-guard 0 0 0 t.color("surface");
+
+            @include m.rtl {
+                box-shadow: (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface");
+            }
         }
 
         &.#{$component}--start .#{$component}__container {
             box-shadow: (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface");
+
+            @include m.rtl {
+                box-shadow: m.$sheet-overshoot-guard 0 0 0 t.color("surface");
+            }
         }
     }
 
@@ -175,12 +183,20 @@ $component: "#{base.$prefix}-side-sheet";
             box-shadow: f.get-elevation(1), m.$sheet-overshoot-guard 0 0 0 t.color("surface-container-low");
             border-start-start-radius: v.shape("large");
             border-end-start-radius: v.shape("large");
+
+            @include m.rtl {
+                box-shadow: f.get-elevation(1), (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface-container-low");
+            }
         }
 
         &.#{$component}--start .#{$component}__container {
             box-shadow: f.get-elevation(1), (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface-container-low");
             border-start-end-radius: v.shape("large");
             border-end-end-radius: v.shape("large");
+
+            @include m.rtl {
+                box-shadow: f.get-elevation(1), m.$sheet-overshoot-guard 0 0 0 t.color("surface-container-low");
+            }
         }
     }
 
@@ -193,6 +209,15 @@ $component: "#{base.$prefix}-side-sheet";
         .#{$component}__container {
             transform: translateX(100%);
         }
+
+        // Flex placement follows direction; the physical exit must follow it.
+        // Limit the mirror to closed sheets so [dir] specificity cannot beat
+        // the open state's zero transform in the light DOM.
+        @include m.rtl {
+            &:not(.#{$component}--open) .#{$component}__container {
+                transform: translateX(-100%);
+            }
+        }
     }
 
     &--start {
@@ -200,6 +225,12 @@ $component: "#{base.$prefix}-side-sheet";
 
         .#{$component}__container {
             transform: translateX(-100%);
+        }
+
+        @include m.rtl {
+            &:not(.#{$component}--open) .#{$component}__container {
+                transform: translateX(100%);
+            }
         }
     }
 
