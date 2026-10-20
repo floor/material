@@ -328,7 +328,9 @@ try {
   const fixtures = [
     // From its subpath since 3.0.0 removed it from the root
     { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: 550 }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
-    { name: "button", code: "export { createButton } from 'material';", gzip: 13900 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // The nearest-boundary direction module: 13,923 measured, measured +1% is
+    // 14,062.23, the next multiple of 50 is 14,100.
+    { name: "button", code: "export { createButton } from 'material';", gzip: 14100 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
     // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
@@ -363,7 +365,9 @@ try {
     // Raised from 13,090: the track, stops and inset icon are a percentage
     // of the value, so the first paint does not wait on a measurement (13,356 measured).
     // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13400 },
+    // The nearest-boundary direction module: 13,434 measured, measured +1% is
+    // 13,568.34, the next multiple of 50 is 13,600.
+    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13600 },
     // The nearest-boundary direction module: 7,046 measured; kb(6.95) is 7,116
     // (70 above, short of 100), kb(7.0) is 7,168 (122 above).
     { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 7168 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
@@ -376,7 +380,9 @@ try {
     // The required asterisk, the live error, the trailing icon button: 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9250 },
+    // The nearest-boundary direction module: 9,417 measured, measured +100 is
+    // 9,517, the next multiple of 50 is 9,550.
+    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9550 },
     // The nearest-boundary direction module: 20,161 measured, measured +1% is
     // 20,363, the next multiple of 50 is 20,400.
     { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20400 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
