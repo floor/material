@@ -6,6 +6,7 @@ import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build, preview, type Manifest } from "vite";
 import { chromium, type Page } from "playwright";
+import { CONSUMER_INITIAL_GZIP } from "./budgets";
 import { createPackageFixture } from "./package-fixture";
 
 const fixture = await createPackageFixture();
@@ -131,7 +132,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   // The same module costs the packed button 8,595-8,597 across two local runs
   // against 8,550; measured +1% (8,683) rounded to the next 50 is 8,700.
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 750, "material/core/dom"], ["text-field", "createTextField", 10000, "material"], ["button", "createButton", 8700, "material"],
+    ["addClass", "addClass", CONSUMER_INITIAL_GZIP.addClass, "material/core/dom"], ["text-field", "createTextField", CONSUMER_INITIAL_GZIP["text-field"], "material"], ["button", "createButton", CONSUMER_INITIAL_GZIP.button, "material"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);

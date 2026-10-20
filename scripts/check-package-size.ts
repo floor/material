@@ -7,6 +7,7 @@ import { gzipSync, brotliCompressSync } from "node:zlib";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
+import { BUTTON_INITIAL_GZIP, PACKAGE_GZIP, SSR_ENTRY, SSR_PAGE, TARBALL_BYTES, UNPACKED_BYTES } from "./budgets";
 import { createPackageFixture, run } from "./package-fixture";
 import { internalIdRefs } from "./internal-ids";
 
@@ -92,9 +93,9 @@ try {
   // 306,706 B raw / 111,726 B gzip, including dependency license notices.
   // Client budgets below are unchanged.
   // 307,059 raw tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  assert(sizes.ssr.raw < 311_000, "SSR entry exceeds 311,000 raw bytes");
+  assert(sizes.ssr.raw < SSR_ENTRY.raw, `SSR entry exceeds ${SSR_ENTRY.raw.toLocaleString("en-US")} raw bytes`);
   // 111,838 gzip tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  assert(sizes.ssr.gzip < 113_000, "SSR entry exceeds 113,000 gzip bytes");
+  assert(sizes.ssr.gzip < SSR_ENTRY.gzip, `SSR entry exceeds ${SSR_ENTRY.gzip.toLocaleString("en-US")} gzip bytes`);
   // What a server-rendered page weighs, by style mode. No other check asserts it.
   // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
   // scenario whose size moves most with the number of elements.
@@ -127,7 +128,7 @@ try {
       // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
       // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
       // follow the measurement.
-      inline: { options: {}, raw: [693_900, 707_200], gzip: [11_050, 11_300] },
+      inline: { options: {}, ...SSR_PAGE.inline },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
       // block is in the linked host sheet, so this HTML does not grow for it.
@@ -135,7 +136,7 @@ try {
       // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
       // After the text-field rename merge the four numbers are unchanged:
       // inline 700,921 / 11,166, link 42,741 / 1,038. Floors and ceilings stay.
-      link: { options: { styles: "link", cssBase: "/css" }, raw: [42_300, 43_200], gzip: [900, 1_150] },
+      link: { options: { styles: "link", cssBase: "/css" }, ...SSR_PAGE.link },
     } as const;
     for (const [mode, budget] of Object.entries(budgets)) {
       const size = measure(page(budget.options));
@@ -188,7 +189,7 @@ try {
   // 22.23.3 / npm 10.9.9, against 1,078,000; main's sheet at that head packs
   // 1,076,913. The rule for explicit ceilings (measured plus 1%, up to the
   // next 1,000, per scripts/size.ts) is 1,090,000.
-  assert(pack.size < 1_090_000, "npm tarball exceeds 1,090,000 bytes");
+  assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -222,7 +223,7 @@ try {
   // so the ceiling stays.
   // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
   // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
-  assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
+  assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,
   // counted another way: every "./components/<name>" key. Which keys those must
@@ -327,10 +328,10 @@ try {
 
   const fixtures = [
     // From its subpath since 3.0.0 removed it from the root
-    { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: 550 }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
+    { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: PACKAGE_GZIP.addClass }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
     // The nearest-boundary direction module: 13,923 measured, measured +1% is
     // 14,062.23, the next multiple of 50 is 14,100.
-    { name: "button", code: "export { createButton } from 'material';", gzip: 14100 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    { name: "button", code: "export { createButton } from 'material';", gzip: PACKAGE_GZIP.button }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
     // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
@@ -367,25 +368,25 @@ try {
     // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The nearest-boundary direction module: 13,434 measured, measured +1% is
     // 13,568.34, the next multiple of 50 is 13,600.
-    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13600 },
+    { name: "slider", code: "export { createSlider } from 'material';", gzip: PACKAGE_GZIP.slider },
     // The nearest-boundary direction module: 7,046 measured; kb(6.95) is 7,116
     // (70 above, short of 100), kb(7.0) is 7,168 (122 above).
-    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 7168 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: PACKAGE_GZIP["navigation-rail"] }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // Contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,156 -> 7,631 gzip bytes (same packer).
     // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // Typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
     // Merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
-    { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';", gzip: 5400 },
+    { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';", gzip: PACKAGE_GZIP["navigation-rail-css"] },
     // The required asterisk, the live error, the trailing icon button: 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
     // The nearest-boundary direction module: 9,417 measured, measured +100 is
     // 9,517, the next multiple of 50 is 9,550.
-    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9550 },
+    { name: "text-field", code: "export { createTextField } from 'material';", gzip: PACKAGE_GZIP["text-field"] },
     // The nearest-boundary direction module: 20,161 measured, measured +1% is
     // 20,363, the next multiple of 50 is 20,400.
-    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20400 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: PACKAGE_GZIP.form }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The toolbar: 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu: 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator: 127,894 to 128,195, measured against 5b314c5.
@@ -401,16 +402,16 @@ try {
     // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the bounded rule.
     // The nearest-boundary direction module: 127,273 measured, measured +1% is
     // 128,545.73, the next multiple of 50 is 128,550.
-    { name: "all-js", code: "export * from 'material';", gzip: 128550 },
+    { name: "all-js", code: "export * from 'material';", gzip: PACKAGE_GZIP["all-js"] },
     // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
     // Merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
-    { name: "base-css", code: "import 'material/styles/base';", gzip: 3050 },
+    { name: "base-css", code: "import 'material/styles/base';", gzip: PACKAGE_GZIP["base-css"] },
     // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
     // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
-    { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: 5300 },
+    { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: PACKAGE_GZIP["button-css"] },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
@@ -433,14 +434,14 @@ try {
     // The text field's insets as custom properties, mirrored by one block for both
     // directions in place of a rule per case: 8,528 -> 8,268 against a8c24f7f.
     // 8,268 + 100 = 8,368, rounded up to 8,400.
-    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8400 },
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: PACKAGE_GZIP["select-css"] },
     // Contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
     // Typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
     // Merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
-    { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: 4850 },
+    { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: PACKAGE_GZIP["slider-css"] },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.
@@ -485,7 +486,7 @@ try {
     // inside a shadow tree (styles/abstract/_mixins.scss): 62,755 to 63,083
     // against 9fb89b44, Node 22.23.3 / npm 10.9.9. 63,083 + 1% = 63,714,
     // rounded up to 63,750, its ceiling.
-    { name: "full-css", code: "import 'material/styles';", gzip: 63750 },
+    { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
@@ -549,7 +550,7 @@ try {
   // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // The nearest-boundary direction module: 7,652 measured, measured +100 is
   // 7,752, the next multiple of 50 is 7,800.
-  assert(sizes["button-initial"].gzip < 7800, "Button initial payload exceeds 7,800 gzip bytes");
+  assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);

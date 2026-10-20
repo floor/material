@@ -140,10 +140,10 @@ describe('side sheet', () => {
   });
 
   test('both variants cover the overshoot gap at their edge', () => {
-    expect(value('side-sheet', '.mtrl-side-sheet--standard.mtrl-side-sheet--end .mtrl-side-sheet__container', 'box-shadow')).toBe('32px 0 0 0 var(--mtrl-sys-color-surface)');
-    expect(value('side-sheet', '.mtrl-side-sheet--standard.mtrl-side-sheet--start .mtrl-side-sheet__container', 'box-shadow')).toBe('-32px 0 0 0 var(--mtrl-sys-color-surface)');
-    expect(value('side-sheet', '.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container', 'box-shadow')).toEndWith(', 32px 0 0 0 var(--mtrl-sys-color-surface-container-low)');
-    expect(value('side-sheet', '.mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container', 'box-shadow')).toEndWith(', -32px 0 0 0 var(--mtrl-sys-color-surface-container-low)');
+    expect(value('side-sheet', '.mtrl-side-sheet--standard.mtrl-side-sheet--end .mtrl-side-sheet__container', 'box-shadow')).toBe('calc(32px * var(--mtrl-side-sheet-direction)) 0 0 0 var(--mtrl-sys-color-surface)');
+    expect(value('side-sheet', '.mtrl-side-sheet--standard.mtrl-side-sheet--start .mtrl-side-sheet__container', 'box-shadow')).toBe('calc(-32px * var(--mtrl-side-sheet-direction)) 0 0 0 var(--mtrl-sys-color-surface)');
+    expect(value('side-sheet', '.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container', 'box-shadow')).toEndWith(', calc(32px * var(--mtrl-side-sheet-direction)) 0 0 0 var(--mtrl-sys-color-surface-container-low)');
+    expect(value('side-sheet', '.mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container', 'box-shadow')).toEndWith(', calc(-32px * var(--mtrl-side-sheet-direction)) 0 0 0 var(--mtrl-sys-color-surface-container-low)');
   });
 
   test('reduced motion stops the open transitions too', () => {

@@ -18,10 +18,10 @@
  * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
  * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
  * least 100 bytes above the measured gzip. Explicit byte ceilings for a
- * bundle (the `gzip:` scenarios, `full-css` and the other `*-css` ones, the
- * SSR entry's gzip, `button-initial`, the adapters' brotli margin, the Vite
- * ceilings in check-consumer.ts, and the slider entry in check-slider.ts)
- * are measured plus 1% or 100 bytes, whichever is more, rounded up to the
+ * bundle (the constants in scripts/budgets.ts: the `gzip:` scenarios,
+ * `full-css` and the other `*-css` ones, the SSR entry and pages,
+ * `button-initial`, the Vite ceilings in check-consumer.ts, and the slider
+ * entry in check-slider.ts) are measured plus 1% or 100 bytes, whichever is more, rounded up to the
  * next multiple of 50, and never above the ceiling `next` had before this
  * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
  * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,

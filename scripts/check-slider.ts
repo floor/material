@@ -5,11 +5,13 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 import { gzipSync } from "node:zlib";
+import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
 
 declare global {
   interface Window {
     ready: boolean;
+    elementReady: boolean;
     slider: SliderComponent;
     mount: (config: SliderConfig, width: number, theme: string, mode: string) => void;
   }
@@ -34,13 +36,22 @@ const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).leng
 // +1% (13,365.33) rounded to the next 50 is 13,400, the same rule as the
 // package fixture's slider row.
 // 13,040 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-assert(size.gzip < 13400, `Slider JS exceeds 13,400 gzip bytes: ${size.gzip}`);
+assert(size.gzip < SLIDER_INLINE_GZIP, `Slider JS exceeds ${SLIDER_INLINE_GZIP.toLocaleString("en-US")} gzip bytes: ${size.gzip}`);
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
   if (url.pathname === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   if (reference && url.pathname === "/reference.js") return new Response(Bun.file(resolve(reference, "slider.js")), { headers: { "Content-Type": "text/javascript" } });
   if (reference && url.pathname === "/reference.css") return new Response(Bun.file(resolve(reference, "styles.css")));
+  // The element path: the page's dir sits outside the shadow root, where the
+  // slider reads its direction. Same 600px page as the issue's measurement.
+  if (url.pathname === "/element") {
+    const dir = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
+    return new Response(`<!doctype html><html dir="${dir}"><head><link rel="stylesheet" href="/styles.css">
+  <style>body{margin:0;padding:0}#host{width:600px}</style></head><body><div id="host"><m-slider value="40" aria-label="Volume"></m-slider></div>
+  <script type="module">import "/dist/elements/css/index.js";import {defineAll} from "/dist/elements/index.js";defineAll();window.elementReady=true;</script></body></html>`, { headers: { "Content-Type": "text/html" } });
+  }
+  if (url.pathname.startsWith("/dist/")) return new Response(Bun.file(`.${url.pathname}`));
   const old = url.searchParams.has("reference");
   // ?motion keeps the slider's own transitions, for the spring check below.
   const still = url.searchParams.has("motion") ? "" : ".mtrl-slider *{transition:none!important}";
@@ -400,6 +411,41 @@ try {
   console.log(JSON.stringify({ gzip: size.gzip, endTicks: endRows, endFailures }, null, 2));
   assert.deepEqual(endFailures, []);
 
+  // The element path: the page's dir is outside the shadow root, where the slider
+  // reads its direction. Value 40 on a 600px page must put the handle, the segments
+  // and the stop at the mirror of their LTR boxes (#114): before, the lookup could
+  // not cross the boundary and the RTL element kept every LTR position.
+  const elementErrors: string[] = [];
+  const elementBoxes = async (dir: "ltr" | "rtl") => {
+    const elementPage = await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
+    elementPage.on("pageerror", error => elementErrors.push(error.message));
+    await elementPage.goto(`http://127.0.0.1:${server.port}/element?dir=${dir}`);
+    await elementPage.waitForFunction(() => window.elementReady);
+    await elementPage.waitForTimeout(200);
+    const boxes = await elementPage.evaluate(() => {
+      const host = document.querySelector("m-slider") as HTMLElement;
+      const root = host.shadowRoot!;
+      const box = (selector: string) => [...root.querySelectorAll<HTMLElement>(selector)]
+        .map(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, w: rect.width }; })
+        .filter(rect => rect.w > 0);
+      return { handle: box("[part=handle]"), segment: box("[part=segment]"), dot: box("[part=dot]") };
+    });
+    await elementPage.close();
+    return boxes;
+  };
+  const ltrElement = await elementBoxes("ltr"), rtlElement = await elementBoxes("rtl");
+  assert.deepEqual(elementErrors, []);
+  const mirrorOf = (box: { x: number; w: number }) => 600 - box.x - box.w;
+  const mirrored = (what: string, ltr: { x: number; w: number }, rtl: { x: number; w: number }) =>
+    assert(Math.abs(rtl.x - mirrorOf(ltr)) <= 1,
+      `${what}: LTR x=${ltr.x.toFixed(2)} mirrors to ${mirrorOf(ltr).toFixed(2)}, RTL x=${rtl.x.toFixed(2)}`);
+  assert.equal(rtlElement.handle.length, ltrElement.handle.length, "element slider handle count");
+  assert.equal(rtlElement.segment.length, ltrElement.segment.length, "element slider segment count");
+  assert.equal(rtlElement.dot.length, ltrElement.dot.length, "element slider stop count");
+  mirrored("element slider handle", ltrElement.handle[0]!, rtlElement.handle[0]!);
+  ltrElement.segment.forEach((segment, index) => mirrored(`element slider segment[${index}]`, segment, rtlElement.segment[index]!));
+  if (ltrElement.dot[0]) mirrored("element slider stop", ltrElement.dot[0], rtlElement.dot[0]!);
+
   const timings: Record<string, number> = {};
   for (const [name, target] of [["dom", page], ["canvas", old]] as const) {
     if (!target) continue;
@@ -415,7 +461,7 @@ try {
       return durations.sort((a,b) => a-b)[2];
     });
   }
-  const report = { size, comparisons, updateMedianMs: timings, errors, motion: { overshoot, peakAfter, settledAfter } };
+  const report = { size, comparisons, updateMedianMs: timings, errors, elementRtl: { ltr: ltrElement, rtl: rtlElement }, motion: { overshoot, peakAfter, settledAfter } };
   await writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(JSON.stringify({ size, updateMedianMs: timings, motion: { overshootPct: +overshoot.toFixed(2), peakAfterMs: Math.round(peakAfter), settledAfterMs: Math.round(settledAfter) }, comparisons: comparisons.length, worst: [...comparisons].sort((a,b) => b.percent-a.percent).slice(0,8) }, null, 2));
+  console.log(JSON.stringify({ size, updateMedianMs: timings, elementRtl: { ltr: ltrElement, rtl: rtlElement }, motion: { overshootPct: +overshoot.toFixed(2), peakAfterMs: Math.round(peakAfter), settledAfterMs: Math.round(settledAfter) }, comparisons: comparisons.length, worst: [...comparisons].sort((a,b) => b.percent-a.percent).slice(0,8) }, null, 2));
 } finally { await browser.close(); server.stop(true); }
