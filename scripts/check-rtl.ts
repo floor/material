@@ -14,6 +14,7 @@
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
+import { checkCarouselRtl } from "./check-carousel-rtl";
 
 const WIDTH = 600;
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
@@ -263,6 +264,7 @@ try {
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
   }
   await checkSideSheetRtl(ltrPage);
+  await checkCarouselRtl(browser, server.url.href);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 
