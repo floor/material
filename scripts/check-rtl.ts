@@ -202,6 +202,8 @@ interface Bundled {
   page: { start: string; end: string; rangeStart: string; rangeEnd: string; prev: string; next: string };
   /** The values read where the direction is on the component's own root. */
   self: { start: string; rangeStart: string; rangeEnd: string; prev: string; next: string };
+  /** An LTR child instance inside an RTL parent instance, on both components. */
+  nested: { direction: string; start: string; end: string; rangeStart: string; rangeEnd: string; prev: string; next: string };
 }
 
 /** The bundled sheet's direction rules, on the class-based markup they target. */
@@ -226,6 +228,18 @@ const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () 
       <div id="self-range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
       <span id="self-prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
       <span id="self-next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>
+    </div>
+    <div dir="rtl" class="mtrl-toolbar mtrl-toolbar--hidden">
+      <div id="nested-toolbar-start" dir="ltr" class="mtrl-ltr mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--start" style="width:100px"></div>
+      <div id="nested-toolbar-end" dir="ltr" class="mtrl-ltr mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--end" style="width:100px"></div>
+    </div>
+    <div dir="rtl" class="mtrl-datepicker">
+      <div dir="ltr" class="mtrl-ltr mtrl-datepicker">
+        <div id="nested-range-start" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-start" style="width:48px;height:48px"></div>
+        <div id="nested-range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
+        <span id="nested-prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
+        <span id="nested-next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>
+      </div>
     </div>`;
   await frame();
   const style = (selector: string): CSSStyleDeclaration =>
@@ -247,6 +261,16 @@ const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () 
       rangeEnd: style("#self-range-end").backgroundPosition,
       prev: style("#self-prev svg").transform,
       next: style("#self-next svg").transform,
+    },
+    // The child's own values, not the values its parent instance carries.
+    nested: {
+      direction: getComputedStyle(document.querySelector("#nested-toolbar-start")!).direction,
+      start: style("#nested-toolbar-start").transform,
+      end: style("#nested-toolbar-end").transform,
+      rangeStart: style("#nested-range-start").backgroundPosition,
+      rangeEnd: style("#nested-range-end").backgroundPosition,
+      prev: style("#nested-prev svg").transform,
+      next: style("#nested-next svg").transform,
     },
   };
 });
@@ -433,6 +457,22 @@ try {
     "a direction on the component's own root did not mirror (the toolbar's closed offset, or the date picker's band and chevrons): the rule stood on an ancestor that the root does not have");
   assert.deepEqual(plainRtl.self, mirrored,
     "a direction on the component's own root did not mirror inside a right-to-left page");
+  // Custom properties inherit: an LTR instance inside an RTL parent must
+  // re-establish its own values at its root, or the parent's physical values
+  // reach it although its own computed direction is ltr.
+  const nestedLtr = {
+    direction: "ltr",
+    start: "matrix(1, 0, 0, 1, -116, 0)",
+    end: "matrix(1, 0, 0, 1, 116, 0)",
+    rangeStart: "100% 0px",
+    rangeEnd: "0px 0px",
+    prev: "none",
+    next: "none",
+  };
+  assert.deepEqual(plainLtr.nested, nestedLtr,
+    "an LTR instance inside an RTL parent did not keep its own direction values: the parent's custom properties inherited through it");
+  assert.deepEqual(plainRtl.nested, nestedLtr,
+    "an LTR instance inside an RTL parent did not keep its own direction values inside a right-to-left page");
 
   const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
@@ -527,7 +567,8 @@ try {
       `a subtree's nearer dir won both ways (factory drawer closed at x ${ltrCase.sheet} in an ltr subtree of an RTL page, ` +
       `${rtlCase.sheet} in an rtl subtree of an LTR page), and the bundled sheet mirrored its class-based markup ` +
       `(toolbar offsets -116→116, range band 100%→0%, chevrons flipped, the same with the direction on the component's ` +
-      `own root and on the factory's element through four runtime toggles).`,
+      `own root and on the factory's element through four runtime toggles, and an LTR instance nested inside an RTL ` +
+      `parent kept its own values).`,
   );
 } finally {
   await browser.close();

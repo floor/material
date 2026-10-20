@@ -20,6 +20,11 @@ $component: '#{base.$prefix}-toolbar';
   --#{$component}-content: #{t.color('on-surface-variant')};
   // The window-edge margin of a placed floating toolbar
   --#{$component}-margin: 16px;
+  // The direction multiplier: 1 left-to-right at the root, -1 under the
+  // direction arm. Declared here, not only used as a var() fallback, because a
+  // custom property inherits: a nested LTR instance must not read its RTL
+  // parent's -1.
+  --#{$component}-dir: 1;
 
   display: flex;
   align-items: center;
@@ -173,13 +178,13 @@ $component: '#{base.$prefix}-toolbar';
     }
 
     // The edge it leaves is physical: start and end trade sides in right-to-left,
-    // where the multiplier is -1; its var() fallback is the 1 in left-to-right.
+    // where the root's multiplier is -1.
     &.#{$component}--start {
-      transform: translateX(calc(-1 * var(--#{$component}-dir, 1) * (100% + var(--#{$component}-margin))));
+      transform: translateX(calc(-1 * var(--#{$component}-dir) * (100% + var(--#{$component}-margin))));
     }
 
     &.#{$component}--end {
-      transform: translateX(calc(var(--#{$component}-dir, 1) * (100% + var(--#{$component}-margin))));
+      transform: translateX(calc(var(--#{$component}-dir) * (100% + var(--#{$component}-margin))));
     }
 
     // In the flow there is no edge to leave by
