@@ -350,6 +350,8 @@ for (const dir of ["ltr", "rtl"]) {
 // in ltr, where the defect and its mirror are visible.
 const ownBoxHosts: Record<string, number> = {
   "icon-button": 40, "button-group": 40, "split-button": 40, datepicker: 96, checkbox: 48, select: 56,
+  // Three 48px rows: the default (vertical) group.
+  radios: 144,
 };
 for (const [element, height] of Object.entries(ownBoxHosts)) {
   const row = cases.find(c => c.element === element && c.variant === "default")!;
@@ -370,6 +372,39 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
         });
       }
     }
+  }
+}
+
+// An empty group holds no row and no baseline: the strut that reserves the
+// populated group's baseline must not make one where there are no items.
+// Unguarded it gives the zero-height host a baseline 34px down, the row is
+// 36px before upgrade and 12px after, and the text and following block move
+// up 24px. Both directions.
+for (const direction of ["vertical", "horizontal"] as const) {
+  cases.push({
+    element: "radios", variant: `empty; ${direction}; baseline; 12/1`,
+    html: `<div style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}></m-radios><span id="next">Next</span></div>`,
+    style: "font-size:12px;line-height:1",
+    width: 850, host: "#subject", strictBox: true, settleMs: 100,
+    siblings: ["#next", "#inline", "#block"],
+  });
+}
+
+// Indented markup is the normal authoring shape: a group whose only content is
+// a newline and spaces has no option, and `:empty` does not see it (CSS counts
+// formatting whitespace as content). The strut must follow an actual option,
+// not the absence of children; otherwise this row reads 36px before upgrade
+// and 12px after, and the text and following block move up 24px, as the
+// compact empty tag did.
+for (const dir of ["ltr", "rtl"] as const) {
+  for (const direction of ["vertical", "horizontal"] as const) {
+    cases.push({
+      element: "radios", variant: `empty whitespace; ${dir}; ${direction}; baseline; 12/1`,
+      html: `<div dir="${dir}" style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}>\n    </m-radios><span id="next">Next</span></div>`,
+      style: "font-size:12px;line-height:1",
+      width: 850, host: "#subject", strictBox: true, settleMs: 100,
+      siblings: ["#next", "#inline", "#block"],
+    });
   }
 }
 
