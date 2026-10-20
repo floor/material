@@ -158,7 +158,7 @@ $component: '#{base.$prefix}-toolbar';
 
   // Off screen, past the edge it is placed at
   &--hidden {
-    @include m.rtl {
+    @include m.rtl($self: true) {
       --#{$component}-dir: -1;
     }
 

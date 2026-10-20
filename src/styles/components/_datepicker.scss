@@ -21,7 +21,7 @@ $component: '#{base.$prefix}-datepicker';
   --#{$component}-range-start: 100% 0;
   --#{$component}-range-end: 0 0;
   --#{$component}-flip: none;
-  @include m.rtl {
+  @include m.rtl($self: true) {
     --#{$component}-range-start: 0 0;
     --#{$component}-range-end: 100% 0;
     --#{$component}-flip: scaleX(-1);

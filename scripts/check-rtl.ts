@@ -198,12 +198,9 @@ const measureFixtures = (page: Page): Promise<Measures> => page.evaluate(async (
 }, ICON);
 
 interface Bundled {
-  start: string;
-  end: string;
-  rangeStart: string;
-  rangeEnd: string;
-  prev: string;
-  next: string;
+  page: { start: string; end: string; rangeStart: string; rangeEnd: string; prev: string; next: string };
+  /** The values read where the direction is on the component's own root. */
+  self: { start: string; rangeStart: string; rangeEnd: string; prev: string; next: string };
 }
 
 /** The bundled sheet's direction rules, on the class-based markup they target. */
@@ -221,17 +218,35 @@ const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () 
       <div id="range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
       <span id="prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
       <span id="next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>
+    </div>
+    <div id="toolbar-self" class="mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--start mtrl-rtl" style="width:100px"></div>
+    <div id="datepicker-self" class="mtrl-datepicker" dir="rtl">
+      <div id="self-range-start" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-start" style="width:48px;height:48px"></div>
+      <div id="self-range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
+      <span id="self-prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
+      <span id="self-next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>
     </div>`;
   await frame();
   const style = (selector: string): CSSStyleDeclaration =>
     getComputedStyle(document.querySelector(selector)!);
+  // The last two carry the direction on the root itself: the class the runtime
+  // reflects onto a factory's root, and a `dir` on the element.
   return {
-    start: style("#toolbar-start").transform,
-    end: style("#toolbar-end").transform,
-    rangeStart: style("#range-start").backgroundPosition,
-    rangeEnd: style("#range-end").backgroundPosition,
-    prev: style("#prev svg").transform,
-    next: style("#next svg").transform,
+    page: {
+      start: style("#toolbar-start").transform,
+      end: style("#toolbar-end").transform,
+      rangeStart: style("#range-start").backgroundPosition,
+      rangeEnd: style("#range-end").backgroundPosition,
+      prev: style("#prev svg").transform,
+      next: style("#next svg").transform,
+    },
+    self: {
+      start: style("#toolbar-self").transform,
+      rangeStart: style("#self-range-start").backgroundPosition,
+      rangeEnd: style("#self-range-end").backgroundPosition,
+      prev: style("#self-prev svg").transform,
+      next: style("#self-next svg").transform,
+    },
   };
 });
 
@@ -269,6 +284,61 @@ const measureSubtree = (
     await frame();
     return measured;
   }, subtreeDir);
+
+interface RootState {
+  direction: string;
+  rtlClass: boolean;
+  rangeStart: string;
+  rangeEnd: string;
+  prev: string;
+  next: string;
+}
+
+/**
+ * The actual factory case: the reviewer's repro. A range picker in an LTR
+ * page, its direction set on the element itself, resolved by the runtime onto
+ * that root — and the range band and month chevrons follow, through repeated
+ * runtime toggles.
+ */
+const measureRootDirection = (
+  page: Page,
+): Promise<{ ltr: RootState; rtl: RootState; back: RootState; again: RootState }> =>
+  page.evaluate(async () => {
+    const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    const host = document.getElementById("host") as HTMLElement;
+    host.innerHTML = "";
+    const picker = (window as unknown as {
+      mtrl: {
+        createDatePicker: (config: Record<string, unknown>) => { element: HTMLElement; open: () => void };
+      };
+    }).mtrl.createDatePicker({ selectionMode: "range", value: ["2026-10-12", "2026-10-16"], animate: false });
+    host.appendChild(picker.element);
+    picker.open();
+    await frame();
+    const read = () => {
+      const style = (selector: string): CSSStyleDeclaration => getComputedStyle(picker.element.querySelector(selector)!);
+      return {
+        direction: getComputedStyle(picker.element).direction,
+        rtlClass: picker.element.classList.contains("mtrl-rtl"),
+        rangeStart: style(".mtrl-datepicker__cell--range-start").backgroundPosition,
+        rangeEnd: style(".mtrl-datepicker__cell--range-end").backgroundPosition,
+        prev: style(".mtrl-datepicker__prev svg").transform,
+        next: style(".mtrl-datepicker__next svg").transform,
+      };
+    };
+    const ltr = read();
+    picker.element.dir = "rtl";
+    await frame();
+    const rtl = read();
+    picker.element.dir = "ltr";
+    await frame();
+    const back = read();
+    picker.element.dir = "rtl";
+    await frame();
+    const again = read();
+    picker.element.remove();
+    return { ltr, rtl, back, again };
+  });
 
 const browser = await chromium.launch({ headless: true });
 const TOLERANCE = 0.5;
@@ -333,7 +403,7 @@ try {
   await plainRtlPage.goto(`${server.url.href}plain?dir=rtl`);
   const plainLtr = await measureBundled(plainLtrPage);
   const plainRtl = await measureBundled(plainRtlPage);
-  assert.deepEqual(plainLtr, {
+  assert.deepEqual(plainLtr.page, {
     start: "matrix(1, 0, 0, 1, -116, 0)",
     end: "matrix(1, 0, 0, 1, 116, 0)",
     rangeStart: "100% 0px",
@@ -341,7 +411,7 @@ try {
     prev: "none",
     next: "none",
   }, "the bundled stylesheet changed left-to-right: the toolbar left the wrong edge, or the date picker's band or chevrons moved");
-  assert.deepEqual(plainRtl, {
+  assert.deepEqual(plainRtl.page, {
     start: "matrix(1, 0, 0, 1, 116, 0)",
     end: "matrix(1, 0, 0, 1, -116, 0)",
     rangeStart: "0px 0px",
@@ -349,6 +419,19 @@ try {
     prev: "matrix(-1, 0, 0, 1, 0, 0)",
     next: "matrix(-1, 0, 0, 1, 0, 0)",
   }, "the bundled stylesheet's direction rules did not match in a right-to-left page: the bundler lowered them out of reach");
+  // The direction on the component's own root — the class the runtime reflects
+  // onto a factory's root, or a `dir` on the element — mirrors the same values.
+  const mirrored = {
+    start: "matrix(1, 0, 0, 1, 116, 0)",
+    rangeStart: "0px 0px",
+    rangeEnd: "100% 0px",
+    prev: "matrix(-1, 0, 0, 1, 0, 0)",
+    next: "matrix(-1, 0, 0, 1, 0, 0)",
+  };
+  assert.deepEqual(plainLtr.self, mirrored,
+    "a direction on the component's own root did not mirror (the toolbar's closed offset, or the date picker's band and chevrons): the rule stood on an ancestor that the root does not have");
+  assert.deepEqual(plainRtl.self, mirrored,
+    "a direction on the component's own root did not mirror inside a right-to-left page");
 
   const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
@@ -405,6 +488,25 @@ try {
     "a dir=rtl subtree of an LTR page did not resolve right-to-left (the closed end drawer should sit off the left edge)",
   );
 
+  // The factory's own direction, set on its element in an LTR page (a `dir`
+  // on the picker itself is the nearest boundary), through runtime toggles.
+  const factoryPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
+  await factoryPage.goto(`${server.url.href}?dir=ltr`);
+  await factoryPage.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+  const rootDirection = await measureRootDirection(factoryPage);
+  const rootLtr: RootState = {
+    direction: "ltr", rtlClass: false,
+    rangeStart: "100% 0px", rangeEnd: "0px 0px", prev: "none", next: "none",
+  };
+  const rootRtl: RootState = {
+    direction: "rtl", rtlClass: true,
+    rangeStart: "0px 0px", rangeEnd: "100% 0px",
+    prev: "matrix(-1, 0, 0, 1, 0, 0)", next: "matrix(-1, 0, 0, 1, 0, 0)",
+  };
+  assert.deepEqual(rootDirection, { ltr: rootLtr, rtl: rootRtl, back: rootLtr, again: rootRtl },
+    "a direction on the date picker's own element did not mirror its range band and month chevrons, or a runtime toggle did not follow");
+  await factoryPage.close();
+
   // A page that switches direction after the elements connected: the observer
   // re-reads the host's computed direction and the sheet follows.
   const switched = await ltrPage.evaluate(async () => {
@@ -422,7 +524,8 @@ try {
       `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), a runtime dir change followed, ` +
       `a subtree's nearer dir won both ways (factory drawer closed at x ${ltrCase.sheet} in an ltr subtree of an RTL page, ` +
       `${rtlCase.sheet} in an rtl subtree of an LTR page), and the bundled sheet mirrored its class-based markup ` +
-      `(toolbar offsets -116→116, range band 100%→0%, chevrons flipped).`,
+      `(toolbar offsets -116→116, range band 100%→0%, chevrons flipped, the same with the direction on the component's ` +
+      `own root and on the factory's element through four runtime toggles).`,
   );
 } finally {
   await browser.close();
