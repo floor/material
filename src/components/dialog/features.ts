@@ -729,6 +729,12 @@ export const withVisibility =
         return;
       }
 
+      // A caller may have mounted the public surface elsewhere. Put it back
+      // inside the scrim before its background siblings are made inert.
+      if (component.element.parentNode !== component.overlay) {
+        component.overlay.appendChild(component.element);
+      }
+
       // Add to DOM if needed
       if (component.overlay && !component.overlay.parentNode) {
         const container = component.structure.container || document.body;
