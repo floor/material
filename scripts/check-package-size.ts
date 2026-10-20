@@ -469,7 +469,11 @@ try {
     // Merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
     // The toolbar's marker selectors grew a default-tag arm each (:is()), the
     // belt for marker-less markup: 62,746 to 62,755, ceiling to 62,760.
-    { name: "full-css", code: "import 'material/styles';", gzip: 62760 },
+    // The direction rule's second form, the host class that reaches a part
+    // inside a shadow tree (styles/abstract/_mixins.scss): 62,755 to 63,083
+    // against 9fb89b44, Node 22.23.3 / npm 10.9.9. 63,083 + 1% = 63,714,
+    // rounded up to 63,750, its ceiling.
+    { name: "full-css", code: "import 'material/styles';", gzip: 63750 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
