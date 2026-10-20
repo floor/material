@@ -354,6 +354,21 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
   }
 }
 
+// An empty group holds no row and no baseline: the strut that reserves the
+// populated group's baseline must not make one where there are no items.
+// Unguarded it gives the zero-height host a baseline 34px down, the row is
+// 36px before upgrade and 12px after, and the text and following block move
+// up 24px. Both directions.
+for (const direction of ["vertical", "horizontal"] as const) {
+  cases.push({
+    element: "radios", variant: `empty; ${direction}; baseline; 12/1`,
+    html: `<div style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}></m-radios><span id="next">Next</span></div>`,
+    style: "font-size:12px;line-height:1",
+    width: 850, host: "#subject", strictBox: true, settleMs: 100,
+    siblings: ["#next", "#inline", "#block"],
+  });
+}
+
 // Every combination the issue measures: five sizes, three densities, standard
 // and connected groups, text and icon buttons, both directions and five
 // consumer typographies. The host is the items' row and gap, so each
