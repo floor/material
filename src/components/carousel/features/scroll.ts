@@ -73,6 +73,20 @@ export const withScroll = (config: CarouselConfig) =>
     const snapClass = `${prefix}__snap`;
     element.classList.toggle(`${prefix}--snap`, snap);
 
+    // Direction: the scroll range is 0..scrollRange in logical terms, and the
+    // browser's scrollLeft is that in LTR but 0..-scrollRange in RTL
+    // (Chromium's negative RTL range), so every read and write of scrollLeft
+    // passes through the normalized pair below. Placement mirrors too: the
+    // snap points and items anchor to the track's right edge and the
+    // translate negates. Vertical (full-screen) scrolls top to bottom in
+    // either direction, so none of this applies there. The computed direction
+    // inherits into a shadow tree, which is where an element's factory lives;
+    // read it at build, and again in layout(), where a changed direction
+    // rebuilds.
+    const readRtl = (): boolean =>
+      !vertical && getComputedStyle(scroller).direction === "rtl";
+    let rtl = readRtl();
+
     let lastWheel = -Infinity;
     let strategy: Strategy | null = null;
     let count = 0;
@@ -95,15 +109,16 @@ export const withScroll = (config: CarouselConfig) =>
       pendingTimer = window.setTimeout(clearPending, 1000);
     };
 
-    const scrollPosition = (): number => (vertical ? scroller.scrollTop : scroller.scrollLeft);
+    const scrollPosition = (): number => (vertical ? scroller.scrollTop : rtl ? -scroller.scrollLeft : scroller.scrollLeft);
     const setScrollPosition = (value: number, smooth: boolean): void => {
       const behavior = smooth && !reduceMotion?.matches ? "smooth" : "auto";
+      const physical = rtl ? -value : value;
       if (typeof scroller.scrollTo === "function") {
-        scroller.scrollTo(vertical ? { top: value, behavior } : { left: value, behavior });
+        scroller.scrollTo(vertical ? { top: value, behavior } : { left: physical, behavior });
       } else if (vertical) {
         scroller.scrollTop = value;
       } else {
-        scroller.scrollLeft = value;
+        scroller.scrollLeft = physical;
       }
     };
 
@@ -139,6 +154,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const build = (): void => {
+      rtl = readRtl();
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
@@ -170,7 +186,12 @@ export const withScroll = (config: CarouselConfig) =>
       snapPositions.forEach((snapPosition) => {
         const point = document.createElement("div");
         point.className = snapClass;
-        point.style[vertical ? "top" : "left"] = `${snapPosition}px`;
+        // Snap points sit at their logical offset from the inline-start edge:
+        // the track's left in LTR, its right in RTL, where scroll-snap-align:
+        // start aligns the point's right edge and scrollLeft settles at the
+        // negated offset. The stylesheet's left: 0 must not win over right.
+        point.style[vertical ? "top" : rtl ? "right" : "left"] = `${snapPosition}px`;
+        if (!vertical && rtl) point.style.left = "auto";
         fragment.appendChild(point);
       });
       track.appendChild(fragment);
@@ -178,6 +199,11 @@ export const withScroll = (config: CarouselConfig) =>
       slideElements.forEach((el) => {
         el.style[vertical ? "height" : "width"] = `${strategy!.itemSize}px`;
         el.style[vertical ? "width" : "height"] = "";
+        // Items anchor to the track's inline-start edge, so the negated
+        // translate in layout() places them mirrored (the stylesheet's left: 0
+        // would otherwise win over right: 0).
+        el.style.left = rtl ? "auto" : "";
+        el.style.right = rtl ? "0" : "";
       });
       element.style.setProperty(`--${config.prefix}-carousel-corner`, corner);
     };
@@ -186,6 +212,13 @@ export const withScroll = (config: CarouselConfig) =>
 
     const layout = (): void => {
       if (!strategy) return;
+      // A dir flip re-anchors the scroller (the browser re-clamps scrollLeft,
+      // which lands here), and the snap points and item anchors are physical,
+      // so a changed direction needs a rebuild, not a layout.
+      if (readRtl() !== rtl) {
+        rebuild();
+        return;
+      }
       const position = scrollPosition();
       const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED;
       const itemSize = strategy.itemSize;
@@ -218,7 +251,7 @@ export const withScroll = (config: CarouselConfig) =>
           continue;
         }
         el.style.visibility = "";
-        el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${start}px, 0, 0)`;
+        el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${rtl ? -start : start}px, 0, 0)`;
         el.style.clipPath = inset > 0 ? (vertical ? `inset(${inset}px 0 round ${corner})` : `inset(0 ${inset}px round ${corner})`) : "";
         el.style.setProperty(`--${config.prefix}-carousel-fade`, fade.toFixed(3));
       }
@@ -273,8 +306,9 @@ export const withScroll = (config: CarouselConfig) =>
       stopWheel();
       const from = indexOf(e.target);
       if (from < 0) return;
-      const forward = vertical ? "ArrowDown" : "ArrowRight";
-      const backward = vertical ? "ArrowUp" : "ArrowLeft";
+      // Arrows are physical: the forward item sits leftwards on an RTL page.
+      const forward = vertical ? "ArrowDown" : rtl ? "ArrowLeft" : "ArrowRight";
+      const backward = vertical ? "ArrowUp" : rtl ? "ArrowRight" : "ArrowLeft";
       let target = -1;
       if (e.key === forward) target = from + 1;
       else if (e.key === backward) target = from - 1;
@@ -338,8 +372,9 @@ export const withScroll = (config: CarouselConfig) =>
       if (dt > 0) dragVelocity = (position - dragLast) / dt;
       dragLast = position;
       dragLastTime = e.timeStamp;
-      if (vertical) scroller.scrollTop = dragScrollStart - delta;
-      else scroller.scrollLeft = dragScrollStart - delta;
+      const drag = dragScrollStart - delta;
+      if (vertical) scroller.scrollTop = drag;
+      else scroller.scrollLeft = rtl ? -drag : drag;
       e.preventDefault();
     };
 
@@ -411,7 +446,8 @@ export const withScroll = (config: CarouselConfig) =>
       // velocity is still high. Land there rather than overshooting it.
       const resting = wheelDirection * (wheelPosition - wheelTarget) >= 0 ||
         (Math.abs(wheelPosition - wheelTarget) < 0.5 && Math.abs(wheelVelocity) < 5);
-      scroller.scrollLeft = resting ? wheelTarget : wheelPosition;
+      const at = resting ? wheelTarget : wheelPosition;
+      scroller.scrollLeft = rtl ? -at : at;
       if (resting) stopWheel(false);
       else wheelFrame = window.requestAnimationFrame(glide);
     };
@@ -462,7 +498,7 @@ export const withScroll = (config: CarouselConfig) =>
           wheelSnapPriority = scroller.style.getPropertyPriority("scroll-snap-type");
           scroller.style.setProperty("scroll-snap-type", "none");
           // Also cancel any native smooth navigation already in flight.
-          scroller.scrollLeft = position;
+          scroller.scrollLeft = rtl ? -position : position;
           wheelPosition = position;
           wheelTime = performance.now();
           wheelFrame = window.requestAnimationFrame(glide);
