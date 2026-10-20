@@ -10,6 +10,14 @@
 // with `:host(.mtrl-rtl) &`. The numbers #113 lists are asserted where a
 // measure does not depend on text metrics.
 //
+// A second pass measures the direction rules in bundled output. A consumer
+// bundles `material/styles` (Bun.build, minified, as size:check does), and the
+// bundler lowers `:dir(rtl)` into `:lang()` lists that match no `dir="rtl"`
+// element: the toolbar's hidden offsets and the date picker's range band and
+// month chevrons stopped mirroring. The class-based markup those rules target
+// is rendered in LTR and RTL pages under the bundled sheet, and the same swap
+// is required.
+//
 //   bun run build && bun run rtl:check
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
@@ -34,14 +42,39 @@ const bundle = await Bun.build({ entrypoints: ["scripts/fixtures/elements.ts"], 
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
 
+// What a consumer's bundler makes of the shipped stylesheet: minified, with
+// every direction rule the bundler can lower lowered.
+const bundledBuild = await Bun.build({
+  entrypoints: ["dist/styles.css"],
+  format: "esm",
+  target: "browser",
+  minify: true,
+});
+assert(bundledBuild.success, String(bundledBuild.logs));
+const bundledCss = await bundledBuild.outputs.find((output) => output.path.endsWith(".css"))!.text();
+
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
   fetch(request) {
-    const path = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const path = url.pathname;
+    // The bundled sheet, for the class-based markup the direction rules target.
+    if (path === "/styles.bundled.css") {
+      return new Response(bundledCss, { headers: { "Content-Type": "text/css" } });
+    }
+    if (path === "/plain") {
+      const direction = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
+      return new Response(
+        `<!doctype html><html dir="${direction}"><head><link rel="stylesheet" href="/styles.bundled.css">
+<style>body{margin:0;width:${WIDTH}px}</style></head>
+<body><main id="host"></main></body></html>`,
+        { headers: { "Content-Type": "text/html" } },
+      );
+    }
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
-    const direction = new URL(request.url).searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
+    const direction = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
     return new Response(
       `<!doctype html><html dir="${direction}" data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;width:${WIDTH}px}</style></head>
@@ -163,6 +196,42 @@ const measureFixtures = (page: Page): Promise<Measures> => page.evaluate(async (
   };
 }, ICON);
 
+interface Bundled {
+  start: string;
+  end: string;
+  rangeStart: string;
+  rangeEnd: string;
+  prev: string;
+  next: string;
+}
+
+/** The bundled sheet's direction rules, on the class-based markup they target. */
+const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () => {
+  const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+  const host = document.getElementById("host") as HTMLElement;
+  // The toolbar is hidden past the edge it leaves; the date picker's range band
+  // starts at the selection's centre and its month chevrons point the way the
+  // months go.
+  host.innerHTML = `
+    <div id="toolbar-start" class="mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--start" style="width:100px"></div>
+    <div id="toolbar-end" class="mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--end" style="width:100px"></div>
+    <div id="range-start" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-start" style="width:48px;height:48px"></div>
+    <div id="range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
+    <span id="prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
+    <span id="next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>`;
+  await frame();
+  const style = (selector: string): CSSStyleDeclaration =>
+    getComputedStyle(document.querySelector(selector)!);
+  return {
+    start: style("#toolbar-start").transform,
+    end: style("#toolbar-end").transform,
+    rangeStart: style("#range-start").backgroundPosition,
+    rangeEnd: style("#range-end").backgroundPosition,
+    prev: style("#prev svg").transform,
+    next: style("#next svg").transform,
+  };
+});
+
 const browser = await chromium.launch({ headless: true });
 const TOLERANCE = 0.5;
 const near = (a: number, b: number): boolean => Math.abs(a - b) <= TOLERANCE;
@@ -219,6 +288,30 @@ const differences = (ltr: Measures, rtl: Measures): string[] => {
 };
 
 try {
+  // Bundled output first: the lowering is the defect this pass exists for.
+  const plainLtrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
+  const plainRtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
+  await plainLtrPage.goto(`${server.url.href}plain?dir=ltr`);
+  await plainRtlPage.goto(`${server.url.href}plain?dir=rtl`);
+  const plainLtr = await measureBundled(plainLtrPage);
+  const plainRtl = await measureBundled(plainRtlPage);
+  assert.deepEqual(plainLtr, {
+    start: "matrix(1, 0, 0, 1, -116, 0)",
+    end: "matrix(1, 0, 0, 1, 116, 0)",
+    rangeStart: "100% 0px",
+    rangeEnd: "0px 0px",
+    prev: "none",
+    next: "none",
+  }, "the bundled stylesheet changed left-to-right: the toolbar left the wrong edge, or the date picker's band or chevrons moved");
+  assert.deepEqual(plainRtl, {
+    start: "matrix(1, 0, 0, 1, 116, 0)",
+    end: "matrix(1, 0, 0, 1, -116, 0)",
+    rangeStart: "0px 0px",
+    rangeEnd: "100% 0px",
+    prev: "matrix(-1, 0, 0, 1, 0, 0)",
+    next: "matrix(-1, 0, 0, 1, 0, 0)",
+  }, "the bundled stylesheet's direction rules did not match in a right-to-left page: the bundler lowered them out of reach");
+
   const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   await ltrPage.goto(`${server.url.href}?dir=ltr`);
@@ -272,7 +365,8 @@ try {
   console.log(
     `Passed RTL: ${Object.keys(ltr).length} fixtures measured in LTR and RTL, every box mirrored ` +
       `(drawer start sheet 0→240, drawer item padding 16/24→24/16, icon x 28→548, bottom padding 4/16→16/4, ` +
-      `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), and a runtime dir change followed.`,
+      `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), and a runtime dir change followed; ` +
+      `bundled: toolbar offsets -116→116, range band 100%→0%, chevrons flipped.`,
   );
 } finally {
   await browser.close();
