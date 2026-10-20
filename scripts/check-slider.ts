@@ -411,9 +411,10 @@ try {
   // reads its direction. Value 40 on a 600px page must put the handle, the segments
   // and the stop at the mirror of their LTR boxes (#114): before, the lookup could
   // not cross the boundary and the RTL element kept every LTR position.
+  const elementErrors: string[] = [];
   const elementBoxes = async (dir: "ltr" | "rtl") => {
     const elementPage = await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
-    elementPage.on("pageerror", error => errors.push(error.message));
+    elementPage.on("pageerror", error => elementErrors.push(error.message));
     await elementPage.goto(`http://127.0.0.1:${server.port}/element?dir=${dir}`);
     await elementPage.waitForFunction(() => window.elementReady);
     await elementPage.waitForTimeout(200);
@@ -429,6 +430,7 @@ try {
     return boxes;
   };
   const ltrElement = await elementBoxes("ltr"), rtlElement = await elementBoxes("rtl");
+  assert.deepEqual(elementErrors, []);
   const mirrorOf = (box: { x: number; w: number }) => 600 - box.x - box.w;
   const mirrored = (what: string, ltr: { x: number; w: number }, rtl: { x: number; w: number }) =>
     assert(Math.abs(rtl.x - mirrorOf(ltr)) <= 1,
