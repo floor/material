@@ -34,6 +34,8 @@ const FLING_VELOCITY = 0.4;
 const DRAG_THRESHOLD = 4;
 /** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
 const WHEEL_QUIET = 120;
+/** A snap the wheel destination has passed by less than this is still its landing snap. */
+const WHEEL_SNAP_REACH = 1;
 
 interface ScrollComponent {
   getCurrentSlide: () => number;
@@ -499,8 +501,11 @@ export const withScroll = (config: CarouselConfig) =>
       wheelDelta += e.deltaY * unit;
       const destination = Math.max(0, Math.min(end, wheelStart + wheelDelta));
       let index = direction > 0 ? count - 1 : 0;
+      // A snap the destination has passed by less than WHEEL_SNAP_REACH still
+      // lands: a fresh notch that starts just short of a snap lands on it,
+      // not the next one.
       for (let i = direction > 0 ? 0 : count - 1; i >= 0 && i < count; i += direction) {
-        if (direction * (snapPositions[i]! - destination) >= 0 &&
+        if (direction * (snapPositions[i]! - destination) >= -WHEEL_SNAP_REACH &&
             direction * (snapPositions[i]! - wheelStart) > 0) {
           index = i;
           break;

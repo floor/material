@@ -187,6 +187,74 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
   assert.deepEqual(failures, [], "carousel wheel browser regressions");
 }
 
+/** Packed carousel: a fresh wheel notch just short of a snap lands on that snap. */
+export async function checkCarouselWheelSubPixelSnap(page: Page): Promise<void> {
+  const viewport = page.viewportSize();
+  const reduced = await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const failures: string[] = [];
+  for (const variant of ["multi-browse", "uncontained", "hero", "hero-center"] as const) {
+    try {
+      await page.evaluate(variant => {
+        const state = window as unknown as CarouselWindow;
+        document.body.replaceChildren();
+        document.body.style.cssText = "display:block;margin:0;padding:0;height:3000px";
+        window.scrollTo(0, 0);
+        const carousel = state.createCarousel({
+          variant, wheel: true, ...(variant.includes("hero") ? {} : { itemWidth: 200 }),
+          slides: Array.from({ length: 20 }, (_, i) => ({ title: `Slide ${i}` })),
+        });
+        carousel.element.id = "wheel-carousel";
+        carousel.element.style.cssText = "width:760px;height:240px";
+        document.body.append(carousel.element);
+        state.wheelCarousel = carousel;
+      }, variant);
+      const scroller = page.locator("#wheel-carousel .mtrl-carousel__scroller");
+      await waitFor(page, "the carousel to lay its slides out", () => document.querySelector(".mtrl-carousel__scroller")!.scrollWidth > 760);
+      const landing = await scroller.evaluate(async element => {
+        const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
+        // Suspend native snapping, as a glide in flight does, and stand one
+        // pixel short of a snap. Chromium rounds scrollLeft to whole pixels,
+        // so the sub-pixel case is built from a fractional wheel delta —
+        // trackpads deliver them: a 1.5px notch crosses the snap by half a
+        // pixel, and the landing must be that snap, not the next one.
+        const snap = snaps[4]!;
+        element.style.scrollSnapType = "none";
+        element.scrollLeft = snap - 1;
+        await new Promise(requestAnimationFrame);
+        const event = new WheelEvent("wheel", { deltaY: 1.5, bubbles: true, cancelable: true });
+        element.dispatchEvent(event);
+        const start = element.scrollLeft;
+        // scrollLeft reads round to whole pixels, so sampled positions look
+        // steady while the spring is still creeping: wait for the scroll to
+        // actually end, with a deadline past the spring's ~0.8s settle.
+        await new Promise<void>(resolve => {
+          const timer = setTimeout(resolve, 2200);
+          element.addEventListener("scrollend", () => { clearTimeout(timer); resolve(); }, { once: true });
+        });
+        return { snap, next: snaps[5]!, start, end: element.scrollLeft, prevented: event.defaultPrevented };
+      });
+      console.log(`${variant} fresh notch half a pixel past a snap: start=${landing.start} snap=${landing.snap} next=${landing.next} landed=${landing.end}`);
+      try {
+        assert.ok(landing.prevented, `${variant}: wheel consumed`);
+        assert.ok(Math.abs(landing.start - (landing.snap - 1)) <= 0.51, `${variant}: stood one pixel short of the snap (at ${landing.start})`);
+        assert.ok(Math.abs(landing.end - landing.snap) <= 1, `${variant}: landed ${landing.end}, not the snap the notch crossed by half a pixel (${landing.snap}; the next is ${landing.next})`);
+      } catch (error) {
+        failures.push(`${variant}: ${String(error)}`);
+      }
+    } catch (error) {
+      failures.push(`${variant}: ${String(error)}`);
+    } finally {
+      await page.evaluate(() => (window as unknown as CarouselWindow).wheelCarousel?.destroy());
+    }
+  }
+  await page.evaluate(() => { document.body.style.cssText = ""; window.scrollTo(0, 0); });
+  if (viewport) await page.setViewportSize(viewport);
+  await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+  assert.deepEqual(failures, [], "carousel sub-pixel fresh-notch browser regressions");
+}
+
 /**
  * Uncontained carousel layout conformance check.
  *

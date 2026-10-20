@@ -373,6 +373,32 @@ describe('carousel opt-in wheel', () => {
     } finally { carousel.destroy(); }
   });
 
+  test('a fresh notch less than a pixel short of a snap lands on that snap', () => {
+    const { carousel, scroller, wheel, snaps, callbacks, step } = animated();
+    try {
+      wheel({ deltaY: 3000 });
+      for (let i = 0; i < 150 && callbacks.size; i++) step();
+      expect(callbacks.size).toBe(0);
+      // Stand a third of a pixel short of a snap, as a glide that ended just
+      // shy of its target leaves the scroller: the fresh notch's 1px
+      // destination crosses the snap by two thirds of a pixel, which is not a
+      // reason to skip to the next one. Seeded by hand, so the case no longer
+      // depends on where the runner's timing lands the first glide.
+      const snap = snaps[4]!;
+      scroller.scrollLeft = snap - 1 / 3;
+      wheel({ deltaY: 1 }, 121);
+      const position = scroller.scrollLeft;
+      expect(position).toBe(snap - 1 / 3);
+      for (let i = 0; i < 150 && callbacks.size; i++) {
+        step();
+        expect(scroller.scrollLeft).toBeGreaterThanOrEqual(position);
+        expect(scroller.scrollLeft).toBeLessThanOrEqual(snap);
+      }
+      expect(scroller.scrollLeft).toBe(snap);
+      expect(callbacks.size).toBe(0);
+    } finally { carousel.destroy(); }
+  });
+
   for (const interruption of ['pointerdown', 'touchstart', 'keydown', 'disable', 'destroy', 'navigation', 'rebuild']) {
     test(`${interruption} cancels an active wheel frame and restores snap`, () => {
       const { carousel, scroller, wheel, callbacks, step } = animated();
