@@ -82,11 +82,14 @@ export const withScroll = (config: CarouselConfig) =>
     // either direction, so none of this applies there. The computed direction
     // inherits into a shadow tree, which is where an element's factory lives;
     // read it at build, and again in scrollPosition() and goTo(), where a
-    // changed direction rebuilds. The drag needs none of this: it follows the
-    // pointer in physical space and the mirrored gesture meets the mirrored
-    // range, so the one formula serves both directions. The style read is
-    // optional-chained: server construction runs this with a window that has
-    // no such method, and no direction to read means left-to-right.
+    // changed direction rebuilds. A flip at rest fires no scroll event (the
+    // read would never run), so a dir observer below rebuilds it as well, and
+    // build() clears the style cache whose key omits direction. The drag needs
+    // none of this: it follows the pointer in physical space and the mirrored
+    // gesture meets the mirrored range, so the one formula serves both
+    // directions. The style read is optional-chained: server construction runs
+    // this with a window that has no such method, and no direction to read
+    // means left-to-right.
     const readRtl = (): boolean =>
       !vertical && window.getComputedStyle?.(scroller).direction === "rtl";
     let rtl = readRtl();
@@ -102,7 +105,7 @@ export const withScroll = (config: CarouselConfig) =>
     let scrollOffsetAtStart = 0;
     let snapPositions: number[] = [];
     let currentIndex = Math.max(0, config.initialSlide ?? CAROUSEL_DEFAULTS.INITIAL_SLIDE);
-    const lastStyles = new WeakMap<HTMLElement, string>();
+    let lastStyles = new WeakMap<HTMLElement, string>();
 
     // A programmatic scroll reports its target, not every item it passes
     let pending: number | null = null;
@@ -168,6 +171,10 @@ export const withScroll = (config: CarouselConfig) =>
     const build = (): void => {
       rtl = readRtl();
       sign = rtl ? -1 : 1;
+      // The style cache key omits direction: a flip that keeps the logical
+      // placement would otherwise skip the very transform whose sign changed.
+      // (A WeakMap cannot be cleared, so build swaps in a fresh one.)
+      lastStyles = new WeakMap();
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
@@ -365,7 +372,10 @@ export const withScroll = (config: CarouselConfig) =>
       dragLast = dragStart;
       dragLastTime = e.timeStamp;
       dragVelocity = 0;
-      dragScrollStart = scrollPosition();
+      // The physical position on the dragged axis, matching the physical
+      // write below: a logical read would be positive in RTL, where the
+      // write must go more negative, and every drag would jump to 0.
+      dragScrollStart = scroller[vertical ? "scrollTop" : "scrollLeft"];
       restoreSnap();
       element.dataset.settling = "true";
       scroller.setPointerCapture(e.pointerId);
@@ -384,8 +394,7 @@ export const withScroll = (config: CarouselConfig) =>
       dragLastTime = e.timeStamp;
       // No rtl term: the drag follows the pointer physically, and the
       // mirrored gesture (right-drag advances) meets the mirrored range.
-      if (vertical) scroller.scrollTop = dragScrollStart - delta;
-      else scroller.scrollLeft = dragScrollStart - delta;
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta;
       e.preventDefault();
     };
 
@@ -547,6 +556,11 @@ export const withScroll = (config: CarouselConfig) =>
 
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(rebuild) : null;
     resizeObserver?.observe(scroller);
+    // A flip at rest moves nothing (logical 0 is physical 0 either way), so
+    // no scroll event fires and the flip check in scrollPosition() never
+    // runs: watch the dir attribute itself, anywhere in the document.
+    const directionObserver = typeof MutationObserver === "function" ? new MutationObserver(rebuild) : null;
+    directionObserver?.observe(document.documentElement, { attributeFilter: ["dir"], subtree: true });
 
     component.onSlidesChanged(rebuild);
     rebuild();
@@ -564,6 +578,7 @@ export const withScroll = (config: CarouselConfig) =>
         setWheel(false);
         restoreSnap();
         resizeObserver?.disconnect();
+        directionObserver?.disconnect();
         reduceMotion?.removeEventListener?.("change", rebuild);
         clearPending();
         scroller.removeEventListener("scroll", layout);

@@ -268,4 +268,119 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
   } finally {
     await flipContext.close();
   }
+
+  // A drag from a nonzero position: the stored origin must be in the same
+  // physical coordinates as the write (#126 review: a logical origin is
+  // positive in RTL where the write must go more negative, so both gestures
+  // jumped to 0 while the button was still held). Reviewer protocol: snap:false,
+  // read before release.
+  console.log("  carousel rtl: nonzero drag origin");
+  const dragFrom = async (direction: "ltr" | "rtl", gesture: number): Promise<number> => {
+    const context = await browser.newContext({ viewport: { width: WIDTH, height: 800 } });
+    const page = await context.newPage();
+    try {
+      await page.goto(`${base}?dir=${direction}`);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      const box = await page.evaluate(() => {
+        const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): { element: HTMLElement } } }).mtrl;
+        const host = document.getElementById("host") as HTMLElement;
+        host.replaceChildren();
+        const carousel = createCarousel({ snap: false, slides: ["Alpha", "Beta", "Gamma", "Delta"].map((title) => ({ title })) });
+        carousel.element.style.cssText = "width:600px;height:400px";
+        host.append(carousel.element);
+        const scroller = carousel.element.querySelector(".mtrl-carousel__scroller") as HTMLElement;
+        return scroller.getBoundingClientRect().toJSON();
+      });
+      await page.waitForTimeout(400);
+      const origin = direction === "ltr" ? 120 : -120;
+      await page.evaluate((v) => {
+        (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft = v;
+      }, origin);
+      await page.waitForTimeout(300);
+      const x = box.x + box.width / 2, y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let step = 1; step <= 4; step++) await page.mouse.move(x + (gesture * step) / 4, y, { steps: 1 });
+      const whileHeld = await page.evaluate(
+        () => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft,
+      );
+      await page.mouse.up();
+      await page.waitForTimeout(700);
+      return whileHeld;
+    } finally {
+      await context.close();
+    }
+  };
+  const ltrLeft = await dragFrom("ltr", -20);
+  assert.ok(Math.abs(ltrLeft - 140) < 1, `LTR from 120, left-drag 20 reads 140 while held (got ${ltrLeft})`);
+  const ltrRight = await dragFrom("ltr", 20);
+  assert.ok(Math.abs(ltrRight - 100) < 1, `LTR from 120, right-drag 20 reads 100 while held (got ${ltrRight})`);
+  const rtlRight = await dragFrom("rtl", 20);
+  assert.ok(Math.abs(rtlRight + 140) < 1, `RTL from -120, the mirrored right-drag 20 reads -140 while held (got ${rtlRight})`);
+  const rtlLeft = await dragFrom("rtl", -20);
+  assert.ok(Math.abs(rtlLeft + 100) < 1, `RTL from -120, left-drag 20 reads -100 while held (got ${rtlLeft})`);
+
+  // An idle dir flip: no scroll event fires (logical 0 is physical 0 either
+  // way), so the layout must update without any navigation (#126 review: the
+  // stale style cache kept the pre-flip transforms; the items must land where
+  // a carousel built in the flipped direction lands).
+  console.log("  carousel rtl: idle flip layout");
+  const itemX = (page: import("playwright").Page): Promise<number> => page.evaluate(
+    () => Math.round(document.querySelectorAll(".mtrl-carousel__item")[0]!.getBoundingClientRect().x * 100) / 100,
+  );
+  const freshItemX = async (config: Record<string, unknown>): Promise<number> => {
+    const context = await browser.newContext({ viewport: { width: WIDTH, height: 800 } });
+    const page = await context.newPage();
+    try {
+      await page.goto(`${base}?dir=rtl`);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      await page.evaluate((cfg) => {
+        const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): { element: HTMLElement } } }).mtrl;
+        const host = document.getElementById("host") as HTMLElement;
+        host.replaceChildren();
+        const carousel = createCarousel(cfg);
+        carousel.element.style.cssText = "width:600px;height:400px";
+        host.append(carousel.element);
+      }, config);
+      await page.waitForTimeout(400);
+      return await itemX(page);
+    } finally {
+      await context.close();
+    }
+  };
+  const flippedItemX = async (config: Record<string, unknown>): Promise<number> => {
+    const context = await browser.newContext({ viewport: { width: WIDTH, height: 800 } });
+    const page = await context.newPage();
+    try {
+      await page.goto(`${base}?dir=ltr`);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      await page.evaluate((cfg) => {
+        const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): { element: HTMLElement } } }).mtrl;
+        const host = document.getElementById("host") as HTMLElement;
+        host.replaceChildren();
+        const carousel = createCarousel(cfg);
+        carousel.element.style.cssText = "width:600px;height:400px";
+        host.append(carousel.element);
+      }, config);
+      await page.waitForTimeout(400);
+      await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
+      await page.waitForTimeout(300);
+      return await itemX(page);
+    } finally {
+      await context.close();
+    }
+  };
+  const slides = ["Alpha", "Beta", "Gamma", "Delta"].map((title) => ({ title }));
+  for (const [name, config] of [
+    ["default", { slides }],
+    ["snap:false", { snap: false, slides }],
+    ["uncontained", { variant: "uncontained", slides }],
+  ] as [string, Record<string, unknown>][]) {
+    const expected = await freshItemX(config);
+    const flipped = await flippedItemX(config);
+    assert.ok(
+      Math.abs(flipped - expected) < 0.51,
+      `idle flip (${name}): item 1 sits at ${expected} in a fresh RTL carousel but ${flipped} after the flip`,
+    );
+  }
 }
