@@ -126,8 +126,10 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   // addClass from its subpath since 3.0.0 removed it from the root
   // addClass 603 and button 8,447 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
+  // The nearest-boundary direction module costs the packed text field 9,875
+  // against 9,700; measured +1% (9,974) rounded to the next 50 is 10,000.
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 750, "material/core/dom"], ["text-field", "createTextField", 9700, "material"], ["button", "createButton", 8550, "material"],
+    ["addClass", "addClass", 750, "material/core/dom"], ["text-field", "createTextField", 10000, "material"], ["button", "createButton", 8550, "material"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);
