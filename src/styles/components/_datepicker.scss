@@ -19,7 +19,7 @@ $component: '#{base.$prefix}-datepicker';
   color: t.color('on-surface');
   // The physical range band and chevron flip, set once for right-to-left;
   // each use carries the left-to-right value as its var() fallback.
-  @include m.rtl {
+  @include m.rtl($self: true) {
     --#{$component}-start: 0 0;
     --#{$component}-end: 100% 0;
     --#{$component}-flip: scaleX(-1);

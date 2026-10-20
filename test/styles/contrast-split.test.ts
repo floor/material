@@ -165,12 +165,15 @@ describe("explicit contrast levels are opt-in", () => {
     // `:where(.mtrl-rtl)` and `:where(:host(.mtrl-rtl))`, while the attribute
     // form stops at a nearer ltr boundary with
     // `:not(:where(.mtrl-ltr, .mtrl-ltr *))`, all at zero specificity
-    // (styles/abstract/_mixins.scss, src/elements/define.ts).
+    // (styles/abstract/_mixins.scss, src/elements/define.ts). The values a
+    // factory's root holds match a direction on that root itself (the class
+    // the runtime reflects, or its own `dir`), not only an ancestor
+    // (styles/components/_datepicker.scss, styles/components/_toolbar.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6d04dd43a467d54114fd606264dffa2c1ab4f742aa9aa6298ebfa1f289d83bad");
-    expect(css.length).toBe(537720);
+      .toBe("ca86a72f5f583ac42902b0603b694597a60fcb35f6b0be6d6fc1f4413b4fa9f6");
+    expect(css.length).toBe(537813);
   });
 
   test("today's sheets still resolve to the fixture", () => {
