@@ -1,65 +1,87 @@
 // src/core/dom/direction.ts
 //
-// The direction a component reads is the one it inherits: the nearest `[dir]`
-// ancestor (or a stylesheet's `direction`), as the browser computed it for the
-// element. An attribute selector cannot express "nearest": `[dir='rtl'] &`
+// The direction a component reads is the one it inherits: `direction` is
+// inherited, so the browser's computed value for the element is the nearest
+// `[dir]` ancestor's direction (or a stylesheet's), through the flattened
+// tree. An attribute selector cannot express "nearest": `[dir='rtl'] &`
 // matches any right-to-left ancestor, so markup in a `dir="ltr"` subtree of an
-// RTL page still mirrored by the page root. Every element the library manages
+// RTL page still mirrors by the page root. Every root the library manages
 // carries the direction it resolved as a class, so a sheet can match the
-// nearest boundary; the attribute fallback is cut at a nearer `dir="ltr"`:
+// nearest boundary; the attribute fallback for markup the runtime does not
+// manage is cut at a nearer `dir="ltr"`:
 //
 // - `mtrl-rtl` on the root when the nearest direction is right-to-left; the
 //   part rules match it with `:where(.mtrl-rtl) &` in the light DOM and
-//   `:where(:host(.mtrl-rtl)) &` inside the root's own shadow tree. The
-//   attribute fallback for markup the runtime does not manage is guarded by a
-//   nearer `dir="ltr"` boundary, which is the same nearest resolution when
-//   direction comes from `dir` attributes.
+//   `:where(:host(.mtrl-rtl)) &` inside the root's own shadow tree.
+// - `mtrl-ltr` on a left-to-right root while an RTL `dir` attribute is an
+//   ancestor: only the attribute fallback can be wrong without it, so an
+//   ordinary left-to-right host keeps its class attribute as authored, and
+//   the fallback's `:not(:where(.mtrl-ltr, .mtrl-ltr *))` guard cuts it inside
+//   the nearer subtree.
 //
-// `:dir()` carries the same nearest resolution at runtime, through the
-// flattened tree (src/core/dom/roving.ts). It stays out of the shipped sheet
-// only because consumer bundlers lower it into `:lang()` lists that match no
-// `dir` (src/styles/components/_text-field.scss).
+// A factory's markup is light DOM, where the attribute fallback already
+// reaches, so its roots resolve from the nearest `[dir]` attribute with no
+// style read (a plain field must not pay one). An element host's parts are in
+// its shadow tree, where no attribute selector crosses, so the host reads its
+// computed direction: the same nearest boundary, including a stylesheet's.
 import { PREFIX } from "../config";
 
 /** A root that has been read while connected, marked on the element itself. */
 type Seen = HTMLElement & { _m?: boolean };
 
-/**
- * Reads the direction the element resolves — `:dir()`, which follows the
- * flattened tree, so it is the nearest `[dir]` even across a shadow boundary —
- * and reflects it as the classes the sheets read.
- */
-const reflectDirection = (element: Seen): void => {
-  const rtl = element.matches(":dir(rtl)");
+/** One direction observer per document, kept on the document itself. */
+type Watched = Document & { _d?: MutationObserver };
+
+/** How a root resolves its direction when it is (re)read. */
+type Reflect = (element: Seen) => void;
+
+const reflectHost = (element: Seen): void => {
+  const rtl = typeof getComputedStyle === "function" && getComputedStyle(element).direction === "rtl";
   element._m = true;
-  element.classList.toggle(PREFIX + "-ltr", !rtl);
   element.classList.toggle(PREFIX + "-rtl", rtl);
+  element.classList.toggle(PREFIX + "-ltr", !rtl && !!element.closest("[dir=rtl]"));
 };
 
-const tracked = new Set<Seen>();
-let directionObserver: MutationObserver | null;
+const reflectFactory = (element: Seen): void => {
+  const nearest = element.closest("[dir]");
+  const dir = nearest?.getAttribute("dir");
+  element._m = true;
+  element.classList.toggle(PREFIX + "-rtl", dir === "rtl");
+  element.classList.toggle(PREFIX + "-ltr", dir === "ltr" && !!nearest?.closest("[dir=rtl]"));
+};
 
-/**
- * Follows the direction an element resolves: after it is in the document, and
- * after a `dir` attribute changes anywhere (a page switching direction at
- * runtime). A root created detached is read on the mutation that inserts it,
- * where its inherited direction exists. A stylesheet changing `direction`
- * without a `dir` change is read on connect.
- */
-export const trackDirection = (element: Seen): void => {
-  if (typeof document > "u") return;
-  tracked.add(element);
-  if (element.isConnected) reflectDirection(element);
-  (directionObserver ||= new MutationObserver(() => {
-    tracked.forEach((trackedElement) =>
+const tracked = new Map<Seen, Reflect>();
+
+const follow = (element: Seen, reflect: Reflect): void => {
+  if (typeof MutationObserver !== "function") return;
+  tracked.set(element, reflect);
+  if (element.isConnected) reflect(element);
+  const owner = element.ownerDocument as Watched;
+  if (owner._d) return;
+  owner._d = new MutationObserver(() => {
+    tracked.forEach((trackedReflect, trackedElement) =>
       trackedElement.isConnected
-        ? reflectDirection(trackedElement)
+        ? trackedReflect(trackedElement)
         : trackedElement._m && tracked.delete(trackedElement),
     );
-  })).observe(document, {
+  });
+  owner._d.observe(owner.documentElement, {
     attributes: true,
     attributeFilter: ["dir"],
     childList: true,
     subtree: true,
   });
 };
+
+/**
+ * Follows an element host: it is read while connected, on the mutation that
+ * inserts a host created detached, and after a `dir` attribute changes
+ * anywhere (a page switching direction at runtime).
+ */
+export const trackDirection = (element: Seen): void => follow(element, reflectHost);
+
+/**
+ * Follows a factory root by the nearest `[dir]` attribute, with no style read:
+ * its markup is light DOM, where the attribute fallback applies.
+ */
+export const trackFactoryDirection = (element: Seen): void => follow(element, reflectFactory);

@@ -11,7 +11,7 @@ import {
   EventCondition,
   removeEventHandlers,
 } from "../dom/create";
-import { trackDirection } from "../dom/direction";
+import { trackFactoryDirection } from "../dom/direction";
 import {
   normalizeEvent,
   hasTouchSupport,
@@ -310,7 +310,7 @@ export const withElement =
     // A factory's markup is light DOM: no host class crosses a shadow boundary
     // for the sheets to read, and an ancestor `[dir]` would be the page root's.
     // The root carries the direction it resolved instead (core/dom/direction).
-    trackDirection(element);
+    trackFactoryDirection(element);
 
     const cleanupTouch = hasTouchSupport() && options.interactive
       ? setupTouch(element, base, options)
