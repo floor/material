@@ -400,8 +400,8 @@ try {
     // 38 B left under 127,000.
     // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the bounded rule.
     // The nearest-boundary direction module: 127,273 measured, measured +1% is
-    // 128,546, the next multiple of 50 is 128,600.
-    { name: "all-js", code: "export * from 'material';", gzip: 128600 },
+    // 128,545.73, the next multiple of 50 is 128,550.
+    { name: "all-js", code: "export * from 'material';", gzip: 128550 },
     // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
