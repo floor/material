@@ -159,13 +159,16 @@ describe("explicit contrast levels are opt-in", () => {
     // Baseline's defaults sit in `:where(:root)` and `:where(.dark-theme)`, so
     // a selected theme outranks them in any import order while undeclared
     // roles still inherit (styles/themes/_baseline.scss).
-    // A direction rule reaches a part inside a shadow root, where no ancestor is
-    // `[dir='rtl']`, through the host's class: `:where(:host(.mtrl-rtl))` beside
-    // the attribute form, at the same specificity (styles/abstract/_mixins.scss,
-    // src/elements/define.ts), with the card, app bars and badge converted.
+    // A direction rule resolves the nearest `[dir]`, as `:dir()` and the runtime
+    // do: a factory root and an element host carry the direction they resolved
+    // as `mtrl-rtl`/`mtrl-ltr` (src/core/dom/direction.ts), read as
+    // `:where(.mtrl-rtl)` and `:where(:host(.mtrl-rtl))`, while the attribute
+    // form stops at a nearer ltr boundary with
+    // `:not(:where(.mtrl-ltr, .mtrl-ltr *))`, all at zero specificity
+    // (styles/abstract/_mixins.scss, src/elements/define.ts).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6ac1a6bf79cde1535a0febbbaa82a1bd4fdf2ea039273e88d860d92b4dc783cd");
-    expect(css.length).toBe(533286);
+      .toBe("69a3e19adb3575fe41604e50849e122e4dfa7aeecaf352bf94d3aa2ef9975887");
+    expect(css.length).toBe(537105);
   });
 
   test("today's sheets still resolve to the fixture", () => {

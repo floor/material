@@ -23,6 +23,7 @@
 
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
+import { trackDirection } from "../core/dom/direction";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -372,42 +373,6 @@ const write = (host: HTMLElement, name: string, type: AttributeType, value: unkn
 
 const CLASS_PREFIX = `${PREFIX}-`;
 
-/** The class a host's own sheet reads its direction from (`:host(.mtrl-rtl)`). */
-const RTL_CLASS = `${CLASS_PREFIX}rtl`;
-
-/**
- * A host inherits `direction` but usually carries no `dir` attribute of its
- * own, and an attribute selector cannot cross into the shadow tree. The host
- * carries the direction it computed as a class, so its sheet can match
- * `:where(:host(.mtrl-rtl)) &` from inside.
- */
-const reflectDirection = (host: HTMLElement): void => {
-  const rtl = typeof getComputedStyle === "function" && getComputedStyle(host).direction === "rtl";
-  host.classList.toggle(RTL_CLASS, rtl);
-};
-
-const directed = new Set<HTMLElement>();
-let directionObserver: MutationObserver | null = null;
-
-/**
- * Follows a page that switches direction by setting `dir` (usually on <html>
- * or <body>): one observer re-reads the computed direction of every connected
- * host. Direction set by a stylesheet without a `dir` change is read on
- * connect only.
- */
-const watchDirection = (host: HTMLElement): void => {
-  if (typeof MutationObserver !== "function") return;
-  directed.add(host);
-  if (directionObserver) return;
-  directionObserver = new MutationObserver(() => {
-    for (const element of directed) {
-      if (element.isConnected) reflectDirection(element);
-      else directed.delete(element);
-    }
-  });
-  directionObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["dir"], subtree: true });
-};
-
 /**
  * A node's part names: its BEM classes without the prefix, a block class by
  * its block (`mtrl-button` is `button`, `mtrl-ripple` is `ripple`) and an
@@ -496,10 +461,8 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     connectedCallback(): void {
-      // On connect, not in the constructor, which must not gain attributes;
-      // and a host is never styled before it is connected.
-      reflectDirection(this);
-      watchDirection(this);
+      // Not in the constructor, which must not gain attributes; and a host is
+      // never styled before it is connected.
       if (spec.marker) this.toggleAttribute(spec.marker, true);
       removeDeclarativeTemplates(this);
       this.#upgradeProperties();
@@ -644,6 +607,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     #build(): void {
+      // On build, which is also the rebuild a live host does: direction is
+      // read again after the component it is restyled for exists.
+      trackDirection(this);
       const root = this.shadowRoot as ShadowRoot;
       applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
       const component = spec.create(this.#config());
@@ -763,7 +729,6 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     #teardown(): void {
-      directed.delete(this);
       const component = this.component;
       const observer = this.#observer;
       const parts = this.#parts;

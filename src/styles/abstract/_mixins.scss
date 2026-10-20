@@ -354,24 +354,54 @@ $sheet-overshoot-guard: 32px;
 
 // RTL Support
 //
-// Two forms, because the rule has to reach where it is written. `[dir='rtl'] &`
-// styles markup in the light DOM, where an ancestor carries the page's
-// direction. It cannot style a part inside a shadow root: selectors do not
-// cross the boundary, so no ancestor inside the tree is `[dir='rtl']`, even
-// when the host is. The host inherits `direction` but usually carries no `dir`
-// attribute of its own. `:where(:host(.mtrl-rtl)) &` reaches the part from the
-// host's class, which the element base sets from the host's computed direction;
-// `:host()` matches nothing in the light DOM, so that form is inert there.
-// `:where()` keeps the class out of the specificity, as an attribute on an
-// ancestor would: the rule replaces the physical rule it mirrors, and a state
-// rule that is more specific than that physical rule still wins (a drawer's
-// open transform over its closed position).
+// Three forms, because the rule has to reach where it is written and resolve
+// the direction the way the element does: the NEAREST `[dir]`, as `:dir()`
+// carries it. An attribute selector cannot say "nearest" — `[dir='rtl'] &`
+// matches any right-to-left ancestor, so markup in a `dir="ltr"` subtree of an
+// RTL page mirrored by the page root. The roots the library manages carry the
+// direction they resolved as a class (src/core/dom/direction.ts):
+//
+// - `:where(.mtrl-rtl) &` for a factory's markup, which is light DOM: its root
+//   carries the class, and the part is its descendant;
+// - `:where(:host(.mtrl-rtl)) &` for a part inside a shadow root, where no
+//   ancestor is `[dir='rtl']` and `:host()` is the only way in; it matches
+//   nothing in the light DOM, so it is inert there.
+//
+// `[dir='rtl'] &` stays for markup the runtime does not manage (hand-written
+// classes, server output before hydration). A root that resolved its nearest
+// direction left-to-right carries `mtrl-ltr`, and its subtree is cut from that
+// form: the page root no longer wins over a nearer boundary. `:where()` keeps
+// the classes and the cut out of the specificity, as an attribute on an
+// ancestor was: the rule replaces the physical rule it mirrors, and a state
+// rule more specific than that physical rule still wins (a drawer's open
+// transform over its closed position). `:dir()` itself stays out of the sheet:
+// consumer bundlers lower it into `:lang()` lists that match no `dir`
+// (src/styles/components/_text-field.scss).
 // A component factory rendered inside a shadow root the app owns needs the
 // direction set in the app's own stylesheet, or the class on that root.
+// A rule inside the block adds to the part with a compound (`&.x`,
+// `&:hover`), never a suffix: a suffix (`&__x`) cannot follow the guard's
+// `:not()`. A rule whose subject is a BEM element or a variant class goes
+// through `rtl-selector` instead, which writes the subject out.
 @mixin rtl {
-  [dir='rtl'] &,
-  :where(:host(.#{base.$prefix}-rtl)) & {
+  :where(.#{base.$prefix}-rtl) &,
+  :where(:host(.#{base.$prefix}-rtl)) &,
+  [dir='rtl'] &:not(:where(.#{base.$prefix}-ltr, .#{base.$prefix}-ltr *)) {
     @content;
+  }
+}
+
+// The same three arms for a subject that is not the include site's selector
+// extended: a BEM element or a variant class, which a suffix on `&` would
+// replace the subject with and the guard sits on the wrong compound for.
+// `$subject` is the class at the call site (e.g. `".#{$component}__item"`).
+@mixin rtl-selector($subject) {
+  @at-root {
+    :where(.#{base.$prefix}-rtl) #{$subject},
+    :where(:host(.#{base.$prefix}-rtl)) #{$subject},
+    [dir='rtl'] #{$subject}:not(:where(.#{base.$prefix}-ltr, .#{base.$prefix}-ltr *)) {
+      @content;
+    }
   }
 }
 
