@@ -13,6 +13,7 @@
 //   bun run build && bun run rtl:check
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 
 const WIDTH = 600;
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
@@ -261,6 +262,7 @@ try {
   for (const page of [ltrPage, rtlPage]) {
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
   }
+  await checkSideSheetRtl(ltrPage);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 

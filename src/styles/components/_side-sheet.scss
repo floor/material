@@ -26,6 +26,13 @@ $component: "#{base.$prefix}-side-sheet";
     display: flex;
     pointer-events: none;
 
+    // Share the physical offset's sign between the slide and overshoot cover.
+    --#{$component}-direction: 1;
+
+    @include m.rtl {
+        --#{$component}-direction: -1;
+    }
+
     &--open {
         pointer-events: auto;
     }
@@ -154,11 +161,11 @@ $component: "#{base.$prefix}-side-sheet";
 
         // Cover the gap the spring's overshoot opens at the docked edge
         &.#{$component}--end .#{$component}__container {
-            box-shadow: m.$sheet-overshoot-guard 0 0 0 t.color("surface");
+            box-shadow: calc(m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface");
         }
 
         &.#{$component}--start .#{$component}__container {
-            box-shadow: (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface");
+            box-shadow: calc(-1 * m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface");
         }
     }
 
@@ -172,13 +179,13 @@ $component: "#{base.$prefix}-side-sheet";
         // faces the page. The standard one is square (MDC
         // Sheet.Side.Docked.Container.Shape = Corner.None),
         &.#{$component}--end .#{$component}__container {
-            box-shadow: f.get-elevation(1), m.$sheet-overshoot-guard 0 0 0 t.color("surface-container-low");
+            box-shadow: f.get-elevation(1), calc(m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface-container-low");
             border-start-start-radius: v.shape("large");
             border-end-start-radius: v.shape("large");
         }
 
         &.#{$component}--start .#{$component}__container {
-            box-shadow: f.get-elevation(1), (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface-container-low");
+            box-shadow: f.get-elevation(1), calc(-1 * m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface-container-low");
             border-start-end-radius: v.shape("large");
             border-end-end-radius: v.shape("large");
         }
@@ -191,7 +198,7 @@ $component: "#{base.$prefix}-side-sheet";
         justify-content: flex-end;
 
         .#{$component}__container {
-            transform: translateX(100%);
+            transform: translateX(calc(100% * var(--#{$component}-direction)));
         }
     }
 
@@ -199,7 +206,7 @@ $component: "#{base.$prefix}-side-sheet";
         justify-content: flex-start;
 
         .#{$component}__container {
-            transform: translateX(-100%);
+            transform: translateX(calc(-100% * var(--#{$component}-direction)));
         }
     }
 

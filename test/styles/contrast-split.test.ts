@@ -166,9 +166,11 @@ describe("explicit contrast levels are opt-in", () => {
     // form stops at a nearer ltr boundary with
     // `:not(:where(.mtrl-ltr, .mtrl-ltr *))`, all at zero specificity
     // (styles/abstract/_mixins.scss, src/elements/define.ts).
+    // The side sheet mirrors its closed transform and solid overshoot cover
+    // on its logical docked edge (styles/components/_side-sheet.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("69a3e19adb3575fe41604e50849e122e4dfa7aeecaf352bf94d3aa2ef9975887");
-    expect(css.length).toBe(537105);
+      .toBe("f9b92289d50f9681e21049db1d14110247968c856804d526ecbf3a3b98031771");
+    expect(css.length).toBe(537545);
   });
 
   test("today's sheets still resolve to the fixture", () => {

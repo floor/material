@@ -81,8 +81,8 @@ describe('side sheet stylesheet', () => {
   });
 
   test('it slides in from its own edge, and stops for reduced motion', () => {
-    expect(value('.mtrl-side-sheet--end .mtrl-side-sheet__container', 'transform')).toBe('translateX(100%)');
-    expect(value('.mtrl-side-sheet--start .mtrl-side-sheet__container', 'transform')).toBe('translateX(-100%)');
+    expect(value('.mtrl-side-sheet--end .mtrl-side-sheet__container', 'transform')).toBe('translateX(calc(100% * var(--mtrl-side-sheet-direction)))');
+    expect(value('.mtrl-side-sheet--start .mtrl-side-sheet__container', 'transform')).toBe('translateX(calc(-100% * var(--mtrl-side-sheet-direction)))');
     expect(value('.mtrl-side-sheet--open .mtrl-side-sheet__container', 'transform')).toBe('translateX(0)');
     expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{[\s\S]{0,300}?transition: none;/);
   });
