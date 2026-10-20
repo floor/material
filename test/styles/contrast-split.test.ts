@@ -169,8 +169,8 @@ describe("explicit contrast levels are opt-in", () => {
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5591d3b195403bf058ce0563a8742eb65907cefedd3a0edce3bea900ddedfd3b");
-    expect(css.length).toBe(537841);
+      .toBe("6d04dd43a467d54114fd606264dffa2c1ab4f742aa9aa6298ebfa1f289d83bad");
+    expect(css.length).toBe(537720);
   });
 
   test("today's sheets still resolve to the fixture", () => {
