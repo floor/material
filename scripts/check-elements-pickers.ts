@@ -164,9 +164,10 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     assert.deepEqual({ limits, disabled }, { limits: ["2026-09-06", "2026-09-05", "2026-10-05", "2026-10-20"], disabled: true });
     check("datepicker: min and max hold the keyboard and disable the days beyond them");
 
-    // A day chosen, then Cancel: nothing is committed.
+    // Space chooses a draft day; Enter explicitly accepts the single date.
+    // A draft day chosen, then Cancel: nothing is committed.
     await page.keyboard.press("ArrowLeft");
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
     await dateAction("cancel").click();
     await wait(200);
     const cancelled = await state();
@@ -178,7 +179,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await dateTrigger().click();
     await wait(200);
     await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
     await page.keyboard.press("Escape");
     await wait(200);
     const escaped = await state();
@@ -190,7 +191,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await dateTrigger().click();
     await wait(200);
     await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
     await dateAction("confirm").click();
     await wait(200);
     const confirmed = await state();
@@ -199,6 +200,16 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       log: [["open", null], ["change", { value: "2026-09-11" }], ["close", null]], focus: "open",
     });
     check("datepicker: OK commits once: one change with the ISO date, the form value, focus back on the trigger");
+
+    const field = page.locator('#wrap #x .mtrl-datepicker__anchor input').first();
+    const fieldId = await field.getAttribute("id");
+    await field.focus(); await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowRight"); await page.keyboard.press("Enter");
+    assert.deepEqual(await state(), {
+      value: "2026-09-12", open: false, modal: false, reflected: false, form: "2026-09-12",
+      log: [["open", null], ["change", { value: "2026-09-12" }], ["close", null]], focus: fieldId,
+    });
+    check("datepicker: Enter saves once, closes the calendar and reflected open state, updates the form and restores field focus through both shadow roots");
 
     // The `open` attribute and the methods open and close it without dispatching.
     const attribute = await page.evaluate(() => {

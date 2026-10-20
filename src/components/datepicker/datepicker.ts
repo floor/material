@@ -252,7 +252,7 @@ const createDatePicker = <M extends string = "single">(
     }
     assignValue(dates.length === 2 ? [dates[0]!, dates[1]!] : dates[0]!, true);
   };
-  const select = (date: Date) => {
+  const select = (date: Date, accept = settings.closeOnSelect) => {
     if (!state.isAllowed(date)) return;
     if (state.selectionMode === "range" && state.selectedDate && !state.rangeEndDate) {
       state.rangeEndDate = date < state.selectedDate ? state.selectedDate : date;
@@ -261,8 +261,8 @@ const createDatePicker = <M extends string = "single">(
     setDisplayDate(date);
     // A docked range commits once it is whole: its start alone is not a value.
     const whole = state.selectionMode !== "range" || !!state.rangeEndDate;
-    if ((!modal || settings.closeOnSelect) && whole) commitDraft();
-    if (settings.closeOnSelect && (state.selectionMode !== "range" || state.rangeEndDate)) close(); else render(true);
+    if ((!modal || accept) && whole) commitDraft();
+    if (accept && whole) close(); else render(true);
   };
   const navigate = (amount: number) => {
     // The year view has no arrows: its list scrolls.
@@ -312,6 +312,11 @@ const createDatePicker = <M extends string = "single">(
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (target?.dataset.date) {
       const date = parseDate(target.dataset.date)!;
+      // Enter accepts a single date (M3 keyboard navigation). Prevent the
+      // button's native click from selecting or committing the date again.
+      if (event.key === "Enter" && state.selectionMode === "single") {
+        event.preventDefault(); select(date, true); return;
+      }
       let next: Date;
       // Left and right follow the reading direction.
       const ahead = rtl(dialog) ? -1 : 1;

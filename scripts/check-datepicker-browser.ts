@@ -3,10 +3,12 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import type { Page } from "playwright";
 import type createDatePicker from "../src/components/datepicker";
+import { checkDatePickerEnter } from "./check-datepicker-enter";
 
 type PickerWindow = Window & { core: { createDatePicker: typeof createDatePicker }; picker: ReturnType<typeof createDatePicker>; dateChanges: string[]; dateCloses: number };
 export async function checkDatePicker(page: Page, artifacts: string): Promise<void> {
   await page.setViewportSize({ width: 800, height: 850 });
+  await checkDatePickerEnter(page);
   await page.evaluate(() => {
     const state = window as unknown as PickerWindow;
     document.documentElement.setAttribute('data-theme', 'baseline'); document.documentElement.setAttribute('data-theme-mode', 'light');
@@ -27,7 +29,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.locator('[data-date="2024-01-31"]').evaluate(el => getComputedStyle(el, '::before').width), '40px');
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-date')), '2024-01-31');
   await page.keyboard.press('PageDown'); assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-date')), '2024-02-29');
-  await page.keyboard.press('Enter'); assert.deepEqual(await page.evaluate(() => (window as unknown as PickerWindow).dateChanges), []);
+  await page.keyboard.press('Space'); assert.deepEqual(await page.evaluate(() => (window as unknown as PickerWindow).dateChanges), []);
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '01/31/2024');
   assert.equal(await trigger.evaluate(el => el === document.activeElement), true);
@@ -71,6 +73,8 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/26/2026');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/27/2026');
+  assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.isOpen()), false, 'Enter accepts the single date and closes');
+  await page.locator('[data-action="open"]').click();
   // The months page horizontally, as m3.material.io's guidelines have it.
   // With motion on, so the arrows take the sliding path (core:check reduces motion earlier).
   await page.emulateMedia({ reducedMotion: 'no-preference' });

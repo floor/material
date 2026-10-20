@@ -234,8 +234,9 @@ export interface DatePickerConfig {
   animate?: boolean;
 
   /**
-   * Whether to close the picker when a date is selected
-   * @default false (modal selections are drafts until OK; true commits on selection)
+   * Whether pointer or Space selection also closes the picker. Enter on a
+   * focused day accepts a single date and closes independently of this option.
+   * @default false
    */
   closeOnSelect?: boolean;
 
