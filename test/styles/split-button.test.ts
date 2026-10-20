@@ -11,7 +11,14 @@ let css = '';
 
 const rules = (selector: string): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  const exact = Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  if (exact.length) return exact;
+  // A direction rule compiles to a selector list — the light-DOM attribute form
+  // beside the shadow tree's host-class form — so the selector is one member of
+  // the prelude, not the whole of it.
+  return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
+    .filter((m) => m[1]!.split(',').map((member) => member.trim()).includes(selector))
+    .map((m) => m[2]!);
 };
 
 const value = (selector: string, property: string): string | undefined =>
