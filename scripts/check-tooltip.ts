@@ -69,14 +69,27 @@ try {
       const seen = await page.evaluate(() => {
         const tooltip = document.querySelector(".mtrl-tooltip")!;
         const arrow = document.querySelector(".mtrl-tooltip__arrow")!;
-        const surface = getComputedStyle(tooltip).backgroundColor;
+        const container = getComputedStyle(tooltip);
+        const surface = container.backgroundColor;
         const style = getComputedStyle(arrow);
         const sides = {
           top: style.borderTopColor, right: style.borderRightColor,
           bottom: style.borderBottomColor, left: style.borderLeftColor,
         };
-        return { className: arrow.className, surface, sides };
+        return {
+          className: arrow.className, surface, sides,
+          typography: { weight: container.fontWeight, size: container.fontSize, lineHeight: container.lineHeight },
+          padding: [container.paddingTop, container.paddingRight, container.paddingBottom, container.paddingLeft],
+        };
       });
+      // M3 tooltips specs: supporting text uses Body Small (plain/default)
+      // or Body Medium (rich); the rich container has an 8dp bottom inset.
+      const rich = variant === "rich";
+      const expectedTypography = { weight: "400", size: rich ? "14px" : "12px", lineHeight: rich ? "20px" : "16px" };
+      const expectedPadding = rich ? ["12px", "16px", "8px", "16px"] : ["4px", "8px", "4px", "8px"];
+      if (position === TOOLTIP_POSITIONS.TOP) console.log(`tooltip metrics ${variant}-${mode}: ${JSON.stringify({ typography: seen.typography, padding: seen.padding })}`);
+      if (JSON.stringify(seen.typography) !== JSON.stringify(expectedTypography)) failures.push(`${name}: typography ${JSON.stringify(seen.typography)}, expected ${JSON.stringify(expectedTypography)}`);
+      if (JSON.stringify(seen.padding) !== JSON.stringify(expectedPadding)) failures.push(`${name}: padding ${seen.padding.join(" ")}, expected ${expectedPadding.join(" ")}`);
       // A tooltip placed at the top points its arrow down at the target from the
       // tooltip's bottom edge, and so on: the painted side follows the placement.
       const side = paintedSide[position]!;
@@ -95,7 +108,7 @@ try {
           failures.push(`${name}: border-${other} painted ${colour}`);
         }
       }
-      rows.push({ name, variant, mode, position, surface: seen.surface, arrow: seen.sides[side] });
+      rows.push({ name, variant, mode, position, surface: seen.surface, arrow: seen.sides[side], typography: seen.typography, padding: seen.padding });
       const clip = await page.evaluate(() => {
         const target = document.querySelector("#target")!.getBoundingClientRect();
         const tip = document.querySelector(".mtrl-tooltip")!.getBoundingClientRect();
@@ -194,7 +207,7 @@ try {
 
   assert.deepEqual(errors, []);
   // Every mismatch is collected, so one run names every failing case.
-  assert.deepEqual(failures, []);
   await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, scrolled: scrolledRows, failures, errors }, null, 2));
+  assert.deepEqual(failures, []);
   console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, scrolled: scrolledRows.length, errors }, null, 2));
 } finally { await browser.close(); server.stop(true); }

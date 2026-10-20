@@ -175,9 +175,11 @@ describe("explicit contrast levels are opt-in", () => {
     // label, and a selected item that is disabled dims its selection colours
     // with no hover layer, the vibrant container excepted
     // (styles/components/_menu.scss).
+    // Plain tooltip text keeps Body Small regular 400; rich tooltip bottom
+    // padding is 8dp (styles/components/_tooltip.scss, M3 tooltips specs).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7bc66d05ecf4d9c3c23c3cd33c598af078b012426f394d6f89483216be94dec1");
-    expect(css.length).toBe(539276);
+      .toBe("e5bae6e54a4ed46672ec33009d5f5cf4ec33cb5da4aaa06de647232f5ae23811");
+    expect(css.length).toBe(539264);
   });
 
   test("today's sheets still resolve to the fixture", () => {
