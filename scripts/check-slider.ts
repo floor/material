@@ -5,6 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 import { gzipSync } from "node:zlib";
+import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
 
 declare global {
@@ -34,7 +35,7 @@ const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).leng
 // +1% (13,365.33) rounded to the next 50 is 13,400, the same rule as the
 // package fixture's slider row.
 // 13,040 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-assert(size.gzip < 13400, `Slider JS exceeds 13,400 gzip bytes: ${size.gzip}`);
+assert(size.gzip < SLIDER_INLINE_GZIP, `Slider JS exceeds ${SLIDER_INLINE_GZIP.toLocaleString("en-US")} gzip bytes: ${size.gzip}`);
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
