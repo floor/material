@@ -6,12 +6,16 @@
  */
 
 import { describe, test, expect } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   BUDGET_BYTES,
   DEFERRED_BUDGET_BYTES,
   COMPONENTS,
   KNOWN_DEPS,
   SCENARIO_DEFS,
+  buildScenario,
   missingMeasuredScenarios,
   sizeGateFails,
 } from '../../scripts/size';
@@ -77,6 +81,67 @@ describe('size gate', () => {
     for (const name of Object.keys(KNOWN_DEPS) as (keyof typeof KNOWN_DEPS)[]) {
       expect(names.has(name)).toBe(true);
       for (const dep of KNOWN_DEPS[name] ?? []) expect(names.has(dep)).toBe(true);
+    }
+  });
+});
+
+describe('size measurement determinism', () => {
+  // The bundler derives chunk names from the module paths it is given, so an
+  // absolute entry in a fresh temporary directory (or a different checkout
+  // path) moved the measured bytes by a few gzipped bytes run to run and
+  // machine to machine (floor/material#131). Two identical trees at different
+  // absolute roots must build identical bytes.
+  const SOURCES: Record<string, string> = {
+    'src/core/compose/index.ts': [
+      'export const pipe = (a: number) => a + 1;',
+      'export const createBase = (a: number) => a * 2;',
+      'export const withElement = (a: number) => import("./scale.ts").then((m) => m.scale(a));',
+      '',
+    ].join('\n'),
+    'src/core/compose/scale.ts': 'export const scale = (a: number) => a * 4;\n',
+  };
+
+  const project = async (root: string): Promise<void> => {
+    for (const [path, source] of Object.entries(SOURCES)) {
+      const file = join(root, path);
+      mkdirSync(join(file, '..'), { recursive: true });
+      await Bun.write(file, source);
+    }
+  };
+
+  test('the same source builds identical bytes at two checkout paths', async () => {
+    const roots = [mkdtempSync(join(tmpdir(), 'mtrl-size-one-')), mkdtempSync(join(tmpdir(), 'mtrl-size-two-'))];
+    try {
+      for (const root of roots) await project(root);
+      const core = SCENARIO_DEFS.find((scenario) => scenario.name === 'core')!;
+      const built = [];
+      for (const root of roots) built.push(await buildScenario(root, core));
+
+      for (const result of built) {
+        if (typeof result === 'string') throw new Error(result);
+      }
+      const [one, two] = built as Exclude<(typeof built)[number], string>[];
+      expect(one.initialBytes.length).toBeGreaterThan(0);
+      expect([...two.initialBytes]).toEqual([...one.initialBytes]);
+      expect([...two.deferredBytes]).toEqual([...one.deferredBytes]);
+    } finally {
+      for (const root of roots) rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test('repeated builds of one tree are byte-identical', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'mtrl-size-again-'));
+    try {
+      await project(root);
+      const core = SCENARIO_DEFS.find((scenario) => scenario.name === 'core')!;
+      const first = await buildScenario(root, core);
+      const second = await buildScenario(root, core);
+      if (typeof first === 'string') throw new Error(first);
+      if (typeof second === 'string') throw new Error(second);
+      expect([...second.initialBytes]).toEqual([...first.initialBytes]);
+      expect([...second.deferredBytes]).toEqual([...first.deferredBytes]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });
