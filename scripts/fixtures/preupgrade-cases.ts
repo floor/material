@@ -21,7 +21,7 @@ export interface PreupgradeCase {
   host?: string;
   siblings?: readonly string[];
   width?: number;
-  /** Define button/text-field neighbours before measuring a switch upgrade. */
+  /** Define button/text-field neighbours (and switch for tabs) before measuring. */
   prepareNeighbors?: boolean;
   strictBox?: boolean;
   /**
@@ -303,6 +303,27 @@ for (const dir of ["ltr", "rtl"]) {
   }
 }
 
+// Tabs must expose the same baseline as their empty reserved box. Measure the
+// issue's baseline row both with settled neighbours and with a shared upgrade;
+// a stable height alone misses the host and the whole row moving vertically.
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, line] = typography.split("/");
+    for (const icon of [false, true]) {
+      for (const prepareNeighbors of [false, true]) {
+        cases.push({
+          element: "tabs",
+          variant: `baseline; ${dir}; ${typography}; ${icon ? "icon" : "text"}; ${prepareNeighbors ? "tabs upgrade" : "peer upgrades"}`,
+          html: `<div dir="${dir}" style="display:flex;gap:8px;align-items:baseline"><m-tabs id="subject" value="a" style="width:360px;flex-shrink:0"><m-tab value="a"${icon ? ` icon="${ICON}"` : ""}>Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs><m-switch id="switch">Wi-Fi</m-switch><m-text-field id="field" label="Name"></m-text-field></div>`,
+          style: typography === "default" ? "" : `font-size:${size}px;line-height:${line}`,
+          width: 850, host: "#subject", siblings: ["#switch", "#field", "#inline", "#block"],
+          strictBox: true, hostHeight: icon ? 64 : 48, settleMs: 100, prepareNeighbors,
+        });
+      }
+    }
+  }
+}
+
 // The default text group keeps its baseline and inherited line box. Keep
 // formatted markup too: whitespace between items must not add inline width.
 const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
@@ -329,6 +350,8 @@ for (const dir of ["ltr", "rtl"]) {
 // in ltr, where the defect and its mirror are visible.
 const ownBoxHosts: Record<string, number> = {
   "icon-button": 40, "button-group": 40, "split-button": 40, datepicker: 96, checkbox: 48, select: 56,
+  // Three 48px rows: the default (vertical) group.
+  radios: 144,
 };
 for (const [element, height] of Object.entries(ownBoxHosts)) {
   const row = cases.find(c => c.element === element && c.variant === "default")!;
@@ -349,6 +372,39 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
         });
       }
     }
+  }
+}
+
+// An empty group holds no row and no baseline: the strut that reserves the
+// populated group's baseline must not make one where there are no items.
+// Unguarded it gives the zero-height host a baseline 34px down, the row is
+// 36px before upgrade and 12px after, and the text and following block move
+// up 24px. Both directions.
+for (const direction of ["vertical", "horizontal"] as const) {
+  cases.push({
+    element: "radios", variant: `empty; ${direction}; baseline; 12/1`,
+    html: `<div style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}></m-radios><span id="next">Next</span></div>`,
+    style: "font-size:12px;line-height:1",
+    width: 850, host: "#subject", strictBox: true, settleMs: 100,
+    siblings: ["#next", "#inline", "#block"],
+  });
+}
+
+// Indented markup is the normal authoring shape: a group whose only content is
+// a newline and spaces has no option, and `:empty` does not see it (CSS counts
+// formatting whitespace as content). The strut must follow an actual option,
+// not the absence of children; otherwise this row reads 36px before upgrade
+// and 12px after, and the text and following block move up 24px, as the
+// compact empty tag did.
+for (const dir of ["ltr", "rtl"] as const) {
+  for (const direction of ["vertical", "horizontal"] as const) {
+    cases.push({
+      element: "radios", variant: `empty whitespace; ${dir}; ${direction}; baseline; 12/1`,
+      html: `<div dir="${dir}" style="display:flex;align-items:baseline;gap:8px"><m-radios id="subject" aria-label="Size"${direction === "horizontal" ? ' direction="horizontal"' : ""}>\n    </m-radios><span id="next">Next</span></div>`,
+      style: "font-size:12px;line-height:1",
+      width: 850, host: "#subject", strictBox: true, settleMs: 100,
+      siblings: ["#next", "#inline", "#block"],
+    });
   }
 }
 

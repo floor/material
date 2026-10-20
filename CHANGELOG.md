@@ -17,6 +17,128 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.3] - 2026-10-20
+
+Elements hold their baseline at upgrade.
+
+### Fixes
+
+- **`<m-tabs>` keeps its reserved baseline at upgrade (#108).**
+  In a baseline-aligned row beside a switch and a text field, upgrading
+  `<m-tabs>` moved it down 12.90625px and moved its neighbors up 6.5px: the
+  empty pre-upgrade block synthesized a baseline at its bottom edge while the
+  upgraded block exported a different baseline from its first rendered tab,
+  though both boxes were already 48px tall. The tabs host now carries
+  `contain: layout`, so it keeps synthesizing its baseline from its own box;
+  paint overflow remains visible. Measured over 40 strict browser cases
+  (LTR/RTL, the default page typography and four overrides, text and icon
+  tabs, tabs-only and shared upgrades): the host shifts 0.00px and every
+  neighbor moves 0.00px, with the 48px and 64px heights held.
+
+- **`<m-radios>` reserves the upgraded baseline before upgrade (#109).**
+  Beside a switch and a text field in a baseline-aligned row, `<m-radios>`
+  moved up 5px when the elements were defined: pre-upgrade the host exposed
+  the first row's label-text baseline, 29px down its box, and after upgrade
+  the first row's control baseline, 34px down. The undefined host is now the
+  column it becomes after upgrade, and its first item is a zero-width strut
+  ending on the circle's bottom edge (`height: 34px; margin-block-end: -34px`),
+  so the row holds the host in place with no horizontal change. The strut
+  follows an actual option — `:has(> m-radio)` — so an empty group, compact or
+  indented, reserves nothing and its neighbors do not move. Measured at the
+  default page typography and 12px/1, 12px/2, 24px/1 and 24px/2: the host
+  moves 0.00px and the row keeps its 144px height.
+
+### Internal
+
+- **The upgrade holds cost a few bytes and no ceiling moved.** Layout
+  containment on the tabs host leaves the tab row at 13,642 bytes gzipped
+  against its unchanged ceiling; the radios guard adds 42 bytes across the
+  three pre-upgrade assets and 520 bytes unpacked with its packed source.
+
+## [3.2.2] - 2026-10-20
+
+Components follow the page's direction, inside shadow roots and in bundled
+output.
+
+### Fixes
+
+- **Direction rules match inside a shadow root, at the nearest `[dir]`, and
+  follow live changes (#113).**
+  The `rtl` mixin compiled to `[dir='rtl'] &`, and two sheets wrote that
+  selector out literally; a descendant selector cannot cross a shadow
+  boundary, so the page's `<html dir="rtl">` outside the element's shadow
+  tree never reached its rules, though every host inherited `direction: rtl`
+  and matched `:dir(rtl)`. A shared direction-resolution module now sets
+  `mtrl-rtl` / `mtrl-ltr` on the roots it watches, from the element's computed
+  style and, for a factory root, the nearest `[dir]`; the direction mixin
+  emits the class arms, a `:host(...)` arm and an attribute fallback, and a
+  document-level `MutationObserver` follows `dir` changes. Measured at 600px:
+  the drawer's start sheet moves 0→240, its item padding 16/24→24/16, the
+  dialog's close button x 528→32, and a subtree's nearer `[dir]` wins over the
+  page both ways.
+
+- **`<m-slider>` mirrors its value, segments and stops on a right-to-left
+  page (#114).**
+  The axis was resolved with `element.closest("[dir]")`, and a selector
+  cannot cross a shadow boundary: the host inherits `direction: rtl`, but the
+  page's `dir` lies outside the shadow root, so the lookup returned `null`
+  and every left-to-right position stayed. The axis now reads the element's
+  computed direction, which inherits into the shadow tree, and keeps the
+  nearest `[dir]` as the fallback where `direction` does not resolve (JSDOM).
+  Measured on a 600px page, `<m-slider value="40">`: the handle moves
+  x 233→353, the segments swap (0/248→368/0), and the stop moves 590→6 — each
+  the mirror of its LTR box.
+
+- **A multi-browse carousel lays out and scrolls on a right-to-left page
+  (#115).**
+  The carousel read and wrote `scrollLeft` in left-to-right arithmetic and
+  placed every item with `translate3d(startPx, 0, 0)`, while Chromium reports
+  an RTL scroller's `scrollLeft` from 0 at the inline start down to negative
+  values toward the left: the scroller settled at the wrong end and the items
+  landed mid-container. At 600px the main build settled at `scrollLeft -232`
+  with items at 8.91, 187.47 and 237.59. Every `scrollLeft` read and write is
+  now normalised (`rtl ? -x : x`), items anchor to the track's right edge in
+  RTL, the translate is negated so the clip insets mirror with it, and the
+  arrow keys walk the way the page reads: the scroller starts at the
+  inline-start edge and the items sit at 314.67, 40 and -118.67, each the
+  mirror of its LTR box with the 2.66667px clip.
+
+- **The toolbar and date picker mirror in a consumer's bundled output
+  (#121).**
+  `_toolbar.scss` and `_datepicker.scss` wrote their direction rules with
+  `:dir(rtl)`, which a bundler lowers into `:lang()` lists: the lowered arms
+  select languages, not direction, so they matched no element on a
+  `dir="rtl"` page — the bundled sheet carried 12,768 `:lang()` entries, 342
+  of them from these six rules. Both sheets now route the rules through the
+  direction mixin, so the toolbar keeps its hidden offset off the edge it
+  leaves, the date picker's range band starts at the selection's centre and
+  its month chevrons point the way the months go, in unbundled and bundled
+  output alike.
+
+- **A closed side sheet leaves the viewport on the page's logical edge
+  (#112).**
+  Placement uses logical `justify-content`, which reverses in right-to-left,
+  but the closed sheet moved with physical `translateX(-100%/100%)` and its
+  solid overshoot cover never reversed: the closed sheet stood inside the
+  viewport at x=256 and painted a 32px stripe back into the page. Both now
+  follow the logical end, so the closed sheet sits at x=-256 with its cover
+  at -32.
+
+### Internal
+
+- **Direction resolution in the shared kernel costs ~220 bytes per entry
+  (175-290 measured).**
+- **The carousel's direction fix costs ~+44 B gzip on the carousel row: the
+  at-rest direction flip now rebuilds through a direction observer.** The two
+  ceilings that crossing required are raised rule-exact in the same change:
+  carousel 11,468 to 11,600, all-js 125,849 to 127,200.
+- **The packed package's unpacked ceiling is raised to 6,524,000 (#121).**
+  The toolbar and date picker declare their left-to-right direction values on
+  each component root, so a nested LTR instance keeps them across an RTL
+  parent's inherited custom properties; packed with CI's Node 22 / npm 10, the
+  package measures 6,459,061 unpacked. The raise follows the rule — measured
+  plus 1%, rounded up to the next 1,000.
+
 ## [3.2.1] - 2026-10-19
 
 No layout jump at upgrade.
@@ -4067,7 +4189,9 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.3...HEAD
+[3.2.3]: https://github.com/floor/material/compare/v3.2.2...v3.2.3
+[3.2.2]: https://github.com/floor/material/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/floor/material/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/floor/material/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/floor/material/compare/v3.0.6...v3.1.0

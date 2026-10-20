@@ -383,12 +383,13 @@ $sheet-overshoot-guard: 32px;
 // `&:hover`), never a suffix: a suffix (`&__x`) cannot follow the guard's
 // `:not()`. A rule whose subject is a BEM element or a variant class goes
 // through `rtl-selector` instead, which writes the subject out.
-@mixin rtl {
-  :where(.#{base.$prefix}-rtl) &,
-  :where(:host(.#{base.$prefix}-rtl)) &,
-  [dir='rtl'] &:not(:where(.#{base.$prefix}-ltr, .#{base.$prefix}-ltr *)) {
-    @content;
-  }
+//
+// `$self: true` for a value the include site sets on itself (a factory's root):
+// its reflected class or its own `dir` matches, the nearest boundary, uncut.
+@mixin rtl($self: false) {
+  $arms: ":where(.#{base.$prefix}-rtl) &, :where(:host(.#{base.$prefix}-rtl)) &, [dir='rtl'] &:not(:where(.#{base.$prefix}-ltr, .#{base.$prefix}-ltr *))";
+  @if $self { $arms: "&:where(.#{base.$prefix}-rtl, [dir='rtl']), #{$arms}"; }
+  #{$arms} { @content; }
 }
 
 // The same three arms for a subject that is not the include site's selector
