@@ -187,6 +187,10 @@ $component: '#{base.$prefix}-card';
 
     &-avatar {
       margin-right: v.card('padding');
+      @include m.rtl {
+        margin-right: 0;
+        margin-left: v.card('padding');
+      }
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -221,6 +225,10 @@ $component: '#{base.$prefix}-card';
     
     &-action {
       margin-left: 8px;
+      @include m.rtl {
+        margin-left: 0;
+        margin-right: 8px;
+      }
       flex-shrink: 0;
     }
   }
@@ -301,13 +309,25 @@ $component: '#{base.$prefix}-card';
     
     > * {
       margin: 0 4px;
-      
+
       &:first-child {
         margin-left: 8px;
       }
-      
+
       &:last-child {
         margin-right: 8px;
+      }
+
+      @include m.rtl {
+        &:first-child {
+          margin-left: 4px;
+          margin-right: 8px;
+        }
+
+        &:last-child {
+          margin-right: 4px;
+          margin-left: 8px;
+        }
       }
     }
     

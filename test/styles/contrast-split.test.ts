@@ -159,9 +159,13 @@ describe("explicit contrast levels are opt-in", () => {
     // Baseline's defaults sit in `:where(:root)` and `:where(.dark-theme)`, so
     // a selected theme outranks them in any import order while undeclared
     // roles still inherit (styles/themes/_baseline.scss).
+    // A direction rule reaches a part inside a shadow root, where no ancestor is
+    // `[dir='rtl']`, through the host's class: `:where(:host(.mtrl-rtl))` beside
+    // the attribute form, at the same specificity (styles/abstract/_mixins.scss,
+    // src/elements/define.ts), with the card, app bars and badge converted.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5408d373fdea9ff19dce540dc53bb1103a3b207c11c4b5f58330f1303a85398e");
-    expect(css.length).toBe(530160);
+      .toBe("6ac1a6bf79cde1535a0febbbaa82a1bd4fdf2ea039273e88d860d92b4dc783cd");
+    expect(css.length).toBe(533286);
   });
 
   test("today's sheets still resolve to the fixture", () => {

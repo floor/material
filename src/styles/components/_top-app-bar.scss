@@ -159,12 +159,12 @@ $component: '#{base.$prefix}-top-app-bar';
   }
   
   // RTL Support
-  [dir="rtl"] & {
+  @include m.rtl {
     .#{$component}__leading {
       margin-right: 0;
       margin-left: 24px;
     }
-    
+
     .#{$component}__trailing {
       margin-left: 0;
       margin-right: auto;
@@ -194,6 +194,15 @@ $component: '#{base.$prefix}-top-app-bar';
     
     .#{$component}__leading {
       margin-right: 16px;
+    }
+
+    // The narrow bar reduces the leading's end gap, not its start edges: the
+    // direction rule has to be restated here, or this later rule wins over it.
+    @include m.rtl {
+      .#{$component}__leading {
+        margin-right: 0;
+        margin-left: 16px;
+      }
     }
     
     .#{$component}__trailing {

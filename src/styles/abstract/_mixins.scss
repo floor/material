@@ -353,8 +353,24 @@ $sheet-overshoot-guard: 32px;
 }
 
 // RTL Support
+//
+// Two forms, because the rule has to reach where it is written. `[dir='rtl'] &`
+// styles markup in the light DOM, where an ancestor carries the page's
+// direction. It cannot style a part inside a shadow root: selectors do not
+// cross the boundary, so no ancestor inside the tree is `[dir='rtl']`, even
+// when the host is. The host inherits `direction` but usually carries no `dir`
+// attribute of its own. `:where(:host(.mtrl-rtl)) &` reaches the part from the
+// host's class, which the element base sets from the host's computed direction;
+// `:host()` matches nothing in the light DOM, so that form is inert there.
+// `:where()` keeps the class out of the specificity, as an attribute on an
+// ancestor would: the rule replaces the physical rule it mirrors, and a state
+// rule that is more specific than that physical rule still wins (a drawer's
+// open transform over its closed position).
+// A component factory rendered inside a shadow root the app owns needs the
+// direction set in the app's own stylesheet, or the class on that root.
 @mixin rtl {
-  [dir='rtl'] & {
+  [dir='rtl'] &,
+  :where(:host(.#{base.$prefix}-rtl)) & {
     @content;
   }
 }

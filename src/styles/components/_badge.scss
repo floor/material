@@ -155,29 +155,29 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
     background-color: t.color('info');
     color: t.color('on-info');
   }
-}
 
-// RTL support
-[dir="rtl"] {
-  .#{$component}--positioned {
-    &.#{$component}--top-right {
-      right: auto;
-      left: -8px;
-    }
-    
-    &.#{$component}--top-left {
-      left: auto;
-      right: -8px;
-    }
-    
-    &.#{$component}--bottom-right {
-      right: auto;
-      left: -8px;
-    }
-    
-    &.#{$component}--bottom-left {
-      left: auto;
-      right: -8px;
+  // RTL support: the positions swap under the mixin's two directions.
+  &--positioned {
+    @include m.rtl {
+      &.#{$component}--top-right {
+        right: auto;
+        left: -8px;
+      }
+
+      &.#{$component}--top-left {
+        left: auto;
+        right: -8px;
+      }
+
+      &.#{$component}--bottom-right {
+        right: auto;
+        left: -8px;
+      }
+
+      &.#{$component}--bottom-left {
+        left: auto;
+        right: -8px;
+      }
     }
   }
 }
