@@ -404,6 +404,14 @@ document.body.append(button.element);
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
+### Bundling
+
+The stylesheets ship no `:lang()` or `:dir()` rules. Values that follow the reading direction use logical properties, such as `margin-inline-start` and `inset-inline-end`.
+
+A bundler can add direction rules of its own. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. On the full stylesheet that is 12,426 `:lang()` arms, about 7.6 kB gzip — 12% of the 63.5 kB bundle.
+
+With current browser targets the bundler keeps the logical properties and emits none of them. In a build that targets old browsers the arms are needed and correct: they are what mirrors the layout there, so leave them in.
+
 ## Building your own components
 
 Components are composed from small features with `pipe`. The same building blocks are public:
