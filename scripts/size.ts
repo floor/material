@@ -36,12 +36,19 @@
  */
 
 import { gzipSync } from "bun";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 const root = resolve(import.meta.dir, "..");
-const entry = `${root}/src/index.ts`;
+
+// The bundler derives chunk names and the entry chunk's runtime id from the
+// module paths it is handed, so the entry lives in a fixed scratch inside the
+// checkout and every path in the bundle is relative to it: a fresh mkdtemp
+// entry path moved the measured bytes a few gzipped bytes every run, and
+// another checkout root moved them again, which made a row near its ceiling a
+// coin flip (floor/material#131).
+const scratch = join(root, "tmp", "size");
 
 // ── Public components ─────────────────────────────────────────────
 //
@@ -439,13 +446,79 @@ const concatBytes = async (paths: readonly string[], byPath: ReadonlyMap<string,
   return joined;
 };
 
-const scenarioSource = (scenario: Scenario): string => {
+const scenarioSource = (scenario: Scenario, projectRoot: string, scratch: string): string => {
+  const specifier = (target: string): string => relative(scratch, target).replaceAll("\\", "/");
   if (scenario.name === "core") {
-    return `import { pipe, createBase, withElement } from "${root}/src/core/compose/index.ts"; globalThis._v = [pipe, createBase, withElement];`;
+    return `import { pipe, createBase, withElement } from "${specifier(join(projectRoot, "src/core/compose/index.ts"))}"; globalThis._v = [pipe, createBase, withElement];`;
   }
   const imports = scenario.imports.join(", ");
-  const from = scenario.name === "shapes" || scenario.name === "shape-heart" ? `${root}/src/core/shapes/index.ts` : entry;
+  const from = scenario.name === "shapes" || scenario.name === "shape-heart"
+    ? specifier(join(projectRoot, "src/core/shapes/index.ts"))
+    : specifier(join(projectRoot, "src/index.ts"));
   return `import { ${imports} } from "${from}"; globalThis._v = [${imports}];`;
+};
+
+export interface ScenarioBuild {
+  readonly initialBytes: Uint8Array;
+  readonly deferredBytes: Uint8Array;
+  readonly texts: readonly string[];
+}
+
+/**
+ * Build one scenario and return its initial and deferred chunks. The entry is
+ * written into a fixed scratch and addressed relatively, and every import in
+ * the generated source is relative to it, so the bytes depend only on the
+ * source tree — not on the checkout path or a per-run temporary directory
+ * (floor/material#131). The scratch must live inside `projectRoot`.
+ */
+export const buildScenario = async (
+  projectRoot: string,
+  scenario: Scenario,
+  scratch = join(projectRoot, "tmp", "size"),
+): Promise<ScenarioBuild | string> => {
+  const stem = scenario.name.replace(/[^a-zA-Z0-9]/g, "_");
+  mkdirSync(scratch, { recursive: true });
+  const entryFile = join(scratch, `${stem}.ts`);
+  await Bun.write(entryFile, scenarioSource(scenario, projectRoot, scratch));
+  const entryPath = relative(projectRoot, entryFile).replaceAll("\\", "/");
+
+  const previousCwd = process.cwd();
+  process.chdir(projectRoot);
+  try {
+    const build = await Bun.build({
+      entrypoints: [entryPath],
+      outdir: join(scratch, "out", stem),
+      minify: true,
+      splitting: true,
+      target: "browser",
+      format: "esm",
+      define: {
+        "process.env.NODE_ENV": '"production"',
+      },
+    });
+
+    if (!build.success) {
+      return `build failed\n${build.logs.map((log) => `   ${log}`).join("\n")}`;
+    }
+
+    const chunks = build.outputs.filter((output): output is typeof output & BuiltChunk =>
+      output.path.endsWith(".js"),
+    );
+    const byPath = new Map(chunks.map((chunk) => [chunk.path, chunk]));
+    const graph = await chunkGraph(chunks);
+    if (typeof graph === "string") return graph;
+
+    const initialBytes = await concatBytes(graph.initial, byPath);
+    const deferredBytes = await concatBytes(graph.deferred, byPath);
+    const texts: string[] = [];
+    for (const path of graph.initial) {
+      const chunk = byPath.get(path);
+      if (chunk) texts.push(await chunk.text());
+    }
+    return { initialBytes, deferredBytes, texts };
+  } finally {
+    process.chdir(previousCwd);
+  }
 };
 
 const main = async (): Promise<void> => {
@@ -459,55 +532,26 @@ const main = async (): Promise<void> => {
     candidates.set(component.name, uniqueLiterals(component.name, sources, coreSource));
   }
 
-  const scratch = mkdtempSync("/tmp/mtrl-size-");
+  // A fixed scratch and a relative entrypoint keep the emitted bytes the same
+  // on every run and in every checkout; tmp/ is ignored by git.
+  rmSync(scratch, { recursive: true, force: true });
+  mkdirSync(scratch, { recursive: true });
   const results: Result[] = [];
   const bundles = new Map<ScenarioName, string>();
   const buildFailures: ScenarioName[] = [];
   const scenarios: readonly Scenario[] = SCENARIO_DEFS;
 
   for (const scenario of scenarios) {
-    const tmpFile = `${scratch}/${scenario.name.replace(/[^a-zA-Z0-9]/g, "_")}.ts`;
-    await Bun.write(tmpFile, scenarioSource(scenario));
-
-    const build = await Bun.build({
-      entrypoints: [tmpFile],
-      outdir: `${scratch}/out/${scenario.name.replace(/[^a-zA-Z0-9]/g, "_")}`,
-      minify: true,
-      splitting: true,
-      target: "browser",
-      format: "esm",
-      define: {
-        "process.env.NODE_ENV": '"production"',
-      },
-    });
-
-    if (!build.success) {
-      console.error(`  ✗ ${scenario.name} — build failed`);
-      for (const log of build.logs) console.error("   ", log);
+    const built = await buildScenario(root, scenario, scratch);
+    if (typeof built === "string") {
+      console.error(`  ✗ ${scenario.name} — ${built}`);
       buildFailures.push(scenario.name);
       continue;
     }
 
-    const chunks = build.outputs.filter((output): output is typeof output & BuiltChunk =>
-      output.path.endsWith(".js"),
-    );
-    const byPath = new Map(chunks.map((chunk) => [chunk.path, chunk]));
-    const graph = await chunkGraph(chunks);
-    if (typeof graph === "string") {
-      console.error(`  ✗ ${scenario.name} — ${graph}`);
-      buildFailures.push(scenario.name);
-      continue;
-    }
-
-    const initialBytes = await concatBytes(graph.initial, byPath);
-    const deferredBytes = await concatBytes(graph.deferred, byPath);
+    const { initialBytes, deferredBytes, texts } = built;
     const gzBytes = gzipSync(initialBytes).byteLength;
     const deferredGzBytes = deferredBytes.byteLength === 0 ? 0 : gzipSync(deferredBytes).byteLength;
-    const texts: string[] = [];
-    for (const path of graph.initial) {
-      const chunk = byPath.get(path);
-      if (chunk) texts.push(await chunk.text());
-    }
 
     bundles.set(scenario.name, texts.join("\n"));
     results.push({
