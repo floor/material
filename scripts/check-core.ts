@@ -17,6 +17,7 @@ import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpeners } from "./check-menu-opener-browser";
+import { checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
@@ -44,6 +45,7 @@ try {
   // createMenu for the menu checks, and the openers for it: one import, two windows
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createDialog } from 'material'; window.createDialog = createDialog;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -52,6 +54,7 @@ try {
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });
   await checkThemeContrast(page);
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
+  await checkDialogMount(page);
   await checkRadiosLayout(page, "factory", (name) => console.log(`  ok ${name}`));
   await checkCheckableValues(page, "factory");
   await page.evaluate(() => {
