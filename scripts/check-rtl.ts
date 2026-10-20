@@ -264,7 +264,7 @@ try {
   // re-reads the host's computed direction and the sheet follows.
   const switched = await ltrPage.evaluate(async () => {
     document.documentElement.dir = "rtl";
-    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    await new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
     const leading = document.querySelector("m-top-app-bar")!.shadowRoot!.querySelector(".mtrl-top-app-bar__leading")!;
     const style = getComputedStyle(leading);
     return { left: parseFloat(style.marginLeft), right: parseFloat(style.marginRight), rtl: document.querySelector("m-top-app-bar")!.classList.contains("mtrl-rtl") };
