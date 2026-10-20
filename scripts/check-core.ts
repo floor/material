@@ -21,7 +21,7 @@ import { checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
-import { checkMenu } from "./check-menu-browser";
+import { checkMenu, checkMenuDisabledColors } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -122,6 +122,7 @@ try {
   await checkMenuOpeners(page);
   await checkControls(page);
   await checkMenu(page);
+  await checkMenuDisabledColors(page);
   await checkSearch(page);
   await checkSelectMenu(page, "factory");
   await checkSelectMenu(page, "factory-top");
