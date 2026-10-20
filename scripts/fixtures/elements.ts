@@ -21,7 +21,6 @@ import createDrawer from "../../dist/components/drawer/index.js";
 import createTopAppBar from "../../dist/components/top-app-bar/index.js";
 import createBottomAppBar from "../../dist/components/bottom-app-bar/index.js";
 import createToolbar from "../../dist/components/toolbar/index.js";
-import createDatePicker from "../../dist/components/datepicker/index.js";
 import createFabMenu from "../../dist/components/fab-menu/index.js";
 import createList from "../../dist/components/list/index.js";
 import createCard from "../../dist/components/card/index.js";
@@ -35,7 +34,7 @@ const factories = {
   createSlider,
   createTextField,
   createRadios,
-  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createToolbar, createDatePicker, createFabMenu,
+  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createToolbar, createFabMenu,
   createList, createCard, createCarousel,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
