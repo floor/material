@@ -17,6 +17,44 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.3] - 2026-10-20
+
+Elements hold their baseline at upgrade.
+
+### Fixes
+
+- **`<m-tabs>` keeps its reserved baseline at upgrade (#108).**
+  In a baseline-aligned row beside a switch and a text field, upgrading
+  `<m-tabs>` moved it down 12.90625px and moved its neighbors up 6.5px: the
+  empty pre-upgrade block synthesized a baseline at its bottom edge while the
+  upgraded block exported a different baseline from its first rendered tab,
+  though both boxes were already 48px tall. The tabs host now carries
+  `contain: layout`, so it keeps synthesizing its baseline from its own box;
+  paint overflow remains visible. Measured over 40 strict browser cases
+  (LTR/RTL, the default page typography and four overrides, text and icon
+  tabs, tabs-only and shared upgrades): the host shifts 0.00px and every
+  neighbor moves 0.00px, with the 48px and 64px heights held.
+
+- **`<m-radios>` reserves the upgraded baseline before upgrade (#109).**
+  Beside a switch and a text field in a baseline-aligned row, `<m-radios>`
+  moved up 5px when the elements were defined: pre-upgrade the host exposed
+  the first row's label-text baseline, 29px down its box, and after upgrade
+  the first row's control baseline, 34px down. The undefined host is now the
+  column it becomes after upgrade, and its first item is a zero-width strut
+  ending on the circle's bottom edge (`height: 34px; margin-block-end: -34px`),
+  so the row holds the host in place with no horizontal change. The strut
+  follows an actual option — `:has(> m-radio)` — so an empty group, compact or
+  indented, reserves nothing and its neighbors do not move. Measured at the
+  default page typography and 12px/1, 12px/2, 24px/1 and 24px/2: the host
+  moves 0.00px and the row keeps its 144px height.
+
+### Internal
+
+- **The upgrade holds cost a few bytes and no ceiling moved.** Layout
+  containment on the tabs host leaves the tab row at 13,642 bytes gzipped
+  against its unchanged ceiling; the radios guard adds 42 bytes across the
+  three pre-upgrade assets and 520 bytes unpacked with its packed source.
+
 ## [3.2.2] - 2026-10-20
 
 Components follow the page's direction, inside shadow roots and in bundled
@@ -4151,7 +4189,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.3...HEAD
+[3.2.3]: https://github.com/floor/material/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/floor/material/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/floor/material/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/floor/material/compare/v3.1.0...v3.2.0
