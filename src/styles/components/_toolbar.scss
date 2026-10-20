@@ -20,6 +20,8 @@ $component: '#{base.$prefix}-toolbar';
   --#{$component}-content: #{t.color('on-surface-variant')};
   // The window-edge margin of a placed floating toolbar
   --#{$component}-margin: 16px;
+  // 1 in LTR, -1 in RTL: the closed offsets share one sign
+  --#{$component}-dir: 1;
 
   display: flex;
   align-items: center;
@@ -156,6 +158,10 @@ $component: '#{base.$prefix}-toolbar';
 
   // Off screen, past the edge it is placed at
   &--hidden {
+    @include m.rtl {
+      --#{$component}-dir: -1;
+    }
+
     &.#{$component}--bottom {
       transform: translateY(calc(100% + var(--#{$component}-margin)));
     }
@@ -168,23 +174,13 @@ $component: '#{base.$prefix}-toolbar';
       transform: translateY(calc(-100% - var(--#{$component}-margin)));
     }
 
+    // The edge it leaves is physical: start and end trade sides in right-to-left.
     &.#{$component}--start {
-      transform: translateX(calc(-100% - var(--#{$component}-margin)));
+      transform: translateX(calc(-1 * var(--#{$component}-dir) * (100% + var(--#{$component}-margin))));
     }
 
     &.#{$component}--end {
-      transform: translateX(calc(100% + var(--#{$component}-margin)));
-    }
-
-    // The edge it leaves is physical: start and end trade sides in right-to-left.
-    @include m.rtl {
-      &.#{$component}--start {
-        transform: translateX(calc(100% + var(--#{$component}-margin)));
-      }
-
-      &.#{$component}--end {
-        transform: translateX(calc(-100% - var(--#{$component}-margin)));
-      }
+      transform: translateX(calc(var(--#{$component}-dir) * (100% + var(--#{$component}-margin))));
     }
 
     // In the flow there is no edge to leave by

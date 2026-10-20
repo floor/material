@@ -216,10 +216,12 @@ const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () 
   host.innerHTML = `
     <div id="toolbar-start" class="mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--start" style="width:100px"></div>
     <div id="toolbar-end" class="mtrl-toolbar mtrl-toolbar--hidden mtrl-toolbar--end" style="width:100px"></div>
-    <div id="range-start" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-start" style="width:48px;height:48px"></div>
-    <div id="range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
-    <span id="prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
-    <span id="next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>`;
+    <div class="mtrl-datepicker">
+      <div id="range-start" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-start" style="width:48px;height:48px"></div>
+      <div id="range-end" class="mtrl-datepicker__cell mtrl-datepicker__cell--range-end" style="width:48px;height:48px"></div>
+      <span id="prev" class="mtrl-datepicker__prev"><svg width="24" height="24"></svg></span>
+      <span id="next" class="mtrl-datepicker__next"><svg width="24" height="24"></svg></span>
+    </div>`;
   await frame();
   const style = (selector: string): CSSStyleDeclaration =>
     getComputedStyle(document.querySelector(selector)!);

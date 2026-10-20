@@ -17,6 +17,15 @@ $component: '#{base.$prefix}-datepicker';
   contain: inline-size;
   contain-intrinsic-inline-size: v.text-field('width');
   color: t.color('on-surface');
+  // The physical range band and chevron flip, set once for both directions
+  --#{$component}-range-start: 100% 0;
+  --#{$component}-range-end: 0 0;
+  --#{$component}-flip: none;
+  @include m.rtl {
+    --#{$component}-range-start: 0 0;
+    --#{$component}-range-end: 100% 0;
+    --#{$component}-flip: scaleX(-1);
+  }
   &__anchor { display: flex; position: relative; }
   &__label { @include m.typography('body-small'); margin-block-end: 4px; }
   &__input {
@@ -109,8 +118,8 @@ $component: '#{base.$prefix}-datepicker';
     background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px) no-repeat;
     .#{$component}__day:not(.#{$component}__day--selected) { color: t.color('on-secondary-container'); }
   }
-  &__cell--range-start { background-size: 50% 100%; background-position: 100% 0; @include m.rtl { background-position: 0 0; } }
-  &__cell--range-end { background-size: 50% 100%; background-position: 0 0; @include m.rtl { background-position: 100% 0; } }
+  &__cell--range-start { background-size: 50% 100%; background-position: var(--#{$component}-range-start); }
+  &__cell--range-end { background-size: 50% 100%; background-position: var(--#{$component}-range-end); }
   &__cell--range-start#{&}__cell--range-end { background: none; }
   // Where the range wraps to the next week, the band runs on through the grid's inline
   // padding to the container edge, as m3.material.io's range picker draws it: the row
@@ -156,7 +165,7 @@ $component: '#{base.$prefix}-datepicker';
   &__field { display: flex; flex-direction: column; }
   &__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 4px 12px; }
   // The chevrons point the way the months go: mirrored right to left.
-  &__prev svg, &__next svg { @include m.rtl { transform: scaleX(-1); } }
+  &__prev svg, &__next svg { transform: var(--#{$component}-flip); }
   &__cancel, &__confirm, &__save { @include m.typography('label-large'); padding: 0 12px; color: t.color('primary'); }
   &__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
