@@ -47,7 +47,9 @@ const make = () => {
 };
 const released = () => {
   for (const set of listeners.values()) expect(set.size).toBe(0);
-  expect(activeObservers.size).toBe(0);
+  // One shared observer follows `dir` for every root and lives with the
+  // document; no per-field observer survives its field.
+  expect(activeObservers.size).toBe(1);
   expect(activeResizeObservers.size).toBe(0);
 };
 test("destroy before initialization never installs resize listeners or observers", async () => {
@@ -58,9 +60,10 @@ test("destroy releases placement, notch and autofill observers", async () => {
   expect(listeners.get("resize")!.size).toBe(1);
   // #234: no theme listener and no observer per ancestor for a copied label
   // background: the class and autofill observers and one label observer remain,
-  // and the counter's maxlength observer
+  // and the counter's maxlength observer; one shared observer follows `dir`
+  // for every root
   expect(listeners.get("themechange")!.size).toBe(0);
-  expect(activeObservers.size).toBe(3);
+  expect(activeObservers.size).toBe(4);
   expect(activeResizeObservers.size).toBe(1);
   field.destroy(); released(); await tick(); released();
 });

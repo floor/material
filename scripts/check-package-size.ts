@@ -328,7 +328,9 @@ try {
   const fixtures = [
     // From its subpath since 3.0.0 removed it from the root
     { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: 550 }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
-    { name: "button", code: "export { createButton } from 'material';", gzip: 13900 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // The nearest-boundary direction module: 13,923 measured, measured +1% is
+    // 14,062.23, the next multiple of 50 is 14,100.
+    { name: "button", code: "export { createButton } from 'material';", gzip: 14100 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
     // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
@@ -363,8 +365,12 @@ try {
     // Raised from 13,090: the track, stops and inset icon are a percentage
     // of the value, so the first paint does not wait on a measurement (13,356 measured).
     // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13400 },
-    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 6950 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // The nearest-boundary direction module: 13,434 measured, measured +1% is
+    // 13,568.34, the next multiple of 50 is 13,600.
+    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13600 },
+    // The nearest-boundary direction module: 7,046 measured; kb(6.95) is 7,116
+    // (70 above, short of 100), kb(7.0) is 7,168 (122 above).
+    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 7168 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // Contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,156 -> 7,631 gzip bytes (same packer).
     // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
@@ -374,8 +380,12 @@ try {
     // The required asterisk, the live error, the trailing icon button: 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9250 },
-    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20100 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // The nearest-boundary direction module: 9,417 measured, measured +100 is
+    // 9,517, the next multiple of 50 is 9,550.
+    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9550 },
+    // The nearest-boundary direction module: 20,161 measured, measured +1% is
+    // 20,363, the next multiple of 50 is 20,400.
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20400 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The toolbar: 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu: 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator: 127,894 to 128,195, measured against 5b314c5.
@@ -389,7 +399,9 @@ try {
     // The text-field rename merged in: 126,962, the same figure main packed.
     // 38 B left under 127,000.
     // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the bounded rule.
-    { name: "all-js", code: "export * from 'material';", gzip: 127100 },
+    // The nearest-boundary direction module: 127,273 measured, measured +1% is
+    // 128,545.73, the next multiple of 50 is 128,550.
+    { name: "all-js", code: "export * from 'material';", gzip: 128550 },
     // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
@@ -535,7 +547,9 @@ try {
     for (const metric of ["raw", "gzip", "brotli"] as const) sizes["button-initial"][metric] += chunk[metric];
   }
   // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  assert(sizes["button-initial"].gzip < 7550, "Button initial payload exceeds 7,550 gzip bytes");
+  // The nearest-boundary direction module: 7,652 measured, measured +100 is
+  // 7,752, the next multiple of 50 is 7,800.
+  assert(sizes["button-initial"].gzip < 7800, "Button initial payload exceeds 7,800 gzip bytes");
 
   console.table(sizes);
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
