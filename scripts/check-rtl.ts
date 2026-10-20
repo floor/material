@@ -232,6 +232,41 @@ const measureBundled = (page: Page): Promise<Bundled> => page.evaluate(async () 
   };
 });
 
+/**
+ * A factory's markup is light DOM: no host class crosses a shadow boundary for
+ * its sheet to read, and `[dir='rtl'] &` would match the page root whatever a
+ * nearer `[dir]` says. The root carries the direction the runtime resolved as
+ * a class, and the attribute form stops at it. Both ways: a `dir="ltr"`
+ * subtree of an RTL page, and a `dir="rtl"` subtree of an LTR page.
+ */
+const measureSubtree = (
+  page: Page,
+  subtreeDir: "ltr" | "rtl",
+): Promise<{ sheet: number; rtl: boolean; ltr: boolean }> =>
+  page.evaluate(async (dir) => {
+    const host = document.getElementById("host") as HTMLElement;
+    const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    const previous = host.innerHTML;
+    host.innerHTML = `<div id="subtree" dir="${dir}"></div>`;
+    const subtree = document.getElementById("subtree") as HTMLElement;
+    const factory = (window as unknown as {
+      mtrl: { createDrawer: (config: Record<string, unknown>) => { element: HTMLElement } };
+    }).mtrl;
+    const drawer = factory.createDrawer({ variant: "modal", position: "end", headline: "Mail", width: 360 });
+    subtree.appendChild(drawer.element);
+    await frame();
+    const sheet = drawer.element.querySelector(".mtrl-drawer__sheet") as HTMLElement;
+    const measured = {
+      sheet: sheet.getBoundingClientRect().x,
+      rtl: drawer.element.classList.contains("mtrl-rtl"),
+      ltr: drawer.element.classList.contains("mtrl-ltr"),
+    };
+    drawer.element.remove();
+    host.innerHTML = previous;
+    await frame();
+    return measured;
+  }, subtreeDir);
+
 const browser = await chromium.launch({ headless: true });
 const TOLERANCE = 0.5;
 const near = (a: number, b: number): boolean => Math.abs(a - b) <= TOLERANCE;
@@ -351,6 +386,21 @@ try {
   const found = differences(ltr, rtl);
   assert.deepEqual(found, [], `direction rules did not reach these parts:\n${found.join("\n")}`);
 
+  // The nearest `[dir]`, not the page root, for a factory's light-DOM markup.
+  // The subtree's dir is the one named; the page is still in its own.
+  const ltrCase = await measureSubtree(rtlPage, "ltr");
+  const rtlCase = await measureSubtree(ltrPage, "rtl");
+  assert.deepEqual(
+    ltrCase,
+    { sheet: WIDTH, rtl: false, ltr: true },
+    "a dir=ltr subtree of an RTL page mirrored by the page root (the closed end drawer should stay off the right edge)",
+  );
+  assert.deepEqual(
+    rtlCase,
+    { sheet: -360, rtl: true, ltr: false },
+    "a dir=rtl subtree of an LTR page did not resolve right-to-left (the closed end drawer should sit off the left edge)",
+  );
+
   // A page that switches direction after the elements connected: the observer
   // re-reads the host's computed direction and the sheet follows.
   const switched = await ltrPage.evaluate(async () => {
@@ -365,8 +415,10 @@ try {
   console.log(
     `Passed RTL: ${Object.keys(ltr).length} fixtures measured in LTR and RTL, every box mirrored ` +
       `(drawer start sheet 0→240, drawer item padding 16/24→24/16, icon x 28→548, bottom padding 4/16→16/4, ` +
-      `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), and a runtime dir change followed; ` +
-      `bundled: toolbar offsets -116→116, range band 100%→0%, chevrons flipped.`,
+      `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), a runtime dir change followed, ` +
+      `a subtree's nearer dir won both ways (factory drawer closed at x ${ltrCase.sheet} in an ltr subtree of an RTL page, ` +
+      `${rtlCase.sheet} in an rtl subtree of an LTR page), and the bundled sheet mirrored its class-based markup ` +
+      `(toolbar offsets -116→116, range band 100%→0%, chevrons flipped).`,
   );
 } finally {
   await browser.close();

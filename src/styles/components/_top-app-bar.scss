@@ -170,23 +170,24 @@ $component: '#{base.$prefix}-top-app-bar';
       margin-right: auto;
     }
     
-    &--medium,
-    &--large {
-      .#{$component}__headline {
-        margin-left: 0;
-        margin-right: 16px;
-      }
-    }
-    
-    &--center {
-      .#{$component}__headline {
-        left: auto;
-        right: 50%;
-        transform: translateX(50%);
-      }
-    }
   }
-  
+
+  @include m.rtl-selector('.#{$component}--medium .#{$component}__headline') {
+    margin-left: 0;
+    margin-right: 16px;
+  }
+
+  @include m.rtl-selector('.#{$component}--large .#{$component}__headline') {
+    margin-left: 0;
+    margin-right: 16px;
+  }
+
+  @include m.rtl-selector('.#{$component}--center .#{$component}__headline') {
+    left: auto;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
   // Mobile screen adjustments
   @media (max-width: map.get(v.$breakpoints, 'sm')) {
     // Reduce side padding slightly on small screens

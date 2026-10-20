@@ -586,16 +586,12 @@ $default-width: 360px;
     // RTL — item padding direction
     // ========================================================================
 
-    @include m.rtl {
-        &__item {
-            padding: 0 16px 0 24px;
-        }
+    @include m.rtl-selector('.#{$component}__item') {
+        padding: 0 16px 0 24px;
+    }
 
-        &--dense {
-            .#{$component}__item {
-                padding: 0 12px 0 16px;
-            }
-        }
+    @include m.rtl-selector('.#{$component}--dense .#{$component}__item') {
+        padding: 0 12px 0 16px;
     }
 
     // ========================================================================

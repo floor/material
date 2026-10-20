@@ -345,10 +345,8 @@ dialog.#{$component} {
     }
 
     // RTL Support
-    @include m.rtl {
-        &-close {
-            margin: -8px 0 0 -8px;
-        }
+    @include m.rtl-selector('.#{$component}__header-close') {
+        margin: -8px 0 0 -8px;
     }
 }
 

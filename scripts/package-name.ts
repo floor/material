@@ -102,8 +102,8 @@ export const ENTRIES: ChangeEntry[] = [
   {
     id: "consumer-size-budgets",
     file: "scripts/check-consumer.ts",
-    find: '["addClass", "addClass", 750, "%s/core/dom"], ["text-field", "createTextField", 9700, "%s"], ["button", "createButton", 8550, "%s"],',
-    replace: '["addClass", "addClass", 750, "%t/core/dom"], ["text-field", "createTextField", 9700, "%t"], ["button", "createButton", 8550, "%t"],',
+    find: '["addClass", "addClass", 750, "%s/core/dom"], ["text-field", "createTextField", 10000, "%s"], ["button", "createButton", 8700, "%s"],',
+    replace: '["addClass", "addClass", 750, "%t/core/dom"], ["text-field", "createTextField", 10000, "%t"], ["button", "createButton", 8700, "%t"],',
     reason: "the size budgets name the specifiers they measure; the bare `\"%s\"` entries are not import forms (the text-field rename moved the component's name to `text-field` after this entry was written)",
   },
   {

@@ -32,9 +32,26 @@ const rules = (css: string, selector: string): string[] => {
   if (exact.length) return exact;
   // A direction rule compiles to a selector list — the light-DOM attribute form
   // beside the shadow tree's host-class form — so the selector is one member of
-  // the prelude, not the whole of it.
+  // the prelude, not the whole of it. Commas inside `:not(:where(...))` do not
+  // separate members.
+  const members = (prelude: string): string[] => {
+    const out: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < prelude.length; i++) {
+      const ch = prelude[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (ch === ',' && depth === 0) {
+        out.push(prelude.slice(start, i));
+        start = i + 1;
+      }
+    }
+    out.push(prelude.slice(start));
+    return out;
+  };
   return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
-    .filter((m) => m[1]!.split(',').map((member) => member.trim()).includes(selector))
+    .filter((m) => members(m[1]!).map((member) => member.trim()).includes(selector))
     .map((m) => m[2]!);
 };
 
@@ -102,8 +119,8 @@ describe('drawer', () => {
     const colour = 'var(--mtrl-sys-color-surface-container-low)';
     expect(value('drawer', '.mtrl-drawer--modal.mtrl-drawer--start .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, -32px 0 0 0 ${colour}`);
     expect(value('drawer', '.mtrl-drawer--modal.mtrl-drawer--end .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, 32px 0 0 0 ${colour}`);
-    expect(value('drawer', '[dir=rtl] .mtrl-drawer--modal.mtrl-drawer--start .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, 32px 0 0 0 ${colour}`);
-    expect(value('drawer', '[dir=rtl] .mtrl-drawer--modal.mtrl-drawer--end .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, -32px 0 0 0 ${colour}`);
+    expect(value('drawer', '[dir=rtl] .mtrl-drawer--modal:not(:where(.mtrl-ltr, .mtrl-ltr *)).mtrl-drawer--start .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, 32px 0 0 0 ${colour}`);
+    expect(value('drawer', '[dir=rtl] .mtrl-drawer--modal:not(:where(.mtrl-ltr, .mtrl-ltr *)).mtrl-drawer--end .mtrl-drawer__sheet', 'box-shadow')).toEndWith(`, -32px 0 0 0 ${colour}`);
   });
 
   test('reduced motion stops the open transitions too, not only the closed ones', () => {
