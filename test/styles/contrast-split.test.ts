@@ -171,9 +171,13 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_datepicker.scss, styles/components/_toolbar.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
+    // The menu's disabled icon, supporting text and shortcut dim with the
+    // label, and a selected item that is disabled dims its selection colours
+    // with no hover layer, the vibrant container excepted
+    // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("51264f3b74e7f3ad3801ef5147f9875a3e221b0655ada8f7be0438550e22ded6");
-    expect(css.length).toBe(537898);
+      .toBe("7bc66d05ecf4d9c3c23c3cd33c598af078b012426f394d6f89483216be94dec1");
+    expect(css.length).toBe(539276);
   });
 
   test("today's sheets still resolve to the fixture", () => {
