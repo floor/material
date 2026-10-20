@@ -11,6 +11,21 @@
   &[direction='horizontal'] {
     flex-direction: row;
     flex-wrap: wrap;
+
+    // As components/_radios.scss: 16px between options on the row, none after
+    // the last. Without the gap reserved here the host is 16px narrower per
+    // gap before upgrade — with three options 290.3px instead of 322.3px —
+    // and everything on the line moves by the difference (floor/material#129).
+    // The last option is found among the options (`:last-of-type`), not among
+    // all children: a group's contract is its `<m-radio>` children, and only
+    // they become items.
+    > #{c.tag('radio')} {
+      margin-inline-end: 16px;
+
+      &:last-of-type {
+        margin-inline-end: 0;
+      }
+    }
   }
 
   // On upgrade the host's baseline is its first row's: the 20px circle's
