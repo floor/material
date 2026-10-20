@@ -92,8 +92,11 @@ const tabsSpec = {
   // A `dir` on the page does not reach the [dir='rtl'] mirror of the tab badges
   // (styles/components/_tabs.scss) inside the shadow root; the host's direction
   // does. Not in the component sheet: a bundler lowers :dir() into :lang() lists.
+  // The empty pre-upgrade block exposes its bottom edge as its baseline.
+  // Layout containment keeps the rendered first tab from exporting a different
+  // baseline through the host, without clipping badges or focus outlines.
   hostStyles:
-    ":host{display:block}" +
+    ":host{display:block;contain:layout}" +
     ":host(:dir(rtl)) :is(.mtrl-tab--icon-only,.mtrl-tab--icon-and-text) .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% - 6px);left:auto}" +
     ":host(:dir(rtl)) .mtrl-tab--text-only .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% + 4px);left:auto}",
   attributes: {

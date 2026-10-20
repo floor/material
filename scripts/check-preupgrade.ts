@@ -306,14 +306,15 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     await p.goto(`http://127.0.0.1:${server.port}${path}?pre=${preupgrade ? 1 : 0}`);
     await settle(p);
     if (item?.prepareNeighbors) {
-      await p.evaluate(async () => {
+      await p.evaluate(async (element) => {
         const css = "/dist/elements/css/index.js";
         const entry = "/dist/elements/index.js";
         await import(css);
         const elements = await import(entry);
         elements.defineButton();
         elements.defineTextField();
-      });
+        if (element === "tabs") elements.defineSwitch();
+      }, item.element);
       await settle(p);
     }
     const siblings = (item?.siblings ?? SIBLINGS).join(", ");
