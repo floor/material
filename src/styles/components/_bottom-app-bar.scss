@@ -69,17 +69,17 @@ $component: '#{base.$prefix}-bottom-app-bar';
   }
   
   // RTL Support
-  [dir="rtl"] & {
+  @include m.rtl {
     padding: 12px 4px 12px 16px;
-    
-    &__actions {
-      flex-direction: row-reverse;
-    }
-    
-    &__fab-container {
-      margin-right: auto;
-      margin-left: initial;
-    }
+  }
+
+  @include m.rtl-selector('.#{$component}__actions') {
+    flex-direction: row-reverse;
+  }
+
+  @include m.rtl-selector('.#{$component}__fab-container') {
+    margin-right: auto;
+    margin-left: initial;
   }
   
   // // Media query to hide on large screens

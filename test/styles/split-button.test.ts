@@ -11,7 +11,31 @@ let css = '';
 
 const rules = (selector: string): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  const exact = Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  if (exact.length) return exact;
+  // A direction rule compiles to a selector list — the light-DOM attribute form
+  // beside the shadow tree's host-class form — so the selector is one member of
+  // the prelude, not the whole of it. Commas inside `:not(:where(...))` do not
+  // separate members.
+  const members = (prelude: string): string[] => {
+    const out: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < prelude.length; i++) {
+      const ch = prelude[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (ch === ',' && depth === 0) {
+        out.push(prelude.slice(start, i));
+        start = i + 1;
+      }
+    }
+    out.push(prelude.slice(start));
+    return out;
+  };
+  return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
+    .filter((m) => members(m[1]!).map((member) => member.trim()).includes(selector))
+    .map((m) => m[2]!);
 };
 
 const value = (selector: string, property: string): string | undefined =>
@@ -103,8 +127,8 @@ describe('split button stylesheet', () => {
     const offsets: Record<string, string> = { xs: '1px', s: '1px', m: '2px', l: '3px', xl: '6px' };
     for (const [size, offset] of Object.entries(offsets)) {
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing .mtrl-split-button__chevron`, 'translate')).toBe(`calc(-1 * ${offset}) 0`);
-      // and it mirrors in right-to-left
-      expect(value(`[dir=rtl] .mtrl-split-button--${size} .mtrl-split-button__trailing .mtrl-split-button__chevron`, 'translate')).toBe(`${offset} 0`);
+      // and it mirrors in right-to-left, unless a nearer ltr subtree owns it
+      expect(value(`[dir=rtl] .mtrl-split-button--${size} .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-split-button__chevron`, 'translate')).toBe(`${offset} 0`);
     }
   });
 

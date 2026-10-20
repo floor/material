@@ -23,6 +23,7 @@
 
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
+import { trackDirection } from "../core/dom/direction";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -460,8 +461,8 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     connectedCallback(): void {
-      // On connect, not in the constructor, which must not gain attributes;
-      // and a host is never styled before it is connected.
+      // Not in the constructor, which must not gain attributes; and a host is
+      // never styled before it is connected.
       if (spec.marker) this.toggleAttribute(spec.marker, true);
       removeDeclarativeTemplates(this);
       this.#upgradeProperties();
@@ -606,6 +607,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     #build(): void {
+      // On build, which is also the rebuild a live host does: direction is
+      // read again after the component it is restyled for exists.
+      trackDirection(this);
       const root = this.shadowRoot as ShadowRoot;
       applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
       const component = spec.create(this.#config());
