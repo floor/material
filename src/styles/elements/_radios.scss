@@ -4,12 +4,27 @@
 @use 'config' as c;
 
 @include c.host('radios') {
-  display: block;
+  display: flex;
+  flex-direction: column;
   @include m.typography('body-large');
 
   &[direction='horizontal'] {
-    display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
+  }
+
+  // On upgrade the host's baseline is its first row's: the 20px circle's
+  // bottom edge, 14px down a 48px row (4px of label padding and 10px of the
+  // control around the circle). The column's first item is a strut that ends
+  // on that edge, so a baseline-aligned row holds the host in place; 0 wide
+  // and -34 below itself, it moves nothing. Without it the baseline was the
+  // label text's, 5px higher, and the host moved up 5px at upgrade
+  // (floor/material#109).
+  &::before {
+    content: '';
+    flex: none;
+    height: 34px;
+    margin-block-end: -34px;
   }
 }
 

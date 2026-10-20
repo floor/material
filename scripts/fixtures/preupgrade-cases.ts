@@ -329,6 +329,8 @@ for (const dir of ["ltr", "rtl"]) {
 // in ltr, where the defect and its mirror are visible.
 const ownBoxHosts: Record<string, number> = {
   "icon-button": 40, "button-group": 40, "split-button": 40, datepicker: 96, checkbox: 48, select: 56,
+  // Three 48px rows: the default (vertical) group.
+  radios: 144,
 };
 for (const [element, height] of Object.entries(ownBoxHosts)) {
   const row = cases.find(c => c.element === element && c.variant === "default")!;
