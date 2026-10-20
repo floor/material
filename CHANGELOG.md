@@ -17,6 +17,54 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.4] - 2026-10-20
+
+Keyboard focus stays inside the surface you open and returns to the field you
+chose from.
+
+### Fixes
+
+- **An externally mounted `<m-dialog>` restores its surface before opening
+  (#116).**
+  Following the `createDialog` example — appending `dialog.element` to
+  `document.body`, then calling `dialog.open()` — moved the surface out of
+  its overlay; opening then made every overlay sibling inert, including the
+  dialog itself. It was visible, but initial focus stayed on `BODY` and Tab
+  reached no action, while the unchanged default mount worked in the same
+  browser run. Before an overlay dialog opens, its surface now returns to its
+  own overlay when the caller mounted or detached it elsewhere; the move
+  happens after `beforeopen` has accepted the request and leaves the native
+  top-layer path unchanged. Measured in Chromium across six mount paths —
+  unchanged, body-appended, nested, configured container, detached and native
+  top layer — each opens with initial focus on the Cancel button, Tab and
+  Shift+Tab wrap inside the dialog, Escape closes it with focus returned, the
+  background stops scrolling and restores it, an existing `inert` attribute
+  is preserved, and a remount reopens cleanly.
+
+- **Enter on a focused day in `<m-datepicker>` saves the date and closes the
+  calendar (#117).**
+  With a day focused, Enter fell through the key handler and activated the
+  day button as a native click. Default docked pickers committed the date but
+  stayed open; modal variants kept it as a draft and stayed open, and focus
+  stayed on the day instead of returning to the field. Enter is now handled
+  explicitly for single-date selection, through the existing commit and close
+  path, with the native click suppressed so one key press emits one change
+  and one close. It accepts independently of `closeOnSelect`, while pointer
+  and Space selection keep that option; range endpoints still select without
+  prematurely accepting, and modal ranges keep their confirmation action.
+  Measured in Chromium across 16 single-date cases — docked, modal,
+  modal-input calendar mode and full-screen, in document and shadow-root
+  placement, under both `closeOnSelect` settings — each saves once, closes
+  the API and native dialog, clears `aria-expanded`, and returns real focus
+  to the field; four range controls preserve endpoint selection and
+  confirmation.
+
+### Internal
+
+- **The two fixes cost 25 bytes gzipped in the all-js row (127,427 to
+  127,452) and nothing in the dialog's own: 13,496 bytes gzipped against its
+  unchanged 13,619-byte ceiling.** No ceiling moved.
+
 ## [3.2.3] - 2026-10-20
 
 Elements hold their baseline at upgrade.
@@ -4189,7 +4237,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.4...HEAD
+[3.2.4]: https://github.com/floor/material/compare/v3.2.3...v3.2.4
 [3.2.3]: https://github.com/floor/material/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/floor/material/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/floor/material/compare/v3.2.0...v3.2.1
