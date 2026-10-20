@@ -81,11 +81,19 @@ export const withScroll = (config: CarouselConfig) =>
     // translate negates. Vertical (full-screen) scrolls top to bottom in
     // either direction, so none of this applies there. The computed direction
     // inherits into a shadow tree, which is where an element's factory lives;
-    // read it at build, and again in layout(), where a changed direction
-    // rebuilds.
+    // read it at build, and again in scrollPosition() and goTo(), where a
+    // changed direction rebuilds. The drag needs none of this: it follows the
+    // pointer in physical space and the mirrored gesture meets the mirrored
+    // range, so the one formula serves both directions. The style read is
+    // optional-chained: server construction runs this with a window that has
+    // no such method, and no direction to read means left-to-right.
     const readRtl = (): boolean =>
-      !vertical && getComputedStyle(scroller).direction === "rtl";
+      !vertical && window.getComputedStyle?.(scroller).direction === "rtl";
     let rtl = readRtl();
+    // 1 in ltr, -1 in rtl: the physical scrollLeft of a logical offset is
+    // offset * sign, and so is the velocity that advances by dragging. Set
+    // by build(), which runs before anything reads it.
+    let sign = rtl ? -1 : 1;
 
     let lastWheel = -Infinity;
     let strategy: Strategy | null = null;
@@ -109,17 +117,21 @@ export const withScroll = (config: CarouselConfig) =>
       pendingTimer = window.setTimeout(clearPending, 1000);
     };
 
-    const scrollPosition = (): number => (vertical ? scroller.scrollTop : rtl ? -scroller.scrollLeft : scroller.scrollLeft);
+    const scrollPosition = (): number => {
+      // A dir flip re-anchors the scroller, and a stale rtl here would clamp a
+      // goTo() to no motion at all (no scroll event, nothing would self-heal),
+      // so the read itself checks: a changed direction rebuilds the physical
+      // anchors before the value returns (readRtl is false when vertical).
+      if (readRtl() !== rtl) rebuild();
+      return vertical ? scroller.scrollTop : scroller.scrollLeft * sign;
+    };
     const setScrollPosition = (value: number, smooth: boolean): void => {
       const behavior = smooth && !reduceMotion?.matches ? "smooth" : "auto";
-      const physical = rtl ? -value : value;
-      if (typeof scroller.scrollTo === "function") {
+      const physical = value * sign;
+      if (typeof scroller.scrollTo === "function")
         scroller.scrollTo(vertical ? { top: value, behavior } : { left: physical, behavior });
-      } else if (vertical) {
-        scroller.scrollTop = value;
-      } else {
-        scroller.scrollLeft = physical;
-      }
+      else if (vertical) scroller.scrollTop = value;
+      else scroller.scrollLeft = physical;
     };
 
     const emitChange = (): void => {
@@ -155,6 +167,7 @@ export const withScroll = (config: CarouselConfig) =>
 
     const build = (): void => {
       rtl = readRtl();
+      sign = rtl ? -1 : 1;
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
@@ -191,7 +204,7 @@ export const withScroll = (config: CarouselConfig) =>
         // start aligns the point's right edge and scrollLeft settles at the
         // negated offset. The stylesheet's left: 0 must not win over right.
         point.style[vertical ? "top" : rtl ? "right" : "left"] = `${snapPosition}px`;
-        if (!vertical && rtl) point.style.left = "auto";
+        if (rtl) point.style.left = "auto";
         fragment.appendChild(point);
       });
       track.appendChild(fragment);
@@ -212,13 +225,6 @@ export const withScroll = (config: CarouselConfig) =>
 
     const layout = (): void => {
       if (!strategy) return;
-      // A dir flip re-anchors the scroller (the browser re-clamps scrollLeft,
-      // which lands here), and the snap points and item anchors are physical,
-      // so a changed direction needs a rebuild, not a layout.
-      if (readRtl() !== rtl) {
-        rebuild();
-        return;
-      }
       const position = scrollPosition();
       const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED;
       const itemSize = strategy.itemSize;
@@ -251,7 +257,7 @@ export const withScroll = (config: CarouselConfig) =>
           continue;
         }
         el.style.visibility = "";
-        el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${rtl ? -start : start}px, 0, 0)`;
+        el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${start * sign}px, 0, 0)`;
         el.style.clipPath = inset > 0 ? (vertical ? `inset(${inset}px 0 round ${corner})` : `inset(0 ${inset}px round ${corner})`) : "";
         el.style.setProperty(`--${config.prefix}-carousel-fade`, fade.toFixed(3));
       }
@@ -282,6 +288,10 @@ export const withScroll = (config: CarouselConfig) =>
     const goTo = (index: number): void => {
       stopWheel();
       if (!count) return;
+      // goTo writes without reading, so the flip check scrollPosition() owns
+      // would not run (a stale rtl would clamp this very write to no motion):
+      // bring the direction current by asking for the position.
+      scrollPosition();
       const target = Math.min(Math.max(index, 0), count - 1);
       if (strategy) {
         expect(target);
@@ -369,12 +379,13 @@ export const withScroll = (config: CarouselConfig) =>
       dragged = true;
       element.dataset.dragging = "true";
       const dt = e.timeStamp - dragLastTime;
-      if (dt > 0) dragVelocity = (position - dragLast) / dt;
+      if (dt > 0) dragVelocity = ((position - dragLast) / dt) * sign;
       dragLast = position;
       dragLastTime = e.timeStamp;
-      const drag = dragScrollStart - delta;
-      if (vertical) scroller.scrollTop = drag;
-      else scroller.scrollLeft = rtl ? -drag : drag;
+      // No rtl term: the drag follows the pointer physically, and the
+      // mirrored gesture (right-drag advances) meets the mirrored range.
+      if (vertical) scroller.scrollTop = dragScrollStart - delta;
+      else scroller.scrollLeft = dragScrollStart - delta;
       e.preventDefault();
     };
 
@@ -389,6 +400,8 @@ export const withScroll = (config: CarouselConfig) =>
       }
       if (snap) {
         let target = nearestIndex(scrollPosition());
+        // dragVelocity is logical (* sign at its source): the velocity that
+        // advances is negative in either direction.
         if (dragVelocity < -FLING_VELOCITY) target = Math.min(count - 1, target + 1);
         else if (dragVelocity > FLING_VELOCITY) target = Math.max(0, target - 1);
         goTo(target);
@@ -446,8 +459,7 @@ export const withScroll = (config: CarouselConfig) =>
       // velocity is still high. Land there rather than overshooting it.
       const resting = wheelDirection * (wheelPosition - wheelTarget) >= 0 ||
         (Math.abs(wheelPosition - wheelTarget) < 0.5 && Math.abs(wheelVelocity) < 5);
-      const at = resting ? wheelTarget : wheelPosition;
-      scroller.scrollLeft = rtl ? -at : at;
+      scroller.scrollLeft = (resting ? wheelTarget : wheelPosition) * sign;
       if (resting) stopWheel(false);
       else wheelFrame = window.requestAnimationFrame(glide);
     };
@@ -498,7 +510,7 @@ export const withScroll = (config: CarouselConfig) =>
           wheelSnapPriority = scroller.style.getPropertyPriority("scroll-snap-type");
           scroller.style.setProperty("scroll-snap-type", "none");
           // Also cancel any native smooth navigation already in flight.
-          scroller.scrollLeft = rtl ? -position : position;
+          scroller.scrollLeft = position * sign;
           wheelPosition = position;
           wheelTime = performance.now();
           wheelFrame = window.requestAnimationFrame(glide);

@@ -169,4 +169,103 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
     );
     assert.equal(other.clip, item.clip, `element item ${i + 1}: RTL clip ${other.clip} != LTR clip ${item.clip}`);
   });
+
+  // The mouse drag: the gesture mirrors (left-drag advances in LTR, right-drag
+  // in RTL) and the fling settles towards the same logical index, not away
+  // from it (#126 review: the RTL fling read the pointer's velocity with the
+  // LTR sign, so the mirrored gesture snapped back to 0 and the wrong one
+  // advanced).
+  console.log("  carousel rtl: drag measures");
+  const dragBy = async (direction: "ltr" | "rtl", dx: number): Promise<number> => {
+    const context = await browser.newContext({ viewport: { width: WIDTH, height: 800 } });
+    const page = await context.newPage();
+    try {
+      await page.goto(`${base}?dir=${direction}`);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      const box = await page.evaluate(() => {
+        const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): { element: HTMLElement } } }).mtrl;
+        const host = document.getElementById("host") as HTMLElement;
+        host.replaceChildren();
+        const carousel = createCarousel({ slides: ["Alpha", "Beta", "Gamma", "Delta"].map((title) => ({ title })) });
+        carousel.element.style.cssText = "width:600px;height:400px";
+        host.append(carousel.element);
+        const scroller = carousel.element.querySelector(".mtrl-carousel__scroller") as HTMLElement;
+        return scroller.getBoundingClientRect().toJSON();
+      });
+      const x = box.x + box.width / 2, y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let step = 1; step <= 6; step++) await page.mouse.move(x + (dx * step) / 6, y, { steps: 1 });
+      await page.mouse.up();
+      await page.waitForTimeout(700);
+      return await page.evaluate(() => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft);
+    } finally {
+      await context.close();
+    }
+  };
+  const ltrDrag = await dragBy("ltr", -180);
+  assert.ok(ltrDrag > 100, `LTR: a left-drag of 180 advances (got scrollLeft ${ltrDrag})`);
+  const rtlDrag = await dragBy("rtl", 180);
+  assert.ok(rtlDrag < -100, `RTL: the mirrored right-drag advances negative (got scrollLeft ${rtlDrag})`);
+  const rtlWrong = await dragBy("rtl", -180);
+  assert.ok(
+    Math.abs(rtlWrong) <= 1,
+    `RTL: the backward gesture at rest does not advance (got scrollLeft ${rtlWrong})`,
+  );
+
+  // A runtime dir flip: the scroller re-anchors, and the next goTo() must move
+  // with the flipped arithmetic instead of clamping to no motion at all
+  // (#126 review: a stale direction left goTo(1) at scrollLeft 0).
+  console.log("  carousel rtl: runtime flip measures");
+  const flipContext = await browser.newContext({ viewport: { width: WIDTH, height: 800 } });
+  const flipPage = await flipContext.newPage();
+  try {
+    await flipPage.goto(`${base}?dir=ltr`);
+    await flipPage.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+    await flipPage.evaluate(() => {
+      type FlipCarousel = { element: HTMLElement; goTo(index: number): void };
+      const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): FlipCarousel } }).mtrl;
+      const host = document.getElementById("host") as HTMLElement;
+      host.replaceChildren();
+      const carousel = createCarousel({ slides: ["Alpha", "Beta", "Gamma", "Delta"].map((title) => ({ title })) });
+      carousel.element.style.cssText = "width:600px;height:400px";
+      host.append(carousel.element);
+      (window as unknown as { __goTo(index: number): void }).__goTo = (i: number) => carousel.goTo(i);
+    });
+    const readScroll = (): Promise<number> => flipPage.evaluate(
+      () => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft,
+    );
+    await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
+    await flipPage.waitForTimeout(700);
+    const ltrAtOne = await readScroll();
+    assert.ok(ltrAtOne > 100, `before the flip, LTR goTo(1) advances (got ${ltrAtOne})`);
+    await flipPage.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
+    await flipPage.waitForTimeout(100);
+    await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
+    await flipPage.waitForTimeout(700);
+    const rtlAtOne = await readScroll();
+    assert.ok(
+      Math.abs(rtlAtOne + ltrAtOne) < 1,
+      `after the dir flip, goTo(1) settles at ${-ltrAtOne} (got ${rtlAtOne})`,
+    );
+    await flipPage.evaluate(() => {
+      const { createCarousel } = (window as unknown as { mtrl: { createCarousel(config: unknown): { goTo(index: number): void; element: HTMLElement } } }).mtrl;
+      const host = document.getElementById("host") as HTMLElement;
+      host.replaceChildren();
+      const carousel = createCarousel({ snap: false, slides: ["Alpha", "Beta", "Gamma", "Delta"].map((title) => ({ title })) });
+      carousel.element.style.cssText = "width:600px;height:400px";
+      host.append(carousel.element);
+      (window as unknown as { __goTo(index: number): void }).__goTo = (i: number) => carousel.goTo(i);
+    });
+    await flipPage.waitForTimeout(200);
+    await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
+    await flipPage.waitForTimeout(700);
+    const unsnapped = await readScroll();
+    assert.ok(
+      unsnapped <= -100,
+      `after the flip, snap:false goTo(1) still moves negative (got ${unsnapped})`,
+    );
+  } finally {
+    await flipContext.close();
+  }
 }
