@@ -195,6 +195,30 @@ describe("Material date picker", () => {
     expect(modal.getFormattedValue()).toBe('09/21/2026'); expect(query(modal, 'dialog').hasAttribute('open')).toBe(false);
     const docked = mount(); docked.input.value = '09/22/2026'; key(docked.input, 'Enter'); expect(docked.getFormattedValue()).toBe('09/22/2026');
   });
+  for (const variant of ['docked', 'modal', 'modal-input', 'fullscreen'] as const) {
+    test(`Enter on a focused ${variant} day accepts once, closes and restores field focus`, () => {
+      for (const closeOnSelect of [false, true]) {
+        const picker = mount({ variant, closeOnSelect }); const events: string[] = [];
+        picker.on('change', value => events.push(`change:${value.iso}`)).on('close', () => events.push('close'));
+        picker.input.focus(); picker.open();
+        if (variant === 'modal-input') click(picker, '[data-action="toggle-mode"]');
+        const target = day(picker, '2026-09-16'); target.focus();
+        expect(key(target, 'Enter')).toBe(false);
+        expect(picker.getFormattedValue()).toBe('09/16/2026');
+        expect(picker.isOpen()).toBe(false);
+        expect(query<HTMLDialogElement>(picker, 'dialog').hasAttribute('open')).toBe(false);
+        expect(document.activeElement).toBe(picker.input);
+        expect(events).toEqual(['change:2026-09-16', 'close']);
+      }
+    });
+  }
+  test("Enter cannot accept a disabled day", () => {
+    const picker = mount({ variant: 'modal', specialDates: [{ date: '2026-09-16', disabled: true }] });
+    const changes: string[] = []; picker.on('change', value => changes.push(value.iso)); picker.open();
+    key(day(picker, '2026-09-16'), 'Enter');
+    expect(picker.isOpen()).toBe(true);
+    expect(picker.getFormattedValue()).toBe('09/15/2026'); expect(changes).toEqual([]);
+  });
   test("navigation before opening is retained and month buttons do not close a docked picker", () => {
     const picker = mount(); picker.calendar.goToDate(new Date(2024, 1, 29)); picker.open();
     expect(query(picker, '[data-date][tabindex="0"]')).toBe(day(picker, '2024-02-29'));
