@@ -375,6 +375,28 @@ for (const [element, height] of Object.entries(ownBoxHosts)) {
   }
 }
 
+// A horizontal group's row is its options plus the 16px the component puts
+// between them (components/_radios.scss); content-sized in a baseline row, the
+// host is 16px wider per gap after upgrade. With the three options below the
+// row reads 290.3px before and 322.3px after, and everything after it moves
+// 32px (floor/material#129). Both directions, compact and indented markup.
+const horizontalRadios = cases.find((c) => c.element === "radios" && c.variant === "direction=horizontal")!;
+for (const dir of ["ltr", "rtl"] as const) {
+  for (const formatted of [false, true]) {
+    const group = horizontalRadios.html
+      .replace("<m-radios", '<m-radios id="subject"');
+    const html = formatted
+      ? group.replaceAll("><m-radio", ">\n  <m-radio").replace("</m-radios>", "\n</m-radios>")
+      : group;
+    cases.push({
+      ...horizontalRadios, variant: `direction=horizontal; ${dir}; baseline; ${formatted ? "formatted" : "compact"}`,
+      html: `<div dir="${dir}" style="display:flex;gap:8px;align-items:baseline">${html}<span id="next">Next</span></div>`,
+      width: 850, host: "#subject", strictBox: true, hostHeight: 48, settleMs: 100,
+      siblings: ["#next", "#inline", "#block"],
+    });
+  }
+}
+
 // An empty group holds no row and no baseline: the strut that reserves the
 // populated group's baseline must not make one where there are no items.
 // Unguarded it gives the zero-height host a baseline 34px down, the row is
