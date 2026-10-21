@@ -214,32 +214,46 @@ export async function checkCarouselWheelSubPixelSnap(page: Page): Promise<void> 
       await waitFor(page, "the carousel to lay its slides out", () => document.querySelector(".mtrl-carousel__scroller")!.scrollWidth > 760);
       const landing = await scroller.evaluate(async element => {
         const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
-        // Suspend native snapping, as a glide in flight does, and stand one
-        // pixel short of a snap. Chromium rounds scrollLeft to whole pixels,
-        // so the sub-pixel case is built from a fractional wheel delta —
-        // trackpads deliver them: a 1.5px notch crosses the snap by half a
-        // pixel, and the landing must be that snap, not the next one.
+        // Stand one pixel short of a snap. Chromium rounds scrollLeft to whole
+        // pixels, so the sub-pixel case is built from a fractional wheel delta,
+        // as trackpads deliver: a 1.5px notch crosses the snap by half a pixel,
+        // and the landing must be that snap, not the next one.
+        // The saved snap declaration never snaps this horizontal scroller and
+        // differs from the "none" a glide suspends it to, so its restoration
+        // marks the spring at rest (stopWheel), not merely a scroll that ended.
+        const saved = "y mandatory";
         const snap = snaps[4]!;
-        element.style.scrollSnapType = "none";
+        element.style.scrollSnapType = saved;
         element.scrollLeft = snap - 1;
         await new Promise(requestAnimationFrame);
         const event = new WheelEvent("wheel", { deltaY: 1.5, bubbles: true, cancelable: true });
         element.dispatchEvent(event);
         const start = element.scrollLeft;
-        // scrollLeft reads round to whole pixels, so sampled positions look
-        // steady while the spring is still creeping: wait for the scroll to
-        // actually end, with a deadline past the spring's ~0.8s settle.
-        await new Promise<void>(resolve => {
-          const timer = setTimeout(resolve, 2200);
-          element.addEventListener("scrollend", () => { clearTimeout(timer); resolve(); }, { once: true });
+        const suspended = element.style.scrollSnapType === "none";
+        const began = performance.now();
+        const settled = await new Promise<boolean>(resolve => {
+          const poll = () => {
+            if (element.style.scrollSnapType === saved) resolve(true);
+            else if (performance.now() - began > 3000) resolve(false);
+            else requestAnimationFrame(poll);
+          };
+          requestAnimationFrame(poll);
         });
-        return { snap, next: snaps[5]!, start, end: element.scrollLeft, prevented: event.defaultPrevented };
+        // One more frame, so the restored position is the one painted.
+        await new Promise(requestAnimationFrame);
+        return {
+          snap, next: snaps[5]!, start, end: element.scrollLeft, prevented: event.defaultPrevented,
+          suspended, settled, ms: Math.round(performance.now() - began),
+        };
       });
-      console.log(`${variant} fresh notch half a pixel past a snap: start=${landing.start} snap=${landing.snap} next=${landing.next} landed=${landing.end}`);
+      console.log(`${variant} fresh notch half a pixel past a snap: start=${landing.start} snap=${landing.snap} next=${landing.next} landed=${landing.end} (${landing.settled ? "glide at rest after" : "no rest within"} ${landing.ms}ms)`);
       try {
         assert.ok(landing.prevented, `${variant}: wheel consumed`);
         assert.ok(Math.abs(landing.start - (landing.snap - 1)) <= 0.51, `${variant}: stood one pixel short of the snap (at ${landing.start})`);
-        assert.ok(Math.abs(landing.end - landing.snap) <= 1, `${variant}: landed ${landing.end}, not the snap the notch crossed by half a pixel (${landing.snap}; the next is ${landing.next})`);
+        assert.ok(landing.suspended, `${variant}: the notch started a glide (snap suspended)`);
+        assert.ok(landing.settled, `${variant}: the glide did not come to rest within 3s (at ${landing.end})`);
+        assert.notEqual(landing.end, landing.start, `${variant}: the notch did not move from ${landing.start}`);
+        assert.ok(Math.abs(landing.end - landing.snap) <= 0.5, `${variant}: landed ${landing.end}, not the snap the notch crossed by half a pixel (${landing.snap}; the next is ${landing.next})`);
       } catch (error) {
         failures.push(`${variant}: ${String(error)}`);
       }
