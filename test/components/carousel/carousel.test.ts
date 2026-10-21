@@ -497,6 +497,28 @@ describe('carousel opt-in wheel', () => {
         expect(wheel({ deltaY: -100 }).defaultPrevented).toBe(false);
       } finally { carousel.destroy(); }
     });
+
+    test(`${variant} a continuing event past a snap still advances to the next one`, () => {
+      const { carousel, scroller, scroll, wheel, snaps } = setupWheel({
+        wheel: true, variant, slides: Array.from({ length: 20 }, (_, i) => ({ title: String(i) })),
+      });
+      scroll.mockImplementation(() => {});
+      try {
+        // A fresh gesture half a pixel short of a snap selects that snap.
+        wheel({ deltaY: snaps[4]! - 0.5 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[4], behavior: 'auto' });
+        // The same gesture carrying on past it moves on: the sub-pixel reach is
+        // for a fresh gesture only, never for continuing accumulation.
+        wheel({ deltaY: 0.75 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[5], behavior: 'auto' });
+        // Backward the same way, from a fresh reversal.
+        scroller.scrollLeft = snaps[8]!;
+        wheel({ deltaY: -(snaps[8]! - snaps[4]! - 0.5) }, 121);
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[4], behavior: 'auto' });
+        wheel({ deltaY: -0.75 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[3], behavior: 'auto' });
+      } finally { carousel.destroy(); }
+    });
   }
 
   test('last slide passes wheel down through and start passes wheel up through', () => {

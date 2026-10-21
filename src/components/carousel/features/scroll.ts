@@ -34,7 +34,7 @@ const FLING_VELOCITY = 0.4;
 const DRAG_THRESHOLD = 4;
 /** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
 const WHEEL_QUIET = 120;
-/** A snap the wheel destination has passed by less than this is still its landing snap. */
+/** A fresh wheel gesture still lands on a snap its destination has passed by less than this. */
 const WHEEL_SNAP_REACH = 1;
 
 interface ScrollComponent {
@@ -487,7 +487,8 @@ export const withScroll = (config: CarouselConfig) =>
       if (direction < 0 ? position <= 1 : position >= end - 1) return;
       e.preventDefault();
       if (direction !== wheelDirection) stopWheel();
-      if (e.timeStamp - lastWheel >= WHEEL_QUIET || direction !== wheelDirection) {
+      const fresh = e.timeStamp - lastWheel >= WHEEL_QUIET || direction !== wheelDirection;
+      if (fresh) {
         wheelStart = position;
         wheelDelta = 0;
         wheelTarget = position;
@@ -501,11 +502,13 @@ export const withScroll = (config: CarouselConfig) =>
       wheelDelta += e.deltaY * unit;
       const destination = Math.max(0, Math.min(end, wheelStart + wheelDelta));
       let index = direction > 0 ? count - 1 : 0;
-      // A snap the destination has passed by less than WHEEL_SNAP_REACH still
-      // lands: a fresh notch that starts just short of a snap lands on it,
-      // not the next one.
+      // A fresh gesture still lands on a snap its destination has passed by
+      // less than WHEEL_SNAP_REACH: a notch that starts just short of a snap
+      // lands on it, not the next one. A continuing gesture keeps the exact
+      // threshold, so its accumulation moves on as soon as it passes a snap.
+      const reach = fresh ? WHEEL_SNAP_REACH : 0;
       for (let i = direction > 0 ? 0 : count - 1; i >= 0 && i < count; i += direction) {
-        if (direction * (snapPositions[i]! - destination) >= -WHEEL_SNAP_REACH &&
+        if (direction * (snapPositions[i]! - destination) >= -reach &&
             direction * (snapPositions[i]! - wheelStart) > 0) {
           index = i;
           break;
