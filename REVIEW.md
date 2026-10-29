@@ -63,7 +63,7 @@ In 3.2.0 the baseline defaults moved to zero-specificity selectors
 rendered the same page, but a downstream site matching `:root` or `.dark-theme` literally in the
 built CSS found nothing.
 
-In 3.2.3, six `:dir(rtl)` rules in the toolbar and date picker were lowered by a bundler into
+In 3.2.2, six `:dir(rtl)` rules in the toolbar and date picker were lowered by a bundler into
 `:lang()` lists, which select a language rather than a direction; they matched no element on a
 right-to-left page.
 
