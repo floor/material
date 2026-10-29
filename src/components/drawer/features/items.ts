@@ -9,6 +9,15 @@ import {
 
 import { setHTML } from "../../../core/dom/html";
 import { activeElementOf } from "../../../core/dom/focus";
+
+/**
+ * An empty or zero count is no badge: the same rule the standalone badge
+ * applies to its own label ("a count of nothing is not news"). Kept local
+ * because the drawer's badge is its spec's own "Badge label text" — plain
+ * trailing text, not the badge component — so nothing of the badge module
+ * comes with it.
+ */
+const hasBadge = (badge: string | undefined): badge is string => !!badge && badge !== "0";
 /**
  * Component shape expected by withItems
  */
@@ -77,8 +86,8 @@ const createItemElement = (
     el.appendChild(labelEl);
   }
 
-  // Badge (optional, placed after label)
-  if (item.badge) {
+  // Badge (optional, placed after label). An empty or zero count is no badge.
+  if (hasBadge(item.badge)) {
     const badgeEl = document.createElement("span");
     badgeEl.className = getClass("drawer__item-badge");
     badgeEl.textContent = item.badge;
@@ -273,7 +282,8 @@ export const withItems =
         `.${component.getClass("drawer__item-badge")}`,
       ) as HTMLElement;
 
-      if (badge) {
+      // An empty or zero count clears the badge.
+      if (hasBadge(badge)) {
         if (!badgeEl) {
           badgeEl = document.createElement("span");
           badgeEl.className = component.getClass("drawer__item-badge");

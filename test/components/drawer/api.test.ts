@@ -338,6 +338,25 @@ describe('drawer badges', () => {
     expect(drawer.getItems().find((entry) => entry.id === 'inbox')?.badge).toBe('');
   });
 
+  test('an empty or zero count is no badge, and a count after them shows again', () => {
+    const drawer = make();
+    const badge = (id: string) => item(drawer, id).querySelector('.mtrl-drawer__item-badge');
+    drawer.setBadge('inbox', '0');
+    expect(badge('inbox')).toBeNull();
+    expect(drawer.getItems().find((entry) => entry.id === 'inbox')?.badge).toBe('0');
+    drawer.setBadge('inbox', '12');
+    expect(badge('inbox')?.textContent).toBe('12');
+    drawer.setBadge('inbox', '');
+    expect(badge('inbox')).toBeNull();
+  });
+
+  test('an item created with an empty or zero badge renders none', () => {
+    const zero = make({ items: [{ id: 'inbox', label: 'Inbox', badge: '0' }] });
+    expect(item(zero, 'inbox').querySelector('.mtrl-drawer__item-badge')).toBeNull();
+    const empty = make({ items: [{ id: 'inbox', label: 'Inbox', badge: '' }] });
+    expect(item(empty, 'inbox').querySelector('.mtrl-drawer__item-badge')).toBeNull();
+  });
+
   test('setBadge ignores an unknown destination', () => {
     const drawer = make();
     drawer.setBadge('missing', '9');
