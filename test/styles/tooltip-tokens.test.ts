@@ -1,9 +1,7 @@
 // test/styles/tooltip-tokens.test.ts
 //
-// The tooltip against Compose's PlainTooltipTokens and
-// RichTooltipTokens. The plain variant had its own surface-container-high with
-// an outline, the base a 90% opacity and a shadow, and the rich variant only a
-// padding.
+// M3 tooltips specs: Web type tokens and container measurements.
+// https://m3.material.io/components/tooltips/specs
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -33,6 +31,16 @@ describe('tooltip tokens', () => {
     expect(value('.mtrl-tooltip--plain', 'border')).toBeUndefined();
     expect(value('.mtrl-tooltip', 'box-shadow')).toBeUndefined();
     expect(value('.mtrl-tooltip--visible', 'opacity')).toBe('1');
+  });
+
+  test('plain supporting text uses Body Small without a medium-weight override', () => {
+    expect(value('.mtrl-tooltip', 'font-weight')).toBe('400');
+    expect(value('.mtrl-tooltip', 'font-size')).toBe('12px');
+    expect(value('.mtrl-tooltip', 'line-height')).toBe('16px');
+  });
+
+  test('rich container keeps 12dp top, 16dp sides and 8dp bottom padding', () => {
+    expect(value('.mtrl-tooltip--rich', 'padding')).toBe('12px 16px 8px');
   });
 
   test('rich: surface-container, on-surface-variant, CornerMedium, elevation 2, Body Medium, 320dp', () => {
