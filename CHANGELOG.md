@@ -17,6 +17,79 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.5] - 2026-10-29
+
+Menus and tooltips match the spec.
+
+### Fixes
+
+- **A disabled menu item dims every part of itself, and a selected disabled item
+  dims its selection colours and shows no state layer (#110).**
+  Only the label faded: the icon, the supporting text and the shortcut each
+  declared their own `on-surface-variant` colour with no disabled rule, and the
+  selected item's rule stood after the disabled one at equal specificity, so a
+  selected item kept the opaque selection colours and still drew its hover and
+  press layers. All three parts now inherit the item's dimmed colour, and
+  selected plus disabled is a compound rule in both menu variants that puts the
+  selection's own colours at 0.38 and sets the state layer's opacity to 0. The
+  vertical standard menu dims its container with the content; the vibrant menu's
+  spec carries no container colour for the state, so it keeps the enabled
+  selection's container. Measured in Chromium against the packed stylesheet, on
+  baseline, vertical standard and vertical vibrant menus: the disabled icon,
+  supporting text and shortcut land on the label's colour at 0.38 instead of
+  opaque `on-surface-variant`, a selected disabled item dims both container and
+  content and keeps no hover layer, and no disabled part changes colour on
+  hover or press.
+
+- **Tooltips use Body Small's regular weight, and rich tooltips the spec's 8dp
+  bottom padding (#111).**
+  A base rule overrode Body Small after its typography mixin, so plain and
+  default tooltips rendered their supporting text at weight 500; rich tooltips
+  used symmetric `12px 16px` padding, a 12px bottom inset. The override is gone,
+  so the mixin's regular 400 applies, and rich tooltips take `12px 16px 8px`.
+  Measured in Chromium across the existing 72-case matrix — default, plain and
+  rich variants, both modes and every placement — computed weight, size, line
+  height and all four padding edges match the token table, with rich padding at
+  12/16/8/16.
+
+- **A horizontal radios group reserves its 16px gaps before upgrade (#129).**
+  A `direction="horizontal"` group changed its host width at upgrade because
+  the undefined host laid out its light children without the component item's
+  `margin-inline-end: 16px`: a three-option group grew 32px, 16px per gap, in
+  both directions, and every following box on the line moved with it. The
+  pre-upgrade rule now gives each option that margin except the last, matching
+  the shadow item rule, with the last found among the options rather than among
+  all children. Measured outside the repository in LTR and RTL: 290.3 → 322.3px
+  on main against 322.3 → 322.3px on the fix, with the next sibling still on
+  both sides.
+
+- **A fresh wheel notch that crosses a snap by less than a pixel lands on that
+  snap instead of running to the next one (#141).**
+  The destination comparison required a strict crossing, so a destination that
+  sat under a snap by up to a pixel advanced a full item; from a third of a
+  pixel short of a snap, a 1px notch moved one item on. The comparison now
+  reaches a snap it has crossed by less than 1px, and only for a fresh gesture:
+  a continuing gesture keeps the exact threshold, so its accumulation still
+  moves on as soon as it passes a snap. The unit case is seeded at a
+  deterministic sub-pixel position instead of depending on a clock read, and the
+  browser check measured four carousels in Chromium: main landed on 1014 / 1040
+  / 3600 / 3312 where the fix lands on 811 / 832 / 2880 / 2640, the crossed
+  snap, with the continuing-gesture control passing on both.
+
+### Internal
+
+- **README documents the `:lang()` arms an old-target bundler adds, and the
+  `full-css` fixture records that its row measures that bundle (#125).**
+  The full stylesheet ships no `:lang()` or `:dir()` rules — the tabs element
+  sheet carries the two `:host(:dir(rtl))` badge rules that are the exception —
+  and a bundler targeting browsers without logical properties adds one
+  `:lang()`-guarded arm per physical declaration it rewrites. On the full
+  stylesheet that is 12,426 arms, about 7.6 kB gzip of the 63.5 kB bundle. They
+  key on the document's language rather than its direction, so they are an
+  approximation, but in a build that targets old browsers they are what mirrors
+  the layout and must not be stripped. The size fixture's note carries the count
+  and the bytes, so the ceiling is read as guarding that larger bundle.
+
 ## [3.2.4] - 2026-10-20
 
 Keyboard focus stays inside the surface you open and returns to the field you
@@ -4237,7 +4310,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.5...HEAD
+[3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5
 [3.2.4]: https://github.com/floor/material/compare/v3.2.3...v3.2.4
 [3.2.3]: https://github.com/floor/material/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/floor/material/compare/v3.2.1...v3.2.2
