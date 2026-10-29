@@ -7,6 +7,7 @@ import type { BaseComponent, ElementComponent } from "../../core/compose/compone
 import { withEvents, withLifecycle } from "../../core/compose/features";
 import type { EventComponent, LifecycleComponent } from "../../core/compose/features";
 import type { BadgeComponent } from "../badge";
+import { isEmptyBadgeLabel } from "../badge/config";
 import { TabConfig, TabComponent, TabEvents } from "./types";
 import { TAB_LAYOUT } from "./constants";
 import { createTabConfig } from "./config";
@@ -114,6 +115,15 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       button.element.querySelector<HTMLElement>(
         `.${baseComponent.getClass("button__icon")},.${baseComponent.getClass("button__text")}`
       ) ?? button.element;
+
+    // Whether the badge carries something to show. The badge component's own
+    // rule (creation and setLabel both): a large badge exists to carry a
+    // label, so an empty or zero one is not shown — a count of nothing is not
+    // news — while the small dot is shape only (m3.material.io/components/
+    // badges/specs has no empty large badge), so it always has its dot.
+    const hasBadgeToShow = (badge: BadgeComponent): boolean =>
+      badge.element.classList.contains(`${badge.getClass("badge")}--small`) ||
+      !isEmptyBadgeLabel(badge.getContent());
 
     // Create the tab component with enhanced API
     const tab: TabComponent = {
@@ -232,11 +242,21 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge = createBadge(badgeConfig);
         } else {
           this.badge.setContent(content);
-          this.badge.show();
+          // setContent settles a large badge's visibility from its label; the
+          // unconditional show that stood here brought back the empty capsule
+          // setBadge("") and setBadge(0) had just cleared. Only the dot badge,
+          // whose content is not its label, still needs the show.
+          if (hasBadgeToShow(this.badge)) {
+            this.badge.show();
+          }
         }
 
-        // Add badge presence attribute for potential styling
-        this.element.setAttribute("data-has-badge", "true");
+        // The presence attribute tells what shows: a cleared badge is no
+        // badge on the tab, the same state hideBadge records.
+        this.element.setAttribute(
+          "data-has-badge",
+          this.badge && hasBadgeToShow(this.badge) ? "true" : "false"
+        );
 
         return this;
       },
@@ -246,7 +266,11 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       },
 
       showBadge() {
-        if (this.badge) {
+        // What the badge itself would not show — an empty or zero label —
+        // cannot be shown on the tab either: `<m-tab badge="">`, or the same
+        // empty value declared again, takes this path through the element's
+        // in-place update.
+        if (this.badge && hasBadgeToShow(this.badge)) {
           this.badge.show();
           this.element.setAttribute("data-has-badge", "true");
         }
