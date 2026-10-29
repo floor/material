@@ -171,9 +171,11 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_datepicker.scss, styles/components/_toolbar.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
+    // Plain tooltip text keeps Body Small regular 400; rich tooltip bottom
+    // padding is 8dp (styles/components/_tooltip.scss, M3 tooltips specs).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("51264f3b74e7f3ad3801ef5147f9875a3e221b0655ada8f7be0438550e22ded6");
-    expect(css.length).toBe(537898);
+      .toBe("50a5eb38fa1d747554de28e31c06e230d672121049e00b4a46ad5f53cb941ee5");
+    expect(css.length).toBe(537886);
   });
 
   test("today's sheets still resolve to the fixture", () => {
