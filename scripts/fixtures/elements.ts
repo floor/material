@@ -25,6 +25,7 @@ import createFabMenu from "../../dist/components/fab-menu/index.js";
 import createList from "../../dist/components/list/index.js";
 import createCard from "../../dist/components/card/index.js";
 import createCarousel from "../../dist/components/carousel/index.js";
+import createTabs from "../../dist/components/tabs/index.js";
 
 elements.defineAll();
 const factories = {
@@ -35,7 +36,7 @@ const factories = {
   createTextField,
   createRadios,
   createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createToolbar, createFabMenu,
-  createList, createCard, createCarousel,
+  createList, createCard, createCarousel, createTabs,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
 
