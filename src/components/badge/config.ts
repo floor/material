@@ -131,12 +131,9 @@ export const getApiConfig = (comp: {
  * and a zero are both hidden. The setter has always done this; creation did
  * not, so `createBadge({ label: 0 })` was visible while `setLabel(0)` on the
  * same badge hid it. One rule now, used by both.
- *
- * Lives in core (utils/badge) so badgeless importers, like the drawer item,
- * can decide with it without pulling the badge's code or CSS; re-exported
- * here so the badge's callers keep their imports.
  */
-export { isEmptyBadgeLabel } from "../../core/utils/badge";
+export const isEmptyBadgeLabel = (formattedLabel: string): boolean =>
+  formattedLabel === "" || formattedLabel === "0";
 
 /**
  * Whether {@link formatBadgeLabel} truncated the label to `max+`.
