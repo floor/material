@@ -27,9 +27,13 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
 }
 
 .#{$component} {
-  // Base badge styles
-  position: absolute;
-  display: flex;
+  // In flow until it is attached. A standalone badge -- `<m-badge>`, "the
+  // badge alone, placed by the page like any inline element"
+  // (src/elements/badge.ts) -- is sized by its own box; `--positioned` takes
+  // an attached badge out of the flow onto its target. Inline-flex sizes the
+  // standalone box to its content, and an absolutely positioned box is
+  // blockified, so attached badges lay out exactly as they did.
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 500;
@@ -73,6 +77,8 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
   
   // Position specs
   &--positioned {
+    position: absolute;
+
     // Small badge placement (6dp from container edge)
     &.#{$component}--small {
       &.#{$component}--top-right {
