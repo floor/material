@@ -176,6 +176,22 @@ try {
     await page.waitForTimeout(200);
     const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
     assert.deepEqual(await namesOf(page), expected, 'the badge\'s displayed label is in the name, capped as the badge caps it, the dot announcing New notification');
+    // Placement, collapsed: the badges spec states the distance "from top
+    // trailing icon corner to bottom leading badge corner" — 14x12dp for the
+    // large badge, 6x6dp for the small one (m3.material.io/components/badges/
+    // specs, Measurements). The expanded rail moves the badge to the end of
+    // the pill, which is this library's own documented layout.
+    const placementOf = (id: string) => page.evaluate((target: string) => {
+        const box = (element: Element) => { const rect = element.getBoundingClientRect(); return { l: rect.left, r: rect.right, t: rect.top, b: rect.bottom }; };
+        const item = document.querySelector(`.mtrl-navigation-rail__item[data-id="${target}"]`)!;
+        return { icon: box(item.querySelector('.mtrl-navigation-rail__icon')!), badge: box(item.querySelector('.mtrl-navigation-rail__badge')!) };
+    }, id);
+    for (const [id, inset, under] of [['count', 12, 14], ['dot', 6, 6]] as const) {
+        const { icon, badge } = await placementOf(id);
+        const insetMeasured = icon.r - badge.l, underMeasured = badge.b - icon.t;
+        assert.ok(Math.abs(insetMeasured - inset) <= 0.5 && Math.abs(underMeasured - under) <= 0.5,
+            `${id === 'count' ? 'the large badge' : 'the small dot'} sits ${inset}x${under}dp from the icon's top trailing corner (spec), measured ${insetMeasured.toFixed(1)}x${underMeasured.toFixed(1)}`);
+    }
     await page.evaluate(() => window.rail.expand());
     await page.waitForTimeout(500);
     assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
@@ -212,7 +228,7 @@ try {
     }
     assert.equal(await page.locator('.mtrl-navigation-rail').count(), 0);
     assert.deepEqual(errors, []);
-    console.log(`Passed ${count} full/selective Expressive rail scenes, keyboard selection, ripple, expansion, badges that say what they show (name, 999+ cap, empty and zero cleared, New notification dot, collapsed, expanded and shadow root), native modal focus/Escape/scrim, and 40 teardown cycles.`);
+    console.log(`Passed ${count} full/selective Expressive rail scenes, keyboard selection, ripple, expansion, badges that say what they show (name, 999+ cap, empty and zero cleared, New notification dot, spec placement, collapsed, expanded and shadow root), native modal focus/Escape/scrim, and 40 teardown cycles.`);
 }
 finally {
     await browser.close();

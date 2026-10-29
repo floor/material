@@ -242,13 +242,16 @@ $snap: 0s linear $midpoint;
     animation: #{$component}-swap v.motion('spring-default-spatial-duration') linear;
   }
 
-  // Badges: the large badge sits on the top end corner of the icon, the dot
-  // just off it; expanded, both move to the end of the pill.
+  // Badges: the large badge and the dot sit inside the icon's top trailing
+  // corner at the badges spec's distances — 14x12dp for the large one, 6x6dp
+  // for the dot (m3.material.io/components/badges/specs, Measurements; the
+  // icon starts 10dp into the collapsed item); expanded, both move to the end
+  // of the pill.
   &__badge {
     position: absolute;
     box-sizing: border-box;
-    inset-inline-start: 54px;
-    inset-block-start: 2px;
+    inset-inline-start: 48px;
+    inset-block-start: 8px;
     min-inline-size: 16px;
     min-block-size: 16px;
     padding-inline: 4px;
@@ -264,8 +267,8 @@ $snap: 0s linear $midpoint;
       min-inline-size: 0;
       min-block-size: 0;
       padding: 0;
-      inset-inline-start: 58px;
-      inset-block-start: 6px;
+      inset-inline-start: 54px;
+      inset-block-start: 10px;
     }
   }
   &--expanded &__badge { inset-inline-start: auto; inset-inline-end: 36px; inset-block-start: 20px; }
