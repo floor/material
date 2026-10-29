@@ -7,6 +7,7 @@ import type { BaseComponent, ElementComponent } from "../../core/compose/compone
 import { withEvents, withLifecycle } from "../../core/compose/features";
 import type { EventComponent, LifecycleComponent } from "../../core/compose/features";
 import type { BadgeComponent } from "../badge";
+import { isEmptyBadgeLabel } from "../badge/config";
 import { TabConfig, TabComponent, TabEvents } from "./types";
 import { TAB_LAYOUT } from "./constants";
 import { createTabConfig } from "./config";
@@ -115,6 +116,15 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         `.${baseComponent.getClass("button__icon")},.${baseComponent.getClass("button__text")}`
       ) ?? button.element;
 
+    // Whether the badge carries something to show. The badge component's own
+    // rule (creation and setLabel both): a large badge exists to carry a
+    // label, so an empty or zero one is not shown — a count of nothing is not
+    // news — while the small dot is shape only (m3.material.io/components/
+    // badges/specs has no empty large badge), so it always has its dot.
+    const hasBadgeToShow = (badge: BadgeComponent): boolean =>
+      badge.element.classList.contains(`${badge.getClass("badge")}--small`) ||
+      !isEmptyBadgeLabel(badge.getContent());
+
     // Create the tab component with enhanced API
     const tab: TabComponent = {
       ...baseComponent,
@@ -201,6 +211,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       setText(content) {
         button.setText(content);
         this.updateLayoutStyle();
+        announceBadge();
         return this;
       },
 
@@ -232,11 +243,23 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge = createBadge(badgeConfig);
         } else {
           this.badge.setContent(content);
-          this.badge.show();
+          // setContent settles a large badge's visibility from its label; the
+          // unconditional show that stood here brought back the empty capsule
+          // setBadge("") and setBadge(0) had just cleared. Only the dot badge,
+          // whose content is not its label, still needs the show.
+          if (hasBadgeToShow(this.badge)) {
+            this.badge.show();
+          }
         }
 
-        // Add badge presence attribute for potential styling
-        this.element.setAttribute("data-has-badge", "true");
+        // The presence attribute tells what shows: a cleared badge is no
+        // badge on the tab, the same state hideBadge records.
+        this.element.setAttribute(
+          "data-has-badge",
+          this.badge && hasBadgeToShow(this.badge) ? "true" : "false"
+        );
+
+        announceBadge();
 
         return this;
       },
@@ -246,10 +269,15 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       },
 
       showBadge() {
-        if (this.badge) {
+        // What the badge itself would not show — an empty or zero label —
+        // cannot be shown on the tab either: `<m-tab badge="">`, or the same
+        // empty value declared again, takes this path through the element's
+        // in-place update.
+        if (this.badge && hasBadgeToShow(this.badge)) {
           this.badge.show();
           this.element.setAttribute("data-has-badge", "true");
         }
+        announceBadge();
         return this;
       },
 
@@ -258,6 +286,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge.hide();
           this.element.setAttribute("data-has-badge", "false");
         }
+        announceBadge();
         return this;
       },
 
@@ -309,6 +338,28 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge?.attachTo(anchor);
         }
       },
+    };
+
+    // A badge is part of its tab's name, read after the label: m3's badge
+    // accessibility page says "The accessibility label for a badge item will
+    // be read after its navigation destination. Any numerical badges will
+    // have their number read." The badge element is a role="status" live
+    // region, and Chromium leaves live-region text out of an ancestor's
+    // computed name — a badged tab measured as "Trips" alone — so the tab
+    // names itself from the parts that make it. A hidden or empty badge adds
+    // nothing: without one, an `ariaLabel` config keeps its attribute and a
+    // plain tab keeps its content-derived name.
+    const announceBadge = (): void => {
+      const count = tab.badge?.isVisible() ? tab.badge.getContent() : "";
+      const label = baseConfig.ariaLabel || button.getText();
+      const name = [label, count].filter(Boolean).join(", ");
+      if (name !== label) {
+        tab.element.setAttribute("aria-label", name);
+      } else if (baseConfig.ariaLabel) {
+        tab.element.setAttribute("aria-label", baseConfig.ariaLabel);
+      } else {
+        tab.element.removeAttribute("aria-label");
+      }
     };
 
     // Add badge if specified in config
