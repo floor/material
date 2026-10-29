@@ -38,10 +38,27 @@ await mkdir(artifacts, { recursive: true });
 const build = await Bun.build({ entrypoints: [resolve('dist/components/navigation-rail/index.js')], target: 'browser', minify: true });
 assert(build.success, String(build.logs));
 const js = await build.outputs[0].text();
+// The element route. The items live in the host's shadow root, whose sheets
+// register into the build's own registry, so the fixture imports the element
+// and its styles from dist.
+const elementBundle = await Bun.build({ entrypoints: [resolve('scripts/fixtures/navigation-elements.ts')], target: 'browser', minify: true });
+assert(elementBundle.success, String(elementBundle.logs));
+const elementJs = await elementBundle.outputs[0].text();
+const itemIcon = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
         const url = new URL(request.url);
         if (url.pathname === '/rail.js')
             return new Response(js, { headers: { 'Content-Type': 'text/javascript' } });
+        if (url.pathname === '/nav-elements.js')
+            return new Response(elementJs, { headers: { 'Content-Type': 'text/javascript' } });
+        if (url.pathname === '/element') return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/full.css"><style>body{margin:0;display:flex;height:100vh}</style></head>
+<body><div id="host"><m-navigation-rail value="inbox" no-toggle>
+<m-navigation-rail-item value="inbox" icon='${itemIcon}'>Inbox</m-navigation-rail-item>
+<m-navigation-rail-item value="trips" icon='${itemIcon}' badge="8">Trips</m-navigation-rail-item>
+<m-navigation-rail-item value="saved" icon='${itemIcon}' badge="">Saved</m-navigation-rail-item>
+<m-navigation-rail-item value="alerts" icon='${itemIcon}' badge="0">Alerts</m-navigation-rail-item>
+<m-navigation-rail-item value="spam" icon='${itemIcon}' badge="1000">Spam</m-navigation-rail-item>
+</m-navigation-rail></div><script type="module" src="/nav-elements.js"></script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
         if (url.pathname === '/full.css')
             return new Response(Bun.file('dist/styles.css'));
         if (url.pathname === '/base.css')
@@ -131,6 +148,63 @@ try {
     assert(modalBox);
     await page.mouse.click(modalBox.x > 0 ? 20 : 880, 700);
     assert.equal(await page.evaluate(() => window.rail.isExpanded()), false);
+
+    // Badges that say what they show: the name carries the badge's displayed
+    // label — "The accessibility label for a badge item will be read after its
+    // navigation destination. Any numerical badges will have their number read,
+    // while non-counting badges will simply announce New notification"
+    // (m3.material.io/components/badges/accessibility, Labeling elements) — a
+    // label too long for the badge is capped as the badge caps it (four
+    // characters, "including a + to indicate more", the guidelines' Label
+    // text), and an empty or zero count clears the badge (the badge
+    // component's own rule, PR 146), collapsed and expanded alike.
+    type AxNode = { role?: { value?: string }; name?: { value?: string } };
+    const namesOf = async (p: import('playwright').Page): Promise<string[]> => {
+        const cdp = await p.context().newCDPSession(p);
+        const tree = (await cdp.send('Accessibility.getFullAXTree')) as { nodes: AxNode[] };
+        await cdp.detach();
+        return tree.nodes.filter((n) => n.role?.value === 'button' || n.role?.value === 'link').map((n) => n.name?.value ?? '');
+    };
+    await page.evaluate((icon: string) => window.mountRail({ showToggle: false, items: [
+        { id: 'count', label: 'Count', icon, badge: 8 },
+        { id: 'thousand', label: 'Thousand', icon, badge: 1000 },
+        { id: 'tenthousand', label: 'Tenthousand', icon, badge: 10000 },
+        { id: 'dot', label: 'Dot', icon, badge: true },
+        { id: 'dotlabel', label: 'Dotlabel', icon, badge: true, badgeLabel: 'New messages' },
+        { id: 'link', label: 'Link', icon, badge: 5, href: '/x' },
+    ] }), itemIcon);
+    await page.waitForTimeout(200);
+    const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
+    assert.deepEqual(await namesOf(page), expected, 'the badge\'s displayed label is in the name, capped as the badge caps it, the dot announcing New notification');
+    await page.evaluate(() => window.rail.expand());
+    await page.waitForTimeout(500);
+    assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
+    const badgeState = () => page.evaluate(() => {
+        const item = document.querySelector('.mtrl-navigation-rail__item[data-id="count"]')!;
+        const badge = item.querySelector('.mtrl-navigation-rail__badge');
+        return { gone: badge === null, name: item.getAttribute('aria-label'), text: badge?.textContent ?? null };
+    });
+    await page.evaluate(() => window.rail.setBadge('count', 0));
+    assert.deepEqual(await badgeState(), { gone: true, name: 'Count', text: null }, 'a zero count clears the badge');
+    await page.evaluate(() => window.rail.setBadge('count', ''));
+    assert.deepEqual(await badgeState(), { gone: true, name: 'Count', text: null }, 'an empty count clears the badge');
+    await page.evaluate(() => window.rail.setBadge('count', 12));
+    assert.deepEqual(await badgeState(), { gone: false, name: 'Count, 12', text: '12' }, 'a count after the empty values shows again');
+
+    // The element, through its shadow root
+    const elementPage = await browser.newPage({ viewport: { width: 900, height: 720 } });
+    const elementErrors: string[] = [];
+    elementPage.on('pageerror', (error) => elementErrors.push(error.message));
+    await elementPage.goto(`${server.url.href}element`);
+    await elementPage.waitForFunction(() => (window as unknown as { navigationElementsReady?: boolean }).navigationElementsReady === true);
+    await elementPage.waitForTimeout(80);
+    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 1000'], 'a declared badge names its item through the shadow root; the dot announces New notification; a zero clears');
+    await elementPage.evaluate(() => document.querySelector('m-navigation-rail-item[value="spam"]')!.setAttribute('badge', '10000'));
+    await elementPage.waitForTimeout(120);
+    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 999+'], 'an attribute change updates the capped name in place');
+    assert.deepEqual(elementErrors, []);
+    await elementPage.close();
+
     for (let i = 0; i < 40; i++) {
         await page.evaluate(() => window.mountRail({ layout: 'modal', expanded: true }));
         await page.waitForFunction(() => document.querySelector('dialog')?.open);
@@ -138,7 +212,7 @@ try {
     }
     assert.equal(await page.locator('.mtrl-navigation-rail').count(), 0);
     assert.deepEqual(errors, []);
-    console.log(`Passed ${count} full/selective Expressive rail scenes, keyboard selection, ripple, expansion, native modal focus/Escape/scrim, and 40 teardown cycles.`);
+    console.log(`Passed ${count} full/selective Expressive rail scenes, keyboard selection, ripple, expansion, badges that say what they show (name, 999+ cap, empty and zero cleared, New notification dot, collapsed, expanded and shadow root), native modal focus/Escape/scrim, and 40 teardown cycles.`);
 }
 finally {
     await browser.close();

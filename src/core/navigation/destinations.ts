@@ -30,6 +30,36 @@ export interface DestinationConfig {
 /** The component's class for a part: `__item`, `__badge`, … */
 export type PartClass = (part: string) => string;
 
+/**
+ * The badge label's maximum length, "including a + to indicate more"
+ * (m3.material.io/components/badges/guidelines, Label text). The badge
+ * component keeps the same four (BADGE_MAX_CHARACTERS); core cannot import
+ * components, so the constant lives here too.
+ */
+const BADGE_MAX_CHARACTERS = 4;
+
+/**
+ * The badge's displayed label, as the badge component's formatter shapes one
+ * (formatBadgeLabel without a `max`): no label is longer than the badge's
+ * characters, and a count too long for them reads "999+". A destination has no
+ * `max` of its own, so a count that fits — 1000 — shows as it is, the same as
+ * a badge without a max.
+ */
+const formatBadgeText = (badge: string | number): string => {
+  const text = String(badge);
+  if (text.length <= BADGE_MAX_CHARACTERS) return text;
+  const numeric = Number(badge);
+  if (Number.isNaN(numeric)) return text.slice(0, BADGE_MAX_CHARACTERS);
+  return numeric >= 1000 ? "999+" : `${text.slice(0, BADGE_MAX_CHARACTERS - 1)}+`;
+};
+
+/**
+ * Whether a badge label has nothing worth showing: a count of nothing is not
+ * news. The badge component's own rule (isEmptyBadgeLabel): an empty label and
+ * a zero are both hidden.
+ */
+const isEmptyBadgeText = (text: string): boolean => text === "" || text === "0";
+
 /** A copy of the items with unique ids, labels and icons, and one active at most. */
 export const copyDestinations = <T extends DestinationConfig>(items: T[], component: string): T[] => {
   const ids = new Set<string>();
@@ -44,10 +74,21 @@ export const copyDestinations = <T extends DestinationConfig>(items: T[], compon
   });
 };
 
-/** Shows, updates or removes the item's badge, and names the destination with it. */
+/**
+ * Shows, updates or removes the item's badge, and names the destination with
+ * it. The name carries what the badge shows: a count past the badge's maximum
+ * reads "999+" in both, an empty or zero count clears the badge, and a dot
+ * with no label of its own announces "New notification" — "The accessibility
+ * label for a badge item will be read after its navigation destination. Any
+ * numerical badges will have their number read, while non-counting badges will
+ * simply announce New notification" (m3.material.io/components/badges/
+ * accessibility, Labeling elements).
+ */
 export const updateBadge = (item: DestinationConfig, element: HTMLElement, cls: PartClass): void => {
   let badge = element.querySelector<HTMLElement>(`.${cls("__badge")}`);
-  const visible = item.badge !== undefined && item.badge !== false && item.badge !== "";
+  const dot = item.badge === true;
+  const text = dot ? "" : formatBadgeText(String(item.badge ?? ""));
+  const visible = dot || (item.badge !== undefined && item.badge !== null && item.badge !== false && !isEmptyBadgeText(text));
   if (!visible) {
     badge?.remove();
     element.classList.remove(cls("__item--badged"));
@@ -60,10 +101,10 @@ export const updateBadge = (item: DestinationConfig, element: HTMLElement, cls: 
     badge.setAttribute("aria-hidden", "true");
     element.querySelector(`.${cls("__content")}`)!.append(badge);
   }
-  badge.classList.toggle(cls("__badge--dot"), item.badge === true);
-  badge.textContent = item.badge === true ? "" : String(item.badge);
-  element.classList.toggle(cls("__item--badged"), item.badge !== true);
-  element.setAttribute("aria-label", `${item.label}, ${item.badgeLabel || (item.badge === true ? "New activity" : String(item.badge))}`);
+  badge.classList.toggle(cls("__badge--dot"), dot);
+  badge.textContent = text;
+  element.classList.toggle(cls("__item--badged"), !dot);
+  element.setAttribute("aria-label", `${item.label}, ${item.badgeLabel || (dot ? "New notification" : text)}`);
 };
 
 /** The destination's element: a link or a button, its indicator, icon, label and badge. */
