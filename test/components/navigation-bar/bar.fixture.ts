@@ -93,6 +93,34 @@ test('badges: a count or text, the dot, folded into the name, updated in place',
     expect([item(bar, 'home').querySelector('.mtrl-navigation-bar__badge'), item(bar, 'home').getAttribute('aria-label')]).toEqual([null, 'Home']);
 });
 
+test('badges: a count too long for the badge reads 999+ in the badge and in the name', () => {
+    const bar = make();
+    bar.setBadge('home', 1000);
+    expect([item(bar, 'home').querySelector('.mtrl-navigation-bar__badge')?.textContent, item(bar, 'home').getAttribute('aria-label')]).toEqual(['1000', 'Home, 1000']);
+    bar.setBadge('home', 10000);
+    expect([item(bar, 'home').querySelector('.mtrl-navigation-bar__badge')?.textContent, item(bar, 'home').getAttribute('aria-label')]).toEqual(['999+', 'Home, 999+']);
+    bar.setBadge('home', 'unread');
+    expect(item(bar, 'home').querySelector('.mtrl-navigation-bar__badge')?.textContent).toBe('unre');
+});
+
+test('badges: an empty or zero count clears the badge, and a value after it shows again', () => {
+    const bar = make();
+    for (const empty of ['', 0, '0'] as const) {
+        bar.setBadge('home', empty);
+        expect([item(bar, 'home').querySelector('.mtrl-navigation-bar__badge'), item(bar, 'home').getAttribute('aria-label')]).toEqual([null, 'Home']);
+    }
+    bar.setBadge('home', 0);
+    expect(item(bar, 'home').classList.contains('mtrl-navigation-bar__item--badged')).toBe(false);
+    bar.setBadge('home', 7);
+    expect([item(bar, 'home').querySelector('.mtrl-navigation-bar__badge')?.textContent, item(bar, 'home').getAttribute('aria-label')]).toEqual(['7', 'Home, 7']);
+});
+
+test('a dot with no label of its own announces New notification', () => {
+    const bar = make();
+    bar.setBadge('search', true);
+    expect(item(bar, 'search').getAttribute('aria-label')).toBe('Search, New notification');
+});
+
 test('setItems renders the new destinations and keeps the focused one focused', () => {
     const bar = make();
     item(bar, 'search').focus();
