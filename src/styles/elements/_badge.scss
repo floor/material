@@ -1,12 +1,73 @@
 // src/styles/elements/_badge.scss
-// <m-badge> before upgrade: as the upgraded host, which lays out no box of
-// its own (the badge is positioned from it). Its text is drawn on upgrade.
+// <m-badge> before upgrade: the badge itself. A standalone badge takes its
+// place in the flow (src/styles/components/_badge.scss), so the undefined host
+// is the large badge's 16dp box around its label -- drawn from the label
+// attribute, as the text field's pre-upgrade host draws its value -- or the
+// 6dp dot. An empty or zero large label hides on upgrade, so it reserves no
+// box before it either.
+@use '../abstract/variables' as v;
+@use '../abstract/theme' as t;
 @use 'config' as c;
+
+// As components/_badge.scss: the badge's colours, the default error above.
+$colors: ('primary', 'secondary', 'tertiary', 'success', 'warning', 'info');
 
 @include c.host('badge') {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   vertical-align: middle;
-  width: 0;
-  height: 0;
   overflow: hidden;
+  height: 16px;
+  min-width: 16px;
+  max-width: 34px; // the overflow badge's 16x34dp
+  padding: 0 4px;
+  border-radius: v.shape('full');
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 16px;
+  background-color: t.color('error');
+  color: t.color('on-error');
+
+  @each $color in $colors {
+    &[color='#{$color}'] {
+      background-color: t.color($color);
+      color: t.color('on-#{$color}');
+    }
+  }
+
+  // The label the markup carries sets the box's width as it will set the
+  // badge's on upgrade. With text inside the tag too, the text draws it: the
+  // element reads the attribute and ignores the text, but CSS cannot hide the
+  // text alone, so it must not be drawn twice. A label past the max
+  // re-formats on upgrade ("1000" becomes "999+"), which CSS cannot repeat.
+  &:empty[label]:not([label=''])::before {
+    content: attr(label);
+  }
+
+  // Nothing to show: an empty or zero label hides the large badge on upgrade,
+  // so it reserves no box. A whitespace-only text node is not matched here --
+  // CSS cannot see it -- so `<m-badge> </m-badge>` (or the tag with a line
+  // break inside) keeps the box before upgrade although the element then hides
+  // the badge. Write the tag with nothing between its tags.
+  &:not([variant='small']):is(:empty:not([label]), [label=''], [label='0']) {
+    width: 0;
+    height: 0;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
+    font-size: 0;
+    background-color: transparent;
+  }
+
+  // The dot is its own box whether or not it carries a label, and shows it.
+  &[variant='small'] {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    max-width: none;
+    padding: 0;
+    font-size: 0;
+  }
 }

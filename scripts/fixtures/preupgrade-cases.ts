@@ -95,7 +95,14 @@ export const cases: PreupgradeCase[] = [
   c("progress", "variant=circular", `<m-progress variant="circular" value="40" aria-label="Upload"></m-progress>`),
   c("loading-indicator", "default", `<m-loading-indicator aria-label="Loading"></m-loading-indicator>`),
   c("badge", "default", `<m-badge label="3"></m-badge>`),
-  c("badge", "small", `<m-badge></m-badge>`),
+  // A multi-digit label is as wide as the badge's on upgrade: the pre-upgrade
+  // rule draws it from the label attribute.
+  c("badge", "label=999+", `<m-badge label="999+"></m-badge>`),
+  // The dot is its own 6dp box, whether or not it carries a label.
+  c("badge", "variant=small", `<m-badge variant="small"></m-badge>`),
+  // An empty or zero large badge hides on upgrade, so it reserves no box.
+  c("badge", "empty", `<m-badge></m-badge>`),
+  c("badge", "label=0", `<m-badge label="0"></m-badge>`),
   c("divider", "default", `<m-divider></m-divider>`),
   c("icon-button", "default", `<m-icon-button icon="${ICON}" aria-label="Favourite"></m-icon-button>`),
   c("icon-button", "size=m", `<m-icon-button size="m" icon="${ICON}" aria-label="Favourite"></m-icon-button>`),
