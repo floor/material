@@ -61,6 +61,57 @@ describe('tab', () => {
     expect(clicks).toBe(1);
     tab.destroy();
   });
+
+  // The badge component's own rule (creation and setLabel both): a large
+  // badge exists to carry a label, so an empty or zero one is not shown.
+  test('setBadge of an empty or zero label clears the badge, and a value after it shows again', () => {
+    const tab = createTab({ text: 'Inbox', value: 'inbox', badge: '3' });
+    const badge = tab.badge!;
+    const invisible = () => badge.element.classList.contains('mtrl-badge--invisible');
+    expect(invisible()).toBe(false);
+
+    tab.setBadge('');
+    expect(invisible()).toBe(true);
+    expect(tab.element.getAttribute('data-has-badge')).toBe('false');
+    expect(tab.getBadge()).toBe('');
+
+    tab.setBadge(0);
+    expect(invisible()).toBe(true);
+
+    tab.setBadge('12');
+    expect(invisible()).toBe(false);
+    expect(badge.getContent()).toBe('12');
+    expect(tab.element.getAttribute('data-has-badge')).toBe('true');
+    tab.destroy();
+  });
+
+  test('showBadge does not show what an empty label cleared', () => {
+    const tab = createTab({ text: 'Inbox', value: 'inbox' });
+    tab.setBadge('9');
+    tab.setBadge('');
+    tab.showBadge();
+    expect(tab.badge!.element.classList.contains('mtrl-badge--invisible')).toBe(true);
+    expect(tab.getBadgeComponent()!.isVisible()).toBe(false);
+    tab.destroy();
+  });
+
+  test('a tab created with an empty or zero badge label shows no badge', () => {
+    for (const empty of ['', 0] as const) {
+      const tab = createTab({ text: 'Inbox', value: 'inbox', badge: empty });
+      expect(tab.badge!.element.classList.contains('mtrl-badge--invisible')).toBe(true);
+      expect(tab.element.getAttribute('data-has-badge')).toBe('false');
+      tab.destroy();
+    }
+  });
+
+  test('a small badge keeps its dot through an empty setBadge', () => {
+    const tab = createTab({ text: 'Starred', value: 'starred', badge: '1', badgeConfig: { variant: 'small' } });
+    const invisible = () => tab.badge!.element.classList.contains('mtrl-badge--invisible');
+    expect(invisible()).toBe(false);
+    tab.setBadge('');
+    expect(invisible()).toBe(false);
+    tab.destroy();
+  });
 });
 
 test('exported tab hooks address the composed button and its shared ripple', () => {
