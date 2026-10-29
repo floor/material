@@ -187,6 +187,88 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
   assert.deepEqual(failures, [], "carousel wheel browser regressions");
 }
 
+/** Packed carousel: a fresh wheel notch just short of a snap lands on that snap. */
+export async function checkCarouselWheelSubPixelSnap(page: Page): Promise<void> {
+  const viewport = page.viewportSize();
+  const reduced = await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const failures: string[] = [];
+  for (const variant of ["multi-browse", "uncontained", "hero", "hero-center"] as const) {
+    try {
+      await page.evaluate(variant => {
+        const state = window as unknown as CarouselWindow;
+        document.body.replaceChildren();
+        document.body.style.cssText = "display:block;margin:0;padding:0;height:3000px";
+        window.scrollTo(0, 0);
+        const carousel = state.createCarousel({
+          variant, wheel: true, ...(variant.includes("hero") ? {} : { itemWidth: 200 }),
+          slides: Array.from({ length: 20 }, (_, i) => ({ title: `Slide ${i}` })),
+        });
+        carousel.element.id = "wheel-carousel";
+        carousel.element.style.cssText = "width:760px;height:240px";
+        document.body.append(carousel.element);
+        state.wheelCarousel = carousel;
+      }, variant);
+      const scroller = page.locator("#wheel-carousel .mtrl-carousel__scroller");
+      await waitFor(page, "the carousel to lay its slides out", () => document.querySelector(".mtrl-carousel__scroller")!.scrollWidth > 760);
+      const landing = await scroller.evaluate(async element => {
+        const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
+        // Stand one pixel short of a snap. Chromium rounds scrollLeft to whole
+        // pixels, so the sub-pixel case is built from a fractional wheel delta,
+        // as trackpads deliver: a 1.5px notch crosses the snap by half a pixel,
+        // and the landing must be that snap, not the next one.
+        // The saved snap declaration never snaps this horizontal scroller and
+        // differs from the "none" a glide suspends it to, so its restoration
+        // marks the spring at rest (stopWheel), not merely a scroll that ended.
+        const saved = "y mandatory";
+        const snap = snaps[4]!;
+        element.style.scrollSnapType = saved;
+        element.scrollLeft = snap - 1;
+        await new Promise(requestAnimationFrame);
+        const event = new WheelEvent("wheel", { deltaY: 1.5, bubbles: true, cancelable: true });
+        element.dispatchEvent(event);
+        const start = element.scrollLeft;
+        const suspended = element.style.scrollSnapType === "none";
+        const began = performance.now();
+        const settled = await new Promise<boolean>(resolve => {
+          const poll = () => {
+            if (element.style.scrollSnapType === saved) resolve(true);
+            else if (performance.now() - began > 3000) resolve(false);
+            else requestAnimationFrame(poll);
+          };
+          requestAnimationFrame(poll);
+        });
+        // One more frame, so the restored position is the one painted.
+        await new Promise(requestAnimationFrame);
+        return {
+          snap, next: snaps[5]!, start, end: element.scrollLeft, prevented: event.defaultPrevented,
+          suspended, settled, ms: Math.round(performance.now() - began),
+        };
+      });
+      console.log(`${variant} fresh notch half a pixel past a snap: start=${landing.start} snap=${landing.snap} next=${landing.next} landed=${landing.end} (${landing.settled ? "glide at rest after" : "no rest within"} ${landing.ms}ms)`);
+      try {
+        assert.ok(landing.prevented, `${variant}: wheel consumed`);
+        assert.ok(Math.abs(landing.start - (landing.snap - 1)) <= 0.51, `${variant}: stood one pixel short of the snap (at ${landing.start})`);
+        assert.ok(landing.suspended, `${variant}: the notch started a glide (snap suspended)`);
+        assert.ok(landing.settled, `${variant}: the glide did not come to rest within 3s (at ${landing.end})`);
+        assert.notEqual(landing.end, landing.start, `${variant}: the notch did not move from ${landing.start}`);
+        assert.ok(Math.abs(landing.end - landing.snap) <= 0.5, `${variant}: landed ${landing.end}, not the snap the notch crossed by half a pixel (${landing.snap}; the next is ${landing.next})`);
+      } catch (error) {
+        failures.push(`${variant}: ${String(error)}`);
+      }
+    } catch (error) {
+      failures.push(`${variant}: ${String(error)}`);
+    } finally {
+      await page.evaluate(() => (window as unknown as CarouselWindow).wheelCarousel?.destroy());
+    }
+  }
+  await page.evaluate(() => { document.body.style.cssText = ""; window.scrollTo(0, 0); });
+  if (viewport) await page.setViewportSize(viewport);
+  await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+  assert.deepEqual(failures, [], "carousel sub-pixel fresh-notch browser regressions");
+}
+
 /**
  * Uncontained carousel layout conformance check.
  *
