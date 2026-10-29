@@ -166,6 +166,9 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 4. CI must pass: types, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
 
+Every pull request is reviewed against [REVIEW.md](../REVIEW.md): what failure looks like in this
+repository, how a finding is written, and how the review loop ends.
+
 ## Testing
 
 ```bash
