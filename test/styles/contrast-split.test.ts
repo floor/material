@@ -180,9 +180,12 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_menu.scss).
     // Plain tooltip text keeps Body Small regular 400; rich tooltip bottom
     // padding is 8dp (styles/components/_tooltip.scss, M3 tooltips specs).
+    // The badge sits at the spec's corner distance (6x6dp dot, 14x12dp large,
+    // mirrored in RTL) and a standalone badge stays in flow
+    // (styles/components/_badge.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d651178adf08cf586fbeb0eab179fd9374c8752baa95c063bd070056bc56e301");
-    expect(css.length).toBe(539265);
+      .toBe("2a37f87075a5ff101d60323e7da59da55ec16874f5935a4ef322419c4ab7f67e");
+    expect(css.length).toBe(540692);
   });
 
   test("today's sheets still resolve to the fixture", () => {

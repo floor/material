@@ -13,8 +13,10 @@
  * - Large badge height: 16dp
  * - Small badge corner radius: 3dp
  * - Large badge corner radius: 8dp
- * - Small badge: positioned 6dp from container edge
- * - Large badge: positioned 14dp (height) x 12dp (width) from container edge
+ * - Small badge: 6dp from the icon's top trailing corner to the badge's
+ *   bottom leading corner
+ * - Large badge: 14dp (height) x 12dp (width) from the icon's top trailing
+ *   corner to the badge's bottom leading corner
  */
 $component: '#{base.$prefix}-badge';
 $wrapper: '#{base.$prefix}-badge__wrapper';
@@ -27,9 +29,13 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
 }
 
 .#{$component} {
-  // Base badge styles
-  position: absolute;
-  display: flex;
+  // In flow until it is attached. A standalone badge -- `<m-badge>`, "the
+  // badge alone, placed by the page like any inline element"
+  // (src/elements/badge.ts) -- is sized by its own box; `--positioned` takes
+  // an attached badge out of the flow onto its target. Inline-flex sizes the
+  // standalone box to its content, and an absolutely positioned box is
+  // blockified, so attached badges lay out exactly as they did.
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 500;
@@ -73,49 +79,56 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
   
   // Position specs
   &--positioned {
-    // Small badge placement (6dp from container edge)
+    position: absolute;
+
+    // The specs measure from the icon's top trailing corner to the badge's
+    // bottom leading corner (m3.material.io/components/badges/specs, "Badge
+    // padding and size measurements"): 6x6dp for the 6dp dot and 14x12dp for
+    // the 16dp large badge. The dot therefore sits flush in the corner; the
+    // large badge reaches 2dp above the icon and 4dp past it, which is what
+    // "anchored inside the icon bounding box" (guidelines) leaves of a badge
+    // larger than its distance.
     &.#{$component}--small {
       &.#{$component}--top-right {
-        top: -3px;
-        right: -3px;
+        top: 0;
+        right: 0;
       }
       
       &.#{$component}--top-left {
-        top: -3px;
-        left: -3px;
+        top: 0;
+        left: 0;
       }
       
       &.#{$component}--bottom-right {
-        bottom: -3px;
-        right: -3px;
+        bottom: 0;
+        right: 0;
       }
       
       &.#{$component}--bottom-left {
-        bottom: -3px;
-        left: -3px;
+        bottom: 0;
+        left: 0;
       }
     }
     
-    // Large badge placement (14dp x 12dp from container edge)
     &.#{$component}--large {
       &.#{$component}--top-right {
-        top: -8px;
-        right: -8px;
+        top: -2px;
+        right: -4px;
       }
       
       &.#{$component}--top-left {
-        top: -8px;
-        left: -8px;
+        top: -2px;
+        left: -4px;
       }
       
       &.#{$component}--bottom-right {
-        bottom: -8px;
-        right: -8px;
+        bottom: -2px;
+        right: -4px;
       }
       
       &.#{$component}--bottom-left {
-        bottom: -8px;
-        left: -8px;
+        bottom: -2px;
+        left: -4px;
       }
     }
   }
@@ -156,27 +169,51 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
     color: t.color('on-info');
   }
 
-  // RTL support: the positions swap under the mixin's two directions.
+  // RTL support: the horizontal side swaps, the distance stays the specs'.
   &--positioned {
     @include m.rtl {
-      &.#{$component}--top-right {
-        right: auto;
-        left: -8px;
+      &.#{$component}--small {
+        &.#{$component}--top-right {
+          right: auto;
+          left: 0;
+        }
+
+        &.#{$component}--top-left {
+          left: auto;
+          right: 0;
+        }
+
+        &.#{$component}--bottom-right {
+          right: auto;
+          left: 0;
+        }
+
+        &.#{$component}--bottom-left {
+          left: auto;
+          right: 0;
+        }
       }
 
-      &.#{$component}--top-left {
-        left: auto;
-        right: -8px;
-      }
+      &.#{$component}--large {
+        &.#{$component}--top-right {
+          right: auto;
+          left: -4px;
+        }
 
-      &.#{$component}--bottom-right {
-        right: auto;
-        left: -8px;
-      }
+        &.#{$component}--top-left {
+          left: auto;
+          right: -4px;
+        }
 
-      &.#{$component}--bottom-left {
-        left: auto;
-        right: -8px;
+        &.#{$component}--bottom-right {
+          right: auto;
+          left: -4px;
+        }
+
+        &.#{$component}--bottom-left {
+          left: auto;
+          right: -4px;
+        }
       }
     }
   }
