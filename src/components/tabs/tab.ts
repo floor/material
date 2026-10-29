@@ -201,6 +201,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       setText(content) {
         button.setText(content);
         this.updateLayoutStyle();
+        announceBadge();
         return this;
       },
 
@@ -238,6 +239,8 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         // Add badge presence attribute for potential styling
         this.element.setAttribute("data-has-badge", "true");
 
+        announceBadge();
+
         return this;
       },
 
@@ -250,6 +253,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge.show();
           this.element.setAttribute("data-has-badge", "true");
         }
+        announceBadge();
         return this;
       },
 
@@ -258,6 +262,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge.hide();
           this.element.setAttribute("data-has-badge", "false");
         }
+        announceBadge();
         return this;
       },
 
@@ -309,6 +314,28 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           this.badge?.attachTo(anchor);
         }
       },
+    };
+
+    // A badge is part of its tab's name, read after the label: m3's badge
+    // accessibility page says "The accessibility label for a badge item will
+    // be read after its navigation destination. Any numerical badges will
+    // have their number read." The badge element is a role="status" live
+    // region, and Chromium leaves live-region text out of an ancestor's
+    // computed name — a badged tab measured as "Trips" alone — so the tab
+    // names itself from the parts that make it. A hidden or empty badge adds
+    // nothing: without one, an `ariaLabel` config keeps its attribute and a
+    // plain tab keeps its content-derived name.
+    const announceBadge = (): void => {
+      const count = tab.badge?.isVisible() ? tab.badge.getContent() : "";
+      const label = baseConfig.ariaLabel || button.getText();
+      const name = [label, count].filter(Boolean).join(", ");
+      if (name !== label) {
+        tab.element.setAttribute("aria-label", name);
+      } else if (baseConfig.ariaLabel) {
+        tab.element.setAttribute("aria-label", baseConfig.ariaLabel);
+      } else {
+        tab.element.removeAttribute("aria-label");
+      }
     };
 
     // Add badge if specified in config
