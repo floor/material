@@ -24,22 +24,24 @@ Menus and tooltips match the spec.
 ### Fixes
 
 - **A disabled menu item dims every part of itself, and a selected disabled item
-  dims its selection colours and shows no state layer (#110).**
+  dims its content in every layout and its container where the spec has one
+  (#110).**
   Only the label faded: the icon, the supporting text and the shortcut each
   declared their own `on-surface-variant` colour with no disabled rule, and the
   selected item's rule stood after the disabled one at equal specificity, so a
   selected item kept the opaque selection colours and still drew its hover and
   press layers. All three parts now inherit the item's dimmed colour, and
   selected plus disabled is a compound rule in both menu variants that puts the
-  selection's own colours at 0.38 and sets the state layer's opacity to 0. The
-  vertical standard menu dims its container with the content; the vibrant menu's
-  spec carries no container colour for the state, so it keeps the enabled
-  selection's container. Measured in Chromium against the packed stylesheet, on
-  baseline, vertical standard and vertical vibrant menus: the disabled icon,
-  supporting text and shortcut land on the label's colour at 0.38 instead of
-  opaque `on-surface-variant`, a selected disabled item dims both container and
-  content and keeps no hover layer, and no disabled part changes colour on
-  hover or press.
+  selection's content at 0.38 — and, in the baseline and vertical standard
+  menus, the container with it — and sets the state layer's opacity to 0. The
+  vertical vibrant menu's spec defines no container colour for the state, so it
+  keeps the enabled selection's container at full opacity. Measured in Chromium
+  against the packed stylesheet, on baseline, vertical standard and vertical
+  vibrant menus: the disabled icon, supporting text and shortcut land on the
+  label's colour at 0.38 instead of opaque `on-surface-variant`; a selected
+  disabled item dims its content in all three layouts and its container only in
+  baseline and vertical standard, and keeps no hover layer; and no disabled part
+  changes colour on hover or press.
 
 - **Tooltips use Body Small's regular weight, and rich tooltips the spec's 8dp
   bottom padding (#111).**
