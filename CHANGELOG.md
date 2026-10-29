@@ -90,6 +90,12 @@ Menus and tooltips match the spec.
   the layout and must not be stripped. The size fixture's note carries the count
   and the bytes, so the ceiling is read as guarding that larger bundle.
 
+- **The release costs 34 bytes gzipped in the all-js row (127,452 to 127,486)
+  and 123 in the full stylesheet (63,527 to 63,650); the packed tarball is
+  1,086,173 bytes compressed, 6,471,097 unpacked, against 1,084,867 and
+  6,460,889 in 3.2.4.** No ceiling moved, and all seven README size rows stand
+  as measured.
+
 ## [3.2.4] - 2026-10-20
 
 Keyboard focus stays inside the surface you open and returns to the field you
