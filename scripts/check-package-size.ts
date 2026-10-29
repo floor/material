@@ -486,6 +486,14 @@ try {
     // inside a shadow tree (styles/abstract/_mixins.scss): 62,755 to 63,083
     // against 9fb89b44, Node 22.23.3 / npm 10.9.9. 63,083 + 1% = 63,714,
     // rounded up to 63,750, its ceiling.
+    // The CSS rows bundle with `target: "browser"`, whose default targets
+    // predate logical properties: Lightning CSS lowers them into physical
+    // declarations behind `:lang()` lists. The full-css row is therefore an
+    // old-target bundle — 12,426 `:lang()` arms, 7,577 of its 63,527 gzip
+    // bytes measured on ff835193 (#125). Current targets keep the logical
+    // properties and emit none; the row stays on the old-target build so the
+    // ceiling covers the larger bundle a consumer with old targets gets.
+    // dist/styles.css itself carries no `:lang()` or `:dir()` rule.
     { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
   ];
   for (const fixture of fixtures) {
