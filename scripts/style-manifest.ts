@@ -23,7 +23,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   chips: { source: "components/chips", dependencies: [] },
   dialog: { source: "components/dialog", dependencies: ["button", "divider"] },
   divider: { source: "components/divider", dependencies: [] },
-  drawer: { source: "components/drawer", dependencies: [] },
+  drawer: { source: "components/drawer", dependencies: ["badge"] },
   progress: { source: "components/progress", dependencies: [] },
   "loading-indicator": { source: "components/loading-indicator", dependencies: [] },
   "split-button": { source: "components/split-button", dependencies: ["menu", "button"] },
