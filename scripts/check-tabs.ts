@@ -546,6 +546,132 @@ try {
   assert.equal(fromElement[0]?.onTab, "Trips", "element badge: on the tab that carries the attribute");
   assert.ok(fromElement[0]?.visible, "element badge: visible");
   checks += 4;
+
+  // A badged tab's name carries the badge, read after the label. m3's badge
+  // accessibility page: "The accessibility label for a badge item will be read
+  // after its navigation destination. Any numerical badges will have their
+  // number read." The badge is a role="status" live region, and Chromium
+  // leaves live-region text out of an ancestor's computed name — measured on
+  // main, this tab said only "Trips" — so the tab names itself from its parts.
+  // Read through Chromium's own tree, not a recomputation of our own.
+  type AxNode = { role?: { value?: string }; name?: { value?: string } };
+  const namesOf = async (p: typeof page): Promise<string[]> => {
+    const cdp = await p.context().newCDPSession(p);
+    const tree = (await cdp.send("Accessibility.getFullAXTree")) as { nodes: AxNode[] };
+    await cdp.detach();
+    return tree.nodes.filter((n) => n.role?.value === "tab").map((n) => n.name?.value ?? "");
+  };
+  type NameWin = {
+    mount: (c: unknown) => void;
+    t: { getTabs: () => Array<{ setBadge: (v: number) => unknown; hideBadge: () => unknown; showBadge: () => unknown; setText: (v: string) => unknown }> };
+  };
+  const mountNames = (c: unknown) => page.evaluate((c) => (window as unknown as NameWin).mount(c), c);
+
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
+    "a badge given in the config: its number read after the tab's label");
+  checks++;
+
+  await page.evaluate(() => {
+    (window as unknown as NameWin).mount({ scrollable: false });
+    (window as unknown as NameWin).t.getTabs()[2].setBadge(3);
+  });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 3"],
+    "setBadge after creation: the tab it was set on carries the count");
+  await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].setBadge(5));
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 5"],
+    "setBadge update: the name follows the new count");
+  await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].hideBadge());
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels"],
+    "hideBadge: the name drops the hidden count");
+  await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].showBadge());
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 5"],
+    "showBadge: the name carries the count again");
+  checks += 4;
+
+  // The count a large badge displays is the count it announces: 1000 over a
+  // max of 999 shows "999+".
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 1000, badgeConfig: { max: 999 } },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips, 999+", "Hotels"],
+    "a large count: the overflow display is what the name reads");
+  checks++;
+
+  // An icon-only tab is named by its ariaLabel; the badge follows that name.
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "", value: "t", icon: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>', ariaLabel: "Trips", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
+    "an icon-only tab: the ariaLabel keeps the badge after it");
+  checks++;
+
+  // A dot badge holds no content, so it adds nothing to the name.
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8, badgeConfig: { variant: "small" } },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels"],
+    "a dot badge: no content, nothing added to the name");
+  checks++;
+
+  // setText recomposes the name a badge rides on.
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[1].setText("Passports"));
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Passports, 8", "Hotels"],
+    "setText on a badged tab: the name follows the new label");
+  checks++;
+
+  // Right-to-left reads the same name.
+  await page.evaluate(() => { document.documentElement.dir = "rtl"; });
+  await mountNames({ scrollable: false, tabs: [
+    { text: "Flights", value: "f", state: "active" },
+    { text: "Trips", value: "t", badge: 8 },
+    { text: "Hotels", value: "h" },
+  ] });
+  await page.waitForTimeout(80);
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
+    "rtl: the name is the same");
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  checks++;
+
+  // The element route: the tabs live in the host's shadow root and the name
+  // must be computed through it.
+  const nameElementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  nameElementPage.on("pageerror", (error) => elementErrors.push(error.message));
+  await nameElementPage.goto(`http://127.0.0.1:${server.port}/element`);
+  await nameElementPage.waitForFunction(() =>
+    !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
+    !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
+  await nameElementPage.waitForTimeout(80);
+  assert.deepEqual(await namesOf(nameElementPage), ["Flights", "Trips, 8", "Hotels"],
+    "the element route: a shadow-root tab carries its badge in the name");
+  await nameElementPage.close();
+  checks++;
+
   assert.deepEqual(elementErrors, [], `element page errors: ${elementErrors.join(", ")}`);
 
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
@@ -553,7 +679,8 @@ try {
     `Passed ${checks} tabs checks: fixed tabs in an evenly divided row, ` +
       `scrollable tabs in their scroller, both directions, divider and indicator out of flow, ` +
       `the M3 indicator per variant, a centred stacked icon, inactive state colours and the focus ring, ` +
-      `a config badge on its tab by factory, element and later setBadge.`
+      `a config badge on its tab by factory, element and later setBadge, and a badged tab's name ` +
+      `carrying its count by factory, setBadge, overflow display, dot, setText, rtl and shadow root.`
   );
 } finally {
   await browser.close();

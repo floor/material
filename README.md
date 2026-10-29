@@ -404,6 +404,14 @@ document.body.append(button.element);
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
+### Bundling
+
+The full stylesheet ships no `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules. Values that follow the reading direction use logical properties, such as `margin-inline-start` and `inset-inline-end`.
+
+A bundler can add direction rules of its own. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. On the full stylesheet that is 12,426 `:lang()` arms, about 7.6 kB gzip — 12% of the 63.5 kB bundle.
+
+With current browser targets the bundler keeps the logical properties and emits none of them. In a build that targets old browsers the arms are needed, but they are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
+
 ## Building your own components
 
 Components are composed from small features with `pipe`. The same building blocks are public:
@@ -520,10 +528,10 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.7 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.2 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 127.5 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 127.6 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 63.5 kB |
+| `material/styles`, the full stylesheet | 63.6 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
