@@ -10,7 +10,7 @@ import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
-import { checkCarouselWheel } from "./check-carousel-browser";
+import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
@@ -105,6 +105,7 @@ try {
   assert.equal(await page.evaluate(() => [...(window as unknown as CoreWindow).documentListeners.values()].reduce((sum, set) => sum + set.size, 0)), 0);
   assert.equal(await page.locator(".mtrl-ripple-wave").count(), 0);
   await checkCarouselWheel(page);
+  await checkCarouselWheelSubPixelSnap(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
   await checkChips(page, artifacts);
