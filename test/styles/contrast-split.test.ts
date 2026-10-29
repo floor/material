@@ -153,6 +153,9 @@ describe("explicit contrast levels are opt-in", () => {
     // A tab's badge sits on the tab's icon (6dp overlap) or label (4dp gap), the
     // anchor it wraps inside the button, not at the button's corner
     // (styles/components/_tabs.scss). It mirrors under [dir='rtl'] (the same file).
+    // The collapsed rail's badges sit inside the icon's top trailing corner at
+    // the badges spec's distances, 14x12dp for the large badge and 6x6dp for
+    // the dot (styles/components/_navigation-rail.scss).
     // A collapsed rail header supplies the extended FAB compact presentation
     // through an inherited property, including across its shadow root
     // (styles/components/_navigation-rail.scss, styles/components/_extended-fab.scss).
@@ -181,8 +184,8 @@ describe("explicit contrast levels are opt-in", () => {
     // mirrored in RTL) and a standalone badge stays in flow
     // (styles/components/_badge.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("9a404df61ba48cbd528650d289c88a286f3ffcda89875bbc80520c5d576a44f7");
-    expect(css.length).toBe(540691);
+      .toBe("2a37f87075a5ff101d60323e7da59da55ec16874f5935a4ef322419c4ab7f67e");
+    expect(css.length).toBe(540692);
   });
 
   test("today's sheets still resolve to the fixture", () => {

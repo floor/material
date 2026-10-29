@@ -157,3 +157,18 @@ test('items carry a badged class only while they show a large badge', () => {
     expect(item.classList.contains('mtrl-navigation-rail__item--badged')).toBe(false);
     expect(item.querySelector('.mtrl-navigation-rail__badge')).toBeNull();
 });
+
+test('a badge says what it shows: capped at 999+, empty or zero cleared, the dot announcing New notification', () => {
+    const rail = make();
+    const item = rail.element.querySelector<HTMLElement>('[data-id="home"]')!;
+    rail.setBadge('home', 1000);
+    expect([item.querySelector('.mtrl-navigation-rail__badge')?.textContent, item.getAttribute('aria-label')]).toEqual(['1000', 'Home, 1000']);
+    rail.setBadge('home', 10000);
+    expect([item.querySelector('.mtrl-navigation-rail__badge')?.textContent, item.getAttribute('aria-label')]).toEqual(['999+', 'Home, 999+']);
+    rail.setBadge('home', 0);
+    expect([item.querySelector('.mtrl-navigation-rail__badge'), item.getAttribute('aria-label')]).toEqual([null, 'Home']);
+    rail.setBadge('home', true);
+    expect(item.getAttribute('aria-label')).toBe('Home, New notification');
+    rail.setBadge('home', 12);
+    expect([item.querySelector('.mtrl-navigation-rail__badge')?.textContent, item.getAttribute('aria-label')]).toEqual(['12', 'Home, 12']);
+});

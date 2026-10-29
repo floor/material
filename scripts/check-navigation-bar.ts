@@ -23,15 +23,32 @@ declare global {
 const build = await Bun.build({ entrypoints: [resolve("dist/components/navigation-bar/index.js")], target: "browser", minify: true });
 assert(build.success, String(build.logs));
 const js = await build.outputs[0].text();
+// The element route. The items live in the host's shadow root, whose sheets
+// register into the build's own registry, so the fixture imports the element
+// and its styles from dist.
+const elementBundle = await Bun.build({ entrypoints: [resolve("scripts/fixtures/navigation-elements.ts")], target: "browser", minify: true });
+assert(elementBundle.success, String(elementBundle.logs));
+const elementJs = await elementBundle.outputs[0].text();
+const itemIcon = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
   fetch(request) {
     const url = new URL(request.url);
-    if (url.pathname === "/bar.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
-    if (url.pathname === "/full.css") return new Response(Bun.file("dist/styles.css"));
-    if (url.pathname === "/base.css") return new Response(Bun.file("dist/styles/base.css"));
-    if (url.pathname === "/bar.css") return new Response(Bun.file("dist/styles/navigation-bar.css"));
+    const path = url.pathname;
+    if (path === "/bar.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/nav-elements.js") return new Response(elementJs, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/full.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/base.css") return new Response(Bun.file("dist/styles/base.css"));
+    if (path === "/bar.css") return new Response(Bun.file("dist/styles/navigation-bar.css"));
+    if (path === "/element") return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/full.css"><style>body{margin:0}#host{width:400px}</style></head>
+<body><div id="host"><m-navigation-bar value="home">
+<m-navigation-bar-item value="home" icon='${itemIcon}'>Home</m-navigation-bar-item>
+<m-navigation-bar-item value="trips" icon='${itemIcon}' badge="8">Trips</m-navigation-bar-item>
+<m-navigation-bar-item value="saved" icon='${itemIcon}' badge="">Saved</m-navigation-bar-item>
+<m-navigation-bar-item value="alerts" icon='${itemIcon}' badge="0">Alerts</m-navigation-bar-item>
+<m-navigation-bar-item value="spam" icon='${itemIcon}' badge="1000">Spam</m-navigation-bar-item>
+</m-navigation-bar></div><script type="module" src="/nav-elements.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
     const styles = url.searchParams.has("selective")
       ? '<link rel="stylesheet" href="/base.css"><link rel="stylesheet" href="/bar.css">'
       : '<link rel="stylesheet" href="/full.css">';
@@ -188,6 +205,63 @@ try {
   await page.click(".mtrl-navigation-bar__item[data-id='off']", { force: true });
   assert.deepEqual(await page.evaluate(() => [window.selected.length, window.bar.getActive()]), [1, "search"], "a disabled destination is not selected");
 
+  // Badges that say what they show: the name carries the badge's displayed
+  // label — "The accessibility label for a badge item will be read after its
+  // navigation destination. Any numerical badges will have their number read,
+  // while non-counting badges will simply announce New notification"
+  // (m3.material.io/components/badges/accessibility, Labeling elements) — a
+  // label too long for the badge is capped as the badge caps it (four
+  // characters, "including a + to indicate more", the guidelines' Label text),
+  // an empty or zero count clears the badge (the badge component's own rule,
+  // PR 146), and the max character count stays within the 16x34dp container.
+  type AxNode = { role?: { value?: string }; name?: { value?: string } };
+  const namesOf = async (p: Page): Promise<string[]> => {
+    const cdp = await p.context().newCDPSession(p);
+    const tree = (await cdp.send("Accessibility.getFullAXTree")) as { nodes: AxNode[] };
+    await cdp.detach();
+    return tree.nodes.filter((n) => n.role?.value === "button" || n.role?.value === "link").map((n) => n.name?.value ?? "");
+  };
+  await page.evaluate((icon: string) => window.mountBar({ items: [
+    { id: "count", label: "Count", icon, badge: 8 },
+    { id: "thousand", label: "Thousand", icon, badge: 1000 },
+    { id: "tenthousand", label: "Tenthousand", icon, badge: 10000 },
+    { id: "dot", label: "Dot", icon, badge: true },
+    { id: "dotlabel", label: "Dotlabel", icon, badge: true, badgeLabel: "New messages" },
+    { id: "link", label: "Link", icon, badge: 5, href: "/x" },
+  ] }, "400px"), itemIcon);
+  await page.waitForTimeout(200);
+  assert.deepEqual(await namesOf(page), ["Count, 8", "Thousand, 1000", "Tenthousand, 999+", "Dot, New notification", "Dotlabel, New messages", "Link, 5"], "the badge's displayed label is in the name, capped as the badge caps it, the dot announcing New notification");
+  const capBox = await page.evaluate(() => {
+    const badge = document.querySelector(".mtrl-navigation-bar__item[data-id='tenthousand'] .mtrl-navigation-bar__badge")!;
+    return { text: badge.textContent, width: badge.getBoundingClientRect().width };
+  });
+  assert.deepEqual([capBox.text, capBox.width <= 35], ["999+", true], `a label too long for the badge reads 999+, within the max character count container (16x34dp): ${JSON.stringify(capBox)}`);
+  const badgeState = () => page.evaluate(() => {
+    const item = document.querySelector(".mtrl-navigation-bar__item[data-id='count']")!;
+    const badge = item.querySelector(".mtrl-navigation-bar__badge");
+    return { gone: badge === null, name: item.getAttribute("aria-label"), text: badge?.textContent ?? null };
+  });
+  await page.evaluate(() => window.bar.setBadge("count", 0));
+  assert.deepEqual(await badgeState(), { gone: true, name: "Count", text: null }, "a zero count clears the badge");
+  await page.evaluate(() => window.bar.setBadge("count", ""));
+  assert.deepEqual(await badgeState(), { gone: true, name: "Count", text: null }, "an empty count clears the badge");
+  await page.evaluate(() => window.bar.setBadge("count", 7));
+  assert.deepEqual(await badgeState(), { gone: false, name: "Count, 7", text: "7" }, "a count after the empty values shows again");
+
+  // The element, through its shadow root
+  const elementPage = await browser.newPage({ viewport: { width: 400, height: 600 } });
+  const elementErrors: string[] = [];
+  elementPage.on("pageerror", (error) => elementErrors.push(error.message));
+  await elementPage.goto(`${server.url.href}element`);
+  await elementPage.waitForFunction(() => (window as unknown as { navigationElementsReady?: boolean }).navigationElementsReady === true);
+  await elementPage.waitForTimeout(80);
+  assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 1000"], "a declared badge names its item through the shadow root; the dot announces New notification; a zero clears");
+  await elementPage.evaluate(() => document.querySelector("m-navigation-bar-item[value='spam']")!.setAttribute("badge", "10000"));
+  await elementPage.waitForTimeout(120);
+  assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 999+"], "an attribute change updates the capped name in place");
+  assert.deepEqual(elementErrors, []);
+  await elementPage.close();
+
   // Hide on scroll, sliding out; focus inside brings it back
   await page.evaluate(() => {
     window.mountBar({ hideOnScroll: true }, "400px");
@@ -248,7 +322,7 @@ try {
   await page.waitForTimeout(100);
   assert.deepEqual(errors, []);
   await page.close();
-  console.log("Passed navigation bar: ShortNavigationBar geometry and colours with full and selective CSS, badges, the container query and forced layouts, the keyboard in both directions, hide on scroll with and without reduced motion, teardown.");
+  console.log("Passed navigation bar: ShortNavigationBar geometry and colours with full and selective CSS, badges that say what they show (name, 999+ cap, empty and zero cleared, New notification dot, shadow root), the container query and forced layouts, the keyboard in both directions, hide on scroll with and without reduced motion, teardown.");
 } finally {
   await browser.close();
   server.stop(true);
