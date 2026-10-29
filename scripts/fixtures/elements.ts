@@ -26,6 +26,9 @@ import createList from "../../dist/components/list/index.js";
 import createCard from "../../dist/components/card/index.js";
 import createCarousel from "../../dist/components/carousel/index.js";
 import createTabs from "../../dist/components/tabs/index.js";
+// The shared feature a component composes with to add a badge, for the badge
+// checks: it is not a factory or an element, and no built-in uses it.
+import { withBadge } from "../../dist/core/compose/features/index.js";
 
 elements.defineAll();
 const factories = {
@@ -38,7 +41,7 @@ const factories = {
   createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createToolbar, createFabMenu,
   createList, createCard, createCarousel, createTabs,
 };
-Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
+Object.assign(window, { mtrl: { ...elements, ...factories, withBadge }, ready: true });
 
 // Button group and chips, the factories their elements wrap.
 import createButtonGroup from "../../dist/components/button-group/index.js";

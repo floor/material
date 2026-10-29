@@ -23,6 +23,7 @@ import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkTabBadge } from "./check-tab-badge-browser";
+import { checkBadge } from "./check-badge-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -4738,6 +4739,8 @@ try {
     });
     check("badge: the success, warning and info colours have their background under baseline");
   }
+
+  await checkBadge(page, check);
 
   // ---------------------------------------------------------------- divider
   await fresh(
