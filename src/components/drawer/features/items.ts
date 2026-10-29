@@ -9,7 +9,7 @@ import {
 
 import { setHTML } from "../../../core/dom/html";
 import { activeElementOf } from "../../../core/dom/focus";
-import { isEmptyBadgeLabel } from "../../badge/config";
+import { isEmptyBadgeLabel } from "../../../core/utils/badge";
 /**
  * Component shape expected by withItems
  */
