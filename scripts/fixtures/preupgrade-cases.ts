@@ -54,6 +54,11 @@ export const cases: PreupgradeCase[] = [
   c("button", "variant=text size=m icon", `<m-button variant="text" size="m" icon="${ICON}">Save</m-button>`),
   c("button", "variant=text size=l icon", `<m-button variant="text" size="l" icon="${ICON}">Save</m-button>`),
   c("button", "variant=text size=xl icon", `<m-button variant="text" size="xl" icon="${ICON}">Save</m-button>`),
+  // A trailing icon reserves the same box on the end side: the placeholder
+  // moves after the label and the icon inset swaps with it.
+  c("button", "icon icon-position=end", `<m-button icon="${ICON}" icon-position="end">Save</m-button>`),
+  c("button", "size=m icon icon-position=end", `<m-button size="m" icon="${ICON}" icon-position="end">Save</m-button>`),
+  c("button", "variant=text icon icon-position=end", `<m-button variant="text" icon="${ICON}" icon-position="end">Save</m-button>`),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
