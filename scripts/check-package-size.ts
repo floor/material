@@ -196,6 +196,9 @@ try {
   // comments from every emitted .d.ts): local 1,096,754 -> 921,839, a
   // -174,915 B cut that transfers to CI within noise, so ~914,635 under
   // CI's packer. Measured + 1%, up to the next 1,000, is 924,000.
+  // The combined tree, prune and prose-free declarations together, local
+  // Node 26.8.1 / npm 11.19.0: 877,120. Measured + 1%, up to the next
+  // 1,000, is 886,000.
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -235,6 +238,8 @@ try {
   // 3.2.7's prose-free declarations: 6,516,507 -> 5,876,906 local, ~5,849,028
   // under CI's packer by the same transferred delta. Measured + 1%, up to
   // the next 1,000, is 5,908,000.
+  // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
+  // the next 1,000, is 5,119,000.
   assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,
