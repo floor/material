@@ -25,6 +25,7 @@ import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
+import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -6842,6 +6843,7 @@ try {
   }
 
   // ---------------------------------------------------------------- card
+  await checkCardActions(page, check);
   await fresh(
     page,
     `<section id="a"><m-card id="c" variant="outlined" headline="Fallback">
