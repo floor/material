@@ -58,12 +58,14 @@
   // A single slotted actions region follows the padded supporting content.
   // The factory row adds 8px above/below it and uses an 8px side inset;
   // transfer the host's last 16px of padding to before that row.
-  > [slot='actions'] {
-    align-self: flex-end;
-    margin-block: 24px -8px;
-    margin-inline: -8px;
+  &:not(:has(> [slot='actions'] ~ [slot='actions'])) {
+    > [slot='actions'] {
+      align-self: flex-end;
+      margin-block: 24px -8px;
+      margin-inline: -8px;
+    }
+    &[actions-align='start'] > [slot='actions'],
+    &[actions-align='space-between'] > [slot='actions'] { align-self: flex-start; }
+    &[actions-align='center'] > [slot='actions'] { align-self: center; }
   }
-  &[actions-align='start'] > [slot='actions'],
-  &[actions-align='space-between'] > [slot='actions'] { align-self: flex-start; }
-  &[actions-align='center'] > [slot='actions'] { align-self: center; }
 }
