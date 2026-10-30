@@ -304,6 +304,16 @@ Declaration children describe a component's items, as native `<select>` and `<op
 
 Attributes are defaults and properties the live state, as on native controls. A `checked` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it.
 
+| Element / factory | Attribute / option | Values |
+| --- | --- | --- |
+| `<m-fab>` / `createFab` | `placement` | `none` (default), `top-start`, `top-end`, `bottom-start`, `bottom-end` |
+| `<m-extended-fab>` / `createExtendedFab` | `placement` | Same as FAB |
+| `<m-fab-menu>` / `createFabMenu` | `placement` | `none` (default), `bottom-start`, `bottom-end` |
+
+Placement uses logical sides: `end` is right in LTR and left in RTL, and follows direction changes. FAB and extended FAB corners are fixed to the viewport with 16px margins; the FAB menu retains its placement within its positioned container. `none` keeps the component in the flow. Changes to the element attribute after upgrade recreate the component with the new placement. The framework adapters expose `placement` with the same name.
+
+For FAB and extended FAB, `position` remains a deprecated physical alias until 4.0. Its `top-right`, `top-left`, `bottom-right` and `bottom-left` values keep the same physical sides in RTL. `placement` wins when both are supplied, including `placement="none"`. To migrate `position="bottom-right"`, use `placement="bottom-end"` for the trailing side in LTR and RTL, or keep `position` temporarily if the physical right side is intentional. See [Migrating](MIGRATING.md).
+
 The page still loads material's base styles and a theme (see [Styles](#styles)); the elements pick up the theme's tokens.
 
 A server-rendered page sends each element as its tag and light DOM, and the element takes its real look once its script defines it. To reserve its box until then, put the pre-upgrade stylesheet in `<head>`, after the base styles and theme:

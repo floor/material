@@ -82,9 +82,10 @@ export const getElementConfig = (config: FabConfig) => {
     componentClasses.push(`${PREFIX}-fab--animate-enter`);
   }
 
-  // Add position class if specified
-  if (config.position) {
-    componentClasses.push(`${PREFIX}-fab--${config.position}`);
+  // An explicit logical placement (including none) wins over the physical alias.
+  const position = config.placement === undefined ? config.position : config.placement === "none" ? undefined : config.placement;
+  if (position) {
+    componentClasses.push(`${PREFIX}-fab--${position}`);
   }
 
   // Add disabled class if specified

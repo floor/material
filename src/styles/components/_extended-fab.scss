@@ -225,6 +225,18 @@ $sizes: (
     }
   }
 
+  // Logical corners are independent of the deprecated physical classes.
+  @each $block in top, bottom {
+    @each $inline in start, end {
+      &--#{$block}-#{$inline} {
+        position: fixed;
+        #{$block}: 16px;
+        inset-inline-#{$inline}: 16px;
+        z-index: v.z-index('dropdown');
+      }
+    }
+  }
+
   // Positioning utilities
   &--top-right {
     position: fixed;

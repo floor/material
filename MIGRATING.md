@@ -4,6 +4,21 @@ This guide covers `mtrl` applications moving to `material` 3, checked against th
 
 Changes below took effect in **3.0.0**, unless another version is stated. Canonical names often existed alongside deprecated names in 0.10.x; material 3 removes the aliases. Search application code, templates, styles, saved theme settings, and generated markup.
 
+## FAB placement in 3.3.0
+
+FAB and extended FAB now accept `placement` in their factory configuration and on `<m-fab>` / `<m-extended-fab>`. Their framework adapters accept the same prop. The FAB menu already uses this name and keeps its existing `none`, `bottom-start` and `bottom-end` values.
+
+| Deprecated physical `position` | Logical `placement` for the same side in LTR | Logical `placement` for the same side in RTL |
+| --- | --- | --- |
+| `top-right` | `top-end` | `top-start` |
+| `top-left` | `top-start` | `top-end` |
+| `bottom-right` | `bottom-end` | `bottom-start` |
+| `bottom-left` | `bottom-start` | `bottom-end` |
+
+Logical sides follow the page's direction; physical sides do not. Use `placement="bottom-end"` for the trailing corner across languages. `placement` takes precedence over `position`, and `placement="none"` suppresses a supplied physical position. Removing the element's `placement` attribute restores `position` if present. Both absent leaves the component in normal flow.
+
+`position`, its physical values and the legacy `setPosition` / `getPosition` methods are deprecated for removal in 4.0. They remain available in 3.x; existing physical placement is preserved. For live logical placement on an element, change its `placement` attribute.
+
 ## 1. Replace retired themes first
 
 | Retired name in 3.0.0 | Replacement |

@@ -63,6 +63,9 @@ export type ExtendedFabPosition =
   | "bottom-right"
   | "bottom-left";
 
+/** Logical viewport corners; start/end follow text direction. */
+export type ExtendedFabPlacement = "none" | "top-start" | "top-end" | "bottom-start" | "bottom-end";
+
 /**
  * Configuration interface for the Extended FAB component
  *
@@ -243,7 +246,11 @@ export interface ExtendedFabConfig {
    * });
    * ```
    */
+  /** @deprecated Use placement. Physical left/right do not mirror in RTL; removal in 4.0. */
   position?: ExtendedFabPosition | string;
+
+  /** Logical corner, fixed with 16px margins; none stays in flow. Wins over position. */
+  placement?: ExtendedFabPlacement;
 
   /**
    * Button type attribute
@@ -647,6 +654,7 @@ export interface ExtendedFabComponent {
    * fab.setPosition('bottom-left');
    * ```
    */
+  /** @deprecated Physical position alias; use the placement option/attribute. Removal in 4.0. */
   setPosition: (position: string) => ExtendedFabComponent;
 
   /**
@@ -659,6 +667,7 @@ export interface ExtendedFabComponent {
    * const position = fab.getPosition(); // Returns 'bottom-right', 'top-left', etc.
    * ```
    */
+  /** @deprecated Reads only the physical position alias. Removal in 4.0. */
   getPosition: () => string | null;
 
   /**

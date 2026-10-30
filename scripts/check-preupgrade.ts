@@ -197,7 +197,7 @@ const snapshot = (p: Page, hosts: string, siblings: string): Promise<Snapshot> =
         getComputedStyle(element).position !== "fixed" &&
         !element.matches(":modal, :popover-open");
       const visual = (host: Element): Box => {
-        const boxes = [box(host), ...Array.from(host.shadowRoot?.children ?? []).filter(inPage).map(box)]
+        const boxes = [host, ...Array.from(host.shadowRoot?.children ?? [])].filter(inPage).map(box)
           .filter((b) => b.w > 0 && b.h > 0)
           .map((b) => {
             const x = Math.max(b.x, 0);
@@ -319,6 +319,12 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     }
     const siblings = (item?.siblings ?? SIBLINGS).join(", ");
     const before = await snapshot(p, hosts, siblings);
+    const anchor = async (selector?: string) => p.locator(hosts).evaluate((host, selector) => {
+      const target = selector ? host.shadowRoot!.querySelector(selector)! : host;
+      const r = target.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: r.height, position: getComputedStyle(target).position };
+    }, selector);
+    const anchorBefore = preupgrade && item?.fixedAnchor ? await anchor() : undefined;
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
@@ -328,6 +334,15 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     await p.waitForTimeout(item?.settleMs ?? 300);
     await settle(p);
     const after = await snapshot(p, hosts, siblings);
+    if (anchorBefore && item?.fixedAnchor) {
+      const anchorAfter = await anchor(item.fixedAnchor);
+      assert.equal(anchorBefore.position, "fixed", `${item.variant}: pre-upgrade corner is fixed`);
+      assert.equal(anchorAfter.position, "fixed", `${item.variant}: upgraded corner is fixed`);
+      for (const key of ["x", "y", "width", "height"] as const) {
+        assert(Math.abs(anchorBefore[key] - anchorAfter[key]) < MOVE_LIMIT,
+          `${item.variant}: fixed ${key} moved from ${anchorBefore[key]} to ${anchorAfter[key]}`);
+      }
+    }
     assert.deepEqual(errors, [], `${path}: page errors`);
     return [before, after];
   } finally {
