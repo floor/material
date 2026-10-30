@@ -5,9 +5,10 @@
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
- * A toggle button (for now from the button's global defaults: the element has
- * no toggle attribute) dispatches `change` with `{ selected, value }` from the
- * host on each click.
+ * With `toggle`, the `selected` attribute is the default state and the
+ * `selected` property the live one: the attribute moves the state until the
+ * user or script changes it. A click dispatches `change` with
+ * `{ selected, value }` from the host, as `<m-icon-button>` does.
  *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
@@ -38,17 +39,28 @@ const buttonSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
+    toggle: { type: "boolean", config: "toggle" },
+    selected: { type: "boolean", config: "selected", update: (c, v) => void c.setSelected(Boolean(v)) },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
   },
+  properties: {
+    selected: {
+      get: (c) => c.isSelected(),
+      set: (c, v) => void c.setSelected(Boolean(v)),
+      config: "selected",
+    },
+  },
+  methods: ["setSelected"] as const,
+  model: "selected" as const,
   slot: {
     attribute: "label" as const,
     config: "text",
   },
   events: {
-    // A toggle button's `change`, with the button's value. The element
-    // has no toggle attribute yet, so it fires for a toggle from the defaults.
+    // A toggle button's `change`, with the button's value, from the
+    // `toggle` attribute or the button's global defaults.
     change: {
       detail: (payload) => {
         const { selected, value } = payload as ButtonChangePayload;
