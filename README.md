@@ -304,6 +304,10 @@ Declaration children describe a component's items, as native `<select>` and `<op
 
 Attributes are defaults and properties the live state, as on native controls. A `checked` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it.
 
+| Element | Attribute | Values |
+| --- | --- | --- |
+| `<m-button>` | `icon-position` | `start` (default), `end` — where the `icon` attribute's icon sits |
+
 The page still loads material's base styles and a theme (see [Styles](#styles)); the elements pick up the theme's tokens.
 
 A server-rendered page sends each element as its tag and light DOM, and the element takes its real look once its script defines it. To reserve its box until then, put the pre-upgrade stylesheet in `<head>`, after the base styles and theme:
