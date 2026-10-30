@@ -129,6 +129,12 @@ Badges that say what they show.
   are never repeated, and each is answered before merge. `CONTRIBUTING.md` links
   to it from the pull request process. Docs only.
 
+- **The release costs 268 bytes gzipped in the all-js row (127,486 to 127,754)
+  and 83 in the full stylesheet (63,650 to 63,733); the packed tarball is
+  1,089,550 bytes compressed, 6,488,629 unpacked, against 1,086,173 and
+  6,471,097 in 3.2.5.** No ceiling moved, and all seven README size rows stand
+  as measured.
+
 ## [3.2.5] - 2026-10-29
 
 Menus and tooltips match the spec.
