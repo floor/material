@@ -2,6 +2,7 @@
 import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules, buildSSR } from "./build-modules";
 import { buildStyles } from "./build-styles";
+import { pruneDeclarations } from "./prune-declarations";
 import { emitSvelte } from "./svelte-package";
 
 const outdir = "./dist";
@@ -32,11 +33,17 @@ try {
     };
     // The published manifest: no development-only fields (scripts, tool settings).
     const { scripts, devDependencies, files, eslintConfig, typedocOptions, ...distribution } = pkg;
-    await writeFile(`${staging}/package.json`, JSON.stringify({
+    const manifest = {
       ...distribution,
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),
       exports: relocate(pkg.exports),
-    }, null, 2) + "\n");
+    };
+    await writeFile(`${staging}/package.json`, JSON.stringify(manifest, null, 2) + "\n");
+
+    // The compiler emits a declaration for every module, including the ones no
+    // `exports` entry can name; ship only those a consumer import can reach.
+    const pruned = await pruneDeclarations(staging, manifest.exports);
+    console.log(`Pruned ${pruned.removed.length} unreachable declarations (${pruned.bytes} bytes)`);
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);

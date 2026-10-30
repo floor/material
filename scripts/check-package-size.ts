@@ -189,6 +189,9 @@ try {
   // 22.23.3 / npm 10.9.9, against 1,078,000; main's sheet at that head packs
   // 1,076,913. The rule for explicit ceilings (measured plus 1%, up to the
   // next 1,000, per scripts/size.ts) is 1,090,000.
+  // The build's declaration prune, dropping the 177 .d.ts no exports target or
+  // shipped declaration reaches: 1,023,153 at 32b0eb71, Node 22.23.3 / npm
+  // 10.9.9. Measured + 1%, up to 1,000, is 1,034,000.
   // 3.2.7 ships declarations without their prose (build-modules.ts strips
   // comments from every emitted .d.ts): local 1,096,754 -> 921,839, a
   // -174,915 B cut that transfers to CI within noise, so ~914,635 under
@@ -227,6 +230,8 @@ try {
   // so the ceiling stays.
   // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
   // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
+  // The same declaration prune: 5,583,235 at 32b0eb71, Node 22.23.3 / npm 10.9.9.
+  // Measured + 1%, up to 1,000, is 5,640,000.
   // 3.2.7's prose-free declarations: 6,516,507 -> 5,876,906 local, ~5,849,028
   // under CI's packer by the same transferred delta. Measured + 1%, up to
   // the next 1,000, is 5,908,000.
