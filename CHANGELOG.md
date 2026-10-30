@@ -56,13 +56,14 @@ Badges that say what they show.
   label of its own announced "New activity", and a zero count kept a large badge
   reading "0". The shared `core/navigation/destinations.ts` now shapes the label
   as the badge does — four characters, a longer count reading "999+" — and feeds
-  one text to both the drawn badge and the destination's name; an empty or zero
-  count clears the badge, a dot without its own `badgeLabel` announces "New
-  notification", and a count that fits (1000) shows as it is. `false`,
-  `undefined` and a removed attribute still clear it, and `null` now clears it
-  too instead of drawing the text "null". Measured in Chromium on the navigation
-  bar and the rail, factory and `<m-…>` element through the shadow root, and the
-  rail collapsed and expanded.
+  one text to both the drawn badge and the destination's name; a zero count
+  clears the badge, a dot without its own `badgeLabel` announces "New
+  notification", and a count that fits (1000) shows as it is. The elements read
+  a present-but-empty `badge=""` attribute as that dot, while the factory's
+  empty or zero badge clears; `false`, `undefined` and a removed attribute still
+  clear it, and `null` now clears it too instead of drawing the text "null".
+  Measured in Chromium on the navigation bar and the rail, factory and `<m-…>`
+  element through the shadow root, and the rail collapsed and expanded.
 
 - **The collapsed navigation rail places its badges at the spec's distances
   (#151).**
@@ -79,11 +80,11 @@ Badges that say what they show.
 - **The drawer clears an item's badge when its count is empty or zero (#148).**
   `setBadge("0")`, `badge: "0"` in the factory and `<m-drawer-item badge="0">`
   all drew a "0" count; `""` and `"0"` now leave no badge, and a real count after
-  them shows again. The item decides with the badge's own predicate in both the
-  render and `setBadge`, so the drawer and the badge cannot drift, and the
-  predicate lives in a core module: the drawer carries no badge code or CSS. The
-  drawer's badge is its spec's own "Badge label text", plain trailing text rather
-  than the badge component. Measured in Chromium on the factory and through the
+  them shows again. The item checks for a badge with a local rule in both the
+  render and `setBadge` — `!!badge && badge !== "0"`, worded after the
+  standalone badge's empty-or-zero test — kept in the item because the drawer's
+  badge is its spec's own "Badge label text", plain trailing text rather than
+  the badge component. Measured in Chromium on the factory and through the
   element's `badge` attribute, with the count announced after the destination on
   both mounts and the label text trailing inside the row at label-large size.
 
@@ -103,9 +104,10 @@ Badges that say what they show.
   nothing or is destroyed, and keeps an existing description; a dot describes
   nothing. And because a standalone badge takes its place, the undefined host
   reserves it before upgrade: the large badge's 16dp box around its label,
-  16x34dp at most, and the dot's 6dp, in the badge's colours, with an empty or
-  "0" label 0x0 before and after. The badge stylesheet is shared with tabs, so a
-  tab's badge moves with it. Measured in Chromium on the factory, `<m-badge>` and
+  16x34dp at most, and the dot's 6dp, in the badge's colours; a large badge
+  with an empty or "0" label is 0x0 before and after, while the dot keeps its
+  6x6dp box with or without a label. The badge stylesheet is shared with tabs, so
+  a tab's badge moves with it. Measured in Chromium on the factory, `<m-badge>` and
   a `withBadge` item, and in the pre-upgrade check's badge rows.
 
 ### Internal
