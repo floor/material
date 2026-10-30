@@ -17,6 +17,126 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.6] - 2026-10-30
+
+Badges that say what they show.
+
+### Fixes
+
+- **A badged tab says its badge in its accessible name, after the label
+  (#145).**
+  A tab's badge is a live region, and Chromium leaves live-region text out of an
+  ancestor's computed accessible name, so a tab badged `8` was announced as
+  "Trips" alone — at creation, after `setBadge`, through `<m-tab badge="8">`, and
+  for the overflow display. The tab now composes its own name: the label, then
+  the badge's displayed content — "Trips, 8" — dropped when the badge is hidden
+  or empty and recomposed by `setText`, `setBadge`, `showBadge` and `hideBadge`.
+  A count past `max` is announced as displayed ("999+"), an `ariaLabel` tab takes
+  that label's place, and a tab without a badge keeps its content-derived name.
+  Measured in Chromium on the factory, after `setBadge`, on an icon-only
+  `ariaLabel` tab, with a dot (no content, nothing added), after `setText` on a
+  badged tab, in RTL, and through `<m-tab>`'s shadow root.
+
+- **`setBadge("")` and `setBadge(0)` clear a tab's badge instead of leaving an
+  empty capsule (#146).**
+  The update path hid the empty label and then showed the capsule
+  unconditionally, leaving a displayed 16×16px badge with no text, and
+  `showBadge()` accepted the same nothing — the `<m-tab badge="">` path reaches
+  it through the element's in-place update when the declared value equals the
+  current cleared one. A real value after them shows again, the small dot is
+  unaffected, and `data-has-badge` now tells what shows. Measured in Chromium on
+  the factory and through `<m-tabs>`' `badge` attribute, including the same
+  empty value declared twice.
+
+- **A badged navigation bar or rail destination says the badge in its name,
+  capped as the badge caps it (#150).**
+  The badge drew `String(badge)` raw and the destination announced the same raw
+  string: a count too long for the four-character label (10000) was drawn 41.8px
+  wide — past the spec's 16x34dp maximum — and announced in full, a dot with no
+  label of its own announced "New activity", and a zero count kept a large badge
+  reading "0". The shared `core/navigation/destinations.ts` now shapes the label
+  as the badge does — four characters, a longer count reading "999+" — and feeds
+  one text to both the drawn badge and the destination's name; a zero count
+  clears the badge, a dot without its own `badgeLabel` announces "New
+  notification", and a count that fits (1000) shows as it is. The elements read
+  a present-but-empty `badge=""` attribute as that dot, while the factory's
+  empty or zero badge clears; `false`, `undefined` and a removed attribute still
+  clear it, and `null` now clears it too instead of drawing the text "null".
+  Measured in Chromium on the navigation bar and the rail, factory and `<m-…>`
+  element through the shadow root, and the rail collapsed and expanded.
+
+- **The collapsed navigation rail places its badges at the spec's distances
+  (#151).**
+  The large badge sat 6x8dp from the icon's top trailing corner and the dot 2x2dp
+  inside that corner, where the badges spec states 14x12dp (HxW) for the large
+  badge and 6x6dp for the small one; the navigation bar already conformed. The
+  collapsed insets move to 48/8 and 54/10, so the large badge sits 12dp inside
+  the corner with its bottom 14dp under the icon's top, and the dot flush at
+  6x6dp; the expanded rail keeps its own pill-end placement. Measured in Chromium
+  on the rendered boxes of the large and dot items in the collapsed rail — 12dp
+  horizontally and 14dp vertically for the large badge, 6x6dp for the dot, within
+  0.5px.
+
+- **The drawer clears an item's badge when its count is empty or zero (#148).**
+  `setBadge("0")`, `badge: "0"` in the factory and `<m-drawer-item badge="0">`
+  all drew a "0" count; `""` and `"0"` now leave no badge, and a real count after
+  them shows again. The item checks for a badge with a local rule in both the
+  render and `setBadge` — `!!badge && badge !== "0"`, worded after the
+  standalone badge's empty-or-zero test — kept in the item because the drawer's
+  badge is its spec's own "Badge label text", plain trailing text rather than
+  the badge component. Measured in Chromium on the factory and through the
+  element's `badge` attribute, with the count announced after the destination on
+  both mounts and the label text trailing inside the row at label-large size.
+
+- **The standalone badge sits at the spec's distances, takes its place in the
+  flow, and describes its item (#149).**
+  Four defects measured against the badge pages. The stylesheet offset a badge
+  by 3x3dp (dot) and 8x8dp (large) from the target's top trailing corner, where
+  the spec states 6x6dp and 14x12dp; the dot now sits flush in the corner and the
+  large badge reaches 14dp vertically and 12dp horizontally from it, with the
+  right-to-left block mirroring each variant's horizontal side. `<m-badge>`
+  documents itself as an inline element, but every badge was
+  `position: absolute`: a standalone badge measured 0x0 and took no place, and
+  the base class now lays out in flow, with `--positioned` reserved for an
+  attached badge. `withBadge` attached no relation the accessibility tree could follow —
+  the item's description measured null — and the item now describes the badge
+  through `aria-describedby` while the badge shows, drops it when the badge shows
+  nothing or is destroyed, and keeps an existing description; a dot describes
+  nothing. And because a standalone badge takes its place, the undefined host
+  reserves it before upgrade: the large badge's 16dp box around its label,
+  16x34dp at most, and the dot's 6dp, in the badge's colours; a large badge
+  with an empty or "0" label is 0x0 before and after, while the dot keeps its
+  6x6dp box with or without a label. The badge stylesheet is shared with tabs, so
+  a tab's badge moves with it. Measured in Chromium on the factory, `<m-badge>` and
+  a `withBadge` item, and in the pre-upgrade check's badge rows.
+
+### Internal
+
+- **Pull requests get a template with required Testing, Risk and How to revert
+  sections (#144).**
+  Testing asks for the command run and the last line it printed, so a reader can
+  tell a passing check from a claimed one; Risk asks what could break and for
+  whom — the public API, the rendered DOM, the packed CSS or a theme; How to
+  revert asks for the exact steps and what to re-run after. Docs only.
+
+- **`REVIEW.md` records the failures the checks cannot see, and the review rules
+  and loop (#143).**
+  Four failures, each with a real example and its evidence in the repository: a
+  token that does not reach its consumer, a size row that lies, an accessible
+  name that is missing or wrong, and a selector or file-shape change that breaks
+  a consumer of the built CSS. Every finding cites a `file:line` and flags its
+  class rather than one instance, nits are capped at three, pre-existing
+  defects are labelled; the loop runs for at most three rounds and then
+  questions the approach, from round two only the new diff is reviewed, findings
+  are never repeated, and each is answered before merge. `CONTRIBUTING.md` links
+  to it from the pull request process. Docs only.
+
+- **The release costs 268 bytes gzipped in the all-js row (127,486 to 127,754)
+  and 83 in the full stylesheet (63,650 to 63,733); the packed tarball is
+  1,089,550 bytes compressed, 6,488,629 unpacked, against 1,086,173 and
+  6,471,097 in 3.2.5.** No ceiling moved, and all seven README size rows stand
+  as measured.
+
 ## [3.2.5] - 2026-10-29
 
 Menus and tooltips match the spec.
@@ -4318,7 +4438,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.5...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.6...HEAD
+[3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5
 [3.2.4]: https://github.com/floor/material/compare/v3.2.3...v3.2.4
 [3.2.3]: https://github.com/floor/material/compare/v3.2.2...v3.2.3
