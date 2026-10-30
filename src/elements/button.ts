@@ -9,6 +9,9 @@
  * no toggle attribute) dispatches `change` with `{ selected, value }` from the
  * host on each click.
  *
+ * The icon markup (`icon`) leads by default; `icon-position="end"` places it
+ * after the label, as the factory's `iconPosition: "end"` does.
+ *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
  * @module elements
@@ -38,6 +41,7 @@ const buttonSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
+    "icon-position": { type: "string", config: "iconPosition" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
