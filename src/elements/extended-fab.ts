@@ -8,6 +8,13 @@
  * changing one recreates it. `type="submit"` and `type="reset"` act on the
  * host's form.
  *
+ * `placement` takes `none` (default), `top-start`, `top-end`, `bottom-start`
+ * or `bottom-end`. Corners are fixed to the viewport with 16px margins and
+ * follow text direction, including direction changes after upgrade. Changing
+ * the attribute recreates the component. `position` is deprecated until 4.0:
+ * its left/right values stay physical in RTL. `placement` wins, including
+ * `none`; removing it restores `position` when present.
+ *
  * Parts: `extended-fab`, `icon`, `label` (also `text`), `ripple`.
  *
  * @module elements
@@ -17,6 +24,7 @@ import createExtendedFab from "../components/extended-fab";
 import type { ExtendedFabComponent, ExtendedFabConfig } from "../components/extended-fab/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
+import { FLOATING_HOST_STYLES } from "./floating-placement";
 
 const create = (config: ExtendedFabConfig): ExtendedFabComponent =>
   createExtendedFab({ ...config, type: "button" });
@@ -25,7 +33,7 @@ const extendedFabSpec = {
   name: "extended-fab",
   create: (config) => create(config as ExtendedFabConfig),
   styles: ["extended-fab"],
-  hostStyles: ":host{vertical-align:middle}",
+  hostStyles: ":host{vertical-align:middle}" + FLOATING_HOST_STYLES,
   attributes: {
     variant: { type: "string", config: "variant" },
     size: { type: "string", config: "size" },
@@ -34,7 +42,9 @@ const extendedFabSpec = {
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon", update: (c, v) => void c.setIcon(String(v ?? "")) },
     "icon-position": { type: "string", config: "iconPosition" },
+    /** @deprecated Physical alias, does not mirror in RTL; removal in 4.0. */
     position: { type: "string", config: "position" },
+    placement: { type: "string", config: "placement" },
     "collapse-on-scroll": { type: "boolean", config: "collapseOnScroll" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,

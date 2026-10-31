@@ -5,6 +5,7 @@
 @use '../abstract/functions' as f;
 @use '../abstract/theme' as t;
 @use 'config' as c;
+@use '../abstract/floating-placement' as placement;
 
 // As the sizes in components/_fab.scss: container and shape.
 $sizes: ('default': (56px, 'large'), 'medium': (80px, 'large-increased'), 'large': (96px, 'extra-large'));
@@ -17,6 +18,7 @@ $sizes: ('default': (56px, 'large'), 'medium': (80px, 'large-increased'), 'large
 }
 
 @include c.host('fab') {
+  @include placement.corners;
   display: inline-block;
   vertical-align: middle;
   box-sizing: border-box;

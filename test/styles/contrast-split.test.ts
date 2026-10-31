@@ -183,9 +183,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The badge sits at the spec's corner distance (6x6dp dot, 14x12dp large,
     // mirrored in RTL) and a standalone badge stays in flow
     // (styles/components/_badge.scss).
+    // FAB and extended FAB add four logical viewport corners each.
+    // Their existing physical corners and all colour/type rules stay pinned.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("2a37f87075a5ff101d60323e7da59da55ec16874f5935a4ef322419c4ab7f67e");
-    expect(css.length).toBe(540692);
+      .toBe("4ed3233ddb0a9b6aa9bb9150b7365ebd8bf318a1172bdc2f1e41f23291ca224b");
+    expect(css.length).toBe(541384);
   });
 
   test("today's sheets still resolve to the fixture", () => {
