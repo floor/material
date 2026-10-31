@@ -306,6 +306,8 @@ Attributes are defaults and properties the live state, as on native controls. A 
 
 | Element | Attribute | Values |
 | --- | --- | --- |
+| `<m-button>` | `toggle` | boolean: a toggle button, dispatching `change` with `{ selected, value }` |
+| `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
 
 `actions-align` aligns the children in the card's `actions` slot, using the factory's `actionsConfig.align` values. Start and end follow the card's text direction. Changing or removing the attribute after upgrade updates the row; removal restores `end`. The framework adapters expose it as `actionsAlign`. For pre-upgrade reservation, put multiple controls in one `slot="actions"` container; independent action-slot siblings require the component to upgrade before they form a row.

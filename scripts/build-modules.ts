@@ -21,6 +21,29 @@ export function printRuntimeModule(filename: string, text: string): string {
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
 }
 
+/**
+ * Drop declaration prose: signatures, not documentation, are the shipped
+ * contract. The published API docs build from src (typedoc reads
+ * `./src/index.ts`), and editors still resolve the same types.
+ */
+export function printDeclarationModule(filename: string, text: string): string {
+  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  const comments = new Map<number, number>();
+  function visit(node: ts.Node): void {
+    for (const position of [node.pos, node.end]) {
+      for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
+        comments.set(range.pos, range.end);
+      }
+    }
+    node.getChildren(file).forEach(visit);
+  }
+  visit(file);
+  for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
+    text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
+  }
+  return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
+}
+
 /** Emit the original module graph so consumers can tree-shake and code-split it. */
 export function buildModules(outdir: string) {
   const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
@@ -33,7 +56,9 @@ export function buildModules(outdir: string) {
     declaration: true,
     sourceMap: false,
     declarationMap: false,
-    // Preserve declaration documentation; JS comments are removed below.
+    // The write pass below strips prose per file kind (runtime JS and
+    // declarations alike); the emit keeps comments so PURE annotations
+    // and import specifiers reach it intact.
     removeComments: false,
   });
   const program = ts.createProgram(parsed.fileNames, parsed.options);
@@ -51,12 +76,12 @@ export function buildModules(outdir: string) {
     // Its public declaration has no imports; keep the internal helpers private.
     if (relative(resolve(outdir), filename).replace(/\\/g, "/").startsWith("ssr/")) {
       if (filename.endsWith("/ssr/render-element.d.ts")) {
-        ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), text);
+        ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), printDeclarationModule(filename, text));
       }
       if (filename.endsWith("/ssr/react.js") || filename.endsWith("/ssr/svelte.js") || filename.endsWith("/ssr/vue.js") || filename.endsWith("/ssr/solid.js")) {
         ts.sys.writeFile(filename, text.replace('"./index"', '"./index.js"'));
       }
-      if (filename.endsWith("/ssr/react.d.ts") || filename.endsWith("/ssr/svelte.d.ts") || filename.endsWith("/ssr/vue.d.ts") || filename.endsWith("/ssr/solid.d.ts")) ts.sys.writeFile(filename, text);
+      if (filename.endsWith("/ssr/react.d.ts") || filename.endsWith("/ssr/svelte.d.ts") || filename.endsWith("/ssr/vue.d.ts") || filename.endsWith("/ssr/solid.d.ts")) ts.sys.writeFile(filename, printDeclarationModule(filename, text));
       return;
     }
     // Node and browsers require explicit extensions and directory index paths.
@@ -93,6 +118,11 @@ export function buildModules(outdir: string) {
         : ts.createPrinter({ removeComments: true }).printFile(
           ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
         );
+    }
+    if (filename.endsWith(".d.ts")) {
+      // Shipped declarations carry signatures, not prose: hovers and the
+      // published docs read src, which the tarball does not carry.
+      text = printDeclarationModule(filename, text);
     }
     ts.sys.writeFile(filename, text);
   });

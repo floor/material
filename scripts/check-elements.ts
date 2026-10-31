@@ -25,6 +25,7 @@ import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
+import { checkButtonToggle } from "./check-button-toggle";
 import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -5447,6 +5448,8 @@ try {
   await checkTabBadge(page, check);
 
   await checkDrawerBadge(page, check);
+
+  await checkButtonToggle(page, check);
 
   // The rows the roving rule must get right. Read in the same turn as
   // connect, before the browser's own slotchange microtask.
