@@ -66,23 +66,43 @@ $swap: 48ms;
   }
 
   &--bottom-end {
-    inset-inline-end: var(--#{$component}-margin);
+    right: var(--#{$component}-margin);
+
+    @include m.rtl(true) {
+      left: var(--#{$component}-margin);
+      right: auto;
+    }
   }
 
   &--bottom-start {
-    inset-inline-start: var(--#{$component}-margin);
+    left: var(--#{$component}-margin);
+
+    @include m.rtl(true) {
+      right: var(--#{$component}-margin);
+      left: auto;
+    }
 
     // Into the page from this edge. The shared rules stay on the inline end,
     // which is where bottom-end and an unplaced menu already open.
     .#{$fab}.#{$component}__fab {
-      inset-inline-start: 0;
-      inset-inline-end: auto;
+      left: 0;
+      right: auto;
+
+      @include m.rtl {
+        right: 0;
+        left: auto;
+      }
     }
 
     .#{$component}__list {
-      inset-inline-start: 0;
-      inset-inline-end: auto;
+      left: 0;
+      right: auto;
       align-items: flex-start;
+
+      @include m.rtl {
+        right: 0;
+        left: auto;
+      }
     }
 
     .#{$component}__item {
@@ -95,7 +115,7 @@ $swap: 48ms;
   @at-root .#{$fab}.#{$component}__fab {
     position: absolute;
     inset-block-start: 0;
-    inset-inline-end: 0;
+    right: 0;
     display: grid;
     place-items: center;
     transition:
@@ -105,6 +125,13 @@ $swap: 48ms;
       background-color $spatial-colour,
       color $spatial-colour,
       box-shadow $spatial;
+
+    // The corner follows the inline direction; the rule above is its
+    // left-to-right form.
+    @include m.rtl {
+      left: 0;
+      right: auto;
+    }
 
     > * {
       grid-area: 1 / 1;
@@ -155,7 +182,7 @@ $swap: 48ms;
   &__list {
     position: absolute;
     bottom: calc(100% + 8px);
-    inset-inline-end: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -164,6 +191,12 @@ $swap: 48ms;
     visibility: hidden;
     // Hidden once the last item has left
     transition: visibility 0s linear var(--#{$component}-exit, 0ms);
+
+    // The end edge follows the inline direction.
+    @include m.rtl {
+      left: 0;
+      right: auto;
+    }
   }
 
   &--menu .#{$component}__list {
