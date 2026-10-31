@@ -232,8 +232,9 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
     `import { DEFAULT_PREFIX, preupgradeSheet } from "./styles.js";\nconst css = ${JSON.stringify(all)};\n` +
     `/** The pre-upgrade stylesheet (elements/preupgrade.css) for a tag prefix, default "m". */\n` +
     `export const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(css, [prefix]);\n`);
+  // Shipped declarations carry signatures, not prose; the one handwritten
+  // declaration follows the same rule as the compiler-emitted ones.
   await writeFile(`${outdir}/elements/preupgrade.d.ts`,
-    `/** The pre-upgrade stylesheet (elements/preupgrade.css) for a tag prefix, default "m". */\n` +
     `export declare const preupgradeStyles: (prefix?: string) => string;\n`);
 }
 
