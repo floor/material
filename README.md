@@ -304,15 +304,31 @@ Declaration children describe a component's items, as native `<select>` and `<op
 
 Attributes are defaults and properties the live state, as on native controls. A `checked` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it.
 
+| Element | Attribute | Values |
+| --- | --- | --- |
+| `<m-button>` | `toggle` | boolean: a toggle button, dispatching `change` with `{ selected, value }` |
+| `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
+| `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
+
+`actions-align` aligns the card's slotted actions, using the factory's `actionsConfig.align` values. Start and end follow text direction. Changes after upgrade update the row; removing the attribute restores `end`. Framework adapters expose `actionsAlign`.
+
+For pre-upgrade reservation, group multiple controls in one `slot="actions"` container. Separate actions-slot siblings form a row after upgrade.
+
 | Element / factory | Attribute / option | Values |
 | --- | --- | --- |
 | `<m-fab>` / `createFab` | `placement` | `none` (default), `top-start`, `top-end`, `bottom-start`, `bottom-end` |
 | `<m-extended-fab>` / `createExtendedFab` | `placement` | Same as FAB |
 | `<m-fab-menu>` / `createFabMenu` | `placement` | `none` (default), `bottom-start`, `bottom-end` |
 
-Placement uses logical sides: `end` is right in LTR and left in RTL, and follows direction changes. FAB and extended FAB corners are fixed to the viewport with 16px margins; the FAB menu retains its placement within its positioned container. `none` keeps the component in the flow. Changes to the element attribute after upgrade recreate the component with the new placement. The framework adapters expose `placement` with the same name.
+Placement uses logical sides: `end` is right in LTR and left in RTL, and follows direction changes. FAB and extended FAB corners are fixed to the viewport with 16px margins; the FAB menu retains its placement within its positioned container.
 
-For FAB and extended FAB, `position` remains a deprecated physical alias until 4.0. Its `top-right`, `top-left`, `bottom-right` and `bottom-left` values keep the same physical sides in RTL. `placement` wins when both are supplied, including `placement="none"`. To migrate `position="bottom-right"`, use `placement="bottom-end"` for the trailing side in LTR and RTL, or keep `position` temporarily if the physical right side is intentional. See [Migrating](MIGRATING.md).
+`none` keeps the component in the flow. Changes to the element attribute after upgrade recreate the component with the new placement. The framework adapters expose `placement` with the same name.
+
+For FAB and extended FAB, `position` remains a deprecated physical alias until 4.0. Its `top-right` and `top-left` values keep the same physical sides in RTL. So do `bottom-right` and `bottom-left`.
+
+`placement` wins when both are supplied, including `placement="none"`.
+
+To migrate `position="bottom-right"`, use `placement="bottom-end"` for the trailing side in LTR and RTL. Keep the physical alias temporarily if the right side is intentional. See [Migrating](MIGRATING.md).
 
 The page still loads material's base styles and a theme (see [Styles](#styles)); the elements pick up the theme's tokens.
 

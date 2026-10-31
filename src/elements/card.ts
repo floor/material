@@ -9,6 +9,10 @@
  *   fallback text);
  * - the default slot: the supporting content, padded;
  * - `actions`: the row of actions at the bottom.
+ *   `actions-align` takes `start`, `center`, `end` (default), or
+ *   `space-between`, as the factory's `actionsConfig.align`. Start/end follow
+ *   text direction; changes after upgrade rebuild the row without moving
+ *   the light-DOM actions. The framework prop is `actionsAlign`.
  *
  * A region is built only when it has content, and the card is recreated when
  * a region appears or goes away; content changes inside a region are the
@@ -22,7 +26,7 @@
 
 import createCard from "../components/card";
 import { createCardActions, createCardContent, createCardHeader, createCardMedia } from "../components/card/content";
-import type { CardComponent, CardConfig } from "../components/card/types";
+import type { CardActionsConfig, CardComponent, CardConfig } from "../components/card/types";
 import { PREFIX } from "../core/config";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
@@ -34,6 +38,7 @@ interface CardElementConfig extends CardConfig {
   headline?: string;
   subhead?: string;
   ariaLabel?: string;
+  actionsAlign?: CardActionsConfig["align"];
 }
 
 /** The regions a card was built with, to tell when a child change needs another. */
@@ -85,7 +90,7 @@ const header = (config: CardElementConfig, regions: Region[]): HTMLElement => {
 };
 
 const create = (config: CardElementConfig): CardComponent => {
-  const { regions = [], headline, subhead, ariaLabel, ...rest } = config;
+  const { regions = [], headline, subhead, ariaLabel, actionsAlign = "end", ...rest } = config;
   const card = createCard({ ...rest, aria: ariaLabel ? { label: ariaLabel } : undefined });
   const has = (region: Region): boolean => regions.includes(region);
   if (has("media")) card.addMedia(createCardMedia({ element: slot("media") }));
@@ -95,7 +100,7 @@ const create = (config: CardElementConfig): CardComponent => {
   if (has("content")) card.addContent(createCardContent({ children: [slot()] }));
   if (has("actions")) {
     // Given as `actions`, the slot would be named "Action 1" for having no text.
-    const actions = createCardActions({});
+    const actions = createCardActions({ align: actionsAlign });
     actions.append(slot("actions"));
     card.setActions(actions);
   }
@@ -152,6 +157,7 @@ const cardSpec = {
     },
     headline: { type: "string", config: "headline" },
     subhead: { type: "string", config: "subhead" },
+    "actions-align": { type: "string", config: "actionsAlign" },
     disabled: { type: "boolean", update: (c, v) => setDisabled(c, !!v) },
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => setAriaLabel(c, v === null ? null : String(v)) },
   },

@@ -523,6 +523,15 @@ for (const dir of ["ltr", "rtl"]) {
   }
 }
 
+// Action-side changes must not move the card or the content following it.
+for (const dir of ["ltr", "rtl"]) for (const align of ["start", "center", "end", "space-between"]) {
+  cases.push({
+    element: "card", variant: `actions-align=${align}; ${dir}`,
+    html: `<m-card dir="${dir}" headline="Title" actions-align="${align}">Supporting text.<button slot="actions" style="width:60px;height:24px">Save</button></m-card>`,
+    strictBox: true,
+  });
+}
+
 // A logical corner is reserved before the element is defined, in both directions.
 for (const element of ["fab", "extended-fab"]) for (const dir of ["ltr", "rtl"]) for (const placement of ["none", "top-start", "top-end", "bottom-start", "bottom-end"]) {
   cases.push({
