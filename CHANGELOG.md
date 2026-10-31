@@ -17,6 +17,40 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.2.7] - 2026-10-31
+
+A lighter package.
+
+### Changed
+
+- **The package ships only the declarations an import can reach (#155).**
+  The build emitted a declaration for every module under `src/`, but the
+  package's `exports` map is the only way a consumer can import one: 177 of the
+  739 declarations belonged to modules no `exports` target names and no shipped
+  declaration imports, 905,394 bytes no supported import could see. The build
+  now walks from the `exports` targets, following import and export
+  declarations, `import()` types and dynamic `import()` calls, and prunes what
+  the walk does not reach from the staging tree before the nested manifest is
+  written. It fails the build rather than guesses when a target names no file or
+  a shipped declaration imports something that does not ship; sources, runtime
+  modules, stylesheets and every `exports` target are untouched. Measured in
+  CI's `package` job: 1,089,550 bytes compressed and 6,488,629 unpacked before,
+  1,023,153 and 5,583,235 after, 177 files fewer.
+
+- **Shipped declarations carry their type signatures without the JSDoc prose
+  (#156).**
+  Every emitted declaration, the SSR ones included, is now printed
+  signatures-only, the way the runtime pass has always reprinted the JavaScript,
+  and the one handwritten declaration takes the same rule; all 562 retained
+  declarations are prose-free. What a consumer keeps is unchanged: the same
+  `dist` paths, all 104 export keys and 213 target branches resolving, identical
+  TypeScript AST signatures and reference-directive metadata on every
+  declaration, and all 934 non-declaration files byte-for-byte the same. What a
+  consumer loses is editor hover prose on the installed types: the published API
+  docs still build from `src`, and no `@deprecated` marker in `src` loses a
+  tooling signal. Measured on top of #155: 1,023,153 bytes compressed and
+  5,583,235 unpacked before, 878,746 and 5,067,838 after.
+
 ## [3.2.6] - 2026-10-30
 
 Badges that say what they show.
@@ -4438,7 +4472,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.6...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.2.7...HEAD
+[3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5
 [3.2.4]: https://github.com/floor/material/compare/v3.2.3...v3.2.4
