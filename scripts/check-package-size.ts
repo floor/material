@@ -199,6 +199,7 @@ try {
   // The combined tree, prune and prose-free declarations together, local
   // Node 26.8.1 / npm 11.19.0: 877,120. Measured + 1%, up to the next
   // 1,000, is 886,000.
+  console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -589,7 +590,6 @@ try {
   assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
-  console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   await mkdir("analysis", { recursive: true });
   await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
