@@ -191,9 +191,13 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // The navigation bar and rail place their start edges on the physical
+    // left and mirror them with the direction arms, not the insets a
+    // consumer's bundler lowers (styles/components/_navigation-bar.scss,
+    // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c52ffab42ebe68ccb98601f67933182e1f2970ef6c85fe24b77b208305ebd504");
-    expect(css.length).toBe(544277);
+      .toBe("2fd2fa43b6b08e25bac71bd89884fb59151f8434d6cf0ab053b05ba62f18b5ec");
+    expect(css.length).toBe(550002);
   });
 
   test("today's sheets still resolve to the fixture", () => {

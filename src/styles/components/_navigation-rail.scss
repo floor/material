@@ -125,7 +125,7 @@ $snap: 0s linear $midpoint;
     position: absolute;
     z-index: -1;
     inset-block-start: 6px;
-    inset-inline-start: 20px;
+    left: 20px;
     inline-size: 56px;
     block-size: 32px;
     border-radius: v.shape('full'); // NavigationRailTokens active-indicator-shape
@@ -195,7 +195,7 @@ $snap: 0s linear $midpoint;
     display: grid;
     place-items: center;
     inset-block-start: 10px;
-    inset-inline-start: 36px;
+    left: 36px;
     inline-size: 24px;
     block-size: 24px;
     color: t.color('on-surface-variant');
@@ -212,16 +212,20 @@ $snap: 0s linear $midpoint;
     position: absolute;
     box-sizing: border-box;
     inset-block-start: 42px;
-    inset-inline-start: 16px;
+    left: 16px;
     inline-size: 64px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     @include m.typography('label-medium');
+    // Both physical sides: the direction arms swap which one is live, and a
+    // transition that names a property the arms unset jumps instead of
+    // snapping (the switch thumb, FLO-1092).
     transition:
       inset-block-start $snap,
-      inset-inline-start $snap,
+      left $snap,
+      right $snap,
       inline-size $snap,
       font-size $snap,
       line-height $snap,
@@ -231,7 +235,7 @@ $snap: 0s linear $midpoint;
   }
   &--expanded &__label {
     inset-block-start: 18px;
-    inset-inline-start: 68px;
+    left: 68px;
     inline-size: calc(100% - 104px);
     text-align: start;
     @include m.typography('label-large');
@@ -250,7 +254,7 @@ $snap: 0s linear $midpoint;
   &__badge {
     position: absolute;
     box-sizing: border-box;
-    inset-inline-start: 48px;
+    left: 48px;
     inset-block-start: 8px;
     min-inline-size: 16px;
     min-block-size: 16px;
@@ -259,7 +263,8 @@ $snap: 0s linear $midpoint;
     background: t.color('error');
     color: t.color('on-error');
     @include m.typography('label-small');
-    transition: inset-inline-start $snap, inset-inline-end $snap, inset-block-start $snap;
+    // Both physical sides, as the label's snap above.
+    transition: left $snap, right $snap, inset-block-start $snap;
     transition-behavior: allow-discrete;
     &--dot {
       inline-size: 6px;
@@ -267,12 +272,32 @@ $snap: 0s linear $midpoint;
       min-inline-size: 0;
       min-block-size: 0;
       padding: 0;
-      inset-inline-start: 54px;
+      left: 54px;
       inset-block-start: 10px;
     }
   }
-  &--expanded &__badge { inset-inline-start: auto; inset-inline-end: 36px; inset-block-start: 20px; }
+  &--expanded &__badge { left: auto; right: 36px; inset-block-start: 20px; }
   &--expanded &__badge--dot { inset-block-start: 25px; }
+
+  // The start-edge insets above are the left-to-right form; these arms write
+  // the mirrored one. The subjects are the parts themselves, so a marker on
+  // the rail root — the class the runtime writes there, or its own dir —
+  // reaches through the ancestor arms.
+  @include m.rtl-selector('.#{$component}__indicator') { right: 20px; left: auto; }
+  @include m.rtl-selector('.#{$component}__icon') { right: 36px; left: auto; }
+  @include m.rtl-selector('.#{$component}__label') { right: 16px; left: auto; }
+  @include m.rtl-selector('.#{$component}__badge') { right: 48px; left: auto; }
+  @include m.rtl-selector('.#{$component}__badge--dot') { right: 54px; left: auto; }
+
+  // The expanded rules above carry the root's variant class, so a marker on
+  // the root itself needs the self form the plain parts get from their own
+  // compound (the fab-menu bottom-start trap).
+  &--expanded {
+    @include m.rtl(true) {
+      .#{$component}__label { right: 68px; left: auto; }
+      .#{$component}__badge { left: 36px; right: auto; }
+    }
+  }
 
   &--hide-collapsed:not(&--expanded) { display: none; }
 
@@ -281,7 +306,8 @@ $snap: 0s linear $midpoint;
   &--modal {
     position: fixed;
     inset-block: 0;
-    inset-inline: 0 auto;
+    left: 0;
+    right: auto;
     margin: 0;
     border: 0;
     max-inline-size: calc(100vw - 56px);
@@ -289,12 +315,23 @@ $snap: 0s linear $midpoint;
     block-size: 100dvh;
     background: t.color('surface-container');
     // The modal rail's container, corner-large at the end, as the drawer's
-    border-start-end-radius: v.shape('large');
-    border-end-end-radius: v.shape('large');
+    border-top-right-radius: v.shape('large');
+    border-bottom-right-radius: v.shape('large');
     transition: inline-size $fast-spatial;
     @include m.elevation(2);
     &:not([open]) { display: none; }
     &::backdrop { background: t.alpha('scrim', 0.32); }
+
+    // The modal docks at the start edge — left here, right in the other
+    // direction — and its large corners follow it.
+    @include m.rtl(true) {
+      left: auto;
+      right: 0;
+      border-top-left-radius: v.shape('large');
+      border-bottom-left-radius: v.shape('large');
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
   }
 
   &__toggle:focus-visible { outline: 2px solid t.color('secondary'); outline-offset: -2px; }

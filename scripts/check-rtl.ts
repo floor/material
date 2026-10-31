@@ -23,6 +23,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
+import { checkNavigationRtl } from "./check-navigation-rtl-browser";
 
 const WIDTH = 600;
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
@@ -483,6 +484,9 @@ try {
   }
   await checkSideSheetRtl(ltrPage);
   await checkCarouselRtl(browser, server.url.href);
+  // The navigation bar and rail, whose start-edge insets the direction arms
+  // mirror — in this unbundled sheet and in the bundled one below.
+  await checkNavigationRtl(browser, server.url.href, ltrPage, rtlPage);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 
