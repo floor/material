@@ -183,11 +183,14 @@ describe("explicit contrast levels are opt-in", () => {
     // The badge sits at the spec's corner distance (6x6dp dot, 14x12dp large,
     // mirrored in RTL) and a standalone badge stays in flow
     // (styles/components/_badge.scss).
-    // FAB and extended FAB add four logical viewport corners each.
-    // Their existing physical corners and all colour/type rules stay pinned.
+    // FAB and extended FAB place the logical viewport corners through the
+    // physical utility each matches left-to-right and flip them with the
+    // direction arms (styles/abstract/_mixins.scss), whose selector lists do
+    // not pay the bundler's :lang() lowering (styles/components/_fab.scss);
+    // the physical aliases and all colour/type rules stay pinned.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4ed3233ddb0a9b6aa9bb9150b7365ebd8bf318a1172bdc2f1e41f23291ca224b");
-    expect(css.length).toBe(541384);
+      .toBe("be0cf87ba11933cff700d87e1de5490955e676af73e852f7dee46f82ca479802");
+    expect(css.length).toBe(542736);
   });
 
   test("today's sheets still resolve to the fixture", () => {
