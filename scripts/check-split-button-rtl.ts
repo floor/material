@@ -21,6 +21,15 @@ import assert from "node:assert/strict";
 import type { Browser, Page } from "playwright";
 
 const WIDTH = 600;
+const HEIGHT = 720;
+
+/** The `/plain` page puts the split button at the viewport's top-left corner,
+ *  where a pointer at (0, 0) sits on it. A half under the pointer is mid-morph
+ *  (the state rule hands it --mtrl-split-button-corner-active through a 425ms
+ *  spring), and the two-frame wait reads a transition frame: CI caught the
+ *  trailing half at 4.76898px instead of 4. Park the pointer on the empty
+ *  bottom-right corner before measuring resting corners. */
+const parkPointer = (page: Page): Promise<void> => page.mouse.move(WIDTH - 1, HEIGHT - 1);
 
 /** The default size (s): outer corners are half the height, inner ones are
  *  ShapeTokens.CornerExtraSmall. */
@@ -209,11 +218,13 @@ function assertMirrored(where: string, split: Split, direction: Direction, base:
 
 /** The class markup on both pages of one sheet. */
 async function assertSheet(browser: Browser, base: string, sheet: string): Promise<void> {
-  const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
-  const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
+  const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
+  const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
   try {
     await ltrPage.goto(`${base}${sheet}?dir=ltr`);
     await rtlPage.goto(`${base}${sheet}?dir=rtl`);
+    await parkPointer(ltrPage);
+    await parkPointer(rtlPage);
     const ltr = await measure(ltrPage, [{ name: "plain", markup: root() }, ...CLASS_CASES]);
     const rtl = await measure(rtlPage, [{ name: "plain", markup: root() }, ...CLASS_CASES]);
     // The plain LTR page is the reference every other case is read against.
@@ -237,11 +248,13 @@ export async function checkSplitButtonRtl(browser: Browser, base: string): Promi
   // The unbundled sheet, and the elements on the same pages: inside a shadow
   // root the direction arrives as the host's mtrl-rtl class, which only the
   // `:host(...)` arm can read.
-  const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
-  const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
+  const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
+  const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
   try {
     await ltrPage.goto(`${base}?dir=ltr`);
     await rtlPage.goto(`${base}?dir=rtl`);
+    await parkPointer(ltrPage);
+    await parkPointer(rtlPage);
     await ltrPage.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     await rtlPage.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     const ltr = await measure(ltrPage, [{ name: "plain", markup: root() }, ...CLASS_CASES]);
