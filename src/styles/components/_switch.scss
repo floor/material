@@ -117,19 +117,23 @@ $component: '#{base.$prefix}-switch';
       border-radius: 50%;
       z-index: 0;
       transition: m.spring(opacity, fast-effects), m.spring(inset-inline-start, fast-spatial),
-        m.spring(left, fast-spatial), m.spring(right, fast-spatial);
+        m.spring(inset, fast-spatial); // see the handle note: covers the lowered sides
       pointer-events: none;
     }
   }
 
   // The handle: 16dp unselected, 24dp selected or with an icon, 28dp pressed.
   // Compose springs it on the fast spatial spring (damping 0.9, stiffness 1400).
-  // The transition also names the physical sides (`left`, `right`) an
+  // The transition also names `inset`, the physical shorthand for the sides an
   // old-target bundler lowers the inset into: the base rule keeps this list
-  // while the placement moves to `:lang()`-guarded physical rules (#125), so a
-  // list naming only the logical side leaves those builds' handle untransitioned
-  // and it jumps. In the unbundled sheet nothing sets `left` or `right`, so the
-  // two entries never start a transition there.
+  // while the placement moves to `:lang()`-guarded `left`/`right` rules (#125),
+  // so a list naming only the logical side leaves those builds' handle
+  // untransitioned and it jumps. `inset` covers those sides and the pressed
+  // rule's `top` (and `bottom`, which nothing sets — inert) on the same spring
+  // the separate entries carried; an engine too old to parse `inset` also
+  // rejects `linear()`, so it never animated these entries on main either. In
+  // the unbundled sheet nothing sets `left` or `right`, so the entry only ever
+  // starts the `top` transition the old `top` entry carried.
   &__thumb {
     position: absolute;
     top: 6px;
@@ -138,9 +142,8 @@ $component: '#{base.$prefix}-switch';
     height: 16px;
     border-radius: 50%;
     background-color: t.color('outline');
-    transition: m.spring(inset-inline-start, fast-spatial), m.spring(top, fast-spatial),
-      m.spring(width, fast-spatial), m.spring(height, fast-spatial), m.spring(background-color, fast-effects),
-      m.spring(left, fast-spatial), m.spring(right, fast-spatial);
+    transition: m.spring(inset-inline-start, fast-spatial), m.spring(inset, fast-spatial),
+      m.spring(width, fast-spatial), m.spring(height, fast-spatial), m.spring(background-color, fast-effects);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -256,13 +259,12 @@ $component: '#{base.$prefix}-switch';
 
     .#{$component}__label, .#{$component}__helper {
       color: t.alpha('on-surface', 0.38);
-      opacity: 1;
     }
 
-    // Selected: the track keeps 0.12, and the handle is Surface at full opacity.
+    // Selected: the track keeps 0.12 (the disabled rule above wins the cascade
+    // over the checked track colour), and the handle is Surface at full opacity.
     &.#{$component}--checked {
       .#{$component}__track {
-        background-color: t.alpha('on-surface', 0.12);
         border-color: transparent;
       }
 

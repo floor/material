@@ -191,14 +191,17 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
-    // The switch handle and its state layer spring on the physical sides
-    // (`left`, `right`) as well as the logical inset, because an old-target
-    // bundler lowers the inset into `:lang()`-guarded physical rules while the
-    // transition list keeps the logical name, leaving those builds' handle
-    // untransitioned (styles/components/_switch.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("2dd94c95ae753f9d84944f14a98e96689cd65271dee1e3b8778a124a17b974bd");
-    expect(css.length).toBe(544995);
+      .toBe("613eb7848780e523a6f866b3b12c115105e71c4e2ff956d7b7a5557950268f87");
+    expect(css.length).toBe(544362);
   });
 
   test("today's sheets still resolve to the fixture", () => {
