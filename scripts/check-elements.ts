@@ -26,6 +26,7 @@ import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkButtonToggle } from "./check-button-toggle";
+import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -6845,6 +6846,7 @@ try {
   }
 
   // ---------------------------------------------------------------- card
+  await checkCardActions(page, check);
   await fresh(
     page,
     `<section id="a"><m-card id="c" variant="outlined" headline="Fallback">
@@ -6864,7 +6866,7 @@ try {
         const assigned = (name: string): number =>
           (root.querySelector(name ? `slot[name="${name}"]` : "slot:not([name])") as HTMLSlotElement | null)?.assignedElements().length ?? -1;
         return {
-          regions: [...card.children].map((child) => child.className.replace(/^.*card__(\w[\w-]*).*$/, "$1")).join(" "),
+          regions: [...card.children].map((child) => [...child.classList].find((name) => /^mtrl-card__[\w-]+$/.test(name) && !name.includes("--"))?.replace("mtrl-card__", "")).join(" "),
           headline: assigned("headline"), subhead: assigned("subhead"), content: assigned(""), actions: assigned("actions"),
           outlined: card.className.includes("card--outlined") ? 1 : 0,
         };
