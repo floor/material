@@ -116,13 +116,20 @@ $component: '#{base.$prefix}-switch';
       opacity: 0;
       border-radius: 50%;
       z-index: 0;
-      transition: m.spring(opacity, fast-effects), m.spring(inset-inline-start, fast-spatial);
+      transition: m.spring(opacity, fast-effects), m.spring(inset-inline-start, fast-spatial),
+        m.spring(left, fast-spatial), m.spring(right, fast-spatial);
       pointer-events: none;
     }
   }
 
   // The handle: 16dp unselected, 24dp selected or with an icon, 28dp pressed.
   // Compose springs it on the fast spatial spring (damping 0.9, stiffness 1400).
+  // The transition also names the physical sides (`left`, `right`) an
+  // old-target bundler lowers the inset into: the base rule keeps this list
+  // while the placement moves to `:lang()`-guarded physical rules (#125), so a
+  // list naming only the logical side leaves those builds' handle untransitioned
+  // and it jumps. In the unbundled sheet nothing sets `left` or `right`, so the
+  // two entries never start a transition there.
   &__thumb {
     position: absolute;
     top: 6px;
@@ -132,7 +139,8 @@ $component: '#{base.$prefix}-switch';
     border-radius: 50%;
     background-color: t.color('outline');
     transition: m.spring(inset-inline-start, fast-spatial), m.spring(top, fast-spatial),
-      m.spring(width, fast-spatial), m.spring(height, fast-spatial), m.spring(background-color, fast-effects);
+      m.spring(width, fast-spatial), m.spring(height, fast-spatial), m.spring(background-color, fast-effects),
+      m.spring(left, fast-spatial), m.spring(right, fast-spatial);
     display: flex;
     align-items: center;
     justify-content: center;

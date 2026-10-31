@@ -495,6 +495,7 @@
     "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
     "rtl:check": "bun run scripts/check-rtl.ts",
+    "switch-transition:check": "bun run scripts/check-switch-transition.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts",
