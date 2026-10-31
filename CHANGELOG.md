@@ -30,10 +30,10 @@ A lighter package.
   declaration imports, 905,394 bytes no supported import could see. The build
   now walks from the `exports` targets, following import and export
   declarations, `import()` types and dynamic `import()` calls, and prunes what
-  the walk does not reach from the staging tree before the nested manifest is
-  written. It fails the build rather than guesses when a target names no file or
-  a shipped declaration imports something that does not ship; sources, runtime
-  modules, stylesheets and every `exports` target are untouched. Measured in
+  the walk does not reach from the staging tree before it becomes `dist`. It
+  fails the build rather than guesses when a target names no file or a shipped
+  declaration imports something that does not ship; sources, runtime modules,
+  stylesheets and every `exports` target are untouched. Measured in
   CI's `package` job: 1,089,550 bytes compressed and 6,488,629 unpacked before,
   1,023,153 and 5,583,235 after, 177 files fewer.
 
