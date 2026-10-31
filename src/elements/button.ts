@@ -10,6 +10,9 @@
  * user or script changes it. A click dispatches `change` with
  * `{ selected, value }` from the host, as `<m-icon-button>` does.
  *
+ * The icon markup (`icon`) leads by default; `icon-position="end"` places it
+ * after the label, as the factory's `iconPosition: "end"` does.
+ *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
  * @module elements
@@ -39,6 +42,7 @@ const buttonSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
+    "icon-position": { type: "string", config: "iconPosition" },
     toggle: { type: "boolean", config: "toggle" },
     selected: { type: "boolean", config: "selected", update: (c, v) => void c.setSelected(Boolean(v)) },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },

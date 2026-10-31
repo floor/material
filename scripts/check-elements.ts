@@ -26,6 +26,7 @@ import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkFabPlacement } from "./check-fab-placement-browser";
+import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -5450,6 +5451,8 @@ try {
   await checkTabBadge(page, check);
 
   await checkDrawerBadge(page, check);
+
+  await checkButtonIconPosition(page, check);
 
   await checkButtonToggle(page, check);
 
