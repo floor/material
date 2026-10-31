@@ -221,7 +221,7 @@ $snap: 0s linear $midpoint;
     @include m.typography('label-medium');
     // Both physical sides: the direction arms swap which one is live, and a
     // transition that names a property the arms unset jumps instead of
-    // snapping (the switch thumb, FLO-1092).
+    // snapping (the switch's thumb learned this the hard way).
     transition:
       inset-block-start $snap,
       left $snap,
