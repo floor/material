@@ -22,7 +22,8 @@ assert<Equals<SwitchProps["onchange"], ((event: CustomEvent<{ checked: boolean; 
 // `bind:checked` is allowed, and only the live properties are bindable.
 assert<Equals<Bindable<SwitchSpec>, "checked">>();
 assert<Equals<Bindable<TabsSpec>, "value">>();
-assert<Equals<Bindable<ButtonSpec>, never>>();
+// The toggle's live selected state binds.
+assert<Equals<Bindable<ButtonSpec>, "selected">>();
 assert<Equals<SvelteProps<TabsSpec>["value"], string | null | undefined>>();
 // Host attributes still pass through.
 assert<Equals<SvelteProps<ButtonSpec>["class"], import("svelte/elements").ClassValue | null | undefined>>();

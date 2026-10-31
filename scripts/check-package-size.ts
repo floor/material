@@ -189,6 +189,16 @@ try {
   // 22.23.3 / npm 10.9.9, against 1,078,000; main's sheet at that head packs
   // 1,076,913. The rule for explicit ceilings (measured plus 1%, up to the
   // next 1,000, per scripts/size.ts) is 1,090,000.
+  // The build's declaration prune, dropping the 177 .d.ts no exports target or
+  // shipped declaration reaches: 1,023,153 at 32b0eb71, Node 22.23.3 / npm
+  // 10.9.9. Measured + 1%, up to 1,000, is 1,034,000.
+  // 3.2.7 ships declarations without their prose (build-modules.ts strips
+  // comments from every emitted .d.ts): local 1,096,754 -> 921,839, a
+  // -174,915 B cut that transfers to CI within noise, so ~914,635 under
+  // CI's packer. Measured + 1%, up to the next 1,000, is 924,000.
+  // The combined tree, prune and prose-free declarations together, local
+  // Node 26.8.1 / npm 11.19.0: 877,120. Measured + 1%, up to the next
+  // 1,000, is 886,000.
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -223,6 +233,13 @@ try {
   // so the ceiling stays.
   // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
   // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
+  // The same declaration prune: 5,583,235 at 32b0eb71, Node 22.23.3 / npm 10.9.9.
+  // Measured + 1%, up to 1,000, is 5,640,000.
+  // 3.2.7's prose-free declarations: 6,516,507 -> 5,876,906 local, ~5,849,028
+  // under CI's packer by the same transferred delta. Measured + 1%, up to
+  // the next 1,000, is 5,908,000.
+  // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
+  // the next 1,000, is 5,119,000.
   assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,

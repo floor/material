@@ -307,6 +307,8 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | Element | Attribute | Values |
 | --- | --- | --- |
 | `<m-button>` | `icon-position` | `start` (default), `end` — where the `icon` attribute's icon sits |
+| `<m-button>` | `toggle` | boolean: a toggle button, dispatching `change` with `{ selected, value }` |
+| `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 
 The page still loads material's base styles and a theme (see [Styles](#styles)); the elements pick up the theme's tokens.
 
