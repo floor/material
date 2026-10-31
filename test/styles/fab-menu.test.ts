@@ -37,6 +37,17 @@ const rtl = (selector: string, property: string): string | undefined => {
     .find((v): v is string => v !== undefined);
 };
 
+/** A declaration of the root-carried marker form of a bottom-start inner part. */
+const self = (selector: string, property: string): string | undefined => {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return Array.from(
+    css.matchAll(new RegExp(`\\.mtrl-fab-menu--bottom-start:where\\(\\.mtrl-rtl, \\[dir=rtl\\]\\) ${escaped}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g')),
+    (m) => m[1]!,
+  )
+    .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
+    .find((v): v is string => v !== undefined);
+};
+
 const reduced = (): string => css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
 
 beforeAll(() => {
@@ -89,6 +100,12 @@ describe('fab menu stylesheet', () => {
     expect(rtl(list, 'left')).toBe('auto');
     expect(rtl('.mtrl-fab-menu--bottom-end', 'left')).toBe('var(--mtrl-fab-menu-margin)');
     expect(rtl('.mtrl-fab-menu--bottom-end', 'right')).toBe('auto');
+    // The menu root itself can carry the marker: the runtime writes mtrl-rtl
+    // there and dir="rtl" may sit on it, while the arms above need an ancestor.
+    expect(self('.mtrl-fab.mtrl-fab-menu__fab', 'right')).toBe('0');
+    expect(self('.mtrl-fab.mtrl-fab-menu__fab', 'left')).toBe('auto');
+    expect(self('.mtrl-fab-menu__list', 'right')).toBe('0');
+    expect(self('.mtrl-fab-menu__list', 'left')).toBe('auto');
   });
 
   test('the list: 8dp above the close button, items 4dp apart, end-aligned', () => {

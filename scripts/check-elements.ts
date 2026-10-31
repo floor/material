@@ -26,6 +26,7 @@ import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkFabPlacement } from "./check-fab-placement-browser";
+import { checkFabMenuRtl } from "./check-fab-menu-rtl-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkCardActions } from "./check-card-actions-browser";
@@ -9274,6 +9275,11 @@ try {
     assert.equal(failures.length, 0, rows.join("\n"));
     check("FAB menu: bottom-end and bottom-start open into the page, in both directions, factory and element");
   }
+
+  // The menu root carries the placement class and the direction marker: the
+  // runtime writes mtrl-rtl there, and dir="rtl" may sit on it too. The inner
+  // close FAB and the list must flip with the root, not only with an ancestor.
+  await checkFabMenuRtl(page, check, ICON);
 
   // ---------------------------------------------------------------- chips right to left (follow-up)
   // <m-chips> renders its chips in a shadow root: a `dir="rtl"` above the host

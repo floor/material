@@ -199,6 +199,23 @@ $swap: 48ms;
     }
   }
 
+  // The placement class and the direction marker are the same element here:
+  // the runtime writes mtrl-rtl on this root, and dir="rtl" may sit on it. The
+  // arms above need a strict ancestor; a root-carried [dir] does reach the
+  // inner parts through the at-root attribute arm, but that arm sets the
+  // left-to-right edges, so this root-carried form is written after it.
+  &--bottom-start:where(.#{base.$prefix}-rtl, [dir='rtl']) {
+    .#{$fab}.#{$component}__fab {
+      right: 0;
+      left: auto;
+    }
+
+    .#{$component}__list {
+      right: 0;
+      left: auto;
+    }
+  }
+
   &--menu .#{$component}__list {
     display: none;
   }
