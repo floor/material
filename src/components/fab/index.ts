@@ -20,7 +20,7 @@
  * // Create a primary FAB with a plus icon
  * const fab = createFab({
  *   icon: '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
- *   position: 'bottom-right',
+ *   placement: 'bottom-end',
  *   ariaLabel: 'Add new item'
  * });
  *
@@ -42,4 +42,5 @@ export type {
   FabVariant,
   FabSize,
   FabPosition,
+  FabPlacement,
 } from "./types";

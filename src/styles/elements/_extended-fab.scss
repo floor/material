@@ -6,6 +6,7 @@
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 @use 'config' as c;
+@use '../abstract/floating-placement' as placement;
 
 // As $sizes in components/_extended-fab.scss.
 $sizes: (
@@ -30,6 +31,7 @@ $sizes: (
 }
 
 @include c.host('extended-fab') {
+  @include placement.corners;
   display: inline-flex;
   vertical-align: middle;
   align-items: center;

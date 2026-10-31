@@ -98,9 +98,10 @@ export const getElementConfig = (config: ExtendedFabConfig) => {
     classNames.push(`${config.prefix}-extended-fab--animate-enter`);
   }
 
-  // Add position class if specified
-  if (config.position) {
-    classNames.push(`${config.prefix}-extended-fab--${config.position}`);
+  // An explicit logical placement (including none) wins over the physical alias.
+  const position = config.placement === undefined ? config.position : config.placement === "none" ? undefined : config.placement;
+  if (position) {
+    classNames.push(`${config.prefix}-extended-fab--${position}`);
   }
 
   // Add collapse-on-scroll class if specified

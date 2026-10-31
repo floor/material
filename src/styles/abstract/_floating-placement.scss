@@ -1,0 +1,12 @@
+// The viewport corners reserved by FAB and extended FAB before upgrade.
+@mixin corners {
+  @each $block in top, bottom {
+    @each $inline in start, end {
+      &[placement='#{$block}-#{$inline}'] {
+        position: fixed;
+        #{$block}: 16px;
+        inset-inline-#{$inline}: 16px;
+      }
+    }
+  }
+}

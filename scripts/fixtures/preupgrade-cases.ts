@@ -24,6 +24,8 @@ export interface PreupgradeCase {
   /** Define button/text-field neighbours (and switch for tabs) before measuring. */
   prepareNeighbors?: boolean;
   strictBox?: boolean;
+  /** A viewport-fixed shadow target whose box must equal the reserved host box. */
+  fixedAnchor?: string;
   /**
    * The host's own height, whatever the page's typography: the control's box
    * that the upgraded host and its pre-upgrade rule must both be.
@@ -532,5 +534,14 @@ for (const dir of ["ltr", "rtl"]) for (const align of ["start", "center", "end",
     element: "card", variant: `actions-align=${align}; ${dir}`,
     html: `<m-card dir="${dir}" headline="Title" actions-align="${align}">Supporting text.<button slot="actions" style="width:60px;height:24px">Save</button></m-card>`,
     strictBox: true,
+  });
+}
+
+// A logical corner is reserved before the element is defined, in both directions.
+for (const element of ["fab", "extended-fab"]) for (const dir of ["ltr", "rtl"]) for (const placement of ["none", "top-start", "top-end", "bottom-start", "bottom-end"]) {
+  cases.push({
+    element, variant: `placement=${placement}; ${dir}`,
+    html: `<m-${element} dir="${dir}" placement="${placement}" icon="${ICON}" aria-label="Compose">${element === "extended-fab" ? "Compose" : ""}</m-${element}>`,
+    fixedAnchor: placement === "none" ? undefined : `.mtrl-${element}`,
   });
 }

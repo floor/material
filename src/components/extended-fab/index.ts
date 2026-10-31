@@ -21,7 +21,7 @@
  * const extendedFab = createExtendedFab({
  *   text: 'Create',
  *   icon: '<svg>...</svg>',
- *   position: 'bottom-right',
+ *   placement: 'bottom-end',
  *   collapseOnScroll: true
  * });
  * 
@@ -43,5 +43,6 @@ export type {
   ExtendedFabVariant,
   ExtendedFabSize,
   ExtendedFabWidth,
-  ExtendedFabPosition
+  ExtendedFabPosition,
+  ExtendedFabPlacement
 } from './types';

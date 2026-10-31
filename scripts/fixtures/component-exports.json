@@ -1243,6 +1243,11 @@
       "status": "public"
     },
     {
+      "name": "ExtendedFabPlacement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ExtendedFabPosition",
       "kind": "type",
       "status": "public"
@@ -1328,6 +1333,11 @@
     },
     {
       "name": "FabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabPlacement",
       "kind": "type",
       "status": "public"
     },

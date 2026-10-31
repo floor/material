@@ -225,33 +225,59 @@ $sizes: (
     }
   }
 
-  // Positioning utilities
-  &--top-right {
+  // Positioning utilities. A logical corner shares the rule of the physical
+  // corner it matches left-to-right; the direction arms below flip it.
+  &--top-right,
+  &--top-end {
     position: fixed;
     top: 16px;
     right: 16px;
     z-index: v.z-index('dropdown');
   }
-  
-  &--top-left {
+
+  &--top-left,
+  &--top-start {
     position: fixed;
     top: 16px;
     left: 16px;
     z-index: v.z-index('dropdown');
   }
-  
-  &--bottom-right {
+
+  &--bottom-right,
+  &--bottom-end {
     position: fixed;
     bottom: 16px;
     right: 16px;
     z-index: v.z-index('dropdown');
   }
-  
-  &--bottom-left {
+
+  &--bottom-left,
+  &--bottom-start {
     position: fixed;
     bottom: 16px;
     left: 16px;
     z-index: v.z-index('dropdown');
+  }
+
+  // A logical corner follows the inline direction; the physical aliases stay
+  // put. Bundlers lower inset-inline-start into :lang() arms that miss
+  // dir="rtl" (src/styles/components/_text-field.scss), about 1.5 kB of the
+  // built full sheet per declaration, so the flip is written as direction
+  // arms instead.
+  &--top-start,
+  &--bottom-start {
+    @include m.rtl(true) {
+      left: auto;
+      right: 16px;
+    }
+  }
+
+  &--top-end,
+  &--bottom-end {
+    @include m.rtl(true) {
+      right: auto;
+      left: 16px;
+    }
   }
   
   // Animation effects

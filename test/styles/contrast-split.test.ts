@@ -132,7 +132,8 @@ describe("explicit contrast levels are opt-in", () => {
     // The text field's hidden icon parts: `[hidden]` on the leading and
     // trailing parts (styles/components/_text-field.scss).
     // A FAB menu at bottom-start anchors its list, its items and its FAB to
-    // the inline start (styles/components/_fab-menu.scss).
+    // the inline start, with direction arms for RTL, matched on an ancestor
+    // and on the menu root itself (styles/components/_fab-menu.scss).
     // The outlined field's open notch stays unpainted in forced colours,
     // from the script's class and the input's own state.
     // The menu's submenu arrow also mirrors inside a shadow root.
@@ -183,9 +184,16 @@ describe("explicit contrast levels are opt-in", () => {
     // The badge sits at the spec's corner distance (6x6dp dot, 14x12dp large,
     // mirrored in RTL) and a standalone badge stays in flow
     // (styles/components/_badge.scss).
+    // FAB and extended FAB place the logical viewport corners through the
+    // physical utility each matches left-to-right and flip them with the
+    // direction arms (styles/abstract/_mixins.scss), whose selector lists do
+    // not pay the bundler's :lang() lowering (styles/components/_fab.scss);
+    // the physical aliases and all colour/type rules stay pinned. The FAB
+    // menu places its inline edges the same way
+    // (styles/components/_fab-menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("2a37f87075a5ff101d60323e7da59da55ec16874f5935a4ef322419c4ab7f67e");
-    expect(css.length).toBe(540692);
+      .toBe("c52ffab42ebe68ccb98601f67933182e1f2970ef6c85fe24b77b208305ebd504");
+    expect(css.length).toBe(544277);
   });
 
   test("today's sheets still resolve to the fixture", () => {
