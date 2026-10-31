@@ -51,6 +51,15 @@ A lighter package.
   tooling signal. Measured on top of #155: 1,023,153 bytes compressed and
   5,583,235 unpacked before, 878,746 and 5,067,838 after.
 
+- **The release takes 210,804 bytes off the packed tarball, which is 878,746
+  bytes compressed and 5,067,838 unpacked in 1,623 files, against 1,089,550 and
+  6,488,629 in 1,800 files in 3.2.6; the gzipped fixture rows are unchanged, at
+  127,754 for all-js and 63,733 for the full stylesheet.** The build log's
+  prune line at the release head reads `Pruned 177 unreachable declarations
+  (781099 bytes)`. Both ceilings followed the package down, by the rule for
+  explicit byte ceilings: `TARBALL_BYTES` 1,090,000 to 886,000 and
+  `UNPACKED_BYTES` 6,524,000 to 5,119,000. No README size row moves.
+
 ## [3.2.6] - 2026-10-30
 
 Badges that say what they show.
