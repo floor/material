@@ -40,6 +40,23 @@ describe("the public types' shapes", () => {
     expect(now["ButtonConfig.type"]).toEqual({ kind: "union", members: ['"button"', '"reset"', '"submit"'] });
   });
 
+  // The three holes measured on 6bf4566c: each declaration change below exits
+  // 0 there, because only direct property unions were read.
+  test("a union nested in an object property is pinned by its path", () => {
+    expect(now["ResponsiveConfig.smallScreen.layout"]).toEqual({
+      kind: "union",
+      members: ["'icon-and-text'", "'icon-only'", "'text-only'"],
+    });
+  });
+
+  test("a union nested in an array's element type is pinned by its path", () => {
+    expect(now["DatePickerConfig.specialDates[].date"]).toEqual({ kind: "union", members: ["Date", "string"] });
+  });
+
+  test("an optional member's union is pinned where it is nested too", () => {
+    expect(now["SelectConfig.menu.container"]).toEqual({ kind: "union", members: ["HTMLElement", "null"] });
+  });
+
   test("a config's base types are pinned, in the order the declaration lists them", () => {
     expect(now.ButtonConfig).toEqual({ kind: "extends", bases: ["BaseComponentConfig"] });
     expect(now.InputComponent).toEqual({ kind: "extends", bases: ["ElementComponent", "InputFeature"] });
@@ -77,6 +94,12 @@ describe("what the diff reports", () => {
     const before = shapes({ ...pinned, "ButtonConfig.type": { kind: "union", members: ['"button"', '"reset"', '"submit"'] } });
     const after = shapes({ ...pinned, "ButtonConfig.type": { kind: "union", members: ['"button"', '"submit"'] } });
     expect(diffTypeShapes(before, after)).toEqual(['ButtonConfig.type: union member "reset" was removed']);
+  });
+
+  test("a nested property union is reported under its full path", () => {
+    const before = shapes({ "SelectConfig.menu.container": { kind: "union", members: ["HTMLElement", "null"] } });
+    const after = shapes({ "SelectConfig.menu.container": { kind: "union", members: ["HTMLElement"] } });
+    expect(diffTypeShapes(before, after)).toEqual(["SelectConfig.menu.container: union member null was removed"]);
   });
 
   test("a type added to the surface", () => {
