@@ -24,6 +24,7 @@ import { chromium, type Page } from "playwright";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
 import { checkDatepickerRtl } from "./check-datepicker-rtl";
+import { checkNavigationRtl } from "./check-navigation-rtl-browser";
 import { checkSplitButtonRtl } from "./check-split-button-rtl";
 
 const WIDTH = 600;
@@ -487,6 +488,9 @@ try {
   await checkCarouselRtl(browser, server.url.href);
   await checkDatepickerRtl(browser, server.url.href);
   await checkSplitButtonRtl(browser, server.url.href);
+  // The navigation bar and rail, whose start-edge insets the direction arms
+  // mirror — in this unbundled sheet and in the bundled one below.
+  await checkNavigationRtl(browser, server.url.href, ltrPage, rtlPage);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 

@@ -200,9 +200,16 @@ describe("explicit contrast levels are opt-in", () => {
     // right-to-left pair as a direction arm, its radii in custom properties,
     // so the bundler's :lang() lowering cannot reach them
     // (styles/components/_split-button.scss).
+    // The navigation bar and rail place their start edges on the physical
+    // left and mirror them with the direction arms, not the insets a
+    // consumer's bundler lowers; the bar's vertical arms share one :is()
+    // subject for both variants, and the bar's dot rides the badge's anchor
+    // through --mtrl-navigation-bar-dot-shift so one arm mirrors both
+    // (styles/components/_navigation-bar.scss,
+    // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("84229932b1ec7d6c180f856b74c0b10303f601ba13a1c764497a323e04a35b6f");
-    expect(css.length).toBe(541984);
+      .toBe("7558302de9c451a0c3dea7109c59da57c82525f0368c276b96c6eff9e0335992");
+    expect(css.length).toBe(545559);
   });
 
   test("today's sheets still resolve to the fixture", () => {
