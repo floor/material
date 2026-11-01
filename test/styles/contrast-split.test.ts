@@ -119,8 +119,7 @@ describe("explicit contrast levels are opt-in", () => {
     // with an unlabelled radio centred (styles/components/_radios.scss), the slider's
     // label at Body Large, not 18px (styles/components/_slider.scss), the select
     // menu's width, mark and selected colours (styles/components/_select.scss,
-    // styles/components/_menu.scss), the chip's secondary-action floor with
-    // its press target stretched to the inline end from the icon's midline
+    // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss).
     // The list's two variants: standard has no container and square rows;
@@ -226,8 +225,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4b5d0063e01b70f2089e7c3efddd15f301a202284ced9cda9574bb14eb9de60e");
-    expect(css.length).toBe(537075);
+      .toBe("10e08b0929fdad5c2163f0c533140d2da92e0f47ef05f6e668e971dc04ff15c0");
+    expect(css.length).toBe(537060);
   });
 
   test("today's sheets still resolve to the fixture", () => {

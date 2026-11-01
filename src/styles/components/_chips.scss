@@ -233,13 +233,14 @@ $container: "#{base.$prefix}-chips";
     &__remove::before, &__trailing-action::before {
         content: "";
         position: absolute;
-        // The 48dp box runs back from the end edge at any width the chip
-        // reaches: an auto start margin parks it there in either direction,
-        // so the rule needs no direction arm.
-        inset: 50% 0 auto;
+        top: 50%;
+        // The 48dp box runs back from the chip's end edge, as on main. The
+        // end inset goes through the direction switch, so the artefacts a
+        // consumer bundler lowers carry the physical side with its arm and
+        // no :lang() lowering can drag the box off the end edge.
+        @include d.end(0);
         width: 48px;
         height: 48px;
-        margin-inline-start: auto;
         transform: translateY(-50%);
     }
 }

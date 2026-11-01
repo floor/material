@@ -85,15 +85,16 @@ describe('trailing action and dragged state', () => {
 
 describe('the secondary action mirrors in every artefact', () => {
   // The remove button's two start corners and the 48px target behind it: the
-  // adopted sheets keep the logical pair and the target's auto inline-start
-  // margin, which mirror natively; the lowered artefacts write the physical
-  // pair with both mirrored forms in one aggregated arm at the root
-  // (abstract/_direction.scss, scripts/build-styles.ts).
+  // adopted sheets keep the logical pair and the target's end inset, which
+  // mirror natively; the lowered artefacts write the physical pair with both
+  // mirrored forms in one aggregated arm at the root, and the target's end
+  // side with the end arm, so no bundler lowering can drag the box off the
+  // end edge (abstract/_direction.scss, scripts/build-styles.ts).
   const compileArms = (): string =>
     compileString(
       `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/chips';`,
       { loadPaths: ['src/styles'] },
-    ).css.replace(/\/\*[\s\S]*?\*\//g, '');
+    ).css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\n/g, ', ');
 
   test('the adopted sheets keep the logical corners and no arm', () => {
     expect(value(`${root}__remove`, 'border-start-start-radius')).toBe('0');
@@ -119,14 +120,43 @@ describe('the secondary action mirrors in every artefact', () => {
     expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
   });
 
-  test("the target runs its 48px back from the chip's end without an arm", () => {
-    // The over-constrained inset (both physical sides 0) with an auto
-    // inline-start margin pushes the box to the inline end and mirrors
-    // natively; a bundler lowers neither the physical inset shorthand nor a
-    // margin, so the same rule serves both forms.
-    for (const sheet of [css, compileArms()]) {
-      expect(sheet).toContain('inset: 50% 0 auto;');
-      expect(sheet).toContain('margin-inline-start: auto;');
-    }
+  test("the target runs its 48px back from the chip's end, mirrored by the end arm", () => {
+    // The block is main's, with the end inset through the direction switch:
+    // the adopted sheet keeps the logical end inset, which mirrors natively.
+    expect(css).toContain(
+      '.mtrl-chip__remove::before, .mtrl-chip__trailing-action::before {' +
+        '\n  content: "";' +
+        '\n  position: absolute;' +
+        '\n  top: 50%;' +
+        '\n  inset-inline-end: 0;' +
+        '\n  width: 48px;' +
+        '\n  height: 48px;' +
+        '\n  transform: translateY(-50%);' +
+        '\n}',
+    );
+    // The lowered artefacts write the physical side, and one end arm flips
+    // it: the marker forms the runtime reflects plus the attribute, the
+    // subject list per part, so no :lang() lowering can leave the box on
+    // the left-to-right side of a right-to-left chip.
+    const arms = compileArms();
+    expect(arms).toContain(
+      '.mtrl-chip__remove::before, .mtrl-chip__trailing-action::before {' +
+        '\n  content: "";' +
+        '\n  position: absolute;' +
+        '\n  top: 50%;' +
+        '\n  right: 0;' +
+        '\n  width: 48px;' +
+        '\n  height: 48px;' +
+        '\n  transform: translateY(-50%);' +
+        '\n}',
+    );
+    expect(arms).toContain(
+      ':where(.mtrl-rtl) .mtrl-chip__remove::before, :where(:host(.mtrl-rtl)) .mtrl-chip__remove::before, [dir=rtl] .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(.mtrl-rtl) .mtrl-chip__trailing-action::before, :where(:host(.mtrl-rtl)) .mtrl-chip__trailing-action::before, [dir=rtl] .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)) {' +
+        '\n  right: auto;' +
+        '\n  left: 0;' +
+        '\n}',
+    );
+    // No logical end inset is left for a bundler to lower into :lang().
+    expect(arms).not.toContain('inset-inline-end');
   });
 });
