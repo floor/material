@@ -36,13 +36,19 @@ describe("the public types' shapes", () => {
     expect(members).toContain('"inverse-primary"');
   });
 
+  test("a union written on a config property is pinned under the interface's name", () => {
+    expect(now["ButtonConfig.type"]).toEqual({ kind: "union", members: ['"button"', '"reset"', '"submit"'] });
+  });
+
   test("a config's base types are pinned, in the order the declaration lists them", () => {
     expect(now.ButtonConfig).toEqual({ kind: "extends", bases: ["BaseComponentConfig"] });
     expect(now.InputComponent).toEqual({ kind: "extends", bases: ["ElementComponent", "InputFeature"] });
   });
 
-  test("the scan reads the root, the component subpaths and core, not a subset", () => {
-    for (const name of ["FabSize", "ThemeRole", "SliderSize", "ToolbarVariant", "DatePickerInput"]) expect(now[name]).toBeDefined();
+  test("the scan reads every public entry the manifest lists, not a subset", () => {
+    for (const name of ["FabSize", "ThemeRole", "SliderSize", "ToolbarVariant", "DatePickerInput", "ButtonConfig.type", "AttributeType"]) {
+      expect(now[name]).toBeDefined();
+    }
     expect(Object.keys(now).length).toBeGreaterThan(120);
   });
 });
@@ -65,6 +71,12 @@ describe("what the diff reports", () => {
       "ButtonConfig: no longer extends BaseComponentConfig",
       "ButtonConfig: now extends OtherBase",
     ]);
+  });
+
+  test("a property union is reported under its interface's name", () => {
+    const before = shapes({ ...pinned, "ButtonConfig.type": { kind: "union", members: ['"button"', '"reset"', '"submit"'] } });
+    const after = shapes({ ...pinned, "ButtonConfig.type": { kind: "union", members: ['"button"', '"submit"'] } });
+    expect(diffTypeShapes(before, after)).toEqual(['ButtonConfig.type: union member "reset" was removed']);
   });
 
   test("a type added to the surface", () => {
