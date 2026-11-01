@@ -219,6 +219,11 @@ $component: "#{base.$prefix}-progress";
 .#{$component}--circular.#{$component}--indeterminate .#{$component}__track {
   stroke-dasharray: max(0, calc(100 - var(--#{$component}-sweep) - 2 * min(var(--#{$component}-sweep), var(--#{$component}-gap100)))) 100;
   stroke-dashoffset: calc(-1 * (var(--#{$component}-sweep) + min(var(--#{$component}-sweep), var(--#{$component}-gap100))));
+  // The canvas's guard drew no track once the arc left it no room; a dash
+  // clamped to 0 here still paints its round cap as a dot, so the same slack
+  // gates the paint itself: negative hides the stroke outright — a sub-unit
+  // dash is still a real dash and stays fully opaque, as the canvas drew it
+  stroke-opacity: clamp(0, (100 - var(--#{$component}-sweep) - 2 * min(var(--#{$component}-sweep), var(--#{$component}-gap100))) * 1000, 1);
 }
 
 // ---------------------------------------------------------------------------
