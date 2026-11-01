@@ -28,6 +28,7 @@ describe("the CI toolchain is pinned", () => {
       ".github/actions/browsers/action.yml",
       ".github/workflows/cache.yml",
       ".github/workflows/ci.yml",
+      ".github/workflows/menu-close-contract-evidence.yml",
       ".github/workflows/publish.yml",
     ]);
   });

@@ -1,0 +1,37 @@
+name: Menu close-contract candidate evidence
+on:
+  pull_request:
+    paths:
+      - .github/workflows/menu-close-contract-evidence.yml
+      - scripts/menu-close-contract-candidate-evidence.ts
+      - scripts/menu-close-contract-stall.ts
+      - scripts/menu-close-contract-slow-reveal.ts
+      - test/build/ci-toolchain.test.ts
+permissions:
+  contents: read
+jobs:
+  repeated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, stall, slow]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - name: Repeat the unchanged candidate test in fresh processes
+        env:
+          CLOSE_CONTRACT_MODE: ${{ matrix.mode }}
+        run: bun scripts/menu-close-contract-candidate-evidence.ts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: candidate-${{ matrix.mode }}
+          path: analysis/menu-close-contract-candidate-${{ matrix.mode }}
+          retention-days: 7
