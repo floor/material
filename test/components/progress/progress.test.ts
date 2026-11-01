@@ -213,6 +213,9 @@ describe('progress', () => {
   // same dash and offset arithmetic, written as attributes (pathLength 100)
   test('circular determinate: the arc starts at 12 o\'clock and the track clears both its ends', () => {
     const progress = createProgress({ variant: 'circular', value: 25 });
+    // The dial carries the determinate start angle to 12 o'clock; a circle's
+    // own stroke runs from 3 o'clock
+    expect(progress.view.querySelector('.mtrl-progress__dial')!.getAttribute('transform')).toBe('rotate(-90)');
     expect(attr(progress, 'indicator', 'stroke-dasharray')).toBe('25.000 100');
     expect(attr(progress, 'track', 'stroke-dasharray')).toBe('62.268 100');
     expect(attr(progress, 'track', 'stroke-dashoffset')).toBe('-31.366');
@@ -230,9 +233,12 @@ describe('progress', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
     const view = progress.view;
     const dial = view.querySelector('.mtrl-progress__dial')!;
-    // Centerless: the rotor rule's transform-origin supplies the center; a
-    // center here would compose with it and rotate the ring out of the view
-    expect(dial.getAttribute('transform')).toBe('rotate(-90)');
+    // The indeterminate arc is based at 3 o'clock — the canvas measured its
+    // indeterminate rotation from raw angle 0 — so the dial holds no angle;
+    // the -90° to 12 o'clock is written only for a determinate value, whose
+    // test covers it. Centerless either way: the rotor rule's
+    // transform-origin supplies the center
+    expect(dial.getAttribute('transform')).toBeNull();
     const spin = dial.querySelector(':scope > .mtrl-progress__spin')!;
     const kick = spin.querySelector(':scope > .mtrl-progress__kick')!;
     // the geometry is the stylesheet's now: no dash attributes, the parts'

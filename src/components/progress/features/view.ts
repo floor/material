@@ -306,7 +306,13 @@ export const withView =
         // view box) supplies the center. A center here would compose with
         // that origin and rotate the ring about the viewBox's corner,
         // throwing it outside the view's clip — nothing would paint.
-        dial.setAttribute("transform", "rotate(-90)");
+        // The dial carries the determinate start angle, 12 o'clock; an
+        // indeterminate arc is based at 3 o'clock — the canvas measured
+        // its indeterminate rotation from raw angle 0 — so that dial
+        // turns nothing and the spin starts from the native base.
+        if (!isIndeterminate()) {
+          dial.setAttribute("transform", "rotate(-90)");
+        }
         svg.append(dial);
         let rotor: SVGElement = dial;
         if (isIndeterminate()) {
