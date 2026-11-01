@@ -371,6 +371,10 @@ export const withView =
           use.setAttribute("href", `#${patternId(svg)}`);
           travel.append(use);
           group.append(clip, travel);
+          // The group itself carries the clip: the window must hold still
+          // while the travel group under it moves the wave through it, or
+          // the bar paints the whole pattern instead of its head and tail.
+          group.setAttribute("clip-path", `url(#${id})`);
           return group;
         };
         const first = bar(PROGRESS_CLASSES.BAR_FIRST);
