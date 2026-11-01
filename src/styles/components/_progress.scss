@@ -348,6 +348,28 @@ $component: "#{base.$prefix}-progress";
         #{$component}-second-head 1750ms infinite;
     }
 
+    // A wavy bar's window rect is the clip shape inside a <clipPath>, and
+    // the style engine does not distribute inherited animated custom
+    // properties into that subtree: the bar group above animates --l and
+    // --r (measured: 0.553% / 7.112% at 350ms) while the rect reads the
+    // registered initial 0% / 0% and the window collapses to nothing —
+    // the wavy indeterminate bars painted zero pixels on every hold and
+    // sample. The keyframes therefore target the rect itself too; the
+    // flat bars above were never affected because their bar-first element
+    // is the rect the formulas read. Under reduced motion the rects keep
+    // the initial 0% / 0% and the rest pose paints no bar, as before.
+    .#{$component}__bar-first rect.#{$component}__wave-window {
+      animation:
+        #{$component}-first-tail 1750ms infinite,
+        #{$component}-first-head 1750ms infinite;
+    }
+
+    .#{$component}__bar-second rect.#{$component}__wave-window {
+      animation:
+        #{$component}-second-tail 1750ms infinite,
+        #{$component}-second-head 1750ms infinite;
+    }
+
     .#{$component}__behind {
       animation: #{$component}-behind-tail 1750ms infinite;
     }
