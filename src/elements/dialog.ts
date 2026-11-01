@@ -153,7 +153,7 @@ const dialogSpec = {
   create: (config) => create(config as DialogElementConfig),
   // Its actions are mtrl buttons and its dividers mtrl dividers, drawn in this
   // shadow root: their sheets come with it
-  styles: ["progress", "button", "divider", "dialog"],
+  styles: ["progress", "divider", "dialog"],
   hostStyles: ":host{display:contents}",
   attributes: {
     open: { type: "boolean", update: (c, v) => setOpen(c, !!v) },
