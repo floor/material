@@ -391,7 +391,21 @@ $component: "#{base.$prefix}-progress";
     animation: #{$component}-dash-ring 1000ms infinite linear;
   }
 
+  // The slide passes through the curve's own arc table at eighths of the
+  // loop: the wave runs longer where it climbs than where it rides the
+  // circle, so equal angles are not equal distances on it, and a uniform
+  // slide let the window's start wobble a degree and a half round its
+  // hold as the wave traveled beneath. Between these the slide runs
+  // straight, which holds the window to a tenth of a degree.
   @keyframes #{$component}-dash-ring {
+    from { stroke-dashoffset: 0; }
+    12.5% { stroke-dashoffset: var(--#{$component}-ws-1); }
+    25% { stroke-dashoffset: var(--#{$component}-ws-2); }
+    37.5% { stroke-dashoffset: var(--#{$component}-ws-3); }
+    50% { stroke-dashoffset: var(--#{$component}-ws-4); }
+    62.5% { stroke-dashoffset: var(--#{$component}-ws-5); }
+    75% { stroke-dashoffset: var(--#{$component}-ws-6); }
+    87.5% { stroke-dashoffset: var(--#{$component}-ws-7); }
     to { stroke-dashoffset: var(--#{$component}-wave-dash); }
   }
 

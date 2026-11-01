@@ -42,6 +42,7 @@ import {
   circularRadius,
   circularWaveRing,
   circularWaveRotation,
+  circularWaveDashSteps,
 } from "./circular";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -273,7 +274,8 @@ export const withView =
       );
       svg.style.setProperty(`--${prefix}-progress-wavelength`, `${isCircular ? 0 : isIndeterminate() ? PROGRESS_WAVE.LINEAR.INDETERMINATE_WAVELENGTH : PROGRESS_WAVE.LINEAR.WAVELENGTH}px`);
       if (isCircular) {
-        const radius = circularRadius(currentSize, stroke, getWaveAmplitude(true, stroke, currentSize));
+        const waveAmplitude = getWaveAmplitude(true, stroke, currentSize);
+        const radius = circularRadius(currentSize, stroke, waveAmplitude);
         svg.style.setProperty(`--${prefix}-progress-size`, `${currentSize}px`);
         svg.style.setProperty(`--${prefix}-progress-wave-rot`, `${circularWaveRotation(radius, currentSize)}deg`);
         // The same wavelength as a dash shift: the travel turns the ring
@@ -285,6 +287,14 @@ export const withView =
           `--${prefix}-progress-wave-dash`,
           `${circularWaveRotation(radius, currentSize) / 3.6}`
         );
+        // The slide's own steps at eighths of the loop, which the keyframes
+        // join: equal angles are not equal distances on the wavy curve, so
+        // a uniform slide let the window wobble as the wave traveled under
+        // it — these hold its angle still
+        const dashSteps = circularWaveDashSteps(radius, waveAmplitude, currentSize, 7);
+        dashSteps.forEach((step, i) => {
+          svg.style.setProperty(`--${prefix}-progress-ws-${i + 1}`, `${step}`);
+        });
       }
       svg.setAttribute("viewBox", `0 0 ${isCircular ? currentSize : lineWidth || 2048} ${height}`);
       if (!isCircular) {
