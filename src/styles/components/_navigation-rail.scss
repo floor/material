@@ -3,6 +3,7 @@
 @use '../abstract/theme' as t;
 @use '../abstract/mixins' as m;
 @use '../abstract/variables' as v;
+@use '../abstract/direction' as d;
 
 // M3 Expressive navigation rail.
 // Geometry: Compose NavigationRailCollapsed/Expanded/BaselineItem/VerticalItem/
@@ -125,7 +126,7 @@ $snap: 0s linear $midpoint;
     position: absolute;
     z-index: -1;
     inset-block-start: 6px;
-    left: 20px;
+    @include d.start(20px, $arm: false);
     inline-size: 56px;
     block-size: 32px;
     border-radius: v.shape('full'); // NavigationRailTokens active-indicator-shape
@@ -195,7 +196,7 @@ $snap: 0s linear $midpoint;
     display: grid;
     place-items: center;
     inset-block-start: 10px;
-    left: 36px;
+    @include d.start(36px, $arm: false);
     inline-size: 24px;
     block-size: 24px;
     color: t.color('on-surface-variant');
@@ -212,19 +213,19 @@ $snap: 0s linear $midpoint;
     position: absolute;
     box-sizing: border-box;
     inset-block-start: 42px;
-    left: 16px;
+    @include d.start(16px, $arm: false);
     inline-size: 64px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     @include m.typography('label-medium');
-    // Both physical sides: the arms swap which is live, and a transition
+    // The inline inset's transition names both physical sides in the arms
+    // form (d.transition): the arms swap which is live, and a transition
     // that names a property the arms unset jumps instead of snapping.
     transition:
       inset-block-start $snap,
-      left $snap,
-      right $snap,
+      d.transition(inset-inline-start, $snap),
       inline-size $snap,
       font-size $snap,
       line-height $snap,
@@ -234,7 +235,7 @@ $snap: 0s linear $midpoint;
   }
   &--expanded &__label {
     inset-block-start: 18px;
-    left: 68px;
+    @include d.start(68px, $arm: false);
     inline-size: calc(100% - 104px);
     text-align: start;
     @include m.typography('label-large');
@@ -253,7 +254,7 @@ $snap: 0s linear $midpoint;
   &__badge {
     position: absolute;
     box-sizing: border-box;
-    left: 48px;
+    @include d.start(48px, $arm: false);
     inset-block-start: 8px;
     min-inline-size: 16px;
     min-block-size: 16px;
@@ -262,8 +263,8 @@ $snap: 0s linear $midpoint;
     background: t.color('error');
     color: t.color('on-error');
     @include m.typography('label-small');
-    // Both physical sides, as the label's snap above.
-    transition: left $snap, right $snap, inset-block-start $snap;
+    // Both physical sides in the arms form, as the label's snap above.
+    transition: d.transition(inset-inline-start, $snap), inset-block-start $snap;
     transition-behavior: allow-discrete;
     &--dot {
       inline-size: 6px;
@@ -271,25 +272,26 @@ $snap: 0s linear $midpoint;
       min-inline-size: 0;
       min-block-size: 0;
       padding: 0;
-      left: 54px;
+      @include d.start(54px, $arm: false);
       inset-block-start: 10px;
     }
   }
-  &--expanded &__badge { left: auto; right: 36px; inset-block-start: 20px; }
+  &--expanded &__badge { @include d.sides(auto, 36px, $arm: false); inset-block-start: 20px; }
   &--expanded &__badge--dot { inset-block-start: 25px; }
 
   // The start-edge insets above are the left-to-right form; these arms write
-  // the mirrored one, a marker on the rail root included.
-  @include m.rtl-selector('.#{$component}__indicator') { right: 20px; left: auto; }
-  @include m.rtl-selector('.#{$component}__icon') { right: 36px; left: auto; }
-  @include m.rtl-selector('.#{$component}__label') { right: 16px; left: auto; }
-  @include m.rtl-selector('.#{$component}__badge') { right: 48px; left: auto; }
-  @include m.rtl-selector('.#{$component}__badge--dot') { right: 54px; left: auto; }
+  // the mirrored one, a marker on the rail root included. Nothing of this in
+  // the logical form, where the insets mirror natively.
+  @include d.arms-selector('.#{$component}__indicator') { right: 20px; left: auto; }
+  @include d.arms-selector('.#{$component}__icon') { right: 36px; left: auto; }
+  @include d.arms-selector('.#{$component}__label') { right: 16px; left: auto; }
+  @include d.arms-selector('.#{$component}__badge') { right: 48px; left: auto; }
+  @include d.arms-selector('.#{$component}__badge--dot') { right: 54px; left: auto; }
 
   // The expanded rules carry the variant class, so a marker on the root
   // needs the self form (the fab-menu bottom-start trap).
   &--expanded {
-    @include m.rtl(true) {
+    @include d.arms($self: true) {
       .#{$component}__label { right: 68px; left: auto; }
       .#{$component}__badge { left: 36px; right: auto; }
     }
@@ -302,8 +304,7 @@ $snap: 0s linear $midpoint;
   &--modal {
     position: fixed;
     inset-block: 0;
-    left: 0;
-    right: auto;
+    @include d.sides(0, auto, $arm: false);
     margin: 0;
     border: 0;
     max-inline-size: calc(100vw - 56px);
@@ -311,15 +312,15 @@ $snap: 0s linear $midpoint;
     block-size: 100dvh;
     background: t.color('surface-container');
     // The modal rail's container, corner-large at the end, as the drawer's
-    border-top-right-radius: v.shape('large');
-    border-bottom-right-radius: v.shape('large');
+    @include d.corners($start-end: v.shape('large'), $end-end: v.shape('large'), $arm: false);
     transition: inline-size $fast-spatial;
     @include m.elevation(2);
     &:not([open]) { display: none; }
     &::backdrop { background: t.alpha('scrim', 0.32); }
 
-    // The modal docks at the start edge and its large corners follow it.
-    @include m.rtl(true) {
+    // The modal docks at the start edge and its large corners follow it. One
+    // arm carries the whole mirrored form; the logical form needs none of it.
+    @include d.arms($self: true) {
       left: auto;
       right: 0;
       border-top-left-radius: v.shape('large');

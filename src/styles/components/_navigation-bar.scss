@@ -2,6 +2,7 @@
 @use '../abstract/theme' as t;
 @use '../abstract/mixins' as m;
 @use '../abstract/variables' as v;
+@use '../abstract/direction' as d;
 
 // M3 Expressive navigation bar: Compose ShortNavigationBar with
 // NavigationBarTokens, NavigationBarVerticalItemTokens and
@@ -47,15 +48,13 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
   // BadgedBox: a large badge's start at the icon's end less 12dp, its bottom 14dp
   // below the icon's top; the dot 6dp in from the icon's end, at its top. The
   // dot is the badge's anchor shifted by its own property, so the direction
-  // arms mirror the badge alone.
+  // arms mirror the badge alone. The mirrored form is aggregated after the
+  // component block (d.arms), naming both variants this mixin serves.
   .#{$component}__badge {
-    left: calc(50% + var(--#{$component}-dot-shift, 0px));
+    @include d.start(calc(50% + var(--#{$component}-dot-shift, 0px)), $arm: false);
     inset-block-start: 8px;
     &--dot { --#{$component}-dot-shift: 6px; inset-block-start: 10px; }
   }
-
-  // The start-side insets above are the left-to-right form; the arms after
-  // the component block write the mirrored one.
 }
 
 // Icon beside the label (NavigationBarHorizontalItemTokens), M3 Expressive's
@@ -85,13 +84,14 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
   // The horizontal item's active label takes the icon's colour (Compose, pending its own token)
   .#{$component}__item--active .#{$component}__label { color: t.color('on-secondary-container'); }
   .#{$component}__badge {
-    left: calc(28px + var(--#{$component}-dot-shift, 0px));
+    @include d.start(calc(28px + var(--#{$component}-dot-shift, 0px)), $arm: false);
     inset-block-start: 6px;
     &--dot { --#{$component}-dot-shift: 6px; inset-block-start: 8px; }
   }
 
-  // As the vertical form's: physical start side, mirrored by the arms.
-  @include m.rtl(true) {
+  // As the vertical form's: the start side, mirrored by one arm that also
+  // matches the marker on the root carrying this variant.
+  @include d.arms($self: true) {
     .#{$component}__badge { right: calc(28px + var(--#{$component}-dot-shift, 0px)); left: auto; }
   }
 }
@@ -250,9 +250,10 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
 // no arm (see the mixin: it is centred by physical sides alone). The :is()
 // names both variants the mixin serves, halving the preludes every shipped
 // copy of the sheet pays, and the self arm still matches a marker on the root
-// that carries the variant.
+// that carries the variant. Nothing in the logical form, where the badge's
+// inset mirrors natively.
 :is(.#{$component}--vertical, .#{$component}--auto) {
-  @include m.rtl(true) {
+  @include d.arms($self: true) {
     .#{$component}__badge { right: calc(50% + var(--#{$component}-dot-shift, 0px)); left: auto; }
   }
 }
