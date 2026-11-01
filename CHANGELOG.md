@@ -124,6 +124,19 @@ Menus you can trust with keyboard and selection.
   `browser (components)`. The `check` status the ruleset requires is
   untouched, and the critical path is now `browser (ssr)` at 4m17s.
 
+- **The menu close-contract test waits for the reveal it asserts, and its
+  pre-reveal cases no longer race the 20 ms reveal (#213).**
+  With the same 38 named cases, a positive reveal check now waits on the menu's
+  visible class through a `MutationObserver` with a 2 s deadline, the select's
+  and the split button's inner menus included, and the pre-reveal click and
+  Escape cases observe and dismiss in the task that opened the menu — no 3 ms
+  yield for a paused runner to stretch past the reveal. A bounded observer
+  still covers the 160 ms no-late-reveal window, now for Escape as well as
+  outside click. Measured before the fix on the unchanged test: 0/1,000
+  failures normally, 100/100 with a 40 ms scheduler pause before the old 3 ms
+  wait; with the fix, 1,000/1,000 and 100/100. Test only: no product code,
+  stylesheet, shared fixture or budget changes.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
