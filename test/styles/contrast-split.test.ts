@@ -191,6 +191,10 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // The split button writes each half's physical corner pair and the
+    // right-to-left pair as a direction arm, its radii in custom properties,
+    // so the bundler's :lang() lowering cannot reach them
+    // (styles/components/_split-button.scss).
     // The navigation bar and rail place their start edges on the physical
     // left and mirror them with the direction arms, not the insets a
     // consumer's bundler lowers; the bar's vertical arms share one :is()
@@ -199,8 +203,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("0e674b7268ad9efeed28d55f66586c26950c4758f0fe09953d98314d3bbebc54");
-    expect(css.length).toBe(548390);
+      .toBe("4d779116e7c7da82e28ac7981b7d0d609ce4715ab7eb853adae769ae8f0178af");
+    expect(css.length).toBe(544596);
   });
 
   test("today's sheets still resolve to the fixture", () => {
