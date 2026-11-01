@@ -25,12 +25,15 @@
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { documentedImports } from "./docs-imports";
+import { documentedImports, sideEffectTarget } from "./docs-imports";
 import { createPackageFixture } from "./package-fixture";
 
 const ROOT = join(import.meta.dir, "..");
 const manifest = await Bun.file(join(ROOT, "package.json")).json() as { name: string };
 const { imports, documents, sources } = await documentedImports(ROOT, manifest.name);
+
+/** A statement with no bindings: the module is imported for what it does. */
+const SIDE_EFFECT = /^\s*import\s*['"]([^'"]+)['"]/;
 
 // One file per distinct statement: the same import line in several docs is
 // compiled once, and a failure names every place it is documented.
@@ -67,6 +70,15 @@ try {
   }
   // A tsc failure no statement accounts for: the check itself could not run.
   if (tsc.exitCode !== 0 && reported === 0) failures.push(`The documented imports did not compile:\n${output}`);
+  // TypeScript leaves an unresolved side-effect import alone unless noUncheckedSideEffectImports is on, and the
+  // stylesheet exports carry no declarations for that option to accept: resolve these through the packed package here.
+  for (const { name, statement } of names) {
+    const specifier = SIDE_EFFECT.exec(statement)?.[1];
+    if (specifier === undefined || sideEffectTarget(specifier, join(fixture.directory, name)) !== undefined) continue;
+    for (const where of places.get(statement) ?? []) {
+      failures.push(`${where.file}:${where.line}: the packed package exports no target for "${specifier}" (side-effect import)`);
+    }
+  }
 } finally {
   await fixture.cleanup();
 }

@@ -16,6 +16,7 @@
  * against the packed package.
  */
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 
 /** Not documentation: a release's history, and the fixtures (test data and a generated table). */
 const NOT_DOCUMENTATION = [/^CHANGELOG\.md$/, /^test\/fixtures\//, /^scripts\/fixtures\//];
@@ -99,6 +100,24 @@ export function jsdocImports(source: string, file: string): DocImport[] {
 /** The imports that name the package or one of its subpaths. */
 export const packageImports = (imports: DocImport[], name: string): DocImport[] =>
   imports.filter((item) => item.specifier === name || item.specifier.startsWith(`${name}/`));
+
+/**
+ * The file a side-effect import of an installed package resolves to, or
+ * undefined when the package's exports name no such target.
+ *
+ * TypeScript leaves an unresolved side-effect import alone unless
+ * noUncheckedSideEffectImports is on, and the stylesheet exports ship no
+ * declarations for that option to accept, so check-docs-imports.ts resolves
+ * these specifiers itself.
+ */
+export function sideEffectTarget(specifier: string, importer: string): string | undefined {
+  try {
+    const target = Bun.resolveSync(specifier, importer);
+    return existsSync(target) ? target : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export interface DocumentedImports {
   /** Every documented import of the package, in file order */
