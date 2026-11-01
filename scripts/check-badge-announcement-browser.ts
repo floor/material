@@ -1,5 +1,5 @@
 /**
- * FLO-1073. Read 2026-11-01:
+ * Non-counting badge announcements. Read 2026-11-01:
  * https://m3.material.io/components/badges/accessibility
  * "non-counting badges will simply announce New notification."
  * Measure Chromium's accessibility tree, including the implicit live region,
