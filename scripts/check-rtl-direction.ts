@@ -676,7 +676,13 @@ export async function checkRtlDirection(browser: Browser): Promise<void> {
       const direction = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
       return new Response(
         `<!doctype html><html dir="${direction}"><head><link rel="stylesheet" href="${sheet}">` +
-          `<style>body{margin:0;width:${WIDTH}px;height:${HEIGHT}px}</style></head>` +
+          `<style>body{margin:0;width:${WIDTH}px;height:${HEIGHT}px}` +
+          // Nothing here is clicked or hovered: opt the harness out of hit
+          // testing entirely, so no fixture can sit under the pointer and
+          // morph — the split button's halves restyle their corners on
+          // :hover, and where a headless renderer leaves the pointer across
+          // a navigation is not ours to control.
+          `#host,#host *{pointer-events:none}</style></head>` +
           `<body><main id="host"></main></body></html>`,
         { headers: { "Content-Type": "text/html" } },
       );
@@ -688,8 +694,6 @@ export async function checkRtlDirection(browser: Browser): Promise<void> {
       for (const direction of ["ltr", "rtl"] as Direction[]) {
         const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
         try {
-          // Parked off every fixture: a half under the pointer is mid-morph.
-          await page.mouse.move(WIDTH - 1, HEIGHT - 1);
           await page.goto(`${server.url.href}?sheet=${sheet}&dir=${direction}`);
           const measured = await measure(page, sheet, direction);
           for (const [where, rows] of Object.entries(measured)) {
