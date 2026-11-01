@@ -9,31 +9,7 @@ let css = '';
 
 const rules = (selector: string): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const exact = Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
-  if (exact.length) return exact;
-  // A direction rule compiles to a selector list — the light-DOM attribute form
-  // beside the shadow tree's host-class form — so the selector is one member of
-  // the prelude, not the whole of it. Commas inside `:not(:where(...))` do not
-  // separate members.
-  const members = (prelude: string): string[] => {
-    const out: string[] = [];
-    let depth = 0;
-    let start = 0;
-    for (let i = 0; i < prelude.length; i++) {
-      const ch = prelude[i];
-      if (ch === '(') depth++;
-      else if (ch === ')') depth = Math.max(0, depth - 1);
-      else if (ch === ',' && depth === 0) {
-        out.push(prelude.slice(start, i));
-        start = i + 1;
-      }
-    }
-    out.push(prelude.slice(start));
-    return out;
-  };
-  return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
-    .filter((m) => members(m[1]!).map((member) => member.trim()).includes(selector))
-    .map((m) => m[2]!);
+  return Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
 };
 
 const value = (selector: string, property: string): string | undefined =>
@@ -71,24 +47,9 @@ describe('progress stylesheet', () => {
     expect(value('.mtrl-progress__label', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
   });
 
-  test('a label sits outside the canvas on a physical edge, and the mirrored edge is a direction arm; it only then reserves room', () => {
+  test('a label sits outside the canvas and only then reserves room', () => {
     expect(value('.mtrl-progress--linear .mtrl-progress__label', 'top')).toBe('100%');
-    expect(value('.mtrl-progress--linear .mtrl-progress__label', 'right')).toBe('0');
-    // A consumer's bundler lowers inset-inline-end into :lang() lists that
-    // match a language, never dir="rtl": the bundled sheet kept the label at
-    // the right edge of a right-to-left page. The mirrored edge is a direction
-    // arm — the class on an ancestor, the shadow tree's host class, and a cut
-    // attribute fallback — plus the root-carried form for the direction on the
-    // indicator itself, where the runtime writes the class.
-    for (const member of [
-      ':where(.mtrl-rtl) .mtrl-progress--linear .mtrl-progress__label',
-      ':where(:host(.mtrl-rtl)) .mtrl-progress--linear .mtrl-progress__label',
-      '[dir=rtl] .mtrl-progress--linear .mtrl-progress__label:not(:where(.mtrl-ltr, .mtrl-ltr *))',
-      '.mtrl-progress--linear:where(.mtrl-rtl, [dir=rtl]) .mtrl-progress__label',
-    ]) {
-      expect(value(member, 'left')).toBe('0');
-      expect(value(member, 'right')).toBe('auto');
-    }
+    expect(value('.mtrl-progress--linear .mtrl-progress__label', 'inset-inline-end')).toBe('0');
     expect(value('.mtrl-progress--linear:has(.mtrl-progress__label)', 'margin-bottom')).toBe('20px');
     // the old stylesheet padded every linear indicator for a label it might not have
     expect(value('.mtrl-progress--linear', 'padding-bottom')).toBeUndefined();

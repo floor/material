@@ -58,7 +58,7 @@ $component: "#{base.$prefix}-progress";
     white-space: nowrap;
 
     .#{$component}--linear & {
-      right: 0;
+      inset-inline-end: 0;
       top: 100%;
       margin-top: 4px;
     }
@@ -68,25 +68,6 @@ $component: "#{base.$prefix}-progress";
       left: 50%;
       transform: translate(-50%, -50%);
     }
-  }
-
-  // The label's edge under a linear indicator is a physical side with a
-  // direction arm, not a logical inset: a consumer bundler lowers
-  // `inset-inline-end` into `:lang()` arms that match a language, never
-  // `dir="rtl"`, so the bundled sheet kept the label at the right edge of a
-  // right-to-left page. The arms read the direction from anywhere above the
-  // indicator; the root-carried form after them reads it from the indicator
-  // itself, where the runtime writes `mtrl-rtl` and a `dir` may sit — the
-  // placement class and the direction marker can share one element (the FAB
-  // menu's bottom-start form).
-  @include m.rtl-selector(".#{$component}--linear .#{$component}__label") {
-    left: 0;
-    right: auto;
-  }
-
-  &--linear:where(.#{base.$prefix}-rtl, [dir='rtl']) .#{$component}__label {
-    left: 0;
-    right: auto;
   }
 
   // A linear indicator with a label leaves room for it underneath

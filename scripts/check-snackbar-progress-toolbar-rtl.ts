@@ -5,12 +5,22 @@
 // them. A consumer bundle lowers `inset-inline-start` / `inset-inline-end`
 // into `:lang()` arms that match a language, never `dir="rtl"`
 // (src/styles/components/_text-field.scss): under the bundled sheet only, a
-// start snackbar stayed at the left edge of a right-to-left page, the linear
-// label kept its right edge, and a start toolbar kept its left one. The
-// partials now write the physical side and the right-to-left side as a
-// direction arm (the FAB placement form; the toolbar's hidden offsets already
-// read the same arms through their direction multiplier), so the bundled and
-// the unbundled sheet must agree.
+// start snackbar stayed at the left edge of a right-to-left page and a start
+// toolbar kept its left one. Those partials now write the physical side and
+// the right-to-left side as a direction arm (the FAB placement form; the
+// toolbar's hidden offsets already read the same arms through their direction
+// multiplier), so the bundled and the unbundled sheet must agree.
+//
+// The linear progress label keeps its logical inset this pass. Its arms would
+// ride in the button's loading-state closure — the manifest wires
+// components/progress into components/button, and the SSR page carries that
+// closure once per button root, 320 bytes a root over the page ceiling — so
+// under the bundled sheet the label is pinned where the lowering leaves it
+// (the physical trailing edge, and flipped by `lang` alone): the defect is
+// measured, deferred to a progress-only pass, and this assert makes the
+// follow-up flip it. The unbundled sheet and the element host keep the native
+// logical property and assert the mirrored edge. The circular label is
+// centred by a translate, neutral to direction, asserted on every sheet.
 //
 // The same markup renders in an LTR page and in an RTL page, under the bundled
 // full-css and under dist/styles.css, with the direction arriving as the page's
@@ -167,6 +177,32 @@ const measure = (page: Page, cases: Case[]): Promise<Record<string, Snapshot>> =
 
 const near = (a: number, b: number): boolean => Math.abs(a - b) <= 0.5;
 
+/** The linear label's offset into the indicator. `mirrored` is the logical
+ *  property's reading — flush with the trailing edge, 0 in right-to-left —
+ *  which the unbundled sheet and the element host give. The bundled sheet's
+ *  lowering cannot mirror on `dir` and turns on `lang` alone, so it is pinned
+ *  to the physical trailing edge in every direction and to 0 under an Arabic
+ *  language, both faces of the deferred defect (see the header). */
+function assertLinearLabel(
+  where: string,
+  snap: Snapshot,
+  direction: Direction,
+  base: Snapshot,
+  mode: "mirrored" | "trailing-edge" | "lang-flipped",
+): void {
+  const trailing = base.linearWidth - base.linearLabel.width;
+  const expected = mode === "lang-flipped" || (mode === "mirrored" && direction === "rtl") ? 0 : trailing;
+  const because = mode === "mirrored"
+    ? "expected the logical inset's mirrored edge"
+    : mode === "lang-flipped"
+      ? "expected the bundled sheet's lowered inset, which flips on lang=ar alone (the deferred progress defect)"
+      : "expected the bundled sheet's lowered inset, which keeps the physical trailing edge (the deferred progress defect)";
+  assert(
+    near(snap.linearLabel.offset, expected),
+    `${where}: the linear label starts ${snap.linearLabel.offset}px into the indicator; ${because} (${expected}px)`,
+  );
+}
+
 /** Every part on the side the direction puts it, mirrored about the viewport
  *  (the snackbar) or the part's own container (the rest). */
 function assertMirrored(where: string, snap: Snapshot, direction: Direction, base: Snapshot): void {
@@ -179,11 +215,6 @@ function assertMirrored(where: string, snap: Snapshot, direction: Direction, bas
   assert(
     near(snap.snackbarEnd.x, end),
     `${where}: the end snackbar sits ${snap.snackbarEnd.x}px from the left edge; expected ${end}px`,
-  );
-  const label = direction === "rtl" ? 0 : base.linearWidth - base.linearLabel.width;
-  assert(
-    near(snap.linearLabel.offset, label),
-    `${where}: the linear label starts ${snap.linearLabel.offset}px into the indicator; expected ${label}px`,
   );
   assert(
     Math.abs(snap.circularCentre) <= 0.5,
@@ -214,13 +245,23 @@ async function assertSheet(browser: Browser, base: string, sheet: string): Promi
     await rtlPage.goto(`${base}${sheet}?dir=rtl`);
     const ltr = await measure(ltrPage, [{ name: "plain", markup: caseMarkup() }, ...CLASS_CASES]);
     const rtl = await measure(rtlPage, [{ name: "plain", markup: caseMarkup() }, ...CLASS_CASES]);
+    // The bundled sheet's label mode: the lowering's physical trailing edge;
+    // the unbundled sheet keeps the logical property and mirrors.
+    const labelMode = sheet === "plain" ? "trailing-edge" : "mirrored";
     // The plain LTR page is the reference every other case is read against.
     assertMirrored(`${sheet}: LTR`, ltr.plain, "ltr", ltr.plain);
+    assertLinearLabel(`${sheet}: LTR`, ltr.plain, "ltr", ltr.plain, labelMode);
     // The lowering is the defect this pass exists for: its case comes first.
     assertMirrored(`${sheet}: page dir=rtl`, rtl.plain, "rtl", ltr.plain);
+    assertLinearLabel(`${sheet}: page dir=rtl`, rtl.plain, "rtl", ltr.plain, labelMode);
     for (const item of CLASS_CASES) {
+      // The bundled lowering also turns on `lang` alone: its case pins that
+      // face of the defect instead of the trailing edge.
+      const itemLabelMode = item.lang && labelMode === "trailing-edge" ? "lang-flipped" : labelMode;
       assertMirrored(`${sheet}: ${item.name}`, ltr[item.name], expectedDirection(item, "ltr"), ltr.plain);
+      assertLinearLabel(`${sheet}: ${item.name}`, ltr[item.name], expectedDirection(item, "ltr"), ltr.plain, itemLabelMode);
       assertMirrored(`${sheet}: ${item.name} (rtl page)`, rtl[item.name], expectedDirection(item, "rtl"), ltr.plain);
+      assertLinearLabel(`${sheet}: ${item.name} (rtl page)`, rtl[item.name], expectedDirection(item, "rtl"), ltr.plain, itemLabelMode);
     }
   } finally {
     await ltrPage.close();
@@ -353,10 +394,14 @@ export async function checkSnackbarProgressToolbarRtl(browser: Browser, base: st
     const ltr = await measure(ltrPage, [{ name: "plain", markup: caseMarkup() }, ...CLASS_CASES]);
     const rtl = await measure(rtlPage, [{ name: "plain", markup: caseMarkup() }, ...CLASS_CASES]);
     assertMirrored("unbundled: LTR", ltr.plain, "ltr", ltr.plain);
+    assertLinearLabel("unbundled: LTR", ltr.plain, "ltr", ltr.plain, "mirrored");
     assertMirrored("unbundled: page dir=rtl", rtl.plain, "rtl", ltr.plain);
+    assertLinearLabel("unbundled: page dir=rtl", rtl.plain, "rtl", ltr.plain, "mirrored");
     for (const item of CLASS_CASES) {
       assertMirrored(`unbundled: ${item.name}`, ltr[item.name], expectedDirection(item, "ltr"), ltr.plain);
+      assertLinearLabel(`unbundled: ${item.name}`, ltr[item.name], expectedDirection(item, "ltr"), ltr.plain, "mirrored");
       assertMirrored(`unbundled: ${item.name} (rtl page)`, rtl[item.name], expectedDirection(item, "rtl"), ltr.plain);
+      assertLinearLabel(`unbundled: ${item.name} (rtl page)`, rtl[item.name], expectedDirection(item, "rtl"), ltr.plain, "mirrored");
     }
 
     const elementLtr = await measureElements(ltrPage);
@@ -402,10 +447,11 @@ export async function checkSnackbarProgressToolbarRtl(browser: Browser, base: st
 
   console.log(
     "Snackbar, progress and toolbar placements: the start snackbar 16px from the left edge and the end one " +
-    "mirrored, the linear label flush with the trailing edge, the circular label centred, and the start and " +
-    "end toolbars 24px from their container's leading and trailing edges, mirrored for the page's dir, a dir " +
-    "on the root, mtrl-rtl on the root and on an ancestor, the snackbar and progress elements inside a shadow " +
-    "root, and a toolbar factory in the light DOM, in the bundled full-css and in dist/styles.css; a " +
-    "nearer dir=ltr boundary keeps its own side, and lang=ar alone turns none of them.",
+    "mirrored, the circular label centred, and the start and end toolbars 24px from their container's leading " +
+    "and trailing edges, mirrored for the page's dir, a dir on the root, mtrl-rtl on the root and on an " +
+    "ancestor, the snackbar and progress elements inside a shadow root, and a toolbar factory in the light " +
+    "DOM, in the bundled full-css and in dist/styles.css; the linear label mirrors in dist/styles.css and the " +
+    "element host, and keeps the bundled sheet's lowered trailing edge (the defect deferred to a " +
+    "progress-only pass); a nearer dir=ltr boundary keeps its own side, and lang=ar alone turns none of them.",
   );
 }
