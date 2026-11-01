@@ -13,8 +13,6 @@ global.SVGElement = dom.window.SVGElement;
 import {
   createElement,
   createSVGElement,
-  createElementPooled,
-  releaseElement,
   removeEventHandlers,
 } from "../../../../src/core/dom/create";
 
@@ -127,87 +125,6 @@ benchmark("DOM Create Performance Benchmarks", () => {
       );
 
       expect(totalTime).toBeLessThan(5000);
-    });
-  });
-
-  describe("Element Pool Performance", () => {
-    it("should handle pooled element creation efficiently", () => {
-      const iterations = 50000;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        const element = createElementPooled({
-          tag: "div",
-          className: "pooled-item",
-          text: `Item ${i}`,
-        });
-
-        // Release every 10th element to test pool reuse
-        if (i % 10 === 0) {
-          releaseElement(element);
-        }
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      console.log(`\n♻️  createElementPooled Performance (${iterations} ops):`);
-      console.log(`   Time: ${totalTime.toFixed(2)}ms`);
-      console.log(
-        `   Per operation: ${((totalTime / iterations) * 1000).toFixed(3)}μs`
-      );
-      console.log(
-        `   Throughput: ${Math.round(iterations / (totalTime / 1000))} ops/sec`
-      );
-      console.log(`   Pool reuse: 10% of elements`);
-
-      expect(totalTime).toBeLessThan(3000);
-    });
-
-    it("should demonstrate pool reuse efficiency", () => {
-      const iterations = 10000;
-      const elements: HTMLElement[] = [];
-
-      // Create elements
-      const createStart = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        const element = createElementPooled({
-          tag: "div",
-          className: "test-item",
-        });
-        elements.push(element);
-      }
-      const createTime = performance.now() - createStart;
-
-      // Release all elements
-      const releaseStart = performance.now();
-      elements.forEach(releaseElement);
-      const releaseTime = performance.now() - releaseStart;
-
-      // Recreate from pool
-      const reuseStart = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        createElementPooled({
-          tag: "div",
-          className: "reused-item",
-        });
-      }
-      const reuseTime = performance.now() - reuseStart;
-
-      console.log(`\n🔄 Pool Reuse Efficiency (${iterations} ops):`);
-      console.log(`   Initial creation: ${createTime.toFixed(2)}ms`);
-      console.log(`   Release time: ${releaseTime.toFixed(2)}ms`);
-      console.log(`   Reuse time: ${reuseTime.toFixed(2)}ms`);
-      console.log(
-        `   Reuse improvement: ${(
-          ((createTime - reuseTime) / createTime) *
-          100
-        ).toFixed(1)}%`
-      );
-
-      // Note: Pooling may have slight overhead for simple cases due to pool management
-      // But should be within 20% of direct creation time
-      expect(reuseTime).toBeLessThan(createTime * 1.2);
     });
   });
 
@@ -671,14 +588,12 @@ benchmark("DOM Create Performance Benchmarks", () => {
             });
             break;
 
-          case 2: // Pooled element
-            const pooled = createElementPooled({
+          case 2: // Attribute-heavy element
+            createElement({
               tag: "span",
-              className: "pooled-item",
+              className: "attribute-item",
+              attributes: { "data-index": `${i}`, role: "presentation" },
             });
-            if (i % 20 === 0) {
-              releaseElement(pooled);
-            }
             break;
 
           case 3: // SVG element
