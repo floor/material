@@ -13,9 +13,9 @@ import { hideFromTopLayer } from "../../core/dom/layer";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
- * What withAPI needs handed to it. Exported because getApiConfig in config.ts
- * builds exactly this, and the features install exactly its sub-objects -- so
- * one description serves all three rather than three that can drift.
+ * What withAPI needs handed to it, besides the element and classes. The
+ * features install exactly these sub-objects, so one description serves the
+ * features and the public API rather than two that can drift.
  */
 export interface ApiOptions {
   visibility: {
@@ -71,14 +71,29 @@ interface ComponentWithElements {
 }
 
 /**
+ * What withAPI reads off the dialog besides its element and classes: the
+ * features' own sub-objects, and the event manager, which is the component.
+ * One description, where there used to be two that could drift.
+ */
+export type DialogFeatureHost = Omit<ApiOptions, "events"> & {
+  on: (event: string, handler: EventCallback) => unknown;
+  off: (event: string, handler: EventCallback) => unknown;
+  emit: (event: string, data: unknown) => unknown;
+};
+
+/**
  * Enhances a dialog component with API methods
- * @param {ApiOptions} options - API configuration options
- * @returns {Function} Higher-order function that adds API methods to component
+ * @param {DialogFeatureHost} component - The composed component
+ * @returns {DialogComponent} The public dialog
  * @internal This is an internal utility for the Dialog component
  */
-export const withAPI =
-  (options: ApiOptions) =>
-  (component: ComponentWithElements): DialogComponent => ({
+export const withAPI = (
+  component: ComponentWithElements & DialogFeatureHost,
+): DialogComponent => {
+  // The feature sub-objects, read where they are: getApiConfig used to copy
+  // every method into a second object, and this method wrapped each copy again
+  const options = component;
+  return {
     ...component,
 
     /**
@@ -244,7 +259,7 @@ export const withAPI =
      * @returns {DialogComponent} Dialog component instance for chaining
      */
     on(event: DialogEventType | string, handler: (event: DialogEvent) => void) {
-      options.events.on(event, handler);
+      options.on(event, handler);
       return this;
     },
 
@@ -258,7 +273,7 @@ export const withAPI =
       event: DialogEventType | string,
       handler: (event: DialogEvent) => void,
     ) {
-      options.events.off(event, handler);
+      options.off(event, handler);
       return this;
     },
 
@@ -292,12 +307,8 @@ export const withAPI =
      * @returns {Promise<boolean>} Promise resolving to user choice (true for confirm, false for cancel)
      */
     confirm(options?: DialogConfirmOptions) {
-      if (component.confirm) {
-        return component.confirm(options || { message: "Are you sure?" });
-      }
-
-      // Fallback if confirm feature is not available
-      return Promise.resolve(false);
+      // withConfirm installs it before this public API is built
+      return component.confirm!(options || { message: "Are you sure?" });
     },
 
     /**
@@ -343,4 +354,5 @@ export const withAPI =
     // Pass through element references
     element: component.element,
     overlay: component.overlay,
-  });
+  };
+};

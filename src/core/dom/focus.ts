@@ -31,12 +31,19 @@ export const deepActiveElement = (): Element | null => {
   return active;
 };
 
-/** Whether an element is a tab stop: focusable in sequence, enabled, rendered. */
+/**
+ * Whether an element is a tab stop: focusable in sequence, enabled, shown to
+ * assistive technology, rendered. `aria-hidden="true"` takes an element out of
+ * the accessibility tree, so it is not a candidate — the dialog's own filter
+ * skipped it before this path was shared.
+ */
 const isTabStop = (element: Element): element is HTMLElement =>
   (element as Partial<HTMLElement>).tabIndex !== undefined &&
   (element as HTMLElement).tabIndex >= 0 &&
-  !element.matches(":disabled, [inert] *, [inert]") &&
-  element.getClientRects().length > 0;
+  !element.matches(":disabled, [inert] *, [inert], [aria-hidden='true']") &&
+  // A rendered element has a layout box and a client rect. A DOM without
+  // layout (JSDOM) reports neither, and a test there supplies the box.
+  ((element as HTMLElement).offsetWidth > 0 || element.getClientRects().length > 0);
 
 /**
  * The tab stops in a container, in the order Tab reaches them: through slots
