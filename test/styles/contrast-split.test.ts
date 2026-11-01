@@ -195,9 +195,15 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The progress family draws in SVG parts the sheet styles: the canvas
+    // element and its rule are gone, the geometry reads the registered
+    // --l/--r/sweep custom properties, the indeterminate motion runs as
+    // keyframes on the drawing parts, and a travelling wave is clipped to a
+    // window the sheet composes while the ring's dash slides against the
+    // travel rotation (styles/components/_progress.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("364addc2b3b4ad5d35eab35e1bc64f854c3b8f2114cc8f8a5f945d23d123d7f8");
+    expect(css.length).toBe(553004);
   });
 
   test("today's sheets still resolve to the fixture", () => {
