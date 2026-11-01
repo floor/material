@@ -1,7 +1,7 @@
 // src/components/select/features.ts
 import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import createTextField from "../text-field";
-import createMenu from "../menu";
+import createMenu from "../menu/surface";
 import { MenuComponent, MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
 import { MENU } from "../menu/inner";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";

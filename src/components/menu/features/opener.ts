@@ -9,6 +9,8 @@ import {
   OpenerTarget,
 } from "../types";
 import { focusWithin } from "./layer";
+import { resolveOpener } from "./opener-target";
+import { handleOpenerKeyboard, toggleMenuFromOpener } from "./opener-events";
 
 /**
  * A component used as the menu opener. It is resolved by its element,
@@ -57,56 +59,6 @@ const withOpener =
     openerElement: null as HTMLElement | null,
     openerComponent: null as OpenerComponent | null,
     activeClass: "", // Store the appropriate active class based on element type
-  };
-
-  /**
-   * Resolves the opener element from string, direct reference, or component
-   * Handles components with element property, components with getElement() method,
-   * or DOM elements directly
-   */
-  const resolveOpener = (
-    opener: OpenerTarget,
-  ): { element: HTMLElement | null; component: OpenerComponent | null } => {
-    if (!opener) return { element: null, component: null };
-
-    // Handle string selector
-    if (typeof opener === "string") {
-      const element = document.querySelector(opener);
-      if (!element) {
-        console.warn(`Menu opener not found: ${opener}`);
-        return { element: null, component: null };
-      }
-      return { element: element as HTMLElement, component: null };
-    }
-
-    // Handle component with element property (most common case)
-    if (typeof opener === "object" && opener !== null) {
-      // Case 1: Component with element property
-      if ("element" in opener && opener.element instanceof HTMLElement) {
-        return { element: opener.element, component: opener };
-      }
-
-      // Case 2: Component with getElement method
-      if ("getElement" in opener && typeof opener.getElement === "function") {
-        const element = opener.getElement();
-        if (element instanceof HTMLElement) {
-          return { element, component: opener };
-        }
-      }
-
-      // Case 3: Component with input property (like text field)
-      if ("input" in opener && opener.input instanceof HTMLElement) {
-        return { element: opener.input, component: opener };
-      }
-
-      // Case 4: Direct HTML element
-      if (opener instanceof HTMLElement) {
-        return { element: opener, component: null };
-      }
-    }
-
-    console.warn("Invalid opener type:", opener);
-    return { element: null, component: null };
   };
 
   /**
@@ -279,80 +231,16 @@ const withOpener =
    * Handles opener element click
    */
   const handleOpenerClick = (e: MouseEvent): void => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Toggle menu visibility with mouse interaction type
-    if (component.menu) {
-      const isOpen = component.menu.isOpen();
-
-      if (isOpen) {
-        component.menu.close(e);
-      } else {
-        component.menu.open(e, "mouse");
-      }
-    }
+    toggleMenuFromOpener(component, e);
   };
 
   /**
    * Handles keyboard events on the opener element
    */
   const handleOpenerKeydown = (e: KeyboardEvent): void => {
-    // Only handle events if we have a menu controller
-    if (!component.menu) return;
-
-    // Determine if menu is currently open
-    const isOpen = component.menu.isOpen();
-
-    switch (e.key) {
-      case "Enter":
-      case " ": // Space
-      case "ArrowDown":
-      case "Down":
-        // Prevent default browser behavior
-        e.preventDefault();
-
-        // Open menu if closed, with keyboard interaction type
-        if (!isOpen) {
-          component.menu.open(e, "keyboard");
-        }
-        break;
-
-      case "Escape":
-        // Close the menu if it's open
-        if (isOpen) {
-          e.preventDefault();
-          component.menu.close(e);
-        }
-        break;
-
-      case "ArrowUp":
-      case "Up":
-        e.preventDefault();
-
-        // Special case: open menu with focus on last item
-        if (!isOpen) {
-          component.menu.open(e, "keyboard");
-
-          // Wait for menu to open and grab the last item
-          tasks.setTimeout(() => {
-            const items = component.element.querySelectorAll(
-              `.${component.getClass("menu__item")}:not(.${component.getClass("menu__item--disabled")})`,
-            ) as NodeListOf<HTMLElement>;
-
-            if (items.length > 0) {
-              // Reset tabindex for all items
-              items.forEach((item) => item.setAttribute("tabindex", "-1"));
-
-              // Set the last item as active
-              const lastItem = items[items.length - 1];
-              lastItem.setAttribute("tabindex", "0");
-              lastItem.focus();
-            }
-          }, 100);
-        }
-        break;
-    }
+    handleOpenerKeyboard(component, e, (action, delay) => {
+      tasks.setTimeout(action, delay);
+    });
   };
 
   /**

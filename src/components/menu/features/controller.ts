@@ -438,6 +438,21 @@ const withController =
   };
 
   /**
+   * Runs a reveal once the menu can be placed. A menu whose positioner is
+   * loaded on demand hands over a `whenReady` that waits for its chunk
+   * (features/on-demand-behaviour.ts); a menu with its positioner at creation
+   * runs the reveal now.
+   */
+  const whenPositioned = (reveal: () => void): void => {
+    const position = component.position;
+    if (position && typeof position.whenReady === "function") {
+      position.whenReady(reveal);
+      return;
+    }
+    reveal();
+  };
+
+  /**
    * Opens the menu
    * @param {Event} [event] - Optional event that triggered the open
    * @param {'mouse'|'keyboard'} [interactionType='mouse'] - Type of interaction that triggered the open
@@ -495,8 +510,13 @@ const withController =
     }
     if (topLayer) showInTopLayer(component.element, { kind: "popover-manual" });
 
-    // Step 2: Use a small delay to ensure DOM operations are complete
-    showTimer = tasks.setTimeout(() => {
+    // Step 2: Use a small delay to ensure DOM operations are complete. What
+    // the delay runs is also what a positioner loaded on demand calls back
+    // (features/on-demand-behaviour.ts): the reveal, placement included, is
+    // held until the menu can be placed.
+    const revealMenu = (): void => {
+      // Closed, or destroyed, while the positioner was arriving: it never shows
+      if (!state.visible || tasks.destroyed) return;
       // Position the menu now that it's in the DOM
       const openerElement = getOpenerElement();
       if (openerElement && component.position) {
@@ -554,6 +574,10 @@ const withController =
         passive: true,
       });
       window.addEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
+    };
+
+    showTimer = tasks.setTimeout(() => {
+      whenPositioned(revealMenu);
     }, 20); // Short delay for browser to process
 
     // Trigger event. It cannot be cancelled: the menu is open.
@@ -763,8 +787,13 @@ const withController =
 
   /** Positions an initially visible menu after the caller can attach it. */
   const initMenu = () => {
-    // Position if visible
-    if (state.visible) {
+    // Only an initially visible menu is placed here. A closed one, a select's
+    // menu, must not ask the positioner for anything: for a positioner loaded
+    // on demand that question would fetch it.
+    if (!state.visible) return;
+    const show = (): void => {
+      // Closed, or destroyed, while the positioner was arriving
+      if (!state.visible || tasks.destroyed) return;
       const openerElement = getOpenerElement();
       if (openerElement && component.position) {
         component.position.positionMenu(openerElement);
@@ -782,7 +811,9 @@ const withController =
       }
       window.addEventListener("resize", handleWindowResize);
       window.addEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
-    }
+    };
+
+    whenPositioned(show);
   };
 
   // Handle create-menu-items events for submenu feature

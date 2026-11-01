@@ -688,6 +688,11 @@ export interface MenuFeatureHost {
       parentItemElement: HTMLElement,
       level?: number
     ) => void;
+    // Set only when the positioner is loaded on demand
+    // (features/on-demand-behaviour.ts): the controller runs the placement
+    // and the reveal when it calls back, so a menu is never shown at 0,0 and
+    // then moved. A positioner composed at creation leaves it out.
+    whenReady?: (action: () => void) => void;
   };
   keyboard?: {
     setupKeyboardHandlers: (
