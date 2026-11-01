@@ -94,6 +94,14 @@ export const rejectionTree = (promise: Promise<string>, boundary: boolean): Reac
 export const countedSuspendedButton = (promise: Promise<string>): React.ReactNode =>
   h(React.Suspense, { fallback: pendingFallback }, h(Button, { id: "count" }, h(CountedSibling), h(Late, { promise })));
 
+/**
+ * #461: a boundary inside the host that never resolves, with a counted sibling
+ * beside it. The retry ladder re-renders the sibling on every attempt before the
+ * cap ships the fallback-shaped root; a single-pass snapshot renders it once.
+ */
+export const neverBoundaryButton = (): React.ReactNode =>
+  h(Button, { id: "never-boundary" }, h(CountedSibling), h(React.Suspense, { fallback: null }, h(Late, { promise: neverPromise() })));
+
 export const rejectingPromise = (): Promise<string> =>
   new Promise((_, reject) => { setTimeout(() => reject(new Error("backend down")), 20); });
 

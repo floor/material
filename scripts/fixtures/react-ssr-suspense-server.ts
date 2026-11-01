@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, mislabelledTree, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, mislabelledTree, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -152,5 +152,16 @@ export const renderGiveUp = async (): Promise<StreamResult & { sibling: number }
   renderCounts.sibling = 0;
   const promise = new Promise<string>((resolve) => { setTimeout(() => resolve(SUSPENSE_TEXT), 9500); });
   const result = await settled(countedSuspendedButton(promise), { timeout: 15000 });
+  return { ...result, sibling: renderCounts.sibling };
+};
+
+/**
+ * #461: a boundary inside the host that never resolves. The cap ships the
+ * fallback-shaped root after the retry ladder; the sibling count proves the
+ * ladder ran where a single-pass snapshot would render it once.
+ */
+export const renderBoundaryGiveUp = async (): Promise<StreamResult & { sibling: number }> => {
+  renderCounts.sibling = 0;
+  const result = await settled(neverBoundaryButton(), { timeout: 12000, abortAfter: 9800 });
   return { ...result, sibling: renderCounts.sibling };
 };
