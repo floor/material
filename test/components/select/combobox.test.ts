@@ -307,3 +307,14 @@ describe('select as a combobox', () => {
     expect(document.querySelector('[role="listbox"]')).toBeNull();
   });
 });
+
+
+test("the explicit accessible name belongs to the select input even when it equals the visible label", async () => {
+  for (const label of [undefined, "Size", "Size in centimetres"]) {
+    const { select, input } = await mount({ label, ariaLabel: "Size in centimetres" });
+    expect(input.getAttribute("aria-label")).toBe("Size in centimetres");
+    select.setValue("l");
+    expect(input.getAttribute("aria-label")).toBe("Size in centimetres");
+    select.destroy();
+  }
+});

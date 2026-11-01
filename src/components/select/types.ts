@@ -87,6 +87,9 @@ export interface SelectConfig {
    */
   label?: string;
 
+  /** Accessible name for the focused input; the visible label is the fallback. */
+  ariaLabel?: string;
+
   /**
    * Input name attribute
    */
