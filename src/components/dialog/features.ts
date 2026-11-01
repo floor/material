@@ -250,12 +250,6 @@ export const withStructure =
   } else {
     overlay.appendChild(component.element);
     container.appendChild(overlay);
-
-    // A contained dialog's scrim is the container's box; withVisibility makes
-    // a static container positioned while the overlay lives in it.
-    if (config.container && container !== document.body) {
-      addClass(overlay, `${component.getClass("dialog__overlay")}--contained`);
-    }
   }
 
   // Store elements in component
@@ -563,25 +557,44 @@ export const withVisibility =
   };
 
   // A contained dialog's scrim covers the container, so the container is its
-  // containing block while the overlay lives in it. A static container is made
-  // positioned for that; a positioned one is left as it is. The container's
-  // own inline value (empty when it had none) goes back on close or destroy.
+  // containing block while the overlay lives in it. It is scoped only when the
+  // container holds the dialog: a collapsed, smaller or hidden one keeps the
+  // page's scrim and its centring, which is what it had before. A static container is
+  // made positioned for that; a positioned one is left as it is. The
+  // container's own inline value (empty when it had none) goes back on close or
+  // destroy.
   let containerPosition: string | null = null;
 
-  const scopeScrim = (): void => {
-    if (top || !component.config.container) return;
-    const container = component.structure.container;
-    if (container === document.body || containerPosition !== null) return;
-    if (getComputedStyle(container).position === "static") {
-      containerPosition = container.style.position;
-      container.style.position = "relative";
-    }
-  };
-
   const unscopeScrim = (): void => {
+    removeClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
     if (containerPosition === null) return;
     component.structure.container.style.position = containerPosition;
     containerPosition = null;
+  };
+
+  const scopeScrim = (): void => {
+    const container = component.structure.container;
+    if (top || container === document.body) return;
+
+    // Measure the dialog as it lays out inside the container: its width and
+    // height there are what the container has to hold, and a static container
+    // is a containing block for the absolute overlay only once it is positioned.
+    if (getComputedStyle(container).position === "static") {
+      containerPosition ??= container.style.position;
+      container.style.position = "relative";
+    }
+    addClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
+
+    // A box with no height centres the dialog on its edge, above the page; a
+    // smaller or hidden one clips or hides it. All keep the page's scrim and
+    // centring instead, and the container is left untouched.
+    if (
+      !container.clientHeight ||
+      container.clientWidth < component.element.offsetWidth ||
+      container.clientHeight < component.element.offsetHeight
+    ) {
+      unscopeScrim();
+    }
   };
 
   // In the top layer the dialog may hold slotted content, which its own query

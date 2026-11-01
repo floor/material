@@ -194,10 +194,14 @@ export interface DialogConfig {
    *
    * With any element but the body, the scrim covers that element rather than
    * the page: it is sized to the container, the dialog is centred in it, and a
-   * click outside the container does not dismiss the dialog. A container whose
-   * computed `position` is `static` is made `relative` while the dialog's
-   * overlay is in it, and its own inline value (none included) is put back when
-   * the dialog closes or is destroyed. A positioned container is left untouched.
+   * click outside the container does not dismiss the dialog. This applies only
+   * when the container has room for the dialog -- at least its width and height
+   * as laid out in the container. A collapsed or smaller container keeps the
+   * page's scrim and centring, and is left untouched, so an unsized container
+   * cannot put the dialog above the page. A container whose computed `position`
+   * is `static` is made `relative` while the dialog's overlay is in it, and its
+   * own inline value (none included) is put back when the dialog closes or is
+   * destroyed. A positioned container is left as it is.
    *
    * `layer: "top"` ignores this: `showModal()` makes the dialog page-modal,
    * with its `::backdrop` over the viewport.
