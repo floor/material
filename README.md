@@ -433,11 +433,11 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 ### Bundling
 
-The full stylesheet ships no `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules. Values that follow the reading direction use logical properties, such as `margin-inline-start` and `inset-inline-end`.
+The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with `mtrl-rtl` and `[dir=rtl]` arms: the properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can move a placement to the wrong side. What stays logical there, such as `margin-inline-start` and `padding-inline`, mirrors natively in the browser. The element sheets and the shadow sheets keep the logical form throughout.
 
-A bundler can add direction rules of its own. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. On the full stylesheet that is 12,426 `:lang()` arms, about 7.6 kB gzip — 12% of the 63.5 kB bundle.
+A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. Those arms are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
 
-With current browser targets the bundler keeps the logical properties and emits none of them. In a build that targets old browsers the arms are needed, but they are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
+No shipped file carries `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules.
 
 ## Building your own components
 
