@@ -255,9 +255,19 @@ $component: "#{base.$prefix}-progress";
     ),
     calc((var(--#{$component}-r) - var(--#{$component}-l)) * 100)
   );
+}
 
-  // Rest pose, the frame the canvas drew at t=0: the track ahead of the
-  // first head is the whole track; every other part is nothing
+// Rest pose, the frame the canvas drew at t=0: the track ahead of the
+// first head is the whole track; every other part is nothing. On the
+// parts only: a wavy bar's window rect reads --l and --r by inheritance
+// from the bar group the keyframes animate — a rest pose declared on the
+// rect itself would pin them at 0 against the inherited animation and
+// the window would collapse to nothing.
+.#{$component}--indeterminate .#{$component}__ahead,
+.#{$component}--indeterminate .#{$component}__bar-first,
+.#{$component}--indeterminate .#{$component}__between,
+.#{$component}--indeterminate .#{$component}__bar-second,
+.#{$component}--indeterminate .#{$component}__behind {
   --#{$component}-l: 0%;
   --#{$component}-r: 0%;
 }

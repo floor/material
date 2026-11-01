@@ -4577,8 +4577,82 @@ try {
       `the linear bar paints both roles (${JSON.stringify(linPaint)})`);
     assert.ok(circPaint.indicator > 180 && circPaint.track > 60,
       `the circular ring paints both roles (${JSON.stringify(circPaint)})`);
-    await page.evaluate(() => document.getElementById("paint-host")?.remove());
-    check("progress: the svg drawing paints its indicator and track, linear and circular");
+
+    // The wavy scenes, on the measures their two defects broke. Both are
+    // sampled with every CSS animation under the element paused and held at
+    // a fixed time, so the counts are the same on every run:
+    // — the determinate wavy ring holds its arc at 12 o'clock while the
+    //   wave travels under it. Sampled at half a travel loop, a wedge just
+    //   clockwise of 12 o'clock sits inside the held arc but inside the
+    //   gap an arc that rode the rotation would leave (it starts half a
+    //   wavelength late), so a held arc paints the wedge and a riding one
+    //   paints none of it;
+    // — the indeterminate wavy bars paint their head-tail windows, which a
+    //   rest pose pinned on the window rect itself collapses to nothing.
+    await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const host = document.createElement("div");
+      host.id = "wavy-host";
+      const ring = w.mtrl.createProgress({ variant: "circular", value: 62, shape: "wavy" }).element;
+      const bars = w.mtrl.createProgress({ indeterminate: true, shape: "wavy" }).element;
+      ring.id = "wavy-ring";
+      bars.id = "wavy-bars";
+      host.append(ring, bars);
+      document.body.append(host);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      for (const root of [ring, bars]) {
+        for (const animation of root.getAnimations({ subtree: true })) {
+          animation.pause();
+          animation.currentTime = 800;
+        }
+      }
+    });
+    await page.waitForTimeout(60);
+    const paintAt = async (id: string, wedge: boolean): Promise<Record<string, number>> =>
+      page.evaluate(
+        async ({ b64, wedge }) => {
+          const img = new Image();
+          img.src = `data:image/png;base64,${b64}`;
+          await img.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+          context.drawImage(img, 0, 0);
+          const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+          const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+          probe.fillStyle = "#000";
+          probe.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--mtrl-sys-color-primary").trim();
+          const head = probe.fillStyle as string;
+          const [hr, hg, hb] = [1, 3, 5].map((i) => parseInt(head.slice(i, i + 2), 16));
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          let all = 0;
+          let inWedge = 0;
+          for (let y = 0; y < canvas.height; y += 1) {
+            for (let x = 0; x < canvas.width; x += 1) {
+              const i = (y * canvas.width + x) * 4;
+              if ((data[i] - hr) ** 2 + (data[i + 1] - hg) ** 2 + (data[i + 2] - hb) ** 2 >= 100) continue;
+              all += 1;
+              if (!wedge) continue;
+              // screen angle, 12 o'clock at -90°, clockwise positive
+              const angle = (Math.atan2(y + 0.5 - cy, x + 0.5 - cx) * 180) / Math.PI + 90;
+              const turn = ((angle % 360) + 360) % 360;
+              if (turn >= 2 && turn <= 20) inWedge += 1;
+            }
+          }
+          return { all, inWedge };
+        },
+        { b64: (await page.locator(`#${id} svg.mtrl-progress__view`).screenshot()).toString("base64"), wedge }
+      );
+    const ringPaint = await paintAt("wavy-ring", true);
+    const barsPaint = await paintAt("wavy-bars", false);
+    assert.ok(ringPaint.inWedge > 10,
+      `the wavy ring holds its arc at 12 o'clock while the wave travels (${JSON.stringify(ringPaint)})`);
+    assert.ok(barsPaint.all > 100,
+      `the wavy indeterminate bars paint their windows (${JSON.stringify(barsPaint)})`);
+    await page.evaluate(() => document.getElementById("wavy-host")?.remove());
+    check("progress: the wavy ring holds its arc and the wavy bars paint their windows");
 
     // The indeterminate circular indicator keeps its track: the sweep
     // animation drives the dashes and both strokes read the theme, element
