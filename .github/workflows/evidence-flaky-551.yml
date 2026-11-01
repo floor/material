@@ -1,4 +1,4 @@
-name: Shadow-menu focus evidence
+name: Shadow-menu delayed-focus evidence
 on:
   pull_request:
     branches: [main]
@@ -21,7 +21,7 @@ jobs:
       - uses: ./.github/actions/browsers
         with:
           browsers: chromium
-      - name: Loop only the existing shadow-menu sequence
+      - name: Loop the shadow-menu sequence with delayed post-dismissal focus
         env:
           FLO_551_ITERATIONS: "50"
           FLO_551_BASELINE: 801b07cf5f31533191c687ea2b04c356a1ec3944
