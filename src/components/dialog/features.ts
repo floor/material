@@ -250,6 +250,12 @@ export const withStructure =
   } else {
     overlay.appendChild(component.element);
     container.appendChild(overlay);
+
+    // A contained dialog's scrim is the container's box; withVisibility makes
+    // a static container positioned while the overlay lives in it.
+    if (config.container && container !== document.body) {
+      addClass(overlay, `${component.getClass("dialog__overlay")}--contained`);
+    }
   }
 
   // Store elements in component
@@ -556,6 +562,28 @@ export const withVisibility =
     }
   };
 
+  // A contained dialog's scrim covers the container, so the container is its
+  // containing block while the overlay lives in it. A static container is made
+  // positioned for that; a positioned one is left as it is. The container's
+  // own inline value (empty when it had none) goes back on close or destroy.
+  let containerPosition: string | null = null;
+
+  const scopeScrim = (): void => {
+    if (top || !component.config.container) return;
+    const container = component.structure.container;
+    if (container === document.body || containerPosition !== null) return;
+    if (getComputedStyle(container).position === "static") {
+      containerPosition = container.style.position;
+      container.style.position = "relative";
+    }
+  };
+
+  const unscopeScrim = (): void => {
+    if (containerPosition === null) return;
+    component.structure.container.style.position = containerPosition;
+    containerPosition = null;
+  };
+
   // In the top layer the dialog may hold slotted content, which its own query
   // does not see: Tab moves as the browser moves it, wrapped at the ends
   const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
@@ -669,6 +697,7 @@ export const withVisibility =
   };
 
   // Setup initial state
+  scopeScrim();
   if (isOpen) {
     if (top) showModal();
     addClass(
@@ -740,6 +769,8 @@ export const withVisibility =
         const container = component.structure.container || document.body;
         container.appendChild(component.overlay);
       }
+      // A previous close put the container's position back: take it again
+      scopeScrim();
 
       // An open dialog can be dismissed: Escape and the scrim, from now
       setupEvents();
@@ -837,6 +868,8 @@ export const withVisibility =
         if (!top && component.overlay && component.overlay.parentNode) {
           component.overlay.parentNode.removeChild(component.overlay);
         }
+        // The overlay no longer needs the container to be a containing block
+        unscopeScrim();
 
         if (typeof component.emit === "function") {
           component.emit(DIALOG_EVENTS.AFTER_CLOSE, { dialog: getComponent() });
@@ -865,6 +898,8 @@ export const withVisibility =
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
       cleanupEvents();
+      // Destroyed rather than closed: no afterclose is coming to restore it
+      unscopeScrim();
     },
   };
 
