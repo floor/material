@@ -216,11 +216,12 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
 /**
  * The style entries a server render emits for a spec's roots: the shared base
  * plus the spec's `ssrStyles` list, or its full `styles` list when that is not
- * narrowed. The renderer and the parity check both read the list here, so the
- * two cannot drift.
+ * narrowed. The renderer and the SSR tests both read the list here, so the
+ * two cannot drift. The parameter is the fields read, not a full spec, so a
+ * union of specs (the test registry's) is accepted too.
  * @internal
  */
-export const ssrStyleNames = <C extends ElementComponent>(spec: ElementSpec<C>): readonly string[] =>
+export const ssrStyleNames = (spec: Pick<ElementSpec<ElementComponent>, "styles" | "ssrStyles">): readonly string[] =>
   [...SHADOW_BASE_STYLES, ...(spec.ssrStyles ?? spec.styles)];
 
 /**
