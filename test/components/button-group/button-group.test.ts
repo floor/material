@@ -740,7 +740,7 @@ describe("Button group selection (Material 3 kinds)", () => {
     // limit stays 24. A pressed end button asks for 15 (15% of 100): xs caps
     // it at the 12dp padding, s and m sit under their own padding and give
     // the whole 15 with padding left over.
-    const sizes: Array<[string, number, number, string]> = [
+    const sizes: Array<["xs" | "s" | "m", number, number, string]> = [
       ["xs", 12, 12, "0px"],
       ["s", 16, 15, "1px"],
       ["m", 24, 15, "9px"],
