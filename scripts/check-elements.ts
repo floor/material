@@ -4571,6 +4571,10 @@ try {
       );
     const linPaint = await count("paint-lin");
     const circPaint = await count("paint-circ");
+    // the host sits on the body, outside the case host fresh() resets: take it
+    // down or its two default-named progressbars outlive the section and every
+    // later progressbar census counts them
+    await page.evaluate(() => document.getElementById("paint-host")?.remove());
     // measured 2026-11-01: linear 1256/722 pixels, circular 253/96, on the
     // branch build; floors sit well under them and far over an empty ring
     assert.ok(linPaint.indicator > 900 && linPaint.track > 450,
