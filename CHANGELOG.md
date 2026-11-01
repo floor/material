@@ -88,6 +88,16 @@ Menus you can trust with keyboard and selection.
   adopted. The `browser (elements)` job falls from 11m42s to 8m51s;
   `elements:check`, which shares the job, is unchanged.
 
+- **`shadow-styles:check` waits on the fixture's work instead of a fixed sleep,
+  and the group drops from 3:10.0 to 2:12.6 (#202).**
+  With the same 37 elements, 1,797 fixtures and 11,311 cross-component classes,
+  and the same five seeded findings when the dialog stops adopting the button
+  sheet, the probe settles on the microtasks a build and an observer callback
+  queue, the fonts and images the fixture inserts, two animation frames and the
+  finite transitions it starts — in the document and in every shadow root it
+  reaches, nested hosts included. The `browser (elements)` job falls from 9m06s
+  to 8m04s; `elements:check`, which shares the job, is unchanged.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
