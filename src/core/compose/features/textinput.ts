@@ -57,6 +57,9 @@ export interface TextInputConfig {
    */
   placeholder?: string;
 
+  /** Accessible name for the native input or textarea. */
+  ariaLabel?: string;
+
   /**
    * Whether input is readonly
    */
@@ -157,6 +160,7 @@ export const withTextInput =
       // A textarea ignores a value attribute. Its default value is its text.
       value: isMultiline ? undefined : config.value || "",
       placeholder: config.placeholder || " ", // Always set placeholder (space if empty) for CSS detection
+      "aria-label": config.ariaLabel,
     };
 
     // Only set type attribute for input elements, not for textarea

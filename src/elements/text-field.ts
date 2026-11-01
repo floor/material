@@ -39,7 +39,7 @@ export type TextFieldElementComponent = TextFieldComponent & {
 const create = (config: TextFieldConfig & { ariaLabel?: string }): TextFieldElementComponent => {
   const field = createTextField(config);
   const input = field.input;
-  // The factory takes no aria-label; it names the inner input.
+  // Preserve an explicit host name even when it matches the visible label.
   if (config.ariaLabel) input.setAttribute("aria-label", config.ariaLabel);
   return Object.assign(field, { select: () => input.select() });
 };
