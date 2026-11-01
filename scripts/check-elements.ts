@@ -4436,9 +4436,11 @@ try {
       await new Promise((r) => requestAnimationFrame(() => r(null)));
       const measure = (root: HTMLElement): Record<string, string | number> => {
         // Not `display`: the circular root is a flex item of the host, so it computes as `flex`.
+        // A missing view reads as 0 here rather than throwing, so that against a
+        // canvas build the failure lands on the named no-canvas assert below.
         const r = root.getBoundingClientRect();
-        const v = (root.querySelector("svg.mtrl-progress__view") as SVGSVGElement).getBoundingClientRect();
-        return { w: r.width, h: r.height, color: getComputedStyle(root).color, viewW: v.width, viewH: v.height };
+        const v = (root.querySelector("svg.mtrl-progress__view") as SVGSVGElement | null)?.getBoundingClientRect();
+        return { w: r.width, h: r.height, color: getComputedStyle(root).color, viewW: v?.width ?? 0, viewH: v?.height ?? 0 };
       };
       const shadow = (id: string): HTMLElement =>
         (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
