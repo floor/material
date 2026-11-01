@@ -6,18 +6,18 @@ import { warnDev } from "../../../dist/core/utils/warn.js";
 registerStyles(Object.fromEntries(["ripple", "text-field"].map(name => [name, ""])));
 textFieldElement.define();
 
-export interface WarningRow { name: string; count: number; expected: number; messages: string[]; unchanged: boolean }
+export interface WarningRow { name: string; count: number; expected: number; messages: string[]; unchanged: boolean; tokens?: string[] }
 
 const icon = "<svg></svg>";
 let production = false;
 try { production = process.env.NODE_ENV === "production"; } catch { /* Raw browser ESM. */ }
-const run = (name: string, expected: number, scenario: () => boolean): WarningRow => {
+const run = (name: string, expected: number, scenario: () => boolean, tokens: string[] = ["trailingIconLabel", "trailing-icon-label"]): WarningRow => {
   const messages: string[] = [];
   const warn = console.warn;
   console.warn = (...args: unknown[]) => { messages.push(args.map(String).join(" ")); };
   let unchanged: boolean;
   try { unchanged = scenario(); } finally { console.warn = warn; }
-  return { name, count: messages.length, expected: production ? 0 : expected, messages, unchanged };
+  return { name, count: messages.length, expected: production ? 0 : expected, messages, unchanged, tokens };
 };
 
 const rows: WarningRow[] = [];
@@ -95,4 +95,24 @@ rows.push(run("element and factory listeners share one warning", 1, () => {
   const host = document.createElement("m-text-field"); host.setAttribute("trailing-icon", icon); document.body.append(host);
   host.component!.on("trailing", () => {}); host.addEventListener("trailing", () => {}); host.remove(); return true;
 }));
+// Unknown config keys: named in development, ignored in every mode. The
+// typo spelling is deliberately untyped; `maxLength` is the supported one.
+rows.push(run("factory unknown config keys", 2, () => {
+  const field = createTextField({ maxlength: 10, inputmode: "numeric" } as unknown as Parameters<typeof createTextField>[0]);
+  document.body.append(field.element);
+  const unchanged = field.input.getAttribute("maxlength") === null && field.input.maxLength === -1
+    && field.input.getAttribute("inputmode") === null && field.input.inputMode === "";
+  field.destroy(); field.element.remove();
+  return unchanged;
+}, ["unknown config key"]));
+rows.push(run("factory supported keys quiet", 0, () => {
+  const field = createTextField({ label: "l", value: "v", maxLength: 20, required: true, readonly: false,
+    autocomplete: "off", pattern: ".*", placeholder: "p", name: "n", prefixText: "pre", suffixText: "suf",
+    supportingText: "s", class: "c", id: "quiet", title: "t", style: {}, data: {}, tabIndex: 0,
+    ariaLabel: "quiet", componentName: "text-field" });
+  document.body.append(field.element);
+  const unchanged = field.input.maxLength === 20;
+  field.destroy(); field.element.remove();
+  return unchanged;
+}, ["unknown config key"]));
 (window as unknown as { warningRows: WarningRow[] }).warningRows = rows;
