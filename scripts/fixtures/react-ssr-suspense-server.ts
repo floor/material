@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, mislabelledTree, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, innerErrorButton, mislabelledTree, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -129,6 +129,13 @@ export const renderRejection = (boundary: boolean): Promise<StreamResult> =>
 
 /** A child error that copies the production suspend wording. It must surface at once, not after the retry cap. */
 export const renderMislabelled = (): Promise<StreamResult> => settled(mislabelledTree(), { timeout: 3000 });
+
+/**
+ * #461 round 4: an error inside a boundary inside the host. It must surface
+ * at once with a fallback-shaped root, not after the retry ladder's cap.
+ */
+export const renderInnerError = (kind: "throw" | "reject"): Promise<StreamResult> =>
+  settled(innerErrorButton(kind), { timeout: 3000 });
 
 /** A child that never resolves, aborted at 300ms. `after` is sibling renders in the following 500ms. */
 export const renderAborted = async (): Promise<StreamResult & { during: number; after: number }> => {

@@ -140,6 +140,22 @@ export const neverBoundaryButton = (): React.ReactNode =>
 export const rejectingPromise = (): Promise<string> =>
   new Promise((_, reject) => { setTimeout(() => reject(new Error("backend down")), 20); });
 
+/**
+ * #461 round 4: a child that fails inside a boundary INSIDE the host — an
+ * immediate throw, then a resource that rejects. The boundary catches the
+ * error in every pass, so a retry ladder can never succeed; the host must
+ * ship its fallback-shaped root at once with the error surfaced, exactly as
+ * the page renders without the bridge (18–23 ms there, not the ladder's cap).
+ */
+export const innerErrorButton = (kind: "throw" | "reject"): React.ReactNode => {
+  const promise = kind === "reject" ? rejectingPromise() : null;
+  const Thrower = (): React.ReactNode => {
+    if (promise) return h("i", null, readPromise(promise));
+    throw new Error("backend down");
+  };
+  return h(Button, { id: `broken-${kind}` }, h(React.Suspense, { fallback: h("em", null, "error fallback") }, h(Thrower)));
+};
+
 export const neverPromise = (): Promise<string> => new Promise(() => {});
 
 /** Resolved on the client, still pending for a moment on the server. */

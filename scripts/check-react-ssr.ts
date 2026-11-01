@@ -136,7 +136,7 @@ try {
     assert.doesNotMatch(clientRender, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
-    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderAborted, renderCeiling, renderGiveUp, renderBoundaryGiveUp } = await import(suspenseServer) as SuspenseServer;
+    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderInnerError, renderAborted, renderCeiling, renderGiveUp, renderBoundaryGiveUp } = await import(suspenseServer) as SuspenseServer;
     const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
     for (const [name, result] of shapes) {
       assert.equal(suspendError(result.errors), false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
@@ -172,6 +172,19 @@ try {
     assert.ok(mislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} mislabelled child onError ${JSON.stringify(mislabelled.errors)}`);
     assert.ok(mislabelled.ms < 1000, `React ${version} mislabelled child retried for ${mislabelled.ms.toFixed(0)} ms`);
     console.log(`React ${version}: a child error copying the production suspend text surfaced in ${mislabelled.ms.toFixed(0)} ms`);
+    // #461 round 4: a boundary INSIDE the host catches the error in every
+    // pass, so a retry ladder can never succeed. The error must surface at
+    // once with the fallback-shaped root, as the page renders without the
+    // bridge — the boundary's client-render marker rides the page stream.
+    for (const kind of ["throw", "reject"] as const) {
+      const inner = await renderInnerError(kind);
+      assert.ok(inner.errors.some((error) => error.includes("backend down")), `React ${version} inner-boundary ${kind} onError ${JSON.stringify(inner.errors)}`);
+      assert.ok(inner.ms < 1000, `React ${version} inner-boundary ${kind} surfaced in ${inner.ms.toFixed(0)} ms — an error must not enter the retry ladder`);
+      assert.match(inner.html, /<template shadowrootmode="open"/, `React ${version} inner-boundary ${kind} ships the fallback-shaped root`);
+      assert.match(inner.html, /error fallback/, `React ${version} inner-boundary ${kind} fallback`);
+      assert.match(inner.html, /<!--\$!-->/, `React ${version} inner-boundary ${kind} boundary switched to client rendering`);
+      console.log(`React ${version}: an inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
+    }
     // The production bundle loads React's production server build and its own copy of the
     // bridge, which samples that build's throw site. Importing it replaces the shared SSR
     // slot, so keep the development slot and put it back before the cases that follow.
@@ -180,11 +193,19 @@ try {
     const devSlot = ssrSlots[ssrSymbol];
     const prodServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}-prod.js`;
     await Bun.write(prodServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun", "production"));
-    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
+    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderInnerError: renderProductionInnerError, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
     const production = await renderProductionShapes();
     const productionMislabelled = await renderProductionMislabelled();
     assert.ok(productionMislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} production mislabelled child onError ${JSON.stringify(productionMislabelled.errors)}`);
     assert.ok(productionMislabelled.ms < 1000, `React ${version} production mislabelled child retried for ${productionMislabelled.ms.toFixed(0)} ms`);
+    // #461 round 4, in the production bundle too: prompt error delivery.
+    for (const kind of ["throw", "reject"] as const) {
+      const inner = await renderProductionInnerError(kind);
+      assert.ok(inner.errors.some((error) => error.includes("backend down")), `React ${version} production inner-boundary ${kind} onError ${JSON.stringify(inner.errors)}`);
+      assert.ok(inner.ms < 1000, `React ${version} production inner-boundary ${kind} surfaced in ${inner.ms.toFixed(0)} ms — an error must not enter the retry ladder`);
+      assert.match(inner.html, /<template shadowrootmode="open"/, `React ${version} production inner-boundary ${kind} ships the fallback-shaped root`);
+      console.log(`React ${version}: production inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
+    }
     const productionCap = await mtrlWarnings(() => renderProductionGiveUp());
     ssrSlots[ssrSymbol] = devSlot;
     for (const name of ["A", "F"] as const) {
