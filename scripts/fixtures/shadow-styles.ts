@@ -63,10 +63,13 @@ const api = {
             const present = adopted.has(sheetText(sheet));
             const changes: Record<string, { before: string; after: string }> = {};
             // Diagnose in place, then restore; no spec or production CSS changes.
-            const before = computed(node);
+            // Only a missing sheet is diagnosed: an adopted one reports `changes`
+            // empty, and reading its computed style read every property of every
+            // class in the page for nothing.
             if (!present) {
               const original = [...root.adoptedStyleSheets];
               try {
+                const before = computed(node);
                 root.adoptedStyleSheets = [...original, sheet];
                 const after = computed(node);
                 for (const property of Object.keys(before)) {
