@@ -26,7 +26,8 @@ const compile = (component: string): string =>
 
 /** The elements each component now spells with `__`, per stylesheet. */
 const MIGRATED: Record<string, string[]> = {
-  progress: ["canvas"],
+  // progress drew on a `__canvas`; the drawing is SVG parts now, and no
+  // canvas element or rule exists to keep the migrated spelling of
   snackbar: ["action", "close"],
   "bottom-app-bar": ["actions", "fab-container"],
   // select's menu has no rules of its own: they never applied
