@@ -137,7 +137,12 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
       ariaLabel: settings.overflowLabel || "More options",
       class: `${block}__overflow`,
     });
+    // The button declares what it opens and whether it is open, as the split
+    // button's trailing button does (split-button/features/buttons.ts). A
+    // slotted menu's opener wiring is what would otherwise write the second,
+    // and the server serializes this shadow before that menu is mounted.
     button.element.setAttribute("aria-haspopup", "menu");
+    button.element.setAttribute("aria-expanded", "false");
     created.set(button.element, button);
     overflowButton = button.element;
     bar.appendChild(overflowButton);

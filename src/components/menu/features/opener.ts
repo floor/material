@@ -175,8 +175,11 @@ const withOpener =
     // A listbox popup belongs to a combobox, which carries its own ARIA
     if (config.listbox) return;
 
-    // Add ARIA attributes
-    openerElement.setAttribute("aria-haspopup", "true");
+    // The opener carries what it opens. A toolbar builds its overflow button
+    // with aria-haspopup="menu" already, so an existing value is kept rather
+    // than replaced by a plain "true"; open and close keep aria-expanded and
+    // the active state up to date from here.
+    if (!openerElement.hasAttribute("aria-haspopup")) openerElement.setAttribute("aria-haspopup", "true");
     openerElement.setAttribute("aria-expanded", "false");
 
     // Get menu ID or generate one
