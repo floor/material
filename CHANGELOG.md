@@ -164,6 +164,25 @@ Menus you can trust with keyboard and selection.
   internal ids. Test and tooling only: no product code, budget or CI step
   changes.
 
+- **CI's `browser (ssr)` row is two rows by engine, and it no longer decides
+  the run (#216).**
+  The row was the run's longest on the push before this change — 3m39s on
+  41330357545, against `browser (components-a)` at 3m26s — and on the pull
+  request run 41319020497 it held the run at 4m17s. Inside it, on the job log
+  of run 41317795666 where the script printed 193.7s, parity took 29.4s and
+  the three Chromium checks 36.3s against 127.8s for firefox and webkit.
+  `scripts/check-ssr.ts` now takes parts the way `elements:check` does — `a` is
+  parity and Chromium, `b` is firefox and webkit, and no argument runs every
+  part — and CI runs them as `browser (ssr-a)` and `browser (ssr-b)`: 1m41s
+  and 3m11s on the push run 41334995191, where the longest row is
+  `browser (elements-a)` at 3m23s and the run is 4m31s against 4m41s. Every
+  sub-run still runs on every change, each exactly once, and
+  `test/build/ci-commands.test.ts` holds the list with `ssr:check:a` and
+  `ssr:check:b`; a local `bun run ssr:check` is unchanged. The Chromium browser
+  cache key is the one every other Chromium row already uses, so only the new
+  `firefox-webkit` key was cold on the first run. The `check` status the
+  ruleset requires is untouched.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
