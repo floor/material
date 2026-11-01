@@ -8,6 +8,7 @@ on:
       - scripts/menu-close-contract-stall.ts
       - scripts/menu-close-contract-browser-evidence.ts
       - scripts/fixtures/menu-close-contract-evidence.ts
+      - test/build/ci-toolchain.test.ts
 
 permissions:
   contents: read
@@ -25,10 +26,10 @@ jobs:
           - stall: 40
             rounds: 50
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.2"
       - run: bun install --frozen-lockfile
@@ -37,7 +38,7 @@ jobs:
           CLOSE_CONTRACT_STALL_MS: ${{ matrix.stall }}
           CLOSE_CONTRACT_ROUNDS: ${{ matrix.rounds }}
         run: bun scripts/menu-close-contract-evidence.ts
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: close-contract-${{ matrix.stall }}
@@ -48,10 +49,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.2"
       - run: bun install --frozen-lockfile
