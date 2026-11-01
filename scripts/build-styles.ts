@@ -178,8 +178,8 @@ export async function buildStyles(outdir: string, banner: string) {
  * `material/elements/css/switch` registers the switch's CSS and its dependencies.
  * Emitted for the components that have an element; importing the module
  * also proves the elements import without a DOM.
- * The shadow base (`ripple`) is what the global base stylesheet gives a
- * component in light DOM and a shadow root does not inherit.
+ * The shadow base (`ripple`) carries native-control resets and ripple rules:
+ * the global base provides them in light DOM, across no shadow boundary.
  *
  * For SSR, link in the browser's cascade order (`applyStyles` in
  * src/elements/define.ts adopts host, then ripple, then the spec's styles):
@@ -206,7 +206,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
     await writeFile(`${dir}/${name}.css`, css);
     await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };
-  await write("ripple", "utilities/ripple", []);
+  await write("ripple", "base/shadow", []);
   // Only components that have an element, and what their CSS depends on.
   const names = resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]));
   const missing = [...preupgrade.keys()].filter(name => !names.includes(name));

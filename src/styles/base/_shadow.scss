@@ -1,0 +1,8 @@
+// Shared by all element roots through elements/css/ripple. The document's
+// selectors do not cross this boundary; inherit native-control typography
+// and clear browser button defaults before the component sheets apply.
+@use "control-reset" as controls;
+@use "../utilities/ripple";
+
+@include controls.fonts;
+@include controls.buttons;
