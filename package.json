@@ -459,7 +459,10 @@
   },
   "files": [
     "dist",
-    "src/styles"
+    "src/styles",
+    "!src/styles/abstract/_config.scss",
+    "!src/styles/base/_foundation.scss",
+    "!src/styles/base/_typescale.scss"
   ],
   "scripts": {
     "build": "bun run scripts/build.ts",
@@ -478,6 +481,7 @@
     "size": "bun run scripts/size.ts",
     "size:check": "bun run scripts/check-package-size.ts",
     "readme:check": "bun run scripts/check-readme.ts",
+    "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
