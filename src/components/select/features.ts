@@ -54,6 +54,7 @@ export const withTextField =
 
     // Prevent typing in the input while keeping normal focus/visual behavior
     if (textField.input) {
+      if (config.ariaLabel) textField.input.setAttribute("aria-label", config.ariaLabel);
       // `input` is HTMLInputElement | HTMLTextAreaElement, and
       // addEventListener over a union falls back to the EventTarget
       // signature, which types the event as a plain Event. Annotating the

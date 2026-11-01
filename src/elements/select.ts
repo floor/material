@@ -83,11 +83,11 @@ const inputAttribute =
     else c.textField.input.setAttribute(name, v === true ? "" : String(v));
   };
 
-const create = (config: SelectConfig & { ariaLabel?: string }): SelectComponent => {
+const create = (config: SelectConfig): SelectComponent => {
   const { ariaLabel, ...rest } = config;
   const select = createSelect({ ...rest, layer: "top" });
   applied.set(select, JSON.stringify(select.getOptions()));
-  // The factory takes no aria-label; it names the combobox
+  // The host manages its mutable label on the combobox.
   if (ariaLabel) select.textField.input.setAttribute("aria-label", ariaLabel);
   return select;
 };

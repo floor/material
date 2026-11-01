@@ -134,6 +134,9 @@ export interface SearchConfig {
   /** Placeholder/supporting text. Default: 'Search' */
   placeholder?: string;
 
+  /** Accessible name for the search input; the current placeholder is the fallback. */
+  ariaLabel?: string;
+
   /** Initial input value */
   value?: string;
 

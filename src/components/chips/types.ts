@@ -8,6 +8,8 @@ export type ChipType = "assist" | "filter" | "input" | "suggestion";
 export interface ChipConfig {
   type?: ChipType;
   label?: string;
+  /** Accessible name for the primary focus target. Secondary actions keep their own labels. */
+  ariaLabel?: string;
   value?: string;
   disabled?: boolean;
   /** In a single-select set, selecting this chip replaces the previous selection; the last selected config wins. */

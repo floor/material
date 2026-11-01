@@ -180,7 +180,7 @@ export const withInput =
     const input = component.structure?.input;
     if (input) {
       input.placeholder = text;
-      input.setAttribute("aria-label", text);
+      input.setAttribute("aria-label", config.ariaLabel || text);
     }
   };
 

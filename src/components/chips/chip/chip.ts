@@ -113,6 +113,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       if (selectable) root.setAttribute("aria-selected", String(selected));
       root.setAttribute("aria-disabled", String(disabled));
     } else if (selectable) action.setAttribute("aria-checked", String(selected));
+    if (options.ariaLabel) (oneActionCell ? root : action).setAttribute("aria-label", options.ariaLabel);
     leading.hidden = !avatar && (!leadingIcon || selected);
     check.hidden = !(selected && (type === "filter" || (type === "input" && !avatar)));
     trailing.hidden = !trailingIcon || !!remove || !!trailingAction;
