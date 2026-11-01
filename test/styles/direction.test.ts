@@ -18,6 +18,9 @@ const SOURCES = {
   cornersPart: `@use 'abstract/direction' as d;\n.a { @include d.corners($start-start: 0, $end-start: 0); }`,
   arms: `@use 'abstract/direction' as d;\n.a { left: 1px; @include d.arms { left: auto; right: 1px; } }`,
   selfArms: `@use 'abstract/direction' as d;\n.a { left: 1px; @include d.arms-self-only { .b { left: auto; } } }`,
+  deferred: `@use 'abstract/direction' as d;\n.a { @include d.start(16px, $arm: false); @include d.sides(0, auto, $arm: false); }\n` +
+    `.a { @include d.arms-selector('.b') { right: 16px; left: auto; } }`,
+  transition: `@use 'abstract/direction' as d;\n.a { transition: opacity 100ms linear, d.transition(inset-inline-start, 200ms ease); }`,
 };
 
 const compile = (source: string, arms: boolean): string =>
@@ -39,6 +42,8 @@ describe('the direction switch', () => {
     // properties mirror on the computed direction without them.
     expect(compile(SOURCES.arms, false)).toBe('.a{left:1px}');
     expect(compile(SOURCES.selfArms, false)).toBe('.a{left:1px}');
+    expect(compile(SOURCES.deferred, false)).toBe('.a{inset-inline-start:16px;inset-inline-start:0;inset-inline-end:auto}');
+    expect(compile(SOURCES.transition, false)).toBe('.a{transition:opacity 100ms linear,inset-inline-start 200ms ease}');
   });
 
   test('the arms form is the physical side and the arm the hand series wrote', () => {
@@ -69,6 +74,13 @@ describe('the direction switch', () => {
     expect(compile(SOURCES.selfArms, true)).toBe(
       '.a{left:1px}.a:where(.mtrl-rtl,[dir=rtl]) .b{left:auto}',
     );
+    // The deferred arm: the declaration without its own arm, the aggregated
+    // selector arm beside it, named at the block that holds the subject.
+    expect(compile(SOURCES.deferred, true)).toBe(
+      '.a{left:16px;left:0;right:auto}' +
+      ':where(.mtrl-rtl) .b,:where(:host(.mtrl-rtl)) .b,[dir=rtl] .b:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:16px;left:auto}',
+    );
+    expect(compile(SOURCES.transition, true)).toBe('.a{transition:opacity 100ms linear,left 200ms ease,right 200ms ease}');
   });
 
   test('a spring on an inline inset names both physical sides in the arms form', () => {

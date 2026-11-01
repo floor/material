@@ -120,10 +120,7 @@ $icons: (
 // names both sides there, so the move animates whichever side the direction
 // placed it on (abstract/_emit.scss, abstract/_direction.scss).
 @function spring($property, $token, $delay: null) {
-  $names: $property;
-  @if emit.$direction-arms and ($property == 'inset-inline-start' or $property == 'inset-inline-end') {
-    $names: left, right;
-  }
+  $names: emit.transition-names($property);
   $transitions: ();
   @each $name in $names {
     $transition: $name v.motion('spring-#{$token}-duration') v.motion('spring-#{$token}-easing');

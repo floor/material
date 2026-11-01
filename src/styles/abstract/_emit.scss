@@ -14,3 +14,17 @@
 // side plus a direction arm instead — nothing left to lower. The entry
 // configures this module; every `@use` after it reads the same value.
 $direction-arms: false !default;
+
+/// The property names a transition needs for `$property` in this form. An
+/// inline inset is two physical sides in the arms form, and the arm swaps
+/// which one is live: a transition naming only the side that was unset jumps
+/// instead of snapping. Both names, unquoted.
+@function transition-names($property) {
+  @if not $direction-arms {
+    @return $property;
+  }
+  @if $property == 'inset-inline-start' or $property == 'inset-inline-end' {
+    @return left, right;
+  }
+  @return $property;
+}

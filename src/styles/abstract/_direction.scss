@@ -17,17 +17,25 @@
 // base side to `auto` so the mirrored rule replaces the base one instead of
 // adding to it, exactly as the logical property resolves one side per
 // direction.
+//
+// `$arm: false` writes the declaration without its arm: for a site whose
+// mirrored form is aggregated — several placements in one arm, named at a
+// block that also carries the marker's own form (`arms`, `arms-selector`
+// below). The call site pairs it with one of those.
+@use 'sass:list';
 @use 'base' as base;
 @use 'mixins' as m;
 @use 'emit' as emit;
 
 /// The inline-start inset.
-@mixin start($value, $self: false) {
+@mixin start($value, $self: false, $arm: true) {
   @if emit.$direction-arms {
     left: $value;
-    @include m.rtl($self) {
-      left: auto;
-      right: $value;
+    @if $arm {
+      @include m.rtl($self) {
+        left: auto;
+        right: $value;
+      }
     }
   } @else {
     inset-inline-start: $value;
@@ -35,12 +43,14 @@
 }
 
 /// The inline-end inset.
-@mixin end($value, $self: false) {
+@mixin end($value, $self: false, $arm: true) {
   @if emit.$direction-arms {
     right: $value;
-    @include m.rtl($self) {
-      right: auto;
-      left: $value;
+    @if $arm {
+      @include m.rtl($self) {
+        right: auto;
+        left: $value;
+      }
     }
   } @else {
     inset-inline-end: $value;
@@ -50,13 +60,15 @@
 /// Both inline insets at once, `auto` allowed on either side — the pair a
 /// placement pins to one edge writes as one call, and the arm swaps the two
 /// values whole.
-@mixin sides($start, $end, $self: false) {
+@mixin sides($start, $end, $self: false, $arm: true) {
   @if emit.$direction-arms {
     left: $start;
     right: $end;
-    @include m.rtl($self) {
-      left: $end;
-      right: $start;
+    @if $arm {
+      @include m.rtl($self) {
+        left: $end;
+        right: $start;
+      }
     }
   } @else {
     inset-inline-start: $start;
@@ -71,24 +83,28 @@
 /// longhand — the sites that round part of a box name every corner they own.
 @mixin corners(
   $start-start: null, $start-end: null, $end-start: null, $end-end: null,
-  $self: false,
+  $self: false, $arm: true,
 ) {
   @if emit.$direction-arms {
     @if $start-start and $start-end and $end-start and $end-end {
       border-radius: $start-start $start-end $end-end $end-start;
-      @include m.rtl($self) {
-        border-radius: $start-end $start-start $end-start $end-end;
+      @if $arm {
+        @include m.rtl($self) {
+          border-radius: $start-end $start-start $end-start $end-end;
+        }
       }
     } @else {
       @if $start-start { border-top-left-radius: $start-start; }
       @if $start-end { border-top-right-radius: $start-end; }
       @if $end-start { border-bottom-left-radius: $end-start; }
       @if $end-end { border-bottom-right-radius: $end-end; }
-      @include m.rtl($self) {
-        @if $start-start { border-top-right-radius: $start-start; }
-        @if $start-end { border-top-left-radius: $start-end; }
-        @if $end-start { border-bottom-right-radius: $end-start; }
-        @if $end-end { border-bottom-left-radius: $end-end; }
+      @if $arm {
+        @include m.rtl($self) {
+          @if $start-start { border-top-right-radius: $start-start; }
+          @if $start-end { border-top-left-radius: $start-end; }
+          @if $end-start { border-bottom-right-radius: $end-start; }
+          @if $end-end { border-bottom-left-radius: $end-end; }
+        }
       }
     }
   } @else {
@@ -108,6 +124,34 @@
       @content;
     }
   }
+}
+
+/// The same arms-only wrapper for a subject that is not the include site's
+/// selector extended — a BEM element or a variant class written at the root of
+/// the component's block, whose prelude is shorter without the component
+/// class the nesting would add (`rtl-selector` in abstract/_mixins.scss).
+@mixin arms-selector($subject) {
+  @if emit.$direction-arms {
+    @include m.rtl-selector($subject) {
+      @content;
+    }
+  }
+}
+
+/// One transition entry for `$property` under `$timing` (a duration and an
+/// easing together), in the form this compile emits: an inline inset names
+/// both physical sides in the arms form (abstract/_emit.scss), so a move
+/// animates whichever side the direction placed it on instead of jumping on
+/// the side the arm unset.
+@function transition($property, $timing) {
+  $entries: ();
+  @each $name in emit.transition-names($property) {
+    $entries: list.append($entries, #{$name} $timing, comma);
+  }
+  @if list.length($entries) == 1 {
+    @return list.nth($entries, 1);
+  }
+  @return $entries;
 }
 
 /// Only the self arm, for a marker on the root this block is written in: the
