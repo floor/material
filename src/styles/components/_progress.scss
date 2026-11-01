@@ -394,29 +394,33 @@ $component: "#{base.$prefix}-progress";
   // baked into every frame, composed here from two animations that share
   // the revolution's own duration. Only the wavy indicator is a path; the
   // plain circle never travels.
-  .#{$component}--circular path.#{$component}__indicator {
-    animation: #{$component}-dash-ring var(--#{$component}-wave-dur, 1000ms) infinite linear;
-  }
-
+  //
   // The slide passes through the curve's own arc table at fiftieths of
   // the loop: the wave runs longer where it climbs than where it rides the
   // circle, so equal angles are not equal distances on it, and a uniform
   // slide let the window's start wobble twelve degrees round its hold as
   // the wave traveled beneath. The curve rides one custom property — the
-  // arc table as a linear() point list — read by the easing rather than by
-  // fifty keyframe stops: linear() joins its points with straight segments
-  // exactly as stops at the same fractions do, so the window holds to a
-  // fifth of a degree at the worst size, measured over every size the
-  // factory admits, while the sheet carries a single keyframe line and the
-  // geometry rides the element's own properties like every other geometry
-  // here. A browser without linear() drops the easing to this rule's own
-  // linear: the window wobbles as it did before the slide, and nothing
+  // arc table as a linear() point list — read by the easing on this rule
+  // rather than by fifty keyframe stops: linear() joins its points with
+  // straight segments exactly as stops at the same fractions do, so the
+  // window holds to a fifth of a degree at the worst size, measured over
+  // every size the factory admits, while the sheet carries a single
+  // easing reference and the geometry rides the element's own properties
+  // like every other geometry here. The easing sits on the rule, not in
+  // the keyframes: a var() in a keyframe's own animated value substitutes
+  // per element, but keyframe-resident timing functions do not get that
+  // substitution — on the rule it is an ordinary declaration. A browser
+  // without linear() cannot hold the declaration at all, so its timing
+  // falls to the property's own initial ease over the same 0-to-100
+  // slide: the window wobbles as it did before the slide, and nothing
   // else changes.
+  .#{$component}--circular path.#{$component}__indicator {
+    animation: #{$component}-dash-ring var(--#{$component}-wave-dur, 1000ms) infinite linear;
+    animation-timing-function: linear(0, var(--#{$component}-slide), 1);
+  }
+
   @keyframes #{$component}-dash-ring {
-    from {
-      stroke-dashoffset: 0;
-      animation-timing-function: linear(0, var(--#{$component}-slide), 1);
-    }
+    from { stroke-dashoffset: 0; }
     to { stroke-dashoffset: var(--#{$component}-wave-dash); }
   }
 

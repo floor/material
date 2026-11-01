@@ -293,13 +293,19 @@ describe('progress stylesheet: the drawing', () => {
       'mtrl-progress-dash-ring var(--mtrl-progress-wave-dur, 1000ms) infinite linear'
     );
     // the slide's curve rides one custom property the view writes its
-    // fiftieths into, read by the easing instead of forty-nine keyframe
-    // stops — the easing reference and the flat from/to pair pin that, and
-    // no per-stop var may come back
+    // fiftieths into, read by the easing on the rule instead of by
+    // forty-nine keyframe stops — the easing reference pins that, the flat
+    // from/to pair pins the keyframes, and no per-stop var may come back.
+    // The easing must stay on the rule: a var() in a keyframe's animated
+    // value substitutes per element, but keyframe-resident timing
+    // functions do not get that substitution, and the slide runs plain
+    // linear again — the CI round at 1740dd2e caught exactly that.
+    expect(value('.mtrl-progress--circular path.mtrl-progress__indicator', 'animation-timing-function')).toBe(
+      'linear(0, var(--mtrl-progress-slide), 1)'
+    );
     const dashRing = keyframes('mtrl-progress-dash-ring');
-    expect(dashRing).toContain('animation-timing-function: linear(0, var(--mtrl-progress-slide), 1)');
     expect(dashRing).toContain('stroke-dashoffset: var(--mtrl-progress-wave-dash)');
-    expect(dashRing).not.toMatch(/--mtrl-progress-ws-\d+/);
+    expect(dashRing).not.toMatch(/--mtrl-progress-ws-\d+|animation-timing-function/);
   });
 
   test('rtl mirrors the linear view and reverses only the travel', () => {

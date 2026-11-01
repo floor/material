@@ -296,13 +296,18 @@ export const withView =
         // The slide's own curve at fiftieths of the loop: equal angles are
         // not equal distances on the wavy curve, so a uniform slide let the
         // window wobble as the wave traveled under it — the arc table as one
-        // linear() point list holds its angle still, read by the keyframes'
-        // easing. One property, not forty-nine: the element's inline style
-        // stays as small as the sheet's single keyframe line.
+        // linear() point list holds its angle still, read by the easing on
+        // the slide's rule. The points are fractions of the slide, not
+        // offsets: linear() says how far along the 0-to-100 shift the window
+        // sits, so the table's 0-100 values divide by 100 here, and the
+        // closing 1 the sheet appends is the same full-turn shift the
+        // keyframes' to-value holds. One property, not forty-nine: the
+        // element's inline style stays as small as the sheet's single
+        // keyframe line.
         const dashSteps = circularWaveDashSteps(radius, waveAmplitude, currentSize, 49);
         svg.style.setProperty(
           `--${prefix}-progress-slide`,
-          dashSteps.map((step, i) => `${step} ${((100 * (i + 1)) / (dashSteps.length + 1)).toFixed(0)}%`).join(", ")
+          dashSteps.map((step, i) => `${(step / 100).toFixed(5)} ${((100 * (i + 1)) / (dashSteps.length + 1)).toFixed(0)}%`).join(", ")
         );
       }
       svg.setAttribute("viewBox", `0 0 ${isCircular ? currentSize : lineWidth || 2048} ${height}`);
