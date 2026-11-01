@@ -1,11 +1,11 @@
 // src/ssr/styles.ts
-import { hostStyleText, SHADOW_BASE_STYLES, type ElementSpec, type ElementComponent } from "../elements/define";
+import { hostStyleText, ssrStyleNames, type ElementSpec, type ElementComponent } from "../elements/define";
 import { styleText } from "../elements/styles";
 import { escapeAttribute, rawText } from "./serialize";
 import type { RenderOptions } from "./render-element";
 
 export const renderStyles = (spec: ElementSpec<ElementComponent>, options: RenderOptions): string => {
-  const names = [...SHADOW_BASE_STYLES, ...spec.styles];
+  const names = ssrStyleNames(spec);
   if (options.styles === "link") {
     const base = options.cssBase.replace(/\/$/, "");
     return [`hosts/${spec.name}`, ...names].map(name =>

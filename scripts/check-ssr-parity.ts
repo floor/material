@@ -82,12 +82,30 @@ try {
     await page.waitForFunction(() => !!window.ssrParity);
     const immediate = await page.evaluate(({ markup, ids }) => window.ssrParity.snapshot(window.ssrParity.mount(markup), ids), { markup: fixture.html, ids: authoredIds });
     assert.deepEqual(compare(upgrade, immediate), [], `${fixture.element}: upgrade differs from fresh construction`);
-    const order = await page.evaluate(() => window.ssrParity.styleOrder(document.querySelector("main")!.firstElementChild!));
+    // The sheets a server render emits for a spec that narrows its list
+    // (ElementSpec.ssrStyles): the progress sheet styles no node a serialized
+    // shadow root contains — the spinner arrives with a runtime loading
+    // state, whose lazy chunk carries the styles — so the button family
+    // drops it until then. Every other element ships its full list.
+    const narrowed: Record<string, string[]> = {
+      button: ["host:button", "ripple", "button"],
+      "button-group": ["host:button-group", "ripple", "button", "icon-button", "button-group"],
+      dialog: ["host:dialog", "ripple", "button", "divider", "dialog"],
+    };
+    const serverList = narrowed[fixture.element];
+    const order = await page.evaluate(
+      (serverNames?: string[]) => window.ssrParity.styleOrder(document.querySelector("main")!.firstElementChild!, serverNames),
+      serverList,
+    );
     const linked = renderElement(`m-${fixture.element}`, {}, "", { styles: "link", cssBase: "/css" });
     const urls = [...linked.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
-    assert.deepEqual(urls, fallback ? [] : order.names.map(name => `/css/${name.replace("host:", "hosts/")}.css`), `${fixture.element}: link adoption order`);
+    assert.deepEqual(urls, fallback ? [] : (serverList ?? order.names).map(name => `/css/${name.replace("host:", "hosts/")}.css`), `${fixture.element}: link adoption order`);
     assert.deepEqual(order.sources, order.adopted, `${fixture.element}: inline source/adoption order`);
-    if (!fallback) assert.equal(ssr["host/shadow/css"], order.adopted.join("\n"), `${fixture.element}: inline/adopted CSS`);
+    // The server's list is the adopted list narrowed: every sheet it keeps is
+    // adopted, in the same relative order, and nothing else is shipped.
+    const serverSources = new Set(order.serverSources);
+    assert.deepEqual(order.adopted.filter(text => serverSources.has(text)), order.serverSources, `${fixture.element}: server styles are the adopted styles, narrowed`);
+    if (!fallback) assert.equal(ssr["host/shadow/css"], order.serverSources.join("\n"), `${fixture.element}: inline/adopted CSS`);
     await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
     await page.waitForTimeout(400);
     const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);

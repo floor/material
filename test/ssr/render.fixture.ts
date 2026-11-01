@@ -5,7 +5,7 @@ import { parseHTML } from "linkedom";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
 import { elements, cardElement, buttonElement } from "../../src/elements";
 import { registerStyles, RENDERED_HOST_ATTRIBUTE, styleText } from "../../src/elements/styles";
-import { SHADOW_BASE_STYLES, hostStyleText, type ElementSpec, type ElementComponent } from "../../src/elements/define";
+import { hostStyleText, ssrStyleNames, type ElementSpec, type ElementComponent } from "../../src/elements/define";
 import { configureHTML } from "../../src/core/dom/html";
 const { renderElement } = await import("../../src/ssr");
 
@@ -89,11 +89,11 @@ test("styles use registry overrides and browser order", () => {
   registerStyles({ button: ".override{}" });
   try {
     const html = renderElement("m-button");
-    expect(html).toContain(`<style>${hostStyleText(buttonElement.spec)}\n${styleText("ripple")}\n${styleText("progress")}\n.override{}</style>`);
+    expect(html).toContain(`<style>${hostStyleText(buttonElement.spec)}\n${styleText("ripple")}\n.override{}</style>`);
     expect(html.match(/<style>/g)).toHaveLength(1);
     const links = renderElement("m-button", {}, "", { styles: "link", cssBase: "/css/" });
     expect([...links.matchAll(/href="([^"]+)"/g)].map(m => m[1])).toEqual([
-      "/css/hosts/button.css", "/css/ripple.css", "/css/progress.css", "/css/button.css",
+      "/css/hosts/button.css", "/css/ripple.css", "/css/button.css",
     ]);
   } finally { registerStyles({ button: old }); }
 });
@@ -150,10 +150,10 @@ test("generated nested hosts and factory style nodes are preserved", () => {
   } finally { containerSpec.setup = original; }
 });
 
-test("eligible link and inline sequences match browser adoption names", () => {
+test("eligible link and inline sequences follow the spec's SSR list", () => {
   for (const { spec } of Object.values(elements)) {
     if (optedOut.has(spec.name)) continue;
-    const names = [...SHADOW_BASE_STYLES, ...spec.styles];
+    const names = ssrStyleNames(spec);
     const html = renderElement(`m-${spec.name}`, {}, "", { styles: "link", cssBase: "/css" });
     const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
     expect(urls, spec.name).toEqual([`hosts/${spec.name}`, ...names].map(name => `/css/${name}.css`));
@@ -161,6 +161,19 @@ test("eligible link and inline sequences match browser adoption names", () => {
     expect(inline, spec.name).toContain(` ${RENDERED_HOST_ATTRIBUTE}=""`);
     expect(inline, spec.name).toContain(`<style>${[styleText(`host:${spec.name}`) ?? hostStyleText(spec), ...names.map(styleText)].join("\n")}</style>`);
   }
+});
+test("the button family's server render drops the progress sheet", () => {
+  // No serialized shadow root contains a progress node: the spinner arrives
+  // with a runtime loading state, whose lazy chunk registers the styles.
+  // The server drops the sheet from every style mode; the runtime adoption
+  // list and the public material/styles/button sheet keep it.
+  for (const name of ["button", "button-group", "dialog"]) {
+    const inline = renderElement(`m-${name}`);
+    expect(inline, name).not.toContain(styleText("progress")!);
+    const links = renderElement(`m-${name}`, {}, "", { styles: "link", cssBase: "/css" });
+    expect(links, name).not.toContain("/progress.css");
+  }
+  expect(buttonElement.spec.styles).toContain("progress");
 });
 test("missing registered styles fail clearly", () => {
   const previous = styleText("button")!;

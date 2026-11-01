@@ -27,6 +27,11 @@ const buttonSpec = {
   name: "button",
   create: (config) => createButton({ ...(config as ButtonConfig), type: "button" }),
   styles: ["progress", "button"],
+  // The serialized shadow root has no progress node: the spinner is inserted
+  // by a runtime loading state, whose lazy chunk registers the progress
+  // styles itself. Server rendering drops the entry; the public
+  // material/styles/button sheet and runtime adoption keep it.
+  ssrStyles: ["button"],
   // The host must be the button's own flex box, mirroring the pre-upgrade
   // rule: an inline-block host builds its line box from the page's typography
   // (a 48px strut at 24px / line-height 2, 8px over the control) and exposes a

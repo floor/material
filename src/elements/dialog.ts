@@ -154,6 +154,9 @@ const dialogSpec = {
   // Its actions are mtrl buttons and its dividers mtrl dividers, drawn in this
   // shadow root: their sheets come with it
   styles: ["progress", "button", "divider", "dialog"],
+  // Of those only the progress sheet styles nothing serialized: no spinner is
+  // ever server-rendered, so the entry is dropped until loading is used.
+  ssrStyles: ["button", "divider", "dialog"],
   hostStyles: ":host{display:contents}",
   attributes: {
     open: { type: "boolean", update: (c, v) => setOpen(c, !!v) },

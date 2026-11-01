@@ -92,15 +92,18 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
 
 const api = {
   snapshot,
-  styleOrder(host: Element) {
+  styleOrder(host: Element, serverNames?: string[]) {
     const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === host.localName)!.spec;
     const names = [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles];
+    // The server's own list when the caller knows the spec narrows it
+    // (ElementSpec.ssrStyles); otherwise the server ships the full list too.
+    const server = serverNames ?? names;
     const normalize = (text: string) => {
       const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
       return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
     };
     const adopted = host.shadowRoot!.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"));
-    return { names, sources: names.map(name => normalize(styleText(name)!)), adopted };
+    return { names, sources: names.map(name => normalize(styleText(name)!)), serverSources: server.map(name => normalize(styleText(name)!)), adopted };
   },
   mount(html: string): Element {
     defineAll();
