@@ -31,17 +31,6 @@ export const deepActiveElement = (): Element | null => {
   return active;
 };
 
-/**
- * Whether an element is rendered: display: none takes it off the page, its own
- * or an ancestor's, and an element that is not rendered cannot take focus. The
- * browser's own check is used when it has one; the computed display fallback
- * keeps a test DOM (which has no layout) and an older browser working.
- */
-export const isRendered = (element: HTMLElement): boolean =>
-  typeof element.checkVisibility === "function"
-    ? element.checkVisibility()
-    : globalThis.getComputedStyle?.(element)?.display !== "none";
-
 /** Whether an element is a tab stop: focusable in sequence, enabled, rendered. */
 const isTabStop = (element: Element): element is HTMLElement =>
   (element as Partial<HTMLElement>).tabIndex !== undefined &&

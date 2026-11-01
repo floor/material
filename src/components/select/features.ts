@@ -6,7 +6,7 @@ import { MenuComponent, MenuItem, MenuContent, MenuDivider, MenuPosition } from 
 import { MENU } from "../menu/inner";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";
 import { warnUnknownValue } from "../../core/utils/warn";
-import { activeElementOf, isRendered } from "../../core/dom/focus";
+import { activeElementOf } from "../../core/dom/focus";
 
 /**
  * Creates a text field for the select component
@@ -182,9 +182,13 @@ const setupCombobox = (
 
   const options = (): HTMLElement[] =>
     Array.from(menu.element.querySelectorAll<HTMLElement>('[role="option"]'));
+  // An option that is not rendered (display: none, its own or an ancestor's)
+  // cannot take focus either, so it is not a stop; a DOM without checkVisibility
+  // keeps every option, which is how the listbox behaved before.
   const enabled = (): HTMLElement[] =>
     options().filter(
-      (option) => option.getAttribute("aria-disabled") !== "true" && isRendered(option),
+      (option) =>
+        option.getAttribute("aria-disabled") !== "true" && option.checkVisibility?.() !== false,
     );
   const optionFor = (element: HTMLElement | null): SelectOption | undefined =>
     element

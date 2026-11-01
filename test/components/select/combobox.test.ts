@@ -28,6 +28,13 @@ g.FocusEvent = dom.window.FocusEvent;
 g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+// jsdom has no Element.checkVisibility; the listbox asks it where a browser
+// would, so the test DOM answers as a browser does, off the computed display.
+// Without it every option counts as rendered, as in any DOM that lacks the
+// method.
+g.Element.prototype.checkVisibility = function (this: Element): boolean {
+  return g.getComputedStyle(this).display !== "none";
+};
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };

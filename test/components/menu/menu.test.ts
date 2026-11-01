@@ -19,6 +19,13 @@ g.KeyboardEvent = dom.window.KeyboardEvent;
 g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+// jsdom has no Element.checkVisibility; the keyboard model asks it where a
+// browser would, so the test DOM answers as a browser does, off the computed
+// display. Without it every item counts as rendered, as in any DOM that lacks
+// the method.
+g.Element.prototype.checkVisibility = function (this: Element): boolean {
+  return g.getComputedStyle(this).display !== "none";
+};
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 // `tasks.requestAnimationFrame` goes through `window.requestAnimationFrame`,
 // and jsdom's own keeps a counter of outstanding frames per window that
