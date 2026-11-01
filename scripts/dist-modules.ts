@@ -7,7 +7,7 @@
 // a module that ships imports it. Anything else is a file no supported import
 // can see. The rule is the same one the declaration prune follows
 // (`scripts/prune-declarations.ts`), applied to runtime modules.
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat, unlink } from "node:fs/promises";
 import { join, posix, resolve } from "node:path";
 import { exportTargets, specifiersOf } from "./prune-declarations";
 
@@ -95,4 +95,26 @@ export async function walkDistModules(distDir: string, exports: unknown): Promis
     reachable: [...reachable].sort(),
     unreachable: [...files].filter((file) => file.endsWith(".js") && !reachable.has(file)).sort(),
   };
+}
+
+export interface PruneModulesResult {
+  /** Package-relative paths removed, sorted. */
+  removed: string[];
+  /** Their total size in bytes. */
+  bytes: number;
+}
+
+/**
+ * Remove the dist JS modules no `exports` target reaches, directly or through
+ * the imports of another module that ships.
+ */
+export async function pruneUnreachableModules(distDir: string, exports: unknown): Promise<PruneModulesResult> {
+  const root = resolve(distDir);
+  const { unreachable } = await walkDistModules(distDir, exports);
+  let bytes = 0;
+  for (const file of unreachable) {
+    bytes += (await stat(join(root, file))).size;
+    await unlink(join(root, file));
+  }
+  return { removed: unreachable, bytes };
 }

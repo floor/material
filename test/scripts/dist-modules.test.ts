@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { walkDistModules } from "../../scripts/dist-modules";
+import { pruneUnreachableModules, walkDistModules } from "../../scripts/dist-modules";
 
 /** A package tree under a temporary directory, keyed by package-relative path. */
 async function tree(files: Record<string, string>): Promise<string> {
@@ -13,6 +13,11 @@ async function tree(files: Record<string, string>): Promise<string> {
     await writeFile(join(directory, path), text);
   }
   return directory;
+}
+
+/** Every file under a directory, package-relative and sorted. */
+async function listing(directory: string): Promise<string[]> {
+  return [...new Bun.Glob("**/*").scanSync({ cwd: directory })].sort();
 }
 
 // The manifest as the build publishes it: paths are package-relative, `*`
@@ -128,6 +133,47 @@ describe("walkDistModules", () => {
     try {
       await expect(walkDistModules(directory, { ".": { types: "./index.d.ts" } }))
         .rejects.toThrow(/no module is an exports target/);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("pruneUnreachableModules", () => {
+  test("removes the modules no exports target reaches, and nothing else", async () => {
+    const directory = await tree(FILES);
+    try {
+      const result = await pruneUnreachableModules(directory, EXPORTS);
+      expect(result.removed).toEqual(UNREACHABLE);
+      expect(result.bytes).toBe(UNREACHABLE.reduce((sum, path) => sum + new TextEncoder().encode(FILES[path]).length, 0));
+      const remaining = await listing(directory);
+      expect(remaining.filter((path) => path.endsWith(".js"))).toEqual(REACHABLE);
+      // Only modules move: stylesheets, declarations and components stay.
+      for (const path of ["components/a/types.d.ts", "elements/css/button.css", "svelte/Button.svelte"]) {
+        expect(remaining).toContain(path);
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("is idempotent: a second run removes nothing", async () => {
+    const directory = await tree(FILES);
+    try {
+      await pruneUnreachableModules(directory, EXPORTS);
+      const again = await pruneUnreachableModules(directory, EXPORTS);
+      expect(again.removed).toEqual([]);
+      expect(again.bytes).toBe(0);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("fails when a module that ships imports a file the build does not ship", async () => {
+    const directory = await tree({ "index.js": 'export * from "./gone.js";\n' });
+    try {
+      await expect(pruneUnreachableModules(directory, { ".": { import: "./index.js" } }))
+        .rejects.toThrow(/index\.js imports \.\/gone\.js, which the build does not ship/);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
