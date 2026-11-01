@@ -4,6 +4,7 @@
 @use "../../styles/abstract/mixins" as m;
 @use "../../styles/abstract/functions" as f;
 @use "../../styles/abstract/theme" as t;
+@use "../../styles/abstract/direction" as d;
 
 $prefix: base.$prefix;
 
@@ -475,14 +476,14 @@ $component: "#{$prefix}-menu";
             }
 
             // The ends of the column round outwards, so the items read as one
+            // (a block edge, not an inline one: the pair mirrors to itself,
+            // so the arms form needs no direction arm).
             &:first-child {
-                border-start-start-radius: v.shape("medium");
-                border-start-end-radius: v.shape("medium");
+                @include d.corners($start-start: v.shape("medium"), $start-end: v.shape("medium"), $arm: false);
             }
 
             &:last-child {
-                border-end-start-radius: v.shape("medium");
-                border-end-end-radius: v.shape("medium");
+                @include d.corners($end-start: v.shape("medium"), $end-end: v.shape("medium"), $arm: false);
             }
 
             &--selected {
@@ -627,14 +628,13 @@ $component: "#{$prefix}-menu";
             // one menu that has been cut, rather than as loose cards.
             border-radius: v.shape("small");
 
+            // Block edges again: the pairs mirror to themselves
             &:first-child {
-                border-start-start-radius: v.shape("large"); // ContainerShape
-                border-start-end-radius: v.shape("large");
+                @include d.corners($start-start: v.shape("large"), $start-end: v.shape("large"), $arm: false); // ContainerShape
             }
 
             &:last-child {
-                border-end-start-radius: v.shape("large");
-                border-end-end-radius: v.shape("large");
+                @include d.corners($end-start: v.shape("large"), $end-end: v.shape("large"), $arm: false);
             }
 
             // its own margin would add to the list gap
