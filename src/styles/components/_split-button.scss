@@ -8,8 +8,14 @@
 // becomes a circle while its menu is open, and its chevron turns 180 degrees.
 //
 // Both halves are the library's own button, so their colours, state layers,
-// focus rings and touch targets come from there. Everything is written with
-// logical properties, so the pair mirrors in right-to-left languages.
+// focus rings and touch targets come from there.
+//
+// The pads stay logical and flip with the computed direction. The corners do
+// not: consumer bundlers lower the logical corner properties into :lang()
+// arms that miss dir="rtl" (src/styles/components/_text-field.scss), so each
+// physical pair is written out and the right-to-left pair is a direction arm,
+// the FAB's placement form. The radii themselves are custom properties, so a
+// state changes only their value and the arms keep choosing the pair.
 @use "sass:map";
 @use "sass:math";
 @use "../../styles/abstract/base" as base;
@@ -56,6 +62,13 @@ $gap: 2px;
   // side overflow it, so a 9999px pill beside a 4dp corner drags that corner
   // to about a fiftieth of a pixel and the split reads as a square cut.
   // Half the height is the same pill and leaves the inner corner alone.
+  //
+  // The size classes set the three radii; a root without one keeps the
+  // default size's values, which is the size the factory defaults to.
+  --#{$component}-pill: #{math.div(map.get($sizes, "s", "height"), 2)};
+  --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($sizes, "s", "inner")});
+  --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($sizes, "s", "inner-active")});
+
   .#{$button} {
     transition:
       border-radius v.motion("spring-fast-spatial-duration") v.motion("spring-fast-spatial-easing"),
@@ -67,21 +80,13 @@ $gap: 2px;
   // ---------------------------------------------------------------------------
   @each $size, $spec in $sizes {
     &--#{$size} {
-      $inner: var(--#{base.$prefix}-split-button-inner-shape, #{map.get($spec, "inner")});
-      $inner-active: var(
-        --#{base.$prefix}-split-button-inner-shape-active,
-        #{map.get($spec, "inner-active")}
-      );
-
-      $outer: math.div(map.get($spec, "height"), 2);
+      --#{$component}-pill: #{math.div(map.get($spec, "height"), 2)};
+      --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($spec, "inner")});
+      --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($spec, "inner-active")});
 
       .#{$button} {
         height: map.get($spec, "height");
         min-height: map.get($spec, "height");
-        border-start-start-radius: $outer;
-        border-end-start-radius: $outer;
-        border-start-end-radius: $outer;
-        border-end-end-radius: $outer;
       }
 
       // The leading button: an outer pill edge, an inner corner facing its
@@ -90,15 +95,6 @@ $gap: 2px;
         padding-inline: map.get($spec, "lead-start") map.get($spec, "lead-end");
         // Compose SplitButtonDefaults.LeadingButtonMinWidth
         min-width: 48px;
-        border-start-end-radius: $inner;
-        border-end-end-radius: $inner;
-
-        &:hover,
-        &:focus-visible,
-        &:active {
-          border-start-end-radius: $inner-active;
-          border-end-end-radius: $inner-active;
-        }
       }
 
       // The trailing button is symmetrical, so its icon is nudged towards the
@@ -108,8 +104,6 @@ $gap: 2px;
         padding-inline: map.get($spec, "trail");
         // Its width is its padding and its icon, not the button's own minimum
         min-width: 0;
-        border-start-start-radius: $inner;
-        border-end-start-radius: $inner;
 
         // The icon sits in the button's icon wrapper, which has a size of its
         // own; the split button's chevron is bigger than a button icon
@@ -129,20 +123,60 @@ $gap: 2px;
             translate: map.get($spec, "offset") 0;
           }
         }
-
-        &:hover,
-        &:focus-visible,
-        &:active {
-          border-start-start-radius: $inner-active;
-          border-end-start-radius: $inner-active;
-        }
       }
+    }
+  }
 
-      // Open: the trailing button's inner corner rounds off into a circle
-      &.#{$component}--expanded .#{$component}__trailing {
-        border-start-start-radius: $outer;
-        border-end-start-radius: $outer;
-      }
+  // ---------------------------------------------------------------------------
+  // The corners: the outer pair faces out, the inner pair faces the gap. The
+  // leading half's inner corners sit on its trailing edge and the trailing
+  // half's on its leading edge, so the right-to-left rule swaps the physical
+  // pair.
+  // ---------------------------------------------------------------------------
+  .#{$button} {
+    border-radius: var(--#{$component}-pill);
+  }
+
+  .#{$component}__leading {
+    border-radius: var(--#{$component}-pill) var(--#{$component}-corner) var(--#{$component}-corner) var(--#{$component}-pill);
+
+    @include m.rtl {
+      border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
+    }
+  }
+
+  .#{$component}__trailing {
+    border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
+
+    @include m.rtl {
+      border-radius: var(--#{$component}-pill) var(--#{$component}-corner) var(--#{$component}-corner) var(--#{$component}-pill);
+    }
+  }
+
+  // The inner corner grows further while a half is hovered, focused or
+  // pressed. Only the value changes, so the arms keep choosing the pair.
+  .#{$component}__leading:where(:hover, :focus-visible, :active),
+  .#{$component}__trailing:where(:hover, :focus-visible, :active) {
+    --#{$component}-corner: var(--#{$component}-corner-active);
+  }
+
+  // Open: the trailing button's inner corner rounds off into a circle. The
+  // pill is the same on either side, so this needs no arm.
+  &--expanded .#{$component}__trailing {
+    --#{$component}-corner: var(--#{$component}-pill);
+  }
+
+  // The placement class and the direction marker are the same element here:
+  // the runtime writes mtrl-rtl on this root, and dir="rtl" may sit on it.
+  // The arms above need a strict ancestor, so the root-carried form is
+  // written here, after them.
+  &:where(.#{base.$prefix}-rtl, [dir='rtl']) {
+    .#{$component}__leading {
+      border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
+    }
+
+    .#{$component}__trailing {
+      border-radius: var(--#{$component}-pill) var(--#{$component}-corner) var(--#{$component}-corner) var(--#{$component}-pill);
     }
   }
 
