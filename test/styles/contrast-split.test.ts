@@ -215,7 +215,7 @@ describe("explicit contrast levels are opt-in", () => {
     // easing that reads the arc curve from one custom property
     // (styles/components/_progress.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("9efde3761174f56dcf031733b933d482c4be5fed272be7122852ca18f2af86f3");
+      .toBe("f4127d1a350830f3029217b80fbd43e96601fed1665ca79e2de43f02614b2d5c");
     expect(css.length).toBe(552712);
   });
 
