@@ -40,7 +40,11 @@ const declared = (css: string): string[] =>
 /** Selectors (rule preludes) and declared custom properties, for the full sheet. */
 const census = (css: string): { selectors: string[]; properties: string[] } => {
   const without = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const properties = [...new Set([...without.matchAll(/(--[A-Za-z_][\w-]*)\s*:/g)].map((match) => match[1]!))].sort();
+  // The lookbehind keeps a class name that ends in --word (for example
+  // .mtrl-progress--indeterminate) followed by whitespace and :is( from being
+  // read as a declaration of that word: only a real --custom-property
+  // declaration is preceded by a rule boundary, whitespace or a semicolon.
+  const properties = [...new Set([...without.matchAll(/(?<![\w-])(--[A-Za-z_][\w-]*)\s*:/g)].map((match) => match[1]!))].sort();
   const selectors: string[] = [];
   let depth = 0;
   let start = 0;
