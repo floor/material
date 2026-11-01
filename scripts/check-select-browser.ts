@@ -173,3 +173,107 @@ export async function checkSelectWidth(page: Page, api: "factory" | "element"): 
     `an unsized select (${api}) is 280px wide in any container, as an unsized text field is`);
   console.log(`Passed select width (${api}): 280px in a 200px, a 400px and an unconstrained container.`);
 }
+
+/**
+ * An option that is not rendered is not a keyboard stop either. The combobox
+ * marks the selected option when it opens, ArrowDown, ArrowUp, Home, End and
+ * typeahead move the active option through the options shown, and Enter
+ * chooses the active one. The WAI-ARIA listbox pattern's keyboard rules are
+ * "Down Arrow: Moves focus to the next option", "Home (Optional): Moves focus
+ * to first option", "End (Optional): Moves focus to last option" and "Type a
+ * character: focus moves to the next item with a name that starts with the
+ * typed character" (w3.org/WAI/ARIA/apg/patterns/listbox, read 2026-11-01). The
+ * active option is the one `aria-activedescendant` names, and a `display: none`
+ * element cannot take focus, so it cannot be that option.
+ *
+ * The first, middle and last of Cat–Dog–Fox are hidden in turn, and once the
+ * selected option itself. Each case opens with a real ArrowDown on the field
+ * and reads `aria-activedescendant` after each real key press, then what Enter
+ * commits. Where the hidden option is still a stop, it becomes the active
+ * option and Enter commits it — a value nobody could see.
+ */
+export async function checkSelectHiddenOptions(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  type Combobox = {
+    element: HTMLElement;
+    getValue: () => string | null;
+    on: (event: "change", handler: (payload: { value: unknown }) => void) => unknown;
+    destroy: () => void;
+  };
+  type Case = { name: string; hidden: string; value: string; keys: Array<[string, string]>; chosen: string | null };
+  const cases: Case[] = [
+    { name: "middle", hidden: "dog", value: "cat", keys: [["ArrowDown", "fox"], ["ArrowUp", "cat"], ["End", "fox"], ["Home", "cat"], ["f", "fox"]], chosen: "fox" },
+    { name: "first", hidden: "cat", value: "dog", keys: [["ArrowUp", "dog"], ["Home", "dog"], ["End", "fox"], ["ArrowDown", "fox"], ["f", "fox"]], chosen: "fox" },
+    { name: "last", hidden: "fox", value: "cat", keys: [["ArrowDown", "dog"], ["End", "dog"], ["Home", "cat"], ["ArrowDown", "dog"], ["ArrowUp", "cat"], ["d", "dog"]], chosen: "dog" },
+    // The selected option is the hidden one: opening marks nothing, and Enter
+    // keeps the value the field shows instead of choosing an option unseen.
+    { name: "selected", hidden: "dog", value: "dog", keys: [], chosen: null },
+  ];
+  for (const { name, hidden, value, keys, chosen } of cases) {
+    await page.evaluate((value) => {
+      document.body.replaceChildren();
+      const state = window as unknown as { createSelect: (config: Record<string, unknown>) => Combobox; select: Combobox; changes: string[] };
+      state.changes = [];
+      const select = state.createSelect({ label: "Pet", value, options: [
+        { id: "cat", text: "Cat" },
+        { id: "dog", text: "Dog" },
+        { id: "fox", text: "Fox" },
+      ] });
+      select.element.style.cssText = "position:absolute;top:24px;left:24px;width:280px";
+      document.body.append(select.element);
+      state.select = select;
+      select.on("change", (payload) => state.changes.push(String(payload.value)));
+      (select.element.querySelector("input") as HTMLInputElement).focus();
+    }, value);
+    // The menu, and its options, are placed on the first open.
+    await page.keyboard.press("ArrowDown");
+    await page.waitForFunction(() => {
+      const state = window as unknown as { select: Combobox };
+      return !!state.select.element.querySelector(".mtrl-select__menu")?.classList.contains("mtrl-menu--visible");
+    });
+    // The active option is placed after the opening frame.
+    await page.waitForTimeout(250);
+    // A consumer hides an option with display: none.
+    const hiddenDisplay = await page.evaluate((hidden) => {
+      const state = window as unknown as { select: Combobox };
+      const option = state.select.element.querySelector<HTMLElement>(`[data-id="${hidden}"]`);
+      if (option) option.style.display = "none";
+      return option ? getComputedStyle(option).display : "missing";
+    }, hidden);
+    assert.equal(hiddenDisplay, "none", `select, ${name} option hidden: the option is display: none, so it cannot take focus`);
+    const read = (): Promise<string | null> => page.evaluate(() => {
+      const state = window as unknown as { select: Combobox };
+      const input = state.select.element.querySelector("input") as HTMLInputElement;
+      const id = input.getAttribute("aria-activedescendant");
+      const active = id ? document.getElementById(id) : null;
+      return active ? active.getAttribute("data-id") : null;
+    });
+    if (name === "selected") {
+      // Close, and open again on the selected option, which is now hidden.
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(400);
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(250);
+    }
+    const opened = await read();
+    assert.equal(opened, name === "selected" ? null : value,
+      `select, ${name} option hidden: opening marks ${name === "selected" ? "no option" : `the shown selected option ${value}`} (${opened})`);
+    for (const [key, expected] of keys) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(120);
+      const active = await read();
+      assert.equal(active, expected, `select, ${name} option hidden: after ${key === "f" || key === "d" ? `typing ${key}` : key} the active option is ${expected} (${active})`);
+    }
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(180);
+    const after = await page.evaluate(() => {
+      const state = window as unknown as { select: Combobox; changes: string[] };
+      return { changes: state.changes.splice(0), value: state.select.getValue() };
+    });
+    assert.deepEqual(after, { changes: chosen === null ? [] : [chosen], value: chosen ?? value },
+      `select, ${name} option hidden: Enter commits ${chosen ?? `nothing, keeping ${value}`} (${JSON.stringify(after)})`);
+    await page.evaluate(() => (window as unknown as { select: Combobox }).select.destroy());
+  }
+  await page.evaluate(() => document.body.replaceChildren());
+  console.log("Passed packed select hidden options: with the first, middle or last option display: none, opening marks the selected option that is shown, ArrowDown, ArrowUp, Home, End and typeahead skip the hidden one, Enter commits the active visible option, and a hidden selected option leaves nothing active so Enter changes nothing.");
+}
