@@ -65,12 +65,15 @@ describe('split button stylesheet', () => {
   test('the outer corner is exactly half the height, so the inner one survives', () => {
     // CSS scales every corner of a box down together when the radii along a
     // side overflow it, so a 9999px pill beside a 4dp corner drags that
-    // corner to a fiftieth of a pixel and the split reads as a square cut
+    // corner to a fiftieth of a pixel and the split reads as a square cut.
+    // The pill is a custom property, so a state or a direction changes only
+    // values and the physical pairs below keep choosing the sides.
     const outer: Record<string, string> = { xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' };
+    expect(value('.mtrl-split-button', '--mtrl-split-button-pill')).toBe('20px');
     for (const [size, corner] of Object.entries(outer)) {
-      expect(value(`.mtrl-split-button--${size} .mtrl-button`, 'border-start-start-radius')).toBe(corner);
-      expect(value(`.mtrl-split-button--${size} .mtrl-button`, 'border-end-end-radius')).toBe(corner);
+      expect(value(`.mtrl-split-button--${size}`, '--mtrl-split-button-pill')).toBe(corner);
     }
+    expect(value('.mtrl-split-button .mtrl-button', 'border-radius')).toBe('var(--mtrl-split-button-pill)');
     expect(css).not.toContain('9999px');
   });
 
@@ -82,9 +85,11 @@ describe('split button stylesheet', () => {
     for (const [size, corner] of Object.entries(inner)) {
       // Read through the shape scale's token
       const fallback = `var(--mtrl-split-button-inner-shape, ${token(parseInt(corner, 10))})`;
-      expect(value(`.mtrl-split-button--${size} .mtrl-split-button__leading`, 'border-start-end-radius')).toBe(fallback);
-      expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing`, 'border-start-start-radius')).toBe(fallback);
+      expect(value(`.mtrl-split-button--${size}`, '--mtrl-split-button-corner')).toBe(fallback);
     }
+    // A root without a size class keeps the default size's values.
+    expect(value('.mtrl-split-button', '--mtrl-split-button-corner'))
+      .toBe(`var(--mtrl-split-button-inner-shape, ${token(4)})`);
   });
 
   test('every inner corner stays between a tenth and a seventh of the height', () => {
@@ -100,9 +105,15 @@ describe('split button stylesheet', () => {
   test('the inner corners grow further when the button is hovered, focused or pressed', () => {
     const active: Record<string, string> = { xs: '8px', s: '12px', m: '12px', l: '20px', xl: '20px' };
     const resting: Record<string, number> = { xs: 4, s: 4, m: 8, l: 12, xl: 16 };
+    // One rule for both halves, and it changes only the value: the arms keep
+    // choosing the physical pair while a half is hovered or pressed.
+    for (const half of ['leading', 'trailing']) {
+      expect(value(`.mtrl-split-button .mtrl-split-button__${half}:where(:hover, :focus-visible, :active)`, '--mtrl-split-button-corner'))
+        .toBe('var(--mtrl-split-button-corner-active)');
+    }
     for (const [size, corner] of Object.entries(active)) {
-      const selector = `.mtrl-split-button--${size} .mtrl-split-button__leading:hover, .mtrl-split-button--${size} .mtrl-split-button__leading:focus-visible, .mtrl-split-button--${size} .mtrl-split-button__leading:active`;
-      expect(value(selector, 'border-start-end-radius')).toBe(`var(--mtrl-split-button-inner-shape-active, ${token(parseInt(corner, 10))})`);
+      expect(value(`.mtrl-split-button--${size}`, '--mtrl-split-button-corner-active'))
+        .toBe(`var(--mtrl-split-button-inner-shape-active, ${token(parseInt(corner, 10))})`);
       // and it is always rounder than the resting corner
       expect(parseInt(corner, 10)).toBeGreaterThan(resting[size]!);
     }
@@ -133,10 +144,48 @@ describe('split button stylesheet', () => {
   });
 
   test('open: the inner corner rounds off, the icon centres and the chevron turns over', () => {
-    expect(value('.mtrl-split-button--s.mtrl-split-button--expanded .mtrl-split-button__trailing', 'border-start-start-radius')).toBe('20px');
-    expect(value('.mtrl-split-button--xl.mtrl-split-button--expanded .mtrl-split-button__trailing', 'border-start-start-radius')).toBe('68px');
+    // The trailing half's inner corner takes the pill, which is the same on
+    // either side, so one rule serves both directions.
+    expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing', '--mtrl-split-button-corner'))
+      .toBe('var(--mtrl-split-button-pill)');
     expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'rotate')).toBe('180deg');
     expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'translate')).toBe('0 0');
+  });
+
+  test('each half writes its physical pair, and the mirrored pair is a direction arm', () => {
+    const leading = 'var(--mtrl-split-button-pill) var(--mtrl-split-button-corner) var(--mtrl-split-button-corner) var(--mtrl-split-button-pill)';
+    const trailing = 'var(--mtrl-split-button-corner) var(--mtrl-split-button-pill) var(--mtrl-split-button-pill) var(--mtrl-split-button-corner)';
+    expect(value('.mtrl-split-button .mtrl-split-button__leading', 'border-radius')).toBe(leading);
+    expect(value('.mtrl-split-button .mtrl-split-button__trailing', 'border-radius')).toBe(trailing);
+    // An ancestor direction reaches the parts through the class the runtime
+    // reflects, the shadow tree's host class, and a cut attribute fallback.
+    for (const member of [
+      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__leading',
+      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__leading',
+      '[dir=rtl] .mtrl-split-button .mtrl-split-button__leading:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+    ]) {
+      expect(value(member, 'border-radius')).toBe(trailing);
+    }
+    for (const member of [
+      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__trailing',
+      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__trailing',
+      '[dir=rtl] .mtrl-split-button .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+    ]) {
+      expect(value(member, 'border-radius')).toBe(leading);
+    }
+    // The direction may sit on the root itself: the arms above need an
+    // ancestor, and this is where the runtime writes the class.
+    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__leading', 'border-radius')).toBe(trailing);
+    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__trailing', 'border-radius')).toBe(leading);
+  });
+
+  test('no logical corner property is left to be lowered into :lang() arms', () => {
+    // A consumer's bundler lowers border-*-*-radius into :lang() lists that
+    // match a language, never dir="rtl": the bundled sheet lost the split
+    // shape on an RTL page while the halves swapped. The physical pair and
+    // the direction arm keep the bundled and unbundled sheets in agreement
+    // (scripts/check-split-button-rtl.ts).
+    expect(css).not.toMatch(/border-(?:start|end)-(?:start|end)-radius/);
   });
 
   test('the short sizes still offer a 48dp target', () => {

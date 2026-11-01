@@ -191,9 +191,13 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // The split button writes each half's physical corner pair and the
+    // right-to-left pair as a direction arm, its radii in custom properties,
+    // so the bundler's :lang() lowering cannot reach them
+    // (styles/components/_split-button.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c52ffab42ebe68ccb98601f67933182e1f2970ef6c85fe24b77b208305ebd504");
-    expect(css.length).toBe(544277);
+      .toBe("3a2de9ba66e129686985c337aee7b5c285bdd25483a7f242496df576e5da5372");
+    expect(css.length).toBe(540483);
   });
 
   test("today's sheets still resolve to the fixture", () => {
