@@ -556,6 +556,47 @@ export const withVisibility =
     }
   };
 
+  // A contained dialog's scrim covers the container, so the container is its
+  // containing block while the overlay lives in it. It is scoped only when the
+  // container holds the dialog: a collapsed, smaller or hidden one keeps the
+  // page's scrim and its centring, which is what it had before. A static container is
+  // made positioned for that; a positioned one is left as it is. The
+  // container's own inline value (empty when it had none) goes back on close or
+  // destroy.
+  let containerPosition: string | null = null;
+
+  const unscopeScrim = (): void => {
+    removeClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
+    if (containerPosition === null) return;
+    component.structure.container.style.position = containerPosition;
+    containerPosition = null;
+  };
+
+  const scopeScrim = (): void => {
+    const container = component.structure.container;
+    if (top || container === document.body) return;
+
+    // Measure the dialog as it lays out inside the container: its width and
+    // height there are what the container has to hold, and a static container
+    // is a containing block for the absolute overlay only once it is positioned.
+    if (getComputedStyle(container).position === "static") {
+      containerPosition ??= container.style.position;
+      container.style.position = "relative";
+    }
+    addClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
+
+    // A box with no height centres the dialog on its edge, above the page; a
+    // smaller or hidden one clips or hides it. All keep the page's scrim and
+    // centring instead, and the container is left untouched.
+    if (
+      !container.clientHeight ||
+      container.clientWidth < component.element.offsetWidth ||
+      container.clientHeight < component.element.offsetHeight
+    ) {
+      unscopeScrim();
+    }
+  };
+
   // In the top layer the dialog may hold slotted content, which its own query
   // does not see: Tab moves as the browser moves it, wrapped at the ends
   const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
@@ -669,6 +710,7 @@ export const withVisibility =
   };
 
   // Setup initial state
+  scopeScrim();
   if (isOpen) {
     if (top) showModal();
     addClass(
@@ -740,6 +782,8 @@ export const withVisibility =
         const container = component.structure.container || document.body;
         container.appendChild(component.overlay);
       }
+      // A previous close put the container's position back: take it again
+      scopeScrim();
 
       // An open dialog can be dismissed: Escape and the scrim, from now
       setupEvents();
@@ -837,6 +881,8 @@ export const withVisibility =
         if (!top && component.overlay && component.overlay.parentNode) {
           component.overlay.parentNode.removeChild(component.overlay);
         }
+        // The overlay no longer needs the container to be a containing block
+        unscopeScrim();
 
         if (typeof component.emit === "function") {
           component.emit(DIALOG_EVENTS.AFTER_CLOSE, { dialog: getComponent() });
@@ -865,6 +911,8 @@ export const withVisibility =
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
       cleanupEvents();
+      // Destroyed rather than closed: no afterclose is coming to restore it
+      unscopeScrim();
     },
   };
 

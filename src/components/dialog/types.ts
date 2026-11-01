@@ -189,8 +189,22 @@ export interface DialogConfig {
    */
   trapFocus?: boolean;
   
-  /** 
-   * Parent element to append dialog to
+  /**
+   * Parent element to append dialog to.
+   *
+   * With any element but the body, the scrim covers that element rather than
+   * the page: it is sized to the container, the dialog is centred in it, and a
+   * click outside the container does not dismiss the dialog. This applies only
+   * when the container has room for the dialog -- at least its width and height
+   * as laid out in the container. A collapsed or smaller container keeps the
+   * page's scrim and centring, and is left untouched, so an unsized container
+   * cannot put the dialog above the page. A container whose computed `position`
+   * is `static` is made `relative` while the dialog's overlay is in it, and its
+   * own inline value (none included) is put back when the dialog closes or is
+   * destroyed. A positioned container is left as it is.
+   *
+   * `layer: "top"` ignores this: `showModal()` makes the dialog page-modal,
+   * with its `::backdrop` over the viewport.
    * @default document.body
    */
   container?: HTMLElement;
@@ -200,8 +214,9 @@ export interface DialogConfig {
    * `container` (or `document.body`) and kept there when it closes, and opens
    * it with `showModal()`: in the browser's top layer, above every z-index and
    * outside any clipping ancestor, with the rest of the page inert. The scrim
-   * is its `::backdrop`, and the overlay element is not used. Escape reaches
-   * the dialog as its `cancel` event.
+   * is its `::backdrop`, which covers the viewport whatever `container` names,
+   * and the overlay element is not used. Escape reaches the dialog as its
+   * `cancel` event.
    *
    * Where the browser has no `showModal()`, the dialog behaves as without it.
    */
