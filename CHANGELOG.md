@@ -98,6 +98,19 @@ Menus you can trust with keyboard and selection.
   reaches, nested hosts included. The `browser (elements)` job falls from 9m06s
   to 8m04s; `elements:check`, which shares the job, is unchanged.
 
+- **CI's elements row is three rows by measured duration, and the run drops
+  from 8m58s to 6m56s (#211).**
+  The `browser (elements)` row held the run at 7m54s, of which
+  `elements:check` was 318.8s and `shadow-styles:check` 132.7s. `elements:check`
+  now takes parts — contiguous ranges of its sections, split before `menu in
+  the top layer`, 165s before the boundary and 154s after — and CI runs them as
+  `browser (elements-a)` and `browser (elements-b)`, with
+  `browser (shadow-styles)` a row of its own: 3m19s, 2m58s and 2m40s. Every
+  check still runs on every change — the two parts printed 489 and 191 checks,
+  the 680 the one row printed — and a local `bun run elements:check` is
+  unchanged. The `check` status the ruleset requires is untouched, and the
+  critical path is now `browser (components)` at 6m06s.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
