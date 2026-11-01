@@ -34,7 +34,8 @@ export type {
  * for better code completion and type safety.
  * 
  * @example
- * import { createMenu, MENU_POSITION } from 'material';
+ * import { createMenu } from 'material';
+ * import { MENU_POSITION } from 'material/components/menu/constants';
  * 
  * // Create a menu positioned at the bottom-right of its opener
  * const menu = createMenu({ 
