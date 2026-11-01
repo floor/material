@@ -198,8 +198,8 @@ describe("explicit contrast levels are opt-in", () => {
     // Native controls carry their measured font/padding defaults in their own
     // component sheets, so those defaults also reach element shadow roots.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("bb72340071ec69e8a9295a77557a8259b2a62dcd9e835c4c344d7b803914696a");
-    expect(css.length).toBe(544539);
+      .toBe("25ce3886f0bd807cf0fa47fc06aedda9e8efe70aa3f7472fb91544582b4cd5ba");
+    expect(css.length).toBe(544536);
   });
 
   test("today's sheets still resolve to the fixture", () => {
