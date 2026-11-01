@@ -18,14 +18,28 @@ const run = async (script: string, engine: string) => {
   assert.match(output, new RegExp(`SSR ${script} ${engine}: \\d+ equal, \\d+ exceptions, 0 failures`), `${script} did not prove coverage for ${engine}`);
   timings.push({ check: `${script}/${engine}`, seconds: (performance.now() - start) / 1000 });
 };
-await run("parity", "chromium");
-for (const engine of ["chromium", "firefox", "webkit"]) {
+// CI runs this check as two matrix rows (.github/workflows/ci.yml), split by
+// engine at the measured boundary: on run 41317795666 parity took 29.4s and the
+// three Chromium checks 36.3s -- 65.7s of the 193.7s the script ran -- against
+// 127.9s for firefox and webkit. Part a is chromium, part b is firefox and
+// webkit, so the two rows run every sub-run exactly once; parity is Chromium's
+// alone and stays in part a. The first split run, 41320050136, printed 62.0s
+// over 4 sub-runs and 104.7s over 6. With no argument every part runs -- what a
+// local `bun run ssr:check` does.
+const parts = process.argv.slice(2);
+const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
+assert.deepEqual(parts.filter(part => part !== "a" && part !== "b"), [], "a part is a or b");
+if (selected("a")) await run("parity", "chromium");
+const engines = [
+  ...(selected("a") ? ["chromium"] : []),
+  ...(selected("b") ? ["firefox", "webkit"] : []),
+];
+for (const engine of engines) {
   await run("security", engine);
   await run("upgrade", engine);
   await run("fallback", engine);
 }
 const seconds = (performance.now() - started) / 1000;
-const previous = timings.filter(t => ["parity/chromium", "security/chromium"].includes(t.check)).reduce((sum, t) => sum + t.seconds, 0);
 await mkdir("analysis/ssr-upgrade", { recursive: true });
-await Bun.write("analysis/ssr-upgrade/timing.json", JSON.stringify({ timings, seconds, addedSeconds: seconds - previous }, null, 2));
-console.log(`ssr:check: ${seconds.toFixed(1)}s total, ${(seconds - previous).toFixed(1)}s added to browser (ssr), excluding browser installation`);
+await Bun.write("analysis/ssr-upgrade/timing.json", JSON.stringify({ parts, timings, seconds }, null, 2));
+console.log(`ssr:check${parts.length ? ` (${parts.join(", ")})` : ""}: ${seconds.toFixed(1)}s total over ${timings.length} sub-runs`);

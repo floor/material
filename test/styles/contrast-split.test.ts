@@ -195,9 +195,13 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("d11cb234bb857f21c85f34e66867822be343352320fdaa5fa84d412e60357cba");
+    expect(css.length).toBe(544228);
   });
 
   test("today's sheets still resolve to the fixture", () => {
