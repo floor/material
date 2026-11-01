@@ -1,16 +1,48 @@
 // src/components/progress/features/linear.ts
 //
-// The linear indicator, after Compose ProgressIndicator.kt and
+// The linear indicator's geometry, after Compose ProgressIndicator.kt and
 // WavyProgressIndicator.kt: an active indicator from the leading edge, a
-// track after it with a gap between the two, a stop indicator at the trailing
-// end, and, when indeterminate, two bars running the track on keyframes.
-// Everything is measured in fractions of the width, as Compose does, so the
-// port stays close to the source.
+// track after it with a gap between the two, a stop indicator at the
+// trailing end, and, when indeterminate, two bars running the track on
+// keyframes. The canvas port drew these fractions straight to the context;
+// here they resolve to the same pixels as windows the drawing elements
+// place themselves by, so the two can be compared frame by frame.
+// Everything is in view pixels, leading edge at 0; a right-to-left
+// container mirrors the whole view in CSS, as the canvas mirrored each
+// fraction, so none of this knows the direction.
 
-import { CanvasContext } from "./canvas";
-import { ProgressColors } from "./colors";
 import { linearIndeterminateFrame } from "./motion";
-import { PROGRESS_MEASUREMENTS, PROGRESS_WAVE } from "../constants";
+import { PROGRESS_MEASUREMENTS } from "../constants";
+
+/** The gap that clears both round caps of a bar (TrackActiveSpace + stroke) */
+export const linearGapPx = (strokeWidth: number): number =>
+  PROGRESS_MEASUREMENTS.LINEAR.GAP + strokeWidth;
+
+/**
+ * A bar's window in view pixels, already widened by its round caps:
+ * [x0 - cap, x1 + cap], with x clamped inside the track as the canvas
+ * clamped it. `null` is every case where the canvas drew nothing.
+ */
+export interface BarWindow {
+  from: number;
+  to: number;
+}
+
+const barWindow = (
+  width: number,
+  cap: number,
+  from: number,
+  to: number
+): BarWindow | null => {
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  if (end - start <= 0) return null;
+  const clamp = (x: number): number => Math.min(Math.max(x, cap), width - cap);
+  const x0 = clamp(start * width);
+  const x1 = clamp(end * width);
+  if (Math.abs(x1 - x0) < 1e-6) return null;
+  return { from: x0 - cap, to: x1 + cap };
+};
 
 /** What a frame of the linear indicator needs */
 export interface LinearFrame {
@@ -18,178 +50,159 @@ export interface LinearFrame {
   progress: number;
   /** Buffer from 0 to 1, this library's own extension; 0 for none */
   buffer: number;
-  indeterminate: boolean;
   /** Track and indicator thickness in pixels */
   strokeWidth: number;
-  /** Milliseconds since the animation started */
-  time: number;
-  /** Wave height in pixels; 0 draws a flat indicator */
-  waveAmplitude: number;
-  /** Right to left, in which case the indicator runs from the right */
-  rtl: boolean;
-  colors: ProgressColors;
+  /** The view's measured width in pixels */
+  width: number;
+  /** The view's height in pixels: the stroke, or the stroke in its wave box */
+  height: number;
   /** Whether to mark the end of the track with a dot */
   showStopIndicator: boolean;
 }
 
-/**
- * A bar between two fractions of the width. Round caps are kept inside the
- * canvas, as Compose does, so the ends are not clipped.
- */
-const drawBar = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  centerY: number,
-  strokeWidth: number,
-  from: number,
-  to: number,
-  color: string,
-  rtl: boolean,
-  wave?: { amplitude: number; wavelength: number; phase: number }
-): void => {
-  const start = Math.min(from, to);
-  const end = Math.max(from, to);
-  if (end - start <= 0) return;
+/** The parts of a determinate linear indicator, as windows and a dot */
+export interface LinearDeterminateGeometry {
+  indicator: BarWindow | null;
+  track: BarWindow | null;
+  buffer: BarWindow | null;
+  stop: { x: number; size: number } | null;
+}
 
+/**
+ * The determinate linear indicator at a value: the indicator from the
+ * leading edge, the track after it with the gap taken out, the buffer over
+ * the track, and the stop dot at the trailing end.
+ */
+export const linearDeterminate = (frame: LinearFrame): LinearDeterminateGeometry => {
+  const { width, height, strokeWidth } = frame;
   const cap = strokeWidth / 2;
-  const toX = (fraction: number): number => {
-    const f = rtl ? 1 - fraction : fraction;
-    return Math.min(Math.max(f * width, cap), width - cap);
-  };
-  const x0 = toX(start);
-  const x1 = toX(end);
-  if (Math.abs(x1 - x0) < 1e-6 && start !== end) return;
-
-  ctx.strokeStyle = color;
-  ctx.lineWidth = strokeWidth;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-
-  if (!wave || wave.amplitude <= 0) {
-    ctx.moveTo(Math.min(x0, x1), centerY);
-    ctx.lineTo(Math.max(x0, x1), centerY);
-    ctx.stroke();
-    return;
-  }
-
-  const left = Math.min(x0, x1);
-  const right = Math.max(x0, x1);
-  const step = Math.max(1, wave.wavelength / 24);
-  for (let x = left; x <= right; x += step) {
-    const y = centerY + wave.amplitude * Math.sin((2 * Math.PI * (x - wave.phase)) / wave.wavelength);
-    if (x === left) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  const endY =
-    centerY + wave.amplitude * Math.sin((2 * Math.PI * (right - wave.phase)) / wave.wavelength);
-  ctx.lineTo(right, endY);
-  ctx.stroke();
-};
-
-/**
- * The dot that marks the end of the track. It is required whenever the track
- * has less than 3:1 contrast with its surroundings, so it is drawn by
- * default (M3 progress indicator accessibility).
- */
-const drawStopIndicator = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  color: string,
-  rtl: boolean
-): void => {
-  const size = Math.min(PROGRESS_MEASUREMENTS.LINEAR.STOP_INDICATOR, height);
-  const offset = Math.min((height - size) / 2, PROGRESS_MEASUREMENTS.LINEAR.STOP_TRAILING_SPACE);
-  const x = rtl ? size / 2 + offset : width - size / 2 - offset;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(x, height / 2, size / 2, 0, 2 * Math.PI);
-  ctx.fill();
-};
-
-/**
- * Draws one frame of the linear indicator.
- */
-export const drawLinearProgress = (
-  context: CanvasContext,
-  frame: LinearFrame
-): void => {
-  const { ctx, width, height } = context;
-  const { strokeWidth, colors, rtl, indeterminate, waveAmplitude } = frame;
-  if (width <= 0 || height <= 0) return;
-
-  const centerY = height / 2;
-  ctx.clearRect(0, 0, width, height);
-
-  // Round caps put half a stroke beyond each end, so the gap has to clear it
-  const gapPx = PROGRESS_MEASUREMENTS.LINEAR.GAP + strokeWidth;
-  const gap = width > 0 ? gapPx / width : 0;
-
-  const wavelength = indeterminate
-    ? PROGRESS_WAVE.LINEAR.INDETERMINATE_WAVELENGTH
-    : PROGRESS_WAVE.LINEAR.WAVELENGTH;
-  const wave =
-    waveAmplitude > 0
-      ? {
-          amplitude: waveAmplitude,
-          wavelength,
-          phase: ((frame.time / 1000) * PROGRESS_WAVE.SPEED * wavelength) % wavelength,
-        }
-      : undefined;
-
-  const bar = (from: number, to: number, color: string, wavy = false): void =>
-    drawBar(ctx, width, centerY, strokeWidth, from, to, color, rtl, wavy ? wave : undefined);
-
-  if (indeterminate) {
-    const { firstHead, firstTail, secondHead, secondTail } = linearIndeterminateFrame(frame.time);
-
-    // Track ahead of the leading bar
-    if (firstHead < 1 - gap) {
-      bar(firstHead > 0 ? firstHead + gap : 0, 1, colors.track);
-    }
-    // Leading bar
-    if (firstHead - firstTail > 0) {
-      bar(firstTail, firstHead, colors.indicator, true);
-    }
-    // Track between the two bars
-    if (firstTail > gap) {
-      bar(
-        secondHead > 0 ? secondHead + gap : 0,
-        firstTail < 1 ? firstTail - gap : 1,
-        colors.track
-      );
-    }
-    // Trailing bar
-    if (secondHead - secondTail > 0) {
-      bar(secondTail, secondHead, colors.indicator, true);
-    }
-    // Track behind the trailing bar
-    if (secondTail > gap) {
-      bar(0, secondTail - gap, colors.track);
-    }
-    return;
-  }
-
+  const gap = linearGapPx(strokeWidth);
   const progress = Math.min(1, Math.max(0, frame.progress));
 
-  // Track after the active indicator, with the gap taken out of it
-  const trackStart = progress + Math.min(progress, gap);
-  if (trackStart <= 1) {
-    bar(trackStart, 1, colors.track);
-  }
+  // Track after the active indicator, starting half a gap further along
+  // while the value is low, so low values keep a gap at all
+  const trackStart = progress + Math.min(progress, gap / width);
 
-  // The buffer, this library's extension, sits over the track
+  const geometry: LinearDeterminateGeometry = {
+    indicator: barWindow(width, cap, 0, progress),
+    track: trackStart <= 1 ? barWindow(width, cap, trackStart, 1) : null,
+    buffer: null,
+    stop: null,
+  };
+
+  // The buffer sits over the track, past its start
   if (frame.buffer > progress) {
     const bufferEnd = Math.min(1, frame.buffer);
-    if (bufferEnd > trackStart) bar(trackStart, bufferEnd, colors.buffer);
+    if (bufferEnd > trackStart) {
+      geometry.buffer = barWindow(width, cap, trackStart, bufferEnd);
+    }
   }
 
-  // The active indicator. At 0 the round cap alone shows as the dot the
-  // guidelines ask for at low percentages.
-  bar(0, progress, colors.indicator, true);
-
+  // The dot that marks the end of the track. It is required whenever the
+  // track has less than 3:1 contrast with its surroundings, so it is drawn
+  // by default (M3 progress indicator accessibility).
   if (frame.showStopIndicator) {
-    drawStopIndicator(ctx, width, height, colors.stop, rtl);
+    const size = Math.min(PROGRESS_MEASUREMENTS.LINEAR.STOP_INDICATOR, height);
+    const offset = Math.min(
+      (height - size) / 2,
+      PROGRESS_MEASUREMENTS.LINEAR.STOP_TRAILING_SPACE
+    );
+    geometry.stop = { x: width - size / 2 - offset, size };
   }
+
+  return geometry;
+};
+
+/** The five parts of an indeterminate linear indicator, as windows */
+export interface LinearIndeterminateGeometry {
+  trackAhead: BarWindow | null;
+  barFirst: BarWindow | null;
+  trackBetween: BarWindow | null;
+  barSecond: BarWindow | null;
+  trackBehind: BarWindow | null;
+}
+
+/**
+ * The indeterminate linear indicator at a time: the two bars on the Compose
+ * keyframes, with the track ahead, between and behind them. The guards are
+ * the canvas's own: a part missing from this list is a part it did not
+ * draw at that time.
+ */
+export const linearIndeterminate = (
+  width: number,
+  strokeWidth: number,
+  time: number
+): LinearIndeterminateGeometry => {
+  const cap = strokeWidth / 2;
+  const gap = linearGapPx(strokeWidth);
+  const gapFraction = width > 0 ? gap / width : 0;
+  const { firstHead, firstTail, secondHead, secondTail } =
+    linearIndeterminateFrame(time);
+
+  return {
+    // Track ahead of the leading bar
+    trackAhead:
+      firstHead < 1 - gapFraction
+        ? barWindow(width, cap, firstHead > 0 ? firstHead + gapFraction : 0, 1)
+        : null,
+    // Leading bar
+    barFirst:
+      firstHead - firstTail > 0
+        ? barWindow(width, cap, firstTail, firstHead)
+        : null,
+    // Track between the two bars
+    trackBetween:
+      firstTail > gapFraction
+        ? barWindow(
+            width,
+            cap,
+            secondHead > 0 ? secondHead + gapFraction : 0,
+            firstTail < 1 ? firstTail - gapFraction : 1
+          )
+        : null,
+    // Trailing bar
+    barSecond:
+      secondHead - secondTail > 0
+        ? barWindow(width, cap, secondTail, secondHead)
+        : null,
+    // Track behind the trailing bar
+    trackBehind:
+      secondTail > gapFraction
+        ? barWindow(width, cap, 0, secondTail - gapFraction)
+        : null,
+  };
+};
+
+/**
+ * The wave the indicator draws, as one open path across the view and a
+ * wavelength past each side, so the traveling window never runs off the
+ * pattern. Flat at zero amplitude, the canvas's straight bar. The phase is
+ * not baked in: the path stays put and a CSS transform travels it one
+ * wavelength per second, which is the same sine of (x - phase).
+ */
+export const linearWavePath = (
+  width: number,
+  height: number,
+  amplitude: number,
+  wavelength: number,
+  wavelengthExtra = 2
+): string => {
+  const centerY = height / 2;
+  if (amplitude <= 0 || wavelength <= 0) {
+    return `M ${-wavelengthExtra * wavelength} ${centerY} L ${width + wavelengthExtra * wavelength} ${centerY}`;
+  }
+  // One point every wavelength/24, as the canvas sampled the sine
+  const step = Math.max(1, wavelength / 24);
+  const y = (x: number): number =>
+    centerY +
+    amplitude * Math.sin((2 * Math.PI * x) / wavelength);
+  const points: string[] = [];
+  for (
+    let x = -wavelengthExtra * wavelength;
+    x <= width + wavelengthExtra * wavelength;
+    x += step
+  ) {
+    points.push(`${x.toFixed(2)} ${y(x).toFixed(2)}`);
+  }
+  return `M ${points.join(" L ")}`;
 };

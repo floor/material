@@ -131,6 +131,15 @@ export interface ElementSpec<C extends ElementComponent> {
   ssr?: boolean | ((host: HTMLElement) => boolean);
   /** Style entries, in cascade order. */
   styles: readonly string[];
+  /**
+   * Style entries a server render emits, in cascade order. Defaults to
+   * `styles`. An entry may be dropped when no node the serialized shadow
+   * root contains addresses it: the button's progress sheet styles nothing
+   * before upgrade (its spinner is inserted by a runtime loading state,
+   * whose lazy chunk carries the styles) and would otherwise ride in every
+   * inline root. Runtime adoption keeps the full `styles` list.
+   */
+  ssrStyles?: readonly string[];
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   /**
@@ -203,6 +212,17 @@ export { DEFAULT_PREFIX };
  * library defines, and their attributes, properties and events, are not.
  */
 export const SHADOW_BASE_STYLES = ["ripple"] as const;
+
+/**
+ * The style entries a server render emits for a spec's roots: the shared base
+ * plus the spec's `ssrStyles` list, or its full `styles` list when that is not
+ * narrowed. The renderer and the SSR tests both read the list here, so the
+ * two cannot drift. The parameter is the fields read, not a full spec, so a
+ * union of specs (the test registry's) is accepted too.
+ * @internal
+ */
+export const ssrStyleNames = (spec: Pick<ElementSpec<ElementComponent>, "styles" | "ssrStyles">): readonly string[] =>
+  [...SHADOW_BASE_STYLES, ...(spec.ssrStyles ?? spec.styles)];
 
 /**
  * The sheet every shadow root adopts first. The reduced-motion rule is the

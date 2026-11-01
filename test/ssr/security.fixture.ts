@@ -60,8 +60,9 @@ test("hostile link bases reject; relative and HTTPS URLs are ordered and escaped
   }
   for (const base of ["/css/a&b", "https://example.invalid/a&b"]) {
     const html = renderElement("m-button", {}, "", { styles: "link", cssBase: base });
+    // the button's server list drops the progress sheet (ElementSpec.ssrStyles)
     expect([...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]))
-      .toEqual(["hosts/button", "ripple", "progress", "button"].map(p => `${base.replaceAll("&", "&amp;")}/${p}.css`));
+      .toEqual(["hosts/button", "ripple", "button"].map(p => `${base.replaceAll("&", "&amp;")}/${p}.css`));
   }
 });
 test("children and nested HTML-valued icons use the same policy once per sink", () => {

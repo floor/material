@@ -70,20 +70,17 @@ export const withState =
       );
     }
 
-    // Apply shape class immediately if needed (linear only)
+    // Apply shape class immediately if needed. The circular view reads it
+    // too: the wavy ring and its travel are scoped to it, exactly as the
+    // linear wave is.
     if (
       config.shape &&
       config.shape !== PROGRESS_SHAPES.FLAT &&
       component.element
     ) {
-      const isCircular = component.element.classList.contains(
-        component.getClass?.(PROGRESS_CLASSES.CIRCULAR) || ""
-      );
-      if (!isCircular) {
-        const containerClass =
-          component.getClass?.(PROGRESS_CLASSES.CONTAINER) || "";
-        addClass(component.element, `${containerClass}--${config.shape}`);
-      }
+      const containerClass =
+        component.getClass?.(PROGRESS_CLASSES.CONTAINER) || "";
+      addClass(component.element, `${containerClass}--${config.shape}`);
     }
 
     // Initialize state values

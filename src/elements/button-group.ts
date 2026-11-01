@@ -145,6 +145,9 @@ const buttonGroupSpec = {
   name: "button-group",
   create: (config) => createButtonGroup(config as ButtonGroupConfig),
   styles: ["progress", "button", "icon-button", "button-group"],
+  // No progress node is ever serialized into the group's shadow root; the
+  // button's runtime loading state brings the progress styles when used.
+  ssrStyles: ["button", "icon-button", "button-group"],
   hostStyles: ":host{display:inline-flex}",
   attributes: {
     variant: { type: "string", config: "variant", update: (c, v) => void c.setVariant(String(v ?? "outlined") as ButtonGroupVariant) },

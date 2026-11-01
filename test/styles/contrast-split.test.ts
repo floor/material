@@ -195,9 +195,28 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The progress family draws in SVG parts the sheet styles: the canvas
+    // element and its rule are gone, the geometry reads the registered
+    // --l/--r/sweep custom properties, the indeterminate motion runs as
+    // keyframes on the drawing parts, and a travelling wave is clipped to a
+    // window the sheet composes while the ring's dash slides against the
+    // travel rotation (styles/components/_progress.scss). The clipPath
+    // subtree does not inherit the animated custom properties, so the wave
+    // windows run their own copies of the keyframes. The parts and their
+    // windows share one :is() derivation rule whose width reads a span
+    // custom property — the between track's zero-to-tail window is the one
+    // override — and the parts' rest pose is the registered initial values,
+    // declared nowhere. The parity round hardened three of those rules: the
+    // circular track hides at the sweep's peak behind a stroke-opacity gate
+    // while its sub-unit dash still paints, the between's tail window holds
+    // a gap behind the first bar's tail so it never paints over the bar,
+    // and the wavy ring closes through one long closing period at the
+    // labelled wavelength, its window's dash sliding under a linear()
+    // easing that reads the arc curve from one custom property
+    // (styles/components/_progress.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("f4127d1a350830f3029217b80fbd43e96601fed1665ca79e2de43f02614b2d5c");
+    expect(css.length).toBe(552712);
   });
 
   test("today's sheets still resolve to the fixture", () => {

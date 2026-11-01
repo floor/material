@@ -267,7 +267,8 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   await lazyPage.getByRole("button", { name: "Load progress" }).waitFor();
   assert(!lazyDeferred.some(file => requested.has(file)), "Progress JS downloaded before use");
   await lazyPage.getByRole("button", { name: "Load progress" }).click();
-  await lazyPage.locator('body[data-loaded="true"] canvas').waitFor();
+  // the drawing is the svg view now; the canvas it waited for is gone
+  await lazyPage.locator('body[data-loaded="true"] svg.mtrl-progress__view').waitFor();
   assert(lazyDeferred.some(file => requested.has(file)), "Lazy progress was not requested on click");
   await lazyPage.close();
 

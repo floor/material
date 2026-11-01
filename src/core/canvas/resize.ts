@@ -6,15 +6,15 @@
 /**
  * Observes resize events on an element and triggers a callback
  * Watches the specified element and debounces resize events
- * 
+ *
  * @param element - The element to observe for size changes
- * @param canvas - The canvas element (for context)
+ * @param target - The drawn element (a canvas or an SVG view; not read)
  * @param onResize - Callback to execute when the element resizes
  * @returns Cleanup function to stop observing
  */
 export const observeCanvasResize = (
   element: HTMLElement,
-  _canvas: HTMLCanvasElement,
+  _target: Element,
   onResize: () => void
 ): (() => void) => {
   

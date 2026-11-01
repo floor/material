@@ -33,7 +33,9 @@ try {
   });
   await check("stylesheet URLs survive browser parsing", async () => {
     await load(renderElement("m-button", {}, "", { styles: "link", cssBase: "https://example.invalid/a&b" }));
-    assert.deepEqual(await page.evaluate(() => Array.from(document.querySelector("m-button")!.shadowRoot!.querySelectorAll("link"), n => n.getAttribute("href"))), ["hosts/button", "ripple", "progress", "button"].map(p => `https://example.invalid/a&b/${p}.css`));
+    // The button's server list is narrowed (ElementSpec.ssrStyles): the
+    // progress sheet styles no serialized node, so no link is emitted for it.
+    assert.deepEqual(await page.evaluate(() => Array.from(document.querySelector("m-button")!.shadowRoot!.querySelectorAll("link"), n => n.getAttribute("href"))), ["hosts/button", "ripple", "button"].map(p => `https://example.invalid/a&b/${p}.css`));
   });
   await check("textarea, title, pre, SVG casing and template contexts round trip", async () => {
     const text = '\n</textarea><img onerror="bad()"> & spaces  stay';

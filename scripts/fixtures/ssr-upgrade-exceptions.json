@@ -2,8 +2,8 @@
   {
     "element": "progress",
     "engines": ["chromium", "firefox", "webkit"],
-    "selector": "canvas",
-    "reason": "Canvas bitmap opt-out: the server has no drawing context. The styled canvas box is preserved; upgrade paints its pixels. Layout must remain unchanged."
+    "selector": "svg.mtrl-progress__view",
+    "reason": "No box stand-in: a server render has no layout box, so the drawing is composed in the 2048-unit token box, as the canvas's fixed bitmap was, and the first layout/upgrade rewrites the geometry to the measured width. Only the drawing's pixels may differ; layout must remain unchanged."
   },
   {
     "element": "loading-indicator",
