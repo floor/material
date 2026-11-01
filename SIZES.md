@@ -45,7 +45,7 @@ these rows drift from a fresh measurement.
 | radios | 15.5 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.8 KB | 10.9 KB | +7.8 KB |  |
 | select | 69.2 KB | 20.7 KB | +17.6 KB | +2.1 KB |
-| slider | 40.0 KB | 13.1 KB | +10.0 KB |  |
+| slider | 40.0 KB | 13.1 KB | +9.9 KB |  |
 | snackbar | 37.1 KB | 12.0 KB | +8.9 KB | +6.8 KB |
 | switch | 19.1 KB | 6.2 KB | +3.1 KB |  |
 | tabs | 42.6 KB | 13.4 KB | +10.3 KB | +6.8 KB |
