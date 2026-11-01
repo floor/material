@@ -210,12 +210,13 @@ describe("explicit contrast levels are opt-in", () => {
     // circular track hides at the sweep's peak behind a stroke-opacity gate
     // while its sub-unit dash still paints, the between's tail window holds
     // a gap behind the first bar's tail so it never paints over the bar,
-    // and the wavy ring snaps to whole wave periods so it closes, its
-    // window's dash sliding through staged keyframes that follow the arc
+    // and the wavy ring closes through one long closing period at the
+    // labelled wavelength, its window's dash sliding under a linear()
+    // easing that reads the arc curve from one custom property
     // (styles/components/_progress.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("860da18797d5da18218df3af0715d90c32fbecab98b82088944c4f104d3ad687");
-    expect(css.length).toBe(552909);
+      .toBe("9efde3761174f56dcf031733b933d482c4be5fed272be7122852ca18f2af86f3");
+    expect(css.length).toBe(552712);
   });
 
   test("today's sheets still resolve to the fixture", () => {
