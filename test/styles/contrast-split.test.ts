@@ -173,6 +173,11 @@ describe("explicit contrast levels are opt-in", () => {
     // factory's root holds match a direction on that root itself (the class
     // the runtime reflects, or its own `dir`), not only an ancestor
     // (styles/components/_datepicker.scss, styles/components/_toolbar.scss).
+    // A date picker's trigger, docked calendar, mode toggle and full-screen
+    // buttons are physical sides with direction arms, so a consumer bundler's
+    // :lang() lowering cannot leave them on the left-to-right side of a
+    // right-to-left page, and its range band's bleed reads the direction from
+    // four custom properties on the root (styles/components/_datepicker.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
     // The menu's disabled icon, supporting text and shortcut dim with the
@@ -203,8 +208,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("f8a23a9f595aed337cf86c3b7f7af9cb9a4c54d9be71e037b04cfc60043f64e8");
-    expect(css.length).toBe(544058);
+      .toBe("7558302de9c451a0c3dea7109c59da57c82525f0368c276b96c6eff9e0335992");
+    expect(css.length).toBe(545559);
   });
 
   test("today's sheets still resolve to the fixture", () => {
