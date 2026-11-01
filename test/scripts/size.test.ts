@@ -110,10 +110,12 @@ describe('size gate', () => {
 
 describe('the published table (SIZES.md)', () => {
   // core at 2.9 KB gzipped, so every delta below is against it
+  // brBytes feeds only the console's brotli column; the published table ignores it
   const row = (name: ScenarioName, minKB: number, gzKB: number, deferredGzBytes = 0): Result => ({
     name,
     minBytes: Math.round(minKB * 1024),
     gzBytes: Math.round(gzKB * 1024),
+    brBytes: Math.round(gzKB * 1024 * 0.8),
     deferredGzBytes,
     minKB,
     gzKB,
