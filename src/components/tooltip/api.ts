@@ -91,10 +91,16 @@ export const withAPI =
       // viewport origin before placing it again. This happens in one task, so
       // there is no visible intermediate position.
       component.element.style.left = "0px";
-      // offsetWidth/offsetHeight are layout dimensions: the entrance scale
-      // changes the visual rect but must not change placement or clamping.
-      const tooltipWidth = component.element.offsetWidth;
-      const tooltipHeight = component.element.offsetHeight;
+      // The computed width/height give the fractional layout size. The
+      // offsetWidth/offsetHeight this used to read round to integers per the
+      // CSSOM, so a text-sized surface measured a fraction of a pixel narrow
+      // and its far edge -- the one facing the target on left/right
+      // placements, the one a clamp holds at the viewport edge -- sat off by
+      // that fraction. Computed size, unlike getBoundingClientRect, also
+      // ignores the entrance scale.
+      const styles = getComputedStyle(component.element);
+      const tooltipWidth = parseFloat(styles.width);
+      const tooltipHeight = parseFloat(styles.height);
       // getBoundingClientRect() is relative to the viewport, and the surface is
       // `position: fixed` in every path (see the stylesheet), so the rectangle
       // is already in the coordinates the surface is placed in. The scroll
@@ -451,9 +457,12 @@ export const withAPI =
         // Calculate position
         const { top, left, arrowPosition } = calculatePosition();
 
-        // Update tooltip position
-        component.element.style.top = `${Math.round(top)}px`;
-        component.element.style.left = `${Math.round(left)}px`;
+        // Update tooltip position. The coordinates are written unrounded: an
+        // auto-sized surface has a fractional width, and rounding its position
+        // shifts the 8px offset by up to half a pixel -- and can push a
+        // clamped surface half a pixel past the viewport edge it was clamped to.
+        component.element.style.top = `${top}px`;
+        component.element.style.left = `${left}px`;
 
         // Update arrow position
         if (arrowPosition) {

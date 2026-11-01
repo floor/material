@@ -436,9 +436,30 @@ try {
     await page.evaluate(() => window.tooltip?.destroy());
   }
 
+  // ── The offset and the clamped edge ─────────────────────────────
+  // The surface is measured fractionally (its computed size, not the
+  // integer-rounded offsetWidth), so the 8px offset is 8 on the axis that
+  // measures a fractional width, and a clamp holds the surface inside the
+  // edge it clamped to, not a fraction of a pixel past it.
+  const offsetRows: Record<string, unknown>[] = [];
+  for (const position of ["left", "left-start", "left-end", "top", "bottom"] as const) {
+    const shown = await showAt(300, 280, position, undefined, 0, 0);
+    // gap() is keyed by the bare side: the start/end variants share its axis
+    const measured = gap(position.split("-")[0] as "left", shown.target, shown.tip);
+    near(failures, `offset ${position}: gap`, measured, 8, 0.1);
+    offsetRows.push({ name: `offset ${position}`, gap: measured });
+  }
+  {
+    // A one-line label whose start-aligned surface clamps at the right edge
+    const shown = await showAt(760, 280, "bottom-start", undefined, 0, 0);
+    const overshoot = shown.tip.right - shown.viewport.width;
+    near(failures, "clamped right edge: distance from the viewport edge", overshoot, 0, 0.1);
+    offsetRows.push({ name: "clamped right edge off the viewport edge", overshoot });
+  }
+
   assert.deepEqual(errors, []);
   // Every mismatch is collected, so one run names every failing case.
-  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, collision: collisionRows, scrolled: scrolledRows, container: containerRows, failures, errors }, null, 2));
+  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, collision: collisionRows, scrolled: scrolledRows, container: containerRows, offset: offsetRows, failures, errors }, null, 2));
   assert.deepEqual(failures, []);
-  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, collision: collisionRows.length, scrolled: scrolledRows.length, container: containerRows.length, errors }, null, 2));
+  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, collision: collisionRows.length, scrolled: scrolledRows.length, container: containerRows.length, offset: offsetRows.length, errors }, null, 2));
 } finally { await browser.close(); server.stop(true); }
