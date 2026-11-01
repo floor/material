@@ -117,7 +117,7 @@ describe("walkDistModules", () => {
     // follow the runtime one.
     const directory = await tree({
       "index.js": 'export { default as Button } from "./Button.svelte";\n',
-      "Button.svelte": '<script>\n  import "mtrl/elements/css/button";\n  import { style } from "./style.js";\n</script>\n<button></button>\n',
+      "Button.svelte": '<script>\n  import "pkg/elements/css/button";\n  import { style } from "./style.js";\n</script>\n<button></button>\n',
       "style.js": "export const style = 1;\n",
       "elements/css/button.js": 'import "./button.css";\n',
       "elements/css/button.css": ".mtrl-button{}\n",
@@ -127,7 +127,7 @@ describe("walkDistModules", () => {
       const walk = await walkDistModules(directory, {
         ".": { import: "./index.js" },
         "./elements/css/*": { types: "./elements/css/*.d.ts", import: "./elements/css/*.js" },
-      }, "mtrl");
+      }, "pkg");
       expect(walk.reachable).toEqual(["elements/css/button.js", "index.js", "style.js"]);
       expect(walk.unreachable).toEqual([]);
     } finally {
@@ -151,11 +151,11 @@ describe("walkDistModules", () => {
   test("fails when a Svelte component imports a package subpath the manifest does not export", async () => {
     const directory = await tree({
       "index.js": 'export { default as View } from "./View.svelte";\n',
-      "View.svelte": '<script>import "mtrl/private/helper";</script>\n',
+      "View.svelte": '<script>import "pkg/private/helper";</script>\n',
     });
     try {
-      await expect(walkDistModules(directory, { ".": { import: "./index.js" } }, "mtrl"))
-        .rejects.toThrow(/View\.svelte imports mtrl\/private\/helper, which the build does not ship/);
+      await expect(walkDistModules(directory, { ".": { import: "./index.js" } }, "pkg"))
+        .rejects.toThrow(/View\.svelte imports pkg\/private\/helper, which the build does not ship/);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
