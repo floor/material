@@ -146,6 +146,24 @@ Menus you can trust with keyboard and selection.
   takes a control row for a failure. No gate, threshold, count or assertion
   changes; the diff is the row printer and its mutation call site.
 
+- **The public types' union members and `extends` bases are pinned, and a
+  removal now fails a test instead of passing every gate (#226).**
+  The export pins record public names and kinds; the values a union accepts and
+  the bases an interface extends were checked by nothing. Measured on
+  77f4c63b, dropping `"medium"` from `FabSize`, dropping
+  `extends BaseComponentConfig` from `ButtonConfig` and dropping `"reset"` from
+  `ButtonConfig.type` each left `component-exports:check`, its 12 tests and
+  `bun run ts:check` green. `scripts/fixtures/type-shapes.json` now pins 295
+  shapes — 243 unions and 52 `extends`, read from the declarations on every
+  public subpath that resolves to a source entry (root, components and their
+  constants, core, elements and ssr), one entry per declaration and a property
+  union under `Interface.property` at any depth.
+  `test/type-shapes.test.ts` fails naming the type, then the member or base by
+  value, and `bun run type-shapes:update` regenerates the pin for a reviewed
+  diff; a union's members are sorted, because the checker orders them by
+  internal ids. Test and tooling only: no product code, budget or CI step
+  changes.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
