@@ -6,7 +6,7 @@
  * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. In development, a warning names the element.
  * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. Svelte has this same context limit and logs a development-only warning naming the element when required context leaves it without a shadow root.
  * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for a later 3.x release.
- * A `Suspense` boundary inside the component contributes its fallback to the first static pass, which does not throw; the host then re-renders on the retry backoff until no boundary inside it is still pending — wherever the boundary renders, inside an ordinary component as well, and whatever thenable the child suspends with — and the shadow root ships the resolved content (#461). A boundary that never resolves server-side ships its fallback in the root, at the retry cap. An error a boundary inside the component caught is reported by the streaming renderer's onError probe and ships its fallback-shaped root at once, without entering the retry ladder, exactly as the page renders it without the bridge.
+ * A `Suspense` boundary inside the component contributes its fallback to the first static pass, which does not throw; the host then re-renders on the retry backoff until no boundary inside it is still pending — wherever the boundary renders, inside an ordinary component as well, and whatever thenable the child suspends with — and the shadow root ships the resolved content (#461). A boundary that never resolves server-side ships its fallback in the root, at the retry cap. An error a boundary inside the component caught is reported by the streaming renderer's onError probe and, once the probe's own render completes — every boundary in the host finished, a still-pending sibling included — ships its fallback-shaped root without entering the retry ladder, exactly as the page renders it without the bridge.
  * @module ssr/react
  */
 import * as React from "react";
@@ -166,7 +166,7 @@ const markGaveUp = (children: React.ReactNode): boolean => {
 /** Long enough for a boundary's error to reach onError, short enough to keep one ladder step (#461). */
 const PROBE_TIMEOUT_MS = 50;
 
-interface BoundaryProbe { reported: boolean; settled: boolean; done: Promise<void> }
+interface BoundaryProbe { reported: boolean; complete: boolean; settled: boolean; done: Promise<void> }
 
 /**
  * React reports an error a boundary caught through the streaming renderers'
@@ -176,16 +176,22 @@ interface BoundaryProbe { reported: boolean; settled: boolean; done: Promise<voi
  * writes the same pending marker for both, and production strips the message
  * its client-render template carries in development — and the string renderers
  * take no onError at all. So this renders the host's own element once through
- * this build's streaming renderer and listens: onError firing means the
- * boundary failed rather than waited, and a wait the renderer itself has
- * abandoned can never resolve, so retrying it can only burn the ladder. The
- * probe settles on that report or on its timeout, never on the shell (React 18
- * delivers a boundary's error only after its shell), and the probe's own abort
- * is ignored once it stops listening. Its output is discarded; the shipped
- * markup stays the static pass's (#461).
+ * this build's streaming renderer and listens for two answers. onError firing
+ * means a boundary failed rather than waited, and a wait the renderer itself
+ * has abandoned can never resolve, so retrying it can only burn the ladder.
+ * The same render's completion — allReady on the readable renderer,
+ * onAllReady on the pipeable — fires only when every boundary in the host has
+ * finished, errored ones included, so a report while the stream stays open
+ * means a sibling boundary is still pending, and the error must not end the
+ * host's wait on the sibling's behalf. The probe settles on completion, on a
+ * shell failure (the render is dead; nothing can be pending), or on its
+ * timeout — never on the shell alone (React 18 delivers a boundary's error
+ * only after its shell) — and the probe's own abort is ignored once it stops
+ * listening. Its output is discarded; the shipped markup stays the static
+ * pass's (#461).
  */
 const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
-  const probe: BoundaryProbe = { reported: false, settled: false, done: Promise.resolve() };
+  const probe: BoundaryProbe = { reported: false, complete: false, settled: false, done: Promise.resolve() };
   let resolveDone!: () => void;
   probe.done = new Promise<void>((resolve) => { resolveDone = resolve; });
   let listening = true;
@@ -199,6 +205,11 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
   const onError = (): void => {
     if (!listening) return;
     probe.reported = true;
+    if (probe.complete) settle();
+  };
+  const onComplete = (): void => {
+    if (!listening) return;
+    probe.complete = true;
     settle();
   };
   const timer = setTimeout(() => {
@@ -206,7 +217,7 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
     settle();
   }, PROBE_TIMEOUT_MS);
   const readable = (ReactDOMServer as {
-    renderToReadableStream?: (element: React.ReactElement, options: { onError: (error: unknown) => void; signal: AbortSignal }) => Promise<unknown>;
+    renderToReadableStream?: (element: React.ReactElement, options: { onError: (error: unknown) => void; signal: AbortSignal }) => Promise<{ allReady?: Promise<unknown> }>;
   }).renderToReadableStream;
   if (typeof readable === "function") {
     const controller = new AbortController();
@@ -215,7 +226,14 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
       listening = false;
       controller.abort();
     };
-    void readable(element, { onError, signal: controller.signal }).catch(() => {});
+    void readable(element, { onError, signal: controller.signal }).then(
+      (response) => {
+        const all = response?.allReady;
+        if (all) void all.then(onComplete, onComplete);
+      },
+      // A shell failure kills the whole render; nothing can still be pending.
+      onComplete,
+    ).catch(() => {});
   } else {
     const pipeable = (ReactDOMServer as {
       renderToPipeableStream?: (element: React.ReactElement, options: { onError: (error: unknown) => void; onShellError: (error: unknown) => void; onShellReady: () => void; onAllReady: () => void }) => { abort: () => void };
@@ -228,7 +246,11 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
       settle();
       return probe;
     }
-    const stream = pipeable(element, { onError, onShellError: onError, onShellReady() {}, onAllReady() {} });
+    const onShellDeath = (): void => {
+      onError();
+      onComplete();
+    };
+    const stream = pipeable(element, { onError, onShellError: onShellDeath, onShellReady() {}, onAllReady: onComplete });
     release = () => {
       clearTimeout(timer);
       listening = false;
@@ -242,7 +264,7 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
 const boundaryProbes = new WeakMap<object, BoundaryProbe>();
 
 /**
- * The probe stored for this host, settled or not (#461).
+ * The probe stored for this host, settled or not, with both answers (#461).
  */
 const storedBoundaryProbe = (children: React.ReactNode): BoundaryProbe | undefined => {
   for (const node of childNodes(children)) {
@@ -254,8 +276,9 @@ const storedBoundaryProbe = (children: React.ReactNode): BoundaryProbe | undefin
 
 /**
  * The probe this pass waits on: an unsettled stored one, or a fresh render.
- * A settled silent answer is replaced — a boundary pending now may fail on a
- * later pass — but only after the decision above has read it.
+ * A settled answer is replaced unless it carries the ship signal — a boundary
+ * pending now may resolve or fail on a later pass — but only after the
+ * decision above has read it.
  */
 const boundaryProbe = (children: React.ReactNode, element: React.ReactElement): BoundaryProbe => {
   const nodes = childNodes(children);
@@ -394,8 +417,10 @@ bridge.react = (tag, props, children, prefix) => {
   // definition; the marker alone cannot say pending from error — the boundary
   // catches its error again in every pass — so the marker-only path asks the
   // streaming-renderer probe. A reported error ships this
-  // pass's fallback-shaped markup at once, as the page renders it without the
-  // bridge: retrying it could only burn the ladder to its cap (#461). A
+  // pass's fallback-shaped markup once the probe's render has also completed
+  // — every boundary in the host finished, a still-pending sibling included —
+  // as the page renders it without the bridge: retrying a settled host could
+  // only burn the ladder to its cap (#461). A
   // pending boundary re-renders on the same backoff as a thrown suspend, so a
   // page that waits for its data ships a root built from the resolved
   // children. At the cap the current markup ships, as a boundary that never
@@ -409,11 +434,14 @@ bridge.react = (tag, props, children, prefix) => {
       if (withinCap) throw new Promise<void>((resolve) => { setTimeout(resolve, retryDelay(attempt)); });
     } else {
       // The marker-only path asks the probe. The stored probe's settled
-      // answer is the previous pass's: a report ships this pass's
-      // fallback-shaped markup at once. A silence is replaced, and the retry
-      // waits for the new probe's answer before its delay, so the next pass
-      // reads a settled one.
-      if (storedBoundaryProbe(children)?.reported) {
+      // answer is the previous pass's: a report together with the probe's
+      // completion — every boundary finished, the errored one and any sibling
+      // — ships this pass's fallback-shaped markup at once. A report with the
+      // stream still open, or a silence, is replaced, and the retry waits for
+      // the new probe's answer before its delay, so the next pass reads a
+      // settled one.
+      const stored = storedBoundaryProbe(children);
+      if (stored?.reported && stored.complete) {
         clearAttempt(children);
         return bridge.shadow(tag, markup, prefix) || undefined;
       }
@@ -421,9 +449,11 @@ bridge.react = (tag, props, children, prefix) => {
       if (probe && !probe.settled) {
         throw new Promise<void>((resolve) => {
           void probe.done.then(() => {
-            // A reported error ships on the very next pass; the backoff is
-            // for a pending boundary, and an error has no use for it.
-            if (probe.reported) { resolve(); return; }
+            // An error settles only the boundary that threw it; the probe's
+            // completion is what says the whole host has finished. Both
+            // answers in hand, the next pass ships without the backoff,
+            // which a pending boundary alone still needs.
+            if (probe.reported && probe.complete) { resolve(); return; }
             setTimeout(resolve, retryDelay(attempt));
           });
         });
