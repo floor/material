@@ -195,9 +195,16 @@ describe("explicit contrast levels are opt-in", () => {
     // right-to-left pair as a direction arm, its radii in custom properties,
     // so the bundler's :lang() lowering cannot reach them
     // (styles/components/_split-button.scss).
+    // The snackbar's start and end places, the linear progress label's edge
+    // and the toolbar's side placements are physical sides with a direction
+    // arm for the mirrored side, on the root itself, an ancestor, the shadow
+    // tree's host and a cut attribute fallback, so the same lowering cannot
+    // pin them to the left edge of a right-to-left page
+    // (styles/components/_snackbar.scss, styles/components/_progress.scss,
+    // styles/components/_toolbar.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("3a2de9ba66e129686985c337aee7b5c285bdd25483a7f242496df576e5da5372");
-    expect(css.length).toBe(540483);
+      .toBe("54083797cc2d805fc86ec8926cd3119f3619955894c3849e522c3d005d2c89ff");
+    expect(css.length).toBe(541669);
   });
 
   test("today's sheets still resolve to the fixture", () => {

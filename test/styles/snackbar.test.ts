@@ -9,7 +9,31 @@ let css = '';
 
 const rules = (selector: string): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  const exact = Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  if (exact.length) return exact;
+  // A direction rule compiles to a selector list — the light-DOM attribute form
+  // beside the shadow tree's host-class form — so the selector is one member of
+  // the prelude, not the whole of it. Commas inside `:not(:where(...))` do not
+  // separate members.
+  const members = (prelude: string): string[] => {
+    const out: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < prelude.length; i++) {
+      const ch = prelude[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (ch === ',' && depth === 0) {
+        out.push(prelude.slice(start, i));
+        start = i + 1;
+      }
+    }
+    out.push(prelude.slice(start));
+    return out;
+  };
+  return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
+    .filter((m) => members(m[1]!).map((member) => member.trim()).includes(selector))
+    .map((m) => m[2]!);
 };
 
 const value = (selector: string, property: string): string | undefined =>
@@ -73,10 +97,34 @@ describe('snackbar stylesheet', () => {
     expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{\s*\.mtrl-snackbar\s*\{[^}]*scale: none/);
   });
 
-  test('positions are classes with logical insets; compact windows keep a fixed 16px from every edge', () => {
+  test('positions are classes with physical sides, and the mirrored side is a direction arm; compact windows keep a fixed 16px from every edge', () => {
     expect(value('.mtrl-snackbar--center', 'translate')).toBe('-50% 0');
-    expect(value('.mtrl-snackbar--start', 'inset-inline-start')).toBe('16px');
-    expect(value('.mtrl-snackbar--end', 'inset-inline-end')).toBe('16px');
+    expect(value('.mtrl-snackbar--start', 'left')).toBe('16px');
+    expect(value('.mtrl-snackbar--end', 'right')).toBe('16px');
+    // A consumer's bundler lowers inset-inline-start/-end into :lang() lists
+    // that match a language, never dir="rtl": the bundled sheet pinned both
+    // places to the left edge of a right-to-left page. The mirrored side is a
+    // direction arm — the marker class on the surface itself, where the
+    // runtime writes it, the class on an ancestor, the shadow tree's host
+    // class, and a cut attribute fallback.
+    for (const member of [
+      '.mtrl-snackbar--start:where(.mtrl-rtl, [dir=rtl])',
+      ':where(.mtrl-rtl) .mtrl-snackbar--start',
+      ':where(:host(.mtrl-rtl)) .mtrl-snackbar--start',
+      '[dir=rtl] .mtrl-snackbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+    ]) {
+      expect(value(member, 'left')).toBe('auto');
+      expect(value(member, 'right')).toBe('16px');
+    }
+    for (const member of [
+      '.mtrl-snackbar--end:where(.mtrl-rtl, [dir=rtl])',
+      ':where(.mtrl-rtl) .mtrl-snackbar--end',
+      ':where(:host(.mtrl-rtl)) .mtrl-snackbar--end',
+      '[dir=rtl] .mtrl-snackbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+    ]) {
+      expect(value(member, 'right')).toBe('auto');
+      expect(value(member, 'left')).toBe('16px');
+    }
     expect(css).toMatch(/max-width: 599px\)\s*\{\s*\.mtrl-snackbar\s*\{[^}]*width: calc\(100% - 32px\)/);
     expect(css).not.toContain('.mtrl-snackbar--primary');
     expect(css).not.toContain('.mtrl-snackbar--multiline');
