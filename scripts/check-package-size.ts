@@ -309,7 +309,7 @@ try {
     const loading = button({ text: 'Upload', progress: { indeterminate: false } });
     document.body.append(loading.element);
     await loading.showProgress();
-    assert(loading.element.querySelector('canvas'), 'Lazy progress module did not load');
+    assert(loading.element.querySelector('svg.mtrl-progress__view'), 'Lazy progress module did not load');
     await loading.hideProgress();
     const card = createCard({ buttons: [{ text: 'Action' }] });
     document.body.append(card.element);

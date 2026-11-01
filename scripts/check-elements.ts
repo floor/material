@@ -4437,8 +4437,8 @@ try {
       const measure = (root: HTMLElement): Record<string, string | number> => {
         // Not `display`: the circular root is a flex item of the host, so it computes as `flex`.
         const r = root.getBoundingClientRect();
-        const c = (root.querySelector("canvas") as HTMLCanvasElement).getBoundingClientRect();
-        return { w: r.width, h: r.height, color: getComputedStyle(root).color, canvasW: c.width, canvasH: c.height };
+        const v = (root.querySelector("svg.mtrl-progress__view") as SVGSVGElement).getBoundingClientRect();
+        return { w: r.width, h: r.height, color: getComputedStyle(root).color, viewW: v.width, viewH: v.height };
       };
       const shadow = (id: string): HTMLElement =>
         (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
@@ -4450,55 +4450,182 @@ try {
     assert.deepEqual(parity.element, parity.factory);
     check("progress: linear and circular render as the factory does with the global stylesheet");
 
-    // The indeterminate circular indicator keeps its track. Its
-    // colour is read from a determinate indicator at 0, all track; the
-    // indeterminate one, element and factory, must show pixels of it.
+    // The drawing moved off the canvas: element and factory draw in an svg
+    // view, and no canvas is left in the module. This is the measure that
+    // fails on main, where the querySelector finds the drawing surface.
+    const drawn = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createProgress({ value: 30 }).element;
+      document.getElementById("factory")?.append(factory);
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      return {
+        elementCanvas: shadow("p").querySelector("canvas"),
+        elementView: shadow("p").querySelector("svg.mtrl-progress__view"),
+        factoryCanvas: factory.querySelector("canvas"),
+        factoryView: factory.querySelector("svg.mtrl-progress__view"),
+      };
+    });
+    assert.equal(drawn.elementCanvas, null, "no canvas in the element's progress");
+    assert.ok(drawn.elementView, "the element's progress draws in an svg view");
+    assert.equal(drawn.factoryCanvas, null, "no canvas in the factory's progress");
+    assert.ok(drawn.factoryView, "the factory's progress draws in an svg view");
+    check("progress: the indicator draws in an svg view and the module has no canvas, element and factory");
+
+    // The svg view keeps the layout box the canvas had before the upgrade:
+    // the same element heights, the same 4dp inset on linear, none on circular.
+    const laid = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const host = document.createElement("div");
+      host.style.cssText = "position: fixed; left: 0; top: 0; width: 512px;";
+      document.body.append(host);
+      const cases: [string, object][] = [
+        ["lin-det", { value: 62 }],
+        ["lin-det-wavy", { value: 62, shape: "wavy" }],
+        ["lin-det-thick", { value: 62, thickness: "thick" }],
+        ["circ-det", { variant: "circular", value: 62 }],
+        ["circ-det-wavy", { variant: "circular", value: 62, shape: "wavy" }],
+        ["circ-det-120", { variant: "circular", value: 62, size: 120 }],
+      ];
+      const out: Record<string, Record<string, number>> = {};
+      for (const [name, config] of cases) {
+        const p = w.mtrl.createProgress(config);
+        host.append(p.element);
+        const view = p.element.querySelector("svg.mtrl-progress__view") as SVGSVGElement;
+        const r = p.element.getBoundingClientRect();
+        const v = view.getBoundingClientRect();
+        out[name] = { ew: r.width, eh: r.height, vw: v.width, vh: v.height, dx: v.x - r.x, dy: v.y - r.y };
+      }
+      host.remove();
+      return out;
+    });
+    // measured on main, 2026-11-01, before the drawing moved off the canvas
+    assert.deepEqual(laid["lin-det"], { ew: 512, eh: 4, vw: 504, vh: 4, dx: 4, dy: 0 });
+    assert.deepEqual(laid["lin-det-wavy"], { ew: 512, eh: 10, vw: 504, vh: 10, dx: 4, dy: 0 });
+    assert.deepEqual(laid["lin-det-thick"], { ew: 512, eh: 8, vw: 504, vh: 8, dx: 4, dy: 0 });
+    assert.deepEqual(laid["circ-det"], { ew: 40, eh: 40, vw: 40, vh: 40, dx: 0, dy: 0 });
+    assert.deepEqual(laid["circ-det-wavy"], { ew: 48, eh: 48, vw: 48, vh: 48, dx: 0, dy: 0 });
+    assert.deepEqual(laid["circ-det-120"], { ew: 120, eh: 120, vw: 120, vh: 120, dx: 0, dy: 0 });
+    check("progress: the svg view keeps the layout box the canvas had before the upgrade");
+
+    // The indeterminate circular indicator keeps its track: the sweep
+    // animation drives the dashes and both strokes read the theme, element
+    // and factory.
     const track = await page.evaluate(async () => {
       const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
-      const empty = w.mtrl.createProgress({ variant: "circular", value: 0 });
       const spinning = w.mtrl.createProgress({ variant: "circular", indeterminate: true });
-      document.getElementById("factory")?.append(empty.element, spinning.element);
-      await new Promise((r) => setTimeout(r, 300));
-      const pixels = (canvas: HTMLCanvasElement): Uint8ClampedArray =>
-        (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
-      const read = (): { trackColor: string; factory: number; element: number } => {
-      // The most frequent opaque colour of the empty ring is its track
-      const counts = new Map<string, number>();
-      const ring = pixels(empty.element.querySelector("canvas") as HTMLCanvasElement);
-      for (let i = 0; i < ring.length; i += 4) {
-        if (ring[i + 3]! < 250) continue;
-        const key = `${ring[i]},${ring[i + 1]},${ring[i + 2]}`;
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-      }
-      const trackColor = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
-      const count = (canvas: HTMLCanvasElement): number => {
-        const data = pixels(canvas);
-        let n = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i + 3]! >= 250 && `${data[i]},${data[i + 1]},${data[i + 2]}` === trackColor) n++;
-        }
-        return n;
+      document.getElementById("factory")?.append(spinning.element);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+      const colour = (value: string): string => {
+        probe.fillStyle = "#000";
+        probe.fillStyle = value;
+        return probe.fillStyle;
       };
-      const inShadow = (id: string): HTMLCanvasElement =>
-        (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement;
-      return { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      const role = (name: string): string =>
+        colour(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+      const read = (root: HTMLElement): Record<string, string> => {
+        const part = (selector: string): Element => root.querySelector(selector) as Element;
+        return {
+          track: colour(getComputedStyle(part("circle.mtrl-progress__track")).stroke),
+          head: colour(getComputedStyle(part("circle.mtrl-progress__indicator")).stroke),
+          trackDash: getComputedStyle(part("circle.mtrl-progress__track")).strokeDasharray,
+          headDash: getComputedStyle(part("circle.mtrl-progress__indicator")).strokeDasharray,
+        };
       };
-      // A detached factory keeps its fallback colours until a ResizeObserver reports
-      // it, and the canvas is drawn in a frame after that: 300ms was only long
-      // enough for both. Read again, for 5s at most, until the track is drawn; the
-      // assertion below reports the last reading.
-      let result = read();
-      for (let i = 0; i < 100 && !(result.trackColor !== "" && result.factory > 20 && result.element > 20); i++) {
-        await new Promise((r) => setTimeout(r, 50));
-        result = read();
-      }
-      empty.element.remove();
+      const inShadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      const result = {
+        themeTrack: role("--mtrl-sys-color-secondary-container"),
+        themeHead: role("--mtrl-sys-color-primary"),
+        factory: read(spinning.element),
+        element: read(inShadow("pc")),
+      };
       spinning.element.remove();
       return result;
     });
-    assert.notEqual(track.trackColor, "", "the empty ring has a track colour");
-    assert.ok(track.factory > 20 && track.element > 20, `track pixels in the indeterminate indicator: ${JSON.stringify(track)}`);
+    const dash = (value: string): number => Number.parseFloat(value);
+    for (const which of ["factory", "element"] as const) {
+      assert.equal(track[which].track, track.themeTrack, `${which}: the track stroke is the theme's`);
+      assert.equal(track[which].head, track.themeHead, `${which}: the head stroke is the theme's`);
+      assert.ok(dash(track[which].trackDash) > 0, `${which}: the track dash shows an arc (${track[which].trackDash})`);
+      assert.ok(dash(track[which].headDash) >= 9 && dash(track[which].headDash) <= 88,
+        `${which}: the head dash carries the sweep 10–87 (${track[which].headDash})`);
+    }
     check("progress: the indeterminate circular indicator shows its track, factory and element");
+
+    // The M3 motion runs as CSS animations on the drawing elements, at the
+    // durations the guidelines give, values that move with the clock, and a
+    // rest at the empty frame when the visitor asks for reduced motion.
+    const motion = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const bars = w.mtrl.createProgress({ indeterminate: true }).element;
+      const ring = w.mtrl.createProgress({ variant: "circular", indeterminate: true }).element;
+      document.getElementById("factory")?.append(bars, ring);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const byName = (root: HTMLElement): Map<string, CSSAnimation> => {
+        const found = new Map<string, CSSAnimation>();
+        for (const animation of root.getAnimations({ subtree: true })) {
+          const css = animation as CSSAnimation;
+          if (css.animationName) found.set(css.animationName, css);
+        }
+        return found;
+      };
+      const linearAnims = byName(bars);
+      const ringAnims = byName(ring);
+      const timing = (animation: Animation | undefined): { duration: number; iterations: number } | null =>
+        animation ? { duration: animation.effect!.getTiming().duration as number, iterations: animation.effect!.getTiming().iterations as number } : null;
+      const head = bars.querySelector(".mtrl-progress__bar-first") as SVGRectElement;
+      const sample = (time: number): string => {
+        for (const animation of linearAnims.values()) {
+          animation.pause();
+          animation.currentTime = time;
+        }
+        return getComputedStyle(head).getPropertyValue("--mtrl-progress-l").trim();
+      };
+      const result = {
+        linear: ["mtrl-progress-ahead-head", "mtrl-progress-first-tail", "mtrl-progress-first-head", "mtrl-progress-second-tail", "mtrl-progress-second-head", "mtrl-progress-between-head", "mtrl-progress-between-tail", "mtrl-progress-behind-tail"].map((name) => timing(linearAnims.get(name))),
+        spin: timing(ringAnims.get("mtrl-progress-spin")),
+        kick: timing(ringAnims.get("mtrl-progress-kick")),
+        sweep: timing(ringAnims.get("mtrl-progress-sweep")),
+        at0: sample(0),
+        at875: sample(875),
+        at1750: sample(1750),
+      };
+      bars.remove();
+      ring.remove();
+      return result;
+    });
+    for (const t of motion.linear) assert.deepEqual(t, { duration: 1750, iterations: Infinity }, "each linear bar animation");
+    assert.deepEqual(motion.spin, { duration: 6000, iterations: Infinity });
+    assert.deepEqual(motion.kick, { duration: 6000, iterations: Infinity });
+    assert.deepEqual(motion.sweep, { duration: 6000, iterations: Infinity });
+    assert.equal(motion.at0, "0%");
+    assert.ok(Number.parseFloat(motion.at875) > 0, `the bar's tail moves mid-cycle (${motion.at875})`);
+    assert.equal(motion.at1750, "100%", "the bar wraps the way the canvas did");
+    check("progress: the indeterminate motion runs as CSS on the drawing elements, at the m3 durations");
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const rested = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const bars = w.mtrl.createProgress({ indeterminate: true }).element;
+      document.getElementById("factory")?.append(bars);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const read = (part: string, property: string): string =>
+        getComputedStyle(bars.querySelector(part) as Element).getPropertyValue(property).trim();
+      const result = {
+        running: bars.getAnimations({ subtree: true }).length,
+        tail: read(".mtrl-progress__bar-first", "--mtrl-progress-l"),
+        ahead: read(".mtrl-progress__ahead", "--mtrl-progress-r"),
+      };
+      bars.remove();
+      return result;
+    });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    assert.equal(rested.running, 0, "no animations under reduced motion");
+    assert.equal(rested.tail, "0%");
+    assert.equal(rested.ahead, "100%"); // draw(0): only the ahead stub spans the track
+    check("progress: reduced motion rests on the empty frame the canvas drew at t=0");
   }
 
   // ---------------------------------------------------------------- loading indicator
@@ -4566,8 +4693,10 @@ try {
   }
 
   // ---------------------------------------------------------- canvas theme
-  // A theme set on a section, with :root light: the canvases draw the
-  // section's colours, factory and element, and follow a theme change on it.
+  // A theme set on a section, with :root light: the progress parts carry
+  // the section's colours through the stylesheet (their computed strokes),
+  // the loading indicator still paints its canvas, and both follow a theme
+  // change on the section — factory and element.
   await fresh(
     page,
     `<div id="themed" data-theme="baseline" data-theme-mode="dark">
@@ -4580,17 +4709,44 @@ try {
      </div>`
   );
   {
-    type Palette = { primary: string; track: string; canvases: Record<string, Record<string, number>> };
+    // which part carries the track colour and which the primary, per scene:
+    // the indeterminate linear's ahead stub is track-coloured, its bars primary
+    const partQueries: Record<string, [string, string]> = {
+      tl: ["rect.mtrl-progress__track", "rect.mtrl-progress__indicator"],
+      tli: ["rect.mtrl-progress__ahead", "rect.mtrl-progress__bar-first"],
+      tc: ["circle.mtrl-progress__track", "circle.mtrl-progress__indicator"],
+      tci: ["circle.mtrl-progress__track", "circle.mtrl-progress__indicator"],
+    };
+    type Palette = {
+      primary: string;
+      track: string;
+      parts: Record<string, { track: string; head: string }>;
+      canvases: Record<string, Record<string, number>>;
+    };
     const sample = (): Promise<Palette> =>
-      page.evaluate(async () => {
+      page.evaluate(async (partQueries) => {
         await new Promise((r) => setTimeout(r, 300));
         const themed = document.getElementById("themed") as HTMLElement;
         const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
-        const hex = (name: string): string => {
+        const colour = (value: string): string => {
           probe.fillStyle = "#000";
-          probe.fillStyle = getComputedStyle(themed).getPropertyValue(name).trim();
+          probe.fillStyle = value;
           return probe.fillStyle;
         };
+        const role = (name: string): string => colour(getComputedStyle(themed).getPropertyValue(name).trim());
+        const stroke = (root: Element, part: string): string =>
+          colour(getComputedStyle(root.querySelector(part) as Element).stroke);
+        const shadow = (id: string): Element =>
+          (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as Element;
+        const factories = (window as unknown as { factories: Record<string, HTMLElement> }).factories;
+        const parts: Record<string, { track: string; head: string }> = {};
+        for (const [id, [trackPart, headPart]] of Object.entries<[string, string]>(partQueries)) {
+          parts[`element ${id}`] = { track: stroke(shadow(id), trackPart), head: stroke(shadow(id), headPart) };
+          parts[`factory ${id}`] = {
+            track: stroke(factories[id] as Element, trackPart),
+            head: stroke(factories[id] as Element, headPart),
+          };
+        }
         const histogram = (canvas: HTMLCanvasElement): Record<string, number> => {
           const data = (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
           const counts: Record<string, number> = {};
@@ -4601,15 +4757,19 @@ try {
           }
           return counts;
         };
-        const canvases: Record<string, Record<string, number>> = {};
-        for (const id of ["tl", "tli", "tc", "tci", "tload"]) {
-          canvases[`element ${id}`] = histogram((document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement);
-        }
-        for (const [name, el] of Object.entries((window as unknown as { factories: Record<string, HTMLElement> }).factories)) {
-          canvases[`factory ${name}`] = histogram(el.querySelector("canvas") as HTMLCanvasElement);
-        }
-        return { primary: hex("--mtrl-sys-color-primary"), track: hex("--mtrl-sys-color-secondary-container"), canvases };
-      });
+        const canvases: Record<string, Record<string, number>> = {
+          "element tload": histogram(
+            (document.getElementById("tload") as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement
+          ),
+          "factory tload": histogram(factories.tload.querySelector("canvas") as HTMLCanvasElement),
+        };
+        return {
+          primary: role("--mtrl-sys-color-primary"),
+          track: role("--mtrl-sys-color-secondary-container"),
+          parts,
+          canvases,
+        };
+      }, partQueries);
     await page.evaluate(() => {
       const w = window as unknown as Win & {
         mtrl: { createProgress: (c: object) => { element: HTMLElement }; createLoadingIndicator: (c: object) => { element: HTMLElement } };
@@ -4634,13 +4794,16 @@ try {
     });
     const expectPalette = (palette: Palette, not: { primary: string; track: string }, when: string): void => {
       assert.notEqual(palette.primary, not.primary, `${when}: the section's primary differs from the other theme's`);
+      for (const [name, part] of Object.entries(palette.parts)) {
+        assert.equal(part.track, palette.track, `${when}, ${name}: the track stroke is the section's ${palette.track}`);
+        assert.equal(part.head, palette.primary, `${when}, ${name}: the head stroke is the section's ${palette.primary}`);
+        assert.notEqual(part.track, not.track, `${when}, ${name}: the track is not the other theme's ${not.track}`);
+        assert.notEqual(part.head, not.primary, `${when}, ${name}: the head is not the other theme's ${not.primary}`);
+      }
       for (const [name, counts] of Object.entries(palette.canvases)) {
         const what = `${when}, ${name}: ${JSON.stringify(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4))}`;
         assert.ok((counts[palette.primary] ?? 0) > 10, `${what} draws the section's primary ${palette.primary}`);
         assert.equal(counts[not.primary] ?? 0, 0, `${what} draws no ${not.primary}`);
-        if (name.endsWith("tload")) continue; // a loading indicator has no track
-        assert.ok((counts[palette.track] ?? 0) > 10, `${what} draws the section's track ${palette.track}`);
-        assert.equal(counts[not.track] ?? 0, 0, `${what} draws no ${not.track}`);
       }
     };
     // The factories were appended just before: their colours arrive from a
