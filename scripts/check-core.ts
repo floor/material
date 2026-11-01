@@ -21,9 +21,9 @@ import { checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
-import { checkMenu, checkMenuDisabledColors, checkMenuVerticalSelectedCheck } from "./check-menu-browser";
+import { checkMenu, checkMenuDisabledColors, checkMenuHiddenItems, checkMenuVerticalSelectedCheck } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
-import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
+import { checkSelectMenu, checkSelectWidth, checkSelectHiddenOptions } from "./check-select-browser";
 import { createPackageFixture } from "./package-fixture";
 
 type CoreWindow = Window & {
@@ -124,11 +124,13 @@ try {
   await checkControls(page);
   await checkMenu(page);
   await checkMenuDisabledColors(page);
+  await checkMenuHiddenItems(page);
   await checkMenuVerticalSelectedCheck(page);
   await checkSearch(page);
   await checkSelectMenu(page, "factory");
   await checkSelectMenu(page, "factory-top");
   await checkSelectWidth(page, "factory");
+  await checkSelectHiddenOptions(page);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.

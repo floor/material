@@ -99,12 +99,16 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
    * Every item in a menu, disabled ones included. A disabled item can take
    * focus and be read out, it just cannot be chosen
    * (m3.material.io menu accessibility, "Interactability"), so it belongs in
-   * the set focus moves through.
+   * the set focus moves through. An item that is not rendered (display: none,
+   * its own or an ancestor's) cannot take focus, so it is not a stop: the
+   * browser's own checkVisibility decides, and a DOM without it (a browser
+   * older than the ones README supports) keeps every item, which is how the
+   * keyboard behaved before.
    */
   const menuItems = (menuElement: HTMLElement): HTMLElement[] =>
-    Array.from(
+    (Array.from(
       menuElement.querySelectorAll(`.${component.getClass("menu__item")}`)
-    ) as HTMLElement[];
+    ) as HTMLElement[]).filter((item) => item.checkVisibility?.() !== false);
 
   /**
    * Resets the typeahead search buffer
