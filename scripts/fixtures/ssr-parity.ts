@@ -7,7 +7,7 @@ import { setHTML } from "../../dist/core/dom/html.js";
 export type Snapshot = Record<string, string>;
 // Only generated ID families, never arbitrary authored IDs or ARIA values.
 const generated = /^(?:mtrl-|text-field-|select-|tabs-|tab-|radio-|checkbox-|switch-|menu-|search-|datepicker-|timepicker-|dialog-|card-)/;
-export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
+export const snapshot = (host: Element, authoredIds: string[], serverNames?: string[]): Snapshot => {
   const result: Snapshot = {};
   const ids = new Map<string, string>();
   const collect = (node: Element): void => {
@@ -35,6 +35,15 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
     const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
     return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
   };
+  // The sheets a server render of the host drops — its spec's narrowed list
+  // (ElementSpec.ssrStyles), passed by the check. They style nothing the
+  // serialized root contains, so the browser's fuller adopted list is
+  // narrowed to match. Nested elements ship their full lists today; if one
+  // ever narrows, this comparison flags it first.
+  const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === host.localName)?.spec;
+  const droppedSheets = new Set(
+    serverNames && spec ? spec.styles.filter(name => !serverNames.includes(name)).map(name => css(styleText(name) ?? "")) : []
+  );
   const walk = (node: Node, path: string): void => {
     if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
       result[`${path}/text`] = node.textContent ?? "";
@@ -82,7 +91,10 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
       const inline = !root.adoptedStyleSheets.length && first?.localName === "style" ? first : null;
       const text = inline?.textContent ?? "";
       result[`${path}/shadow/css`] = inline ? css(text) :
-        root.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n")).join("\n");
+        root.adoptedStyleSheets
+          .map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"))
+          .filter(sheetText => !droppedSheets.has(sheetText))
+          .join("\n");
       Array.from(root.childNodes).filter(child => child !== inline).forEach((child, index) => walk(child, `${path}/shadow/${index}`));
     }
   };

@@ -70,29 +70,35 @@ try {
     }
     await page.addScriptTag({ url: `${server.url}fixture.js`, type: "module" });
     await page.waitForFunction(() => !!window.ssrParity);
-    const ssr = await page.evaluate(ids => window.ssrParity.snapshot(document.body.firstElementChild!, ids), authoredIds);
-    const upgrade = await page.evaluate(ids => {
-      window.ssrParity.upgrade();
-      return window.ssrParity.snapshot(document.body.firstElementChild!, ids);
-    }, authoredIds);
-    if (!fallback) assert.equal(Object.keys(upgrade).filter(k => k.endsWith("/shadow/css")).length, Object.keys(ssr).filter(k => k.endsWith("/shadow/css")).length, "Upgrade lost roots");
-    html = "";
-    await page.goto(server.url.href);
-    await page.addScriptTag({ url: `${server.url}fixture.js`, type: "module" });
-    await page.waitForFunction(() => !!window.ssrParity);
-    const immediate = await page.evaluate(({ markup, ids }) => window.ssrParity.snapshot(window.ssrParity.mount(markup), ids), { markup: fixture.html, ids: authoredIds });
-    assert.deepEqual(compare(upgrade, immediate), [], `${fixture.element}: upgrade differs from fresh construction`);
     // The sheets a server render emits for a spec that narrows its list
     // (ElementSpec.ssrStyles): the progress sheet styles no node a serialized
     // shadow root contains — the spinner arrives with a runtime loading
     // state, whose lazy chunk carries the styles — so the button family
-    // drops it until then. Every other element ships its full list.
+    // drops it until then. Every other element ships its full list. The
+    // snapshots of an upgraded root take the list so the browser's fuller
+    // adopted sheets are narrowed the same way; the pre-upgrade snapshot
+    // reads exactly what the server shipped and takes nothing.
     const narrowed: Record<string, string[]> = {
       button: ["host:button", "ripple", "button"],
       "button-group": ["host:button-group", "ripple", "button", "icon-button", "button-group"],
       dialog: ["host:dialog", "ripple", "button", "divider", "dialog"],
     };
     const serverList = narrowed[fixture.element];
+    const ssr = await page.evaluate(ids => window.ssrParity.snapshot(document.body.firstElementChild!, ids), authoredIds);
+    const upgrade = await page.evaluate(({ ids, serverNames }) => {
+      window.ssrParity.upgrade();
+      return window.ssrParity.snapshot(document.body.firstElementChild!, ids, serverNames);
+    }, { ids: authoredIds, serverNames: serverList });
+    if (!fallback) assert.equal(Object.keys(upgrade).filter(k => k.endsWith("/shadow/css")).length, Object.keys(ssr).filter(k => k.endsWith("/shadow/css")).length, "Upgrade lost roots");
+    html = "";
+    await page.goto(server.url.href);
+    await page.addScriptTag({ url: `${server.url}fixture.js`, type: "module" });
+    await page.waitForFunction(() => !!window.ssrParity);
+    const immediate = await page.evaluate(
+      ({ markup, ids, serverNames }) => window.ssrParity.snapshot(window.ssrParity.mount(markup), ids, serverNames),
+      { markup: fixture.html, ids: authoredIds, serverNames: serverList },
+    );
+    assert.deepEqual(compare(upgrade, immediate), [], `${fixture.element}: upgrade differs from fresh construction`);
     const order = await page.evaluate(
       (serverNames?: string[]) => window.ssrParity.styleOrder(document.querySelector("main")!.firstElementChild!, serverNames),
       serverList,
@@ -108,7 +114,10 @@ try {
     if (!fallback) assert.equal(ssr["host/shadow/css"], order.serverSources.join("\n"), `${fixture.element}: inline/adopted CSS`);
     await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
     await page.waitForTimeout(400);
-    const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);
+    const settled = await page.evaluate(
+      ({ ids, serverNames }) => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids, serverNames),
+      { ids: authoredIds, serverNames: serverList },
+    );
     const row = { element: fixture.element, equal: 0, exceptions: 0, failures: [] as Array<Difference & { phase: string }> };
     for (const [phase, actual] of (fallback ? [] : [["immediate", immediate], ["settled", settled]]) as Array<[string, Snapshot]>) {
       const differences = compare(ssr, actual);
