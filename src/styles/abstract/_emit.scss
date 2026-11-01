@@ -1,24 +1,14 @@
 // src/styles/abstract/_emit.scss
 //
-// Which direction form this compile emits. The default is logical: every
-// sheet the library itself adopts — the elements' shadow roots, the
-// pre-upgrade rules — keeps the native logical properties, which mirror on
-// the computed `dir` alone and never on `lang`.
-//
-// The two artefacts a consumer's bundler takes through a CSS pipeline,
-// `dist/styles.css` and `dist/styles/<name>.css`, are compiled once more with
-// `$direction-arms: true` (scripts/build-styles.ts): a bundler configured for
-// older browser targets rewrites `inset-inline-start` and the logical corner
-// radii into `:lang()` arms that match a language, never `dir="rtl"`
-// (src/styles/components/_text-field.scss), so those sheets carry the physical
-// side plus a direction arm instead — nothing left to lower. The entry
-// configures this module; every `@use` after it reads the same value.
+// Which direction form this compile emits: logical by default; the artefacts
+// a consumer's bundler takes through a CSS pipeline compile once more with
+// $direction-arms: true (scripts/build-styles.ts, test/styles/direction.md). The
+// entry configures this module; every @use after it reads the same value.
 $direction-arms: false !default;
 
-/// The property names a transition needs for `$property` in this form. An
-/// inline inset is two physical sides in the arms form, and the arm swaps
-/// which one is live: a transition naming only the side that was unset jumps
-/// instead of snapping. Both names, unquoted.
+/// The property names a transition needs in this form: an inline inset is two
+/// physical sides in the arms form, both named so a move animates the side
+/// the arm set.
 @function transition-names($property) {
   @if not $direction-arms {
     @return $property;

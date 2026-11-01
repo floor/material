@@ -1,27 +1,10 @@
 // src/styles/abstract/_direction.scss
 //
-// The inline-start and inline-end insets and the four logical corner radii,
-// through the compile's direction form (abstract/_emit.scss).
-//
-// In the logical form (the default) these are the logical properties: the
-// sheet mirrors on the computed `dir`, and a bundler's lowering of them is the
-// consumer's own choice. In the arms form — the two artefacts a consumer's
-// bundler takes through a CSS pipeline, `dist/styles.css` and
-// `dist/styles/<name>.css` — the same call emits the physical side the value
-// matches left-to-right plus the mirrored side as a direction arm
-// (`rtl` in abstract/_mixins.scss), so no `:lang()` lowering of the sheet can
-// pin a start placement to the left edge of a right-to-left page.
-//
-// `$self: true` is the form for a value the site sets on itself (a factory's
-// root): the arm also matches the marker on that element. The arm resets the
-// base side to `auto` so the mirrored rule replaces the base one instead of
-// adding to it, exactly as the logical property resolves one side per
-// direction.
-//
-// `$arm: false` writes the declaration without its arm: for a site whose
-// mirrored form is aggregated — several placements in one arm, named at a
-// block that also carries the marker's own form (`arms`, `arms-selector`
-// below). The call site pairs it with one of those.
+// The inline insets and the logical corner radii through the compile's
+// direction form (abstract/_emit.scss): the logical form writes the logical
+// property, the arms form the physical side plus its mirrored arm. The full
+// contract — the forms, $self, arm aggregation, transitions, state-re-placed
+// insets — is in test/styles/direction.md, which the package does not pack.
 @use 'sass:list';
 @use 'base' as base;
 @use 'mixins' as m;
@@ -57,9 +40,8 @@
   }
 }
 
-/// Both inline insets at once, `auto` allowed on either side — the pair a
-/// placement pins to one edge writes as one call, and the arm swaps the two
-/// values whole.
+/// Both inline insets at once, `auto` allowed on either side; the arm swaps
+/// the pair whole.
 @mixin sides($start, $end, $self: false, $arm: true) {
   @if emit.$direction-arms {
     left: $start;
@@ -76,11 +58,9 @@
   }
 }
 
-/// The four logical corner radii, `null` for a corner this rule does not
-/// declare. With all four the arms form is the physical `border-radius`
-/// shorthand and the arm swaps its start and end columns; with fewer, each
-/// declared corner is the physical longhand and the arm writes the mirrored
-/// longhand — the sites that round part of a box name every corner they own.
+/// The four logical corner radii, `null` for an undeclared corner; all four
+/// write the physical shorthand in the arms form, fewer write longhands with
+/// mirrored longhand arms.
 @mixin corners(
   $start-start: null, $start-end: null, $end-start: null, $end-end: null,
   $self: false, $arm: true,
@@ -115,9 +95,7 @@
   }
 }
 
-/// A direction arm this site aggregates by hand: the mirrored declarations of
-/// several placements in one block, so every shipped copy pays one prelude.
-/// Nothing in the logical form — the properties mirror natively there.
+/// A direction arm this site aggregates by hand; nothing in the logical form.
 @mixin arms($self: false) {
   @if emit.$direction-arms {
     @include m.rtl($self) {
@@ -126,10 +104,8 @@
   }
 }
 
-/// The same arms-only wrapper for a subject that is not the include site's
-/// selector extended — a BEM element or a variant class written at the root of
-/// the component's block, whose prelude is shorter without the component
-/// class the nesting would add (`rtl-selector` in abstract/_mixins.scss).
+/// arms' wrapper for a subject that is not this site's selector extended
+/// (`rtl-selector` in abstract/_mixins.scss).
 @mixin arms-selector($subject) {
   @if emit.$direction-arms {
     @include m.rtl-selector($subject) {
@@ -139,10 +115,7 @@
 }
 
 /// An arms-only block at the document root under a prelude this site owns
-/// whole: the aggregated arm whose shape the wrappers above do not express —
-/// one prelude shared across the marker forms, a subject list of its own,
-/// cut by the nested LTR boundary. The prelude is the site's; only the
-/// arms-only part is the switch's. Nothing in the logical form.
+/// whole; nothing in the logical form.
 @mixin arms-at-root($prelude) {
   @if emit.$direction-arms {
     @at-root #{$prelude} {
@@ -151,11 +124,8 @@
   }
 }
 
-/// A logical alias of a physical base a shared rule already wrote on the pair
-/// (a FAB's `--top-end` beside `--top-right`): the arms form flips that base
-/// under a self arm; the logical form replaces it with the logical property,
-/// which resolves the corner in either direction. The physical alias of the
-/// pair never goes through this — it stays where the shared rule put it.
+/// A logical alias of a physical base a shared rule wrote on the pair; the
+/// arms form flips that base under a self arm.
 @mixin flip-start($value) {
   @if emit.$direction-arms {
     @include m.rtl(true) {
@@ -181,11 +151,9 @@
   }
 }
 
-/// One transition entry for `$property` under `$timing` (a duration and an
-/// easing together), in the form this compile emits: an inline inset names
-/// both physical sides in the arms form (abstract/_emit.scss), so a move
-/// animates whichever side the direction placed it on instead of jumping on
-/// the side the arm unset.
+/// One transition entry in this form's property names (emit.transition-names);
+/// an inline inset names both physical sides in the arms form, so the move
+/// animates whichever side the direction placed it on.
 @function transition($property, $timing) {
   $entries: ();
   @each $name in emit.transition-names($property) {
@@ -197,9 +165,7 @@
   @return $entries;
 }
 
-/// Only the self arm, for a marker on the root this block is written in: the
-/// arm members of `arms` need the marker on an ancestor, and a part of a root
-/// that carries the marker itself is reached by the root's own selector. The
+/// Only the self arm, for a marker on the root this block is written in; the
 /// logical form emits nothing.
 @mixin arms-self-only {
   @if emit.$direction-arms {
@@ -209,12 +175,8 @@
   }
 }
 
-/// An inline-start inset whose value states re-place (a switch's handle and
-/// state layer): the base names a custom property as the value's fallback and
-/// the states override the property (`start-value-set`), so the arms form
-/// carries one arm per subject while every state's move rides the property —
-/// a bundler lowers no custom property. The logical form is the plain logical
-/// inset, state overrides included; it mirrors natively and names no property.
+/// An inline-start inset whose value states re-place, through a custom
+/// property in the arms form; the logical form is the plain logical inset.
 @mixin start-value($name, $value) {
   @if emit.$direction-arms {
     left: var(#{$name}, #{$value});
