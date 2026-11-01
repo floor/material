@@ -140,6 +140,8 @@ jobs:
         run: bun run ssr-consumer:check
       - name: Packed imports and size budgets
         run: bun run size:check
+      - name: Public Sass entries compile from the packed package
+        run: bun run styles-package:check
       - name: README examples, specifiers, sizes and links against the packed package
         run: bun run readme:check
       - name: Per-component gzip budgets
