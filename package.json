@@ -486,6 +486,8 @@
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
     "component-exports:update": "bun run scripts/component-exports.ts --update",
+    "type-shapes:check": "bun run scripts/type-shapes.ts",
+    "type-shapes:update": "bun run scripts/type-shapes.ts --update",
     "root-exports:update": "bun run scripts/root-exports.ts --update",
     "classes:check": "bun run scripts/check-class-names.ts",
     "consumer:check": "bun run scripts/check-consumer.ts",
