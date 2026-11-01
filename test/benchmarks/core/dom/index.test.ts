@@ -30,8 +30,6 @@ import {
 import {
   createElement,
   createSVGElement,
-  createElementPooled,
-  releaseElement,
 } from "../../../../src/core/dom/create";
 
 import {
@@ -95,8 +93,8 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
           text: `This is content for card ${i}`,
         });
 
-        // 6. Create actions with pooled elements
-        const actions = createElementPooled({
+        // 6. Create actions
+        const actions = createElement({
           tag: "div",
           className: "card-actions",
         });
@@ -138,10 +136,6 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
           // expect(matchesCard).toBe(true);
         }
 
-        // 10. Clean up pooled elements periodically
-        if (i % 50 === 0) {
-          releaseElement(actions);
-        }
       }
 
       const endTime = performance.now();
@@ -345,7 +339,7 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
         // 3. Create toolbar buttons
         const toolbarButtons = ["refresh", "settings", "export"];
         toolbarButtons.forEach((buttonType) => {
-          const button = createElementPooled({
+          const button = createElement({
             tag: "button",
             className: `button icon ${buttonType}`,
             text: buttonType.charAt(0).toUpperCase() + buttonType.slice(1),
@@ -517,7 +511,7 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
           backgroundColor: "#f8f9fa",
         });
 
-        // 9. Validation and cleanup
+        // 9. Validation
         if (i % 100 === 0) {
           const allWidgets = dashboard.querySelectorAll(".widget");
           const hasHighlighted = Array.from(allWidgets).some((w) =>
@@ -529,12 +523,6 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
 
           // Note: DOM queries can be inconsistent in JSDOM environment
           // expect(allWidgets.length).toBe(4);
-
-          // Release some pooled elements
-          const toolbarBtns = dashboard.querySelectorAll(
-            ".dashboard-toolbar button"
-          );
-          toolbarBtns.forEach((btn) => releaseElement(btn as HTMLElement));
         }
       }
 
@@ -552,7 +540,6 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
         )} dashboards/sec`
       );
       console.log(`   SVG elements: ${iterations * 2}`);
-      console.log(`   Pooled elements: ${iterations * 3}`);
 
       expect(totalTime).toBeLessThan(45000);
     });
@@ -657,69 +644,6 @@ benchmark("DOM Modules Comprehensive Benchmarks", () => {
 
       expect(classesTime).toBeLessThan(2000);
       expect(utilsTime).toBeLessThan(2000);
-    });
-
-    it("should analyze pooled vs non-pooled element creation", () => {
-      const iterations = 50000;
-
-      // Test regular createElement
-      const regularStart = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        createElement({
-          tag: "div",
-          className: "pooled-test",
-          text: `Item ${i}`,
-        });
-      }
-      const regularTime = performance.now() - regularStart;
-
-      // Test pooled createElement
-      const pooledStart = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        const element = createElementPooled({
-          tag: "div",
-          className: "pooled-test",
-          text: `Item ${i}`,
-        });
-
-        // Release every 10th element to simulate pool reuse
-        if (i % 10 === 0) {
-          releaseElement(element);
-        }
-      }
-      const pooledTime = performance.now() - pooledStart;
-
-      console.log(
-        `\n♻️  Pooled vs Regular createElement (${iterations} ops each):`
-      );
-      console.log(
-        `   Regular createElement: ${regularTime.toFixed(2)}ms (${(
-          (regularTime / iterations) *
-          1000
-        ).toFixed(3)}μs/op)`
-      );
-      console.log(
-        `   Pooled createElement: ${pooledTime.toFixed(2)}ms (${(
-          (pooledTime / iterations) *
-          1000
-        ).toFixed(3)}μs/op)`
-      );
-      console.log(`   Pool reuse rate: 10%`);
-      console.log(
-        `   Performance difference: ${(
-          (Math.abs(regularTime - pooledTime) /
-            Math.max(regularTime, pooledTime)) *
-          100
-        ).toFixed(1)}%`
-      );
-      console.log(
-        `   Faster: ${
-          regularTime < pooledTime ? "Regular" : "Pooled"
-        } createElement`
-      );
-
-      expect(regularTime).toBeLessThan(5000);
-      expect(pooledTime).toBeLessThan(5000);
     });
   });
 });
