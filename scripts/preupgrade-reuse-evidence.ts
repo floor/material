@@ -57,7 +57,7 @@ const run = async (name: string, filters: string[]) => {
   const assertions = await Bun.file(`${directory}/${name}-assertions.json`).json();
   const result = { name, status, seconds: (performance.now() - started) / 1000, ...assertions };
   console.log("PREUPGRADE_RUN", JSON.stringify(result));
-  console.log(stdout.split("\n").filter(line => /Mutation: \d|React render|preupgrade check passed|^  FAIL/.test(line)).join("\n"));
+  console.log(stdout.split("\n").filter(line => /Mutation: \d|React render|preupgrade check passed|^ {2}FAIL/.test(line)).join("\n"));
   if (status) console.log(stderr);
   return result;
 };
