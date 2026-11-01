@@ -183,6 +183,22 @@ Menus you can trust with keyboard and selection.
   `firefox-webkit` key was cold on the first run. The `check` status the
   ruleset requires is untouched.
 
+- **An export's deprecation is read through its declaration, and a public name
+  removed since the last release fails the pins (#222).**
+  Measured on 8b1ae397, adding `@deprecated` to the declaration a re-export
+  names left `root-exports:check` and `component-exports:check` green, and a
+  name deleted from a pin failed nothing, because each reader read the tags on
+  the re-export statement alone and neither compared its pins with a release.
+  `scripts/export-deprecation.ts` is now one resolver both readers share — the
+  export statement's tag wins, so a root move keeps its path note, and
+  otherwise the aliased declaration's tag counts — and the root pin records
+  such a deprecation as `deprecated` in place with `where: "declaration"`,
+  never in the migration table and never as a rename. Both readers also compare
+  their pins with the same files at the latest `v*` tag and fail on a name
+  public there and absent now (`test/build/export-pin-removals.test.ts`), and
+  the `tests` job checks out with `fetch-depth: 0` so the tag is there. Tooling
+  only: no API or runtime change.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
