@@ -60,9 +60,6 @@ const make = (config: Record<string, unknown> = {}) => {
   return { menu, opener, seen };
 };
 
-/** A key press or a click made after `open()` ran: events are stamped in milliseconds here */
-const later = (): Promise<void> => wait(3);
-
 for (const layer of LAYERS) {
   describe(`menu close(), ${named(layer)}: the state and the event are there when it returns`, () => {
     test("isOpen() is false and close has been emitted", async () => {
@@ -188,11 +185,12 @@ for (const layer of LAYERS) {
     const escape = () => new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
     const click = () => new MouseEvent("click", { bubbles: true, cancelable: true });
 
+    // Observe and dismiss before yielding: even a 3 ms sleep can resume after
+    // the reveal timer on a busy runner. Event dispatch order needs no delay.
     test("a click outside before the surface is shown closes it", async () => {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await later();
       expect(menu.element.classList.contains(VISIBLE)).toBe(false);
       document.body.dispatchEvent(click());
       expect(menu.isOpen()).toBe(false);
@@ -205,7 +203,6 @@ for (const layer of LAYERS) {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await later();
       document.body.dispatchEvent(escape());
       expect(menu.isOpen()).toBe(false);
       expect(seen).toEqual(["open", "close"]);
