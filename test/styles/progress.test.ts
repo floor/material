@@ -146,9 +146,16 @@ describe('progress stylesheet: the drawing', () => {
     const body = rulesAny('.mtrl-progress--indeterminate .mtrl-progress__bar-first').find((b) => b.includes('x:')) ?? '';
     expect(body).toContain('x: max(0px, min(min(var(--mtrl-progress-l), var(--mtrl-progress-r)) - var(--mtrl-progress-cap)');
     expect(body).toContain('(var(--mtrl-progress-r) - var(--mtrl-progress-l)) * 100');
-    // rest pose outside any animation: all bars empty
-    expect(body).toContain('--mtrl-progress-l: 0%');
-    expect(body).toContain('--mtrl-progress-r: 0%');
+    // rest pose outside any animation: all bars empty — but on the parts only.
+    // The geometry rule also carries the wave window rect, which reads --l/--r
+    // by inheritance from the bar group the keyframes animate; a declared pose
+    // there would pin the window at zero width against the inherited values.
+    const rest = rulesAny('.mtrl-progress--indeterminate .mtrl-progress__bar-first').find((b) =>
+      b.includes('--mtrl-progress-l: 0%')
+    );
+    expect(rest).toContain('--mtrl-progress-r: 0%');
+    expect(rest).not.toContain('x:');
+    expect(body).not.toContain('--mtrl-progress-l: 0%');
   });
 
   test('reduced motion rests on the empty frame: only the ahead bar spans the track', () => {
