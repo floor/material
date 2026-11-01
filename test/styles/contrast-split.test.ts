@@ -200,9 +200,17 @@ describe("explicit contrast levels are opt-in", () => {
     // right-to-left pair as a direction arm, its radii in custom properties,
     // so the bundler's :lang() lowering cannot reach them
     // (styles/components/_split-button.scss).
+    // The snackbar's start and end places and the toolbar's side placements
+    // are physical sides with a direction arm for the mirrored side, on the
+    // root itself, an ancestor, the shadow tree's host and a cut attribute
+    // fallback, so the same lowering cannot pin them to the left edge of a
+    // right-to-left page (styles/components/_snackbar.scss,
+    // styles/components/_toolbar.scss). The linear progress label keeps its
+    // logical inset this pass: its arms would ride in the button's
+    // loading-state closure, over the SSR page ceiling.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("84229932b1ec7d6c180f856b74c0b10303f601ba13a1c764497a323e04a35b6f");
-    expect(css.length).toBe(541984);
+      .toBe("2341ead40fd667bf31d87bc9207074c6f06e3fb48d076dc1b2f18c0ab9af443b");
+    expect(css.length).toBe(542850);
   });
 
   test("today's sheets still resolve to the fixture", () => {

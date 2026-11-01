@@ -25,6 +25,7 @@ import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
 import { checkDatepickerRtl } from "./check-datepicker-rtl";
 import { checkSplitButtonRtl } from "./check-split-button-rtl";
+import { checkSnackbarProgressToolbarRtl } from "./check-snackbar-progress-toolbar-rtl";
 
 const WIDTH = 600;
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
@@ -487,6 +488,7 @@ try {
   await checkCarouselRtl(browser, server.url.href);
   await checkDatepickerRtl(browser, server.url.href);
   await checkSplitButtonRtl(browser, server.url.href);
+  await checkSnackbarProgressToolbarRtl(browser, server.url.href);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 
