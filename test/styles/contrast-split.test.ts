@@ -191,9 +191,11 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c52ffab42ebe68ccb98601f67933182e1f2970ef6c85fe24b77b208305ebd504");
-    expect(css.length).toBe(544277);
+      .toBe("2ac8afc65cdc1038ec556f1378f918c5e9cd4a375bab177d84932c4c1c44ea05");
+    expect(css.length).toBe(544328);
   });
 
   test("today's sheets still resolve to the fixture", () => {
