@@ -98,40 +98,80 @@ describe("publish.yml's next dist-tag move", () => {
     expect(step, `publish.yml has no step named "${STEP_NAME}"`).toBeDefined();
   });
 
+  // The ordering matrix: the tag is moved exactly when semver says it sorts
+  // below the version just published, prereleases included (semver.org §11:
+  // 3.3.1-next.1 sorts below 3.3.1, and an earlier release sorts below a later
+  // one). `view` is what npm answers for `<3.3.1`: a range with no prerelease
+  // comparator on the same major.minor.patch excludes every prerelease, and
+  // the release itself is outside its own range — the defect these hold down.
   test("a next below the published version is moved to it", async () => {
     const { code, stdout, log, summary } = await runStep({
-      tags: '{"legacy":"1.0.4","latest":"3.2.7","next":"3.1.0"}',
-      view: '["3.0.0","3.1.0","3.2.0","3.2.7"]',
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0"}',
+      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
-    expect(log).toContain("npm view material@<3.3.0 version --json");
-    expect(log).toContain("npm dist-tag add material@3.3.0 next");
-    expect(summary).toContain("Moved next from 3.1.0 to 3.3.0");
+    expect(log).toContain("npm dist-tag add material@3.3.1 next");
+    expect(summary).toContain("Moved next from 3.3.0 to 3.3.1");
     expect(stdout).not.toContain("::warning");
+  });
+
+  test("a next prerelease behind the published release is moved to it", async () => {
+    const { code, log, summary } = await runStep({
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.1-next.1"}',
+      view: '["3.2.7","3.3.0"]',
+    });
+    expect(code).toBe(0);
+    expect(log).toContain("npm dist-tag add material@3.3.1 next");
+    expect(summary).toContain("Moved next from 3.3.1-next.1 to 3.3.1");
+  });
+
+  test("a next prerelease behind on an earlier release is moved to it", async () => {
+    const { code, log, summary } = await runStep({
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0-next.1"}',
+      view: '["3.2.7","3.3.0"]',
+    });
+    expect(code).toBe(0);
+    expect(log).toContain("npm dist-tag add material@3.3.1 next");
+    expect(summary).toContain("Moved next from 3.3.0-next.1 to 3.3.1");
+  });
+
+  test("a next equal to the published version is left alone", async () => {
+    const { code, log, summary } = await runStep({
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.1"}',
+      view: '["3.2.7","3.3.0"]',
+    });
+    expect(code).toBe(0);
+    expect(log).not.toContain("npm dist-tag add");
+    expect(summary).not.toContain("Moved next");
+  });
+
+  test("a next above the published version, prerelease included, is left alone", async () => {
+    const { code, log, summary } = await runStep({
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.4.0-next.1"}',
+      view: '["3.2.7","3.3.0"]',
+    });
+    expect(code).toBe(0);
+    expect(log).not.toContain("npm dist-tag add");
+    expect(summary).not.toContain("Moved next");
   });
 
   test("a refused move does not fail the job: it is reported in the summary and as a warning", async () => {
     const { code, stdout, log, summary } = await runStep({
-      tags: '{"legacy":"1.0.4","latest":"3.2.7","next":"3.1.0"}',
-      view: '["3.0.0","3.1.0","3.2.0","3.2.7"]',
+      version: "3.3.1",
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0"}',
+      view: '["3.2.7","3.3.0"]',
       addExit: 1,
     });
     expect(code).toBe(0);
-    expect(log).toContain("npm dist-tag add material@3.3.0 next");
+    expect(log).toContain("npm dist-tag add material@3.3.1 next");
     expect(stdout).toContain("::warning title=next dist-tag::");
-    expect(summary).toContain("npm refused to move the next dist-tag from 3.1.0 to 3.3.0");
+    expect(summary).toContain("npm refused to move the next dist-tag from 3.3.0 to 3.3.1");
     expect(summary).toContain("Allow npm dist-tag");
-  });
-
-  test("a next above the published version is left alone", async () => {
-    const { code, log, summary } = await runStep({
-      tags: '{"legacy":"1.0.4","latest":"3.2.7","next":"3.4.0-next.0"}',
-      view: '["3.0.0","3.1.0","3.2.0","3.2.7"]',
-    });
-    expect(code).toBe(0);
-    expect(log).toContain("npm view material@<3.3.0 version --json");
-    expect(log).not.toContain("npm dist-tag add");
-    expect(summary).not.toContain("Moved next");
   });
 
   test("no next tag at all is nothing to do, and npm is not asked", async () => {
