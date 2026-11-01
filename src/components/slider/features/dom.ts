@@ -54,7 +54,7 @@ export const withDom =
     });
 
     // Build accessible label for handles
-    const label = config.label || "";
+    const label = config.ariaLabel || config.label || "";
     const handleLabel = config.range && label ? `${label} minimum` : label;
     const secondHandleLabel = label ? `${label} maximum` : "";
 
@@ -157,6 +157,28 @@ export const withDom =
       // Apply second value bubble positioning
       setStyles(secondValueBubble, {
         left: `${secondValuePercent}%`,
+      });
+    }
+
+    // Keep ID references live: changes to the external label rename the handles.
+    // A range appends its endpoint through a hidden, referenced suffix.
+    if (config.ariaLabelledBy) {
+      [handle, secondHandle].forEach((target, index) => {
+        if (!target) return;
+        let labelledBy = config.ariaLabelledBy!;
+        if (config.range) {
+          const suffix = createElement({
+            tag: "span",
+            text: index ? "maximum" : "minimum",
+            attributes: {
+              id: `${getClass("slider")}-${Math.random().toString(36).slice(2, 9)}`,
+              hidden: true,
+            },
+            container: target,
+          });
+          labelledBy += ` ${suffix.id}`;
+        }
+        target.setAttribute("aria-labelledby", labelledBy);
       });
     }
 

@@ -49,9 +49,8 @@ const setRange = (c: SliderComponent, low: number, high: number): void => {
 };
 
 /**
- * The factory names its handles only from the visible `label`, and has no
- * `ariaLabel` option: `aria-label` on the host names them here instead, with
- * the factory's "minimum" and "maximum" on a range.
+ * `aria-label` on the host names the handles, with the factory's "minimum"
+ * and "maximum" on a range. The visible label is the fallback.
  */
 const nameHandles = (c: SliderComponent, host: HTMLElement): void => {
   const name = host.getAttribute("aria-label") ?? c.getLabel();
