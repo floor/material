@@ -125,6 +125,22 @@ export async function checkBadgeAnnouncement(page: Page, check: (name: string) =
       (document.getElementById("dot-element") as HTMLElement & { visible: boolean }).visible = true;
     });
     measurements.shown = await snapshot();
+    const tabs = await page.evaluate(() => {
+      const w = window as unknown as { mtrl: { createTabs(config: Record<string, unknown>): { element: HTMLElement } } };
+      const tabs = w.mtrl.createTabs({ tabs: [
+        { text: "Text destination", value: "text", badge: 7, badgeConfig: { variant: "small" } },
+        { text: "", ariaLabel: "Icon destination", icon: '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>', value: "icon", badge: 7, badgeConfig: { variant: "small" } },
+        { text: "Translated destination", value: "translated", badge: "Nouvelle notification", badgeConfig: { variant: "small" } },
+      ] });
+      tabs.element.id = "dot-tabs";
+      document.getElementById("badge-announcement-check")!.append(tabs.element);
+      return ["Text destination, New notification", "Icon destination, New notification", "Translated destination, Nouvelle notification"];
+    });
+    const tabNames = [];
+    for (let i = 0; i < tabs.length; i++) {
+      tabNames.push(await read(`document.getElementById("dot-tabs").querySelectorAll('[role="tab"]')[${i}]`));
+    }
+    console.log(`Badge tab measurements: ${JSON.stringify(tabNames)}`);
     console.log(`Badge announcement measurements: ${JSON.stringify(measurements)}`);
     const failures: string[] = [];
     for (const [state, data] of Object.entries(measurements)) {
@@ -146,6 +162,9 @@ export async function checkBadgeAnnouncement(page: Page, check: (name: string) =
       if (data.destination.name !== "Notification destination" || data.destination.description !== description) {
         failures.push(`${state}/destination: ${JSON.stringify(data.destination)}, expected unchanged name and description ${description}`);
       }
+    }
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabNames[i].name !== tabs[i]) failures.push(`tab ${i}: ${JSON.stringify(tabNames[i])}, expected ${tabs[i]}`);
     }
     assert.equal(failures.length, 0, failures.join("\n"));
     check("badge: factory and element dots expose New notification in the accessibility tree, with a polite live region; destination descriptions follow label, variant and visibility");
