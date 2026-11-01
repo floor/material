@@ -197,6 +197,26 @@ export async function checkSearch(page: Page): Promise<void> {
   const back = await layout(page);
   assert.deepEqual([back.surface[3], back.after, back.popover], [56, bar.after, false], "Escape: back to a bar in the page");
 
+  // Created already open: showing the surface moves focus to its first control,
+  // the back button — for a modal dialog and for a popover — and this path never
+  // asked for the input. M3: a selected search entry point opens focused search.
+  for (const viewMode of ["fullscreen", "docked"] as const) {
+    await mount(page, { initialState: "view", viewMode, suggestions: ["One"] });
+    await page.waitForFunction(() => document.querySelector(".mtrl-search__surface")?.matches(":modal, :popover-open"));
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+    const created = await page.evaluate(() => {
+      const input = document.querySelector(".mtrl-search__input");
+      const leading = document.querySelector<HTMLElement>(".mtrl-search__leading-icon");
+      const active = document.activeElement;
+      return {
+        active: active === input ? "input" : active === leading ? "the back button" : active?.tagName ?? null,
+        ring: leading ? getComputedStyle(leading).outlineStyle : null,
+      };
+    });
+    assert.equal(created.active, "input", `created open, ${viewMode}: search opens on the input`);
+    assert.equal(created.ring, "none", `created open, ${viewMode}: the back button paints no focus ring over the input`);
+  }
+
   await checkSearchTokens(page);
   await checkSearchVariants(page);
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
