@@ -184,6 +184,11 @@ export const cases: PreupgradeCase[] = [
   // The multiline box is the textarea's, not the single-line field's
   c("text-field", "type=multiline", `<m-text-field label="Name" type="multiline"></m-text-field>`),
   c("text-field", "type=multiline value", `<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>`),
+  // A value with line breaks still holds the reserved box and first line (#522)
+  c("text-field", "type=multiline value line break", `<m-text-field label="Name" type="multiline" value="Ada\nLovelace"></m-text-field>`),
+  c("text-field", "type=multiline value three lines", `<m-text-field label="Name" type="multiline" value="Ada\nLovelace\nByron"></m-text-field>`),
+  c("text-field", "type=multiline outlined value line break", `<m-text-field variant="outlined" label="Name" type="multiline" value="Ada\nLovelace"></m-text-field>`),
+  c("text-field", "type=multiline compact value line break", `<m-text-field density="compact" label="Name" type="multiline" value="Ada\nLovelace"></m-text-field>`),
   c("text-field", "type=multiline no label", `<m-text-field type="multiline" aria-label="Name"></m-text-field>`),
   c("text-field", "type=multiline variant=outlined", `<m-text-field variant="outlined" label="Name" type="multiline"></m-text-field>`),
   c("text-field", "type=multiline outlined value", `<m-text-field variant="outlined" label="Name" type="multiline" value="Ada"></m-text-field>`),
