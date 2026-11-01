@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, mislabelledTree, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, innerErrorButton, mislabelledTree, mixedBoundaryButton, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -130,6 +130,21 @@ export const renderRejection = (boundary: boolean): Promise<StreamResult> =>
 /** A child error that copies the production suspend wording. It must surface at once, not after the retry cap. */
 export const renderMislabelled = (): Promise<StreamResult> => settled(mislabelledTree(), { timeout: 3000 });
 
+/**
+ * #461 round 4: an error inside a boundary inside the host. It must surface
+ * at once with a fallback-shaped root, not after the retry ladder's cap.
+ */
+export const renderInnerError = (kind: "throw" | "reject"): Promise<StreamResult> =>
+  settled(innerErrorButton(kind), { timeout: 3000 });
+
+/**
+ * #461 round 5: a pending own-`then` boundary and an at-once erroring boundary
+ * in one host. The error must not end the host's wait for its sibling: the
+ * resolved label ships in the shadow root once the thenable settles.
+ */
+export const renderMixedBoundary = (): Promise<StreamResult> =>
+  settled(mixedBoundaryButton(), { timeout: 3000 });
+
 /** A child that never resolves, aborted at 300ms. `after` is sibling renders in the following 500ms. */
 export const renderAborted = async (): Promise<StreamResult & { during: number; after: number }> => {
   renderCounts.sibling = 0;
@@ -152,5 +167,16 @@ export const renderGiveUp = async (): Promise<StreamResult & { sibling: number }
   renderCounts.sibling = 0;
   const promise = new Promise<string>((resolve) => { setTimeout(() => resolve(SUSPENSE_TEXT), 9500); });
   const result = await settled(countedSuspendedButton(promise), { timeout: 15000 });
+  return { ...result, sibling: renderCounts.sibling };
+};
+
+/**
+ * #461: a boundary inside the host that never resolves. The cap ships the
+ * fallback-shaped root after the retry ladder; the sibling count proves the
+ * ladder ran where a single-pass snapshot would render it once.
+ */
+export const renderBoundaryGiveUp = async (): Promise<StreamResult & { sibling: number }> => {
+  renderCounts.sibling = 0;
+  const result = await settled(neverBoundaryButton(), { timeout: 12000, abortAfter: 9800 });
   return { ...result, sibling: renderCounts.sibling };
 };
