@@ -1,5 +1,6 @@
 // Evidence only: simulate the runner being descheduled between open() and
 // registering the test's 3 ms wait. Product timers keep their actual delays.
+console.log("CLOSE_CONTRACT_PRELOAD_READY");
 const stall = Number(process.env.CLOSE_CONTRACT_STALL_MS ?? 0);
 const schedule = globalThis.setTimeout;
 globalThis.setTimeout = ((callback: TimerHandler, delay?: number, ...args: unknown[]) => {

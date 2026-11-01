@@ -6,7 +6,7 @@ let passed = 0, failed = 0;
 for (let iteration = 1; iteration <= rounds; iteration++) {
   const started = performance.now();
   const child = Bun.spawn([
-    "bun", "test", "--preload", "./scripts/menu-close-contract-stall.ts",
+    "bun", "test", "--preload", process.env.CLOSE_CONTRACT_PRELOAD ?? "./scripts/menu-close-contract-stall.ts",
     "test/components/menu/close-contract.test.ts", "-t",
     "a click outside before the surface is shown closes it",
   ], { stdout: "pipe", stderr: "pipe" });
@@ -15,9 +15,10 @@ for (let iteration = 1; iteration <= rounds; iteration++) {
   ]);
   const output = stdout + stderr;
   const stalls = output.match(/CLOSE_CONTRACT_SCHEDULER_PAUSE/g)?.length ?? 0;
-  if (Number(process.env.CLOSE_CONTRACT_STALL_MS) && stalls !== 2) {
+  const expectedPauses = Number(process.env.CLOSE_CONTRACT_EXPECT_PAUSES ?? 2);
+  if (!output.includes("CLOSE_CONTRACT_PRELOAD_READY") || (Number(process.env.CLOSE_CONTRACT_STALL_MS) && stalls !== expectedPauses)) {
     console.log(output);
-    throw new Error(`Expected two controlled pauses; measured ${stalls}`);
+    throw new Error(`Expected ${expectedPauses} controlled pauses and an active preload; measured ${stalls}`);
   }
   const pass = output.match(/^\(pass\).*a click outside before the surface is shown closes it/gm)?.length ?? 0;
   const fail = output.match(/^\(fail\).*a click outside before the surface is shown closes it/gm)?.length ?? 0;

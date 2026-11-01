@@ -1,6 +1,8 @@
 name: Menu close-contract evidence
 
 on:
+  push:
+    branches: [test/menu-close-contract]
   pull_request:
     paths:
       - .github/workflows/menu-close-contract-evidence.yml
@@ -26,11 +28,19 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: "1.4.2"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3cef9ffbeaad0d8b5ad172040d49e145fc0d6ff0
+          path: candidate
       - run: bun install --frozen-lockfile
+        working-directory: candidate
       - name: Repeat both layer cases fifty times
         env:
           CLOSE_CONTRACT_STALL_MS: ${{ matrix.stall }}
-        run: bun scripts/menu-close-contract-evidence.ts
+          CLOSE_CONTRACT_EXPECT_PAUSES: "0"
+          CLOSE_CONTRACT_PRELOAD: ../scripts/menu-close-contract-stall.ts
+        working-directory: candidate
+        run: bun ../scripts/menu-close-contract-evidence.ts
 
   browser-measurement:
     runs-on: ubuntu-24.04
