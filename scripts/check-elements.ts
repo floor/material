@@ -4599,12 +4599,18 @@ try {
       host.id = "wavy-host";
       const ring = w.mtrl.createProgress({ variant: "circular", value: 62, shape: "wavy" }).element;
       const bars = w.mtrl.createProgress({ indeterminate: true, shape: "wavy" }).element;
+      const flatBars = w.mtrl.createProgress({ indeterminate: true }).element;
+      const flatRing = w.mtrl.createProgress({ variant: "circular", indeterminate: true }).element;
+      const wavyLinear = w.mtrl.createProgress({ value: 62, shape: "wavy" }).element;
       ring.id = "wavy-ring";
       bars.id = "wavy-bars";
-      host.append(ring, bars);
+      flatBars.id = "paint-flat-bars";
+      flatRing.id = "paint-flat-ring";
+      wavyLinear.id = "paint-wavy-lin";
+      host.append(ring, bars, flatBars, flatRing, wavyLinear);
       document.body.append(host);
       await new Promise((r) => requestAnimationFrame(() => r(null)));
-      for (const root of [ring, bars]) {
+      for (const root of [ring, bars, flatBars, flatRing, wavyLinear]) {
         for (const animation of root.getAnimations({ subtree: true })) {
           animation.pause();
           animation.currentTime = 800;
@@ -4651,12 +4657,23 @@ try {
       );
     const ringPaint = await paintAt("wavy-ring", true);
     const barsPaint = await paintAt("wavy-bars", false);
+    // The remaining forms, held the same way: every drawing the component
+    // can show must paint indicator pixels at all, the measure the wavy
+    // bars' 0x0 clip defeated while every computed style still read right.
+    const flatBarsPaint = await paintAt("paint-flat-bars", false);
+    const flatRingPaint = await paintAt("paint-flat-ring", false);
+    const wavyLinearPaint = await paintAt("paint-wavy-lin", false);
+    console.log("progress painted-pixel counts (held at 800ms):",
+      JSON.stringify({ ring: ringPaint, bars: barsPaint, flatBars: flatBarsPaint, flatRing: flatRingPaint, wavyLinear: wavyLinearPaint }));
     assert.ok(ringPaint.inWedge > 10,
       `the wavy ring holds its arc at 12 o'clock while the wave travels (${JSON.stringify(ringPaint)})`);
     assert.ok(barsPaint.all > 100,
       `the wavy indeterminate bars paint their windows (${JSON.stringify(barsPaint)})`);
+    for (const [name, paint] of [["flat indeterminate bars", flatBarsPaint], ["flat indeterminate ring", flatRingPaint], ["wavy determinate bar", wavyLinearPaint]] as const) {
+      assert.ok(paint.all > 20, `${name} paints its indicator (${JSON.stringify(paint)})`);
+    }
     await page.evaluate(() => document.getElementById("wavy-host")?.remove());
-    check("progress: the wavy ring holds its arc and the wavy bars paint their windows");
+    check("progress: the wavy ring holds its arc and every form paints its indicator");
 
     // The indeterminate circular indicator keeps its track: the sweep
     // animation drives the dashes and both strokes read the theme, element
