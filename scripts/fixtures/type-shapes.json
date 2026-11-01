@@ -1,0 +1,2265 @@
+{
+  "AttributeType": {
+    "kind": "union",
+    "members": [
+      "\"boolean\"",
+      "\"number\"",
+      "\"string\""
+    ]
+  },
+  "BadgeColor": {
+    "kind": "union",
+    "members": [
+      "\"error\"",
+      "\"info\"",
+      "\"primary\"",
+      "\"secondary\"",
+      "\"success\"",
+      "\"tertiary\"",
+      "\"warning\""
+    ]
+  },
+  "BadgeConfig.color": {
+    "kind": "union",
+    "members": [
+      "BadgeColor",
+      "string"
+    ]
+  },
+  "BadgeConfig.label": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
+  "BadgeConfig.position": {
+    "kind": "union",
+    "members": [
+      "BadgePosition",
+      "string"
+    ]
+  },
+  "BadgeConfig.variant": {
+    "kind": "union",
+    "members": [
+      "BadgeVariant",
+      "string"
+    ]
+  },
+  "BadgePosition": {
+    "kind": "union",
+    "members": [
+      "\"bottom-left\"",
+      "\"bottom-right\"",
+      "\"top-left\"",
+      "\"top-right\""
+    ]
+  },
+  "BadgeVariant": {
+    "kind": "union",
+    "members": [
+      "\"large\"",
+      "\"small\""
+    ]
+  },
+  "BaseConfig.parent": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null",
+      "string"
+    ]
+  },
+  "BottomAppBarComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "BottomSheetConfig.content": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "BottomSheetElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "Omit<BottomSheetComponent, \"on\" | \"off\">"
+    ]
+  },
+  "BottomSheetState": {
+    "kind": "union",
+    "members": [
+      "\"expanded\"",
+      "\"hidden\"",
+      "\"partial\""
+    ]
+  },
+  "BottomSheetVariant": {
+    "kind": "union",
+    "members": [
+      "\"modal\"",
+      "\"standard\""
+    ]
+  },
+  "ButtonConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "ButtonConfig.progress": {
+    "kind": "union",
+    "members": [
+      "ProgressConfig",
+      "boolean"
+    ]
+  },
+  "ButtonConfig.shape": {
+    "kind": "union",
+    "members": [
+      "ButtonShape",
+      "string"
+    ]
+  },
+  "ButtonConfig.size": {
+    "kind": "union",
+    "members": [
+      "ButtonSize",
+      "string"
+    ]
+  },
+  "ButtonConfig.text": {
+    "kind": "union",
+    "members": [
+      "Node",
+      "string"
+    ]
+  },
+  "ButtonConfig.type": {
+    "kind": "union",
+    "members": [
+      "\"button\"",
+      "\"reset\"",
+      "\"submit\""
+    ]
+  },
+  "ButtonConfig.variant": {
+    "kind": "union",
+    "members": [
+      "ButtonVariant",
+      "string"
+    ]
+  },
+  "ButtonGroupChangeEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ButtonGroupDensity": {
+    "kind": "union",
+    "members": [
+      "\"comfortable\"",
+      "\"compact\"",
+      "\"default\""
+    ]
+  },
+  "ButtonGroupEventType": {
+    "kind": "union",
+    "members": [
+      "\"blur\"",
+      "\"change\"",
+      "\"click\"",
+      "\"focus\""
+    ]
+  },
+  "ButtonGroupItemConfig": {
+    "kind": "union",
+    "members": [
+      "ButtonGroupItemBase & { text: string; }",
+      "ButtonGroupItemBase & { text?: undefined; ariaLabel: string; }"
+    ]
+  },
+  "ButtonGroupKind": {
+    "kind": "union",
+    "members": [
+      "\"connected\"",
+      "\"standard\""
+    ]
+  },
+  "ButtonGroupOrientation": {
+    "kind": "union",
+    "members": [
+      "\"horizontal\"",
+      "\"vertical\""
+    ]
+  },
+  "ButtonGroupSelection": {
+    "kind": "union",
+    "members": [
+      "\"multi\"",
+      "\"none\"",
+      "\"single\""
+    ]
+  },
+  "ButtonGroupValue": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ButtonGroupVariant": {
+    "kind": "union",
+    "members": [
+      "\"elevated\"",
+      "\"filled\"",
+      "\"outlined\"",
+      "\"text\"",
+      "\"tonal\""
+    ]
+  },
+  "ButtonShape": {
+    "kind": "union",
+    "members": [
+      "\"ROUND\"",
+      "\"SQUARE\""
+    ]
+  },
+  "ButtonSize": {
+    "kind": "union",
+    "members": [
+      "\"L\"",
+      "\"M\"",
+      "\"S\"",
+      "\"XL\"",
+      "\"XS\""
+    ]
+  },
+  "ButtonVariant": {
+    "kind": "union",
+    "members": [
+      "\"elevated\"",
+      "\"filled\"",
+      "\"outlined\"",
+      "\"text\"",
+      "\"tonal\""
+    ]
+  },
+  "CardActionsConfig.align": {
+    "kind": "union",
+    "members": [
+      "'center'",
+      "'end'",
+      "'space-between'",
+      "'start'"
+    ]
+  },
+  "CardComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "CardConfig.variant": {
+    "kind": "union",
+    "members": [
+      "CardVariant",
+      "string"
+    ]
+  },
+  "CardElevationLevel": {
+    "kind": "union",
+    "members": [
+      "0",
+      "1",
+      "2",
+      "4"
+    ]
+  },
+  "CardEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "CardHeaderConfig.action": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "CardHeaderConfig.avatar": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "CardMediaConfig.aspectRatio": {
+    "kind": "union",
+    "members": [
+      "'16:9'",
+      "'1:1'",
+      "'4:3'",
+      "string"
+    ]
+  },
+  "CardMediaConfig.position": {
+    "kind": "union",
+    "members": [
+      "'bottom'",
+      "'top'"
+    ]
+  },
+  "CardVariant": {
+    "kind": "union",
+    "members": [
+      "\"elevated\"",
+      "\"filled\"",
+      "\"outlined\""
+    ]
+  },
+  "CarouselSlide.content": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "CarouselVariant": {
+    "kind": "union",
+    "members": [
+      "\"full-screen\"",
+      "\"hero\"",
+      "\"hero-center\"",
+      "\"multi-browse\"",
+      "\"uncontained\""
+    ]
+  },
+  "CheckableComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "CheckboxConfig.labelPosition": {
+    "kind": "union",
+    "members": [
+      "CheckboxLabelPosition",
+      "string"
+    ]
+  },
+  "CheckboxEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "CheckboxLabelPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "ChipChangePayload.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ChipsAddEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ChipsChangeEvent.changed": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ChipsChangeEvent.selected[]": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ChipsChangeEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ChipsConfig.labelPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "ChipsConfig.selector": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ChipsRemoveEvent": {
+    "kind": "extends",
+    "bases": [
+      "ChipsAddEvent"
+    ]
+  },
+  "ChipsRemoveEvent.chipValue": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ChipsRemoveEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ChipsValue": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string",
+      "string[]"
+    ]
+  },
+  "ChipType": {
+    "kind": "union",
+    "members": [
+      "\"assist\"",
+      "\"filter\"",
+      "\"input\"",
+      "\"suggestion\""
+    ]
+  },
+  "Component.element": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "ComponentSpec.ssr": {
+    "kind": "union",
+    "members": [
+      "((host: HTMLElement) => boolean)",
+      "boolean"
+    ]
+  },
+  "ComponentWithEmit": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "ComponentWithLifecycle": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "CreateElementOptions.class": {
+    "kind": "union",
+    "members": [
+      "string",
+      "string[]"
+    ]
+  },
+  "CreateElementOptions.className": {
+    "kind": "union",
+    "members": [
+      "string",
+      "string[]"
+    ]
+  },
+  "CreateElementOptions.container": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "DatePickerChangePayload.rangeEndDate": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "null"
+    ]
+  },
+  "DatePickerConfig.initialView": {
+    "kind": "union",
+    "members": [
+      "DatePickerView",
+      "string"
+    ]
+  },
+  "DatePickerConfig.maxDate": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "string"
+    ]
+  },
+  "DatePickerConfig.minDate": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "string"
+    ]
+  },
+  "DatePickerConfig.selectionMode": {
+    "kind": "union",
+    "members": [
+      "DatePickerSelectionMode",
+      "string"
+    ]
+  },
+  "DatePickerConfig.specialDates[].date": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "string"
+    ]
+  },
+  "DatePickerConfig.variant": {
+    "kind": "union",
+    "members": [
+      "DatePickerVariant",
+      "string"
+    ]
+  },
+  "DatepickerElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "DatePickerComponent"
+    ]
+  },
+  "DatePickerInput": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "[string | Date, string | Date]",
+      "string",
+      "{ start: string | Date; end: string | Date; }"
+    ]
+  },
+  "DatePickerSelectionMode": {
+    "kind": "union",
+    "members": [
+      "\"range\"",
+      "\"single\""
+    ]
+  },
+  "DatePickerSwipePayload.direction": {
+    "kind": "union",
+    "members": [
+      "\"left\"",
+      "\"right\""
+    ]
+  },
+  "DatePickerValue": {
+    "kind": "union",
+    "members": [
+      "Date",
+      "[Date, Date]",
+      "null"
+    ]
+  },
+  "DatePickerVariant": {
+    "kind": "union",
+    "members": [
+      "\"docked\"",
+      "\"fullscreen\"",
+      "\"modal\"",
+      "\"modal-input\""
+    ]
+  },
+  "DatePickerView": {
+    "kind": "union",
+    "members": [
+      "\"day\"",
+      "\"month\"",
+      "\"year\""
+    ]
+  },
+  "DebounceComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "Described.model": {
+    "kind": "union",
+    "members": [
+      "string",
+      "undefined"
+    ]
+  },
+  "DialogAnimation": {
+    "kind": "union",
+    "members": [
+      "\"fade\"",
+      "\"scale\"",
+      "\"slide-down\"",
+      "\"slide-up\""
+    ]
+  },
+  "DialogConfig.animation": {
+    "kind": "union",
+    "members": [
+      "DialogAnimation",
+      "string"
+    ]
+  },
+  "DialogConfig.footerAlignment": {
+    "kind": "union",
+    "members": [
+      "DialogFooterAlignment",
+      "string"
+    ]
+  },
+  "DialogConfig.role": {
+    "kind": "union",
+    "members": [
+      "'alertdialog'",
+      "'dialog'"
+    ]
+  },
+  "DialogConfig.size": {
+    "kind": "union",
+    "members": [
+      "DialogSize",
+      "string"
+    ]
+  },
+  "DialogConfirmOptions.size": {
+    "kind": "union",
+    "members": [
+      "DialogSize",
+      "string"
+    ]
+  },
+  "DialogElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "DialogComponent"
+    ]
+  },
+  "DialogEventType": {
+    "kind": "union",
+    "members": [
+      "\"afterclose\"",
+      "\"afteropen\"",
+      "\"beforeclose\"",
+      "\"beforeopen\"",
+      "\"close\"",
+      "\"open\""
+    ]
+  },
+  "DialogFooterAlignment": {
+    "kind": "union",
+    "members": [
+      "\"center\"",
+      "\"left\"",
+      "\"right\"",
+      "\"space-between\""
+    ]
+  },
+  "DialogSize": {
+    "kind": "union",
+    "members": [
+      "\"fullscreen\"",
+      "\"fullwidth\"",
+      "\"large\"",
+      "\"medium\"",
+      "\"small\""
+    ]
+  },
+  "DisabledComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "DividerComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent",
+      "ElementComponent",
+      "DividerOrientation",
+      "DividerInset",
+      "DividerStyle"
+    ]
+  },
+  "DividerConfig.class": {
+    "kind": "union",
+    "members": [
+      "string",
+      "string[]"
+    ]
+  },
+  "DividerConfig.orientation": {
+    "kind": "union",
+    "members": [
+      "'horizontal'",
+      "'vertical'"
+    ]
+  },
+  "DividerConfig.variant": {
+    "kind": "union",
+    "members": [
+      "'full-width'",
+      "'inset'",
+      "'middle-inset'"
+    ]
+  },
+  "DrawerConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "DrawerConfig.position": {
+    "kind": "union",
+    "members": [
+      "DrawerPosition",
+      "string"
+    ]
+  },
+  "DrawerConfig.variant": {
+    "kind": "union",
+    "members": [
+      "DrawerVariant",
+      "string"
+    ]
+  },
+  "DrawerConfig.width": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
+  "DrawerItemConfig.type": {
+    "kind": "union",
+    "members": [
+      "\"divider\"",
+      "\"item\"",
+      "\"section\""
+    ]
+  },
+  "DrawerPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "DrawerVariant": {
+    "kind": "union",
+    "members": [
+      "\"modal\"",
+      "\"standard\""
+    ]
+  },
+  "ElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "ElementHost": {
+    "kind": "extends",
+    "bases": [
+      "HTMLElement"
+    ]
+  },
+  "ElementHost.component": {
+    "kind": "union",
+    "members": [
+      "C",
+      "null"
+    ]
+  },
+  "ElementHost.internals": {
+    "kind": "union",
+    "members": [
+      "ElementInternals",
+      "null"
+    ]
+  },
+  "ElementSpec.observeChildren": {
+    "kind": "union",
+    "members": [
+      "((host: ElementHost<C>, component: C) => boolean)",
+      "boolean"
+    ]
+  },
+  "ElementSpec.ssr": {
+    "kind": "union",
+    "members": [
+      "((host: HTMLElement) => boolean)",
+      "boolean"
+    ]
+  },
+  "EnhancedEventComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "EventComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "Exposed.element": {
+    "kind": "union",
+    "members": [
+      "E",
+      "null"
+    ]
+  },
+  "ExtendedFabConfig.iconPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "ExtendedFabConfig.position": {
+    "kind": "union",
+    "members": [
+      "ExtendedFabPosition",
+      "string"
+    ]
+  },
+  "ExtendedFabConfig.type": {
+    "kind": "union",
+    "members": [
+      "\"button\"",
+      "\"reset\"",
+      "\"submit\""
+    ]
+  },
+  "ExtendedFabConfig.variant": {
+    "kind": "union",
+    "members": [
+      "ExtendedFabVariant",
+      "string"
+    ]
+  },
+  "ExtendedFabConfig.width": {
+    "kind": "union",
+    "members": [
+      "ExtendedFabWidth",
+      "string"
+    ]
+  },
+  "ExtendedFabEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "ExtendedFabPlacement": {
+    "kind": "union",
+    "members": [
+      "\"bottom-end\"",
+      "\"bottom-start\"",
+      "\"none\"",
+      "\"top-end\"",
+      "\"top-start\""
+    ]
+  },
+  "ExtendedFabPosition": {
+    "kind": "union",
+    "members": [
+      "\"bottom-left\"",
+      "\"bottom-right\"",
+      "\"top-left\"",
+      "\"top-right\""
+    ]
+  },
+  "ExtendedFabSize": {
+    "kind": "union",
+    "members": [
+      "\"large\"",
+      "\"medium\"",
+      "\"small\""
+    ]
+  },
+  "ExtendedFabVariant": {
+    "kind": "union",
+    "members": [
+      "\"primary\"",
+      "\"primary-container\"",
+      "\"secondary\"",
+      "\"secondary-container\"",
+      "\"tertiary\"",
+      "\"tertiary-container\""
+    ]
+  },
+  "ExtendedFabWidth": {
+    "kind": "union",
+    "members": [
+      "\"fixed\"",
+      "\"fluid\""
+    ]
+  },
+  "FabConfig.position": {
+    "kind": "union",
+    "members": [
+      "FabPosition",
+      "string"
+    ]
+  },
+  "FabConfig.size": {
+    "kind": "union",
+    "members": [
+      "FabSize",
+      "string"
+    ]
+  },
+  "FabConfig.type": {
+    "kind": "union",
+    "members": [
+      "\"button\"",
+      "\"reset\"",
+      "\"submit\""
+    ]
+  },
+  "FabConfig.variant": {
+    "kind": "union",
+    "members": [
+      "FabVariant",
+      "string"
+    ]
+  },
+  "FabEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "FabMenuColor": {
+    "kind": "union",
+    "members": [
+      "\"primary\"",
+      "\"secondary\"",
+      "\"tertiary\""
+    ]
+  },
+  "FabMenuComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "FabMenuConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "FabMenuConfig.color": {
+    "kind": "union",
+    "members": [
+      "FabMenuColor",
+      "string"
+    ]
+  },
+  "FabMenuConfig.placement": {
+    "kind": "union",
+    "members": [
+      "FabMenuPlacement",
+      "string"
+    ]
+  },
+  "FabMenuConfig.presentation": {
+    "kind": "union",
+    "members": [
+      "FabMenuPresentation",
+      "string"
+    ]
+  },
+  "FabMenuConfig.size": {
+    "kind": "union",
+    "members": [
+      "FabMenuSize",
+      "string"
+    ]
+  },
+  "FabMenuPlacement": {
+    "kind": "union",
+    "members": [
+      "\"bottom-end\"",
+      "\"bottom-start\"",
+      "\"none\""
+    ]
+  },
+  "FabMenuPresentation": {
+    "kind": "union",
+    "members": [
+      "\"auto\"",
+      "\"list\"",
+      "\"menu\""
+    ]
+  },
+  "FabMenuSize": {
+    "kind": "union",
+    "members": [
+      "\"default\"",
+      "\"large\"",
+      "\"medium\""
+    ]
+  },
+  "FabPlacement": {
+    "kind": "union",
+    "members": [
+      "\"bottom-end\"",
+      "\"bottom-start\"",
+      "\"none\"",
+      "\"top-end\"",
+      "\"top-start\""
+    ]
+  },
+  "FabPosition": {
+    "kind": "union",
+    "members": [
+      "\"bottom-left\"",
+      "\"bottom-right\"",
+      "\"top-left\"",
+      "\"top-right\""
+    ]
+  },
+  "FabSize": {
+    "kind": "union",
+    "members": [
+      "\"default\"",
+      "\"large\"",
+      "\"medium\""
+    ]
+  },
+  "FabVariant": {
+    "kind": "union",
+    "members": [
+      "\"primary\"",
+      "\"primary-container\"",
+      "\"secondary\"",
+      "\"secondary-container\"",
+      "\"tertiary\"",
+      "\"tertiary-container\""
+    ]
+  },
+  "HTMLInput": {
+    "kind": "union",
+    "members": [
+      "TrustedHTMLLike",
+      "string"
+    ]
+  },
+  "IconButtonConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "IconButtonConfig.shape": {
+    "kind": "union",
+    "members": [
+      "IconButtonShape",
+      "string"
+    ]
+  },
+  "IconButtonConfig.size": {
+    "kind": "union",
+    "members": [
+      "IconButtonSize",
+      "string"
+    ]
+  },
+  "IconButtonConfig.type": {
+    "kind": "union",
+    "members": [
+      "'button'",
+      "'reset'",
+      "'submit'"
+    ]
+  },
+  "IconButtonConfig.variant": {
+    "kind": "union",
+    "members": [
+      "IconButtonVariant",
+      "string"
+    ]
+  },
+  "IconButtonConfig.width": {
+    "kind": "union",
+    "members": [
+      "IconButtonWidth",
+      "string"
+    ]
+  },
+  "IconButtonEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "IconButtonShape": {
+    "kind": "union",
+    "members": [
+      "\"round\"",
+      "\"square\""
+    ]
+  },
+  "IconButtonSize": {
+    "kind": "union",
+    "members": [
+      "\"l\"",
+      "\"m\"",
+      "\"s\"",
+      "\"xl\"",
+      "\"xs\""
+    ]
+  },
+  "IconButtonVariant": {
+    "kind": "union",
+    "members": [
+      "\"filled\"",
+      "\"outlined\"",
+      "\"standard\"",
+      "\"tonal\""
+    ]
+  },
+  "IconButtonWidth": {
+    "kind": "union",
+    "members": [
+      "\"default\"",
+      "\"narrow\"",
+      "\"wide\""
+    ]
+  },
+  "IconComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "IndicatorConfig.widthStrategy": {
+    "kind": "union",
+    "members": [
+      "'auto'",
+      "'content'",
+      "'dynamic'",
+      "'fixed'"
+    ]
+  },
+  "InputComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent",
+      "InputFeature"
+    ]
+  },
+  "LabelComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "LifecycleComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "ListConfig.initialSelection[]": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
+  "ListItem.id": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
+  "ListItem.kind": {
+    "kind": "union",
+    "members": [
+      "\"divider\"",
+      "\"item\"",
+      "\"subheader\""
+    ]
+  },
+  "ListItem.lines": {
+    "kind": "union",
+    "members": [
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "ListSlot.content": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "ListSlot.type": {
+    "kind": "union",
+    "members": [
+      "\"avatar\"",
+      "\"control\"",
+      "\"custom\"",
+      "\"icon\"",
+      "\"image\"",
+      "\"text\"",
+      "\"video\""
+    ]
+  },
+  "ListVariant": {
+    "kind": "union",
+    "members": [
+      "\"segmented\"",
+      "\"standard\""
+    ]
+  },
+  "LoadingIndicatorConfig.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "number"
+    ]
+  },
+  "MaterialShapeName": {
+    "kind": "union",
+    "members": [
+      "\"arch\"",
+      "\"arrow\"",
+      "\"boom\"",
+      "\"bun\"",
+      "\"burst\"",
+      "\"circle\"",
+      "\"clamShell\"",
+      "\"clover4Leaf\"",
+      "\"clover8Leaf\"",
+      "\"cookie12Sided\"",
+      "\"cookie4Sided\"",
+      "\"cookie6Sided\"",
+      "\"cookie7Sided\"",
+      "\"cookie9Sided\"",
+      "\"diamond\"",
+      "\"fan\"",
+      "\"flower\"",
+      "\"gem\"",
+      "\"ghostish\"",
+      "\"heart\"",
+      "\"oval\"",
+      "\"pentagon\"",
+      "\"pill\"",
+      "\"pixelCircle\"",
+      "\"pixelTriangle\"",
+      "\"puffy\"",
+      "\"puffyDiamond\"",
+      "\"semiCircle\"",
+      "\"slanted\"",
+      "\"softBoom\"",
+      "\"softBurst\"",
+      "\"square\"",
+      "\"sunny\"",
+      "\"triangle\"",
+      "\"verySunny\""
+    ]
+  },
+  "MenuAnchor": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null",
+      "string"
+    ]
+  },
+  "MenuConfig.container": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "MenuConfig.opener": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string",
+      "{ element: HTMLElement }"
+    ]
+  },
+  "MenuContent": {
+    "kind": "union",
+    "members": [
+      "MenuDivider",
+      "MenuGap",
+      "MenuItem<TData>"
+    ]
+  },
+  "MenuPosition": {
+    "kind": "union",
+    "members": [
+      "\"bottom\"",
+      "\"bottom-end\"",
+      "\"bottom-start\"",
+      "\"left\"",
+      "\"left-end\"",
+      "\"left-start\"",
+      "\"right\"",
+      "\"right-end\"",
+      "\"right-start\"",
+      "\"top\"",
+      "\"top-end\"",
+      "\"top-start\""
+    ]
+  },
+  "MenuSelectEvent": {
+    "kind": "extends",
+    "bases": [
+      "MenuEvent"
+    ]
+  },
+  "MenuVariant": {
+    "kind": "union",
+    "members": [
+      "\"baseline\"",
+      "\"vertical\""
+    ]
+  },
+  "NavigationBarConfig.hideOnScroll": {
+    "kind": "union",
+    "members": [
+      "boolean",
+      "{ target?: HTMLElement | Window }"
+    ]
+  },
+  "NavigationBarItemLayout": {
+    "kind": "union",
+    "members": [
+      "\"auto\"",
+      "\"horizontal\"",
+      "\"vertical\""
+    ]
+  },
+  "NavigationRailConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "NavigationRailConfig.layout": {
+    "kind": "union",
+    "members": [
+      "'modal'",
+      "'standard'"
+    ]
+  },
+  "NavigationRailItemConfig.badge": {
+    "kind": "union",
+    "members": [
+      "boolean",
+      "number",
+      "string"
+    ]
+  },
+  "ProgressShape": {
+    "kind": "union",
+    "members": [
+      "\"flat\"",
+      "\"wavy\""
+    ]
+  },
+  "ProgressVariant": {
+    "kind": "union",
+    "members": [
+      "\"circular\"",
+      "\"linear\""
+    ]
+  },
+  "RadiosChangePayload.option": {
+    "kind": "union",
+    "members": [
+      "RadioOptionConfig",
+      "null"
+    ]
+  },
+  "RadiosChangePayload.originalEvent": {
+    "kind": "union",
+    "members": [
+      "Event",
+      "undefined"
+    ]
+  },
+  "RadiosChangePayload.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "RadiosConfig.direction": {
+    "kind": "union",
+    "members": [
+      "'horizontal'",
+      "'vertical'"
+    ]
+  },
+  "RenderOptions": {
+    "kind": "union",
+    "members": [
+      "{ prefix?: string | undefined; } & { styles: \"link\"; cssBase: string; }",
+      "{ prefix?: string | undefined; } & { styles?: \"inline\" | undefined; }"
+    ]
+  },
+  "ResponsiveConfig.smallScreen.layout": {
+    "kind": "union",
+    "members": [
+      "'icon-and-text'",
+      "'icon-only'",
+      "'text-only'"
+    ]
+  },
+  "RippleComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "SearchConfig.suggestions": {
+    "kind": "union",
+    "members": [
+      "SearchSuggestion[]",
+      "string[]"
+    ]
+  },
+  "SearchElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "Omit<SearchComponent, \"on\" | \"off\">"
+    ]
+  },
+  "SearchElementEvents": {
+    "kind": "extends",
+    "bases": [
+      "SearchEvents"
+    ]
+  },
+  "SearchEvent.originalEvent": {
+    "kind": "union",
+    "members": [
+      "Event",
+      "null"
+    ]
+  },
+  "SearchEventType": {
+    "kind": "union",
+    "members": [
+      "\"blur\"",
+      "\"clear\"",
+      "\"collapse\"",
+      "\"expand\"",
+      "\"focus\"",
+      "\"input\"",
+      "\"submit\"",
+      "\"suggestionSelect\""
+    ]
+  },
+  "SearchState": {
+    "kind": "union",
+    "members": [
+      "\"bar\"",
+      "\"view\""
+    ]
+  },
+  "SearchTrailingItem.type": {
+    "kind": "union",
+    "members": [
+      "\"avatar\"",
+      "\"icon\""
+    ]
+  },
+  "SearchVariant": {
+    "kind": "union",
+    "members": [
+      "\"contained\"",
+      "\"divided\""
+    ]
+  },
+  "SearchViewMode": {
+    "kind": "union",
+    "members": [
+      "\"docked\"",
+      "\"fullscreen\""
+    ]
+  },
+  "SelectChangeEvent": {
+    "kind": "extends",
+    "bases": [
+      "SelectEvent"
+    ]
+  },
+  "SelectChangeEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "SelectConfig.density": {
+    "kind": "union",
+    "members": [
+      "\"compact\"",
+      "\"default\"",
+      "string"
+    ]
+  },
+  "SelectConfig.menu.container": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "SelectConfig.variant": {
+    "kind": "union",
+    "members": [
+      "SelectVariant",
+      "string"
+    ]
+  },
+  "SelectVariant": {
+    "kind": "union",
+    "members": [
+      "\"filled\"",
+      "\"outlined\""
+    ]
+  },
+  "ShapeStep": {
+    "kind": "union",
+    "members": [
+      "\"extra-extra-large\"",
+      "\"extra-large\"",
+      "\"extra-large-increased\"",
+      "\"extra-small\"",
+      "\"large\"",
+      "\"large-increased\"",
+      "\"medium\"",
+      "\"none\"",
+      "\"small\""
+    ]
+  },
+  "SideSheetConfig.content": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "SideSheetElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "SideSheetComponent"
+    ]
+  },
+  "SideSheetPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "SideSheetVariant": {
+    "kind": "union",
+    "members": [
+      "\"modal\"",
+      "\"standard\""
+    ]
+  },
+  "SliderConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "SliderConfig.iconPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "SliderConfig.labelPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "SliderConfig.orientation": {
+    "kind": "union",
+    "members": [
+      "\"horizontal\"",
+      "\"vertical\""
+    ]
+  },
+  "SliderConfig.tickLabels": {
+    "kind": "union",
+    "members": [
+      "Record<number, string>",
+      "string[]"
+    ]
+  },
+  "SliderEvent.originalEvent": {
+    "kind": "union",
+    "members": [
+      "Event",
+      "null"
+    ]
+  },
+  "SliderEvent.secondValue": {
+    "kind": "union",
+    "members": [
+      "null",
+      "number"
+    ]
+  },
+  "SliderEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "SliderSize": {
+    "kind": "union",
+    "members": [
+      "\"L\"",
+      "\"M\"",
+      "\"S\"",
+      "\"XL\"",
+      "\"XS\"",
+      "number"
+    ]
+  },
+  "SnackbarCloseReason": {
+    "kind": "union",
+    "members": [
+      "\"action\"",
+      "\"api\"",
+      "\"close-button\"",
+      "\"escape\"",
+      "\"queue\"",
+      "\"timeout\""
+    ]
+  },
+  "SnackbarDuration": {
+    "kind": "union",
+    "members": [
+      "\"indefinite\"",
+      "\"long\"",
+      "\"short\"",
+      "number"
+    ]
+  },
+  "SnackbarEvent.originalEvent": {
+    "kind": "union",
+    "members": [
+      "Event",
+      "null"
+    ]
+  },
+  "SnackbarPosition": {
+    "kind": "union",
+    "members": [
+      "\"center\"",
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "SnackbarQueueBehavior": {
+    "kind": "union",
+    "members": [
+      "\"queue\"",
+      "\"replace\""
+    ]
+  },
+  "SolidProps.ref": {
+    "kind": "union",
+    "members": [
+      "((element: E) => void)",
+      "E"
+    ]
+  },
+  "SplitButtonElementComponent": {
+    "kind": "extends",
+    "bases": [
+      "Omit<SplitButtonComponent, \"on\" | \"off\">"
+    ]
+  },
+  "SplitButtonElementEventType": {
+    "kind": "union",
+    "members": [
+      "\"change\"",
+      "\"click\"",
+      "\"close\"",
+      "\"collapse\"",
+      "\"expand\"",
+      "\"open\"",
+      "\"select\""
+    ]
+  },
+  "SplitButtonEvent.originalEvent": {
+    "kind": "union",
+    "members": [
+      "Event",
+      "null"
+    ]
+  },
+  "SplitButtonEvent.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "SplitButtonSize": {
+    "kind": "union",
+    "members": [
+      "\"l\"",
+      "\"m\"",
+      "\"s\"",
+      "\"xl\"",
+      "\"xs\""
+    ]
+  },
+  "SplitButtonVariant": {
+    "kind": "union",
+    "members": [
+      "\"elevated\"",
+      "\"filled\"",
+      "\"outlined\"",
+      "\"tonal\""
+    ]
+  },
+  "StateComponentConfig": {
+    "kind": "extends",
+    "bases": [
+      "ComponentConfig"
+    ]
+  },
+  "SwitchComponent.supportingTextElement": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "SwitchConfig.label": {
+    "kind": "union",
+    "members": [
+      "Node",
+      "string"
+    ]
+  },
+  "SwitchEvents": {
+    "kind": "extends",
+    "bases": [
+      "TouchEvents"
+    ]
+  },
+  "TabComponent.badge": {
+    "kind": "union",
+    "members": [
+      "BadgeComponent",
+      "undefined"
+    ]
+  },
+  "TabConfig.badge": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
+  "TabConfig.state": {
+    "kind": "union",
+    "members": [
+      "TabStates",
+      "string"
+    ]
+  },
+  "TabsConfig.variant": {
+    "kind": "union",
+    "members": [
+      "TabsVariant",
+      "string"
+    ]
+  },
+  "TabsVariant": {
+    "kind": "union",
+    "members": [
+      "\"primary\"",
+      "\"secondary\""
+    ]
+  },
+  "TextComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "TextFieldComponent.input": {
+    "kind": "union",
+    "members": [
+      "HTMLInputElement",
+      "HTMLTextAreaElement"
+    ]
+  },
+  "TextFieldComponent.leadingIcon": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TextFieldComponent.prefixTextElement": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TextFieldComponent.suffixTextElement": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TextFieldComponent.supportingTextElement": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TextFieldComponent.trailingIcon": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TextFieldConfig.density": {
+    "kind": "union",
+    "members": [
+      "TextFieldDensity",
+      "string"
+    ]
+  },
+  "TextFieldConfig.type": {
+    "kind": "union",
+    "members": [
+      "TextFieldTypes",
+      "string"
+    ]
+  },
+  "TextFieldConfig.variant": {
+    "kind": "union",
+    "members": [
+      "TextFieldVariant",
+      "string"
+    ]
+  },
+  "TextFieldDensity": {
+    "kind": "union",
+    "members": [
+      "\"compact\"",
+      "\"default\""
+    ]
+  },
+  "TextFieldVariant": {
+    "kind": "union",
+    "members": [
+      "\"filled\"",
+      "\"outlined\""
+    ]
+  },
+  "TextInputComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent",
+      "TextInputFeature"
+    ]
+  },
+  "ThemedComponentConfig": {
+    "kind": "extends",
+    "bases": [
+      "ComponentConfig"
+    ]
+  },
+  "ThemeRole": {
+    "kind": "union",
+    "members": [
+      "\"error\"",
+      "\"error-container\"",
+      "\"inverse-on-surface\"",
+      "\"inverse-primary\"",
+      "\"inverse-surface\"",
+      "\"on-error\"",
+      "\"on-error-container\"",
+      "\"on-primary\"",
+      "\"on-primary-container\"",
+      "\"on-primary-fixed\"",
+      "\"on-primary-fixed-variant\"",
+      "\"on-secondary\"",
+      "\"on-secondary-container\"",
+      "\"on-secondary-fixed\"",
+      "\"on-secondary-fixed-variant\"",
+      "\"on-surface\"",
+      "\"on-surface-variant\"",
+      "\"on-tertiary\"",
+      "\"on-tertiary-container\"",
+      "\"on-tertiary-fixed\"",
+      "\"on-tertiary-fixed-variant\"",
+      "\"outline\"",
+      "\"outline-variant\"",
+      "\"primary\"",
+      "\"primary-container\"",
+      "\"primary-fixed\"",
+      "\"primary-fixed-dim\"",
+      "\"scrim\"",
+      "\"secondary\"",
+      "\"secondary-container\"",
+      "\"secondary-fixed\"",
+      "\"secondary-fixed-dim\"",
+      "\"shadow\"",
+      "\"surface\"",
+      "\"surface-bright\"",
+      "\"surface-container\"",
+      "\"surface-container-high\"",
+      "\"surface-container-highest\"",
+      "\"surface-container-low\"",
+      "\"surface-container-lowest\"",
+      "\"surface-dim\"",
+      "\"surface-variant\"",
+      "\"tertiary\"",
+      "\"tertiary-container\"",
+      "\"tertiary-fixed\"",
+      "\"tertiary-fixed-dim\""
+    ]
+  },
+  "ThrottleComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "TimeFormat": {
+    "kind": "union",
+    "members": [
+      "\"12h\"",
+      "\"24h\"",
+      "TIME_FORMAT.AMPM",
+      "TIME_FORMAT.MILITARY"
+    ]
+  },
+  "TimePickerConfig.container": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  },
+  "TimePickerInputEvent": {
+    "kind": "extends",
+    "bases": [
+      "TimePickerValueEvent"
+    ]
+  },
+  "TimePickerOrientation": {
+    "kind": "union",
+    "members": [
+      "\"horizontal\"",
+      "\"vertical\"",
+      "TIME_PICKER_ORIENTATION.HORIZONTAL",
+      "TIME_PICKER_ORIENTATION.VERTICAL"
+    ]
+  },
+  "TimePickerSwipePayload.direction": {
+    "kind": "union",
+    "members": [
+      "\"left\"",
+      "\"right\""
+    ]
+  },
+  "TimePickerType": {
+    "kind": "union",
+    "members": [
+      "\"dial\"",
+      "\"input\"",
+      "TIME_PICKER_TYPE.DIAL",
+      "TIME_PICKER_TYPE.INPUT"
+    ]
+  },
+  "ToolbarArrangement": {
+    "kind": "union",
+    "members": [
+      "\"center\"",
+      "\"spread\""
+    ]
+  },
+  "ToolbarColor": {
+    "kind": "union",
+    "members": [
+      "\"standard\"",
+      "\"vibrant\""
+    ]
+  },
+  "ToolbarComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "ToolbarComponent.overflowButton": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "ToolbarConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
+  "ToolbarConfig.arrangement": {
+    "kind": "union",
+    "members": [
+      "ToolbarArrangement",
+      "string"
+    ]
+  },
+  "ToolbarConfig.color": {
+    "kind": "union",
+    "members": [
+      "ToolbarColor",
+      "string"
+    ]
+  },
+  "ToolbarConfig.fabPosition": {
+    "kind": "union",
+    "members": [
+      "ToolbarFabPosition",
+      "string"
+    ]
+  },
+  "ToolbarConfig.orientation": {
+    "kind": "union",
+    "members": [
+      "ToolbarOrientation",
+      "string"
+    ]
+  },
+  "ToolbarConfig.placement": {
+    "kind": "union",
+    "members": [
+      "ToolbarPlacement",
+      "string"
+    ]
+  },
+  "ToolbarConfig.scrollBehavior": {
+    "kind": "union",
+    "members": [
+      "ToolbarScrollBehavior",
+      "string"
+    ]
+  },
+  "ToolbarConfig.scrollTarget": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "Window"
+    ]
+  },
+  "ToolbarConfig.variant": {
+    "kind": "union",
+    "members": [
+      "ToolbarVariant",
+      "string"
+    ]
+  },
+  "ToolbarElementItem": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "{ element: HTMLElement; }"
+    ]
+  },
+  "ToolbarFabPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "ToolbarItem": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "IconButtonConfig",
+      "ToolbarButtonItem",
+      "{ element: HTMLElement; }"
+    ]
+  },
+  "ToolbarOrientation": {
+    "kind": "union",
+    "members": [
+      "\"horizontal\"",
+      "\"vertical\""
+    ]
+  },
+  "ToolbarPlacement": {
+    "kind": "union",
+    "members": [
+      "\"bottom\"",
+      "\"end\"",
+      "\"none\"",
+      "\"start\"",
+      "\"top\""
+    ]
+  },
+  "ToolbarScrollBehavior": {
+    "kind": "union",
+    "members": [
+      "\"exit\"",
+      "\"none\""
+    ]
+  },
+  "ToolbarVariant": {
+    "kind": "union",
+    "members": [
+      "\"docked\"",
+      "\"floating\""
+    ]
+  },
+  "TooltipComponent.target": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "TooltipConfig.position": {
+    "kind": "union",
+    "members": [
+      "TooltipPosition",
+      "string"
+    ]
+  },
+  "TooltipConfig.variant": {
+    "kind": "union",
+    "members": [
+      "TooltipVariant",
+      "string"
+    ]
+  },
+  "TooltipVariant": {
+    "kind": "union",
+    "members": [
+      "\"default\"",
+      "\"plain\"",
+      "\"rich\""
+    ]
+  },
+  "TopAppBarComponent": {
+    "kind": "extends",
+    "bases": [
+      "ElementComponent"
+    ]
+  },
+  "TopLayerKind": {
+    "kind": "union",
+    "members": [
+      "\"modal\"",
+      "\"popover-auto\"",
+      "\"popover-manual\""
+    ]
+  },
+  "TouchState.activeTarget": {
+    "kind": "union",
+    "members": [
+      "EventTarget",
+      "null"
+    ]
+  },
+  "TrackComponent": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponent"
+    ]
+  },
+  "VariantComponentConfig": {
+    "kind": "extends",
+    "bases": [
+      "ComponentConfig"
+    ]
+  },
+  "WithElementOptions.className": {
+    "kind": "union",
+    "members": [
+      "string",
+      "string[]"
+    ]
+  },
+  "WithElementOptions.parent": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "string"
+    ]
+  }
+}
