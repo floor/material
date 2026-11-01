@@ -302,10 +302,11 @@ export const withView =
 
       if (isCircular) {
         const dial = el("g", PROGRESS_CLASSES.DIAL) as SVGGElement;
-        dial.setAttribute(
-          "transform",
-          `rotate(-90 ${currentSize / 2} ${currentSize / 2})`
-        );
+        // Centerless: the rotor rule's transform-origin (50% 50% of the
+        // view box) supplies the center. A center here would compose with
+        // that origin and rotate the ring about the viewBox's corner,
+        // throwing it outside the view's clip — nothing would paint.
+        dial.setAttribute("transform", "rotate(-90)");
         svg.append(dial);
         let rotor: SVGElement = dial;
         if (isIndeterminate()) {

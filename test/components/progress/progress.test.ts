@@ -230,7 +230,9 @@ describe('progress', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
     const view = progress.view;
     const dial = view.querySelector('.mtrl-progress__dial')!;
-    expect(dial.getAttribute('transform')).toBe('rotate(-90 20 20)');
+    // Centerless: the rotor rule's transform-origin supplies the center; a
+    // center here would compose with it and rotate the ring out of the view
+    expect(dial.getAttribute('transform')).toBe('rotate(-90)');
     const spin = dial.querySelector(':scope > .mtrl-progress__spin')!;
     const kick = spin.querySelector(':scope > .mtrl-progress__kick')!;
     // the geometry is the stylesheet's now: no dash attributes, the parts'
