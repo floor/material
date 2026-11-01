@@ -4517,6 +4517,69 @@ try {
     assert.deepEqual(laid["circ-det-120"], { ew: 120, eh: 120, vw: 120, vh: 120, dx: 0, dy: 0 });
     check("progress: the svg view keeps the layout box the canvas had before the upgrade");
 
+    // Computed strokes and dashes cannot see a drawing that paints nothing:
+    // the dial's first rotation once composed with the rotor rule's
+    // transform-origin and threw the whole ring outside the view's clip,
+    // while every stroke and dash still read right. Rasterised pixels are
+    // the measure that catches it, the same frames the parity probe reads.
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const host = document.createElement("div");
+      host.style.cssText = "position: fixed; left: 0; top: 100px; width: 512px; background: #7f7f7f";
+      host.id = "paint-host";
+      const linear = w.mtrl.createProgress({ value: 62 }).element;
+      const circular = w.mtrl.createProgress({ variant: "circular", value: 62 }).element;
+      linear.id = "paint-lin";
+      circular.id = "paint-circ";
+      host.append(linear, circular);
+      document.body.append(host);
+    });
+    // 220ms: the first window write is debounced 100ms (core/canvas/resize.ts)
+    await page.waitForTimeout(220);
+    const count = async (id: string): Promise<Record<string, number>> =>
+      page.evaluate(
+        async ({ b64 }) => {
+          const img = new Image();
+          img.src = `data:image/png;base64,${b64}`;
+          await img.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+          context.drawImage(img, 0, 0);
+          const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+          const roles: Record<string, [number, number, number]> = {};
+          const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+          for (const [role, name] of [
+            ["indicator", "--mtrl-sys-color-primary"],
+            ["track", "--mtrl-sys-color-secondary-container"],
+          ] as const) {
+            probe.fillStyle = "#000";
+            probe.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+            const value = probe.fillStyle as string;
+            roles[role] = [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16)) as [number, number, number];
+          }
+          const out: Record<string, number> = { indicator: 0, track: 0 };
+          for (let i = 0; i < data.length; i += 4) {
+            for (const [role, [r, g, b]] of Object.entries(roles)) {
+              if ((data[i] - r) ** 2 + (data[i + 1] - g) ** 2 + (data[i + 2] - b) ** 2 < 100) out[role] += 1;
+            }
+          }
+          return out;
+        },
+        { b64: (await page.locator(`#${id} svg.mtrl-progress__view`).screenshot()).toString("base64") }
+      );
+    const linPaint = await count("paint-lin");
+    const circPaint = await count("paint-circ");
+    // measured 2026-11-01: linear 1256/722 pixels, circular 253/96, on the
+    // branch build; floors sit well under them and far over an empty ring
+    assert.ok(linPaint.indicator > 900 && linPaint.track > 450,
+      `the linear bar paints both roles (${JSON.stringify(linPaint)})`);
+    assert.ok(circPaint.indicator > 180 && circPaint.track > 60,
+      `the circular ring paints both roles (${JSON.stringify(circPaint)})`);
+    await page.evaluate(() => document.getElementById("paint-host")?.remove());
+    check("progress: the svg drawing paints its indicator and track, linear and circular");
+
     // The indeterminate circular indicator keeps its track: the sweep
     // animation drives the dashes and both strokes read the theme, element
     // and factory.
