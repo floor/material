@@ -1,14 +1,15 @@
-# Runs on every pull request, nightly on main, and on demand. Without it a version
-# tag publishes whatever is on that commit having run nothing: `prepublishOnly`
-# builds, so a broken build fails the release, but the tests were never run in CI.
+# Runs on every pull request, on every push to main, nightly on main, and on
+# demand. Without it a version tag publishes whatever is on that commit having run
+# nothing: `prepublishOnly` builds, so a broken build fails the release, but the
+# tests were never run in CI.
 #
 # The work is split into parallel jobs, so a run takes as long as its slowest job
 # rather than the sum of every step. `check` waits for all of them and is the one
 # status the main ruleset requires, so the jobs can change without touching it.
 #
-# No run on pushes to main: the ruleset requires a pull request that is up to date
-# with main, so a merge commit's tree is the tree its pull request already tested.
-# The nightly run on main is the safety net.
+# A push to main runs the same checks on the merge commit itself, so the commit a
+# tag publishes carries a green run of its own instead of relying on the pull
+# request's. The nightly run on main stays as the safety net.
 #
 # Benchmarks are excluded by default (test/benchmarks/bench.ts): they compare
 # elapsed time to fixed thresholds and fail on a busy runner, which would make
@@ -16,6 +17,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
   schedule:
     - cron: "17 3 * * *"
@@ -24,7 +28,8 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same pull request cancels the run it replaces.
+# A newer push to the same pull request cancels the run it replaces. A run on main
+# is never cancelled: each merge commit keeps a verdict of its own.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

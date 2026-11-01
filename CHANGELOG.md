@@ -17,6 +17,85 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-01
+
+Elements say everything the factories can.
+
+### Added
+
+- **`<m-button>` takes a toggle and a selected state (#157).**
+  With `toggle`, a button is a toggle button: a click flips it, the resting
+  shape swaps round to square, the host carries `aria-pressed`, and a `change`
+  event with `{ selected, value }` comes from the host, as `<m-icon-button>`
+  does. The `selected` attribute is the state at creation, the `selected`
+  property the live one; the attribute moves the state until the user or a
+  script changes it, and `form.reset()` restores its default. The factory
+  options are `toggle` and `selected`, and the framework props take the same
+  names. A `selected` attribute without `toggle` selects nothing.
+
+- **`<m-card>` aligns its actions row (#153).**
+  A card's slotted actions sat at the start of the row even though the
+  factory's button actions default to the end. `actions-align` takes `start`,
+  `center`, `end` (the default, as the factory's `actionsConfig.align` is) or
+  `space-between`; start and end follow the text direction. A change after
+  upgrade rebuilds the row without moving the light-DOM actions, and the
+  framework prop is `actionsAlign`. The pre-upgrade styles reserve the row at
+  its logical alignment, so a card with an actions region no longer grows 16px
+  when it upgrades.
+
+- **`<m-button>` places its icon after the label (#158).**
+  `icon-position="end"` puts the icon after the label and swaps the small
+  insets, as `iconPosition: "end"` does in the factory; `start` is the default
+  and keeps the leading icon the buttons guidelines describe. As on
+  `<m-extended-fab>`, the attribute is read at upgrade, and changing or
+  removing it rebuilds the button. The framework prop is `iconPosition`.
+
+- **FAB and extended FAB take a logical placement (#154).**
+  `<m-fab>`, `<m-extended-fab>`, `createFab` and `createExtendedFab` accept
+  `placement` — `none`, `top-start`, `top-end`, `bottom-start` or `bottom-end`
+  — and their framework props take the same name; `placement="bottom-end"`
+  names the trailing corner in every language, and the viewport margin stays
+  16px. The logical corners flip with `dir="rtl"` on the component or above
+  it, and with the `mtrl-rtl` class the runtime reflects: on the component's
+  own root, on an ancestor for a factory root, and on a custom element's
+  host; they follow a direction change while mounted, measured in Chromium on
+  both routes. The physical `position` values keep their left/right meaning
+  in RTL. `placement` wins over
+  `position`, including `none`; removing the attribute restores `position`,
+  and `MIGRATING.md` maps each physical corner to the logical one on both
+  sides.
+
+  The FAB menu keeps its `none`, `bottom-start` and `bottom-end` values and
+  its layouts; its inline edges are now written as physical sides with the
+  same direction arms, so it reads the direction the way FAB placement does,
+  root marker included: `dir="rtl"` or `mtrl-rtl` on the menu root flips the
+  outer menu, its inner close FAB and its list together. The review measured
+  what changes in the bundled `full-css` build: `dir="rtl"` on the page or an
+  ancestor now flips the menu, which the bundler's earlier `:lang()` lowering
+  of `inset-inline-*` did not match, and a page that is RTL only by language
+  (`<html lang="ar">` with no `dir`) no longer flips it, which that lowering
+  did. In the unbundled stylesheet and the elements' shadow sheets,
+  `dir="rtl"` flipped the menu before and still does, and the `mtrl-rtl`
+  class now flips it too.
+
+### Deprecated
+
+- **The physical FAB `position` values (#154).**
+  `top-left`, `top-right`, `bottom-left` and `bottom-right` on `<m-fab>`,
+  `<m-extended-fab>` and the two factories, with `setPosition` and
+  `getPosition`, are deprecated for removal in 4.0. They stay available
+  through 3.x and keep their physical meaning in RTL; `MIGRATING.md` maps
+  each to the `placement` naming the same corner in left-to-right and in
+  right-to-left.
+
+### Internal
+
+- **The release costs 15 bytes gzipped in the all-js row (127,754 to 127,769)
+  and 88 fewer in the full stylesheet (63,733 to 63,645); the packed tarball
+  is 882,445 bytes compressed, 5,095,982 unpacked in 1,625 files, against
+  878,746 and 5,067,838 in 1,623 files in 3.2.7.** No ceiling moved, and all
+  seven README size rows stand as measured.
+
 ## [3.2.7] - 2026-10-31
 
 A lighter package.
@@ -4481,7 +4560,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.7...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
 [3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5
