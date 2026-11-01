@@ -191,13 +191,17 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // A vertical menu's selected item paints no trailing check: its 16px end
+    // padding has no room for the horizontal variant's mark, which covered
+    // the label, while the horizontal menu keeps its own
+    // (styles/components/_menu.scss).
     // The tooltip's position classes carry no margin: the API's offset is the
     // whole gap on every placement, so the cardinal bottom and right sides
     // sit 8px from the target with the arrow meeting it, exactly as the
     // start and end placements always did (styles/components/_tooltip.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6d859e3004943aea533e2fccf757761c6d674cdecc196369b89fb85466fe1c45");
-    expect(css.length).toBe(544129);
+      .toBe("d11cb234bb857f21c85f34e66867822be343352320fdaa5fa84d412e60357cba");
+    expect(css.length).toBe(544228);
   });
 
   test("today's sheets still resolve to the fixture", () => {
