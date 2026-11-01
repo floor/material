@@ -105,7 +105,8 @@ export const circularIndeterminate = (
 
 /**
  * The wavy ring: a full circle of the radial sine the indicator draws,
- * starting at 12 o'clock. Flat at zero amplitude, the canvas's plain arc.
+ * starting at 3 o'clock, where a circle element's own stroke begins.
+ * Flat at zero amplitude, the canvas's plain arc.
  * The phase is not baked in: the pattern stays put and a CSS rotation
  * travels it one wavelength per second, which over a circle is the same
  * sine of (arc - phase).
@@ -122,17 +123,21 @@ export const circularWaveRing = (
   const lambda = wavelength * scale;
   if (radius <= 0) return "";
   if (amplitude <= 0 || lambda <= 0) {
-    // A plain circle, as one arc from 12 o'clock
-    const x = cx;
-    const y = cy - radius;
-    return `M ${x} ${y} A ${radius} ${radius} 0 1 1 ${x - 2 * radius} ${y} A ${radius} ${radius} 0 1 1 ${x} ${y} Z`;
+    // A plain circle in the two-arc form, from 3 o'clock — the base a
+    // circle element's own stroke starts from, so the dial's rotation and
+    // the dash conventions read the same on both. Both arcs bend about the
+    // centre: their endpoints sit a diameter apart through it.
+    const x = cx + radius;
+    const y = cy;
+    return `M ${x} ${y} A ${radius} ${radius} 0 1 1 ${cx - radius} ${y} A ${radius} ${radius} 0 1 1 ${x} ${y} Z`;
   }
   // One point every wavelength/24 of arc, as the canvas sampled the sine
   const arcLength = TWO_PI * radius;
   const steps = Math.max(8, Math.ceil(arcLength / Math.max(1, lambda / 24)));
   const points: string[] = [];
   for (let i = 0; i <= steps; i++) {
-    const angle = -Math.PI / 2 + (TWO_PI * i) / steps;
+    // From 3 o'clock clockwise, as the circle element's stroke runs
+    const angle = (TWO_PI * i) / steps;
     const along = (TWO_PI * radius * i) / steps;
     const r = radius + amplitude * Math.sin((TWO_PI * along) / lambda);
     points.push(`${(cx + Math.cos(angle) * r).toFixed(2)} ${(cy + Math.sin(angle) * r).toFixed(2)}`);
