@@ -2,6 +2,7 @@
 import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules, buildSSR } from "./build-modules";
 import { buildStyles } from "./build-styles";
+import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
 import { emitSvelte } from "./svelte-package";
 
@@ -44,6 +45,11 @@ try {
     // `exports` entry can name; ship only those a consumer import can reach.
     const pruned = await pruneDeclarations(staging, manifest.exports);
     console.log(`Pruned ${pruned.removed.length} unreachable declarations (${pruned.bytes} bytes)`);
+
+    // A module no export target reaches and no shipped module imports is a
+    // file no consumer can load: ship the reachable tree and nothing beside it.
+    const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
+    console.log(`Pruned ${modules.removed.length} unreachable modules (${modules.bytes} bytes)`);
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);
