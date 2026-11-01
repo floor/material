@@ -188,9 +188,12 @@ jobs:
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check
-          - group: ssr
-            browsers: chromium firefox webkit
-            checks: ssr:check
+          - group: ssr-a
+            browsers: chromium
+            checks: ssr:check:a
+          - group: ssr-b
+            browsers: firefox webkit
+            checks: ssr:check:b
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

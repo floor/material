@@ -592,8 +592,10 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
 const label = (item: PreupgradeCase): string => (item.variant === "default" ? item.element : `${item.element} [${item.variant}]`);
 const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
 
-/** Print the rows; return the names that failed. */
-const report = (results: Result[], checkMoves: boolean): string[] => {
+/** Print the rows; return the names that failed. Control rows (the mutation run without the
+    pre-upgrade stylesheet) print "shift" instead of FAIL: their shifts are the expected proof
+    that the stylesheet reserves each box, not gate failures. */
+const report = (results: Result[], checkMoves: boolean, control = false): string[] => {
   const failed: string[] = [];
   for (const r of results) {
     const height = r.hostHeight === undefined ? ""
@@ -605,9 +607,10 @@ const report = (results: Result[], checkMoves: boolean): string[] => {
         ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
         : markOf(r, checkMoves);
     if (mark === "FAIL") failed.push(r.name);
+    const shown = control && mark === "FAIL" ? "shift" : mark;
     const box = r.subjectMove !== undefined ? `  box shift ${r.subjectMove.toFixed(2)}px` : "";
     const at = r.labelBefore || r.labelAfter ? `  ${labelPlace(r)}` : "";
-    console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}${at}`);
+    console.log(`  ${shown.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}${at}`);
   }
   return failed;
 };
@@ -641,9 +644,9 @@ try {
     "Button labels that move on upgrade",
   );
 
-  console.log("\nMutation: without the pre-upgrade styles:");
+  console.log("\nMutation: without the pre-upgrade styles (control rows, marked shift):");
   const without = await runCases(false);
-  report(without, false);
+  report(without, false, true);
 
   const defaults = without.filter((r) => !r.name.includes("["));
   const caught = defaults.filter((r) => r.score >= THRESHOLD);
