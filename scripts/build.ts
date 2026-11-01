@@ -48,7 +48,7 @@ try {
 
     // A module no export target reaches and no shipped module imports is a
     // file no consumer can load: ship the reachable tree and nothing beside it.
-    const modules = await pruneUnreachableModules(staging, manifest.exports);
+    const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
     console.log(`Pruned ${modules.removed.length} unreachable modules (${modules.bytes} bytes)`);
 
     await rm(outdir, { recursive: true, force: true });

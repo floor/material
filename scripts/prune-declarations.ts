@@ -50,8 +50,8 @@ function patternFor(path: string): RegExp {
   return new RegExp(`^${path.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
 }
 
-/** The relative module specifiers a declaration names: imports, exports and import types. */
-export function specifiersOf(source: string): string[] {
+/** Every module specifier a module names: imports, exports, import types and dynamic imports. */
+export function moduleSpecifiersOf(source: string): string[] {
   const file = ts.createSourceFile("declaration.d.ts", source, ts.ScriptTarget.Latest, true);
   const specifiers: string[] = [];
   const visit = (node: ts.Node): void => {
@@ -59,11 +59,16 @@ export function specifiersOf(source: string): string[] {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) specifier = node.moduleSpecifier;
     if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) specifier = node.argument.literal;
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) specifier = node.arguments[0];
-    if (specifier && ts.isStringLiteralLike(specifier) && specifier.text.startsWith(".")) specifiers.push(specifier.text);
+    if (specifier && ts.isStringLiteralLike(specifier)) specifiers.push(specifier.text);
     ts.forEachChild(node, visit);
   };
   visit(file);
   return specifiers;
+}
+
+/** The relative module specifiers a declaration names: imports, exports and import types. */
+export function specifiersOf(source: string): string[] {
+  return moduleSpecifiersOf(source).filter((specifier) => specifier.startsWith("."));
 }
 
 /**

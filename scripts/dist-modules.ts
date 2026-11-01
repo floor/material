@@ -9,7 +9,7 @@
 // (`scripts/prune-declarations.ts`), applied to runtime modules.
 import { readdir, readFile, stat, unlink } from "node:fs/promises";
 import { join, posix, resolve } from "node:path";
-import { exportTargets, specifiersOf } from "./prune-declarations";
+import { exportTargets, moduleSpecifiersOf } from "./prune-declarations";
 
 /** Every file under a directory, as package-relative POSIX paths. */
 async function filesUnder(directory: string): Promise<string[]> {
@@ -49,14 +49,57 @@ export interface ModuleWalk {
   unreachable: string[];
 }
 
+/** The source between a Svelte component's `<script>` tags, every block joined. */
+function scriptOf(source: string): string {
+  return [...source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((match) => match[1])
+    .join("\n");
+}
+
+/**
+ * The dist runtime files an exports subpath names, through an exact key or a
+ * `*` pattern, as Node's exports lookup resolves it. Declaration targets are
+ * dropped: this walk follows runtime modules, and a `.d.ts` beside them names
+ * no module to load. `undefined` when the manifest does not export the subpath.
+ */
+function exportedFiles(specifier: string, packageName: string, exports: unknown): string[] | undefined {
+  if (!packageName) return undefined;
+  if (specifier !== packageName && !specifier.startsWith(`${packageName}/`)) return undefined;
+  if (!exports || typeof exports !== "object") return undefined;
+  const map = exports as Record<string, unknown>;
+  const subpath = specifier === packageName ? "." : `./${specifier.slice(packageName.length + 1)}`;
+  const expand = (key: string, star: string): string[] =>
+    exportTargets(map[key])
+      .filter((target) => target.startsWith("./") && !target.endsWith(".d.ts"))
+      .map((target) => target.slice(2).replaceAll("*", star));
+  if (Object.prototype.hasOwnProperty.call(map, subpath)) return expand(subpath, "");
+  const patterns = Object.keys(map).filter((key) => {
+    if (!key.includes("*")) return false;
+    const prefix = key.slice(0, key.indexOf("*"));
+    const suffix = key.slice(key.indexOf("*") + 1);
+    return subpath.length >= prefix.length + suffix.length && subpath.startsWith(prefix) && subpath.endsWith(suffix);
+  });
+  // Node picks one pattern: the longest base before `*`, then the longest key.
+  patterns.sort((a, b) => b.indexOf("*") - a.indexOf("*") || b.length - a.length);
+  const pattern = patterns[0];
+  if (pattern === undefined) return undefined;
+  const prefix = pattern.slice(0, pattern.indexOf("*"));
+  const suffix = pattern.slice(pattern.indexOf("*") + 1);
+  return expand(pattern, subpath.slice(prefix.length, subpath.length - suffix.length));
+}
+
 /**
  * Walk the dist JavaScript from the nested manifest's `exports`.
  *
  * Fails rather than guesses when an `exports` target names no shipped file or
  * when a module that ships imports a file the build does not ship: either is a
  * broken package, and pruning such a tree would hide it.
+ *
+ * A reached Svelte component is not a leaf: its script imports runtime modules,
+ * relative ones and this package's own subpaths, and those must ship with it.
+ * `packageName` is the name those self-imports start with.
  */
-export async function walkDistModules(distDir: string, exports: unknown): Promise<ModuleWalk> {
+export async function walkDistModules(distDir: string, exports: unknown, packageName = ""): Promise<ModuleWalk> {
   const root = resolve(distDir);
   const files = new Set(await filesUnder(root));
   const roots = new Set<string>();
@@ -77,17 +120,31 @@ export async function walkDistModules(distDir: string, exports: unknown): Promis
   }
   if (roots.size === 0) throw new Error("no module is an exports target: nothing would ship");
 
-  // Every module an exported one imports, through any depth of the graph.
+  // Every module an exported one imports, through any depth of the graph. A
+  // reached Svelte component is a node, not a leaf: its script imports runtime
+  // modules, and those must ship with it.
   const reachable = new Set(roots);
+  const components = new Set<string>();
   const queue = [...roots];
   while (queue.length > 0) {
     const file = queue.shift()!;
-    for (const specifier of specifiersOf(await readFile(join(root, file), "utf8"))) {
-      const target = resolveSpecifier(file, specifier, files);
+    const source = await readFile(join(root, file), "utf8");
+    for (const specifier of moduleSpecifiersOf(file.endsWith(".svelte") ? scriptOf(source) : source)) {
+      const selfImport = packageName !== "" && (specifier === packageName || specifier.startsWith(`${packageName}/`));
+      if (!specifier.startsWith(".") && !selfImport) continue;
+      const candidates = specifier.startsWith(".")
+        ? [resolveSpecifier(file, specifier, files)]
+        : exportedFiles(specifier, packageName, exports);
+      const target = candidates?.find((candidate) => candidate !== undefined && files.has(candidate));
       if (!target) throw new Error(`${file} imports ${specifier}, which the build does not ship`);
-      if (!target.endsWith(".js") || reachable.has(target)) continue;
-      reachable.add(target);
-      queue.push(target);
+      if (target.endsWith(".svelte")) {
+        if (components.has(target)) continue;
+        components.add(target);
+        queue.push(target);
+      } else if (target.endsWith(".js") && !reachable.has(target)) {
+        reachable.add(target);
+        queue.push(target);
+      }
     }
   }
 
@@ -108,9 +165,9 @@ export interface PruneModulesResult {
  * Remove the dist JS modules no `exports` target reaches, directly or through
  * the imports of another module that ships.
  */
-export async function pruneUnreachableModules(distDir: string, exports: unknown): Promise<PruneModulesResult> {
+export async function pruneUnreachableModules(distDir: string, exports: unknown, packageName = ""): Promise<PruneModulesResult> {
   const root = resolve(distDir);
-  const { unreachable } = await walkDistModules(distDir, exports);
+  const { unreachable } = await walkDistModules(distDir, exports, packageName);
   let bytes = 0;
   for (const file of unreachable) {
     bytes += (await stat(join(root, file))).size;

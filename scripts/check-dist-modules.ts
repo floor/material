@@ -11,7 +11,7 @@ import { walkDistModules } from "./dist-modules";
 
 const dir = process.argv[2] ?? "dist";
 const manifest = await Bun.file(join(dir, "package.json")).json();
-const { reachable, unreachable } = await walkDistModules(dir, manifest.exports);
+const { reachable, unreachable } = await walkDistModules(dir, manifest.exports, manifest.name);
 
 if (unreachable.length > 0) {
   console.error(`✗ ${unreachable.length} dist JS modules no exports target reaches:`);

@@ -94,6 +94,73 @@ describe("walkDistModules", () => {
     }
   });
 
+  test("walks the imports inside a reached Svelte component's script", async () => {
+    // A helper imported only by an exported component's script is reachable:
+    // a `.svelte` node is not a leaf.
+    const directory = await tree({
+      "index.js": 'export { default as View } from "./View.svelte";\n',
+      "View.svelte": '<script>import { value } from "./helper.js";</script>\n<p>{value}</p>\n',
+      "helper.js": "export const value = 1;\n",
+    });
+    try {
+      const walk = await walkDistModules(directory, { ".": { import: "./index.js" } });
+      expect(walk.reachable).toEqual(["helper.js", "index.js"]);
+      expect(walk.unreachable).toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves a component's self-import through the nested manifest", async () => {
+    // The generated components import their stylesheet by package subpath. The
+    // manifest's `types` target sits first in the condition, so the walk must
+    // follow the runtime one.
+    const directory = await tree({
+      "index.js": 'export { default as Button } from "./Button.svelte";\n',
+      "Button.svelte": '<script>\n  import "mtrl/elements/css/button";\n  import { style } from "./style.js";\n</script>\n<button></button>\n',
+      "style.js": "export const style = 1;\n",
+      "elements/css/button.js": 'import "./button.css";\n',
+      "elements/css/button.css": ".mtrl-button{}\n",
+      "elements/css/button.d.ts": "export {};\n",
+    });
+    try {
+      const walk = await walkDistModules(directory, {
+        ".": { import: "./index.js" },
+        "./elements/css/*": { types: "./elements/css/*.d.ts", import: "./elements/css/*.js" },
+      }, "mtrl");
+      expect(walk.reachable).toEqual(["elements/css/button.js", "index.js", "style.js"]);
+      expect(walk.unreachable).toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("fails when a Svelte component imports a file the build does not ship", async () => {
+    const directory = await tree({
+      "index.js": 'export { default as View } from "./View.svelte";\n',
+      "View.svelte": '<script>import { gone } from "./gone.js";</script>\n',
+    });
+    try {
+      await expect(walkDistModules(directory, { ".": { import: "./index.js" } }))
+        .rejects.toThrow(/View\.svelte imports \.\/gone\.js, which the build does not ship/);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("fails when a Svelte component imports a package subpath the manifest does not export", async () => {
+    const directory = await tree({
+      "index.js": 'export { default as View } from "./View.svelte";\n',
+      "View.svelte": '<script>import "mtrl/private/helper";</script>\n',
+    });
+    try {
+      await expect(walkDistModules(directory, { ".": { import: "./index.js" } }, "mtrl"))
+        .rejects.toThrow(/View\.svelte imports mtrl\/private\/helper, which the build does not ship/);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("fails when an exports target names no module", async () => {
     const directory = await tree({ "index.js": "export {};\n" });
     try {
