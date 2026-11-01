@@ -379,9 +379,12 @@ export const withAPI =
           // Update position
           this.updatePosition();
 
-          // Add resize listener
+          // Add resize listener. The scroll listener captures: scroll events
+          // do not bubble, so a target inside a scrollable container scrolls
+          // without the window itself ever scrolling, and only a capturing
+          // window listener sees it to reposition the fixed surface.
           window.addEventListener("resize", handleWindowResize);
-          window.addEventListener("scroll", handleWindowScroll);
+          window.addEventListener("scroll", handleWindowScroll, true);
           document.addEventListener("keydown", handleDocumentKeydown);
         };
 
@@ -416,7 +419,7 @@ export const withAPI =
 
           // Remove resize and scroll listeners
           window.removeEventListener("resize", handleWindowResize);
-          window.removeEventListener("scroll", handleWindowScroll);
+          window.removeEventListener("scroll", handleWindowScroll, true);
           document.removeEventListener("keydown", handleDocumentKeydown);
 
           // Out of the top layer once the exit transition has run
@@ -487,7 +490,7 @@ export const withAPI =
 
         // Remove window events
         window.removeEventListener("resize", handleWindowResize);
-        window.removeEventListener("scroll", handleWindowScroll);
+        window.removeEventListener("scroll", handleWindowScroll, true);
         document.removeEventListener("keydown", handleDocumentKeydown);
         component.element.removeEventListener("mouseenter", handleTooltipMouseEnter);
         component.element.removeEventListener("mouseleave", handleTooltipMouseLeave);
