@@ -140,6 +140,60 @@ jobs:
           esac
           npm publish "$tgz" --provenance --access public --tag "$dist"
 
+      # A stable publish moves `latest` only, so `next` is left where it was:
+      # `npm install material@next` would install an older build than `material`.
+      # This step points `next` at the version just published when it sorts
+      # below it, through npm's trusted publishing — the same OIDC identity, no
+      # token and no terminal (npm 11.21.0 or later, pinned above). It needs the
+      # one-time "Allow npm dist-tag" setting on the package's trusted publisher
+      # on npmjs.com; while that is off npm refuses the move.
+      # The publish above has already happened and cannot be rolled back, so
+      # nothing in this step may fail the job: every outcome — a refused move,
+      # an unreadable registry — is reported in the run summary and as a
+      # warning annotation, and the step exits 0. The `dist-tags` job below
+      # reports the same state loudly, on its own.
+      - name: Move the next dist-tag after a stable publish
+        run: |
+          set +e
+          tgz="$(ls material-*.tgz)"
+          name="$(tar -xzOf "$tgz" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).name')"
+          version="$(tar -xzOf "$tgz" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')"
+          report() {
+            echo "::warning title=next dist-tag::$1"
+            { echo "### next dist-tag"; echo; echo "$1"; } >> "$GITHUB_STEP_SUMMARY"
+            echo "$1"
+          }
+          case "$version" in
+            *-*)
+              echo "Prerelease $name@$version: it went to next; there is nothing to move."
+              exit 0
+              ;;
+          esac
+          if ! tags="$(curl -fsS --retry 3 "https://registry.npmjs.org/-/package/$name/dist-tags")"; then
+            report "The registry's dist-tags for $name could not be read, so next was not checked. The publish itself succeeded: a maintainer checks the next tag on npmjs.com."
+            exit 0
+          fi
+          next="$(printf '%s' "$tags" | node -e 'const tags = JSON.parse(require("fs").readFileSync(0, "utf8")); process.stdout.write(typeof tags.next === "string" ? tags.next : "")')"
+          if [ -z "$next" ]; then
+            echo "$name has no next dist-tag: nothing to move."
+            exit 0
+          fi
+          if ! below="$(npm view "$name@<$version" version --json)"; then
+            report "npm could not list the $name versions below $version, so next ($next) was not checked. The publish itself succeeded: a maintainer moves the tag with npm dist-tag add $name@$version next --auth-type=web."
+            exit 0
+          fi
+          if ! printf '%s' "$below" | NEXT="$next" node -e 'const listed = JSON.parse(require("fs").readFileSync(0, "utf8")); process.exit((Array.isArray(listed) ? listed : [listed]).includes(process.env.NEXT) ? 0 : 1)'; then
+            echo "$name@$next does not sort below $version: next stays where it is."
+            exit 0
+          fi
+          if npm dist-tag add "$name@$version" next; then
+            { echo "### next dist-tag"; echo; echo "Moved next from $next to $version."; } >> "$GITHUB_STEP_SUMMARY"
+            echo "next now points at $version."
+          else
+            report "npm refused to move the next dist-tag from $next to $version, so npm install $name@next still installs $next. The publish itself succeeded and nothing after it depends on this. The package's trusted publisher on npmjs.com likely lacks the one-time \"Allow npm dist-tag\" setting; once an owner enables it, the next stable release moves the tag itself. A maintainer can move it now with npm dist-tag add $name@$version next --auth-type=web."
+          fi
+          exit 0
+
   # The state a publish left, checked loudly but blocking nothing: once npm has
   # the version, `next` must not sort below `latest` (a stable release whose
   # old `next` tag stays behind would leave `material@next` older than
