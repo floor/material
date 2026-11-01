@@ -94,6 +94,26 @@ export const normalizeClasses = (
   return result;
 };
 
+// Every normalized token is free of spaces: normalizeClasses splits on them and
+// trims each part, and its single-string fast path only returns inputs that do
+// not contain one. So each helper only has to apply the token.
+const forEachClass = (
+  classes: (string | string[])[],
+  apply: (name: string) => void,
+): void => {
+  // Fast path: one string without spaces, the most common call
+  if (
+    classes.length === 1 &&
+    typeof classes[0] === "string" &&
+    classes[0] &&
+    !classes[0].includes(" ")
+  ) {
+    apply(classes[0]);
+    return;
+  }
+  for (const name of normalizeClasses(...classes)) apply(name);
+};
+
 /**
  * Add prefixed classes to element with optimizations
  * Automatically adds prefix to classes that don't already have it
@@ -107,45 +127,7 @@ export const addClass = (
   element: HTMLElement,
   ...classes: (string | string[])[]
 ): HTMLElement => {
-  // Fast path 1: Empty classes
-  if (classes.length === 0) return element;
-
-  // Handle the case where an array is passed directly (not spread)
-  // This happens when addClass(element, ["class1", "class2"]) is called
-  if (classes.length === 1 && Array.isArray(classes[0])) {
-    return addClass(element, ...classes[0]);
-  }
-
-  // Fast path 2: Single string class - most common case
-  if (classes.length === 1 && typeof classes[0] === "string") {
-    const cls = classes[0];
-    if (cls && !cls.includes(" ")) {
-      const prefixed = cls;
-      // Safety check: ensure no spaces were introduced by prefixing
-      if (!prefixed.includes(" ")) {
-        element.classList.add(prefixed);
-        return element;
-      }
-    }
-  }
-
-  // Full processing for complex cases
-  const normalized = normalizeClasses(...classes);
-  for (const cls of normalized) {
-    const prefixed = cls;
-
-    // Safety check: ensure no spaces in class token (prevents DOMTokenList errors)
-    if (prefixed.includes(" ")) {
-      // Split further if needed (shouldn't happen if normalizeClasses works correctly)
-      prefixed.split(" ").forEach((c) => {
-        const trimmed = c.trim();
-        if (trimmed) element.classList.add(trimmed);
-      });
-    } else {
-      element.classList.add(prefixed);
-    }
-  }
-
+  forEachClass(classes, (name) => element.classList.add(name));
   return element;
 };
 
@@ -162,43 +144,7 @@ export const removeClass = (
   element: HTMLElement,
   ...classes: (string | string[])[]
 ): HTMLElement => {
-  // Fast path 1: Empty classes
-  if (classes.length === 0) return element;
-
-  // Handle the case where an array is passed directly (not spread)
-  if (classes.length === 1 && Array.isArray(classes[0])) {
-    return removeClass(element, ...classes[0]);
-  }
-
-  // Fast path 2: Single string class - most common case
-  if (classes.length === 1 && typeof classes[0] === "string") {
-    const cls = classes[0];
-    if (cls && !cls.includes(" ")) {
-      const prefixed = cls;
-      // Safety check: ensure no spaces were introduced by prefixing
-      if (!prefixed.includes(" ")) {
-        element.classList.remove(prefixed);
-        return element;
-      }
-    }
-  }
-
-  // Full processing for complex cases
-  const normalized = normalizeClasses(...classes);
-  for (const cls of normalized) {
-    const prefixed = cls;
-
-    // Safety check: ensure no spaces in class token
-    if (prefixed.includes(" ")) {
-      prefixed.split(" ").forEach((c) => {
-        const trimmed = c.trim();
-        if (trimmed) element.classList.remove(trimmed);
-      });
-    } else {
-      element.classList.remove(prefixed);
-    }
-  }
-
+  forEachClass(classes, (name) => element.classList.remove(name));
   return element;
 };
 
@@ -215,40 +161,7 @@ export const toggleClass = (
   element: HTMLElement,
   ...classes: (string | string[])[]
 ): HTMLElement => {
-  // Handle the case where an array is passed directly (not spread)
-  if (classes.length === 1 && Array.isArray(classes[0])) {
-    return toggleClass(element, ...classes[0]);
-  }
-
-  // Fast path: Single string class - most common case
-  if (classes.length === 1 && typeof classes[0] === "string") {
-    const cls = classes[0];
-    if (cls && !cls.includes(" ")) {
-      const prefixed = cls;
-      // Safety check: ensure no spaces were introduced by prefixing
-      if (!prefixed.includes(" ")) {
-        element.classList.toggle(prefixed);
-        return element;
-      }
-    }
-  }
-
-  // Full processing for complex cases
-  const normalized = normalizeClasses(...classes);
-  for (const cls of normalized) {
-    const prefixed = cls;
-
-    // Safety check: ensure no spaces in class token
-    if (prefixed.includes(" ")) {
-      prefixed.split(" ").forEach((c) => {
-        const trimmed = c.trim();
-        if (trimmed) element.classList.toggle(trimmed);
-      });
-    } else {
-      element.classList.toggle(prefixed);
-    }
-  }
-
+  forEachClass(classes, (name) => element.classList.toggle(name));
   return element;
 };
 
@@ -265,49 +178,8 @@ export const hasClass = (
   element: HTMLElement,
   ...classes: (string | string[])[]
 ): boolean => {
-  // Fast path: Empty classes - vacuously true
-  if (classes.length === 0) return true;
-
-  // Handle the case where an array is passed directly (not spread)
-  if (classes.length === 1 && Array.isArray(classes[0])) {
-    return hasClass(element, ...classes[0]);
+  for (const name of normalizeClasses(...classes)) {
+    if (!element.classList.contains(name)) return false;
   }
-
-  // Fast path: Single string class - most common case
-  if (classes.length === 1 && typeof classes[0] === "string") {
-    const cls = classes[0];
-    if (cls && !cls.includes(" ")) {
-      const prefixed = cls;
-      // Safety check: ensure no spaces were introduced by prefixing
-      if (!prefixed.includes(" ")) {
-        return element.classList.contains(prefixed);
-      }
-    }
-  }
-
-  // Full processing for complex cases
-  const normalized = normalizeClasses(...classes);
-  for (const cls of normalized) {
-    const prefixed = cls;
-
-    // Safety check: ensure no spaces in class token
-    if (prefixed.includes(" ")) {
-      // For hasClass, all space-separated tokens must exist
-      const tokens = prefixed
-        .split(" ")
-        .map((c) => c.trim())
-        .filter(Boolean);
-      for (const token of tokens) {
-        if (!element.classList.contains(token)) {
-          return false;
-        }
-      }
-    } else {
-      if (!element.classList.contains(prefixed)) {
-        return false;
-      }
-    }
-  }
-
   return true;
 };
