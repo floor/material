@@ -38,7 +38,10 @@ try {
     assert.deepEqual(Object.keys(ssr), ['renderElement']);
     const html = ssr.renderElement('m-button', { variant: 'filled' }, 'Save');
     assert.match(html, /<template shadowrootmode="open"/);
-    assert.match(html, /<style>[^<]+<\/style>/);
+    // one non-empty style element, stopping at its own close: the sheet can
+    // carry '<' inside (registered custom properties spell their syntax
+    // "<percentage>", "<number>"), which the old [^<]+ form rejected
+    assert.match(html, /<style>[\s\S]+?<\/style>/);
     assert.match(html, /\.mtrl-button/);
     assert.match(html, /Save/);
     console.log(html.slice(0, 300));
