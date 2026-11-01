@@ -6,6 +6,7 @@
  * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. In development, a warning names the element.
  * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. Svelte has this same context limit and logs a development-only warning naming the element when required context leaves it without a shadow root.
  * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for a later 3.x release.
+ * A `Suspense` boundary inside the component contributes its fallback to the first static pass, which does not throw; the host then re-renders on the retry backoff until no boundary inside it is still pending, and the shadow root ships the resolved content (#461). A boundary that never resolves server-side ships its fallback in the root, at the retry cap.
  * @module ssr/react
  */
 import * as React from "react";
@@ -177,6 +178,55 @@ const clearAttempt = (children: React.ReactNode): void => {
 const retryDelay = (attempt: number): number =>
   RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1] ?? 250;
 
+/** The marker a probed boundary renders instead of its fallback while pending. */
+const PROBE_TAG = "mtrl-ssr-boundary-pending";
+
+/**
+ * A Suspense boundary inside the children renders its fallback in a static
+ * pass without throwing, so a successful pass can still be fallback-shaped
+ * while the page's own stream later resolves the boundary (#461). Static
+ * markup marks nothing, and a pending fallback is stable output, so comparing
+ * passes cannot tell pending from resolved. This rewrite replaces every
+ * boundary's fallback with the marker element: the probe markup carries the
+ * marker exactly while some boundary is still pending. `null` when the walk
+ * meets no boundary, so hosts without one keep the single-pass behavior. The
+ * walk is bounded; a boundary past the budget, or one inside a lazy component
+ * a boundary-level probe cannot see, also keeps it.
+ */
+const boundaryProbe = (children: React.ReactNode): React.ReactNode | null => {
+  const marker = React.createElement(PROBE_TAG);
+  let budget = 512;
+  let found = false;
+  // Path nodes are rebuilt with createElement, which leaves a single array
+  // argument untouched; cloneElement key-checks such an argument and would log
+  // a development warning against the page's own component. Keys survive the
+  // rebuild; refs do not, and a static pass never attaches one.
+  const visit = (node: React.ReactNode): React.ReactNode => {
+    if (budget-- <= 0) return node;
+    if (Array.isArray(node)) {
+      let changed = false;
+      const next = node.map((child) => {
+        const replaced = visit(child);
+        changed ||= replaced !== child;
+        return replaced;
+      });
+      return changed ? next : node;
+    }
+    if (!React.isValidElement(node)) return node;
+    const props = node.props as { children?: React.ReactNode };
+    const nextChildren = visit(props.children);
+    if (node.type === React.Suspense) {
+      found = true;
+      return React.createElement(React.Suspense, { ...props, fallback: marker, key: node.key }, nextChildren);
+    }
+    return nextChildren === props.children
+      ? node
+      : React.createElement(node.type, { ...props, key: node.key }, nextChildren);
+  };
+  const probed = visit(children);
+  return found ? probed : null;
+};
+
 bridge.react = (tag, props, children, prefix) => {
   // Nested hosts emit their own roots when React renders the outer tree.
   // A template from this pass would declare a shadow root twice.
@@ -192,7 +242,8 @@ bridge.react = (tag, props, children, prefix) => {
     // suspension as the same fallback, so a wrapper cannot tell them apart.
     // A suspension is thrown from React's static renderer; any other throw is
     // the child's error. A boundary already inside the children still renders
-    // its own fallback, and this pass does not throw.
+    // its own fallback, and this pass does not throw — the success path below
+    // probes such a host for a still-pending boundary and re-renders it (#461).
     markup = renderToStaticMarkup(React.createElement(tag, props, children));
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
@@ -217,6 +268,32 @@ bridge.react = (tag, props, children, prefix) => {
     const delay = retryDelay(attempt);
     throw new Promise<void>((resolve) => { setTimeout(resolve, delay); });
   } finally { serializingChildren = false; }
+  // A boundary inside the children did not throw: this pass succeeded with the
+  // boundary's fallback. Static markup cannot tell a pending fallback from a
+  // resolved subtree, so the probe render above replaces every boundary's
+  // fallback with the marker element: its markup carries the marker exactly
+  // while some boundary is still pending. Pending retries on the same backoff
+  // as a thrown suspend, so a page that waits for its data ships a root built
+  // from the resolved children. At the cap the current markup ships, as a
+  // boundary that never resolves always has.
+  const probeTree = boundaryProbe(children);
+  if (probeTree !== null) {
+    let pending = true;
+    serializingChildren = true;
+    try {
+      const probe = renderToStaticMarkup(React.createElement(tag, props, probeTree));
+      pending = probe.includes(`<${PROBE_TAG}`);
+    } catch {
+      // The real pass just succeeded with these children; a probe that throws
+      // anyway is treated as pending, and the cap keeps the wait bounded.
+    } finally { serializingChildren = false; }
+    if (pending) {
+      const attempt = nextAttempt(children);
+      if (attempt <= MAX_SUSPENDS) {
+        throw new Promise<void>((resolve) => { setTimeout(resolve, retryDelay(attempt)); });
+      }
+    }
+  }
   clearAttempt(children);
   // Let React serialize host props (style objects, tabIndex, boolean/data/aria
   // attributes). The server bridge parses them in its own DOM realm.
