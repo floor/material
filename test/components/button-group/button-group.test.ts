@@ -735,6 +735,50 @@ describe("Button group selection (Material 3 kinds)", () => {
     document.dispatchEvent(new dom.window.Event("pointerup"));
   });
 
+  it("at each size a neighbour gives up to that size's facing padding", () => {
+    // The token paddings are 12 at xs, 16 at s and 24 at m; the compression
+    // limit stays 24. A pressed end button asks for 15 (15% of 100): xs caps
+    // it at the 12dp padding, s and m sit under their own padding and give
+    // the whole 15 with padding left over.
+    const sizes: Array<[string, number, number, string]> = [
+      ["xs", 12, 12, "0px"],
+      ["s", 16, 15, "1px"],
+      ["m", 24, 15, "9px"],
+    ];
+    for (const [size, padding, limit, facingAfter] of sizes) {
+      const group = createButtonGroup({ size, buttons: [{ text: "A" }, { text: "B" }] });
+      document.body.appendChild(group.element);
+      group.buttons.forEach((b) => {
+        b.element.getBoundingClientRect = () => ({ width: 100, height: 40 } as DOMRect);
+        b.element.style.padding = `0 ${padding}px`;
+      });
+      group.buttons[1].element.dispatchEvent(new dom.window.Event("pointerdown", { bubbles: true }));
+      expect(group.buttons[0].element.style.width).toBe(`${100 - limit}px`);
+      expect(group.buttons[0].element.style.paddingRight).toBe(facingAfter);
+      expect(group.buttons[1].element.style.width).toBe(`${100 + limit}px`);
+      document.dispatchEvent(new dom.window.Event("pointerup"));
+      group.element.remove();
+    }
+  });
+
+  it("in rtl the neighbour's facing side swaps", () => {
+    const group = createButtonGroup({ buttons: [{ text: "A" }, { text: "B" }] });
+    document.body.appendChild(group.element);
+    group.element.style.direction = "rtl";
+    group.buttons.forEach((b) => {
+      b.element.getBoundingClientRect = () => ({ width: 100, height: 40 } as DOMRect);
+      b.element.style.padding = "0 16px";
+    });
+    group.buttons[1].element.dispatchEvent(new dom.window.Event("pointerdown", { bubbles: true }));
+    // 15% of 100 is 15, under the 16dp padding: the neighbour's left side,
+    // the one facing the pressed button in rtl, gives it up; the right side
+    // is untouched
+    expect(group.buttons[0].element.style.width).toBe("85px");
+    expect(group.buttons[0].element.style.paddingLeft).toBe("1px");
+    expect(group.buttons[0].element.style.paddingRight).toBe("16px");
+    document.dispatchEvent(new dom.window.Event("pointerup"));
+  });
+
   it("icon buttons, which have no padding, still make room for a pressed neighbour", () => {
     const icon = '<svg viewBox="0 0 24 24"></svg>';
     const group = createButtonGroup({
