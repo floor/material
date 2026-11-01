@@ -49,6 +49,31 @@ const settle = async (): Promise<void> => {
 };
 
 const api = {
+  /**
+   * The settle's own guard: a 60 ms transition in a shadow tree, longer than
+   * the two frames a settle that only waits on the document returns after. If
+   * the settle reaches the shadow roots, the transition ends before it returns
+   * and `ended` is true; if it does not, the transition is still running.
+   */
+  async settleGuard(): Promise<{ ended: boolean; elapsed: number }> {
+    const host = document.createElement("div");
+    const root = host.attachShadow({ mode: "open" });
+    const style = document.createElement("style");
+    style.textContent = ".guard{width:60px;transition:width 60ms linear}.guard-go{width:120px}";
+    const node = document.createElement("div");
+    node.className = "guard";
+    root.append(style, node);
+    document.body.append(host);
+    void getComputedStyle(node).width; // commit the 60px width, so the change transitions
+    let ended = false;
+    node.addEventListener("transitionend", () => { ended = true; }, { once: true });
+    node.classList.add("guard-go");
+    const started = performance.now();
+    await settle();
+    const result = { ended, elapsed: Math.round(performance.now() - started) };
+    host.remove();
+    return result;
+  },
   async probe(html: string, defaults?: "dialog" | "card") {
     if (defaults === "dialog") setComponentDefaults("dialog", { buttons: [{ text: "Save" }] });
     if (defaults === "card") setComponentDefaults("card", { buttons: [{ text: "Save" }] });

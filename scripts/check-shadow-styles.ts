@@ -52,6 +52,9 @@ try {
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(server.url.href);
   await page.waitForFunction(() => !!window.shadowStyles);
+  const guard = await page.evaluate(() => window.shadowStyles.settleGuard());
+  assert.equal(guard.ended, true, `The settle returned before a 60 ms transition in a shadow root ended (${guard.elapsed} ms)`);
+  console.log(`Settle guard: a 60 ms shadow-root transition ended before the settle returned (${guard.elapsed} ms).`);
   for (const fixture of fixtures) {
     const result = await page.evaluate(({ html, defaults }) => {
       // The probe removes its own container, and a factory may have portaled a
