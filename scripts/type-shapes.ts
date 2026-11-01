@@ -12,10 +12,14 @@
  * This reads the declarations on every public subpath the manifest lists with
  * the type checker and pins them in scripts/fixtures/type-shapes.json.
  * Only the written surface is read: a union alias is pinned as the union it
- * resolves to (a `(typeof CONST)[number]` too), an interface by its heritage
- * clauses and by the unions its properties write (keyed `Interface.property`).
- * A type re-exported from two subpaths is one entry: the shape belongs to the
- * declaration, not to the subpath that shows it.
+ * resolves to (a `(typeof CONST)[number]` too); any declaration that is not
+ * itself a union — an interface, or an alias built from an intersection — is
+ * pinned by the unions its properties write, at any depth: a union can leave
+ * an object a caller fills in, or an array of them, as silently as it can
+ * leave the top level. A property's path is its key: `Interface.property`,
+ * `Interface.nested.property`, `Interface.items[].property`. A type re-exported
+ * from two subpaths is one entry: the shape belongs to the declaration, not to
+ * the subpath that shows it.
  *
  *   bun run type-shapes:check    fails with the members and bases added, removed or changed
  *   bun run type-shapes:update   rewrites the fixture
@@ -57,6 +61,43 @@ const entryFiles = (): string[] => {
 const membersOf = (checker: ts.TypeChecker, type: ts.UnionType): string[] =>
   [...new Set(type.types.map((member) => checker.typeToString(member, undefined, ts.TypeFormatFlags.NoTruncation)))].sort();
 
+/**
+ * The union a property writes, at any depth, keyed by the property's path.
+ * Object literals and arrays are walked through: `smallScreen?: { layout?:
+ * 'icon-only' | 'text-only' }` promises `layout` exactly as a top-level
+ * property does, and `specialDates?: Array<{ date: Date | string }>` promises
+ * the element's `date`.
+ *
+ * A union is a leaf. Its members are pinned as written, an inline object
+ * literal included, so a member's own properties are held by the union's text.
+ * A type reference is a leaf too: an exported type it names is pinned on its
+ * own declaration, under its own name.
+ */
+const propertyUnions = (type: ts.TypeNode, path: string, into: [string, TypeShape][]): void => {
+  if (ts.isParenthesizedTypeNode(type)) {
+    propertyUnions(type.type, path, into);
+  } else if (ts.isArrayTypeNode(type)) {
+    propertyUnions(type.elementType, `${path}[]`, into);
+  } else if (ts.isTypeReferenceNode(type) && ["Array", "ReadonlyArray"].includes(type.typeName.getText()) && type.typeArguments?.[0]) {
+    propertyUnions(type.typeArguments[0], `${path}[]`, into);
+  } else if (ts.isUnionTypeNode(type)) {
+    // Written, not resolved: the checker widens `BadgeVariant | string` to
+    // `string`, which would pin the collapse and not the members.
+    const members = type.types.map((member) => member.getText().replace(/\s+/g, " "));
+    into.push([path, { kind: "union", members: [...new Set(members)].sort() }]);
+  } else if (ts.isTypeLiteralNode(type)) {
+    for (const member of type.members) {
+      if (ts.isPropertySignature(member) && member.type) {
+        propertyUnions(member.type, `${path}.${member.name.getText()}`, into);
+      }
+    }
+  } else if (ts.isIntersectionTypeNode(type)) {
+    // `A & { ref?: E | ((element: E) => void) }`: the literal's properties are
+    // written here and promise what they say, whichever type they are joined to.
+    for (const member of type.types) propertyUnions(member, path, into);
+  }
+};
+
 /** The shapes a declaration writes, keyed by the name the pin uses. */
 const shapesOf = (checker: ts.TypeChecker, symbol: ts.Symbol): [string, TypeShape][] => {
   const shapes: [string, TypeShape][] = [];
@@ -64,18 +105,21 @@ const shapesOf = (checker: ts.TypeChecker, symbol: ts.Symbol): [string, TypeShap
   for (const declaration of symbol.declarations ?? []) {
     if (ts.isTypeAliasDeclaration(declaration)) {
       const type = checker.getTypeAtLocation(declaration.type);
-      if (type.isUnion()) shapes.push([symbol.name, { kind: "union", members: membersOf(checker, type) }]);
+      if (type.isUnion()) {
+        shapes.push([symbol.name, { kind: "union", members: membersOf(checker, type) }]);
+      } else {
+        // An alias is not always a union: `A & { ref?: E | ((e: E) => void) }`
+        // has properties too, and they are as public as an interface's.
+        propertyUnions(declaration.type, symbol.name, shapes);
+      }
     } else if (ts.isInterfaceDeclaration(declaration)) {
       for (const clause of declaration.heritageClauses ?? []) {
         if (clause.token !== ts.SyntaxKind.ExtendsKeyword) continue;
         bases.push(...clause.types.map((type) => type.getText().replace(/\s+/g, " ")));
       }
       for (const member of declaration.members) {
-        if (!ts.isPropertySignature(member) || !member.type || !ts.isUnionTypeNode(member.type)) continue;
-        // Written, not resolved: the checker widens `BadgeVariant | string` to
-        // `string`, which would pin the collapse and not the members.
-        const members = member.type.types.map((type) => type.getText().replace(/\s+/g, " "));
-        shapes.push([`${symbol.name}.${member.name.getText()}`, { kind: "union", members: [...new Set(members)].sort() }]);
+        if (!ts.isPropertySignature(member) || !member.type) continue;
+        propertyUnions(member.type, `${symbol.name}.${member.name.getText()}`, shapes);
       }
     }
   }
