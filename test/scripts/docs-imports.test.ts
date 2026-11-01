@@ -6,7 +6,10 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { importsIn, jsdocImports, markdownImports, packageImports } from '../../scripts/docs-imports';
+import { mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { importsIn, jsdocImports, markdownImports, packageImports, sideEffectTarget } from '../../scripts/docs-imports';
 
 describe('imports in a stretch of code', () => {
   test('a one-line import, with its line', () => {
@@ -156,5 +159,43 @@ describe('the package’s own imports', () => {
 
   test('follows the package name, not a spelled-out one', () => {
     expect(packageImports([item('material'), item('mtrl')], 'mtrl').map((kept) => kept.specifier)).toEqual(['mtrl']);
+  });
+});
+
+describe('a side-effect import resolves through the installed package', () => {
+  // TypeScript leaves an unresolved side-effect import alone unless
+  // noUncheckedSideEffectImports is on, and the stylesheet exports carry no
+  // declarations for it to check: check-docs-imports.ts resolves these itself.
+  const packed = async () => {
+    const directory = await realpath(await mkdtemp(join(tmpdir(), 'docs-imports-')));
+    const installed = join(directory, 'node_modules', 'pkg');
+    await mkdir(join(installed, 'dist'), { recursive: true });
+    await writeFile(join(installed, 'package.json'), JSON.stringify({
+      name: 'pkg', type: 'module',
+      exports: {
+        './styles': { default: './dist/styles.css' },
+        './button': { import: './dist/button.js' },
+        './gone': { default: './dist/gone.css' },
+      },
+    }));
+    await writeFile(join(installed, 'dist', 'styles.css'), '');
+    await writeFile(join(installed, 'dist', 'button.js'), 'export {};');
+    return { installed, importer: join(directory, 'doc.ts') };
+  };
+
+  test('a stylesheet export and a module export both resolve to their packed files', async () => {
+    const { installed, importer } = await packed();
+    expect(sideEffectTarget('pkg/styles', importer)).toBe(join(installed, 'dist', 'styles.css'));
+    expect(sideEffectTarget('pkg/button', importer)).toBe(join(installed, 'dist', 'button.js'));
+  });
+
+  test('a subpath the exports map does not have is no target', async () => {
+    const { importer } = await packed();
+    expect(sideEffectTarget('pkg/__review_missing_module__', importer)).toBeUndefined();
+  });
+
+  test('an export whose file the package does not ship is no target', async () => {
+    const { importer } = await packed();
+    expect(sideEffectTarget('pkg/gone', importer)).toBeUndefined();
   });
 });
