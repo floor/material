@@ -462,7 +462,8 @@
     "src/styles",
     "!src/styles/abstract/_config.scss",
     "!src/styles/base/_foundation.scss",
-    "!src/styles/base/_typescale.scss"
+    "!src/styles/base/_typescale.scss",
+    "!src/styles/abstract/_variables.scss"
   ],
   "scripts": {
     "build": "bun run scripts/build.ts",
