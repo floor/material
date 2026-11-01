@@ -94,5 +94,85 @@
     "server": null,
     "browser": "false",
     "issue": "The menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@viewBox",
+    "server": "0 0 2048 4",
+    "browser": "0 0 592 4",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The viewBox keeps the 2048-unit stand-in server-side; the first layout rewrites it to the measured width (592px on the parity page)."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/style:--mtrl-progress-gapp",
+    "server": "0.390625",
+    "browser": "1.3513513513513513",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The gap token is a percentage of the width: the server computes it against the 2048 stand-in, the first layout against the measured 592px."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@x",
+    "server": null,
+    "browser": "242.80",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. At width 0 the determinate draw returns before writing windows, so the server writes no x; the first layout writes the measured one."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@width",
+    "server": null,
+    "browser": "349.20",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. At width 0 the determinate draw returns before writing windows, so the server writes no width; the first layout writes the measured one."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@width",
+    "server": null,
+    "browser": "0",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The buffer window is empty on both sides, but only a laid-out draw writes the 0."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/@x",
+    "server": null,
+    "browser": "0.00",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. At width 0 the determinate draw returns before writing windows, so the server writes no x; the first layout writes the measured one."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/@width",
+    "server": null,
+    "browser": "238.80",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. At width 0 the determinate draw returns before writing windows, so the server writes no width; the first layout writes the measured one."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/3/@cx",
+    "server": null,
+    "browser": "590.00",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The stop indicator sits at the measured end (592px minus its radius); the server, having no box, places nothing."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/3/@cy",
+    "server": null,
+    "browser": "2.00",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The stop indicator's centre is half the drawn height once laid out; the server, having no box, places nothing."
+  },
+  {
+    "element": "progress",
+    "phase": "settled",
+    "property": "host/shadow/0/0/3/@r",
+    "server": null,
+    "browser": "2.00",
+    "issue": "A server render has no box: the drawing stands in the token box, as the canvas's fixed bitmap did, and the first layout corrects it. The stop indicator's dot is sized once laid out; the server, having no box, places nothing."
   }
 ]
