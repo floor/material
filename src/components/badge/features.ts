@@ -1,6 +1,6 @@
 // src/components/badge/features.ts
 import { BadgeConfig, BadgeFeatureHost, BadgeVisibility } from './types';
-import { formatBadgeLabel, isBadgeOverflow, isEmptyBadgeLabel } from './config';
+import { formatBadgeLabel, isBadgeOverflow, isEmptyBadgeLabel, smallBadgeLabel } from './config';
 
 // Common badge variants
 const VARIANT_SMALL = 'small';
@@ -88,14 +88,18 @@ export const withVariant = (config: BadgeConfig) => <C extends BadgeFeatureHost>
   // Apply variant class
   component.element.classList.add(`${component.getClass('badge')}--${variant}`);
   
-  // Small badges (dot variant) don't have text
+  // Small badges (dot variant) don't have text: their label is the accessible
+  // name assistive technology reads, "New notification" by default.
   if (variant === VARIANT_SMALL) {
     component.element.textContent = '';
-    component.element.setAttribute('aria-hidden', 'true');
+    component.element.setAttribute('role', 'status');
+    component.element.setAttribute('aria-label', smallBadgeLabel(config.label));
+    component.element.removeAttribute('aria-hidden');
   } else {
     // Add accessibility for large badges
     component.element.setAttribute('role', 'status');
-    
+    component.element.removeAttribute('aria-label');
+
     // Set the label if available and variant is large
     if (config.label !== undefined && config.label !== '') {
       // Format the label according to max value

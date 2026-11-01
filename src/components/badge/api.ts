@@ -1,5 +1,5 @@
 // src/components/badge/api.ts
-import { isBadgeOverflow, isEmptyBadgeLabel } from "./config";
+import { isBadgeOverflow, isEmptyBadgeLabel, smallBadgeLabel } from "./config";
 import {
   BadgeComponent,
   BadgeColor,
@@ -91,15 +91,19 @@ export const withAPI =
       setLabel(label: string | number) {
         component.config.label = label;
 
-        // Small badges (dot variant) don't have text
+        // Small badges (dot variant) don't have text: the label is the
+        // accessible name assistive technology reads, and an empty or numeric
+        // one announces "New notification".
         if (component.config.variant === VARIANT_SMALL) {
           component.element.textContent = "";
+          component.element.setAttribute("aria-label", smallBadgeLabel(label));
           return badgeComponent;
         }
 
         // Format the label
         const formattedLabel = formatBadgeLabel(label, component.config.max);
         component.element.textContent = formattedLabel;
+        component.element.removeAttribute("aria-label");
 
         // Add overflow class if label was truncated
         component.element.classList.remove(
@@ -240,14 +244,17 @@ export const withAPI =
         // Update component config
         component.config.variant = variant;
 
-        // Update accessibility attributes
+        // Update accessibility attributes: both variants are a status, and a
+        // small badge's announcement is its accessible name.
         if (variant === VARIANT_SMALL) {
           component.element.textContent = "";
-          component.element.removeAttribute("role");
-          component.element.setAttribute("aria-hidden", "true");
+          component.element.setAttribute("role", "status");
+          component.element.setAttribute("aria-label", smallBadgeLabel(component.config.label));
+          component.element.removeAttribute("aria-hidden");
         } else {
           component.element.removeAttribute("aria-hidden");
           component.element.setAttribute("role", "status");
+          component.element.removeAttribute("aria-label");
 
           // Restore label for large badges
           if (component.config.label !== undefined) {
