@@ -193,6 +193,8 @@ describe('progress stylesheet: the drawing', () => {
       'mtrl-progress-spin',
       'mtrl-progress-sweep',
       'mtrl-progress-travel',
+      'mtrl-progress-travel-ring',
+      'mtrl-progress-dash-ring',
     ]) {
       const at = css.indexOf(`@keyframes ${name} `);
       expect(at).toBeGreaterThan(from - 1);
@@ -233,8 +235,11 @@ describe('progress stylesheet: the drawing', () => {
   });
 
   test('the circular indeterminate head is a dash on the sweep, the track a negative offset', () => {
+    // the gap is the ring's complement, not an open 100: the dash pattern
+    // repeats once per turn, so the travel's lockstep dashoffset can slide the
+    // window across the path's seam without the painted arc riding the rotation
     expect(value('.mtrl-progress--circular.mtrl-progress--indeterminate .mtrl-progress__indicator', 'stroke-dasharray')).toBe(
-      'var(--mtrl-progress-sweep) 100'
+      'var(--mtrl-progress-sweep) calc(100 - var(--mtrl-progress-sweep))'
     );
     expect(
       value('.mtrl-progress--circular.mtrl-progress--indeterminate .mtrl-progress__track', 'stroke-dasharray')
@@ -251,6 +256,13 @@ describe('progress stylesheet: the drawing', () => {
     );
     expect(keyframes('mtrl-progress-travel')).toContain('translate: var(--mtrl-progress-wavelength) 0');
     expect(keyframes('mtrl-progress-travel-ring')).toContain('rotate: var(--mtrl-progress-wave-rot)');
+    // the dash slides back along the ring in lockstep with that rotation, one
+    // wavelength per loop, so the painted arc and its caps hold still in screen
+    // space while the sine travels under them
+    expect(value('.mtrl-progress--circular path.mtrl-progress__indicator', 'animation')).toBe(
+      'mtrl-progress-dash-ring 1000ms infinite linear'
+    );
+    expect(keyframes('mtrl-progress-dash-ring')).toContain('stroke-dashoffset: var(--mtrl-progress-wave-dash)');
   });
 
   test('rtl mirrors the linear view and reverses only the travel', () => {
