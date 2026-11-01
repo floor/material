@@ -19,3 +19,19 @@ export interface MenuOwner {
 
 /** The menu inside a select or a split button, if it has one. @internal */
 export const innerMenu = (owner: object): MenuComponent | undefined => (owner as MenuOwner)[MENU];
+
+/**
+ * Set in the configuration of a menu whose surface is rendered inside its own
+ * element's shadow root (`src/elements/menu.ts`). The opener sits outside that
+ * root and an IDREF does not cross a shadow boundary, so the menu writes it no
+ * `aria-controls`: the reference would dangle. What the opener opens is
+ * declared by the element that owns it, as the toolbar's overflow button
+ * declares `aria-haspopup` and `aria-expanded` itself. A factory menu's
+ * surface moves into the document, or beside the opener, when it opens, and
+ * its id does resolve there.
+ * @internal
+ */
+export const SHADOW_SURFACE: unique symbol = Symbol("mtrl.menu.shadowSurface");
+
+/** A menu configuration carrying mtrl's own options. @internal */
+export type InternalMenuConfig = { [SHADOW_SURFACE]?: boolean };

@@ -9,6 +9,7 @@ import {
   OpenerTarget,
 } from "../types";
 import { focusWithin } from "./layer";
+import { SHADOW_SURFACE, type InternalMenuConfig } from "../inner";
 
 /**
  * A component used as the menu opener. It is resolved by its element,
@@ -175,8 +176,11 @@ const withOpener =
     // A listbox popup belongs to a combobox, which carries its own ARIA
     if (config.listbox) return;
 
-    // Add ARIA attributes
-    openerElement.setAttribute("aria-haspopup", "true");
+    // The opener carries what it opens. A toolbar builds its overflow button
+    // with aria-haspopup="menu" already, so an existing value is kept rather
+    // than replaced by a plain "true"; open and close keep aria-expanded and
+    // the active state up to date from here.
+    if (!openerElement.hasAttribute("aria-haspopup")) openerElement.setAttribute("aria-haspopup", "true");
     openerElement.setAttribute("aria-expanded", "false");
 
     // Get menu ID or generate one
@@ -186,8 +190,13 @@ const withOpener =
       component.element.id = menuId;
     }
 
-    // Connect menu and opener with ARIA
-    openerElement.setAttribute("aria-controls", menuId);
+    // Connect menu and opener with ARIA. A menu rendered by an element keeps
+    // its surface inside that element's shadow root, where the opener, outside
+    // it, cannot reach the id; such a menu says so and the element that names
+    // the opener declares the relationship (see SHADOW_SURFACE in ../inner).
+    if (!(config as MenuConfig & InternalMenuConfig)[SHADOW_SURFACE] && !openerElement.hasAttribute("aria-controls")) {
+      openerElement.setAttribute("aria-controls", menuId);
+    }
   };
 
   /**

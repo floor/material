@@ -33,6 +33,7 @@
  */
 
 import createMenu from "../components/menu";
+import { SHADOW_SURFACE, type InternalMenuConfig } from "../components/menu/inner";
 import type { MenuComponent, MenuConfig, MenuContent, MenuItem, MenuPosition, MenuSelectEvent } from "../components/menu/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
@@ -132,7 +133,15 @@ const create = (config: MenuElementConfig): MenuElementComponent => {
   const standIn = document.createElement("span");
   // A property kept over a recreation may be null: the attribute then decides
   const opener = findAnchor(host, anchor) ?? findAnchor(host, host.getAttribute("anchor")) ?? standIn;
-  const menu = createMenu({ ...rest, items: rest.items ?? [], opener, closeOnSelect: !noCloseOnSelect, layer: "top" });
+  const menu = createMenu({
+    ...rest,
+    items: rest.items ?? [],
+    opener,
+    closeOnSelect: !noCloseOnSelect,
+    layer: "top",
+    // The surface this factory builds goes into the element's shadow root
+    ...({ [SHADOW_SURFACE]: true } satisfies InternalMenuConfig),
+  });
   hosts.set(menu, host);
   standIns.set(menu, standIn);
   applied.set(menu, JSON.stringify(menu.getItems()));
