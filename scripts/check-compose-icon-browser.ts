@@ -17,7 +17,7 @@ import type { Page } from "playwright";
  */
 export async function checkComposeIconLabel(page: Page): Promise<void> {
   const result = await page.evaluate(() => {
-    const withIcon = (window as unknown as { withIcon: (config: Record<string, string>) => (component: { element: HTMLElement }) => { icon: { setIcon: (html: string) => unknown } } }).withIcon;
+    const withIcon = (window as unknown as { withIcon: (config: { prefix?: string; componentName?: string }) => (component: { element: HTMLElement }) => { icon: { setIcon: (html: string) => unknown } } }).withIcon;
     const cases = [
       { key: "nameQuote", prefix: undefined as string | undefined, name: 'a"b' },
       { key: "nameBackslash", prefix: undefined as string | undefined, name: "a\\b" },
