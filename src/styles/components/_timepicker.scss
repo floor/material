@@ -388,6 +388,7 @@ $component: '#{base.$prefix}-time-picker';
   }
   
   &__toggle-type {
+    font: inherit;
     background: transparent;
     border: none;
     padding: 8px;

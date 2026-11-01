@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import * as sass from "sass";
 import { registerStyles } from "../../src/elements/styles";
 import { componentStyles, resolveStyleDependencies } from "../style-manifest";
-const entries = [["ripple", "base/shadow"], ...resolveStyleDependencies(Object.keys(componentStyles))
+const entries = [["ripple", "utilities/ripple"], ...resolveStyleDependencies(Object.keys(componentStyles))
   .map(name => [name, componentStyles[name].source])];
 registerStyles(Object.fromEntries(entries.map(([name, source]) => [name, sass.compileString(`@use "${source}";`, {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,

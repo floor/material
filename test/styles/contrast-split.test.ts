@@ -195,9 +195,11 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // Native controls carry their measured font/padding defaults in their own
+    // component sheets, so those defaults also reach element shadow roots.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("bb72340071ec69e8a9295a77557a8259b2a62dcd9e835c4c344d7b803914696a");
+    expect(css.length).toBe(544539);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -1,7 +1,5 @@
 // src/styles/base/_reset.scss
 
-@use "control-reset" as controls;
-
 // Modern CSS Reset
 // Adapted and simplified for mtrl
 
@@ -36,7 +34,12 @@ picture {
 }
 
 // Inherit fonts for inputs and buttons
-@include controls.fonts;
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
 
 // For people who prefer reduced motion, movement stops and fades stay.
 // WCAG 2.3.3 is about motion: things that move, grow or slide. A short
@@ -62,7 +65,12 @@ picture {
 }
 
 // Reset button styles
-@include controls.buttons;
+button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
 
 // Remove list styles
 ul,

@@ -60,6 +60,7 @@ $component: '#{base.$prefix}-radios';
 
   // Radio input
   &__input {
+    font: inherit;
     position: absolute;
     opacity: 0;
     height: 0;

@@ -33,6 +33,7 @@ $component: '#{base.$prefix}-checkbox';
 
   // Input (visually hidden but accessible)
   &__input {
+    font: inherit;
     position: absolute;
     opacity: 0;
     width: 100%;

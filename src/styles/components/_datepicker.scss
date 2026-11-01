@@ -42,6 +42,8 @@ $component: '#{base.$prefix}-datepicker';
     &:disabled { opacity: 0.38; }
   }
   &__anchor &__input { padding-inline-end: 56px; }
+  // Normalize only the icon controls; their own font-size rules follow.
+  &__trigger, &__mode-toggle, &__prev, &__next, &__close { font: inherit; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
   &__trigger { position: absolute; inset-inline-end: 4px; top: 4px; font-size: 24px; }
   &__help, &__error { @include m.typography('body-small'); padding: 4px 16px 0; }
   &__help { color: t.color('on-surface-variant'); }
@@ -96,7 +98,6 @@ $component: '#{base.$prefix}-datepicker';
     &:focus-visible { outline: 2px solid t.color('primary'); outline-offset: -2px; background: t.alpha('on-surface', v.state('focus-state-layer-opacity')); }
     &:disabled { opacity: 0.38; cursor: default; }
   }
-  &__trigger, &__mode-toggle, &__prev, &__next, &__close { display: inline-flex; align-items: center; justify-content: center; }
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
   // No bottom padding: the modal is Compose's 568dp, the footer included.

@@ -9,6 +9,7 @@ $component: '#{base.$prefix}-fab';
 
 .#{$component} {
   // Base styles
+  padding: 0;
   position: relative;
   display: inline-flex;
   align-items: center;

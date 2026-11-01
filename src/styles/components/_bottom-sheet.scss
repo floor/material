@@ -90,6 +90,7 @@ $component: "#{base.$prefix}-bottom-sheet";
     // minimum interactive size) drawing the 32x4dp bar
     // (DockedDragHandleWidth / DockedDragHandleHeight)
     &__handle {
+        font: inherit;
         flex: 0 0 auto;
         position: relative;
         align-self: center;
