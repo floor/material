@@ -19,12 +19,13 @@ const run = async (script: string, engine: string) => {
   timings.push({ check: `${script}/${engine}`, seconds: (performance.now() - start) / 1000 });
 };
 // CI runs this check as two matrix rows (.github/workflows/ci.yml), split by
-// engine at the measured boundary: on run 41317795666 the Chromium part --
-// parity and its three checks -- took 36.3s of the 193.7s the script ran, and
-// the firefox and webkit part 127.9s. Part a is chromium, part b is firefox and
+// engine at the measured boundary: on run 41317795666 parity took 29.4s and the
+// three Chromium checks 36.3s -- 65.7s of the 193.7s the script ran -- against
+// 127.9s for firefox and webkit. Part a is chromium, part b is firefox and
 // webkit, so the two rows run every sub-run exactly once; parity is Chromium's
-// alone and stays in part a. With no argument every part runs -- what a local
-// `bun run ssr:check` does.
+// alone and stays in part a. The first split run, 41320050136, printed 62.0s
+// over 4 sub-runs and 104.7s over 6. With no argument every part runs -- what a
+// local `bun run ssr:check` does.
 const parts = process.argv.slice(2);
 const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
 assert.deepEqual(parts.filter(part => part !== "a" && part !== "b"), [], "a part is a or b");
