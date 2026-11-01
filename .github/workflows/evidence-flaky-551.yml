@@ -1,0 +1,35 @@
+name: FLO-551 focus evidence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/evidence-flaky-551.yml
+      - scripts/measure-flaky-551.ts
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - uses: ./.github/actions/browsers
+        with:
+          browsers: chromium
+      - name: Loop only the existing shadow-menu sequence
+        env:
+          FLO_551_ITERATIONS: "50"
+          FLO_551_BASELINE: 801b07cf5f31533191c687ea2b04c356a1ec3944
+        run: bun run scripts/measure-flaky-551.ts
+      - name: Every iteration and failure snapshot
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flaky-551-evidence
+          path: analysis/flaky-551/
+          retention-days: 14
