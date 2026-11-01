@@ -195,9 +195,11 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("2371c975d94d25b2dc15d52e77158e224170a47fb4695fca3ea1ebc6e53354c7");
+    expect(css.length).toBe(544285);
   });
 
   test("today's sheets still resolve to the fixture", () => {

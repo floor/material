@@ -511,14 +511,11 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 // Two-line items: 72dp, the second line Body Medium on-surface-variant.
 .#{$component}__suggestion-item--two-line {
     min-height: 72px;
-
-    .#{$component}__suggestion-text {
-        display: flex;
-        flex-direction: column;
-    }
 }
 
 .#{$component}__suggestion-supporting {
+    // Keep the headline's text and highlighted matches in one inline flow.
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     @include m.typography("body-medium");

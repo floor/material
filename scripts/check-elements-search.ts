@@ -3,6 +3,7 @@
 // full screen as a modal), the suggestion declarations updated in place, the
 // value model and form association, and parity with the factory in light DOM.
 
+import { checkSearchSuggestionLayout } from "./check-search-suggestion-layout";
 import assert from "node:assert/strict";
 import type { Browser, Page } from "playwright";
 
@@ -508,6 +509,9 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   });
   assert.equal(warned.length, 1, "one warning, for the avatar without avatar-label");
   check("search: an avatar without avatar-label warns that its button has no name");
+
+  await checkSearchSuggestionLayout(page, "element");
+  check("search: highlighted suggestion headlines stay on one line above supporting text, in both directions");
 
   // ------------------------------------------------------------ restore
   // Going back restores the query the user typed over the value attribute

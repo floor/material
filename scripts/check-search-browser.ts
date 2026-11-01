@@ -1,4 +1,5 @@
 /** Search in the packed build: the open view's place in the page and the top layer. */
+import { checkSearchSuggestionLayout } from "./check-search-suggestion-layout";
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
@@ -199,6 +200,7 @@ export async function checkSearch(page: Page): Promise<void> {
 
   await checkSearchTokens(page);
   await checkSearchVariants(page);
+  await checkSearchSuggestionLayout(page, "factory");
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
   console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal; 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions; the contained default and the divided variant, docked and full screen, and the results' reveal; minWidth and maxWidth.");
 }
