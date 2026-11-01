@@ -8,10 +8,11 @@ import { compileString } from 'sass';
 import { corner as token } from '../utils/corner';
 
 let css = '';
+let armsCss = '';
 
-const rules = (selector: string): string[] => {
+const rules = (selector: string, sheet: string = css): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const exact = Array.from(css.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  const exact = Array.from(sheet.matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
   if (exact.length) return exact;
   // A direction rule compiles to a selector list — the light-DOM attribute form
   // beside the shadow tree's host-class form — so the selector is one member of
@@ -33,19 +34,23 @@ const rules = (selector: string): string[] => {
     out.push(prelude.slice(start));
     return out;
   };
-  return Array.from(css.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
+  return Array.from(sheet.matchAll(/(?:^|\n)([^{}\n]+)\{([^}]*)\}/g))
     .filter((m) => members(m[1]!).map((member) => member.trim()).includes(selector))
     .map((m) => m[2]!);
 };
 
-const value = (selector: string, property: string): string | undefined =>
-  rules(selector)
+const value = (selector: string, property: string, sheet: string = css): string | undefined =>
+  rules(selector, sheet)
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
     .filter((v): v is string => v !== undefined)
     .pop();
 
 beforeAll(() => {
   css = compileString(`@use 'components/split-button';`, { loadPaths: ['src/styles'], style: 'expanded' }).css.replace(/,\n/g, ', ');
+  armsCss = compileString(
+    `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/split-button';`,
+    { loadPaths: ['src/styles'], style: 'expanded' },
+  ).css.replace(/,\n/g, ', ');
 });
 
 describe('split button stylesheet', () => {
@@ -152,11 +157,45 @@ describe('split button stylesheet', () => {
     expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'translate')).toBe('0 0');
   });
 
-  test('each half writes its physical pair, and the mirrored pair is a direction arm', () => {
+  test('each half keeps its logical corners in the adopted sheets', () => {
+    // The element sheets and the pre-upgrade rules are adopted by the runtime
+    // as compiled: the logical radii mirror on the computed direction there,
+    // and no arm rides along.
+    const leading = [
+      ['border-start-start-radius', 'var(--mtrl-split-button-pill)'],
+      ['border-start-end-radius', 'var(--mtrl-split-button-corner)'],
+      ['border-end-start-radius', 'var(--mtrl-split-button-pill)'],
+      ['border-end-end-radius', 'var(--mtrl-split-button-corner)'],
+    ] as const;
+    const trailing = [
+      ['border-start-start-radius', 'var(--mtrl-split-button-corner)'],
+      ['border-start-end-radius', 'var(--mtrl-split-button-pill)'],
+      ['border-end-start-radius', 'var(--mtrl-split-button-corner)'],
+      ['border-end-end-radius', 'var(--mtrl-split-button-pill)'],
+    ] as const;
+    for (const [property, radius] of leading) {
+      expect(value('.mtrl-split-button .mtrl-split-button__leading', property)).toBe(radius);
+    }
+    for (const [property, radius] of trailing) {
+      expect(value('.mtrl-split-button .mtrl-split-button__trailing', property)).toBe(radius);
+    }
+    // The halves carry no physical shorthand; the button's own full pill stays
+    // one, because it is the same on either side and nothing mirrors.
+    for (const half of ['leading', 'trailing']) {
+      expect(rules(`.mtrl-split-button .mtrl-split-button__${half}`).join('\n')).not.toMatch(/border-radius:/);
+    }
+    expect(css).not.toContain(':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__leading');
+    expect(css).not.toContain('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl])');
+  });
+
+  test('the lowered artefacts write the physical pair, the mirrored pair an arm', () => {
+    // In the artefacts a consumer bundler lowers (abstract/_emit.scss), the
+    // same call sites compile to the physical pair with the right-to-left
+    // pair as a direction arm.
     const leading = 'var(--mtrl-split-button-pill) var(--mtrl-split-button-corner) var(--mtrl-split-button-corner) var(--mtrl-split-button-pill)';
     const trailing = 'var(--mtrl-split-button-corner) var(--mtrl-split-button-pill) var(--mtrl-split-button-pill) var(--mtrl-split-button-corner)';
-    expect(value('.mtrl-split-button .mtrl-split-button__leading', 'border-radius')).toBe(leading);
-    expect(value('.mtrl-split-button .mtrl-split-button__trailing', 'border-radius')).toBe(trailing);
+    expect(value('.mtrl-split-button .mtrl-split-button__leading', 'border-radius', armsCss)).toBe(leading);
+    expect(value('.mtrl-split-button .mtrl-split-button__trailing', 'border-radius', armsCss)).toBe(trailing);
     // An ancestor direction reaches the parts through the class the runtime
     // reflects, the shadow tree's host class, and a cut attribute fallback.
     for (const member of [
@@ -164,28 +203,29 @@ describe('split button stylesheet', () => {
       ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__leading',
       '[dir=rtl] .mtrl-split-button .mtrl-split-button__leading:not(:where(.mtrl-ltr, .mtrl-ltr *))',
     ]) {
-      expect(value(member, 'border-radius')).toBe(trailing);
+      expect(value(member, 'border-radius', armsCss)).toBe(trailing);
     }
     for (const member of [
       ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__trailing',
       ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__trailing',
       '[dir=rtl] .mtrl-split-button .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *))',
     ]) {
-      expect(value(member, 'border-radius')).toBe(leading);
+      expect(value(member, 'border-radius', armsCss)).toBe(leading);
     }
     // The direction may sit on the root itself: the arms above need an
     // ancestor, and this is where the runtime writes the class.
-    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__leading', 'border-radius')).toBe(trailing);
-    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__trailing', 'border-radius')).toBe(leading);
+    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__leading', 'border-radius', armsCss)).toBe(trailing);
+    expect(value('.mtrl-split-button:where(.mtrl-rtl, [dir=rtl]) .mtrl-split-button__trailing', 'border-radius', armsCss)).toBe(leading);
   });
 
   test('no logical corner property is left to be lowered into :lang() arms', () => {
     // A consumer's bundler lowers border-*-*-radius into :lang() lists that
     // match a language, never dir="rtl": the bundled sheet lost the split
-    // shape on an RTL page while the halves swapped. The physical pair and
-    // the direction arm keep the bundled and unbundled sheets in agreement
-    // (scripts/check-split-button-rtl.ts).
-    expect(css).not.toMatch(/border-(?:start|end)-(?:start|end)-radius/);
+    // shape on an RTL page while the halves swapped. The artefacts a bundler
+    // lowers compile with none left (abstract/_emit.scss); the adopted sheets
+    // keep them, which mirrors natively and never meets a bundler
+    // (scripts/check-rtl-direction.ts).
+    expect(armsCss).not.toMatch(/border-(?:start|end)-(?:start|end)-radius/);
   });
 
   test('the short sizes still offer a 48dp target', () => {

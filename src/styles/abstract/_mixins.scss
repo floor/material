@@ -5,6 +5,7 @@
 @use 'base' as base;
 @use 'variables' as v;
 @use 'functions' as f;
+@use 'emit' as emit;
 
 // Common icons map
 $icons: (
@@ -115,12 +116,23 @@ $icons: (
 // overshoot; effects springs change opacity and colour and never do.
 // A delay lets a property wait for another transition, such as visibility
 // flipping to hidden only once a fade has finished.
+// A spring on an inline inset the arms form splits across `left` and `right`
+// names both sides there, so the move animates whichever side the direction
+// placed it on (abstract/_emit.scss, abstract/_direction.scss).
 @function spring($property, $token, $delay: null) {
-  $transition: $property v.motion('spring-#{$token}-duration') v.motion('spring-#{$token}-easing');
-  @if $delay {
-    $transition: list.append($transition, $delay);
+  $names: emit.transition-names($property);
+  $transitions: ();
+  @each $name in $names {
+    $transition: $name v.motion('spring-#{$token}-duration') v.motion('spring-#{$token}-easing');
+    @if $delay {
+      $transition: list.append($transition, $delay);
+    }
+    $transitions: list.append($transitions, $transition, comma);
   }
-  @return $transition;
+  @if list.length($transitions) == 1 {
+    @return list.nth($transitions, 1);
+  }
+  @return $transitions;
 }
 
 // How long a spring token takes to settle, for delays tied to it.

@@ -18,6 +18,7 @@
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
 @use "../abstract/variables" as v;
+@use "../abstract/direction" as d;
 
 $component: "#{base.$prefix}-list";
 .#{$component} {
@@ -103,15 +104,23 @@ $component: "#{base.$prefix}-list";
     > .#{$component}__item:not(.#{$component}__item--selected) { background: var(--#{base.$prefix}-list-item-container-color, t.color("surface-container")); }
     // Outer corners of a group (the first row, the last, and a row beside a
     // divider or subheader) are large. Specs, 2026-10-02: 4dp inner, 16dp outer.
+    // Block-edge pairs, which mirror to themselves: the arms form carries the
+    // physical pair with no direction arm.
     > .#{$component}__item:first-child,
     > :not(.#{$component}__item) + .#{$component}__item {
-      border-start-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-      border-start-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+      @include d.corners(
+        $start-start: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large')),
+        $start-end: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large')),
+        $arm: false
+      );
     }
     > .#{$component}__item:last-child,
     > .#{$component}__item:has(+ :not(.#{$component}__item)) {
-      border-end-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-      border-end-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+      @include d.corners(
+        $end-start: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large')),
+        $end-end: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large')),
+        $arm: false
+      );
     }
     // Hover, keyboard focus, press and selection replace that shape on every
     // corner. Focus is the row's own action under :focus-visible, so a click

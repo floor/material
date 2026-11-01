@@ -4,6 +4,7 @@
 @use "../abstract/variables" as v;
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
+@use "../abstract/direction" as d;
 
 $component: "#{base.$prefix}-side-sheet";
 
@@ -180,14 +181,39 @@ $component: "#{base.$prefix}-side-sheet";
         // Sheet.Side.Docked.Container.Shape = Corner.None),
         &.#{$component}--end .#{$component}__container {
             box-shadow: f.get-elevation(1), calc(m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface-container-low");
-            border-start-start-radius: v.shape("large");
-            border-end-start-radius: v.shape("large");
+            @include d.corners($start-start: v.shape("large"), $end-start: v.shape("large"), $arm: false);
         }
 
         &.#{$component}--start .#{$component}__container {
             box-shadow: f.get-elevation(1), calc(-1 * m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface-container-low");
-            border-start-end-radius: v.shape("large");
-            border-end-end-radius: v.shape("large");
+            @include d.corners($start-end: v.shape("large"), $end-end: v.shape("large"), $arm: false);
+        }
+
+        // The inner edge follows the direction, so the mirrored form is an
+        // arm: the base corners are unset there, not mirrored by the cascade.
+        // One arm per placement, written after its base, the marker on the
+        // sheet root included (the self form). Nothing of it in the logical
+        // form, where the corners mirror natively.
+        &.#{$component}--end {
+            @include d.arms($self: true) {
+                .#{$component}__container {
+                    border-top-left-radius: 0;
+                    border-bottom-left-radius: 0;
+                    border-top-right-radius: v.shape("large");
+                    border-bottom-right-radius: v.shape("large");
+                }
+            }
+        }
+
+        &.#{$component}--start {
+            @include d.arms($self: true) {
+                .#{$component}__container {
+                    border-top-right-radius: 0;
+                    border-bottom-right-radius: 0;
+                    border-top-left-radius: v.shape("large");
+                    border-bottom-left-radius: v.shape("large");
+                }
+            }
         }
     }
 

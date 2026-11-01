@@ -23,9 +23,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
-import { checkDatepickerRtl } from "./check-datepicker-rtl";
-import { checkNavigationRtl } from "./check-navigation-rtl-browser";
-import { checkSplitButtonRtl } from "./check-split-button-rtl";
+import { checkRtlDirection } from "./check-rtl-direction";
 
 const WIDTH = 600;
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
@@ -486,11 +484,11 @@ try {
   }
   await checkSideSheetRtl(ltrPage);
   await checkCarouselRtl(browser, server.url.href);
-  await checkDatepickerRtl(browser, server.url.href);
-  await checkSplitButtonRtl(browser, server.url.href);
-  // The navigation bar and rail, whose start-edge insets the direction arms
-  // mirror — in this unbundled sheet and in the bundled one below.
-  await checkNavigationRtl(browser, server.url.href, ltrPage, rtlPage);
+  // The direction switch's own pass — every converted component under both
+  // forms the build ships (dist/styles.css arms and the logical main.scss),
+  // across the full marker matrix. It replaced the per-component
+  // right-to-left checks (split button, datepicker, navigation, FAB menu).
+  await checkRtlDirection(browser);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 

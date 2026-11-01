@@ -4,6 +4,7 @@
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
 @use '../../styles/abstract/theme' as t;
+@use '../../styles/abstract/direction' as d;
 
 $component: '#{base.$prefix}-switch';
 
@@ -111,7 +112,7 @@ $component: '#{base.$prefix}-switch';
       width: 40px;
       height: 40px;
       top: -6px;
-      inset-inline-start: -6px;
+      @include d.start-value(--#{$component}-layer-start, -6px);
       background-color: t.color('on-surface');
       opacity: 0;
       border-radius: 50%;
@@ -126,7 +127,7 @@ $component: '#{base.$prefix}-switch';
   &__thumb {
     position: absolute;
     top: 6px;
-    inset-inline-start: 6px;
+    @include d.start-value(--#{$component}-thumb-start, 6px);
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -178,7 +179,7 @@ $component: '#{base.$prefix}-switch';
       width: 24px;
       height: 24px;
       top: 2px;
-      inset-inline-start: 2px;
+      @include d.start-value-set(--#{$component}-thumb-start, 2px);
     }
 
     .#{$component}__thumb-icon--unselected {
@@ -194,7 +195,7 @@ $component: '#{base.$prefix}-switch';
       border-color: t.color('primary');
 
       &::after {
-        inset-inline-start: 14px;
+        @include d.start-value-set(--#{$component}-layer-start, 14px);
         background-color: t.color('primary');
       }
     }
@@ -204,7 +205,7 @@ $component: '#{base.$prefix}-switch';
       width: 24px;
       height: 24px;
       top: 2px;
-      inset-inline-start: 22px;
+      @include d.start-value-set(--#{$component}-thumb-start, 22px);
     }
 
     .#{$component}__thumb-icon:not(.#{$component}__thumb-icon--unselected) {
@@ -297,11 +298,30 @@ $component: '#{base.$prefix}-switch';
       width: 28px;
       height: 28px;
       top: 0;
-      inset-inline-start: 0;
+      @include d.start-value-set(--#{$component}-thumb-start, 0);
     }
 
     &.#{$component}--checked .#{$component}__input:active ~ .#{$component}__track .#{$component}__thumb {
-      inset-inline-start: 20px;
+      @include d.start-value-set(--#{$component}-thumb-start, 20px);
+    }
+  }
+
+  // The mirrored handle and layer positions, one arm per subject: every
+  // state's move rides the custom property the arms form's base names, and a
+  // bundler lowers no custom property, so the move animates on whichever side
+  // the direction placed it — the transitions above already name both sides
+  // in the arms form. The arm resets the base side to auto, exactly as the
+  // logical property resolves one side per direction. Nothing of it in the
+  // logical form, where the insets mirror natively.
+  @include d.arms($self: true) {
+    .#{$component}__track::after {
+      left: auto;
+      right: var(--#{$component}-layer-start, -6px);
+    }
+
+    .#{$component}__thumb {
+      left: auto;
+      right: var(--#{$component}-thumb-start, 6px);
     }
   }
 

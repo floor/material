@@ -82,3 +82,81 @@ describe('trailing action and dragged state', () => {
     expect(value(`${root}--dragged:not(${root}--disabled)::after`, 'opacity')).toBe('0.16');
   });
 });
+
+describe('the secondary action mirrors in every artefact', () => {
+  // The remove button's two start corners and the 48px target behind it: the
+  // adopted sheets keep the logical pair and the target's end inset, which
+  // mirror natively; the lowered artefacts write the physical pair with both
+  // mirrored forms in one aggregated arm at the root, and the target's end
+  // side with the end arm, so no bundler lowering can drag the box off the
+  // end edge (abstract/_direction.scss, scripts/build-styles.ts).
+  const compileArms = (): string =>
+    compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/chips';`,
+      { loadPaths: ['src/styles'] },
+    ).css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\n/g, ', ');
+
+  test('the adopted sheets keep the logical corners and no arm', () => {
+    expect(value(`${root}__remove`, 'border-start-start-radius')).toBe('0');
+    expect(value(`${root}__remove`, 'border-end-start-radius')).toBe('0');
+    expect(css).not.toContain('.mtrl-rtl');
+    expect(css).not.toContain('[dir=rtl]');
+  });
+
+  test('the lowered artefacts write the physical pair, both mirrored forms one arm', () => {
+    const arms = compileArms();
+    expect(arms).toContain('.mtrl-chip__remove, .mtrl-chip__trailing-action {');
+    expect(arms).toContain('border-top-left-radius: 0;');
+    expect(arms).toContain('border-bottom-left-radius: 0;');
+    // One prelude, both subjects: the marker forms the runtime reflects plus
+    // the attribute, the subject list bare so a mark on the chip root reaches
+    // its parts. `inherit` restates the chip's radius before the end corners
+    // are zeroed.
+    expect(arms).toContain(
+      ":where(.mtrl-rtl, :host(.mtrl-rtl), [dir=rtl]) :is(.mtrl-chip__remove, .mtrl-chip__trailing-action):not(.mtrl-ltr *) {" +
+        '\n  border-radius: inherit;\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;\n}',
+    );
+    // No logical corner property is left for a bundler to lower into :lang().
+    expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
+  });
+
+  test("the target runs its 48px back from the chip's end, mirrored by the end arm", () => {
+    // The block is main's, with the end inset through the direction switch:
+    // the adopted sheet keeps the logical end inset, which mirrors natively.
+    expect(css).toContain(
+      '.mtrl-chip__remove::before, .mtrl-chip__trailing-action::before {' +
+        '\n  content: "";' +
+        '\n  position: absolute;' +
+        '\n  top: 50%;' +
+        '\n  inset-inline-end: 0;' +
+        '\n  width: 48px;' +
+        '\n  height: 48px;' +
+        '\n  transform: translateY(-50%);' +
+        '\n}',
+    );
+    // The lowered artefacts write the physical side, and one end arm flips
+    // it: the marker forms the runtime reflects plus the attribute, the
+    // subject list per part, so no :lang() lowering can leave the box on
+    // the left-to-right side of a right-to-left chip.
+    const arms = compileArms();
+    expect(arms).toContain(
+      '.mtrl-chip__remove::before, .mtrl-chip__trailing-action::before {' +
+        '\n  content: "";' +
+        '\n  position: absolute;' +
+        '\n  top: 50%;' +
+        '\n  right: 0;' +
+        '\n  width: 48px;' +
+        '\n  height: 48px;' +
+        '\n  transform: translateY(-50%);' +
+        '\n}',
+    );
+    expect(arms).toContain(
+      ':where(.mtrl-rtl) .mtrl-chip__remove::before, :where(:host(.mtrl-rtl)) .mtrl-chip__remove::before, [dir=rtl] .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(.mtrl-rtl) .mtrl-chip__trailing-action::before, :where(:host(.mtrl-rtl)) .mtrl-chip__trailing-action::before, [dir=rtl] .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)) {' +
+        '\n  right: auto;' +
+        '\n  left: 0;' +
+        '\n}',
+    );
+    // No logical end inset is left for a bundler to lower into :lang().
+    expect(arms).not.toContain('inset-inline-end');
+  });
+});

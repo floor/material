@@ -1,0 +1,196 @@
+// src/styles/abstract/_direction.scss
+//
+// The inline insets and the logical corner radii through the compile's
+// direction form (abstract/_emit.scss): the logical form writes the logical
+// property, the arms form the physical side plus its mirrored arm. The full
+// contract — the forms, $self, arm aggregation, transitions, state-re-placed
+// insets — is in test/styles/direction.md, which the package does not pack.
+@use 'sass:list';
+@use 'base' as base;
+@use 'mixins' as m;
+@use 'emit' as emit;
+
+/// The inline-start inset.
+@mixin start($value, $self: false, $arm: true) {
+  @if emit.$direction-arms {
+    left: $value;
+    @if $arm {
+      @include m.rtl($self) {
+        left: auto;
+        right: $value;
+      }
+    }
+  } @else {
+    inset-inline-start: $value;
+  }
+}
+
+/// The inline-end inset.
+@mixin end($value, $self: false, $arm: true) {
+  @if emit.$direction-arms {
+    right: $value;
+    @if $arm {
+      @include m.rtl($self) {
+        right: auto;
+        left: $value;
+      }
+    }
+  } @else {
+    inset-inline-end: $value;
+  }
+}
+
+/// Both inline insets at once, `auto` allowed on either side; the arm swaps
+/// the pair whole.
+@mixin sides($start, $end, $self: false, $arm: true) {
+  @if emit.$direction-arms {
+    left: $start;
+    right: $end;
+    @if $arm {
+      @include m.rtl($self) {
+        left: $end;
+        right: $start;
+      }
+    }
+  } @else {
+    inset-inline-start: $start;
+    inset-inline-end: $end;
+  }
+}
+
+/// The four logical corner radii, `null` for an undeclared corner; all four
+/// write the physical shorthand in the arms form, fewer write longhands with
+/// mirrored longhand arms.
+@mixin corners(
+  $start-start: null, $start-end: null, $end-start: null, $end-end: null,
+  $self: false, $arm: true,
+) {
+  @if emit.$direction-arms {
+    @if $start-start and $start-end and $end-start and $end-end {
+      border-radius: $start-start $start-end $end-end $end-start;
+      @if $arm {
+        @include m.rtl($self) {
+          border-radius: $start-end $start-start $end-start $end-end;
+        }
+      }
+    } @else {
+      @if $start-start { border-top-left-radius: $start-start; }
+      @if $start-end { border-top-right-radius: $start-end; }
+      @if $end-start { border-bottom-left-radius: $end-start; }
+      @if $end-end { border-bottom-right-radius: $end-end; }
+      @if $arm {
+        @include m.rtl($self) {
+          @if $start-start { border-top-right-radius: $start-start; }
+          @if $start-end { border-top-left-radius: $start-end; }
+          @if $end-start { border-bottom-right-radius: $end-start; }
+          @if $end-end { border-bottom-left-radius: $end-end; }
+        }
+      }
+    }
+  } @else {
+    @if $start-start { border-start-start-radius: $start-start; }
+    @if $start-end { border-start-end-radius: $start-end; }
+    @if $end-start { border-end-start-radius: $end-start; }
+    @if $end-end { border-end-end-radius: $end-end; }
+  }
+}
+
+/// A direction arm this site aggregates by hand; nothing in the logical form.
+@mixin arms($self: false) {
+  @if emit.$direction-arms {
+    @include m.rtl($self) {
+      @content;
+    }
+  }
+}
+
+/// arms' wrapper for a subject that is not this site's selector extended
+/// (`rtl-selector` in abstract/_mixins.scss).
+@mixin arms-selector($subject) {
+  @if emit.$direction-arms {
+    @include m.rtl-selector($subject) {
+      @content;
+    }
+  }
+}
+
+/// An arms-only block at the document root under a prelude this site owns
+/// whole; nothing in the logical form.
+@mixin arms-at-root($prelude) {
+  @if emit.$direction-arms {
+    @at-root #{$prelude} {
+      @content;
+    }
+  }
+}
+
+/// A logical alias of a physical base a shared rule wrote on the pair; the
+/// arms form flips that base under a self arm.
+@mixin flip-start($value) {
+  @if emit.$direction-arms {
+    @include m.rtl(true) {
+      left: auto;
+      right: $value;
+    }
+  } @else {
+    left: auto;
+    inset-inline-start: $value;
+  }
+}
+
+/// `flip-start`'s end-side twin.
+@mixin flip-end($value) {
+  @if emit.$direction-arms {
+    @include m.rtl(true) {
+      right: auto;
+      left: $value;
+    }
+  } @else {
+    right: auto;
+    inset-inline-end: $value;
+  }
+}
+
+/// One transition entry in this form's property names (emit.transition-names);
+/// an inline inset names both physical sides in the arms form, so the move
+/// animates whichever side the direction placed it on.
+@function transition($property, $timing) {
+  $entries: ();
+  @each $name in emit.transition-names($property) {
+    $entries: list.append($entries, #{$name} $timing, comma);
+  }
+  @if list.length($entries) == 1 {
+    @return list.nth($entries, 1);
+  }
+  @return $entries;
+}
+
+/// Only the self arm, for a marker on the root this block is written in; the
+/// logical form emits nothing.
+@mixin arms-self-only {
+  @if emit.$direction-arms {
+    &:where(.#{base.$prefix}-rtl, [dir='rtl']) {
+      @content;
+    }
+  }
+}
+
+/// An inline-start inset whose value states re-place, through a custom
+/// property in the arms form; the logical form is the plain logical inset.
+@mixin start-value($name, $value) {
+  @if emit.$direction-arms {
+    left: var(#{$name}, #{$value});
+  } @else {
+    inset-inline-start: $value;
+  }
+}
+
+/// A state's override of a `start-value` base: the property this state moves
+/// the subject to.
+@mixin start-value-set($name, $value) {
+  @if emit.$direction-arms {
+    #{$name}: #{$value};
+  } @else {
+    inset-inline-start: $value;
+  }
+}

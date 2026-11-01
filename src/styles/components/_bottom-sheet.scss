@@ -4,6 +4,7 @@
 @use "../abstract/variables" as v;
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
+@use "../abstract/direction" as d;
 
 $component: "#{base.$prefix}-bottom-sheet";
 
@@ -62,8 +63,8 @@ $component: "#{base.$prefix}-bottom-sheet";
         color: t.color("on-surface");
 
         // CornerExtraLargeTop: the bottom edge meets the screen, so it is square
-        border-start-start-radius: v.shape("extra-large");
-        border-start-end-radius: v.shape("extra-large");
+        // (a block edge: the pair mirrors to itself, no direction arm)
+        @include d.corners($start-start: v.shape("extra-large"), $start-end: v.shape("extra-large"), $arm: false);
         // Level 1 (DockedStandardContainerElevation), plus a shadow of the
         // sheet's own colour below it to cover the gap the spring's overshoot
         // opens at the bottom edge
@@ -170,8 +171,7 @@ $component: "#{base.$prefix}-bottom-sheet";
             // level with the top of the screen, the corners square off
             // (DockedMinimizedContainerShape is CornerNone)
             &:where(.#{$component}--full-height *) {
-                border-start-start-radius: 0;
-                border-start-end-radius: 0;
+                @include d.corners($start-start: 0, $start-end: 0, $arm: false);
             }
         }
 
