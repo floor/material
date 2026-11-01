@@ -32,11 +32,15 @@ const cases: Record<string, () => unknown> = {
     add(createTextField({ label: "Email", value: "invalid", variant: "filled", error: true, supportingText: "Enter an email address" }));
     add(createTextField({ label: "Disabled", disabled: true, value: "Read only" }));
   },
-  select() {
+  async select() {
     const select = add(createSelect({ label: "Destination", variant: "outlined", options: [
       { id: "paris", text: "Paris" }, { id: "lyon", text: "Lyon" },
     ] }));
-    if (params.get("state") === "open") select.open();
+    if (params.get("state") === "open") {
+      await document.fonts.ready;
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      select.open();
+    }
     if (params.get("state") === "error") select.setError(true, "Choose a destination");
     (window as any).control = select;
   },
@@ -50,9 +54,13 @@ const cases: Record<string, () => unknown> = {
     add(createButtonGroup({ kind: "connected", buttons: [{ text: "Cut" }, { text: "Copy" }, { text: "Paste", disabled: true }] }));
     add(createButtonGroup({ buttons: [{ icon, ariaLabel: "Add" }, { icon, ariaLabel: "More" }] }));
   },
-  "split-button"() {
+  async "split-button"() {
     const split = add(createSplitButton({ text: "Save", items: [{ id: "copy", text: "Save a copy" }, { id: "export", text: "Export" }] }));
-    if (params.get("state") === "open") split.trailingElement.click();
+    if (params.get("state") === "open") {
+      await document.fonts.ready;
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      split.trailingElement.click();
+    }
   },
   tabs() {
     add(createTabs({ tabs: [{ text: "Overview", value: "overview", badge: "3" }, { text: "Details", value: "details" }] }));
