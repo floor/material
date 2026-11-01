@@ -1,7 +1,8 @@
 // scripts/fixtures/react-ssr-suspense-app.ts
-// The six shapes from the SSR audit. React 19 suspends with use(); React 18 throws the promise.
+// The six shapes from the SSR audit, plus the two from #461: a boundary inside
+// the host. React 19 suspends with use(); React 18 throws the promise.
 import * as React from "react";
-import { Button, Card } from "material/react";
+import { Button, Card, Tab, Tabs } from "material/react";
 
 const h = React.createElement;
 export const SUSPENSE_TEXT = "loaded 5";
@@ -43,6 +44,11 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
     A: h(React.Suspense, { fallback }, h(Button, { id: "a" }, h(Late, { promise }))),
     A2: h(React.Suspense, { fallback }, h(Button, { id: "a2" }, h(LazyInner))),
     B: h(Card, { id: "b" }, h(React.Suspense, { fallback }, h(Late, { promise }))),
+    // #461: a boundary INSIDE the host. The static pass renders the fallback
+    // without throwing, so the snapshot is built from the fallback state while
+    // the page's own stream waits for the resolved children.
+    B2: h(Button, { id: "b2" }, h(React.Suspense, { fallback: null }, h(Late, { promise }))),
+    B3: h(Tabs, { id: "b3" }, h(React.Suspense, { fallback }, h(Tab, { label: "One" }, h(Late, { promise }))), h(Tab, { label: "Two" }, "two")),
     C: h(React.Suspense, { fallback }, h(({ promise: value }: { promise: Promise<string> }) => h(Button, { id: "c" }, readPromise(value)), { promise })),
     E: h(React.Suspense, { fallback }, h("div", null, h(Late, { promise }))),
     F: h(Button, { id: "f" }, h(Late, { promise })),
@@ -52,7 +58,7 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
   return node;
 };
 
-export const SUSPENSE_SHAPES = ["A", "A2", "B", "C", "E", "F"] as const;
+export const SUSPENSE_SHAPES = ["A", "A2", "B", "B2", "B3", "C", "E", "F"] as const;
 
 /** Renders inside a host so a check can count static passes. */
 export const renderCounts = { sibling: 0 };

@@ -148,6 +148,18 @@ try {
       }
       assert.match(result.html, /<template shadowrootmode="open"/, `React ${version} ${name} shadow`);
       assert.match(result.html, name === "A2" ? /lazy loaded/ : /loaded 5/, `React ${version} ${name} content`);
+      if (name === "B3") {
+        // #461: a tabs root absorbs its items, so the snapshot itself must carry
+        // the boundary's tab, not only the streamed light DOM.
+        assert.match(result.html, /data-value="One"/, `React ${version} B3 snapshot keeps the boundary tab`);
+        continue;
+      }
+      if (name === "B2") {
+        // #461: an empty fallback leaves no light content at shell time, so a
+        // fallback-state snapshot ships with no label slot at all and the
+        // resolved text stays unprojected until upgrade.
+        assert.match(result.html, /<span part="text label"/, `React ${version} B2 snapshot keeps the label slot`);
+      }
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
     }
     console.log(`React ${version}: suspending children streamed (${shapes.map(([name]) => name).join(", ")})`);
