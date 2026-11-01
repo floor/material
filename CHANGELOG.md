@@ -17,6 +17,276 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-11-02
+
+Menus you can trust with keyboard and selection.
+
+### Fixed
+
+- **A vertical menu's selected item no longer draws a trailing check (#161).**
+  The horizontal menu's 18px check sits 12px from the item's end, past the
+  vertical item's 16px end padding, so it overlapped the label by 14px — long
+  labels had glyphs under it, in left-to-right and in right-to-left. A vertical
+  item keeps its container colour and its 12dp corner and paints no check, as
+  the menus specs and guidelines describe; `aria-selected` is unchanged. The
+  horizontal check is untouched: 18px, 12px from the end, 10px clear of the
+  label.
+
+- **The keyboard skips menu items and select options that are not shown (#172).**
+  An item kept in the DOM but hidden with `display: none` cannot take focus, yet
+  arrows and Enter treated it as a stop: a hidden option could become the
+  select's active descendant and Enter could commit an invisible value, and a
+  hidden first or middle menu item could make the menu, or everything after it,
+  unreachable. The keyboard now moves only through the items a person can see,
+  opens a menu on its first visible item and wraps through the visible ones, and
+  leaves the select without an active option when nothing is visible. Disabled
+  items still take focus and dividers still cannot, as the menus and lists
+  accessibility guidance describes.
+
+- **Submenus follow `setItems` (#175).**
+  After a menu's items were replaced, the right arrow resolved the focused
+  item's children through the list the menu had been created with: it opened the
+  old submenu, or nothing when the parent had been renamed, while the
+  replacement was on screen and returned by `getItems()`. A submenu now reads
+  the items it was opened with, so the key opens the replacement's next level
+  and focuses its items.
+
+### Internal
+
+- **`SIZES.md` publishes a measured size per component, and `bun run size` holds
+  it to the measurement (#160).**
+  The file lists every component's minified and gzipped size, its gzipped delta
+  against the kernel and its deferred gzip, generated from the measurement the
+  budgets already use (`bun run size --markdown`) and linked from the README's
+  Sizes section. A plain `bun run size` compares the committed rows with a fresh
+  measurement and fails on drift. `SIZES.md` is not packed, so nothing in the
+  package changes, and no new CI step or budget was added.
+
+- **CI runs the checks on every push to `main`, not only on a pull request
+  (#181).**
+  `.github/workflows/ci.yml` adds a `push` trigger for `main`, so every merge
+  commit now gets the checks its pull request ran, on the commit a `v*` tag and
+  a publish act on. Every existing trigger and step stays, and a run on `main`
+  is never cancelled by a newer one.
+
+- **`preupgrade:check` reuses pages and waits for settled layout, and the
+  evidence job drops from 22:57 to 2:44 (#195).**
+  With the same cases, assertions and measurements — the 1,789 styled result
+  objects match exactly, and the check itself goes from 21:23 to 1:38 — it
+  reuses one never-upgraded pre-page, two isolated prepared-neighbour
+  registries and four post-upgrade pages, and settles on fonts, images, finite
+  animations and two animation frames instead of fixed waits.
+
+- **`shadow-styles:check` measures every fixture on one page, and the group
+  drops from 5:52.8 to 3:08.8 (#198).**
+  With the same fixtures and findings — 37 elements, 1,797 fixtures and 11,311
+  cross-component classes on both trees, and the same five seeded findings when
+  the dialog stops adopting the button sheet — it navigates once and empties the
+  body before each probe, so the element bundle, the full stylesheet and the
+  element definitions are paid once instead of 1,797 times, and it no longer
+  reads every computed property of a node whose class already has its sheet
+  adopted. The `browser (elements)` job falls from 11m42s to 8m51s;
+  `elements:check`, which shares the job, is unchanged.
+
+- **`shadow-styles:check` waits on the fixture's work instead of a fixed sleep,
+  and the group drops from 3:10.0 to 2:12.6 (#202).**
+  With the same 37 elements, 1,797 fixtures and 11,311 cross-component classes,
+  and the same five seeded findings when the dialog stops adopting the button
+  sheet, the probe settles on the microtasks a build and an observer callback
+  queue, the fonts and images the fixture inserts, two animation frames and the
+  finite transitions it starts — in the document and in every shadow root it
+  reaches, nested hosts included. The `browser (elements)` job falls from 9m06s
+  to 8m04s; `elements:check`, which shares the job, is unchanged.
+
+- **CI's elements row is three rows by measured duration, and the run drops
+  from 8m58s to 6m56s (#211).**
+  The `browser (elements)` row held the run at 7m54s, of which
+  `elements:check` was 318.8s and `shadow-styles:check` 132.7s. `elements:check`
+  now takes parts — contiguous ranges of its sections, split before `menu in
+  the top layer`, 165s before the boundary and 154s after — and CI runs them as
+  `browser (elements-a)` and `browser (elements-b)`, with
+  `browser (shadow-styles)` a row of its own: 3m19s, 2m58s and 2m40s. Every
+  check still runs on every change — the two parts printed 489 and 191 checks,
+  the 680 the one row printed — and a local `bun run elements:check` is
+  unchanged. The `check` status the ruleset requires is untouched, and the
+  critical path is now `browser (components)` at 6m06s.
+
+- **CI's components row is two rows by measured duration, and the run drops
+  from 6m56s to 5m21s (#212).**
+  The `browser (components)` row held the run at 6m06s on the push run
+  41316827952, of which `core:check` was 138.9s and `consumer:check` 49.5s.
+  CI now runs it as `browser (components-a)` (`core:check` and
+  `carousel:check`) and `browser (components-b)` (the other ten): 3m17s and
+  2m52s on the push run 41319020497, and the run goes from 6m56s to 5m21s.
+  Every check still runs on every change, each exactly once —
+  `test/build/ci-commands.test.ts` holds the list and passes unchanged — and
+  the timing line `ssr:check` prints now names `browser (ssr)` rather than
+  `browser (components)`. The `check` status the ruleset requires is
+  untouched, and the critical path is now `browser (ssr)` at 4m17s.
+
+- **The menu close-contract test waits for the reveal it asserts, and its
+  pre-reveal cases no longer race the 20 ms reveal (#213).**
+  With the same 38 named cases, a positive reveal check now waits on the menu's
+  visible class through a `MutationObserver` with a 2 s deadline, the select's
+  and the split button's inner menus included, and the pre-reveal click and
+  Escape cases observe and dismiss in the task that opened the menu — no 3 ms
+  yield for a paused runner to stretch past the reveal. A bounded observer
+  still covers the 160 ms no-late-reveal window, now for Escape as well as
+  outside click. Measured before the fix on the unchanged test: 0/1,000
+  failures normally, 100/100 with a 40 ms scheduler pause before the old 3 ms
+  wait; with the fix, 1,000/1,000 and 100/100. Test only: no product code,
+  stylesheet, shared fixture or budget changes.
+
+- **`preupgrade:check` prints its mutation-control rows as `shift`, not `FAIL`
+  (#223).**
+  The mutation section runs every case without the pre-upgrade stylesheet to
+  prove the sheet is load-bearing — most elements must shift there and the
+  run's result is not a gate — so its rows now read `shift`, while the
+  with-stylesheet rows keep `FAIL`, and scanning the styles job log no longer
+  takes a control row for a failure. No gate, threshold, count or assertion
+  changes; the diff is the row printer and its mutation call site.
+
+- **The public types' union members and `extends` bases are pinned, and a
+  removal now fails a test instead of passing every gate (#226).**
+  The export pins record public names and kinds; the values a union accepts and
+  the bases an interface extends were checked by nothing. Measured on
+  77f4c63b, dropping `"medium"` from `FabSize`, dropping
+  `extends BaseComponentConfig` from `ButtonConfig` and dropping `"reset"` from
+  `ButtonConfig.type` each left `component-exports:check`, its 12 tests and
+  `bun run ts:check` green. `scripts/fixtures/type-shapes.json` now pins 295
+  shapes — 243 unions and 52 `extends`, read from the declarations on every
+  public subpath that resolves to a source entry (root, components and their
+  constants, core, elements and ssr), one entry per declaration and a property
+  union under `Interface.property` at any depth.
+  `test/type-shapes.test.ts` fails naming the type, then the member or base by
+  value, and `bun run type-shapes:update` regenerates the pin for a reviewed
+  diff; a union's members are sorted, because the checker orders them by
+  internal ids. Test and tooling only: no product code, budget or CI step
+  changes.
+
+- **CI's `browser (ssr)` row is two rows by engine, and it no longer decides
+  the run (#216).**
+  The row was the run's longest on the push before this change — 3m39s on
+  41330357545, against `browser (components-a)` at 3m26s — and on the push
+  run 41319020497 at main 7c488c5f it held the run at 4m17s. Inside it, on
+  the job log of run 41317795666 where the script printed 193.7s, parity took
+  29.4s and the three Chromium checks 36.3s against 127.8s for firefox and
+  webkit.
+  `scripts/check-ssr.ts` now takes parts the way `elements:check` does — `a` is
+  parity and Chromium, `b` is firefox and webkit, and no argument runs every
+  part — and CI runs them as `browser (ssr-a)` and `browser (ssr-b)`: 1m41s
+  and 3m11s on the push run 41334995191, where the longest row is
+  `browser (elements-a)` at 3m23s and the run is 4m31s against 4m41s. Every
+  sub-run still runs on every change, each exactly once, and
+  `test/build/ci-commands.test.ts` holds the list with `ssr:check:a` and
+  `ssr:check:b`; a local `bun run ssr:check` is unchanged. The Chromium browser
+  cache key is the one every other Chromium row already uses, so only the new
+  `firefox-webkit` key was cold on the first run. The `check` status the
+  ruleset requires is untouched.
+
+- **An export's deprecation is read through its declaration, and a public name
+  removed since the last release fails the pins (#222).**
+  Measured on 8b1ae397, adding `@deprecated` to the declaration a re-export
+  names left `root-exports:check` and `component-exports:check` green, and a
+  name deleted from a pin failed nothing, because each reader read the tags on
+  the re-export statement alone and neither compared its pins with a release.
+  `scripts/export-deprecation.ts` is now one resolver both readers share — the
+  export statement's tag wins, so a root move keeps its path note, and
+  otherwise the aliased declaration's tag counts — and the root pin records
+  such a deprecation as `deprecated` in place with `where: "declaration"`,
+  never in the migration table and never as a rename. Both readers also compare
+  their pins with the same files at the latest `v*` tag and fail on a name
+  public there and absent now (`test/build/export-pin-removals.test.ts`), and
+  the `tests` job checks out with `fetch-depth: 0` so the tag is there. Tooling
+  only: no API or runtime change.
+
+- **The release costs 11 bytes gzipped in the all-js row (127,769 to 127,780)
+  and 81 in the full stylesheet (63,645 to 63,726); the packed tarball is
+  882,680 bytes compressed, 5,096,854 unpacked in 1,625 files, against
+  882,445 and 5,095,982 in 1,625 files in 3.3.0.** The gzip rows, the unpacked
+  size and the file count read the same on this pull request's head as on main
+  at e57c811f; only four of the 17 packed rows, all CSS Brotli, differ between
+  them. No ceiling moved, and all seven README size rows stand as measured.
+
+## [3.3.0] - 2026-11-01
+
+Elements say everything the factories can.
+
+### Added
+
+- **`<m-button>` takes a toggle and a selected state (#157).**
+  With `toggle`, a button is a toggle button: a click flips it, the resting
+  shape swaps round to square, the host carries `aria-pressed`, and a `change`
+  event with `{ selected, value }` comes from the host, as `<m-icon-button>`
+  does. The `selected` attribute is the state at creation, the `selected`
+  property the live one; the attribute moves the state until the user or a
+  script changes it, and `form.reset()` restores its default. The factory
+  options are `toggle` and `selected`, and the framework props take the same
+  names. A `selected` attribute without `toggle` selects nothing.
+
+- **`<m-card>` aligns its actions row (#153).**
+  A card's slotted actions sat at the start of the row even though the
+  factory's button actions default to the end. `actions-align` takes `start`,
+  `center`, `end` (the default, as the factory's `actionsConfig.align` is) or
+  `space-between`; start and end follow the text direction. A change after
+  upgrade rebuilds the row without moving the light-DOM actions, and the
+  framework prop is `actionsAlign`. The pre-upgrade styles reserve the row at
+  its logical alignment, so a card with an actions region no longer grows 16px
+  when it upgrades.
+
+- **`<m-button>` places its icon after the label (#158).**
+  `icon-position="end"` puts the icon after the label and swaps the small
+  insets, as `iconPosition: "end"` does in the factory; `start` is the default
+  and keeps the leading icon the buttons guidelines describe. As on
+  `<m-extended-fab>`, the attribute is read at upgrade, and changing or
+  removing it rebuilds the button. The framework prop is `iconPosition`.
+
+- **FAB and extended FAB take a logical placement (#154).**
+  `<m-fab>`, `<m-extended-fab>`, `createFab` and `createExtendedFab` accept
+  `placement` — `none`, `top-start`, `top-end`, `bottom-start` or `bottom-end`
+  — and their framework props take the same name; `placement="bottom-end"`
+  names the trailing corner in every language, and the viewport margin stays
+  16px. The logical corners flip with `dir="rtl"` on the component or above
+  it, and with the `mtrl-rtl` class the runtime reflects: on the component's
+  own root, on an ancestor for a factory root, and on a custom element's
+  host; they follow a direction change while mounted, measured in Chromium on
+  both routes. The physical `position` values keep their left/right meaning
+  in RTL. `placement` wins over
+  `position`, including `none`; removing the attribute restores `position`,
+  and `MIGRATING.md` maps each physical corner to the logical one on both
+  sides.
+
+  The FAB menu keeps its `none`, `bottom-start` and `bottom-end` values and
+  its layouts; its inline edges are now written as physical sides with the
+  same direction arms, so it reads the direction the way FAB placement does,
+  root marker included: `dir="rtl"` or `mtrl-rtl` on the menu root flips the
+  outer menu, its inner close FAB and its list together. The review measured
+  what changes in the bundled `full-css` build: `dir="rtl"` on the page or an
+  ancestor now flips the menu, which the bundler's earlier `:lang()` lowering
+  of `inset-inline-*` did not match, and a page that is RTL only by language
+  (`<html lang="ar">` with no `dir`) no longer flips it, which that lowering
+  did. In the unbundled stylesheet and the elements' shadow sheets,
+  `dir="rtl"` flipped the menu before and still does, and the `mtrl-rtl`
+  class now flips it too.
+
+### Deprecated
+
+- **The physical FAB `position` values (#154).**
+  `top-left`, `top-right`, `bottom-left` and `bottom-right` on `<m-fab>`,
+  `<m-extended-fab>` and the two factories, with `setPosition` and
+  `getPosition`, are deprecated for removal in 4.0. They stay available
+  through 3.x and keep their physical meaning in RTL; `MIGRATING.md` maps
+  each to the `placement` naming the same corner in left-to-right and in
+  right-to-left.
+
+### Internal
+
+- **The release costs 15 bytes gzipped in the all-js row (127,754 to 127,769)
+  and 88 fewer in the full stylesheet (63,733 to 63,645); the packed tarball
+  is 882,445 bytes compressed, 5,095,982 unpacked in 1,625 files, against
+  878,746 and 5,067,838 in 1,623 files in 3.2.7.** No ceiling moved, and all
+  seven README size rows stand as measured.
+
 ## [3.2.7] - 2026-10-31
 
 A lighter package.
@@ -4481,7 +4751,9 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.7...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.1...HEAD
+[3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
+[3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
 [3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5

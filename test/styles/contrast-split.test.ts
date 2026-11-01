@@ -191,6 +191,14 @@ describe("explicit contrast levels are opt-in", () => {
     // the physical aliases and all colour/type rules stay pinned. The FAB
     // menu places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // A vertical menu's selected item paints no trailing check: its 16px end
+    // padding has no room for the horizontal variant's mark, which covered
+    // the label, while the horizontal menu keeps its own
+    // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
     // The switch handle and its state layer spring on `inset` — the physical
     // shorthand covering the sides an old-target bundler lowers the inset into
     // (`left`, `right`, and the pressed rule's `top`) — beside the logical
@@ -200,8 +208,8 @@ describe("explicit contrast levels are opt-in", () => {
     // also rejects `linear()` and never animated these entries before either
     // (styles/components/_switch.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("613eb7848780e523a6f866b3b12c115105e71c4e2ff956d7b7a5557950268f87");
-    expect(css.length).toBe(544362);
+      .toBe("7d0279b91c0b43c6bca514bdf6ff7d1747891ddfa419d2ae677f639e5624a0af");
+    expect(css.length).toBe(544313);
   });
 
   test("today's sheets still resolve to the fixture", () => {
