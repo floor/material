@@ -219,7 +219,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // material/core/shapes: every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
-  tooltip: kb(6.1), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
+  tooltip: 6_300, // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952; the on-screen fix (flip on the placement axis, both-axis clamp, arrow re-anchor on clamp, class derived from final geometry): 6,298 gzipped, the smallest correct form — re-anchoring unconditionally breaks the rich rows' requested anchor, and a centre-comparison anchor pick misses the target at a clamped edge (floor/material#173). kb(6.1) = 6,246 raised to 6,300 by the Floor orchestrator (Atlas decision, this fix only), 2026-11-01
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
