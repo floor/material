@@ -82,3 +82,51 @@ describe('trailing action and dragged state', () => {
     expect(value(`${root}--dragged:not(${root}--disabled)::after`, 'opacity')).toBe('0.16');
   });
 });
+
+describe('the secondary action mirrors in every artefact', () => {
+  // The remove button's two start corners and the 48px target behind it: the
+  // adopted sheets keep the logical pair and the target's auto inline-start
+  // margin, which mirror natively; the lowered artefacts write the physical
+  // pair with both mirrored forms in one aggregated arm at the root
+  // (abstract/_direction.scss, scripts/build-styles.ts).
+  const compileArms = (): string =>
+    compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/chips';`,
+      { loadPaths: ['src/styles'] },
+    ).css.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  test('the adopted sheets keep the logical corners and no arm', () => {
+    expect(value(`${root}__remove`, 'border-start-start-radius')).toBe('0');
+    expect(value(`${root}__remove`, 'border-end-start-radius')).toBe('0');
+    expect(css).not.toContain('.mtrl-rtl');
+    expect(css).not.toContain('[dir=rtl]');
+  });
+
+  test('the lowered artefacts write the physical pair, both mirrored forms one arm', () => {
+    const arms = compileArms();
+    expect(arms).toContain('.mtrl-chip__remove, .mtrl-chip__trailing-action {');
+    expect(arms).toContain('border-top-left-radius: 0;');
+    expect(arms).toContain('border-bottom-left-radius: 0;');
+    // One prelude, both subjects: the marker forms the runtime reflects plus
+    // the attribute, the subject list bare so a mark on the chip root reaches
+    // its parts. `inherit` restates the chip's radius before the end corners
+    // are zeroed.
+    expect(arms).toContain(
+      ":where(.mtrl-rtl, :host(.mtrl-rtl), [dir=rtl]) :is(.mtrl-chip__remove, .mtrl-chip__trailing-action):not(.mtrl-ltr *) {" +
+        '\n  border-radius: inherit;\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;\n}',
+    );
+    // No logical corner property is left for a bundler to lower into :lang().
+    expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
+  });
+
+  test("the target runs its 48px back from the chip's end without an arm", () => {
+    // The over-constrained inset (both physical sides 0) with an auto
+    // inline-start margin pushes the box to the inline end and mirrors
+    // natively; a bundler lowers neither the physical inset shorthand nor a
+    // margin, so the same rule serves both forms.
+    for (const sheet of [css, compileArms()]) {
+      expect(sheet).toContain('inset: 50% 0 auto;');
+      expect(sheet).toContain('margin-inline-start: auto;');
+    }
+  });
+});

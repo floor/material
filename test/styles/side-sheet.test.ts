@@ -97,4 +97,40 @@ describe('side sheet stylesheet', () => {
     expect(css).not.toContain('9999px');
     expect(css).not.toContain('!important');
   });
+
+  test('the modal corners mirror in every artefact: logical pair, physical pair plus a self arm', () => {
+    // Only the modal sheet rounds, on its inner edge. The adopted sheets keep
+    // the logical pair; the lowered artefacts write the physical pair with the
+    // mirrored pair in one arm per placement whose prelude covers a mark on
+    // the sheet root itself (abstract/_direction.scss).
+    const radius = 'var(--mtrl-sys-shape-corner-large, 16px)';
+    const endModal = '.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container';
+    expect(value(endModal, 'border-start-start-radius')).toBe(radius);
+    expect(value(endModal, 'border-end-start-radius')).toBe(radius);
+    const arms = compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/side-sheet';`,
+      { loadPaths: ['src/styles'], style: 'expanded' },
+    ).css.replace(/,\n/g, ', ');
+    expect(arms).toContain(`border-top-left-radius: ${radius};`);
+    // The arm resets the base side to auto's pair — 0, the docked edge — and
+    // writes the mirrored inner edge, under every marker form.
+    expect(arms).toContain(
+      '.mtrl-side-sheet--modal.mtrl-side-sheet--end:where(.mtrl-rtl, [dir=rtl]) .mtrl-side-sheet__container, ' +
+        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container, ' +
+        '[dir=rtl] .mtrl-side-sheet--modal.mtrl-side-sheet--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container {' +
+        '\n  border-top-left-radius: 0;\n  border-bottom-left-radius: 0;' +
+        `\n  border-top-right-radius: ${radius};\n  border-bottom-right-radius: ${radius};\n}`,
+    );
+    expect(arms).toContain(
+      '.mtrl-side-sheet--modal.mtrl-side-sheet--start:where(.mtrl-rtl, [dir=rtl]) .mtrl-side-sheet__container, ' +
+        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container, ' +
+        '[dir=rtl] .mtrl-side-sheet--modal.mtrl-side-sheet--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container {' +
+        '\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;' +
+        `\n  border-top-left-radius: ${radius};\n  border-bottom-left-radius: ${radius};\n}`,
+    );
+    // No logical corner property is left for a bundler to lower into :lang().
+    expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
+  });
 });

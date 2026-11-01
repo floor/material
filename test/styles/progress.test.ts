@@ -62,4 +62,26 @@ describe('progress stylesheet', () => {
     expect(css).not.toContain('!important');
     expect(css).not.toContain('style*=');
   });
+
+  test('the label docks on the physical end in the lowered artefacts, mirrored by one arm', () => {
+    // The linear label sits under the indicator's end edge. The adopted
+    // sheets keep the logical inset (asserted above); the artefacts a
+    // consumer bundler lowers write the physical side, with the mirrored side
+    // in one arm that also covers a marker on this root — --linear and the
+    // runtime's direction mark are the same element, and the plain arm
+    // members need the marker on an ancestor (abstract/_direction.scss).
+    const arms = compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/progress';`,
+      { loadPaths: ['src/styles'], style: 'expanded' },
+    ).css.replace(/,\n/g, ', ');
+    expect(arms).toContain('.mtrl-progress--linear .mtrl-progress__label {\n  right: 0;\n');
+    expect(arms).toContain(
+      '.mtrl-progress--linear:where(.mtrl-rtl, [dir=rtl]) .mtrl-progress__label, ' +
+        ':where(.mtrl-rtl) .mtrl-progress--linear .mtrl-progress__label, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-progress--linear .mtrl-progress__label, ' +
+        "[dir=rtl] .mtrl-progress--linear:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-progress__label {\n  right: auto;\n  left: 0;\n}",
+    );
+    // No logical side inset is left for a bundler to lower into a :lang() arm.
+    expect(arms).not.toMatch(/inset-inline-(start|end)/);
+  });
 });

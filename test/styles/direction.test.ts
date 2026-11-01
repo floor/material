@@ -23,6 +23,10 @@ const SOURCES = {
   transition: `@use 'abstract/direction' as d;\n.a { transition: opacity 100ms linear, d.transition(inset-inline-start, 200ms ease); }`,
   flipStart: `@use 'abstract/direction' as d;\n.a { left: 16px; }\n.a { @include d.flip-start(16px); }`,
   flipEnd: `@use 'abstract/direction' as d;\n.a { right: 16px; }\n.a { @include d.flip-end(16px); }`,
+  armsAtRoot: `@use 'abstract/direction' as d;\n` +
+    `.a { left: 1px; @include d.arms-at-root(":where(.mtrl-rtl, [dir='rtl']) .b:not(.mtrl-ltr *)") { left: auto; right: 1px; } }`,
+  startValue: `@use 'abstract/direction' as d;\n` +
+    `.a { @include d.start-value(--a-thumb-start, 6px); }\n.a:checked { @include d.start-value-set(--a-thumb-start, 22px); }`,
 };
 
 const compile = (source: string, arms: boolean): string =>
@@ -51,6 +55,11 @@ describe('the direction switch', () => {
     // corner in either direction.
     expect(compile(SOURCES.flipStart, false)).toBe('.a{left:16px}.a{left:auto;inset-inline-start:16px}');
     expect(compile(SOURCES.flipEnd, false)).toBe('.a{right:16px}.a{right:auto;inset-inline-end:16px}');
+    // The aggregated arm at a prelude the site owns whole, and a start inset
+    // states re-place: both are invisible here — the logical property mirrors
+    // natively and names no custom property.
+    expect(compile(SOURCES.armsAtRoot, false)).toBe('.a{left:1px}');
+    expect(compile(SOURCES.startValue, false)).toBe('.a{inset-inline-start:6px}.a:checked{inset-inline-start:22px}');
   });
 
   test('the arms form is the physical side and the arm the hand series wrote', () => {
@@ -96,6 +105,18 @@ describe('the direction switch', () => {
     expect(compile(SOURCES.flipEnd, true)).toBe(
       '.a{right:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,' +
       ':where(:host(.mtrl-rtl)) .a,[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:auto;left:16px}',
+    );
+    // The aggregated arm keeps the prelude the site wrote, markers and subject
+    // list included, where the wrappers' own shapes do not fit.
+    expect(compile(SOURCES.armsAtRoot, true)).toBe(
+      '.a{left:1px}:where(.mtrl-rtl,[dir=rtl]) .b:not(.mtrl-ltr *){left:auto;right:1px}',
+    );
+    // A start inset states re-place: the base names a custom property as the
+    // value's fallback and every state's move rides the property — a bundler
+    // lowers no custom property, so the move animates on whichever side the
+    // one arm below placed it.
+    expect(compile(SOURCES.startValue, true)).toBe(
+      '.a{left:var(--a-thumb-start, 6px)}.a:checked{--a-thumb-start:22px}',
     );
   });
 

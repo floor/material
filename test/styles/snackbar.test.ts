@@ -81,4 +81,30 @@ describe('snackbar stylesheet', () => {
     expect(css).not.toContain('.mtrl-snackbar--primary');
     expect(css).not.toContain('.mtrl-snackbar--multiline');
   });
+
+  test('the placed snackbar is physical with a self arm in the lowered artefacts', () => {
+    // The placement class sits on the snackbar itself, which the runtime may
+    // also mark: the self form covers a marker on the snackbar's own root
+    // (abstract/_direction.scss). The adopted sheets keep the logical inset.
+    const arms = compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/snackbar';`,
+      { loadPaths: ['src/styles'], style: 'expanded' },
+    ).css.replace(/,\n/g, ', ');
+    expect(arms).toContain('.mtrl-snackbar--start {\n  left: 16px;\n}');
+    expect(arms).toContain('.mtrl-snackbar--end {\n  right: 16px;\n}');
+    // One prelude, every marker form: the snackbar's own root, an ancestor's
+    // class, the shadow host's class, and the attribute cut by a nearer ltr.
+    expect(arms).toContain(
+      '.mtrl-snackbar--start:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--start, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--start, ' +
+        "[dir=rtl] .mtrl-snackbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  left: auto;\n  right: 16px;\n}",
+    );
+    expect(arms).toContain(
+      '.mtrl-snackbar--end:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--end, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--end, ' +
+        "[dir=rtl] .mtrl-snackbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  right: auto;\n  left: 16px;\n}",
+    );
+    // No logical side inset is left for a bundler to lower into a :lang() arm.
+    expect(arms).not.toMatch(/inset-inline-(start|end)/);
+  });
 });
