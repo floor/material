@@ -502,6 +502,8 @@
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",
+    "ssr:check:a": "bun run scripts/check-ssr.ts a",
+    "ssr:check:b": "bun run scripts/check-ssr.ts b",
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
