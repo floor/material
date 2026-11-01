@@ -60,8 +60,8 @@ describe("unannounced removals from a component pin", () => {
   });
 
   test("a subpath that is gone takes its public names with it", () => {
-    const released: ComponentExports = { textfield: [{ name: "TextField", kind: "class", status: "public" }] };
-    expect(componentRemovals(released, {})).toEqual([`textfield: TextField (class) ${NOTE}: deprecate it first, then remove it in a later release`]);
+    const released: ComponentExports = { snackbar: [{ name: "Snackbar", kind: "class", status: "public" }] };
+    expect(componentRemovals(released, {})).toEqual([`snackbar: Snackbar (class) ${NOTE}: deprecate it first, then remove it in a later release`]);
   });
 });
 
