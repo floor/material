@@ -1,5 +1,11 @@
 // Compose DatePickerModalTokens: 360px container, 120px header, 40px date state
 // layers, 36x72px year state layers, extra-large corners and elevation level 3.
+//
+// The insets are physical sides with a direction arm, not logical
+// `inset-inline-*` properties: consumer bundlers lower those into :lang()
+// arms that miss dir="rtl" (src/styles/components/_text-field.scss), and the
+// trigger, the docked calendar and the full-screen buttons would stay on the
+// left-to-right side of a right-to-left page.
 @use '../abstract/base' as base;
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
@@ -17,16 +23,28 @@ $component: '#{base.$prefix}-datepicker';
   contain: inline-size;
   contain-intrinsic-inline-size: v.text-field('width');
   color: t.color('on-surface');
-  // The physical range band and chevron flip: left-to-right at the root,
-  // right-to-left under the direction arm. The defaults are declared here, not
-  // only used as var() fallbacks, because a custom property inherits: a nested
-  // LTR instance must not read its RTL parent's values.
+  // The physical range band, its bleed into the grid padding, and the chevron
+  // flip: left-to-right at the root, right-to-left under the direction arm.
+  // The defaults are declared here, not only used as var() fallbacks, because
+  // a custom property inherits: a nested LTR instance must not read its RTL
+  // parent's values. The bleed is a value here rather than a physical-pair arm
+  // on the ::before: the arm's `:not(.mtrl-ltr *)` cut sits after the
+  // pseudo-element, which no combinator can match, so an LTR instance in an
+  // RTL page would take the RTL band.
   --#{$component}-start: 100% 0;
   --#{$component}-end: 0 0;
+  --#{$component}-bleed-first-left: auto;
+  --#{$component}-bleed-first-right: 100%;
+  --#{$component}-bleed-last-left: 100%;
+  --#{$component}-bleed-last-right: auto;
   --#{$component}-flip: none;
   @include m.rtl($self: true) {
     --#{$component}-start: 0 0;
     --#{$component}-end: 100% 0;
+    --#{$component}-bleed-first-left: 100%;
+    --#{$component}-bleed-first-right: auto;
+    --#{$component}-bleed-last-left: auto;
+    --#{$component}-bleed-last-right: 100%;
     --#{$component}-flip: scaleX(-1);
   }
   &__anchor { display: flex; position: relative; }
@@ -42,7 +60,10 @@ $component: '#{base.$prefix}-datepicker';
     &:disabled { opacity: 0.38; }
   }
   &__anchor &__input { padding-inline-end: 56px; }
-  &__trigger { position: absolute; inset-inline-end: 4px; top: 4px; font-size: 24px; }
+  &__trigger {
+    position: absolute; top: 4px; right: 4px; font-size: 24px;
+    @include m.rtl { right: auto; left: 4px; }
+  }
   &__help, &__error { @include m.typography('body-small'); padding: 4px 16px 0; }
   &__help { color: t.color('on-surface-variant'); }
   &__error { color: t.color('error'); &:empty { display: none; } }
@@ -63,8 +84,14 @@ $component: '#{base.$prefix}-datepicker';
     border-radius: 0; box-shadow: none; overflow: hidden;
     .#{$component}__content { height: 100%; }
     .#{$component}__modal-header { min-height: 128px; padding: 64px 64px 12px; }
-    .#{$component}__close { position: absolute; inset-inline-start: 4px; top: 4px; }
-    .#{$component}__save { position: absolute; inset-inline-end: 12px; top: 8px; }
+    .#{$component}__close {
+      position: absolute; top: 4px; left: 4px;
+      @include m.rtl { left: auto; right: 4px; }
+    }
+    .#{$component}__save {
+      position: absolute; top: 8px; right: 12px;
+      @include m.rtl { right: auto; left: 12px; }
+    }
     .#{$component}__title { margin-bottom: 0; }
     .#{$component}__headline { @include m.typography('title-large'); }
     .#{$component}__weekdays { padding: 0 var(--#{$component}-grid-inset); }
@@ -73,7 +100,10 @@ $component: '#{base.$prefix}-datepicker';
   &__subhead { @include m.typography('title-small'); color: t.color('on-surface-variant'); padding: 20px 24px 8px; }
   // Docked: corner-large (16dp), where the dialogs are extra-large.
   &--docked { border-radius: v.shape('large'); }
-  &--docked { position: absolute; inset: auto; top: 100%; inset-inline-start: 0; margin: 8px 0 0; z-index: v.z-index('dropdown'); }
+  &--docked {
+    position: absolute; inset: auto; top: 100%; left: 0; margin: 8px 0 0; z-index: v.z-index('dropdown');
+    @include m.rtl { left: auto; right: 0; }
+  }
   &__content { display: flex; flex-direction: column; }
   &__modal-header {
     position: relative; box-sizing: border-box; min-height: 120px; padding: 16px 64px 16px 24px;
@@ -83,7 +113,10 @@ $component: '#{base.$prefix}-datepicker';
   &--range &__headline { @include m.typography('title-large'); }
   &__title { @include m.typography('label-large'); margin-bottom: 20px; }
   &__headline { @include m.typography('headline-large'); overflow-wrap: anywhere; }
-  &__mode-toggle { position: absolute; inset-inline-end: 12px; bottom: 12px; font-size: 24px; }
+  &__mode-toggle {
+    position: absolute; right: 12px; bottom: 12px; font-size: 24px;
+    @include m.rtl { right: auto; left: 12px; }
+  }
   // The month and year row is 56dp, as in Compose (48dp buttons, 4dp above and below).
   &__header { display: flex; align-items: center; padding: 4px 12px; min-height: 56px; box-sizing: border-box; }
   &__navigation { display: flex; flex: 1; }
@@ -132,8 +165,14 @@ $component: '#{base.$prefix}-datepicker';
     content: ''; position: absolute; top: 4px; width: var(--#{$component}-grid-inset); height: 40px;
     background: t.color('secondary-container');
   }
-  &__cell--range:last-child::before { inset-inline-start: 100%; }
-  &__cell--range:first-child::before { inset-inline-end: 100%; }
+  &__cell--range:last-child::before {
+    left: var(--#{$component}-bleed-last-left);
+    right: var(--#{$component}-bleed-last-right);
+  }
+  &__cell--range:first-child::before {
+    left: var(--#{$component}-bleed-first-left);
+    right: var(--#{$component}-bleed-first-right);
+  }
   &__day {
     position: relative; isolation: isolate; width: 100%; height: 48px; padding: 0; border: 0;
     background: transparent; color: t.color('on-surface'); cursor: pointer;
