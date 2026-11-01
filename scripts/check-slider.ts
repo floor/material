@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 import { gzipSync } from "node:zlib";
 import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
+import { checkSliderNames } from "./fixtures/slider-names";
 
 declare global {
   interface Window {
@@ -71,6 +72,7 @@ try {
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => window.ready);
+  await checkSliderNames(page, artifacts);
   const old = reference ? await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" }) : null;
   if (old) { await old.goto(`http://127.0.0.1:${server.port}/?reference`); await old.waitForFunction(() => window.ready); }
   const scenarios: (SliderConfig & { name: string })[] = [
