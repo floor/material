@@ -185,19 +185,15 @@ export type SliderActiveHandle = "first" | "second" | null;
 /**
  * The controller's state, shared with the handlers it builds.
  *
- * Written down once because controller.ts owns it and handlers.ts reads every
+ * Written down once because controller.ts owns it and its handlers read every
  * field of it; two descriptions of the same object is how they drift.
  *
  * @category Components
  * @internal
  */
 export interface SliderState {
-  /** The component the controller was handed, with its DOM features */
-  component: SliderStateComponent;
   value: number;
   secondValue: number | null;
-  /** The value before the last change, kept for centred sliders */
-  previousValue?: number;
   min: number;
   max: number;
   step: number;
@@ -210,11 +206,10 @@ export interface SliderState {
 }
 
 /**
- * The DOM the controller and handlers reach for through `state.component`.
+ * The DOM the controller reaches for on the component it is handed.
  *
  * Every element is optional: withDom installs them, and a range slider has the
- * second pair while a single one does not. `components` is the older place the
- * same elements were kept, which both files still fall back to.
+ * second pair while a single one does not.
  *
  * @category Components
  * @internal
@@ -230,14 +225,6 @@ export interface SliderStateComponent {
   valueBubble?: HTMLElement | null;
   secondHandle?: HTMLElement | null;
   secondValueBubble?: HTMLElement | null;
-  /**
-   * The older bag the same elements were kept in. **Internal, and not part of
-   * the public contract** (3.0.0): nothing in the library fills it, the
-   * controller and the handlers only fall back to it, and it may go in any
-   * release. `SliderComponent` has no `components`.
-   * @internal
-   */
-  components?: Record<string, HTMLElement | null | undefined>;
   getClass: (name: string) => string;
   emit: (event: string, data: unknown) => unknown;
   /** withStates installs this whole, so the member is not optional inside it */
@@ -254,8 +241,6 @@ export interface SliderStateComponent {
   /** withTracks installs this; the controller calls it with the state after every change */
   renderTracks?: (state?: unknown) => void;
   lifecycle?: { destroy?: () => void; mount?: () => void };
-  /** The controller's own API, once withController has installed it */
-  slider?: { setValue?: (value: number, triggerEvent?: boolean) => unknown };
 }
 
 /**
@@ -266,51 +251,6 @@ export interface SliderStateComponent {
  * @internal
  */
 export type SliderPointerEvent = MouseEvent | TouchEvent;
-
-/**
- * The slider's elements, gathered from wherever they are kept.
- *
- * The index signature is for the legacy `components` bag, which is spread over
- * the named five so anything else it holds comes through too.
- *
- * @category Components
- * @internal
- */
-export interface SliderElements {
-  container?: HTMLElement | null;
-  handle?: HTMLElement | null;
-  valueBubble?: HTMLElement | null;
-  secondHandle?: HTMLElement | null;
-  secondValueBubble?: HTMLElement | null;
-  [key: string]: HTMLElement | null | undefined;
-}
-
-/**
- * The drawing and measuring helpers the controller hands to its handlers.
- *
- * @category Components
- * @internal
- */
-export interface SliderUiRenderer {
-  getPercentage: (value: number) => number;
-  getValueFromPosition: (position: number) => number;
-  roundToStep: (value: number) => number;
-  clamp: (value: number, min?: number, max?: number) => number;
-  showValueBubble: (bubbleElement: HTMLElement | null, show: boolean) => void;
-  /** Alias of render, kept for callers that used the older name */
-  updateUi: () => void;
-  render: () => void;
-}
-
-/**
- * How the handlers report what happened.
- *
- * @category Components
- * @internal
- */
-export interface SliderEventHelpers {
-  triggerEvent: (eventName: string, originalEvent?: Event | null) => void;
-}
 
 /** Public model, native forwarding and gesture notifications. */
 export interface SliderEvents extends TouchEvents {
