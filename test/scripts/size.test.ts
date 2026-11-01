@@ -9,6 +9,7 @@ import { describe, test, expect } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { brotliCompressSync, constants } from 'node:zlib';
 import {
   BUDGET_BYTES,
   DEFERRED_BUDGET_BYTES,
@@ -16,6 +17,7 @@ import {
   KNOWN_DEPS,
   SCENARIO_DEFS,
   buildScenario,
+  brotliBytes,
   missingMeasuredScenarios,
   sizeGateFails,
 } from '../../scripts/size';
@@ -82,6 +84,30 @@ describe('size gate', () => {
       expect(names.has(name)).toBe(true);
       for (const dep of KNOWN_DEPS[name] ?? []) expect(names.has(dep)).toBe(true);
     }
+  });
+});
+
+describe('brotli measurement', () => {
+  // The reported figure is the CDN one: quality 11, the setting
+  // check-adapter-size.ts gates adapters on. The sample is varied enough that
+  // a lower quality measurably disagrees, so the equality pins the setting.
+  const SAMPLE = new TextEncoder().encode(
+    Array.from({ length: 96 }, (_, i) => `export const hook${i} = (v) => v * ${i} + ${i % 7}; // ${'x'.repeat(i % 13)}\n`).join(''),
+  );
+
+  test('reports quality 11, not another quality', () => {
+    expect(brotliBytes(SAMPLE)).toBe(
+      brotliCompressSync(SAMPLE, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length,
+    );
+    expect(brotliBytes(SAMPLE)).not.toBe(
+      brotliCompressSync(SAMPLE, { params: { [constants.BROTLI_PARAM_QUALITY]: 1 } }).length,
+    );
+  });
+
+  test('is deterministic and smaller than the minified input it measures', () => {
+    expect(brotliBytes(SAMPLE)).toBe(brotliBytes(SAMPLE));
+    expect(brotliBytes(SAMPLE)).toBeGreaterThan(0);
+    expect(brotliBytes(SAMPLE)).toBeLessThan(SAMPLE.byteLength);
   });
 });
 

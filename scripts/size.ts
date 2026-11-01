@@ -15,6 +15,10 @@
  * deferred column and are left out of `KNOWN_DEPS`, so their markers must not
  * appear in that initial graph.
  *
+ * Brotli is reported beside gzip for the same initial graph, at quality 11
+ * (`node:zlib`, the setting check-adapter-size.ts uses — what a CDN serves).
+ * It is reported, never gated: every budget in this file stays gzip.
+ *
  * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
  * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
  * least 100 bytes above the measured gzip. Explicit byte ceilings for a
@@ -36,6 +40,7 @@
  */
 
 import { gzipSync } from "bun";
+import { brotliCompressSync, constants } from "node:zlib";
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
@@ -139,6 +144,14 @@ export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
 
 /** Tenth-of-a-KB ceiling, matching how sizes are quoted. */
 export const kb = (n: number): number => Math.floor(n * 1024);
+
+/**
+ * Brotli of the initial graph at quality 11 — what a CDN serves, the setting
+ * check-adapter-size.ts gates adapters on. Reported beside `gzBytes`; no
+ * budget reads it.
+ */
+export const brotliBytes = (bytes: Uint8Array): number =>
+  brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length;
 
 export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // The nearest-[dir] direction module (core/dom/direction, 3.2.2) is shared
@@ -329,6 +342,8 @@ interface Result {
   name: ScenarioName;
   minBytes: number;
   gzBytes: number;
+  /** Brotli (quality 11) of the same initial graph `gzBytes` measures. */
+  brBytes: number;
   /** Gzip of extra JS chunks. Dynamic imports land here, not in `gzBytes`. */
   deferredGzBytes: number;
   minKB: number;
@@ -551,6 +566,7 @@ const main = async (): Promise<void> => {
 
     const { initialBytes, deferredBytes, texts } = built;
     const gzBytes = gzipSync(initialBytes).byteLength;
+    const brBytes = brotliBytes(initialBytes);
     const deferredGzBytes = deferredBytes.byteLength === 0 ? 0 : gzipSync(deferredBytes).byteLength;
 
     bundles.set(scenario.name, texts.join("\n"));
@@ -558,6 +574,7 @@ const main = async (): Promise<void> => {
       name: scenario.name,
       minBytes: initialBytes.byteLength,
       gzBytes,
+      brBytes,
       deferredGzBytes,
       minKB: initialBytes.byteLength / 1024,
       gzKB: gzBytes / 1024,
@@ -615,10 +632,11 @@ const main = async (): Promise<void> => {
   const COL_NAME = 20;
   const COL_MIN = 10;
   const COL_GZ = 9;
+  const COL_BR = 9;
   const COL_DELTA = 12;
   const COL_DEFERRED = 12;
   const showDeferred = results.some((result) => result.deferredGzBytes > 0);
-  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
+  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_BR + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
 
   const pad = (value: string, width: number): string => value.padStart(width);
   const sep = "─".repeat(LINE_W);
@@ -626,17 +644,18 @@ const main = async (): Promise<void> => {
   console.log("");
   console.log("  mtrl — Component Sizes");
   console.log("");
-  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"vs core".padStart(COL_DELTA)}`;
+  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"Brotli".padStart(COL_BR)}  ${"vs core".padStart(COL_DELTA)}`;
   console.log(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
   console.log(`  ${sep}`);
 
   for (const result of results) {
     const min = `${result.minKB.toFixed(1)} KB`;
     const gz = `${result.gzKB.toFixed(1)} KB`;
+    const br = `${(result.brBytes / 1024).toFixed(1)} KB`;
     const delta = result.name === "core"
       ? ""
       : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
-    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(delta, COL_DELTA)}`;
+    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(br, COL_BR)}  ${pad(delta, COL_DELTA)}`;
     if (!showDeferred) {
       console.log(line);
       continue;
