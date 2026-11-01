@@ -9,7 +9,6 @@ import {
   OpenerTarget,
 } from "../types";
 import { focusWithin } from "./layer";
-import { SHADOW_SURFACE, type InternalMenuConfig } from "../inner";
 
 /**
  * A component used as the menu opener. It is resolved by its element,
@@ -190,13 +189,8 @@ const withOpener =
       component.element.id = menuId;
     }
 
-    // Connect menu and opener with ARIA. A menu rendered by an element keeps
-    // its surface inside that element's shadow root, where the opener, outside
-    // it, cannot reach the id; such a menu says so and the element that names
-    // the opener declares the relationship (see SHADOW_SURFACE in ../inner).
-    if (!(config as MenuConfig & InternalMenuConfig)[SHADOW_SURFACE] && !openerElement.hasAttribute("aria-controls")) {
-      openerElement.setAttribute("aria-controls", menuId);
-    }
+    // Connect menu and opener with ARIA
+    openerElement.setAttribute("aria-controls", menuId);
   };
 
   /**
