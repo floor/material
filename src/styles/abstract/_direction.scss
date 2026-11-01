@@ -138,6 +138,19 @@
   }
 }
 
+/// An arms-only block at the document root under a prelude this site owns
+/// whole: the aggregated arm whose shape the wrappers above do not express —
+/// one prelude shared across the marker forms, a subject list of its own,
+/// cut by the nested LTR boundary. The prelude is the site's; only the
+/// arms-only part is the switch's. Nothing in the logical form.
+@mixin arms-at-root($prelude) {
+  @if emit.$direction-arms {
+    @at-root #{$prelude} {
+      @content;
+    }
+  }
+}
+
 /// A logical alias of a physical base a shared rule already wrote on the pair
 /// (a FAB's `--top-end` beside `--top-right`): the arms form flips that base
 /// under a self arm; the logical form replaces it with the logical property,
