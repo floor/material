@@ -315,6 +315,148 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
         styles: styles(), before: styles("::before"), after: styles("::after") };
     }));
   }
+  const diffPNG = async (page: Page, aBuf: Buffer, bBuf: Buffer) => page.evaluate(async ({ a, b }) => {
+    const decode = async (b64: string) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = img.width;
+      c.height = img.height;
+      const ctx = c.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      return { width: img.width, height: img.height, data: ctx.getImageData(0, 0, img.width, img.height).data };
+    };
+    const [x, y] = await Promise.all([decode(a), decode(b)]);
+    let mismatchCount = 0;
+    let maxChannelDelta = 0;
+    let minX = x.width, minY = x.height, maxX = -1, maxY = -1;
+    const samples: Array<{ px: number; py: number; full: number[]; selective: number[]; delta: number }> = [];
+    for (let i = 0; i < x.data.length; i += 4) {
+      const dr = Math.abs(x.data[i] - y.data[i]);
+      const dg = Math.abs(x.data[i + 1] - y.data[i + 1]);
+      const db = Math.abs(x.data[i + 2] - y.data[i + 2]);
+      const da = Math.abs(x.data[i + 3] - y.data[i + 3]);
+      const d = Math.max(dr, dg, db, da);
+      if (d > 0) {
+        mismatchCount++;
+        const px = (i / 4) % x.width;
+        const py = Math.floor(i / 4 / x.width);
+        if (px < minX) minX = px;
+        if (py < minY) minY = py;
+        if (px > maxX) maxX = px;
+        if (py > maxY) maxY = py;
+        if (d > maxChannelDelta) maxChannelDelta = d;
+        if (samples.length < 8) {
+          samples.push({
+            px, py,
+            full: [x.data[i], x.data[i + 1], x.data[i + 2], x.data[i + 3]],
+            selective: [y.data[i], y.data[i + 1], y.data[i + 2], y.data[i + 3]],
+            delta: d,
+          });
+        }
+      }
+    }
+    return {
+      mismatchCount,
+      region: mismatchCount > 0 ? [minX, minY, maxX, maxY] : null,
+      maxChannelDelta,
+      samples,
+    };
+  }, { a: aBuf.toString("base64"), b: bBuf.toString("base64") });
+
+  // Evidence probe: run split-button-open-ocean-dark-390 N = 30 times and print per-run
+  // mismatch count, differing region, and max channel delta.
+  const EVIDENCE_N = 30;
+  console.log(`=== EVIDENCE PROBE: split-button-open-ocean-dark-390 (N=${EVIDENCE_N}) ===`);
+  for (let run = 1; run <= EVIDENCE_N; run++) {
+    const probePages = await Promise.all([context.newPage(), context.newPage()]);
+    for (const p of probePages) await p.setViewportSize({ width: 390, height: 900 });
+    const sequence = run <= 15
+      ? [
+          { name: "button-hover", state: "hover" },
+          { name: "button-focus", state: "focus" },
+          { name: "split-button", state: "" },
+          { name: "split-button-open", state: "open" },
+        ]
+      : [{ name: "split-button-open", state: "open" }];
+    for (const sc of sequence) {
+      await Promise.all(probePages.map(async (p, i) => {
+        const params = new URLSearchParams({ theme: "ocean", mode: "dark", state: sc.state });
+        await p.goto(`${origin}/${i === 0 ? "full" : "selective"}-${sc.name}.html?${params}`);
+        await p.locator('body[data-ready="true"]').waitFor();
+        await p.evaluate(() => document.fonts.ready);
+        if (sc.state === "hover") await p.getByRole("button").first().hover();
+        if (sc.state === "focus") await p.keyboard.press("Tab");
+      }));
+    }
+    const hovered = await Promise.all(probePages.map(p => p.evaluate(() =>
+      [...document.querySelectorAll(":hover")].map(el => el.tagName + (el.className ? "." + String(el.className).trim().replace(/\s+/g, ".") : "")))));
+    const beforeSnap = await Promise.all(probePages.map(snapshot));
+    const [fBuf, sBuf] = await Promise.all(probePages.map((p, i) =>
+      p.screenshot({ path: join(artifacts, `probe-run${run}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" })));
+    const afterSnap = await Promise.all(probePages.map(snapshot));
+    const settledProbe = JSON.stringify(beforeSnap[0]) === JSON.stringify(afterSnap[0]) &&
+      JSON.stringify(beforeSnap[1]) === JSON.stringify(afterSnap[1]);
+    const snapEqual = JSON.stringify(afterSnap[0]) === JSON.stringify(afterSnap[1]);
+    const diff = await diffPNG(probePages[0], fBuf, sBuf);
+    console.log(
+      `[probe-390-ocean-dark] run=${run}/${EVIDENCE_N} mode=${run <= 15 ? "after-hover-focus" : "direct"} ` +
+      `mismatchCount=${diff.mismatchCount} region=${JSON.stringify(diff.region)} ` +
+      `maxChannelDelta=${diff.maxChannelDelta} settled=${settledProbe} snapshotEqual=${snapEqual} ` +
+      `hovered=${JSON.stringify(hovered)}` +
+      (diff.samples.length ? ` samples=${JSON.stringify(diff.samples)}` : "")
+    );
+    await Promise.all(probePages.map(p => p.close()));
+  }
+
+  // Diagnostic probe: measure the unpinned compositor-layer shadow blend vs pinned
+  // on split-button-open-ocean-dark-390 to record exact pixel count, region, and delta.
+  {
+    const diagPages = await Promise.all([context.newPage(), context.newPage()]);
+    for (const p of diagPages) await p.setViewportSize({ width: 390, height: 900 });
+    await Promise.all(diagPages.map(async (p, i) => {
+      const params = new URLSearchParams({ theme: "ocean", mode: "dark", state: "open" });
+      await p.goto(`${origin}/${i === 0 ? "full" : "selective"}-split-button-open.html?${params}`);
+      await p.locator('body[data-ready="true"]').waitFor();
+      await p.evaluate(() => document.fonts.ready);
+    }));
+    const rects = await diagPages[0].evaluate(() => {
+      const r = (sel: string) => {
+        const el = document.querySelector(sel)?.getBoundingClientRect();
+        return el ? [el.x, el.y, el.width, el.height] : null;
+      };
+      return {
+        split: r(".mtrl-split-button"),
+        leading: r(".mtrl-split-button__leading"),
+        trailing: r(".mtrl-split-button__trailing"),
+        menu: r(".mtrl-menu"),
+      };
+    });
+    console.log(`[diag-geometry] split-button-open-ocean-dark-390 rects=${JSON.stringify(rects)}`);
+    // Unpin .mtrl-menu and trigger a transient compositor layer on page 0's main
+    await Promise.all(diagPages.map(p => p.evaluate(() => {
+      const m = document.querySelector<HTMLElement>(".mtrl-menu");
+      if (m) m.style.willChange = "auto";
+    })));
+    await diagPages[0].evaluate(async () => {
+      const main = document.querySelector<HTMLElement>("main")!;
+      main.style.filter = "opacity(0.99)";
+      await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      main.style.filter = "";
+      await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+    });
+    const [uFull, uSel] = await Promise.all(diagPages.map(p => p.screenshot({ fullPage: true, animations: "disabled" })));
+    const unpinnedDiff = await diffPNG(diagPages[0], uFull, uSel);
+    console.log(
+      `[diag-unpinned-layer-churn] mismatchCount=${unpinnedDiff.mismatchCount} ` +
+      `region=${JSON.stringify(unpinnedDiff.region)} maxChannelDelta=${unpinnedDiff.maxChannelDelta} ` +
+      `samples=${JSON.stringify(unpinnedDiff.samples)}`
+    );
+    await Promise.all(diagPages.map(p => p.close()));
+  }
+  console.log(`=== END EVIDENCE PROBE ===`);
+
   const failures: string[] = [];
   const retaken: string[] = [];
   let comparisons = 0;
