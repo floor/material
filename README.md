@@ -433,9 +433,13 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 ### Bundling
 
-The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with `mtrl-rtl` and `[dir=rtl]` arms: the properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can move a placement to the wrong side. What stays logical there, such as `margin-inline-start` and `padding-inline`, mirrors natively in the browser. The element sheets and the shadow sheets keep the logical form throughout.
+The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can move a placement to the wrong side.
 
-A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. Those arms are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
+The arms answer the `mtrl-rtl` marker and `[dir=rtl]` on an ancestor. What stays logical there, such as `margin-inline-start` and `padding-inline`, mirrors natively in the browser. The element sheets and the shadow sheets keep the logical form throughout.
+
+A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages.
+
+Those arms are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
 
 No shipped file carries `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules.
 
@@ -557,8 +561,8 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.2 kB |
 | Everything the root exports (`export * from 'material'`), without code splitting | 127.8 kB |
 | `material/styles/base` | 2.9 kB |
-| `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 60.4 kB |
+| `material/styles/base` and `material/styles/button` | 5.1 kB |
+| `material/styles`, the full stylesheet | 58.6 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
