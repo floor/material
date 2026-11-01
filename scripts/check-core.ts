@@ -16,7 +16,7 @@ import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
-import { checkMenuOpeners } from "./check-menu-opener-browser";
+import { checkMenuOpenerPlacement, checkMenuOpeners } from "./check-menu-opener-browser";
 import { checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
@@ -121,6 +121,7 @@ try {
   await checkTextFieldSearchCancel(page, "factory");
   await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
+  await checkMenuOpenerPlacement(page);
   await checkControls(page);
   await checkMenu(page);
   await checkMenuDisabledColors(page);
