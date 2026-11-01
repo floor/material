@@ -22,7 +22,7 @@ these rows drift from a fresh measurement.
 | bottom-sheet | 20.4 KB | 7.2 KB | +4.1 KB |  |
 | side-sheet | 18.8 KB | 6.7 KB | +3.6 KB |  |
 | button | 22.8 KB | 7.5 KB | +4.4 KB | +6.8 KB |
-| button-group | 37.4 KB | 11.9 KB | +8.8 KB | +6.8 KB |
+| button-group | 37.4 KB | 12.0 KB | +8.8 KB | +6.8 KB |
 | card | 20.4 KB | 6.7 KB | +3.6 KB | +9.6 KB |
 | carousel | 30.7 KB | 11.2 KB | +8.1 KB |  |
 | checkbox | 16.8 KB | 5.7 KB | +2.6 KB |  |
