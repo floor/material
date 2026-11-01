@@ -393,6 +393,13 @@
       "string"
     ]
   },
+  "ChipsChangeEvent.selected[]": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
   "ChipsChangeEvent.value": {
     "kind": "union",
     "members": [
@@ -532,6 +539,13 @@
     "kind": "union",
     "members": [
       "DatePickerSelectionMode",
+      "string"
+    ]
+  },
+  "DatePickerConfig.specialDates[].date": {
+    "kind": "union",
+    "members": [
+      "Date",
       "string"
     ]
   },
@@ -1190,6 +1204,13 @@
       "BaseComponent"
     ]
   },
+  "ListConfig.initialSelection[]": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
+    ]
+  },
   "ListItem.id": {
     "kind": "union",
     "members": [
@@ -1432,6 +1453,14 @@
       "{ prefix?: string | undefined; } & { styles?: \"inline\" | undefined; }"
     ]
   },
+  "ResponsiveConfig.smallScreen.layout": {
+    "kind": "union",
+    "members": [
+      "'icon-and-text'",
+      "'icon-only'",
+      "'text-only'"
+    ]
+  },
   "RippleComponent": {
     "kind": "extends",
     "bases": [
@@ -1524,6 +1553,13 @@
       "\"compact\"",
       "\"default\"",
       "string"
+    ]
+  },
+  "SelectConfig.menu.container": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
     ]
   },
   "SelectConfig.variant": {
@@ -1686,6 +1722,13 @@
     "members": [
       "\"queue\"",
       "\"replace\""
+    ]
+  },
+  "SolidProps.ref": {
+    "kind": "union",
+    "members": [
+      "((element: E) => void)",
+      "E"
     ]
   },
   "SplitButtonElementComponent": {

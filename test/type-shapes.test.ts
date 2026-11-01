@@ -57,6 +57,10 @@ describe("the public types' shapes", () => {
     expect(now["SelectConfig.menu.container"]).toEqual({ kind: "union", members: ["HTMLElement", "null"] });
   });
 
+  test("a union on an object literal inside a type alias is pinned by its path", () => {
+    expect(now["SolidProps.ref"]).toEqual({ kind: "union", members: ["((element: E) => void)", "E"] });
+  });
+
   test("a config's base types are pinned, in the order the declaration lists them", () => {
     expect(now.ButtonConfig).toEqual({ kind: "extends", bases: ["BaseComponentConfig"] });
     expect(now.InputComponent).toEqual({ kind: "extends", bases: ["ElementComponent", "InputFeature"] });
