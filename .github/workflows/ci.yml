@@ -164,9 +164,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - group: elements
+          - group: elements-a
             browsers: chromium
-            checks: elements:check shadow-styles:check
+            checks: elements:check:a
+          - group: elements-b
+            browsers: chromium
+            checks: elements:check:b
+          - group: shadow-styles
+            browsers: chromium
+            checks: shadow-styles:check
           - group: adapters
             browsers: chromium
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
