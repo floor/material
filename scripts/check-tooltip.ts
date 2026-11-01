@@ -24,7 +24,9 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
   const url = new URL(request.url);
   if (url.pathname === "/tooltip.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
   if (url.pathname === "/styles.css") return new Response(Bun.file("dist/styles.css"));
-  return new Response(`<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
+  // ?dir=rtl serves the same page right to left, for the placements section
+  const direction = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
+  return new Response(`<!doctype html><html dir="${direction}"><head><link rel="stylesheet" href="/styles.css">
   <style>body{margin:0}#target{position:absolute;left:300px;top:280px;width:40px;height:40px;border-radius:50%;
   background:#ddd;border:0}.mtrl-tooltip{transition:none!important}</style></head><body>
   <button id="target">&#9829;</button>
@@ -43,6 +45,11 @@ const paintedSide: Record<string, "top" | "right" | "bottom" | "left"> = {
   [TOOLTIP_POSITIONS.RIGHT]: "right", [TOOLTIP_POSITIONS.RIGHT_START]: "right", [TOOLTIP_POSITIONS.RIGHT_END]: "right",
 };
 
+/** Fails with a message when |actual - wanted| is at least the tolerance. */
+const near = (failures: string[], name: string, actual: number, wanted: number, tolerance = 0.5): void => {
+  if (Math.abs(actual - wanted) >= tolerance) failures.push(`${name} ${actual.toFixed(1)}, expected ${wanted.toFixed(1)}`);
+};
+
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
@@ -53,6 +60,7 @@ try {
   const variants = ["default", "plain", "rich"] as const;
   const positions = Object.values(TOOLTIP_POSITIONS) as TooltipPosition[];
   const rows: Record<string, unknown>[] = [];
+  const placementRows: Record<string, unknown>[] = [];
   const failures: string[] = [];
   for (const mode of ["light", "dark"]) {
     await page.evaluate(mode => {
@@ -119,6 +127,76 @@ try {
       await page.screenshot({ path: `${artifacts}/${name}.png`, clip });
     }
   }
+
+  // --------------------------------------------------------------- placements
+  // A tooltip sits DEFAULT_OFFSET (8px) from its target on the named side,
+  // aligned along the shared edge as start/end says, and its arrow fills the
+  // gap: the arrow's tip meets the target's edge and its body stays over the
+  // target's span. m3.material.io's tooltip specs are silent on placements,
+  // alignment and arrows, so the contract measured here is the API's own,
+  // the twelve TOOLTIP_POSITIONS values, and it must hold in a right-to-left
+  // page exactly as in a left-to-right one: every placement path in api.ts
+  // is physical.
+  const OFFSET = 8; // DEFAULT_OFFSET, src/components/tooltip/types.ts
+  for (const dir of ["ltr", "rtl"] as const) {
+    await page.goto(`http://127.0.0.1:${server.port}/?dir=${dir}`);
+    await page.waitForFunction(() => window.ready);
+    for (const position of positions) {
+      await page.evaluate(({ position }) => window.mountTooltip({ position, text: "Search, and filter" }), { position });
+      await page.waitForTimeout(30);
+      const seen = await page.evaluate(() => {
+        const box = (element: Element) => {
+          const r = element.getBoundingClientRect();
+          return { top: r.top, left: r.left, right: r.right, bottom: r.bottom };
+        };
+        const tip = document.querySelector(".mtrl-tooltip")!;
+        return {
+          target: box(document.querySelector("#target")!),
+          tip: box(tip),
+          arrow: box(tip.querySelector(".mtrl-tooltip__arrow")!),
+        };
+      });
+      const name = `placement ${position} (${dir})`;
+      const side = position.split("-")[0] as "top" | "right" | "bottom" | "left";
+      const align = position.endsWith("-start") ? "start" : position.endsWith("-end") ? "end" : "center";
+      // The gap along the placement axis, and the arrow tip's distance to the
+      // target's near edge: the offset once, with the arrow filling it.
+      const gap =
+        side === "right" ? seen.tip.left - seen.target.right
+        : side === "left" ? seen.target.left - seen.tip.right
+        : side === "bottom" ? seen.tip.top - seen.target.bottom
+        : seen.target.top - seen.tip.bottom;
+      near(failures, `${name}: gap`, gap, OFFSET);
+      const arrowTipToTarget = Math.abs(
+        (side === "right" ? seen.arrow.left - seen.target.right
+        : side === "left" ? seen.target.left - seen.arrow.right
+        : side === "bottom" ? seen.arrow.top - seen.target.bottom
+        : seen.target.top - seen.arrow.bottom),
+      );
+      near(failures, `${name}: arrow tip to target`, arrowTipToTarget, 0);
+      // The alignment along the shared edge: the start, end or centre of the
+      // tooltip against the target's, and the arrow over the target's span.
+      if (side === "top" || side === "bottom") {
+        if (align === "start") near(failures, `${name}: start edge`, seen.tip.left, seen.target.left);
+        else if (align === "end") near(failures, `${name}: end edge`, seen.tip.right, seen.target.right);
+        else near(failures, `${name}: centre`, (seen.tip.left + seen.tip.right) / 2, (seen.target.left + seen.target.right) / 2);
+        if (!(seen.arrow.right > seen.target.left && seen.arrow.left < seen.target.right)) {
+          failures.push(`${name}: arrow ${seen.arrow.left.toFixed(1)}..${seen.arrow.right.toFixed(1)} outside the target ${seen.target.left.toFixed(1)}..${seen.target.right.toFixed(1)}`);
+        }
+      } else {
+        if (align === "start") near(failures, `${name}: start edge`, seen.tip.top, seen.target.top);
+        else if (align === "end") near(failures, `${name}: end edge`, seen.tip.bottom, seen.target.bottom);
+        else near(failures, `${name}: centre`, (seen.tip.top + seen.tip.bottom) / 2, (seen.target.top + seen.target.bottom) / 2);
+        if (!(seen.arrow.bottom > seen.target.top && seen.arrow.top < seen.target.bottom)) {
+          failures.push(`${name}: arrow ${seen.arrow.top.toFixed(1)}..${seen.arrow.bottom.toFixed(1)} outside the target ${seen.target.top.toFixed(1)}..${seen.target.bottom.toFixed(1)}`);
+        }
+      }
+      placementRows.push({ position, dir, gap, arrowTipToTarget });
+    }
+  }
+  // Back to the plain left-to-right page the scrolled section starts from
+  await page.goto(`http://127.0.0.1:${server.port}`);
+  await page.waitForFunction(() => window.ready);
 
   // --------------------------------------------------------------- scrolled page
   // The surface is `position: fixed` in every path (`src/styles/components/_tooltip.scss:13`),
@@ -207,7 +285,7 @@ try {
 
   assert.deepEqual(errors, []);
   // Every mismatch is collected, so one run names every failing case.
-  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, scrolled: scrolledRows, failures, errors }, null, 2));
+  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, scrolled: scrolledRows, failures, errors }, null, 2));
   assert.deepEqual(failures, []);
   console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, scrolled: scrolledRows.length, errors }, null, 2));
 } finally { await browser.close(); server.stop(true); }
