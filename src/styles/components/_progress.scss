@@ -216,7 +216,10 @@ $component: "#{base.$prefix}-progress";
 // — the same dash and offset arithmetic the canvas drew, read live from
 // the animated sweep
 .#{$component}--circular.#{$component}--indeterminate .#{$component}__indicator {
-  stroke-dasharray: var(--#{$component}-sweep) 100;
+  // The gap is the ring's complement, not an open 100: the pattern must
+  // repeat once per turn for the dash-ring shift below to slide the
+  // window across the path's seam
+  stroke-dasharray: var(--#{$component}-sweep) calc(100 - var(--#{$component}-sweep));
 }
 
 .#{$component}--circular.#{$component}--indeterminate .#{$component}__track {
@@ -360,6 +363,21 @@ $component: "#{base.$prefix}-progress";
 
   .#{$component}--circular .#{$component}__wave-travel {
     animation-name: #{$component}-travel-ring;
+  }
+
+  // The ring's dash must not ride that rotation: the extent — value arc
+  // or indeterminate sweep — is fixed in the view while the wave pattern
+  // turns under it. The window slides back along the path exactly one
+  // wavelength per loop, in step with the travel, so the painted arc and
+  // its round caps hold still and only the sine travels: the phase the
+  // canvas baked into every frame, composed here from two animations.
+  // Only the wavy indicator is a path; the plain circle never travels.
+  .#{$component}--circular path.#{$component}__indicator {
+    animation: #{$component}-dash-ring 1000ms infinite linear;
+  }
+
+  @keyframes #{$component}-dash-ring {
+    to { stroke-dashoffset: var(--#{$component}-wave-dash); }
   }
 
   // --l / --r keyframes: head is the leading edge, tail the trailing. The

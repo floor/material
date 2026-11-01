@@ -229,6 +229,24 @@ describe('progress', () => {
     expect(attr(full, 'track', 'stroke-dasharray')).toBe('0 100');
   });
 
+  // The wavy ring's dash window slides along the path as the wave travels
+  // (the sheet's dash-ring animation), so its pattern must repeat once per
+  // turn — the gap is the ring's complement — or the window cannot cross
+  // the path's seam and the arc would ride the travel rotation instead of
+  // holding to the value
+  test('a wavy circular ring carries a once-per-turn dash pattern and its travel token', () => {
+    const progress = createProgress({ variant: 'circular', value: 62, shape: 'wavy' });
+    const path = part(progress, 'indicator')!;
+    expect(path.tagName.toLowerCase()).toBe('path');
+    expect(path.getAttribute('stroke-dasharray')).toBe('62.000 38.000');
+    expect(path.closest('g')!.getAttribute('class')).toContain('wave-travel');
+    const style = progress.view.style;
+    const rot = parseFloat(style.getPropertyValue('--mtrl-progress-wave-rot'));
+    const dash = parseFloat(style.getPropertyValue('--mtrl-progress-wave-dash'));
+    // 100 pathLength units are 360°, so the shift is the angle over 3.6
+    expect(rot / 3.6).toBeCloseTo(dash, 3);
+  });
+
   test('circular indeterminate: the rotors and the parts are in the view, and nothing is written', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
     const view = progress.view;

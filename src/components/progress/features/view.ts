@@ -276,6 +276,15 @@ export const withView =
         const radius = circularRadius(currentSize, stroke, getWaveAmplitude(true, stroke, currentSize));
         svg.style.setProperty(`--${prefix}-progress-size`, `${currentSize}px`);
         svg.style.setProperty(`--${prefix}-progress-wave-rot`, `${circularWaveRotation(radius, currentSize)}deg`);
+        // The same wavelength as a dash shift: the travel turns the ring
+        // one wave-rot per second, and the indicator's dash window must
+        // slide back by the same arc to hold the painted extent still
+        // while the wave runs under it. 100 pathLength units = 360°, so
+        // the angle divides by 3.6 into units of the ring's dash pattern
+        svg.style.setProperty(
+          `--${prefix}-progress-wave-dash`,
+          `${circularWaveRotation(radius, currentSize) / 3.6}`
+        );
       }
       svg.setAttribute("viewBox", `0 0 ${isCircular ? currentSize : lineWidth || 2048} ${height}`);
       if (!isCircular) {
@@ -452,9 +461,20 @@ export const withView =
           currentSize
         );
         if (parts.indicator) {
+          // A wavy indicator is a closed ring the wave pattern travels
+          // under: its dash window is slid along the path by the sheet's
+          // dash-ring animation, which only lands where the pattern is
+          // due to repeat once per turn — the gap is the ring's
+          // complement, not an open 100. The plain circle never slides,
+          // so its gap stays a plain open 100.
+          const dash = geometry.indicator ? geometry.indicator.dash : 0;
           parts.indicator.setAttribute(
             "stroke-dasharray",
-            geometry.indicator ? `${geometry.indicator.dash.toFixed(3)} 100` : "0 100"
+            isWavy()
+              ? `${dash.toFixed(3)} ${(100 - dash).toFixed(3)}`
+              : dash > 0
+                ? `${dash.toFixed(3)} 100`
+                : "0 100"
           );
         }
         if (parts.track) {
