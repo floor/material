@@ -19,6 +19,7 @@
  * notification."
  */
 import assert from "node:assert/strict";
+import { checkBadgeAnnouncement } from "./check-badge-announcement-browser";
 import type { Page } from "playwright";
 
 type Box = { left: number; top: number; right: number; bottom: number; width: number; height: number };
@@ -395,5 +396,6 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     expect(afterDestroy.describedBy === null && afterDestroy.inDocument === true && destroyed["Badge notifications"] === null, `destroy: the item stays and the description goes, attribute ${json(afterDestroy.describedBy)}, description ${json(destroyed["Badge notifications"])}`);
   });
 
+  await checkBadgeAnnouncement(page, check);
   assert.deepEqual(failures, [], `badge, measured against the M3 pages:\n  ${failures.join("\n  ")}`);
 }

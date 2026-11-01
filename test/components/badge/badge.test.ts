@@ -78,6 +78,8 @@ describe('badge variants', () => {
     expect(badge.element.getAttribute('role')).toBe('status');
     expect(badge.element.getAttribute('aria-label')).toBe('New notification');
     expect(badge.element.hasAttribute('aria-hidden')).toBe(false);
+    badge.setLabel('7');
+    expect(badge.element.getAttribute('aria-label')).toBe('New notification');
     badge.setLabel(8);
     expect(badge.getLabel()).toBe('');
     expect(badge.element.getAttribute('aria-label')).toBe('New notification');

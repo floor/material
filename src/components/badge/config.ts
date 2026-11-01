@@ -34,14 +34,14 @@ export const defaultConfig: BadgeConfig = {
  * The name a non-counting badge announces. The accessibility page reads: "Any
  * numerical badges will have their number read, while non-counting badges will
  * simply announce New notification" (m3.material.io/components/badges/
- * accessibility, read 2026-11-01). A string label given to a small badge is
+ * accessibility, read 2026-11-01). A nonnumeric string label given to a small badge is
  * its announcement, so a page in another language passes its own text; the
  * count a large badge carries is not one.
  */
-export const SMALL_BADGE_LABEL = "New notification";
+const SMALL_BADGE_LABEL = "New notification";
 
 /**
- * The accessible name of a non-counting badge: its label when it is a string,
+ * The accessible name of a non-counting badge: its label when it is nonnumeric text,
  * "New notification" otherwise.
  *
  * @param {string | number} [label] - Badge label
@@ -50,7 +50,8 @@ export const SMALL_BADGE_LABEL = "New notification";
  * @internal
  */
 export const smallBadgeLabel = (label: string | number | undefined): string =>
-  typeof label === "string" && label.trim() ? label.trim() : SMALL_BADGE_LABEL;
+  typeof label === "string" && label.trim() && Number.isNaN(Number(label))
+    ? label.trim() : SMALL_BADGE_LABEL;
 
 /**
  * Creates the base configuration for Badge component by merging user-provided
