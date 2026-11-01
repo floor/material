@@ -56,11 +56,13 @@ export const withStates =
   };
   resources.add(cancelPendingFocus);
   // Both ways into the view focus the input on the next animation frame:
-  // expanding from the bar, and being created open. A collapse before that
-  // frame cancels it, so a dismissed view does not take focus back.
+  // expanding from the bar, and being created open. A second request replaces
+  // the first, so one frame is ever pending: the collapse that follows cancels
+  // it, and a dismissed view does not take focus back.
   const focusInputNextFrame = (): void => {
     const input = component.structure?.input;
     if (!input) return;
+    cancelPendingFocus();
     focusFrame = requestAnimationFrame(() => {
       focusFrame = null;
       input.focus();
