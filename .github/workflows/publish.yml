@@ -10,8 +10,9 @@
 # the tarball; `publish` alone holds `id-token: write` and downloads the tarball,
 # re-checks its version and publishes it — no checkout, no install, no build.
 # A third job, `dist-tags`, re-reads the registry after the publish and fails if
-# `next` was left behind `latest`; nothing needs it, so its failure is loud but
-# blocks neither the publish nor the GitHub Release.
+# `next` was left behind `latest` or the version just published; nothing needs
+# it, so its failure is loud but blocks neither the publish nor the GitHub
+# Release.
 # The tag's commit must be on main and the version must be package.json's; a
 # tag ruleset protecting v* (only the owner creates them) is recommended.
 # The step "A material release is 3.0.0 or later" refuses a `material` version
@@ -197,12 +198,15 @@ jobs:
   # The state a publish left, checked loudly but blocking nothing: once npm has
   # the version, `next` must not sort below `latest` (a stable release whose
   # old `next` tag stays behind would leave `material@next` older than
-  # `material`). Its own job, needing only `publish`, so a failure fails this
-  # job alone — it can neither block the publish (already done) nor skip the
-  # GitHub Release (which needs `publish`, not this). The check re-reads the
-  # registry with a bounded retry, because the registry can still answer with
-  # the previous tags right after a publish; it never changes which tag was
-  # chosen.
+  # `material`). The version just published is passed in, so the check compares
+  # `next` against the higher of `latest` and it: right after a publish the
+  # registry can still answer with the previous `latest`, and against that a
+  # stale `next` would pass on the first read. Its own job, needing only
+  # `publish`, so a failure fails this job alone — it can neither block the
+  # publish (already done) nor skip the GitHub Release (which needs `publish`,
+  # not this). The check re-reads the registry with a bounded retry, because
+  # the registry can still answer with the previous tags right after a publish;
+  # it never changes which tag was chosen.
   dist-tags:
     needs: publish
     runs-on: ubuntu-24.04
@@ -213,8 +217,8 @@ jobs:
         with:
           bun-version: "1.4.2"
 
-      - name: The next dist-tag must not be behind latest
-        run: bun run check:dist-tags
+      - name: The next dist-tag must not be behind the published version
+        run: bun run check:dist-tags "${GITHUB_REF_NAME#v}"
 
   # The GitHub Release for the tag, once npm has the version: its CHANGELOG.md
   # section and a footer (scripts/release-notes.ts). A pre-release is marked one
