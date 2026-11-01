@@ -11,7 +11,7 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "elements-css:check", "tooling:check", "classes:check", "ssr-consumer:check", "size:check", "readme:check", "size",
+  "build", "elements-css:check", "tooling:check", "classes:check", "ssr-consumer:check", "size:check", "readme:check", "docs-imports:check", "size",
   "adapters:size",
   // the browser checks
   "elements:check:a", "elements:check:b", "shadow-styles:check",

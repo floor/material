@@ -479,6 +479,7 @@
     "size:check": "bun run scripts/check-package-size.ts",
     "readme:check": "bun run scripts/check-readme.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
+    "docs-imports:check": "bun run scripts/check-docs-imports.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",

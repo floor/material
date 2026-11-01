@@ -142,6 +142,8 @@ jobs:
         run: bun run size:check
       - name: README examples, specifiers, sizes and links against the packed package
         run: bun run readme:check
+      - name: Documented imports, in every doc and JSDoc example, against the packed package
+        run: bun run docs-imports:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element
