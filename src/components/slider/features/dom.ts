@@ -55,8 +55,6 @@ export const withDom =
 
     // Build accessible label for handles
     const label = config.ariaLabel || config.label || "";
-    const handleLabel = config.range && label ? `${label} minimum` : label;
-    const secondHandleLabel = label ? `${label} maximum` : "";
 
     // Create the main handle (kept as DOM for accessibility)
     const handleAttributes: Record<string, string> = {
@@ -70,10 +68,6 @@ export const withDom =
       "data-value": String(value),
       "data-handle-index": "0",
     };
-
-    if (handleLabel) {
-      handleAttributes["aria-label"] = handleLabel;
-    }
 
     const handle = createElement({
       tag: "div",
@@ -126,10 +120,6 @@ export const withDom =
         "data-handle-index": "1",
       };
 
-      if (secondHandleLabel) {
-        secondHandleAttributes["aria-label"] = secondHandleLabel;
-      }
-
       secondHandle = createElement({
         tag: "div",
         className: getClass("slider__handle"),
@@ -162,14 +152,16 @@ export const withDom =
 
     // Keep ID references live: changes to the external label rename the handles.
     // A range appends its endpoint through a hidden, referenced suffix.
-    if (config.ariaLabelledBy) {
-      [handle, secondHandle].forEach((target, index) => {
-        if (!target) return;
-        let labelledBy = config.ariaLabelledBy!;
-        if (config.range) {
+    [handle, secondHandle].forEach((target, index) => {
+      if (!target) return;
+      const endpoint = config.range ? index ? "maximum" : "minimum" : "";
+      if (label) target.setAttribute("aria-label", endpoint ? `${label} ${endpoint}` : label);
+      if (config.ariaLabelledBy) {
+        let labelledBy = config.ariaLabelledBy;
+        if (endpoint) {
           const suffix = createElement({
             tag: "span",
-            text: index ? "maximum" : "minimum",
+            text: endpoint,
             attributes: {
               id: `${getClass("slider")}-${Math.random().toString(36).slice(2, 9)}`,
               hidden: true,
@@ -179,8 +171,8 @@ export const withDom =
           labelledBy += ` ${suffix.id}`;
         }
         target.setAttribute("aria-labelledby", labelledBy);
-      });
-    }
+      }
+    });
 
     // A slider renders no form control of its own, so without these it
     // submits nothing. Nothing is created unless the slider is named; a range
