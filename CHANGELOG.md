@@ -17,6 +17,77 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-11-02
+
+Menus you can trust with keyboard and selection.
+
+### Fixed
+
+- **A vertical menu's selected item no longer draws a trailing check (#161).**
+  The horizontal menu's 18px check sits 12px from the item's end, past the
+  vertical item's 16px end padding, so it overlapped the label by 14px — long
+  labels had glyphs under it, in left-to-right and in right-to-left. A vertical
+  item keeps its container colour and its 12dp corner and paints no check, as
+  the menus specs and guidelines describe; `aria-selected` is unchanged. The
+  horizontal check is untouched: 18px, 12px from the end, 10px clear of the
+  label.
+
+- **The keyboard skips menu items and select options that are not shown (#172).**
+  An item kept in the DOM but hidden with `display: none` cannot take focus, yet
+  arrows and Enter treated it as a stop: a hidden option could become the
+  select's active descendant and Enter could commit an invisible value, and a
+  hidden first or middle menu item could make the menu, or everything after it,
+  unreachable. The keyboard now moves only through the items a person can see,
+  opens a menu on its first visible item and wraps through the visible ones, and
+  leaves the select without an active option when nothing is visible. Disabled
+  items still take focus and dividers still cannot, as the menus and lists
+  accessibility guidance describes.
+
+- **Submenus follow `setItems` (#175).**
+  After a menu's items were replaced, the right arrow resolved the focused
+  item's children through the list the menu had been created with: it opened the
+  old submenu, or nothing when the parent had been renamed, while the
+  replacement was on screen and returned by `getItems()`. A submenu now reads
+  the items it was opened with, so the key opens the replacement's next level
+  and focuses its items.
+
+### Internal
+
+- **`SIZES.md` publishes a measured size per component, and `bun run size` holds
+  it to the measurement (#160).**
+  The file lists every component's minified and gzipped size, its gzipped delta
+  against the kernel and its deferred gzip, generated from the measurement the
+  budgets already use (`bun run size --markdown`) and linked from the README's
+  Sizes section. A plain `bun run size` compares the committed rows with a fresh
+  measurement and fails on drift. `SIZES.md` is not packed, so nothing in the
+  package changes, and no new CI step or budget was added.
+
+- **CI runs the checks on every push to `main`, not only on a pull request
+  (#181).**
+  `.github/workflows/ci.yml` adds a `push` trigger for `main`, so every merge
+  commit now gets the checks its pull request ran, on the commit a `v*` tag and
+  a publish act on. Every existing trigger and step stays, and a run on `main`
+  is never cancelled by a newer one.
+
+- **`preupgrade:check` reuses pages and waits for settled layout, and the
+  evidence job drops from 22:57 to 2:44 (#195).**
+  With the same cases, assertions and measurements — the 1,789 styled result
+  objects match exactly, and the check itself goes from 21:23 to 1:38 — it
+  reuses one never-upgraded pre-page, two isolated prepared-neighbour
+  registries and four post-upgrade pages, and settles on fonts, images, finite
+  animations and two animation frames instead of fixed waits.
+
+- **`shadow-styles:check` measures every fixture on one page, and the group
+  drops from 5:52.8 to 3:08.8 (#198).**
+  With the same fixtures and findings — 37 elements, 1,797 fixtures and 11,311
+  cross-component classes on both trees, and the same five seeded findings when
+  the dialog stops adopting the button sheet — it navigates once and empties the
+  body before each probe, so the element bundle, the full stylesheet and the
+  element definitions are paid once instead of 1,797 times, and it no longer
+  reads every computed property of a node whose class already has its sheet
+  adopted. The `browser (elements)` job falls from 11m42s to 8m51s;
+  `elements:check`, which shares the job, is unchanged.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
@@ -4560,7 +4631,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.1...HEAD
+[3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
 [3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
