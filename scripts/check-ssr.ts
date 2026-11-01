@@ -28,4 +28,4 @@ const seconds = (performance.now() - started) / 1000;
 const previous = timings.filter(t => ["parity/chromium", "security/chromium"].includes(t.check)).reduce((sum, t) => sum + t.seconds, 0);
 await mkdir("analysis/ssr-upgrade", { recursive: true });
 await Bun.write("analysis/ssr-upgrade/timing.json", JSON.stringify({ timings, seconds, addedSeconds: seconds - previous }, null, 2));
-console.log(`ssr:check: ${seconds.toFixed(1)}s total, ${(seconds - previous).toFixed(1)}s added to browser (components), excluding browser installation`);
+console.log(`ssr:check: ${seconds.toFixed(1)}s total, ${(seconds - previous).toFixed(1)}s added to browser (ssr), excluding browser installation`);

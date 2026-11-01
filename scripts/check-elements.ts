@@ -162,7 +162,18 @@ const fresh = async (page: Page, html: string): Promise<void> => {
 };
 
 try {
-  await checkDeclarativeUpgrade(browser);
+  // CI runs this check as two matrix rows (.github/workflows/ci.yml), split at
+  // the section boundary closest to half the measured run: 165 s before the
+  // boundary below and 154 s after it, of the 319 s one row took on main (run
+  // 41314303737). A part is a contiguous range of the sections, so each row pays
+  // the setup once and the two rows together run every check exactly once. With
+  // no argument, every part runs -- what a local `bun run elements:check` does.
+  // The bodies keep the indentation they had, so the diff of a part boundary is
+  // the boundary itself.
+  const parts = process.argv.slice(2);
+  const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
+
+  if (selected("a")) await checkDeclarativeUpgrade(browser);
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -171,6 +182,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
+  if (selected("a")) {
   await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
@@ -8927,6 +8939,10 @@ try {
     assert.deepEqual(menuFailures, [], menuFailures.join("\n"));
     check("menu: the submenu arrow is at the inline end across the shadow boundary, and a narrow top-layer menu keeps the wide field's edge ");
   }
+  }
+
+  // Part b starts here: from the menu in the top layer to the end.
+  if (selected("b")) {
 
   // ---------------------------------------------------------------- menu in the top layer
   // `layer: "top"` renders the menu next to its opener and shows it as a
@@ -12714,9 +12730,12 @@ try {
     assert.deepEqual(measured.failures, []);
     check("side sheet: under a page 'button { position: static }', the close button keeps its own position, layer and 48 px target, ltr and rtl");
   }
+  }
 
   assert.deepEqual(errors, [], "no page errors");
-  check("no page errors");
+  // Printed once across the two CI rows: part a owns the name, part b still
+  // asserts its own page errors above and fails its row on them.
+  if (selected("a")) check("no page errors");
 } finally {
   await browser.close();
   server.stop(true);

@@ -505,6 +505,8 @@
     "ssr:check": "bun run scripts/check-ssr.ts",
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
+    "elements:check:a": "bun run scripts/check-elements.ts a",
+    "elements:check:b": "bun run scripts/check-elements.ts b",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "shadow-styles:check": "bun run scripts/check-shadow-styles.ts",
     "preupgrade:check": "bun run scripts/check-preupgrade.ts",

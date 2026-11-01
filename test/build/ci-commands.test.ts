@@ -14,7 +14,7 @@ const COMMANDS = [
   "build", "elements-css:check", "tooling:check", "classes:check", "ssr-consumer:check", "size:check", "readme:check", "size",
   "adapters:size",
   // the browser checks
-  "elements:check", "shadow-styles:check",
+  "elements:check:a", "elements:check:b", "shadow-styles:check",
   "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
   // the same SSR checks on the lowest peer version package.json allows
   "solid-ssr:floor", "vue-ssr:floor",
