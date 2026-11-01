@@ -23,6 +23,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
+import { checkDatepickerRtl } from "./check-datepicker-rtl";
 import { checkSplitButtonRtl } from "./check-split-button-rtl";
 import { checkSnackbarProgressToolbarRtl } from "./check-snackbar-progress-toolbar-rtl";
 
@@ -485,6 +486,7 @@ try {
   }
   await checkSideSheetRtl(ltrPage);
   await checkCarouselRtl(browser, server.url.href);
+  await checkDatepickerRtl(browser, server.url.href);
   await checkSplitButtonRtl(browser, server.url.href);
   await checkSnackbarProgressToolbarRtl(browser, server.url.href);
   const ltr = await measureFixtures(ltrPage);
