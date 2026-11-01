@@ -10,12 +10,13 @@
 // Both halves are the library's own button, so their colours, state layers,
 // focus rings and touch targets come from there.
 //
-// The pads stay logical and flip with the computed direction. The corners do
-// not: consumer bundlers lower the logical corner properties into :lang()
-// arms that miss dir="rtl" (src/styles/components/_text-field.scss), so each
-// physical pair is written out and the right-to-left pair is a direction arm,
-// the FAB's placement form. The radii themselves are custom properties, so a
-// state changes only their value and the arms keep choosing the pair.
+// The corners are written as the logical properties and go through the
+// direction switch (abstract/_direction.scss): the runtime-adopted sheets
+// keep the logical radii, and the artefacts a consumer bundler lowers carry
+// the physical pair with the right-to-left pair as a direction arm, so the
+// bundler's :lang() lowering cannot pin them to the left-to-left corners of a
+// right-to-left page. The radii themselves are custom properties, so a state
+// changes only their value and the arms keep choosing the pair.
 @use "sass:map";
 @use "sass:math";
 @use "../../styles/abstract/base" as base;
@@ -23,6 +24,7 @@
 @use "../../styles/abstract/functions" as f;
 @use "../../styles/abstract/mixins" as m;
 @use "../../styles/abstract/theme" as t;
+@use "../../styles/abstract/direction" as d;
 
 $component: "#{base.$prefix}-split-button";
 $button: "#{base.$prefix}-button";
@@ -130,27 +132,28 @@ $gap: 2px;
   // ---------------------------------------------------------------------------
   // The corners: the outer pair faces out, the inner pair faces the gap. The
   // leading half's inner corners sit on its trailing edge and the trailing
-  // half's on its leading edge, so the right-to-left rule swaps the physical
-  // pair.
+  // half's on its leading edge, so the right-to-left form swaps the pair.
   // ---------------------------------------------------------------------------
   .#{$button} {
     border-radius: var(--#{$component}-pill);
   }
 
   .#{$component}__leading {
-    border-radius: var(--#{$component}-pill) var(--#{$component}-corner) var(--#{$component}-corner) var(--#{$component}-pill);
-
-    @include m.rtl {
-      border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
-    }
+    @include d.corners(
+      $start-start: var(--#{$component}-pill),
+      $start-end: var(--#{$component}-corner),
+      $end-start: var(--#{$component}-pill),
+      $end-end: var(--#{$component}-corner),
+    );
   }
 
   .#{$component}__trailing {
-    border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
-
-    @include m.rtl {
-      border-radius: var(--#{$component}-pill) var(--#{$component}-corner) var(--#{$component}-corner) var(--#{$component}-pill);
-    }
+    @include d.corners(
+      $start-start: var(--#{$component}-corner),
+      $start-end: var(--#{$component}-pill),
+      $end-start: var(--#{$component}-corner),
+      $end-end: var(--#{$component}-pill),
+    );
   }
 
   // The inner corner grows further while a half is hovered, focused or
@@ -169,8 +172,9 @@ $gap: 2px;
   // The placement class and the direction marker are the same element here:
   // the runtime writes mtrl-rtl on this root, and dir="rtl" may sit on it.
   // The arms above need a strict ancestor, so the root-carried form is
-  // written here, after them.
-  &:where(.#{base.$prefix}-rtl, [dir='rtl']) {
+  // written here, after them (abstract/_direction.scss: nothing in the
+  // logical form, where the radii mirror natively).
+  @include d.arms-self-only {
     .#{$component}__leading {
       border-radius: var(--#{$component}-corner) var(--#{$component}-pill) var(--#{$component}-pill) var(--#{$component}-corner);
     }
