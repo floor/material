@@ -431,3 +431,106 @@ export async function checkMenuSubmenuSetItems(page: Page): Promise<void> {
   await page.evaluate(() => document.body.replaceChildren());
   console.log("Passed packed menu setItems submenus: after setItems changes a top-level item's children or renames the item, ArrowRight opens the replacement's levels and focuses its items.");
 }
+
+/**
+ * A vertical menu's selected item paints no trailing check. M3 puts the
+ * selected check before the label, and the vertical selected-state figure
+ * shows colour and shape alone (m3.material.io/components/menus/specs and
+ * /guidelines). The vertical item's 16px end padding leaves no room for the
+ * horizontal variant's 18px trailing mark, which would otherwise cover the
+ * last 14px of the label in either direction. The horizontal menu keeps its
+ * mark: 18px wide, 12px from the end, clear of the label.
+ */
+export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> {
+  const longText = "Vegetarian and gluten-free, no nuts";
+  const measure = () => page.evaluate(() => {
+    const menu = (window as unknown as MenuWindow).menu.element;
+    const item = menu.querySelector<HTMLElement>('[data-id="long"]')!;
+    const text = item.querySelector<HTMLElement>(".mtrl-menu__item-text")!;
+    const itemRect = item.getBoundingClientRect();
+    const textRect = text.getBoundingClientRect();
+    const pseudo = getComputedStyle(item, "::after");
+    const painted = pseudo.content !== "none" && pseudo.content !== "normal";
+    const width = parseFloat(pseudo.width);
+    // Both physical insets are set and the inline-start margin takes the
+    // space between, so the mark ends 12px from the item's physical end in
+    // either direction.
+    const left = document.documentElement.dir === "rtl"
+      ? itemRect.left + parseFloat(pseudo.left)
+      : itemRect.right - parseFloat(pseudo.right) - width;
+    const right = left + width;
+    return {
+      painted,
+      content: pseudo.content,
+      width,
+      height: parseFloat(pseudo.height),
+      trailingEdge: document.documentElement.dir === "rtl" ? left - itemRect.left : itemRect.right - right,
+      gap: document.documentElement.dir === "rtl" ? textRect.left - right : left - textRect.right,
+      overlap: painted ? Math.max(0, Math.min(right, textRect.right) - Math.max(left, textRect.left)) : 0,
+      selected: item.getAttribute("aria-selected"),
+    };
+  });
+  try {
+    for (const dir of ["ltr", "rtl"] as const) {
+      await page.evaluate(({ dir, longText }) => {
+        const state = window as unknown as MenuWindow;
+        document.body.replaceChildren();
+        document.documentElement.dir = dir;
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, variant: "vertical", items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "long", text: longText },
+          { id: "offline", text: "Offline mode" },
+        ] });
+        state.menu.setSelected("long");
+        document.body.append(state.menu.element);
+      }, { dir, longText });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const vertical = await measure();
+      assert.equal(vertical.selected, "true", `${dir}: the selected item is not announced as selected`);
+      assert.equal(vertical.overlap, 0, `${dir}: the selected item's trailing check (${JSON.stringify(vertical.content)}, ${vertical.width}px wide, ${vertical.trailingEdge}px from the end) overlaps its label by ${vertical.overlap}px`);
+      assert.equal(vertical.painted, false, `${dir}: a vertical menu's selected item still paints a trailing check`);
+
+      // The horizontal menu keeps its own mark, and its 40px end padding keeps it clear.
+      await page.evaluate(({ dir, longText }) => {
+        const state = window as unknown as MenuWindow;
+        state.menu.destroy();
+        document.body.replaceChildren();
+        document.documentElement.dir = dir;
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, width: "220px", items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "long", text: longText },
+          { id: "offline", text: "Offline mode" },
+        ] });
+        state.menu.setSelected("long");
+        document.body.append(state.menu.element);
+      }, { dir, longText });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const horizontal = await measure();
+      assert.equal(horizontal.selected, "true", `${dir} horizontal: the selected item is not announced as selected`);
+      assert.equal(horizontal.painted, true, `${dir} horizontal: the trailing check is gone`);
+      assert.ok(Math.abs(horizontal.trailingEdge - 12) <= 0.5, `${dir} horizontal: the check ends ${horizontal.trailingEdge}px from the item, not 12px`);
+      assert.ok(Math.abs(horizontal.width - 18) <= 0.5 && Math.abs(horizontal.height - 18) <= 0.5, `${dir} horizontal: the check is ${horizontal.width} by ${horizontal.height}, not 18 by 18`);
+      assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
+      assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
+    }
+  } finally {
+    await page.evaluate(() => {
+      (window as unknown as MenuWindow).menu?.destroy();
+      document.body.replaceChildren();
+      document.documentElement.dir = "";
+    });
+  }
+  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
+}
