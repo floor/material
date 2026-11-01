@@ -207,9 +207,13 @@ describe("explicit contrast levels are opt-in", () => {
     // through --mtrl-navigation-bar-dot-shift so one arm mirrors both
     // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
+    // A vertical menu's selected item paints no trailing check: its 16px end
+    // padding has no room for the horizontal variant's mark, which covered
+    // the label, while the horizontal menu keeps its own
+    // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7558302de9c451a0c3dea7109c59da57c82525f0368c276b96c6eff9e0335992");
-    expect(css.length).toBe(545559);
+      .toBe("9e6b70fc06de86e4d8b82d4b0f24f01cb941a854539f690a536f5102ef912ecf");
+    expect(css.length).toBe(545658);
   });
 
   test("today's sheets still resolve to the fixture", () => {
