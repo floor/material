@@ -69,8 +69,9 @@ describe("the pins against the latest release tag", () => {
   const tag = releaseTag();
 
   test("a CI checkout has the release tag, so the comparison cannot skip there", () => {
+    console.log(`export-pin removals: comparing against ${tag ?? "no tag in this checkout"}`);
     if (!process.env.CI) {
-      console.warn(`export-pin removals: comparing against ${tag ?? "no tag (a local checkout without tags skips this comparison)"}`);
+      if (!tag) console.warn("export-pin removals: a local checkout without tags skips the release comparison");
       return;
     }
     expect(tag).toBeDefined();
