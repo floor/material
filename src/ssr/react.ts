@@ -420,7 +420,12 @@ bridge.react = (tag, props, children, prefix) => {
       const probe = withinCap ? boundaryProbe(children, element) : undefined;
       if (probe && !probe.settled) {
         throw new Promise<void>((resolve) => {
-          void probe.done.then(() => { setTimeout(resolve, retryDelay(attempt)); });
+          void probe.done.then(() => {
+            // A reported error ships on the very next pass; the backoff is
+            // for a pending boundary, and an error has no use for it.
+            if (probe.reported) { resolve(); return; }
+            setTimeout(resolve, retryDelay(attempt));
+          });
         });
       }
     }
