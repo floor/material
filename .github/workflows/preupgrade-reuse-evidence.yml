@@ -1,0 +1,39 @@
+name: Preupgrade reuse evidence
+on:
+  push:
+    branches: [test/preupgrade-reuse-evidence]
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 1857233b617e07336215c15051f4592bc1580de1
+          path: candidate
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+        working-directory: candidate
+      - run: ln -s candidate/node_modules node_modules
+      - run: bun run build
+        working-directory: candidate
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.23.3"
+      - uses: ./.github/actions/browsers
+        with:
+          browsers: chromium
+      - name: Full manifest, assertion count, duration and seeded shift
+        working-directory: candidate
+        run: bun ../scripts/preupgrade-reuse-evidence.ts
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: preupgrade-baseline
+          path: candidate/analysis/preupgrade-evidence
+          retention-days: 7
