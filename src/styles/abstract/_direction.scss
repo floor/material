@@ -138,6 +138,36 @@
   }
 }
 
+/// A logical alias of a physical base a shared rule already wrote on the pair
+/// (a FAB's `--top-end` beside `--top-right`): the arms form flips that base
+/// under a self arm; the logical form replaces it with the logical property,
+/// which resolves the corner in either direction. The physical alias of the
+/// pair never goes through this — it stays where the shared rule put it.
+@mixin flip-start($value) {
+  @if emit.$direction-arms {
+    @include m.rtl(true) {
+      left: auto;
+      right: $value;
+    }
+  } @else {
+    left: auto;
+    inset-inline-start: $value;
+  }
+}
+
+/// `flip-start`'s end-side twin.
+@mixin flip-end($value) {
+  @if emit.$direction-arms {
+    @include m.rtl(true) {
+      right: auto;
+      left: $value;
+    }
+  } @else {
+    right: auto;
+    inset-inline-end: $value;
+  }
+}
+
 /// One transition entry for `$property` under `$timing` (a duration and an
 /// easing together), in the form this compile emits: an inline inset names
 /// both physical sides in the arms form (abstract/_emit.scss), so a move

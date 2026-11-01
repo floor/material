@@ -8,14 +8,15 @@ import { compileString } from 'sass';
 import { corner } from '../utils/corner';
 
 let css = '';
+let arms = '';
 
-const rules = (selector: string): string[] => {
+const rules = (selector: string, sheet: string = css): string[] => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return Array.from(css.matchAll(new RegExp(`(^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
+  return Array.from(sheet.matchAll(new RegExp(`(^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g')), (m) => m[2]);
 };
 
-const value = (selector: string, property: string): string | undefined =>
-  rules(selector)
+const value = (selector: string, property: string, sheet: string = css): string | undefined =>
+  rules(selector, sheet)
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
     .filter((v): v is string => v !== undefined)
     .pop();
@@ -26,11 +27,11 @@ const base = (selector: string, property: string): string | undefined =>
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
     .find((v): v is string => v !== undefined);
 
-/** A declaration of a direction arm's ancestor form: `:where(.mtrl-rtl) <selector>`. */
-const rtl = (selector: string, property: string): string | undefined => {
+/** A declaration of a direction arm's ancestor form: `:where(.mtrl-rtl) <selector>`. The arms exist only in the lowered form's sheet. */
+const rtl = (selector: string, property: string, sheet: string = arms): string | undefined => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return Array.from(
-    css.matchAll(new RegExp(`:where\\(\\.mtrl-rtl\\) ${escaped}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g')),
+    sheet.matchAll(new RegExp(`:where\\(\\.mtrl-rtl\\) ${escaped}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g')),
     (m) => m[1]!,
   )
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
@@ -41,7 +42,7 @@ const rtl = (selector: string, property: string): string | undefined => {
 const self = (selector: string, property: string): string | undefined => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return Array.from(
-    css.matchAll(new RegExp(`\\.mtrl-fab-menu--bottom-start:where\\(\\.mtrl-rtl, \\[dir=rtl\\]\\) ${escaped}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g')),
+    arms.matchAll(new RegExp(`\\.mtrl-fab-menu--bottom-start:where\\(\\.mtrl-rtl, \\[dir=rtl\\]\\) ${escaped}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g')),
     (m) => m[1]!,
   )
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
@@ -52,6 +53,10 @@ const reduced = (): string => css.slice(css.indexOf('@media (prefers-reduced-mot
 
 beforeAll(() => {
   css = compileString(`@use 'components/fab-menu';`, { loadPaths: ['src/styles'], style: 'expanded' }).css.replace(/,\n\s*/g, ', ');
+  arms = compileString(
+    `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/fab-menu';`,
+    { loadPaths: ['src/styles'], style: 'expanded' },
+  ).css.replace(/,\n\s*/g, ', ');
 });
 
 describe('fab menu stylesheet', () => {
@@ -73,8 +78,11 @@ describe('fab menu stylesheet', () => {
     // a medium FAB shrank towards its start edge
     expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'position')).toBe('absolute');
     expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'inset-block-start')).toBe('0');
-    expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'right')).toBe('0');
-    // The trailing edge is the left one in RTL.
+    // The adopted sheet keeps the logical trailing edge, which mirrors natively.
+    expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'inset-inline-end')).toBe('0');
+    // The lowered artefact writes the physical side; the trailing edge is the
+    // left one in RTL.
+    expect(value('.mtrl-fab.mtrl-fab-menu__fab', 'right', arms)).toBe('0');
     expect(rtl('.mtrl-fab.mtrl-fab-menu__fab', 'left')).toBe('0');
     expect(rtl('.mtrl-fab.mtrl-fab-menu__fab', 'right')).toBe('auto');
     expect(value('.mtrl-fab-menu--medium', 'width')).toBe('80px');
@@ -85,19 +93,23 @@ describe('fab menu stylesheet', () => {
     const fab = '.mtrl-fab-menu--bottom-start .mtrl-fab.mtrl-fab-menu__fab';
     const list = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__list';
     const item = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__item';
-    expect(value(fab, 'left')).toBe('0');
-    expect(value(fab, 'right')).toBe('auto');
-    expect(value(list, 'left')).toBe('0');
-    expect(value(list, 'right')).toBe('auto');
+    expect(value(fab, 'inset-inline-start')).toBe('0');
+    expect(value(fab, 'inset-inline-end')).toBe('auto');
+    expect(value(list, 'inset-inline-start')).toBe('0');
+    expect(value(list, 'inset-inline-end')).toBe('auto');
     expect(value(list, 'align-items')).toBe('flex-start');
     expect(value(item, 'justify-content')).toBe('flex-start');
-    expect(value('.mtrl-fab-menu--bottom-end', 'right')).toBe('var(--mtrl-fab-menu-margin)');
-    expect(value('.mtrl-fab-menu--bottom-end', 'left')).toBeUndefined();
-    // The inline edges mirror in RTL; the physical left/right rules above do not.
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-end')).toBe('var(--mtrl-fab-menu-margin)');
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-start')).toBeUndefined();
+    // The lowered artefacts write the physical start side and mirror it under
+    // the arm; the physical rules alone do not mirror.
+    expect(value(fab, 'left', arms)).toBe('0');
+    expect(value(fab, 'right', arms)).toBe('auto');
     expect(rtl(fab, 'right')).toBe('0');
     expect(rtl(fab, 'left')).toBe('auto');
     expect(rtl(list, 'right')).toBe('0');
     expect(rtl(list, 'left')).toBe('auto');
+    expect(value('.mtrl-fab-menu--bottom-end', 'right', arms)).toBe('var(--mtrl-fab-menu-margin)');
     expect(rtl('.mtrl-fab-menu--bottom-end', 'left')).toBe('var(--mtrl-fab-menu-margin)');
     expect(rtl('.mtrl-fab-menu--bottom-end', 'right')).toBe('auto');
     // The menu root itself can carry the marker: the runtime writes mtrl-rtl
@@ -113,7 +125,8 @@ describe('fab menu stylesheet', () => {
     expect(value('.mtrl-fab-menu__list', 'gap')).toBe('4px');
     expect(value('.mtrl-fab-menu__list', 'align-items')).toBe('flex-end');
     expect(value('.mtrl-fab-menu__list', 'overflow-y')).toBe('auto');
-    expect(value('.mtrl-fab-menu__list', 'right')).toBe('0');
+    expect(value('.mtrl-fab-menu__list', 'inset-inline-end')).toBe('0');
+    expect(value('.mtrl-fab-menu__list', 'right', arms)).toBe('0');
     expect(rtl('.mtrl-fab-menu__list', 'left')).toBe('0');
     expect(rtl('.mtrl-fab-menu__list', 'right')).toBe('auto');
   });

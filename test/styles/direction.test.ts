@@ -21,6 +21,8 @@ const SOURCES = {
   deferred: `@use 'abstract/direction' as d;\n.a { @include d.start(16px, $arm: false); @include d.sides(0, auto, $arm: false); }\n` +
     `.a { @include d.arms-selector('.b') { right: 16px; left: auto; } }`,
   transition: `@use 'abstract/direction' as d;\n.a { transition: opacity 100ms linear, d.transition(inset-inline-start, 200ms ease); }`,
+  flipStart: `@use 'abstract/direction' as d;\n.a { left: 16px; }\n.a { @include d.flip-start(16px); }`,
+  flipEnd: `@use 'abstract/direction' as d;\n.a { right: 16px; }\n.a { @include d.flip-end(16px); }`,
 };
 
 const compile = (source: string, arms: boolean): string =>
@@ -44,6 +46,11 @@ describe('the direction switch', () => {
     expect(compile(SOURCES.selfArms, false)).toBe('.a{left:1px}');
     expect(compile(SOURCES.deferred, false)).toBe('.a{inset-inline-start:16px;inset-inline-start:0;inset-inline-end:auto}');
     expect(compile(SOURCES.transition, false)).toBe('.a{transition:opacity 100ms linear,inset-inline-start 200ms ease}');
+    // A logical alias of a shared physical base: the logical form replaces the
+    // side the pair's rule wrote with the logical property, which resolves the
+    // corner in either direction.
+    expect(compile(SOURCES.flipStart, false)).toBe('.a{left:16px}.a{left:auto;inset-inline-start:16px}');
+    expect(compile(SOURCES.flipEnd, false)).toBe('.a{right:16px}.a{right:auto;inset-inline-end:16px}');
   });
 
   test('the arms form is the physical side and the arm the hand series wrote', () => {
@@ -81,6 +88,15 @@ describe('the direction switch', () => {
       ':where(.mtrl-rtl) .b,:where(:host(.mtrl-rtl)) .b,[dir=rtl] .b:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:16px;left:auto}',
     );
     expect(compile(SOURCES.transition, true)).toBe('.a{transition:opacity 100ms linear,left 200ms ease,right 200ms ease}');
+    // ... and the arms form flips that base under a self arm.
+    expect(compile(SOURCES.flipStart, true)).toBe(
+      '.a{left:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,' +
+      ':where(:host(.mtrl-rtl)) .a,[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:16px}',
+    );
+    expect(compile(SOURCES.flipEnd, true)).toBe(
+      '.a{right:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,' +
+      ':where(:host(.mtrl-rtl)) .a,[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:auto;left:16px}',
+    );
   });
 
   test('a spring on an inline inset names both physical sides in the arms form', () => {

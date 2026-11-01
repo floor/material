@@ -13,6 +13,7 @@
 @use '../../styles/abstract/variables' as v;
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
+@use '../../styles/abstract/direction' as d;
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-fab-menu';
@@ -66,43 +67,21 @@ $swap: 48ms;
   }
 
   &--bottom-end {
-    right: var(--#{$component}-margin);
-
-    @include m.rtl(true) {
-      left: var(--#{$component}-margin);
-      right: auto;
-    }
+    @include d.end(var(--#{$component}-margin), $self: true);
   }
 
   &--bottom-start {
-    left: var(--#{$component}-margin);
-
-    @include m.rtl(true) {
-      right: var(--#{$component}-margin);
-      left: auto;
-    }
+    @include d.start(var(--#{$component}-margin), $self: true);
 
     // Into the page from this edge. The shared rules stay on the inline end,
     // which is where bottom-end and an unplaced menu already open.
     .#{$fab}.#{$component}__fab {
-      left: 0;
-      right: auto;
-
-      @include m.rtl {
-        right: 0;
-        left: auto;
-      }
+      @include d.sides(0, auto);
     }
 
     .#{$component}__list {
-      left: 0;
-      right: auto;
+      @include d.sides(0, auto);
       align-items: flex-start;
-
-      @include m.rtl {
-        right: 0;
-        left: auto;
-      }
     }
 
     .#{$component}__item {
@@ -115,7 +94,7 @@ $swap: 48ms;
   @at-root .#{$fab}.#{$component}__fab {
     position: absolute;
     inset-block-start: 0;
-    right: 0;
+    @include d.end(0);
     display: grid;
     place-items: center;
     transition:
@@ -126,12 +105,6 @@ $swap: 48ms;
       color $spatial-colour,
       box-shadow $spatial;
 
-    // The corner follows the inline direction; the rule above is its
-    // left-to-right form.
-    @include m.rtl {
-      left: 0;
-      right: auto;
-    }
 
     > * {
       grid-area: 1 / 1;
@@ -182,7 +155,7 @@ $swap: 48ms;
   &__list {
     position: absolute;
     bottom: calc(100% + 8px);
-    right: 0;
+    @include d.end(0);
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -192,27 +165,26 @@ $swap: 48ms;
     // Hidden once the last item has left
     transition: visibility 0s linear var(--#{$component}-exit, 0ms);
 
-    // The end edge follows the inline direction.
-    @include m.rtl {
-      left: 0;
-      right: auto;
-    }
   }
 
   // The placement class and the direction marker are the same element here:
   // the runtime writes mtrl-rtl on this root, and dir="rtl" may sit on it. The
   // arms above need a strict ancestor; a root-carried [dir] does reach the
   // inner parts through the at-root attribute arm, but that arm sets the
-  // left-to-right edges, so this root-carried form is written after it.
-  &--bottom-start:where(.#{base.$prefix}-rtl, [dir='rtl']) {
-    .#{$fab}.#{$component}__fab {
-      right: 0;
-      left: auto;
-    }
+  // left-to-right edges, so this root-carried form is written after it
+  // (abstract/_direction.scss: nothing in the logical form, where the edges
+  // mirror natively).
+  &--bottom-start {
+    @include d.arms-self-only {
+      .#{$fab}.#{$component}__fab {
+        right: 0;
+        left: auto;
+      }
 
-    .#{$component}__list {
-      right: 0;
-      left: auto;
+      .#{$component}__list {
+        right: 0;
+        left: auto;
+      }
     }
   }
 
