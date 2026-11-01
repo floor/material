@@ -88,6 +88,14 @@ Elements say everything the factories can.
   each to the `placement` naming the same corner in left-to-right and in
   right-to-left.
 
+### Internal
+
+- **The release costs 15 bytes gzipped in the all-js row (127,754 to 127,769)
+  and 88 fewer in the full stylesheet (63,733 to 63,645); the packed tarball
+  is 882,445 bytes compressed, 5,095,982 unpacked in 1,625 files, against
+  878,746 and 5,067,838 in 1,623 files in 3.2.7.** No ceiling moved, and all
+  seven README size rows stand as measured.
+
 ## [3.2.7] - 2026-10-31
 
 A lighter package.
