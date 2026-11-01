@@ -190,8 +190,11 @@ export const circularWaveRing = (
   const points: string[] = [];
   let at = 0;
   for (let i = 0; i <= steps; i++) {
-    // From 3 o'clock clockwise, as the circle element's stroke runs
-    const target = slice * i;
+    // From 3 o'clock clockwise, as the circle element's stroke runs. The
+    // last slice line is the table's total: slice * steps can round a hair
+    // above it, which would walk the scan past the table's end and divide
+    // by a cell that is not there, so the target clamps to the total.
+    const target = Math.min(total, slice * i);
     while (arcs[at + 1]! < target) at++;
     const angle = (TWO_PI * (at + (target - arcs[at]!) / (arcs[at + 1]! - arcs[at]!))) / 2048;
     const r = radius + amplitude * Math.sin((TWO_PI * radius * angle) / lambda);
