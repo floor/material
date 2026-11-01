@@ -319,15 +319,10 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
               itemElement.getAttribute("data-index") ?? "0",
               10,
             );
-            const parentMenu = itemElement.closest(
-              `.${component.getClass("menu--submenu")}`,
-            );
-            const parentItemId = parentMenu?.getAttribute("data-parent-item");
-
-            // Find the parent item in the items array to get its submenu
-            const parentItem = parentItemId ? actions.findItemById(parentItemId) : null;
-            if (parentItem && parentItem.submenu) {
-              const itemData = parentItem.submenu[itemIndex] as MenuItem;
+            // The submenu's own items, live from the item it was opened with:
+            // `setItems` may have replaced the menu's top-level list since.
+            const itemData = state.items[itemIndex] as MenuItem;
+            if (itemData?.submenu) {
               actions.handleNestedSubmenuClick?.(
                 itemData,
                 itemIndex,

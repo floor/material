@@ -308,6 +308,131 @@ export async function checkMenuHiddenItems(page: Page): Promise<void> {
 }
 
 /**
+ * A submenu opened after `setItems` serves the replacement, not the list the
+ * menu was created with. Material asks the right arrow to open the focused
+ * item's submenu — "Left and Right arrows — Opens or closes a submenu"
+ * (m3.material.io/components/menus/accessibility) — so the second level it
+ * opens belongs to the item on screen, replacement included.
+ *
+ * Two cases: the replacement keeps the top-level id and changes its children,
+ * and it renames the top-level id. On a tree whose second-level handler finds
+ * the parent item in the creation-time list, the first opens the old second
+ * level and focuses its old child, and the second opens nothing at all.
+ */
+export async function checkMenuSubmenuSetItems(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const original = [
+    { id: "one", text: "One" },
+    { id: "two", text: "Two", hasSubmenu: true, submenu: [
+      { id: "two-a", text: "Two A" },
+      { id: "two-b", text: "Two B", hasSubmenu: true, submenu: [
+        { id: "old-child", text: "Old child" },
+      ] },
+    ] },
+    { id: "three", text: "Three" },
+  ];
+  const replacement = (rootId: string) => [
+    { id: "one", text: "One" },
+    { id: rootId, text: "Two", hasSubmenu: true, submenu: [
+      { id: "new-a", text: "New A" },
+      { id: "new-b", text: "New B", hasSubmenu: true, submenu: [
+        { id: "new-child", text: "New child" },
+      ] },
+    ] },
+    { id: "three", text: "Three" },
+  ];
+  const focused = (): Promise<string | null> =>
+    page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? null);
+  const level = (depth: string) =>
+    page.evaluate((depth) => {
+      const menus = Array.from(
+        document.querySelectorAll<HTMLElement>(".mtrl-menu--submenu"),
+      ).filter((menu) =>
+        menu.getAttribute("data-level") === depth &&
+        menu.classList.contains("mtrl-menu--visible"),
+      );
+      const shown = menus[0];
+      return {
+        count: menus.length,
+        parent: shown?.getAttribute("data-parent-item") ?? null,
+        items: shown
+          ? Array.from(shown.querySelectorAll<HTMLElement>(".mtrl-menu__item"))
+            .map((item) => item.getAttribute("data-id"))
+          : [],
+      };
+    }, depth);
+  // Focus enters a submenu once its opening frame has run, which on a loaded
+  // CI runner can be after any fixed sleep. Wait for the state the assertion
+  // is about, then assert it: a failure still names what is on screen.
+  const waitForFocus = (id: string): Promise<unknown> =>
+    page.waitForFunction(
+      (id) => document.activeElement?.getAttribute("data-id") === id,
+      id, { timeout: 10000 },
+    ).catch(() => undefined);
+  const waitForLevel = (depth: string, parent?: string): Promise<unknown> =>
+    page.waitForFunction(({ depth, parent }: { depth: string; parent?: string }) => {
+      const active = document.activeElement as HTMLElement | null;
+      const menu = active?.closest?.(".mtrl-menu--submenu");
+      return !!menu &&
+        menu.getAttribute("data-level") === depth &&
+        menu.classList.contains("mtrl-menu--visible") &&
+        (!parent || menu.getAttribute("data-parent-item") === parent);
+    }, { depth, parent }, { timeout: 10000 }).catch(() => undefined);
+  for (const { name, rootId } of [
+    { name: "changed child", rootId: "two" },
+    { name: "renamed root", rootId: "deux" },
+  ]) {
+    await page.evaluate(({ original, replacement }) => {
+      document.body.replaceChildren();
+      const state = window as unknown as MenuWindow;
+      const opener = document.createElement("button");
+      opener.id = "menu-opener";
+      opener.textContent = "Edit";
+      document.body.append(opener);
+      opener.focus();
+      state.menu = state.createMenu({ opener, items: original });
+      state.menu.setItems(replacement);
+      state.menu.open(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    }, { original, replacement: replacement(rootId) });
+    await page.waitForFunction(() =>
+      (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"));
+    await waitForFocus("one");
+    let at = await focused();
+    assert.equal(at, "one",
+      `menu setItems, ${name}: opening focuses the replacement's first item (${at})`);
+    await page.keyboard.press("ArrowDown");
+    await waitForFocus(rootId);
+    at = await focused();
+    assert.equal(at, rootId,
+      `menu setItems, ${name}: ArrowDown reaches ${rootId} (${at})`);
+    await page.keyboard.press("ArrowRight");
+    await waitForLevel("1", rootId);
+    const first = await level("1");
+    assert.deepEqual([first.count, first.parent, first.items], [1, rootId, ["new-a", "new-b"]],
+      `menu setItems, ${name}: ArrowRight opens the replacement's first level (parent ${first.parent}, items ${first.items?.join(", ")})`);
+    at = await focused();
+    assert.equal(at, "new-a",
+      `menu setItems, ${name}: focus enters the first level it opened (${at})`);
+    await page.keyboard.press("ArrowDown");
+    await waitForFocus("new-b");
+    at = await focused();
+    assert.equal(at, "new-b",
+      `menu setItems, ${name}: ArrowDown reaches the replaced second-level item (${at})`);
+    await page.keyboard.press("ArrowRight");
+    await waitForLevel("2");
+    const second = await level("2");
+    assert.deepEqual([second.count, second.parent, second.items], [1, "new-b", ["new-child"]],
+      `menu setItems, ${name}: ArrowRight on new-b opens its new child (parent ${second.parent}, items ${second.items?.join(", ") || "none"})`);
+    at = await focused();
+    assert.equal(at, "new-child",
+      `menu setItems, ${name}: focus enters the second level it opened (${at})`);
+    await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());
+  }
+  await page.evaluate(() => document.body.replaceChildren());
+  console.log("Passed packed menu setItems submenus: after setItems changes a top-level item's children or renames the item, ArrowRight opens the replacement's levels and focuses its items.");
+}
+
+/**
  * A vertical menu's selected item paints no trailing check. M3 puts the
  * selected check before the label, and the vertical selected-state figure
  * shows colour and shape alone (m3.material.io/components/menus/specs and
