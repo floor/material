@@ -200,10 +200,12 @@ describe("explicit contrast levels are opt-in", () => {
     // --l/--r/sweep custom properties, the indeterminate motion runs as
     // keyframes on the drawing parts, and a travelling wave is clipped to a
     // window the sheet composes while the ring's dash slides against the
-    // travel rotation (styles/components/_progress.scss).
+    // travel rotation (styles/components/_progress.scss). The clipPath
+    // subtree does not inherit the animated custom properties, so the wave
+    // windows run their own copies of the keyframes.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("364addc2b3b4ad5d35eab35e1bc64f854c3b8f2114cc8f8a5f945d23d123d7f8");
-    expect(css.length).toBe(553004);
+      .toBe("634a1700943a83e148a1529b4b4b54c7561b3a1dbc916836f5860665d72bb19b");
+    expect(css.length).toBe(553367);
   });
 
   test("today's sheets still resolve to the fixture", () => {
