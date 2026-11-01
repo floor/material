@@ -1,4 +1,5 @@
 // scripts/fixtures/shadow-styles.ts
+import { auditControlReset } from "./shadow-control-reset";
 import { defineAll, elements } from "../../dist/elements/index.js";
 import "../../dist/elements/css/index.js";
 import { applyStyles } from "../../dist/elements/styles.js";
@@ -65,6 +66,7 @@ const settle = async (): Promise<void> => {
 };
 
 const api = {
+  auditControlReset,
   /**
    * The settle's own guard: a 60 ms transition in a shadow tree, longer than
    * the two frames a settle that only waits on the document returns after. If
