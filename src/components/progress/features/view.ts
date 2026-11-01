@@ -416,7 +416,16 @@ export const withView =
      */
     const draw = (): void => {
       if (isIndeterminate()) {
-        if (isWavy() && !isCircular) writeWavePath(sharedPattern());
+        // The motion is the stylesheet's, but a wavy ring's indicator path
+        // still needs its wave written once, at its full indeterminate
+        // amplitude; the linear wave lives in a shared pattern def.
+        if (isWavy()) {
+          writeWavePath(
+            isCircular
+              ? (parts.indicator as SVGPathElement | null)
+              : sharedPattern()
+          );
+        }
         return;
       }
       if (isCircular) {
@@ -444,6 +453,12 @@ export const withView =
           } else {
             parts.track.setAttribute("stroke-dasharray", "0 100");
           }
+        }
+        // A wavy ring's indicator is a path, not a circle: the wave still
+        // has to be written here, and its amplitude var with it — the
+        // sheet's radius calc reads it to make room for the wave.
+        if (isWavy()) {
+          writeWavePath(parts.indicator as SVGPathElement | null);
         }
         return;
       }
