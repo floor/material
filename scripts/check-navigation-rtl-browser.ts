@@ -147,6 +147,51 @@ const MODAL = `
     <div class="mtrl-navigation-rail__items">${RAIL_ITEM("3")}</div>
   </dialog>`;
 
+// An `--auto` bar: horizontal items once the bar's own container is 600px or
+// wider, vertical below. The pill must fill the content box in the horizontal
+// form and stay a centred 56dp pill in the vertical one, in every direction
+// form — the horizontal geometry lives in a container query whose (0,2,0)
+// rules a (0,3,0) direction arm would outrank.
+const AUTO_BAR = (width: number): string => `
+  <div style="width: ${width}px">
+    <nav class="mtrl-navigation-bar mtrl-navigation-bar--auto">
+      <div class="mtrl-navigation-bar__items">
+        <a class="mtrl-navigation-bar__item" href="#">
+          <div class="mtrl-navigation-bar__content">
+            <div class="mtrl-navigation-bar__indicator"></div>
+            <div class="mtrl-navigation-bar__icon"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg></div>
+            <span class="mtrl-navigation-bar__label">Chat</span>
+          </div>
+        </a>
+      </div>
+    </nav>
+  </div>`;
+
+type AutoRow = { name: string; pill: number; centre: number; content: number };
+
+const measureAutoBar = (page: Page, markup: string): Promise<AutoRow[]> =>
+  page.evaluate(async (markup): Promise<AutoRow[]> => {
+    const host = document.getElementById("host")!;
+    const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    const rows: AutoRow[] = [];
+    for (const name of ["plain", "root-class", "root-dir"]) {
+      host.innerHTML = "";
+      const wrap = document.createElement("div");
+      host.append(wrap);
+      wrap.innerHTML = markup;
+      await frame();
+      const nav = wrap.querySelector(".mtrl-navigation-bar") as HTMLElement;
+      if (name === "root-class") nav.classList.add("mtrl-rtl");
+      if (name === "root-dir") nav.setAttribute("dir", "rtl");
+      await frame();
+      const pill = nav.querySelector(".mtrl-navigation-bar__indicator")!.getBoundingClientRect();
+      const content = nav.querySelector(".mtrl-navigation-bar__content")!.getBoundingClientRect();
+      rows.push({ name, pill: pill.width, centre: pill.x + pill.width / 2 - (content.x + content.width / 2), content: content.width });
+      host.innerHTML = "";
+    }
+    return rows;
+  }, markup);
+
 type BundledRow = {
   name: string;
   viewport: number;
@@ -291,6 +336,25 @@ export async function checkNavigationRtl(browser: Browser, href: string, ltrPage
       report(where, p);
     }
   }
+  // ---- the auto bar: horizontal items at 600px and wider, vertical below,
+  // in both sheets and every marker form
+  for (const [page, pageName] of [[ltrPage, "ltr page"], [rtlPage, "rtl page"]] as const) {
+    for (const width of [640, 400] as const) {
+      for (const row of await measureAutoBar(page, AUTO_BAR(width))) {
+        const p: string[] = [];
+        const where = `auto bar ${width}px (${pageName}, ${row.name})`;
+        if (width >= 600) {
+          near(p, "pill fills the content", row.pill, row.content);
+          if (row.content < 50) p.push(`content ${row.content.toFixed(1)} is not the horizontal layout`);
+        } else {
+          near(p, "pill width", row.pill, 56);
+          near(p, "pill centre", row.centre, 0);
+        }
+        report(where, p);
+      }
+    }
+  }
+
   // A `dir="ltr"` subtree of the RTL page keeps its own geometry (the cut).
   {
     const cut = await rtlPage.evaluate(async (icon) => {
@@ -336,6 +400,15 @@ export async function checkNavigationRtl(browser: Browser, href: string, ltrPage
         const [inner, outer] = rtl ? [row.modal.topLeft, row.modal.topRight] : [row.modal.topRight, row.modal.topLeft];
         if (inner <= 0 || outer !== 0) p.push(`modal corners inner ${inner}, outer ${outer}`);
       }
+      report(where, p);
+    }
+    // The auto bar's pill against the container query, in the bundled sheet
+    // the consumer actually ships.
+    for (const row of await measureAutoBar(page, AUTO_BAR(640))) {
+      const p: string[] = [];
+      const where = `bundled auto bar 640px (${dir} page, ${row.name})`;
+      near(p, "pill fills the content", row.pill, row.content);
+      if (row.content < 50) p.push(`content ${row.content.toFixed(1)} is not the horizontal layout`);
       report(where, p);
     }
     if (dir === "rtl") {

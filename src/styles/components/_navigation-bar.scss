@@ -29,10 +29,15 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
   }
   .#{$component}__indicator {
     inset-block-start: 6px;
+    // A centred symmetric box mirrors to itself: physical sides and a physical
+    // centring margin place the pill at the item's centre in every direction,
+    // with no arm at all. The horizontal form the container query switches
+    // `--auto` to at 600px lives at (0,2,0); a direction arm here would carry
+    // the [dir] prelude's extra class and outrank it, collapsing the pill.
     left: 50%;
+    margin-left: -28px;
     inline-size: 56px;
     block-size: 32px;
-    margin-inline-start: -28px;
   }
   // The icon is centred in the indicator: 4dp below its top edge
   .#{$component}__icon { margin-block-start: 4px; }
@@ -241,14 +246,13 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
   }
 }
 
-// The vertical items' mirrored form. The :is() names both variants the mixin
-// serves, halving the preludes every shipped copy of the sheet pays, and the
-// self arm still matches a marker on the root that carries the variant. The
-// pill's -28dp centring margin is mirrored physically: from the end side the
-// logical margin would go inert.
+// The vertical items' mirrored form — the badge and its dot; the pill needs
+// no arm (see the mixin: it is centred by physical sides alone). The :is()
+// names both variants the mixin serves, halving the preludes every shipped
+// copy of the sheet pays, and the self arm still matches a marker on the root
+// that carries the variant.
 :is(.#{$component}--vertical, .#{$component}--auto) {
   @include m.rtl(true) {
-    .#{$component}__indicator { right: 50%; left: auto; margin: 0 -28px; }
     .#{$component}__badge { right: calc(50% + var(--#{$component}-dot-shift, 0px)); left: auto; }
   }
 }
