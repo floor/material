@@ -131,6 +131,7 @@ export const getLinearHeight = (strokeWidth: number, isWavy: boolean): number =>
 export const withView =
   (config: ProgressConfig) =>
   <C extends BaseComponent>(component: C): C & ViewComponent => {
+    const prefix = config.prefix || "mtrl";
     const isCircular = config.variant === PROGRESS_VARIANTS.CIRCULAR;
     const view = component.element.ownerDocument?.defaultView ?? null;
     const doc = component.element.ownerDocument ?? document;
@@ -216,7 +217,7 @@ export const withView =
         return;
       }
       waveCache = { amplitude, width: isCircular ? currentSize : lineWidth, stroke };
-      svg.style.setProperty("--mtrl-progress-amp", `${amplitude}px`);
+      svg.style.setProperty(`--${prefix}-progress-amp`, `${amplitude}px`);
       target.setAttribute(
         "d",
         isCircular
@@ -259,22 +260,22 @@ export const withView =
     const writeTokens = (): void => {
       const stroke = strokeWidth();
       const height = isCircular ? currentSize : getLinearHeight(stroke, isWavy());
-      svg.style.setProperty("--mtrl-progress-stroke", `${stroke}px`);
-      svg.style.setProperty("--mtrl-progress-cap", `${stroke / 2}px`);
+      svg.style.setProperty(`--${prefix}-progress-stroke`, `${stroke}px`);
+      svg.style.setProperty(`--${prefix}-progress-cap`, `${stroke / 2}px`);
       const gap = isCircular
         ? circularGapUnits(stroke, currentSize)
         : lineWidth > 0
           ? (100 * linearGapPx(stroke)) / lineWidth
           : (100 * linearGapPx(stroke)) / 2048;
       svg.style.setProperty(
-        isCircular ? "--mtrl-progress-gap100" : "--mtrl-progress-gapp",
+        isCircular ? `--${prefix}-progress-gap100` : `--${prefix}-progress-gapp`,
         `${gap}`
       );
-      svg.style.setProperty("--mtrl-progress-wavelength", `${isCircular ? 0 : isIndeterminate() ? PROGRESS_WAVE.LINEAR.INDETERMINATE_WAVELENGTH : PROGRESS_WAVE.LINEAR.WAVELENGTH}px`);
+      svg.style.setProperty(`--${prefix}-progress-wavelength`, `${isCircular ? 0 : isIndeterminate() ? PROGRESS_WAVE.LINEAR.INDETERMINATE_WAVELENGTH : PROGRESS_WAVE.LINEAR.WAVELENGTH}px`);
       if (isCircular) {
         const radius = circularRadius(currentSize, stroke, getWaveAmplitude(true, stroke, currentSize));
-        svg.style.setProperty("--mtrl-progress-size", `${currentSize}px`);
-        svg.style.setProperty("--mtrl-progress-wave-rot", `${circularWaveRotation(radius, currentSize)}deg`);
+        svg.style.setProperty(`--${prefix}-progress-size`, `${currentSize}px`);
+        svg.style.setProperty(`--${prefix}-progress-wave-rot`, `${circularWaveRotation(radius, currentSize)}deg`);
       }
       svg.setAttribute("viewBox", `0 0 ${isCircular ? currentSize : lineWidth || 2048} ${height}`);
       if (!isCircular) {
@@ -344,7 +345,7 @@ export const withView =
         if (wave) {
           const defs = doc.createElementNS(SVG_NS, "defs");
           const pattern = el("path", PROGRESS_CLASSES.WAVE_DEF) as SVGPathElement;
-          pattern.setAttribute("id", `mtrl-progress-wave-${++waveId}`);
+          pattern.setAttribute("id", `${prefix}-progress-wave-${++waveId}`);
           defs.append(pattern);
           svg.append(defs);
         }
@@ -352,7 +353,7 @@ export const withView =
         svg.append(ahead);
         const bar = (which: string): SVGElement => {
           if (!wave) return el("rect", PROGRESS_CLASSES.INDICATOR, which);
-          const id = `mtrl-progress-wave-${++waveId}`;
+          const id = `${prefix}-progress-wave-${++waveId}`;
           const group = el("g", PROGRESS_CLASSES.INDICATOR, which) as SVGGElement;
           const clip = doc.createElementNS(SVG_NS, "clipPath");
           clip.setAttribute("id", id);
@@ -380,7 +381,7 @@ export const withView =
       svg.append(track, buffer);
       if (wave) {
         const clip = doc.createElementNS(SVG_NS, "clipPath");
-        clip.setAttribute("id", `mtrl-progress-wave-${++waveId}`);
+        clip.setAttribute("id", `${prefix}-progress-wave-${++waveId}`);
         const rect = el("rect", PROGRESS_CLASSES.WAVE_WINDOW) as SVGRectElement;
         clip.append(rect);
         svg.append(clip);
