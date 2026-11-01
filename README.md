@@ -249,7 +249,7 @@ document.documentElement.dataset.themeMode = 'dark';
 | Themes | Names | Where |
 |--------|-------|-------|
 | Baseline and the eleven others | `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel`, `highcontrast` | In the full stylesheet, and each as `material/themes/<name>` |
-| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>`, and as a Sass source read by path |
+| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>`, and as the Sass source `src/styles/themes/_<name>.scss` |
 
 The scheme variants are not forwarded by the Sass `themes` entry. They ship as Sass sources, and a theme builder reads them by path, as md3.io does:
 
@@ -257,7 +257,7 @@ The scheme variants are not forwarded by the Sass `themes` entry. They ship as S
 @use "material/src/styles/themes/expressive";
 ```
 
-The eight files are `_neutral.scss`, `_vibrant.scss`, `_expressive.scss`, `_fidelity.scss`, `_content.scss`, `_monochrome.scss`, `_rainbow.scss` and `_fruit-salad.scss`, under `src/styles/themes` in the package.
+Each variant is one file in `src/styles/themes`, `_<name>.scss` for the name of its row above.
 
 Every theme has three contrast levels. Set one with `data-theme-contrast` on the element that carries the theme:
 
