@@ -17,6 +17,19 @@ $container: "#{base.$prefix}-chips";
     --#{base.$prefix}-chip-leading-color: #{t.color("primary")};
     --#{base.$prefix}-chip-trailing-color: #{t.color("on-surface-variant")};
     --#{base.$prefix}-chip-checkmark-color: currentColor;
+    // The trailing control's 48px touch target runs back from the chip's end:
+    // the control's physical end edge, which mirrors with the direction. The
+    // flip is carried by custom properties on the root because the ::before
+    // cannot take a direction arm itself: the attribute fallback's
+    // :not(:where(.mtrl-ltr, .mtrl-ltr *)) cannot follow a pseudo-element, so
+    // it would never cut a chip inside a nearer dir="ltr" (as the date
+    // picker's range band found).
+    --#{base.$prefix}-chip-trailing-target-left: auto;
+    --#{base.$prefix}-chip-trailing-target-right: 0;
+    @include m.rtl($self: true) {
+        --#{base.$prefix}-chip-trailing-target-left: 0;
+        --#{base.$prefix}-chip-trailing-target-right: auto;
+    }
     display: inline-flex;
     align-items: center;
     position: relative;
@@ -83,8 +96,18 @@ $container: "#{base.$prefix}-chips";
         padding: 0;
         padding-inline-end: 8px;
         justify-content: flex-start;
-        border-start-start-radius: 0;
-        border-end-start-radius: 0;
+        // The edge that meets the chip's body is square; the one on the outside
+        // keeps the chip's radius. Physical pairs, with the right-to-left pair
+        // as an arm: the minifier lowers the logical corners into :lang() arms
+        // that never match dir="rtl" (_text-field.scss).
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        @include m.rtl {
+            border-top-left-radius: inherit;
+            border-bottom-left-radius: inherit;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
         color: var(--#{base.$prefix}-chip-trailing-color);
     }
     // m3.material.io, Chips: "Secondary actions (such as a trailing icon button
@@ -213,12 +236,16 @@ $container: "#{base.$prefix}-chips";
     // end over the label's end, so it never sticks out past the chip -- centred on
     // the icon it overflowed by 7px, which a scrolling chip set would scroll to. It
     // was only under pointer: coarse, only vertically, and the remove button 32 wide.
-    &__action::before { content: ""; position: absolute; inset-inline: 0; inset-block: -8px; }
+    // Physical sides: the action's target spans the action symmetrically, which needs
+    // no arm, and the trailing target's anchored edge is a custom property the root
+    // flips (above), because no arm can sit on the ::before itself.
+    &__action::before { content: ""; position: absolute; inset-block: -8px; left: 0; right: 0; }
     &__remove::before, &__trailing-action::before {
         content: "";
         position: absolute;
         top: 50%;
-        inset-inline-end: 0;
+        left: var(--#{base.$prefix}-chip-trailing-target-left);
+        right: var(--#{base.$prefix}-chip-trailing-target-right);
         width: 48px;
         height: 48px;
         transform: translateY(-50%);
