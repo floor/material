@@ -208,18 +208,23 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       // border box already on screen.
       const apply: Array<() => void> = [];
       // A neighbour narrows by up to the compression limit, whatever its own
-      // padding: an icon button has none and still gives way. Padding on the
-      // facing side shrinks with it where there is some. min-width at the
-      // target overrides the 58px minimum for the gesture and stops the
-      // spatial spring's overshoot short of the label.
+      // padding: an icon button has none and still gives way. A text button
+      // gives no more than its facing padding (12/16/24dp by size, 48/64 at
+      // l and xl, where the constant binds first anyway), so its label never
+      // clips: the padding shrinks by the loss and the width follows it.
+      // min-width at the target overrides the 58px minimum for the gesture
+      // and stops the spatial spring's overshoot short of the label.
       const compress = (i: number, side: 'paddingLeft' | 'paddingRight') => {
-        const limit = Math.min(share, BUTTON_GROUP_COMPRESSION_LIMIT, widths[i]);
+        const facing = padding(i, side);
+        const room = facing > 0
+          ? Math.min(facing, BUTTON_GROUP_COMPRESSION_LIMIT)
+          : BUTTON_GROUP_COMPRESSION_LIMIT;
+        const limit = Math.min(share, room, widths[i]);
         if (limit <= 0) return;
         const el = buttons[i].element;
         const to = widths[i] - limit;
         el.style.minWidth = `${to}px`;
         el.style.width = `${widths[i]}px`;
-        const facing = padding(i, side);
         apply.push(() => {
           el.style.width = `${to}px`;
           if (facing > 0) el.style[side] = `${Math.max(0, facing - limit)}px`;
