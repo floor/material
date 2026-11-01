@@ -499,34 +499,10 @@ const withController =
       // Step 4: Set up initial focus based on interaction type. A listbox
       // leaves focus on its combobox.
       if (!listbox) focusTimer = tasks.setTimeout(() => {
-        if (component.keyboard && component.keyboard.handleInitialFocus) {
-          component.keyboard.handleInitialFocus(
-            component.element,
-            interactionType,
-          );
-        } else {
-          // Fallback when the keyboard feature is not composed in: the first
-          // item is the way in for the Tab order; a menu opened with a key
-          // focuses it, one opened with a pointer focuses the menu itself so
-          // the first arrow press lands on the first item
-          const items = Array.from(
-            component.element.querySelectorAll(
-              `.${component.getClass("menu__item")}`,
-            ),
-          ) as HTMLElement[];
-
-          items.forEach((item) => {
-            item.tabIndex = -1;
-          });
-          if (items.length > 0) items[0].tabIndex = 0;
-
-          if (interactionType === "keyboard" && items.length > 0) {
-            items[0].focus();
-          } else {
-            component.element.tabIndex = -1;
-            component.element.focus();
-          }
-        }
+        component.keyboard?.handleInitialFocus(
+          component.element,
+          interactionType,
+        );
       }, 100);
 
       // The menu follows its opener from the moment it is placed
@@ -681,25 +657,18 @@ const withController =
         // handler works out which menu they belong to from the event target.
         // This branch used to stop at Escape, so an arrow inside a submenu
         // fell through to the main menu and moved focus there.
-        if (component.keyboard && component.keyboard.handleMenuKeydown) {
-          component.keyboard.handleMenuKeydown(e, state, {
-            closeMenu,
-            findItemById,
-            ...submenuActions,
-          });
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          closeMenu(e, true);
-        }
+        component.keyboard?.handleMenuKeydown(e, state, {
+          closeMenu,
+          findItemById,
+          ...submenuActions,
+        });
       } else {
         // If target is outside menu, but menu is open, handle all keyboard navigation
-        if (component.keyboard && component.keyboard.handleMenuKeydown) {
-          component.keyboard.handleMenuKeydown(e, state, {
-            closeMenu,
-            findItemById,
-            ...submenuActions,
-          });
-        }
+        component.keyboard?.handleMenuKeydown(e, state, {
+          closeMenu,
+          findItemById,
+          ...submenuActions,
+        });
       }
     }
   };
@@ -792,8 +761,8 @@ const withController =
   // the same initial tree in the browser and on the server, including tab stops.
   renderMenuItems();
   // A listbox leaves focus and keyboard handling with its combobox.
-  if (!listbox && component.keyboard && component.keyboard.setupKeyboardHandlers) {
-    component.keyboard.setupKeyboardHandlers(component.element, state, {
+  if (!listbox) {
+    component.keyboard?.setupKeyboardHandlers(component.element, state, {
       closeMenu,
       findItemById,
       ...submenuActions,
