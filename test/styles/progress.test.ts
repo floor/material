@@ -275,20 +275,30 @@ describe('progress stylesheet: the drawing', () => {
     ).toContain('calc(-1 * (var(--mtrl-progress-sweep)');
   });
 
-  test('the wave travels one wavelength per second, as a ring when circular', () => {
+  test('the wave travels one wavelength per second, a whole ring turn when circular', () => {
     expect(value('.mtrl-progress__wave-travel', 'animation')).toBe('mtrl-progress-travel 1000ms infinite linear');
-    expect(value('.mtrl-progress--circular .mtrl-progress__wave-travel', 'animation-name')).toBe(
-      'mtrl-progress-travel-ring'
+    // the ring's pattern does not repeat partway round — one closing period
+    // absorbs the circumference's remainder — so the loop is the ring's whole
+    // revolution at the wavelength's own rate, and both the rotation and the
+    // dash slide that cancels it run that revolution's own duration
+    expect(value('.mtrl-progress--circular .mtrl-progress__wave-travel', 'animation')).toBe(
+      'mtrl-progress-travel-ring var(--mtrl-progress-wave-dur, 1000ms) infinite linear'
     );
     expect(keyframes('mtrl-progress-travel')).toContain('translate: var(--mtrl-progress-wavelength) 0');
     expect(keyframes('mtrl-progress-travel-ring')).toContain('rotate: var(--mtrl-progress-wave-rot)');
-    // the dash slides back along the ring in lockstep with that rotation, one
-    // wavelength per loop, so the painted arc and its caps hold still in screen
-    // space while the sine travels under them
+    // the dash slides back through the ring's whole length in lockstep with
+    // that rotation, offset 100 landing where offset 0 began, so the painted
+    // arc and its caps hold still in screen space while the sine travels
     expect(value('.mtrl-progress--circular path.mtrl-progress__indicator', 'animation')).toBe(
-      'mtrl-progress-dash-ring 1000ms infinite linear'
+      'mtrl-progress-dash-ring var(--mtrl-progress-wave-dur, 1000ms) infinite linear'
     );
-    expect(keyframes('mtrl-progress-dash-ring')).toContain('stroke-dashoffset: var(--mtrl-progress-wave-dash)');
+    // the slide's staged stops must line up with the fiftieths the view
+    // writes its ws vars for — the interior stop count and the last stop
+    // pin that
+    const dashRing = keyframes('mtrl-progress-dash-ring');
+    expect((dashRing.match(/--mtrl-progress-ws-\d+/g) ?? []).length).toBe(49);
+    expect(dashRing).toContain('var(--mtrl-progress-ws-49)');
+    expect(dashRing).toContain('stroke-dashoffset: var(--mtrl-progress-wave-dash)');
   });
 
   test('rtl mirrors the linear view and reverses only the travel', () => {

@@ -30,7 +30,8 @@ $component: "#{base.$prefix}-progress";
 // radius (--cap), the gap between indicator and track as a percentage of the
 // track (--gapp, linear) or of the circle's pathLength (--gap100, circular),
 // the wave's amplitude and wavelength (--amp, --wavelength), the circular
-// size (--size) and the wave's per-second rotation around it (--wave-rot).
+// size (--size), the wave loop's whole-turn rotation and its duration
+// (--wave-rot, --wave-dur).
 
 .#{$component} {
   position: relative;
@@ -371,41 +372,90 @@ $component: "#{base.$prefix}-progress";
   }
 
   // The wave travels one wavelength per second, to the right. A circular
-  // wave travels around the ring instead: one wavelength as an angle.
+  // wave travels around the ring instead: one wavelength of arc per second
+  // at the ring's radius. The labelled wavelength does not divide the ring
+  // — one closing period absorbs the remainder, so the pattern does not
+  // repeat partway round — and the travel turns the ring one whole
+  // revolution per loop at that rate, as long as the revolution takes.
   .#{$component}__wave-travel {
     animation: #{$component}-travel 1000ms infinite linear;
   }
 
   .#{$component}--circular .#{$component}__wave-travel {
-    animation-name: #{$component}-travel-ring;
+    animation: #{$component}-travel-ring var(--#{$component}-wave-dur, 1000ms) infinite linear;
   }
 
   // The ring's dash must not ride that rotation: the extent — value arc
   // or indeterminate sweep — is fixed in the view while the wave pattern
-  // turns under it. The window slides back along the path exactly one
-  // wavelength per loop, in step with the travel, so the painted arc and
-  // its round caps hold still and only the sine travels: the phase the
-  // canvas baked into every frame, composed here from two animations.
-  // Only the wavy indicator is a path; the plain circle never travels.
+  // turns under it. The window slides back along the path through the
+  // ring's whole length — exactly one full turn, offset 100 landing where
+  // offset 0 began — in step with the travel, so the painted arc and its
+  // round caps hold still and only the sine travels: the phase the canvas
+  // baked into every frame, composed here from two animations that share
+  // the revolution's own duration. Only the wavy indicator is a path; the
+  // plain circle never travels.
   .#{$component}--circular path.#{$component}__indicator {
-    animation: #{$component}-dash-ring 1000ms infinite linear;
+    animation: #{$component}-dash-ring var(--#{$component}-wave-dur, 1000ms) infinite linear;
   }
 
-  // The slide passes through the curve's own arc table at eighths of the
-  // loop: the wave runs longer where it climbs than where it rides the
+  // The slide passes through the curve's own arc table at fiftieths of
+  // the loop: the wave runs longer where it climbs than where it rides the
   // circle, so equal angles are not equal distances on it, and a uniform
   // slide let the window's start wobble a degree and a half round its
   // hold as the wave traveled beneath. Between these the slide runs
-  // straight, which holds the window to a tenth of a degree.
+  // straight, which holds the window to a fifth of a degree at the worst
+  // size, measured over every size the factory admits.
   @keyframes #{$component}-dash-ring {
     from { stroke-dashoffset: 0; }
-    12.5% { stroke-dashoffset: var(--#{$component}-ws-1); }
-    25% { stroke-dashoffset: var(--#{$component}-ws-2); }
-    37.5% { stroke-dashoffset: var(--#{$component}-ws-3); }
-    50% { stroke-dashoffset: var(--#{$component}-ws-4); }
-    62.5% { stroke-dashoffset: var(--#{$component}-ws-5); }
-    75% { stroke-dashoffset: var(--#{$component}-ws-6); }
-    87.5% { stroke-dashoffset: var(--#{$component}-ws-7); }
+    2% { stroke-dashoffset: var(--#{$component}-ws-1); }
+    4% { stroke-dashoffset: var(--#{$component}-ws-2); }
+    6% { stroke-dashoffset: var(--#{$component}-ws-3); }
+    8% { stroke-dashoffset: var(--#{$component}-ws-4); }
+    10% { stroke-dashoffset: var(--#{$component}-ws-5); }
+    12% { stroke-dashoffset: var(--#{$component}-ws-6); }
+    14% { stroke-dashoffset: var(--#{$component}-ws-7); }
+    16% { stroke-dashoffset: var(--#{$component}-ws-8); }
+    18% { stroke-dashoffset: var(--#{$component}-ws-9); }
+    20% { stroke-dashoffset: var(--#{$component}-ws-10); }
+    22% { stroke-dashoffset: var(--#{$component}-ws-11); }
+    24% { stroke-dashoffset: var(--#{$component}-ws-12); }
+    26% { stroke-dashoffset: var(--#{$component}-ws-13); }
+    28% { stroke-dashoffset: var(--#{$component}-ws-14); }
+    30% { stroke-dashoffset: var(--#{$component}-ws-15); }
+    32% { stroke-dashoffset: var(--#{$component}-ws-16); }
+    34% { stroke-dashoffset: var(--#{$component}-ws-17); }
+    36% { stroke-dashoffset: var(--#{$component}-ws-18); }
+    38% { stroke-dashoffset: var(--#{$component}-ws-19); }
+    40% { stroke-dashoffset: var(--#{$component}-ws-20); }
+    42% { stroke-dashoffset: var(--#{$component}-ws-21); }
+    44% { stroke-dashoffset: var(--#{$component}-ws-22); }
+    46% { stroke-dashoffset: var(--#{$component}-ws-23); }
+    48% { stroke-dashoffset: var(--#{$component}-ws-24); }
+    50% { stroke-dashoffset: var(--#{$component}-ws-25); }
+    52% { stroke-dashoffset: var(--#{$component}-ws-26); }
+    54% { stroke-dashoffset: var(--#{$component}-ws-27); }
+    56% { stroke-dashoffset: var(--#{$component}-ws-28); }
+    58% { stroke-dashoffset: var(--#{$component}-ws-29); }
+    60% { stroke-dashoffset: var(--#{$component}-ws-30); }
+    62% { stroke-dashoffset: var(--#{$component}-ws-31); }
+    64% { stroke-dashoffset: var(--#{$component}-ws-32); }
+    66% { stroke-dashoffset: var(--#{$component}-ws-33); }
+    68% { stroke-dashoffset: var(--#{$component}-ws-34); }
+    70% { stroke-dashoffset: var(--#{$component}-ws-35); }
+    72% { stroke-dashoffset: var(--#{$component}-ws-36); }
+    74% { stroke-dashoffset: var(--#{$component}-ws-37); }
+    76% { stroke-dashoffset: var(--#{$component}-ws-38); }
+    78% { stroke-dashoffset: var(--#{$component}-ws-39); }
+    80% { stroke-dashoffset: var(--#{$component}-ws-40); }
+    82% { stroke-dashoffset: var(--#{$component}-ws-41); }
+    84% { stroke-dashoffset: var(--#{$component}-ws-42); }
+    86% { stroke-dashoffset: var(--#{$component}-ws-43); }
+    88% { stroke-dashoffset: var(--#{$component}-ws-44); }
+    90% { stroke-dashoffset: var(--#{$component}-ws-45); }
+    92% { stroke-dashoffset: var(--#{$component}-ws-46); }
+    94% { stroke-dashoffset: var(--#{$component}-ws-47); }
+    96% { stroke-dashoffset: var(--#{$component}-ws-48); }
+    98% { stroke-dashoffset: var(--#{$component}-ws-49); }
     to { stroke-dashoffset: var(--#{$component}-wave-dash); }
   }
 

@@ -104,6 +104,34 @@ export const circularIndeterminate = (
 };
 
 /**
+ * The wave's phase map round the ring, in cycles at each angle. The
+ * measurements figure labels the wavelength itself — 15 at every size it
+ * draws — and names no period count, so the wavelength is the fixed thing:
+ * every period that fits the ring keeps it exactly, and one closing period
+ * absorbs the circumference's remainder. The closing period always runs
+ * long — a wavelength and change, never a squeezed one — so the wave never
+ * oscillates faster there than its labelled wavelength paints it anywhere
+ * else. The sine then completes whole cycles round the ring and meets
+ * itself at the resting radius, where a closed ring of the nominal
+ * wavelength alone would leave its last period torn open at the seam.
+ */
+const circularWaveShape = (radius: number, size: number) => {
+  const lambda = circularWaveWavelength(size);
+  const periods = circularWavePeriods(radius, size);
+  // The angle the whole nominal periods run through, and the angle left
+  // for the closing period to fill.
+  const nominal = (Math.max(1, periods - 1) * lambda) / radius;
+  const closing = TWO_PI - nominal;
+  const cyclesAt = (angle: number): number =>
+    angle <= nominal
+      ? (radius * angle) / lambda
+      : periods - 1 + (angle - nominal) / closing;
+  const rateAt = (angle: number): number =>
+    angle <= nominal ? radius / lambda : 1 / closing;
+  return { cyclesAt, rateAt };
+};
+
+/**
  * The wavy path's arc table: the distance travelled along the curve at each
  * of `samples` equal angles round the ring, and the total. The wave runs
  * longer where it climbs than where it rides the circle, so distance and
@@ -114,15 +142,16 @@ export const circularIndeterminate = (
 const circularWaveArcTable = (
   radius: number,
   amplitude: number,
-  lambda: number,
+  size: number,
   samples: number
 ): { arcs: Float64Array; total: number } => {
+  const { cyclesAt, rateAt } = circularWaveShape(radius, size);
   const radiusAt = (angle: number): number =>
-    radius + amplitude * Math.sin((TWO_PI * radius * angle) / lambda);
+    radius + amplitude * Math.sin(TWO_PI * cyclesAt(angle));
   const speedAt = (angle: number): number =>
     Math.hypot(
       radiusAt(angle),
-      amplitude * ((TWO_PI * radius) / lambda) * Math.cos((TWO_PI * radius * angle) / lambda)
+      amplitude * TWO_PI * rateAt(angle) * Math.cos(TWO_PI * cyclesAt(angle))
     );
   const arcs = new Float64Array(samples + 1);
   let total = 0;
@@ -166,10 +195,13 @@ export const circularWaveRing = (
   // ring open where it meets itself, which the closing line would cut
   // straight across — a notch travelling round the ring once a second,
   // where the canvas, which draws the arc alone and never closes the ring,
-  // has none. The wave count rounds to the nearest whole wavelength and the
-  // wavelength follows it, as any closed ring of crests must.
-  const periods = circularWavePeriods(radius, size);
-  const lambda = (TWO_PI * radius) / periods;
+  // has none. The figure fixes the wavelength, so the shape keeps it for
+  // every period that fits and one closing period absorbs the remainder,
+  // running long — up to two wavelengths — rather than squeezed, so the
+  // ink never crowds at the seam: the sine completes whole cycles and the
+  // closing Z is a point, with the closing period's slope gentler through
+  // its zero crossings than its neighbours', a kink the width of the
+  // sample spacing and far below the ink's own thickness.
   // The canvas placed the arc's ends by angle; the sheet places them by dash
   // units, which the browser measures as fractions of the path's own length.
   // On a ring sampled at equal angles — as the canvas sampled the sine — a
@@ -184,8 +216,9 @@ export const circularWaveRing = (
   // at its slice line: the points sit equal arc apart to the table's own
   // precision, and the last lands on the first — the sine completes whole
   // periods now, so the closing Z is a point.
-  const { arcs, total } = circularWaveArcTable(radius, amplitude, lambda, 2048);
-  const steps = Math.max(8, Math.round(total / Math.max(1, lambda / 24)));
+  const { cyclesAt } = circularWaveShape(radius, size);
+  const { arcs, total } = circularWaveArcTable(radius, amplitude, size, 2048);
+  const steps = Math.max(8, Math.round(total / Math.max(1, circularWaveWavelength(size) / 24)));
   const slice = total / steps;
   const points: string[] = [];
   let at = 0;
@@ -197,7 +230,7 @@ export const circularWaveRing = (
     const target = Math.min(total, slice * i);
     while (arcs[at + 1]! < target) at++;
     const angle = (TWO_PI * (at + (target - arcs[at]!) / (arcs[at + 1]! - arcs[at]!))) / 2048;
-    const r = radius + amplitude * Math.sin((TWO_PI * radius * angle) / lambda);
+    const r = radius + amplitude * Math.sin(TWO_PI * cyclesAt(angle));
     points.push(`${(cx + Math.cos(angle) * r).toFixed(2)} ${(cy + Math.sin(angle) * r).toFixed(2)}`);
   }
   return `M ${points.join(" L ")} Z`;
@@ -205,13 +238,18 @@ export const circularWaveRing = (
 
 /**
  * The dash offsets the ring's slide passes through at equal steps of its
- * one-second loop, `count` of them between zero and the full shift. The
- * slide must move the window back by equal angles, and equal angles are not
- * equal distances on the wavy curve, so each step reads the arc table —
- * measured backward from where the pattern meets itself, which is the same
- * stretch for every wavelength, so one set of steps serves every window.
- * The keyframes join these with straight segments, which holds the window
- * still to a tenth of a degree.
+ * loop, `count` of them between zero and the full shift. The closing
+ * period breaks the pattern's symmetry round the ring, so the loop is a
+ * whole revolution and the slide runs the ring's full length: one
+ * pathLength unit returns exactly where it began. Each step holds the
+ * window to an equal angle of that turn, and equal angles are not equal
+ * distances on the wavy curve, so each reads the arc table — measured
+ * backward from where the pattern meets itself, which is the stretch the
+ * window's start has actually slid through. The first stretch forward
+ * from 3 o'clock is not the same arc any more: the closing period makes
+ * the ring asymmetric, and reading the wrong way lagged the window three
+ * degrees behind its rotation. The keyframes join these with straight
+ * segments, which holds the window still to a tenth of a degree.
  */
 export const circularWaveDashSteps = (
   radius: number,
@@ -219,9 +257,7 @@ export const circularWaveDashSteps = (
   size: number,
   count: number
 ): number[] => {
-  const periods = circularWavePeriods(radius, size);
-  const lambda = (TWO_PI * radius) / periods;
-  const { arcs, total } = circularWaveArcTable(radius, amplitude, lambda, 512);
+  const { arcs, total } = circularWaveArcTable(radius, amplitude, size, 512);
   const arcAt = (angle: number): number => {
     const x = (angle / TWO_PI) * 512;
     const i = Math.min(511, Math.floor(x));
@@ -229,8 +265,8 @@ export const circularWaveDashSteps = (
   };
   const steps: number[] = [];
   for (let k = 1; k <= count; k++) {
-    const tau = k / (count + 1);
-    steps.push(Number((((100 * (total - arcAt(TWO_PI - (TWO_PI / periods) * tau))) / total)).toFixed(3)));
+    const angle = TWO_PI - (TWO_PI * k) / (count + 1);
+    steps.push(Number((((100 * (total - arcAt(angle))) / total)).toFixed(3)));
   }
   return steps;
 };
@@ -240,20 +276,26 @@ export const circularWaveWavelength = (size: number): number =>
   PROGRESS_WAVE.CIRCULAR.WAVELENGTH * (size / PROGRESS_MEASUREMENTS.CIRCULAR.SIZE);
 
 /**
- * The number of whole wavelengths the ring holds: the circumference over the
- * nominal wavelength, rounded. A sine that stops mid-period would leave the
- * ring open at the seam, so the wave count is the whole number and the
- * wavelength follows it.
+ * The number of whole wavelengths the ring holds: the circumference over
+ * the nominal wavelength, floored — N−1 periods at the nominal wavelength
+ * and the closing period that carries the remainder as extra length. The
+ * closing period runs between one and two wavelengths, never less: a
+ * remainder absorbed by squeezing (rounding up) would crowd the wave's
+ * ink at the seam and bend its arc-length curve harder than the nominal
+ * wavelength bends it anywhere, which the dash window's staged slide
+ * could not follow; running long keeps the closing period's curvature
+ * inside the nominal one's everywhere.
  */
 export const circularWavePeriods = (radius: number, size: number): number =>
-  Math.max(1, Math.round((TWO_PI * radius) / circularWaveWavelength(size)));
+  Math.max(1, Math.floor((TWO_PI * radius) / circularWaveWavelength(size)));
 
 /**
- * How far round the wave pattern travels in its one-second loop, in degrees:
- * one wavelength of arc at the ring's radius — a whole 360 over the ring's
- * wave count, exactly, so the dash slide that cancels this rotation is a
- * whole number of pattern units and the window holds still through the
- * whole loop.
+ * How long the wave pattern's whole loop takes, in milliseconds: the ring
+ * holds 2πR/λ wavelengths and the travel crosses one wavelength per
+ * second, so the loop is the ring's full revolution at that rate. The
+ * closing period makes the pattern non-periodic round the ring — the loop
+ * cannot shortcut to a wavelength's own angle — so the rotation and the
+ * dash slide that cancels it share this one duration.
  */
-export const circularWaveRotation = (radius: number, size: number): number =>
-  radius > 0 ? 360 / circularWavePeriods(radius, size) : 0;
+export const circularWaveLoopMs = (radius: number, size: number): number =>
+  radius > 0 ? (1000 * TWO_PI * radius) / circularWaveWavelength(size) : 1000;

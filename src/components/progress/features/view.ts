@@ -41,7 +41,7 @@ import {
   circularGapUnits,
   circularRadius,
   circularWaveRing,
-  circularWaveRotation,
+  circularWaveLoopMs,
   circularWaveDashSteps,
 } from "./circular";
 
@@ -277,21 +277,30 @@ export const withView =
         const waveAmplitude = getWaveAmplitude(true, stroke, currentSize);
         const radius = circularRadius(currentSize, stroke, waveAmplitude);
         svg.style.setProperty(`--${prefix}-progress-size`, `${currentSize}px`);
-        svg.style.setProperty(`--${prefix}-progress-wave-rot`, `${circularWaveRotation(radius, currentSize)}deg`);
-        // The same wavelength as a dash shift: the travel turns the ring
-        // one wave-rot per second, and the indicator's dash window must
-        // slide back by the same arc to hold the painted extent still
-        // while the wave runs under it. 100 pathLength units = 360°, so
-        // the angle divides by 3.6 into units of the ring's dash pattern
+        // The closing period makes the wave non-periodic round the ring, so
+        // the loop cannot shortcut to a wavelength's own angle: the travel
+        // turns the ring one whole revolution per loop at the wavelength's
+        // own rate — one wavelength of arc per second — and the loop lasts
+        // as long as that revolution takes.
+        svg.style.setProperty(`--${prefix}-progress-wave-rot`, "360deg");
         svg.style.setProperty(
-          `--${prefix}-progress-wave-dash`,
-          `${circularWaveRotation(radius, currentSize) / 3.6}`
+          `--${prefix}-progress-wave-dur`,
+          `${circularWaveLoopMs(radius, currentSize).toFixed(2)}ms`
         );
-        // The slide's own steps at eighths of the loop, which the keyframes
-        // join: equal angles are not equal distances on the wavy curve, so
-        // a uniform slide let the window wobble as the wave traveled under
-        // it — these hold its angle still
-        const dashSteps = circularWaveDashSteps(radius, waveAmplitude, currentSize, 7);
+        // The same revolution as a dash shift: the indicator's dash window
+        // must slide back through the ring's whole length to hold the
+        // painted extent still while the wave runs under it. 100 pathLength
+        // units = 360° = one full turn, and offset 100 lands where offset 0
+        // began, so the loop rejoins itself exactly
+        svg.style.setProperty(`--${prefix}-progress-wave-dash`, "100");
+        // The slide's own steps at fiftieths of the loop, which the
+        // keyframes join: equal angles are not equal distances on the wavy
+        // curve, so a uniform slide let the window wobble as the wave
+        // traveled under it — these hold its angle still. The loop is the
+        // ring's whole revolution now, so the stages run to fiftieths of
+        // that turn to keep each straight join as short as the eighths of
+        // the old one-wavelength loop were
+        const dashSteps = circularWaveDashSteps(radius, waveAmplitude, currentSize, 49);
         dashSteps.forEach((step, i) => {
           svg.style.setProperty(`--${prefix}-progress-ws-${i + 1}`, `${step}`);
         });
