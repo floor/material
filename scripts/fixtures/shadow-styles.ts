@@ -29,8 +29,67 @@ const computed = (node: Element) => {
   const style = getComputedStyle(node);
   return Object.fromEntries(Array.from(style, property => [property, style.getPropertyValue(property)]));
 };
+// The shadow roots under `node`, nested hosts' roots included: an element's own
+// root is not in its children, and a root holds hosts of further roots.
+const shadowRoots = (node: Element, roots: ShadowRoot[] = []): ShadowRoot[] => {
+  const root = node.shadowRoot;
+  if (root) {
+    roots.push(root);
+    for (const child of Array.from(root.children)) shadowRoots(child, roots);
+  }
+  for (const child of Array.from(node.children)) shadowRoots(child, roots);
+  return roots;
+};
+// Settle on the work the fixture set off instead of sleeping a fixed 100 ms for
+// it: yield to the microtasks a build, a slot assignment and an observer
+// callback queue, await the fonts and images the fixture inserts, let two
+// frames pass so frame-queued layout runs, then await the finite transitions
+// that started. A shadow root's animations belong to its own tree, so
+// document.getAnimations() does not see them: every reachable root is collected
+// too. An infinite decorative animation (a progress indicator) never settles,
+// and is not awaited.
+const settle = async (): Promise<void> => {
+  await document.fonts.ready;
+  await Promise.all(Array.from(document.images, image => image.decode().catch(() => {})));
+  for (;;) {
+    for (let frame = 0; frame < 2; frame++) await new Promise(resolve => requestAnimationFrame(resolve));
+    const animations = new Set([
+      ...document.getAnimations(),
+      ...shadowRoots(document.documentElement).flatMap(root => root.getAnimations()),
+    ].filter(animation =>
+      (animation.playState === "running" || animation.pending) &&
+      animation.effect?.getComputedTiming().endTime !== Infinity));
+    if (!animations.size) return;
+    await Promise.all([...animations].map(animation => animation.finished.catch(() => {})));
+  }
+};
 
 const api = {
+  /**
+   * The settle's own guard: a 60 ms transition in a shadow tree, longer than
+   * the two frames a settle that only waits on the document returns after. If
+   * the settle reaches the shadow roots, the transition ends before it returns
+   * and `ended` is true; if it does not, the transition is still running.
+   */
+  async settleGuard(): Promise<{ ended: boolean; elapsed: number }> {
+    const host = document.createElement("div");
+    const root = host.attachShadow({ mode: "open" });
+    const style = document.createElement("style");
+    style.textContent = ".guard{width:60px;transition:width 60ms linear}.guard-go{width:120px}";
+    const node = document.createElement("div");
+    node.className = "guard";
+    root.append(style, node);
+    document.body.append(host);
+    void getComputedStyle(node).width; // commit the 60px width, so the change transitions
+    let ended = false;
+    node.addEventListener("transitionend", () => { ended = true; }, { once: true });
+    node.classList.add("guard-go");
+    const started = performance.now();
+    await settle();
+    const result = { ended, elapsed: Math.round(performance.now() - started) };
+    host.remove();
+    return result;
+  },
   async probe(html: string, defaults?: "dialog" | "card") {
     if (defaults === "dialog") setComponentDefaults("dialog", { buttons: [{ text: "Save" }] });
     if (defaults === "card") setComponentDefaults("card", { buttons: [{ text: "Save" }] });
@@ -38,7 +97,7 @@ const api = {
     setHTML(container, html);
     document.body.append(container);
     // Include asynchronous factory setup, slot assignment and observer work.
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await settle();
     const rows: Array<{
       element: string; className: string; sheet: string; adopted: boolean;
       changes: Record<string, { before: string; after: string }>;
