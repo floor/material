@@ -468,6 +468,12 @@ export const withView =
           // complement, not an open 100. The plain circle never slides,
           // so its gap stays a plain open 100.
           const dash = geometry.indicator ? geometry.indicator.dash : 0;
+          if (geometry.indicator) parts.indicator.setAttribute("visibility", "visible");
+          // Value 0 shows nothing: the guidelines' dot is for when
+          // "progress first begins", and 0 is not begun. A zero-length
+          // dash still paints its round cap as a dot in Chromium, so the
+          // arc is hidden rather than dashed to nothing.
+          else parts.indicator.setAttribute("visibility", "hidden");
           parts.indicator.setAttribute(
             "stroke-dasharray",
             isWavy()
@@ -479,6 +485,7 @@ export const withView =
         }
         if (parts.track) {
           if (geometry.track) {
+            parts.track.setAttribute("visibility", "visible");
             parts.track.setAttribute(
               "stroke-dasharray",
               `${geometry.track.dash.toFixed(3)} 100`
@@ -488,6 +495,9 @@ export const withView =
               geometry.track.offset.toFixed(3)
             );
           } else {
+            // Full value leaves no room for the track; the same round-cap
+            // dot a zero-length dash paints is why it hides, not dashes.
+            parts.track.setAttribute("visibility", "hidden");
             parts.track.setAttribute("stroke-dasharray", "0 100");
           }
         }

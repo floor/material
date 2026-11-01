@@ -4582,15 +4582,50 @@ try {
     assert.ok(circPaint.indicator > 180 && circPaint.track > 60,
       `the circular ring paints both roles (${JSON.stringify(circPaint)})`);
 
+    // Value 0 shows no active indicator and a full track: the guidelines'
+    // dot appears "when progress first begins", and 0 is not begun. The
+    // zero-length dash the writer used to leave on the arc painted its
+    // round cap as a dot and sat over the track's start.
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const host = document.createElement("div");
+      host.id = "zero-host";
+      for (const [id, config] of [
+        ["zero-flat", { variant: "circular", value: 0 }],
+        ["zero-wavy", { variant: "circular", value: 0, shape: "wavy" }],
+        ["five-flat", { variant: "circular", value: 5 }],
+      ] as [string, object][]) {
+        const p = w.mtrl.createProgress(config).element;
+        p.id = id;
+        host.append(p);
+      }
+      document.body.append(host);
+    });
+    // The value ease settles in 500ms; read after it rests.
+    await page.waitForTimeout(650);
+    const zeroFlat = await count("zero-flat");
+    const zeroWavy = await count("zero-wavy");
+    const fiveFlat = await count("five-flat");
+    console.log("progress value-0 counts:", JSON.stringify({ zeroFlat, zeroWavy, fiveFlat }));
+    assert.equal(zeroFlat.indicator, 0, `value 0 paints no indicator (${JSON.stringify(zeroFlat)})`);
+    assert.equal(zeroWavy.indicator, 0, `wavy value 0 paints no indicator (${JSON.stringify(zeroWavy)})`);
+    assert.ok(zeroFlat.track > fiveFlat.track,
+      `value 0's track is the full ring; value 5's is shorter (${JSON.stringify({ zeroFlat, fiveFlat })})`);
+    assert.ok(fiveFlat.indicator > 5, `begun progress paints its dot (${JSON.stringify(fiveFlat)})`);
+    await page.evaluate(() => document.getElementById("zero-host")?.remove());
+    check("progress: value 0 shows no indicator and the full track; begun progress paints its dot");
+
     // The wavy scenes, on the measures their two defects broke. Both are
-    // sampled with every CSS animation under the element paused and held at
-    // a fixed time, so the counts are the same on every run:
+    // sampled with every CSS animation under the element paused and re-held
+    // at each of five fixed times, the max over holds taken, so the counts
+    // are the same on every run and no single phase where a window is
+    // legitimately thin can fail the form:
     // — the determinate wavy ring holds its arc at 12 o'clock while the
-    //   wave travels under it. Sampled at half a travel loop, a wedge just
-    //   clockwise of 12 o'clock sits inside the held arc but inside the
-    //   gap an arc that rode the rotation would leave (it starts half a
-    //   wavelength late), so a held arc paints the wedge and a riding one
-    //   paints none of it;
+    //   wave travels under it. At the holds where the arc covers it, a
+    //   wedge just clockwise of 12 o'clock sits inside the held arc but
+    //   inside the gap an arc that rode the rotation would leave (it
+    //   starts half a wavelength late), so a held arc paints the wedge and
+    //   a riding one paints none of it;
     // — the indeterminate wavy bars paint their head-tail windows, which a
     //   rest pose pinned on the window rect itself collapses to nothing.
     await page.evaluate(async () => {
@@ -4613,7 +4648,7 @@ try {
       for (const root of [ring, bars, flatBars, flatRing, wavyLinear]) {
         for (const animation of root.getAnimations({ subtree: true })) {
           animation.pause();
-          animation.currentTime = 800;
+          animation.currentTime = 0;
         }
       }
     });
@@ -4655,22 +4690,32 @@ try {
         },
         { b64: (await page.locator(`#${id} svg.mtrl-progress__view`).screenshot()).toString("base64"), wedge }
       );
-    const ringPaint = await paintAt("wavy-ring", true);
-    const barsPaint = await paintAt("wavy-bars", false);
-    // The remaining forms, held the same way: every drawing the component
-    // can show must paint indicator pixels at all, the measure the wavy
-    // bars' 0x0 clip defeated while every computed style still read right.
-    const flatBarsPaint = await paintAt("paint-flat-bars", false);
-    const flatRingPaint = await paintAt("paint-flat-ring", false);
-    const wavyLinearPaint = await paintAt("paint-wavy-lin", false);
-    console.log("progress painted-pixel counts (held at 800ms):",
-      JSON.stringify({ ring: ringPaint, bars: barsPaint, flatBars: flatBarsPaint, flatRing: flatRingPaint, wavyLinear: wavyLinearPaint }));
-    assert.ok(ringPaint.inWedge > 10,
-      `the wavy ring holds its arc at 12 o'clock while the wave travels (${JSON.stringify(ringPaint)})`);
-    assert.ok(barsPaint.all > 100,
-      `the wavy indeterminate bars paint their windows (${JSON.stringify(barsPaint)})`);
-    for (const [name, paint] of [["flat indeterminate bars", flatBarsPaint], ["flat indeterminate ring", flatRingPaint], ["wavy determinate bar", wavyLinearPaint]] as const) {
-      assert.ok(paint.all > 20, `${name} paints its indicator (${JSON.stringify(paint)})`);
+    const holds = [0, 350, 700, 1050, 1400];
+    const samples: Record<string, Array<Record<string, number>>> = {};
+    for (const hold of holds) {
+      await page.evaluate((time) => {
+        for (const root of Array.from(document.getElementById("wavy-host")!.children)) {
+          for (const animation of (root as HTMLElement).getAnimations({ subtree: true })) animation.currentTime = time;
+        }
+      }, hold);
+      await page.waitForTimeout(40);
+      for (const [id, wedge] of [["wavy-ring", true], ["wavy-bars", false], ["paint-flat-bars", false], ["paint-flat-ring", false], ["paint-wavy-lin", false]] as const) {
+        (samples[id] ??= []).push(await paintAt(id, wedge));
+      }
+    }
+    const peak = (id: string): { all: number; inWedge: number } =>
+      samples[id].reduce<{ all: number; inWedge: number }>(
+        (best, sample) => ({ all: Math.max(best.all, sample.all), inWedge: Math.max(best.inWedge, sample.inWedge) }),
+        { all: 0, inWedge: 0 },
+      );
+    console.log("progress painted-pixel counts (held at each of", JSON.stringify(holds), "ms):",
+      JSON.stringify(samples));
+    assert.ok(peak("wavy-ring").inWedge > 10,
+      `the wavy ring holds its arc at 12 o'clock while the wave travels (${JSON.stringify(peak("wavy-ring"))})`);
+    assert.ok(peak("wavy-bars").all > 100,
+      `the wavy indeterminate bars paint their windows (${JSON.stringify(peak("wavy-bars"))})`);
+    for (const [name, id] of [["flat indeterminate bars", "paint-flat-bars"], ["flat indeterminate ring", "paint-flat-ring"], ["wavy determinate bar", "paint-wavy-lin"]] as const) {
+      assert.ok(peak(id).all > 20, `${name} paints its indicator (${JSON.stringify(peak(id))})`);
     }
     await page.evaluate(() => document.getElementById("wavy-host")?.remove());
     check("progress: the wavy ring holds its arc and every form paints its indicator");
