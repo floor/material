@@ -11,6 +11,7 @@ import {
   ChipsFeatureComponent,
 } from "../types";
 import createChip from "../chip/chip";
+import { chipMount } from "../chip/variants";
 import { CHIPS_EVENTS } from "../constants";
 import { activeElementOf } from "../../../core/dom/focus";
 
@@ -265,7 +266,7 @@ export const withController =
       onSelected: selectSingle,
       cell: true,
       onRemoved: removeChip,
-    });
+    }, chipMount(chipConfig.type));
 
     // Get the container element to append to
     const container = component.chipContainer || component.element;

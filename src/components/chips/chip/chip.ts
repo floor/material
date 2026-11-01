@@ -6,13 +6,16 @@ import { createRipple } from "../../../core/compose/features/ripple";
 import { createComponentConfig, createElementConfig } from "../../../core/config/component";
 import { setHTML } from "../../../core/dom/html";
 import type { ChipOptions, ChipComponent, ChipEvents } from "../types";
+import type { ChipMount, ChipParts } from "./variant";
 
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
-const DROP_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>';
-const CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
 
-/** Shared internal implementation for the four Material chip factories. */
-const createChip = (config: ChipOptions = {}): ChipComponent => {
+/**
+ * Shared implementation for the four Material chip factories. `mount` carries
+ * the code only one type uses (see variant.ts): the chip's own buttons, their
+ * labels and their keyboard removal live in that type's module.
+ */
+const createChip = (config: ChipOptions = {}, mount?: ChipMount): ChipComponent => {
   const options = createComponentConfig<ChipOptions>({ type: "filter", ripple: true }, config, "chip");
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
@@ -59,32 +62,30 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   let leadingIcon = options.leadingIcon ?? options.icon ?? "";
   const avatar = type === "input" ? options.avatar : undefined;
   let trailingIcon = type === "suggestion" ? "" : options.trailingIcon ?? "";
-  let remove: HTMLButtonElement | undefined;
-  // Every input chip is removable (m3.material.io chips); it used to need onRemove.
-  if (type === "input") {
-    remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = base.getClass("chip__remove");
-    setHTML(remove, trailingIcon || CLOSE);
-    root.append(remove);
-    root.setAttribute("role", "group");
-  }
-  // A filter chip's trailing icon can have its own action: open a menu or remove the
-  // chip (m3.material.io chips). Built like the remove button, beside the action,
-  // never inside it.
-  let trailingAction: HTMLButtonElement | undefined;
-  if (type === "filter" && options.onTrailingClick) {
-    trailingAction = document.createElement("button");
-    trailingAction.type = "button";
-    trailingAction.className = base.getClass("chip__trailing-action");
-    if (options.trailingMenu) {
-      trailingAction.setAttribute("aria-haspopup", "menu");
-      trailingAction.setAttribute("aria-expanded", "false");
-    }
-    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
-    root.append(trailingAction);
-    root.setAttribute("role", "group");
-  }
+  // Set once the chip has been made: a change after that animates its icons, the first
+  // render does not (see --motion in the stylesheet).
+  let made = false;
+
+  const listen = <K extends keyof HTMLElementEventMap>(element: HTMLElement, name: K, handler: (event: HTMLElementEventMap[K]) => void) => {
+    element.addEventListener(name, handler);
+    resources.add(() => element.removeEventListener(name, handler));
+  };
+
+  const parts: ChipParts = {
+    root, action, label, options,
+    classOf: (name) => base.getClass(name),
+    getTrailingIcon: () => trailingIcon,
+    emit: (event, chip) => { base.emit(event, chip); },
+    listen,
+    isDisabled: () => disabled,
+    isDestroyed: () => resources.destroyed,
+    getApi: () => api,
+  };
+  // The variant's own buttons exist before the cell handling below: a chip with
+  // two actions keeps both buttons as focus targets inside its cell.
+  const extras = mount?.(parts);
+  const remove = extras?.remove;
+  const trailingAction = extras?.trailingAction;
 
   // In a chip set's grid (the m3.material.io chips' web roles) the chip is a
   // gridcell. A chip with one action is itself the focus target: the cell carries
@@ -118,21 +119,8 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     trailing.hidden = !trailingIcon || !!remove || !!trailingAction;
     root.classList.toggle(base.getClass("chip--leading"), !leading.hidden || !check.hidden);
     root.classList.toggle(base.getClass("chip--trailing"), !trailing.hidden || !!remove || !!trailingAction);
-    if (remove) {
-      remove.disabled = disabled;
-      remove.setAttribute("aria-label", options.removeLabel ?? `Remove ${label.textContent ?? ""}`);
-      if (!options.cell) root.setAttribute("aria-label", label.textContent ?? "");
-    }
-    if (trailingAction) {
-      trailingAction.disabled = disabled;
-      const text = label.textContent ?? "";
-      trailingAction.setAttribute("aria-label", options.trailingLabel ?? (options.trailingMenu ? `${text} options` : `Remove ${text}`));
-      if (!options.cell) root.setAttribute("aria-label", text);
-    }
+    extras?.render?.();
   };
-  // Set once the chip has been made: a change after that animates its icons, the first
-  // render does not (see --motion in the stylesheet).
-  let made = false;
   const animateChanges = () => { if (made) root.classList.add(base.getClass("chip--motion")); };
   const setLabel = (text: string) => { label.textContent = text; render(); return api; };
   const setLeadingIcon = (icon: string) => {
@@ -169,8 +157,8 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     setLeadingIcon,
     setTrailingIcon(icon) {
       trailingIcon = type === "suggestion" ? "" : icon;
-      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
-      else setHTML(remove ?? trailing, trailingIcon || (remove ? CLOSE : ""));
+      if (extras?.setTrailingGlyph) extras.setTrailingGlyph(trailingIcon);
+      else setHTML(trailing, trailingIcon);
       render();
       return api;
     },
@@ -194,10 +182,6 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   if (options.onRemove) api.on("remove", options.onRemove);
   if (options.onTrailingClick) api.on("trailing", options.onTrailingClick);
 
-  const listen = <K extends keyof HTMLElementEventMap>(element: HTMLElement, name: K, handler: (event: HTMLElementEventMap[K]) => void) => {
-    element.addEventListener(name, handler);
-    resources.add(() => element.removeEventListener(name, handler));
-  };
   listen(root, "click", event => {
     if (disabled || resources.destroyed) return;
     // One order, alone or in a set: click reports the press, with the state
@@ -212,49 +196,14 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (selected !== was) base.emit("change", { selected, chip: api, value: api.getValue() });
     if (!options.managedSelection) options.onSelect?.(api);
   });
-  // Backspace and Delete remove a focused removable chip (m3.material.io chips
-  // accessibility, keyboard table).
-  const removeFromKeyboard = (event: KeyboardEvent) => {
-    if (!remove || disabled || (event.key !== "Backspace" && event.key !== "Delete")) return false;
-    event.preventDefault();
-    remove.click();
-    return true;
-  };
+  // A variant that answers a key press on its action (Backspace and Delete
+  // remove a focused input chip) consumes it here.
   listen(action, "keydown", event => {
-    if (removeFromKeyboard(event)) return;
+    if (extras?.keydown?.(event)) return;
     if (!disabled) base.emit("keydown", { event, originalEvent: event, element: root });
   });
   for (const name of ["focus", "blur"] as const) {
     listen(action, name, event => base.emit(name, { event, originalEvent: event, element: root }));
-  }
-  if (remove) {
-    listen(remove, "click", event => {
-      event.stopPropagation();
-      if (disabled) return;
-      base.emit("remove", api);
-      // After the listeners, which read a chip that is still there: in a set
-      // the set removes it, on its own the chip leaves the page.
-      if (resources.destroyed) return;
-      if (options.onRemoved) options.onRemoved(api);
-      else root.remove();
-    });
-    // Enter and Space activate this button, so the set must not also select the chip
-    // for them; the arrows go on to the set's navigation, which they did not.
-    listen(remove, "keydown", event => {
-      if (removeFromKeyboard(event)) return;
-      if (event.key === "Enter" || event.key === " ") event.stopPropagation();
-    });
-  }
-  if (trailingAction) {
-    listen(trailingAction, "click", event => {
-      event.stopPropagation();
-      if (disabled) return;
-      base.emit("trailing", api);
-    });
-    // As for the remove button: Enter and Space stay here, the arrows go on to the set.
-    listen(trailingAction, "keydown", event => {
-      if (event.key === "Enter" || event.key === " ") event.stopPropagation();
-    });
   }
   if (oneActionCell) {
     // The cell answers Space and Enter for its hidden button, and a press on that
