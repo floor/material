@@ -11,73 +11,64 @@ import { TEXT_FIELD_DEFAULTS } from "./constants";
 import { warnDev } from "../../core/utils/warn";
 
 /**
- * Every configuration key the text field carries, as a `Record` over the
- * key types themselves: the compiler errors the moment this list and the
- * interfaces drift apart, so the diagnostic below cannot go stale quietly.
- * `multiline` is read by the shared text-input feature although the
- * component's own interface does not carry it.
- */
-const CONFIG_KEYS: Record<
-  keyof TextFieldConfig | keyof BaseComponentConfig | "multiline",
-  true
-> = {
-  type: true,
-  variant: true,
-  density: true,
-  name: true,
-  label: true,
-  value: true,
-  placeholder: true,
-  required: true,
-  noAsterisk: true,
-  disabled: true,
-  readonly: true,
-  maxLength: true,
-  pattern: true,
-  autocomplete: true,
-  leadingIcon: true,
-  trailingIcon: true,
-  trailingIconLabel: true,
-  onTrailingClick: true,
-  supportingText: true,
-  error: true,
-  prefixText: true,
-  suffixText: true,
-  class: true,
-  prefix: true,
-  componentName: true,
-  className: true,
-  parent: true,
-  id: true,
-  title: true,
-  tabIndex: true,
-  style: true,
-  data: true,
-  role: true,
-  ariaLabel: true,
-  ariaDescribedBy: true,
-  ariaLabelledBy: true,
-  ariaHidden: true,
-  multiline: true,
-};
-
-/**
  * Development diagnostic, the pattern of the trailing-label one: a config
  * key nothing reads was silently ignored (`maxlength` where `maxLength` is
  * supported, an `inputmode` the field never reads), so it names each
- * unknown key, suggesting the supported spelling when one is a
- * case-insensitive match. The literal check lets bundlers erase the entire
- * loop, keys and all, in production; the probe keeps raw ESM safe.
+ * unknown key. The key table is a `Record` over the key types themselves,
+ * kept inside the body: the compiler errors the moment the list and the
+ * interfaces drift apart, and the call site's literal check lets bundlers
+ * erase the call — and, with every caller gone, this function, its loop
+ * and the table — in production, while warnDev's own runtime guard keeps
+ * the un-bundled paths safe. `multiline` is read by the shared text-input
+ * feature although the component's own interface does not carry it.
  */
 const warnUnknownConfigKeys = (config: TextFieldConfig): void => {
-  if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
-    for (const key of Object.keys(config)) {
-      if (key in CONFIG_KEYS) continue;
-      const match = Object.keys(CONFIG_KEYS).find(
-        (known) => known.toLowerCase() === key.toLowerCase()
-      );
-      warnDev("text-field", `unknown config key "${key}"${match ? ` — did you mean "${match}"?` : ""}`);
-    }
+  const CONFIG_KEYS: Record<
+    keyof TextFieldConfig | keyof BaseComponentConfig | "multiline",
+    true
+  > = {
+    type: true,
+    variant: true,
+    density: true,
+    name: true,
+    label: true,
+    value: true,
+    placeholder: true,
+    required: true,
+    noAsterisk: true,
+    disabled: true,
+    readonly: true,
+    maxLength: true,
+    pattern: true,
+    autocomplete: true,
+    leadingIcon: true,
+    trailingIcon: true,
+    trailingIconLabel: true,
+    onTrailingClick: true,
+    supportingText: true,
+    error: true,
+    prefixText: true,
+    suffixText: true,
+    class: true,
+    prefix: true,
+    componentName: true,
+    className: true,
+    parent: true,
+    id: true,
+    title: true,
+    tabIndex: true,
+    style: true,
+    data: true,
+    role: true,
+    ariaLabel: true,
+    ariaDescribedBy: true,
+    ariaLabelledBy: true,
+    ariaHidden: true,
+    multiline: true,
+  };
+  for (const key of Object.keys(config)) {
+    if (key in CONFIG_KEYS) continue;
+    warnDev("text-field", `unknown config key "${key}"`);
   }
 };
 
@@ -97,7 +88,9 @@ export const defaultConfig: TextFieldConfig = {
 export const createBaseConfig = (
   config: TextFieldConfig = {}
 ): TextFieldConfig => {
-  warnUnknownConfigKeys(config);
+  if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
+    warnUnknownConfigKeys(config);
+  }
   return createComponentConfig(defaultConfig, config, "text-field") as TextFieldConfig;
 };
 

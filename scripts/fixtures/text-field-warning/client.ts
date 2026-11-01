@@ -109,7 +109,7 @@ rows.push(run("factory supported keys quiet", 0, () => {
   const field = createTextField({ label: "l", value: "v", maxLength: 20, required: true, readonly: false,
     autocomplete: "off", pattern: ".*", placeholder: "p", name: "n", prefixText: "pre", suffixText: "suf",
     supportingText: "s", class: "c", id: "quiet", title: "t", style: {}, data: {}, tabIndex: 0,
-    ariaLabel: "quiet", componentName: "text-field" });
+    ariaLabel: "quiet", componentName: "text-field" } as unknown as Parameters<typeof createTextField>[0]);
   document.body.append(field.element);
   const unchanged = field.input.maxLength === 20;
   field.destroy(); field.element.remove();

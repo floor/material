@@ -29,10 +29,7 @@ test("an unknown config key warns in development and is left ignored", () => {
   const field = unknown({ maxlength: 10, inputmode: "numeric" })();
   expect(messages).toHaveLength(2);
   expect(messages[0]).toContain('unknown config key "maxlength"');
-  expect(messages[0]).toContain('"maxLength"');
-  // no supported spelling for the second key: the diagnostic names it alone
   expect(messages[1]).toContain('unknown config key "inputmode"');
-  expect(messages[1]).not.toContain("did you mean");
   // the diagnostic changes nothing: the keys stay ignored, as measured
   expect(field.input.getAttribute("maxlength")).toBe(null);
   expect(field.input.maxLength).toBe(-1);
@@ -40,6 +37,8 @@ test("an unknown config key warns in development and is left ignored", () => {
 });
 
 test("every supported key stays quiet, on the factory and the element path", () => {
+  // Base keys (className, id, aria*, …) are runtime-consumed but not part of
+  // the standalone TextFieldConfig interface, so the full surface arrives cast.
   const field = mount(createTextField({
     type: "text", variant: "outlined", density: "compact", name: "n", label: "l",
     value: "v", placeholder: "p", required: true, noAsterisk: true, disabled: false,
@@ -50,7 +49,7 @@ test("every supported key stays quiet, on the factory and the element path", () 
     className: "cc", id: "i", title: "t", tabIndex: 0, style: {}, data: {},
     role: "textbox", ariaLabel: "al", ariaDescribedBy: "adb", ariaLabelledBy: "alb",
     ariaHidden: false, multiline: true,
-  }));
+  } as unknown as TextFieldConfig));
   expect(field.input.maxLength).toBe(20);
   expect(messages).toEqual([]);
 });
