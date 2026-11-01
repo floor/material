@@ -74,12 +74,27 @@ $margin: 16px;
     translate: -50% 0;
   }
 
+  // The start and end places are physical sides with a direction arm, not
+  // logical insets: a consumer bundler lowers `inset-inline-start`/`-end` into
+  // `:lang()` arms that match a language, never `dir="rtl"`, so the bundled
+  // sheet pinned both places to the left edge of a right-to-left page
+  // (src/styles/components/_text-field.scss, the FAB placement form).
   &--start {
-    inset-inline-start: $margin;
+    left: $margin;
+
+    @include m.rtl($self: true) {
+      left: auto;
+      right: $margin;
+    }
   }
 
   &--end {
-    inset-inline-end: $margin;
+    right: $margin;
+
+    @include m.rtl($self: true) {
+      right: auto;
+      left: $margin;
+    }
   }
 
   // ---------------------------------------------------------------------------

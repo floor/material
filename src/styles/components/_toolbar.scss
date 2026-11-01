@@ -143,12 +143,28 @@ $component: '#{base.$prefix}-toolbar';
     max-height: calc(100% - 2 * var(--#{$component}-margin));
   }
 
+  // The side placements are physical sides with a direction arm, not logical
+  // insets: a consumer bundler lowers `inset-inline-start`/`-end` into
+  // `:lang()` arms that match a language, never `dir="rtl"`, so the bundled
+  // sheet pinned both sides to the left edge of a right-to-left page. The
+  // hidden offsets below already mirror through the direction multiplier,
+  // which reads the same arms.
   &--start {
-    inset-inline-start: var(--#{$component}-margin);
+    left: var(--#{$component}-margin);
+
+    @include m.rtl($self: true) {
+      left: auto;
+      right: var(--#{$component}-margin);
+    }
   }
 
   &--end {
-    inset-inline-end: var(--#{$component}-margin);
+    right: var(--#{$component}-margin);
+
+    @include m.rtl($self: true) {
+      right: auto;
+      left: var(--#{$component}-margin);
+    }
   }
 
   &--floating.#{$component}--bottom {
