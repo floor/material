@@ -156,6 +156,19 @@ export const innerErrorButton = (kind: "throw" | "reject"): React.ReactNode => {
   return h(Button, { id: `broken-${kind}` }, h(React.Suspense, { fallback: h("em", null, "error fallback") }, h(Thrower)));
 };
 
+const ErrorNow = (): React.ReactNode => { throw new Error("backend down"); };
+
+/**
+ * #461 round 5: one host, two inner boundaries — one suspending on a thenable
+ * with its own `then` method, one failing at once. The host-wide error report
+ * must not ship while the sibling is still pending: once the thenable
+ * resolves, the shadow root keeps the label slot, as the page renders it.
+ */
+export const mixedBoundaryButton = (): React.ReactNode =>
+  h(Button, { id: "mixed-boundary" },
+    h(React.Suspense, { fallback: null }, h(Late, { promise: customThenable(20, SUSPENSE_TEXT) })),
+    h(React.Suspense, { fallback: null }, h(ErrorNow)));
+
 export const neverPromise = (): Promise<string> => new Promise(() => {});
 
 /** Resolved on the client, still pending for a moment on the server. */

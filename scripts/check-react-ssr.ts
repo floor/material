@@ -136,7 +136,7 @@ try {
     assert.doesNotMatch(clientRender, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
-    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderInnerError, renderAborted, renderCeiling, renderGiveUp, renderBoundaryGiveUp } = await import(suspenseServer) as SuspenseServer;
+    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderInnerError, renderMixedBoundary, renderAborted, renderCeiling, renderGiveUp, renderBoundaryGiveUp } = await import(suspenseServer) as SuspenseServer;
     const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
     for (const [name, result] of shapes) {
       assert.equal(suspendError(result.errors), false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
@@ -185,6 +185,19 @@ try {
       assert.match(inner.html, /<!--\$!-->/, `React ${version} inner-boundary ${kind} boundary switched to client rendering`);
       console.log(`React ${version}: an inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
     }
+    // #461 round 5: an error in one boundary must not end the host's wait for
+    // a still-pending sibling boundary. The error surfaces while the sibling's
+    // own-`then` resource is unresolved; the host ships only once both are
+    // finished, so the resolved label reaches the shadow root's label slot.
+    const mixed = await renderMixedBoundary();
+    assert.ok(mixed.errors.some((error) => error.includes("backend down")), `React ${version} mixed-boundary onError ${JSON.stringify(mixed.errors)}`);
+    assert.ok(mixed.ms < 1000, `React ${version} mixed-boundary settled in ${mixed.ms.toFixed(0)} ms`);
+    assert.match(mixed.html, /<template shadowrootmode="open"/, `React ${version} mixed-boundary ships the shadow root`);
+    assert.match(mixed.html, /<span part="text label"/, `React ${version} mixed-boundary keeps the label slot for the resolved sibling`);
+    assert.match(mixed.html, /<slot/, `React ${version} mixed-boundary projects the resolved label`);
+    assert.match(mixed.html, /loaded 5/, `React ${version} mixed-boundary resolved label`);
+    assert.match(mixed.html, /<!--\$!-->/, `React ${version} mixed-boundary error boundary switched to client rendering`);
+    console.log(`React ${version}: a pending sibling kept its label slot beside an erroring boundary, settled in ${mixed.ms.toFixed(0)} ms`);
     // The production bundle loads React's production server build and its own copy of the
     // bridge, which samples that build's throw site. Importing it replaces the shared SSR
     // slot, so keep the development slot and put it back before the cases that follow.
@@ -193,7 +206,7 @@ try {
     const devSlot = ssrSlots[ssrSymbol];
     const prodServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}-prod.js`;
     await Bun.write(prodServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun", "production"));
-    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderInnerError: renderProductionInnerError, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
+    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderInnerError: renderProductionInnerError, renderMixedBoundary: renderProductionMixedBoundary, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
     const production = await renderProductionShapes();
     const productionMislabelled = await renderProductionMislabelled();
     assert.ok(productionMislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} production mislabelled child onError ${JSON.stringify(productionMislabelled.errors)}`);
@@ -206,6 +219,15 @@ try {
       assert.match(inner.html, /<template shadowrootmode="open"/, `React ${version} production inner-boundary ${kind} ships the fallback-shaped root`);
       console.log(`React ${version}: production inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
     }
+    // #461 round 5, in the production bundle too: the pending sibling keeps its
+    // label slot beside the erroring boundary.
+    const productionMixed = await renderProductionMixedBoundary();
+    assert.ok(productionMixed.errors.some((error) => error.includes("backend down")), `React ${version} production mixed-boundary onError ${JSON.stringify(productionMixed.errors)}`);
+    assert.ok(productionMixed.ms < 1000, `React ${version} production mixed-boundary settled in ${productionMixed.ms.toFixed(0)} ms`);
+    assert.match(productionMixed.html, /<template shadowrootmode="open"/, `React ${version} production mixed-boundary ships the shadow root`);
+    assert.match(productionMixed.html, /<span part="text label"/, `React ${version} production mixed-boundary keeps the label slot for the resolved sibling`);
+    assert.match(productionMixed.html, /loaded 5/, `React ${version} production mixed-boundary resolved label`);
+    console.log(`React ${version}: production mixed-boundary kept the pending sibling's label slot, settled in ${productionMixed.ms.toFixed(0)} ms`);
     const productionCap = await mtrlWarnings(() => renderProductionGiveUp());
     ssrSlots[ssrSymbol] = devSlot;
     for (const name of ["A", "F"] as const) {

@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, innerErrorButton, mislabelledTree, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, innerErrorButton, mislabelledTree, mixedBoundaryButton, neverBoundaryButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -136,6 +136,14 @@ export const renderMislabelled = (): Promise<StreamResult> => settled(mislabelle
  */
 export const renderInnerError = (kind: "throw" | "reject"): Promise<StreamResult> =>
   settled(innerErrorButton(kind), { timeout: 3000 });
+
+/**
+ * #461 round 5: a pending own-`then` boundary and an at-once erroring boundary
+ * in one host. The error must not end the host's wait for its sibling: the
+ * resolved label ships in the shadow root once the thenable settles.
+ */
+export const renderMixedBoundary = (): Promise<StreamResult> =>
+  settled(mixedBoundaryButton(), { timeout: 3000 });
 
 /** A child that never resolves, aborted at 300ms. `after` is sibling renders in the following 500ms. */
 export const renderAborted = async (): Promise<StreamResult & { during: number; after: number }> => {
