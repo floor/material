@@ -127,6 +127,8 @@ jobs:
         with:
           name: dist
           path: dist
+      - name: Every dist JS module is reachable from the package exports
+        run: bun run dist-modules:check
       - name: Element CSS files and exports
         run: bun run elements-css:check
       - name: Build and consumer tooling types
