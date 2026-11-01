@@ -4472,6 +4472,13 @@ try {
     assert.ok(drawn.factoryView, "the factory's progress draws in an svg view");
     check("progress: the indicator draws in an svg view and the module has no canvas, element and factory");
 
+    // SSR renders the same svg view, with no canvas in the markup. The import
+    // is from the built dist this check loads, so on main it finds the canvas.
+    const ssr = (await import("../dist/ssr/index.js")).renderElement("m-progress", { value: 50 });
+    assert.ok(ssr.includes("svg"), "the server-rendered markup carries the svg view");
+    assert.ok(!ssr.includes("<canvas"), "the server-rendered markup has no canvas");
+    check("progress: SSR output is valid, with the svg view and no canvas");
+
     // The svg view keeps the layout box the canvas had before the upgrade:
     // the same element heights, the same 4dp inset on linear, none on circular.
     const laid = await page.evaluate(() => {
@@ -4544,7 +4551,8 @@ try {
       spinning.element.remove();
       return result;
     });
-    const dash = (value: string): number => Number.parseFloat(value);
+    // the computed dasharray may keep its calc() wrapper; the first number is the dash
+    const dash = (value: string): number => Number.parseFloat(value.match(/-?[\d.]+/)?.[0] ?? "0");
     for (const which of ["factory", "element"] as const) {
       assert.equal(track[which].track, track.themeTrack, `${which}: the track stroke is the theme's`);
       assert.equal(track[which].head, track.themeHead, `${which}: the head stroke is the theme's`);
@@ -4590,6 +4598,7 @@ try {
         sweep: timing(ringAnims.get("mtrl-progress-sweep")),
         at0: sample(0),
         at875: sample(875),
+        at1749: sample(1749),
         at1750: sample(1750),
       };
       bars.remove();
@@ -4602,7 +4611,8 @@ try {
     assert.deepEqual(motion.sweep, { duration: 6000, iterations: Infinity });
     assert.equal(motion.at0, "0%");
     assert.ok(Number.parseFloat(motion.at875) > 0, `the bar's tail moves mid-cycle (${motion.at875})`);
-    assert.equal(motion.at1750, "100%", "the bar wraps the way the canvas did");
+    assert.equal(motion.at1749, "100%");
+    assert.equal(motion.at1750, "0%", "the cycle wraps at the boundary, the way the canvas did");
     check("progress: the indeterminate motion runs as CSS on the drawing elements, at the m3 durations");
 
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -4709,13 +4719,13 @@ try {
      </div>`
   );
   {
-    // which part carries the track colour and which the primary, per scene:
-    // the indeterminate linear's ahead stub is track-coloured, its bars primary
-    const partQueries: Record<string, [string, string]> = {
-      tl: ["rect.mtrl-progress__track", "rect.mtrl-progress__indicator"],
-      tli: ["rect.mtrl-progress__ahead", "rect.mtrl-progress__bar-first"],
-      tc: ["circle.mtrl-progress__track", "circle.mtrl-progress__indicator"],
-      tci: ["circle.mtrl-progress__track", "circle.mtrl-progress__indicator"],
+    // which part carries the track colour and which the primary, per scene,
+    // and the property it is painted with: rects fill, circles stroke
+    const partQueries: Record<string, { track: string; head: string; prop: "fill" | "stroke" }> = {
+      tl: { track: "rect.mtrl-progress__track", head: "rect.mtrl-progress__indicator", prop: "fill" },
+      tli: { track: "rect.mtrl-progress__ahead", head: "rect.mtrl-progress__bar-first", prop: "fill" },
+      tc: { track: "circle.mtrl-progress__track", head: "circle.mtrl-progress__indicator", prop: "stroke" },
+      tci: { track: "circle.mtrl-progress__track", head: "circle.mtrl-progress__indicator", prop: "stroke" },
     };
     type Palette = {
       primary: string;
@@ -4734,17 +4744,17 @@ try {
           return probe.fillStyle;
         };
         const role = (name: string): string => colour(getComputedStyle(themed).getPropertyValue(name).trim());
-        const stroke = (root: Element, part: string): string =>
-          colour(getComputedStyle(root.querySelector(part) as Element).stroke);
+        const paint = (root: Element, part: string, prop: "fill" | "stroke"): string =>
+          colour(getComputedStyle(root.querySelector(part) as Element)[prop]);
         const shadow = (id: string): Element =>
           (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as Element;
         const factories = (window as unknown as { factories: Record<string, HTMLElement> }).factories;
         const parts: Record<string, { track: string; head: string }> = {};
-        for (const [id, [trackPart, headPart]] of Object.entries<[string, string]>(partQueries)) {
-          parts[`element ${id}`] = { track: stroke(shadow(id), trackPart), head: stroke(shadow(id), headPart) };
+        for (const [id, { track, head, prop }] of Object.entries(partQueries)) {
+          parts[`element ${id}`] = { track: paint(shadow(id), track, prop), head: paint(shadow(id), head, prop) };
           parts[`factory ${id}`] = {
-            track: stroke(factories[id] as Element, trackPart),
-            head: stroke(factories[id] as Element, headPart),
+            track: paint(factories[id] as Element, track, prop),
+            head: paint(factories[id] as Element, head, prop),
           };
         }
         const histogram = (canvas: HTMLCanvasElement): Record<string, number> => {
