@@ -31,16 +31,35 @@
  * same rule (scripts/check-package-size.ts). The merged tree measured 6,420,252;
  * measured plus 1% is above that ceiling, so it stays.
  *
+ * The published table. SIZES.md is generated from this script's own results by
+ * `bun run size --markdown > SIZES.md`, and a plain `bun run size` fails when
+ * the rows the committed file keeps between its `size-table` markers are not
+ * what a fresh measurement says — the pull request that changes a size
+ * refreshes the table, as readme:check has the README's `sizes` rows refreshed.
+ * The commit and the date in the file's header stand outside the markers, so
+ * they record when the table was regenerated without counting as drift.
+ *
  * Usage:
  *   bun run size
+ *   bun run size --markdown > SIZES.md
  */
 
 import { gzipSync } from "bun";
-import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 const root = resolve(import.meta.dir, "..");
+
+/** The commit the table was measured at, for the SIZES.md header. */
+const shortCommit = (): string => {
+  try {
+    return execFileSync("git", ["rev-parse", "--short=8", "HEAD"], { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+};
 
 // The bundler derives chunk names and the entry chunk's runtime id from the
 // module paths it is handed, so the entry lives in a fixed scratch inside the
@@ -225,19 +244,107 @@ export interface SizeGateInput {
   readonly buildFailures: readonly string[];
   readonly treeShakeFailures: readonly unknown[];
   readonly overBudget: readonly string[];
+  /** Rows of the committed SIZES.md that a fresh measurement disagrees with. */
+  readonly tableDrift?: readonly string[];
 }
 
-/** The command fails if any scenario failed to build, leaked, or grew past its budget. */
+/** The command fails if any scenario failed to build, leaked, grew past its budget, or drifted from the committed table. */
 export const sizeGateFails = (input: SizeGateInput): boolean =>
   input.buildFailures.length > 0
   || input.treeShakeFailures.length > 0
-  || input.overBudget.length > 0;
+  || input.overBudget.length > 0
+  || (input.tableDrift?.length ?? 0) > 0;
 
 export const missingMeasuredScenarios = (
   measuredNames: readonly string[],
 ): readonly ScenarioName[] => {
   const measured = new Set(measuredNames);
   return SCENARIO_DEFS.map((scenario) => scenario.name).filter((name) => !measured.has(name));
+};
+
+// ── The published table (SIZES.md) ────────────────────────────────
+//
+// The same measurement as the console table, as Markdown: `core` (the kernel
+// every component starts from), every component, and `all`. The rows between
+// the markers are what a plain run compares the committed file against; the
+// header around them — the commit and the date — records when the table was
+// regenerated and is left out of the comparison.
+
+export const SIZES_FILE = "SIZES.md";
+export const TABLE_OPEN = "<!-- size-table -->";
+export const TABLE_CLOSE = "<!-- /size-table -->";
+
+const inTable = (name: ScenarioName): boolean =>
+  name === "core" || name === "all" || COMPONENTS.some((component) => component.name === name);
+
+const formatKB = (value: number): string => `${value.toFixed(1)} KB`;
+
+/** The table SIZES.md commits: one row for the kernel, each component, and `all`. */
+export const renderSizesTable = (results: readonly Result[]): string => {
+  const lines = [
+    "| Component | Minified | Gzipped | vs core | Deferred |",
+    "| --- | ---: | ---: | ---: | ---: |",
+  ];
+  for (const result of results.filter((result) => inTable(result.name))) {
+    const delta = result.name === "core"
+      ? "—"
+      : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
+    const deferred = result.deferredGzBytes === 0 ? "" : `+${formatKB(result.deferredGzBytes / 1024)}`;
+    lines.push(`| ${result.name} | ${formatKB(result.minKB)} | ${formatKB(result.gzKB)} | ${delta} | ${deferred} |`);
+  }
+  return lines.join("\n");
+};
+
+/** The whole generated file: how it was measured, at what commit, and the table. */
+export const renderSizesMarkdown = (
+  results: readonly Result[],
+  measuredAt: { commit: string; date: string },
+): string => [
+  "# Component sizes",
+  "",
+  "Measured by `bun run size` (scripts/size.ts). Each row imports only that",
+  "component's factories from the package entry, the way a consumer does, and",
+  "the numbers are what a bundler keeps. Minified and Gzipped are the initial",
+  "graph — the static chunks the import pulls in before any lazy load.",
+  "Deferred is the gzip of the chunks reached only through `import()`, which",
+  "loads on demand. `vs core` is the gzipped delta against the `core` kernel",
+  "(`pipe`, `createBase`, `withElement`) that every component starts from. A",
+  "scenario that carries another component's code fails the run, not this table.",
+  "",
+  `Measured at ${measuredAt.commit} on ${measuredAt.date}. Regenerate with`,
+  "`bun run size --markdown > SIZES.md`; a plain `bun run size` fails when",
+  "these rows drift from a fresh measurement.",
+  "",
+  TABLE_OPEN,
+  renderSizesTable(results),
+  TABLE_CLOSE,
+  "",
+].join("\n");
+
+/** Where the committed file and a fresh measurement disagree, row by row. */
+export const sizesTableDrift = (committed: string, fresh: string): readonly string[] => {
+  const rows = (text: string): readonly string[] | undefined => {
+    const open = text.indexOf(TABLE_OPEN);
+    const close = text.lastIndexOf(TABLE_CLOSE);
+    if (open === -1 || close === -1 || close < open) return undefined;
+    return text
+      .slice(open + TABLE_OPEN.length, close)
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  };
+  const committedRows = rows(committed);
+  const freshRows = rows(fresh);
+  if (committedRows === undefined || freshRows === undefined) {
+    return [`no ${TABLE_OPEN} … ${TABLE_CLOSE} block: regenerate with \`bun run size --markdown > SIZES.md\``];
+  }
+  const drift: string[] = [];
+  for (let index = 0; index < Math.max(committedRows.length, freshRows.length); index += 1) {
+    const was = committedRows[index] ?? "(row missing)";
+    const now = freshRows[index] ?? "(row missing)";
+    if (was !== now) drift.push(`row ${index + 1}: committed ${was} — measured ${now}`);
+  }
+  return drift;
 };
 
 // ── Markers ───────────────────────────────────────────────────────
@@ -328,7 +435,7 @@ interface Scenario {
   imports: readonly string[];
 }
 
-interface Result {
+export interface Result {
   name: ScenarioName;
   minBytes: number;
   gzBytes: number;
@@ -525,6 +632,10 @@ export const buildScenario = async (
 };
 
 const main = async (): Promise<void> => {
+  // `--markdown` writes the SIZES.md content to standard output, so everything
+  // else the run says goes to standard error and the file holds only the table.
+  const markdown = process.argv.includes("--markdown");
+  const report = markdown ? console.error : console.log;
   const coreSource = readTree(join(root, "src/core"));
   const sources = new Map<ComponentName, string>();
   for (const component of COMPONENTS) {
@@ -626,12 +737,12 @@ const main = async (): Promise<void> => {
   const pad = (value: string, width: number): string => value.padStart(width);
   const sep = "─".repeat(LINE_W);
 
-  console.log("");
-  console.log("  mtrl — Component Sizes");
-  console.log("");
+  report("");
+  report("  mtrl — Component Sizes");
+  report("");
   const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"vs core".padStart(COL_DELTA)}`;
-  console.log(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
-  console.log(`  ${sep}`);
+  report(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
+  report(`  ${sep}`);
 
   for (const result of results) {
     const min = `${result.minKB.toFixed(1)} KB`;
@@ -641,41 +752,41 @@ const main = async (): Promise<void> => {
       : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
     const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(delta, COL_DELTA)}`;
     if (!showDeferred) {
-      console.log(line);
+      report(line);
       continue;
     }
     const deferred = result.deferredGzBytes === 0
       ? ""
       : `+${(result.deferredGzBytes / 1024).toFixed(1)} KB`;
-    console.log(`${line}  ${pad(deferred, COL_DEFERRED)}`);
+    report(`${line}  ${pad(deferred, COL_DEFERRED)}`);
   }
 
-  console.log(`  ${sep}`);
-  console.log("");
+  report(`  ${sep}`);
+  report("");
 
   if (buildFailures.length > 0) {
-    console.log(`  ✗ Build: ${buildFailures.length} scenario(s) failed to compile`);
-    for (const name of buildFailures) console.log(`    ${name}`);
-    console.log("");
+    report(`  ✗ Build: ${buildFailures.length} scenario(s) failed to compile`);
+    for (const name of buildFailures) report(`    ${name}`);
+    report("");
   }
 
   if (treeShakeFailures.length === 0) {
     const checked = results.filter((result) => result.name !== "all").length;
     const expected = scenarios.length - 1;
-    console.log(
+    report(
       checked === expected
         ? `  ✓ Tree-shaking: all ${expected} scenarios clean — unused components excluded`
         : `  ✓ Tree-shaking: ${checked} measured scenario(s) clean`,
     );
   } else {
-    console.log(`  ✗ Tree-shaking: ${treeShakeFailures.length} leak(s) detected`);
-    console.log("");
+    report(`  ✗ Tree-shaking: ${treeShakeFailures.length} leak(s) detected`);
+    report("");
     for (const failure of treeShakeFailures) {
-      console.log(`    ${failure.scenario}: leaked ${failure.leaked} (marker: "${failure.marker}")`);
+      report(`    ${failure.scenario}: leaked ${failure.leaked} (marker: "${failure.marker}")`);
     }
   }
 
-  console.log("");
+  report("");
 
   const overBudget: string[] = [];
 
@@ -683,25 +794,46 @@ const main = async (): Promise<void> => {
     const budget = BUDGET_BYTES[scenario.name];
     const result = results.find((item) => item.name === scenario.name);
     if (!result) {
-      console.log(`  ✗ ${scenario.name}: not measured (build failed)`);
+      report(`  ✗ ${scenario.name}: not measured (build failed)`);
       continue;
     }
     const over = result.gzBytes > budget;
     if (over) overBudget.push(result.name);
-    console.log(
-      `  ${over ? "✗" : "✓"} ${result.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
+    report(
+      `  ${over ? "✗" : "✓"} ${scenario.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
     );
     const deferredBudget = DEFERRED_BUDGET_BYTES[scenario.name];
     if (deferredBudget !== undefined) {
       const deferredOver = result.deferredGzBytes > deferredBudget;
       if (deferredOver) overBudget.push(`${result.name} (deferred)`);
-      console.log(
+      report(
         `  ${deferredOver ? "✗" : "✓"} ${result.name} deferred: ${result.deferredGzBytes} bytes gzipped (budget ${deferredBudget})`,
       );
     }
   }
 
-  console.log("");
+  report("");
+
+  // The published table: regenerated on request, and on every plain run
+  // compared with the committed file, the way readme:check holds the README's
+  // `sizes` rows against size:check's measurement. A checkout without the file
+  // (the emitter, before the table lands) is not drift.
+  const tableDrift: string[] = [];
+  if (markdown) {
+    process.stdout.write(renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) }));
+  } else {
+    const sizesPath = join(root, SIZES_FILE);
+    if (existsSync(sizesPath)) {
+      const fresh = renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) });
+      tableDrift.push(...sizesTableDrift(readFileSync(sizesPath, "utf8"), fresh));
+      if (tableDrift.length === 0) {
+        report("  ✓ SIZES.md: the committed table matches this measurement");
+      } else {
+        for (const line of tableDrift) report(`  ✗ SIZES.md: ${line}`);
+      }
+      report("");
+    }
+  }
 
   rmSync(scratch, { recursive: true, force: true });
 
@@ -709,7 +841,7 @@ const main = async (): Promise<void> => {
     if (!buildFailures.includes(name)) buildFailures.push(name);
   }
 
-  if (sizeGateFails({ buildFailures, treeShakeFailures, overBudget })) {
+  if (sizeGateFails({ buildFailures, treeShakeFailures, overBudget, tableDrift })) {
     process.exit(1);
   }
 };

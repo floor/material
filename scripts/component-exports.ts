@@ -6,8 +6,8 @@
  * `material/components/<name>` is public API like the root: every name
  * its index exports is a 3.x promise. This reads every component index with
  * the type checker, values and types, records each export as public or
- * deprecated (an `@deprecated` tag on its re-export), and pins the result in
- * scripts/fixtures/component-exports.json.
+ * deprecated (an `@deprecated` tag on its re-export, else on the declaration
+ * it re-exports), and pins the result in scripts/fixtures/component-exports.json.
  *
  *   bun run component-exports:check    fails with the names added, removed or changed
  *   bun run component-exports:update   rewrites the fixture
@@ -15,6 +15,7 @@
 import ts from "typescript";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { deprecationOf } from "./export-deprecation";
 
 export type ComponentExport = { name: string; kind: "value" | "type" | "class"; status: "public" | "deprecated"; note?: string };
 export type ComponentExports = Record<string, ComponentExport[]>;
@@ -30,15 +31,6 @@ export const componentNames = (): string[] =>
 
 const kindOf = (symbol: ts.Symbol): ComponentExport["kind"] =>
   symbol.flags & ts.SymbolFlags.Class ? "class" : symbol.flags & ts.SymbolFlags.Value ? "value" : "type";
-
-/** The @deprecated text on the index's export specifier, if any */
-const deprecation = (symbol: ts.Symbol): string | undefined => {
-  for (const declaration of symbol.declarations ?? []) {
-    const tag = ts.getJSDocTags(declaration).find((t) => t.tagName.text === "deprecated");
-    if (tag) return ts.getTextOfJSDocComment(tag.comment) ?? "";
-  }
-  return undefined;
-};
 
 /** The `material/components/<name>/constants` subpaths, pinned beside the indexes */
 export const constantsNames = (): string[] =>
@@ -59,10 +51,12 @@ export function readComponentExports(): ComponentExports {
     result[name] = (module ? checker.getExportsOfModule(module) : [])
       .map((symbol): ComponentExport => {
         const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
-        const note = deprecation(symbol);
-        return note === undefined
-          ? { name: symbol.name, kind: kindOf(target), status: "public" }
-          : { name: symbol.name, kind: kindOf(target), status: "deprecated", note };
+        const found = deprecationOf(checker, symbol);
+        if (!found) return { name: symbol.name, kind: kindOf(target), status: "public" };
+        // The note is the index's own: a declaration's note is the same wherever that declaration is re-exported
+        return found.where === "export"
+          ? { name: symbol.name, kind: kindOf(target), status: "deprecated", note: found.note }
+          : { name: symbol.name, kind: kindOf(target), status: "deprecated" };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   });
@@ -89,6 +83,20 @@ export function diffComponentExports(pinned: ComponentExports, now: ComponentExp
 }
 
 export const readPinned = async (): Promise<ComponentExports> => Bun.file(FIXTURE).json();
+
+/**
+ * A name a release pinned as public that is gone now, with no deprecation in
+ * between: a removal has to be announced in an earlier release. A subpath that
+ * leaves takes its public names with it, so it is reported the same way.
+ */
+export function unannouncedRemovals(released: ComponentExports, now: ComponentExports): string[] {
+  return Object.entries(released).flatMap(([component, entries]) => {
+    const current = new Set((now[component] ?? []).map((e) => e.name));
+    return entries
+      .filter((e) => e.status === "public" && !current.has(e.name))
+      .map((e) => `${component}: ${e.name} (${e.kind}) was public in the release pin and is gone: deprecate it first, then remove it in a later release`);
+  });
+}
 
 if (import.meta.main) {
   const now = readComponentExports();
