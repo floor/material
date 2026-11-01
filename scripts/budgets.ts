@@ -45,11 +45,15 @@ export const SSR_PAGE = {
 } as const;
 
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
-export const TARBALL_BYTES = 886_000;
+// Raised from 886_000 / 5_119_000 for PR #189: owner budget decision
+// 2026-11-01, relayed by Atlas. Temporary — ratcheted back down to the
+// measured size plus a small margin in the same 3.5.0 release, after
+// Proposals A and B land.
+export const TARBALL_BYTES = 888_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts.
-export const UNPACKED_BYTES = 5_119_000;
+export const UNPACKED_BYTES = 5_137_000;
 
 /** check-slider.ts: its own build of the slider element entry. */
 export const SLIDER_INLINE_GZIP = 13_400;
