@@ -129,6 +129,19 @@ try {
       // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
       // follow the measurement.
       inline: { options: {}, ...SSR_PAGE.inline },
+      // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
+      // main's reduced-motion rule in every root's host sheet (0.10.6), on the
+      // forward merge: 700,173 raw, 11,154 gzip against 42c1a111 plus main 23c03a2f.
+      // This merge: that block (275 B) plus data-mtrl-ssr="" (17 B), and no guard.
+      // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
+      // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
+      // follow the measurement.
+      // The button family's server roots drop the progress sheet (ElementSpec.
+      // ssrStyles; no serialized node it styles): 675,345 raw, 10,506 gzip —
+      // CI's printed row and the local content-deterministic one agree. Both
+      // ceilings ratchet down by the rule and both floors follow the smaller
+      // page; the dropped sheet is asserted shipped where it is used, by the
+      // parity check and the render fixture, not by this page's size.
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
       // block is in the linked host sheet, so this HTML does not grow for it.
@@ -136,6 +149,9 @@ try {
       // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
       // After the text-field rename merge the four numbers are unchanged:
       // inline 700,921 / 11,166, link 42,741 / 1,038. Floors and ceilings stay.
+      // The same narrowing drops one <link> from every button root: 41,551 raw,
+      // 1,029 gzip. Raw ratchets by the rule; gzip's floor stays 900 and its
+      // ceiling 1,150, both of which it still fits.
       link: { options: { styles: "link", cssBase: "/css" }, ...SSR_PAGE.link },
     } as const;
     for (const [mode, budget] of Object.entries(budgets)) {
