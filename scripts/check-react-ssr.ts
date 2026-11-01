@@ -154,12 +154,15 @@ try {
         assert.match(result.html, /data-value="One"/, `React ${version} B3 snapshot keeps the boundary tab`);
         continue;
       }
-      if (name === "B2" || name === "B5") {
+      if (name === "B2" || name === "B5" || name === "B6" || name === "B7") {
         // #461: an empty fallback leaves no light content at shell time, so a
         // fallback-state snapshot ships with no label slot at all and the
         // resolved text stays unprojected until upgrade. B5 wraps the boundary
         // in an ordinary component: the slot must survive that too, which a
         // host-to-children walk cannot see but the renderer's signal can.
+        // B6 and B7 suspend on a thenable whose `then` never dispatches through
+        // this realm's Promise.prototype — its own method, or another realm's
+        // native Promise — so only the renderer's own pending report sees them.
         assert.match(result.html, /<span part="text label"/, `React ${version} ${name} snapshot keeps the label slot`);
       }
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
@@ -196,7 +199,7 @@ try {
     console.log(`React ${version}: production shapes A and F streamed with a shadow root`);
     // The inner-boundary shapes must hold in the production bundle too, not only
     // in development: the snapshot chrome is the product behavior (#461).
-    for (const name of ["B2", "B3", "B5"] as const) {
+    for (const name of ["B2", "B3", "B5", "B6", "B7"] as const) {
       const result = production.find(([shape]) => shape === name)?.[1];
       assert.ok(result, `React ${version} production ${name} missing`);
       assert.equal(suspendError(result.errors), false, `React ${version} production ${name} onError ${JSON.stringify(result.errors)}`);
@@ -209,7 +212,7 @@ try {
       }
       assert.match(result.html, /<span part="text label"/, `React ${version} production ${name} snapshot keeps the label slot`);
     }
-    console.log(`React ${version}: production B2, B3 and B5 keep their snapshot chrome`);
+    console.log(`React ${version}: production B2, B3, B5, B6 and B7 keep their snapshot chrome`);
     const productionGaveUp = productionCap.result;
     assert.equal(suspendError(productionGaveUp.errors) || productionGaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), false, `React ${version} production cap onError ${JSON.stringify(productionGaveUp.errors)}`);
     assert.match(productionGaveUp.html, /loaded 5/, `React ${version} production cap content`);

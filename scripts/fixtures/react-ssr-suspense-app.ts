@@ -2,6 +2,7 @@
 // The six shapes from the SSR audit, plus the two from #461: a boundary inside
 // the host. React 19 suspends with use(); React 18 throws the promise.
 import * as React from "react";
+import { runInNewContext } from "node:vm";
 import { Button, Card, Tab, Tabs } from "material/react";
 
 const h = React.createElement;
@@ -37,6 +38,34 @@ const Wrap = ({ promise }: { promise: Promise<string> }) =>
 
 const pending = (ms: number, text: string): Promise<string> => new Promise((resolve) => { setTimeout(() => resolve(text), ms); });
 
+/**
+ * #461: a thenable with its own `then` method. React subscribes on the object
+ * itself, so the call never dispatches through this realm's Promise.prototype.
+ */
+const customThenable = (ms: number, text: string): Promise<string> => {
+  const callbacks: Array<(value: string) => void> = [];
+  let ready = false;
+  setTimeout(() => {
+    ready = true;
+    for (const callback of callbacks.splice(0)) callback(text);
+  }, ms);
+  return {
+    then(onFulfilled?: (value: string) => void) {
+      if (ready) onFulfilled?.(text);
+      else callbacks.push((value) => onFulfilled?.(value));
+    },
+  } as unknown as Promise<string>;
+};
+
+/** #461: a native Promise from another realm; `then` dispatches on that realm's prototype. */
+const foreignThenable = (ms: number, text: string): Promise<string> => {
+  const foreign = runInNewContext(
+    '(() => { let fulfill; const promise = new Promise(resolve => { fulfill = resolve; }); return { promise, fulfill }; })()',
+  ) as { promise: Promise<string>; fulfill: (value: string) => void };
+  setTimeout(() => { foreign.fulfill(text); }, ms);
+  return foreign.promise;
+};
+
 /** One fresh tree. A lazy component must not be reused from an earlier render. */
 export const suspenseShape = (name: string, promise: Promise<string>): React.ReactNode => {
   const LazyInner = React.lazy(async () => {
@@ -56,6 +85,12 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
     // #461 review: a boundary an element walk from the host cannot reach — only
     // the renderer's own pending signal sees it.
     B5: h(Button, { id: "b5" }, h(Wrap, { promise })),
+    // #461 round 3: the wrapped boundary suspending on a thenable a
+    // prototype-level subscription count cannot see — its own `then` method,
+    // then a Promise built in another realm. These shapes build their own
+    // thenable, as A2 builds its own lazy component.
+    B6: h(Button, { id: "b6" }, h(Wrap, { promise: customThenable(15, SUSPENSE_TEXT) })),
+    B7: h(Button, { id: "b7" }, h(Wrap, { promise: foreignThenable(15, SUSPENSE_TEXT) })),
     C: h(React.Suspense, { fallback }, h(({ promise: value }: { promise: Promise<string> }) => h(Button, { id: "c" }, readPromise(value)), { promise })),
     E: h(React.Suspense, { fallback }, h("div", null, h(Late, { promise }))),
     F: h(Button, { id: "f" }, h(Late, { promise })),
@@ -65,7 +100,7 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
   return node;
 };
 
-export const SUSPENSE_SHAPES = ["A", "A2", "B", "B2", "B3", "B5", "C", "E", "F"] as const;
+export const SUSPENSE_SHAPES = ["A", "A2", "B", "B2", "B3", "B5", "B6", "B7", "C", "E", "F"] as const;
 
 /** Renders inside a host so a check can count static passes. */
 export const renderCounts = { sibling: 0 };
