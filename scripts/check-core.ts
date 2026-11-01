@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Exercise the packed shared ripple and component teardown in Chromium. */
 import { checkCheckableValues } from "./check-checkable-values";
+import { checkTextFieldNames } from "./check-text-field-names";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -111,6 +112,7 @@ try {
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkTextFieldNames(page);
   await checkTextField(page);
   await checkTextFieldTokens(page);
   await checkTextFieldAnatomy(page);
