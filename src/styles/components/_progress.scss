@@ -89,16 +89,12 @@ $component: "#{base.$prefix}-progress";
   // ---------------------------------------------------------------------------
   // The drawing parts, linear: filled bars. A bar sits in the middle of the
   // view's height (a wavy view is taller than the stroke) and is rounded by
-  // its cap radius, as the canvas's rounded rectangles were.
+  // its cap radius, as the canvas's rounded rectangles were. One :is() rule:
+  // each part's specificity is unchanged (the most specific argument is
+  // still type plus class) and the eight selectors stop repeating the
+  // prefix.
   // ---------------------------------------------------------------------------
-  rect#{&}__track,
-  rect#{&}__buffer,
-  rect#{&}__indicator,
-  rect#{&}__ahead,
-  rect#{&}__between,
-  rect#{&}__behind,
-  rect#{&}__bar-first,
-  rect#{&}__bar-second {
+  :is(rect#{&}__track, rect#{&}__buffer, rect#{&}__indicator, rect#{&}__ahead, rect#{&}__between, rect#{&}__behind, rect#{&}__bar-first, rect#{&}__bar-second) {
     y: calc((100% - var(--#{$component}-stroke)) / 2);
     height: var(--#{$component}-stroke);
     rx: var(--#{$component}-cap);
@@ -116,9 +112,7 @@ $component: "#{base.$prefix}-progress";
   // stroked rather than filled — on the path itself and on the group a wavy
   // indeterminate bar carries it with (the stroke inherits into the
   // referenced pattern)
-  path#{&}__indicator,
-  g#{&}__indicator,
-  &__wave {
+  :is(path#{&}__indicator, g#{&}__indicator, #{&}__wave) {
     fill: none;
     stroke-width: var(--#{$component}-stroke);
     stroke-linecap: round;
@@ -233,60 +227,54 @@ $component: "#{base.$prefix}-progress";
 // derived from them with the same clamps the canvas applied to its
 // windows, so every frame the sheet composes is the frame the canvas
 // drew:
-//   x = max(0, min(min(l, r) - cap, 100% - 2·cap))
+//   x = clamp(0, min(l, r) - cap, 100% - 2·cap)
 //   width = clamp(max(l, r) + cap) - x, or 0 when the canvas's guard
-//           failed — the second min() operand is 0 exactly then
+//           failed — the span operand is 0 exactly then
+// The span operand is a custom property so the between track below can
+// substitute its own without restating the width formula; every other
+// part takes the fallback, the head-to-tail span. One :is() rule: the
+// parts and the wavy windows share the prefix, and with the span moved
+// to a property this is the only x/width rule, so the specificity :is()
+// gives its most specific argument (type plus class) competes with
+// nothing.
 // ---------------------------------------------------------------------------
-.#{$component}--indeterminate .#{$component}__ahead,
-.#{$component}--indeterminate .#{$component}__bar-first,
-.#{$component}--indeterminate .#{$component}__between,
-.#{$component}--indeterminate .#{$component}__bar-second,
-.#{$component}--indeterminate .#{$component}__behind,
-.#{$component}--indeterminate rect.#{$component}__wave-window {
-  x: max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))));
+.#{$component}--indeterminate :is(
+  .#{$component}__ahead,
+  .#{$component}__bar-first,
+  .#{$component}__between,
+  .#{$component}__bar-second,
+  .#{$component}__behind,
+  rect.#{$component}__wave-window
+) {
+  x: clamp(0px, min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap), 100% - 2 * var(--#{$component}-cap));
 
   // The window spans from its left edge to its right edge, unless the
   // guard killed it: a head-tail span that ended (bars, and the track
   // ahead of the first head)
   width: min(
-    calc(
-      min(calc(max(var(--#{$component}-l), var(--#{$component}-r)) + var(--#{$component}-cap)), 100%) -
-      max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))))
-    ),
-    calc((var(--#{$component}-r) - var(--#{$component}-l)) * 100)
+    min(max(var(--#{$component}-l), var(--#{$component}-r)) + var(--#{$component}-cap), 100%) -
+    clamp(0px, min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap), 100% - 2 * var(--#{$component}-cap)),
+    var(--#{$component}-span, calc((var(--#{$component}-r) - var(--#{$component}-l)) * 100))
   );
 }
 
-// Rest pose, the frame the canvas drew at t=0: the track ahead of the
-// first head is the whole track; every other part is nothing. On the
-// parts only: a wavy bar's window rect reads --l and --r by inheritance
-// from the bar group the keyframes animate — a rest pose declared on the
-// rect itself would pin them at 0 against the inherited animation and
-// the window would collapse to nothing.
-.#{$component}--indeterminate .#{$component}__ahead,
-.#{$component}--indeterminate .#{$component}__bar-first,
-.#{$component}--indeterminate .#{$component}__between,
-.#{$component}--indeterminate .#{$component}__bar-second,
-.#{$component}--indeterminate .#{$component}__behind {
-  --#{$component}-l: 0%;
-  --#{$component}-r: 0%;
-}
-
+// The rest pose is the @property initial values, 0% on both edges: the
+// frame the canvas drew at t=0, under reduced motion and before any
+// keyframe interval names an edge. The track ahead of the first head is
+// the whole track instead — its head, not its tail, is the edge that
+// moves.
 .#{$component}--indeterminate .#{$component}__ahead {
   --#{$component}-r: 100%;
 }
 
-// The between and behind tracks are guarded by their tail instead: the
-// canvas drew neither until the tail it tracks left the start
-.#{$component}--indeterminate .#{$component}__between,
-.#{$component}--indeterminate .#{$component}__behind {
-  width: min(
-    calc(
-      min(calc(max(var(--#{$component}-l), var(--#{$component}-r)) + var(--#{$component}-cap)), 100%) -
-      max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))))
-    ),
-    calc(var(--#{$component}-r) * 100)
-  );
+// The between track is guarded by its tail instead: the canvas drew it
+// from the start of the track to its tail, so its window spans zero to
+// --r rather than head to tail — the one part whose span is not its
+// head-to-tail gap, substituted for the fallback above. Behind needs no
+// override: its head edge stays at the initial 0% for the whole cycle,
+// where the fallback already reads zero to --r.
+.#{$component}--indeterminate .#{$component}__between {
+  --#{$component}-span: calc(var(--#{$component}-r) * 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -330,7 +318,18 @@ $component: "#{base.$prefix}-progress";
       animation: #{$component}-ahead-head 1750ms infinite;
     }
 
-    .#{$component}__bar-first {
+    // A wavy bar's window rect is the clip shape inside a <clipPath>, and
+    // the style engine does not distribute inherited animated custom
+    // properties into that subtree: a bar group's keyframes (measured:
+    // 0.553% / 7.112% at 350ms on the group) never reach the rect, which
+    // reads the registered initial 0% / 0% and collapses its window to
+    // nothing — the wavy indeterminate bars painted zero pixels on every
+    // hold and sample until the keyframes targeted the rect itself. The
+    // flat bars were never affected: their bar-first element is the rect
+    // the formulas read. Under reduced motion the rects keep the initial
+    // 0% / 0% and the rest pose paints no bar, as before.
+    .#{$component}__bar-first,
+    .#{$component}__bar-first rect.#{$component}__wave-window {
       animation:
         #{$component}-first-tail 1750ms infinite,
         #{$component}-first-head 1750ms infinite;
@@ -342,28 +341,7 @@ $component: "#{base.$prefix}-progress";
         #{$component}-between-tail 1750ms infinite;
     }
 
-    .#{$component}__bar-second {
-      animation:
-        #{$component}-second-tail 1750ms infinite,
-        #{$component}-second-head 1750ms infinite;
-    }
-
-    // A wavy bar's window rect is the clip shape inside a <clipPath>, and
-    // the style engine does not distribute inherited animated custom
-    // properties into that subtree: the bar group above animates --l and
-    // --r (measured: 0.553% / 7.112% at 350ms) while the rect reads the
-    // registered initial 0% / 0% and the window collapses to nothing —
-    // the wavy indeterminate bars painted zero pixels on every hold and
-    // sample. The keyframes therefore target the rect itself too; the
-    // flat bars above were never affected because their bar-first element
-    // is the rect the formulas read. Under reduced motion the rects keep
-    // the initial 0% / 0% and the rest pose paints no bar, as before.
-    .#{$component}__bar-first rect.#{$component}__wave-window {
-      animation:
-        #{$component}-first-tail 1750ms infinite,
-        #{$component}-first-head 1750ms infinite;
-    }
-
+    .#{$component}__bar-second,
     .#{$component}__bar-second rect.#{$component}__wave-window {
       animation:
         #{$component}-second-tail 1750ms infinite,
@@ -428,39 +406,46 @@ $component: "#{base.$prefix}-progress";
     100% { --#{$component}-r: 100%; }
   }
 
+  // A part's opening hold at 0% is left to the synthesized keyframe — the
+  // registered initial 0% is the same value, and the hold is constant, so
+  // the default easing of the implicit segment never shows. An explicit 0%
+  // stays where it starts a visible interval with its own easing (the
+  // first head, the track ahead of it) or holds a value the underlying
+  // does not have (every 100% here: without one the property would ramp
+  // back toward the underlying by the cycle's end).
   @keyframes #{$component}-first-tail {
-    0%, 14.285714% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    14.285714% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     71.428571% { --#{$component}-l: 100%; }
     100% { --#{$component}-l: 100%; }
   }
 
   @keyframes #{$component}-between-head {
-    0%, 37.142857% { --#{$component}-l: 0%; }
+    37.142857% { --#{$component}-l: 0%; }
     37.143% { --#{$component}-l: calc(var(--#{$component}-gapp) * 1%); animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     85.714286% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
     100% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
   }
 
   @keyframes #{$component}-between-tail {
-    0%, 14.285714% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    14.285714% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     71.428571% { --#{$component}-r: calc(100% - var(--#{$component}-gapp) * 1%); }
     71.43% { --#{$component}-r: 100%; }
     100% { --#{$component}-r: 100%; }
   }
 
   @keyframes #{$component}-second-head {
-    0%, 37.142857% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    37.142857% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     85.714286% { --#{$component}-r: 100%; }
     100% { --#{$component}-r: 100%; }
   }
 
   @keyframes #{$component}-second-tail {
-    0%, 51.428571% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    51.428571% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     100% { --#{$component}-l: 100%; }
   }
 
   @keyframes #{$component}-behind-tail {
-    0%, 51.428571% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    51.428571% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     100% { --#{$component}-r: calc(100% - var(--#{$component}-gapp) * 1%); }
   }
 

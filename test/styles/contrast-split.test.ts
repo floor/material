@@ -202,10 +202,14 @@ describe("explicit contrast levels are opt-in", () => {
     // window the sheet composes while the ring's dash slides against the
     // travel rotation (styles/components/_progress.scss). The clipPath
     // subtree does not inherit the animated custom properties, so the wave
-    // windows run their own copies of the keyframes.
+    // windows run their own copies of the keyframes. The parts and their
+    // windows share one :is() derivation rule whose width reads a span
+    // custom property — the between track's zero-to-tail window is the one
+    // override — and the parts' rest pose is the registered initial values,
+    // declared nowhere.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("634a1700943a83e148a1529b4b4b54c7561b3a1dbc916836f5860665d72bb19b");
-    expect(css.length).toBe(553367);
+      .toBe("aff740457ea4e389c8c45e6c0e845fd01a5a2fcd6ff6ee563891c846bf2698b0");
+    expect(css.length).toBe(552371);
   });
 
   test("today's sheets still resolve to the fixture", () => {

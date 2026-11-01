@@ -44,6 +44,16 @@ const rulesAny = (selector: string): string[] => {
   return out;
 };
 
+// rules whose selector carries the text anywhere — the shared lists the
+// sheet folds into one :is() rule do not stand as their own segments
+const rulesContaining = (text: string): string[] => {
+  const out: string[] = [];
+  for (const match of css.matchAll(/(^|\n)([^{}@][^{]*?)\s*\{([^}]*)\}/g)) {
+    if (match[2].includes(text)) out.push(match[3]);
+  }
+  return out;
+};
+
 const value = (selector: string, property: string): string | undefined =>
   rules(selector)
     .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
@@ -127,7 +137,10 @@ describe('progress stylesheet', () => {
 
 describe('progress stylesheet: the drawing', () => {
   test('the bars share one geometry: centred by stroke, rounded by the cap', () => {
-    const body = rulesAny('.mtrl-progress rect.mtrl-progress__indicator').find((b) => b.includes('y:')) ?? '';
+    // one rule for every part, the eight selectors folded into one :is()
+    const shared = rulesContaining(':is(rect.mtrl-progress__track, rect.mtrl-progress__buffer');
+    expect(shared).toHaveLength(1);
+    const body = shared[0] ?? '';
     expect(body).toContain('y: calc((100% - var(--mtrl-progress-stroke)) / 2)');
     expect(body).toContain('height: var(--mtrl-progress-stroke)');
     expect(body).toContain('rx: var(--mtrl-progress-cap)');
@@ -143,18 +156,20 @@ describe('progress stylesheet: the drawing', () => {
   });
 
   test('the indeterminate bars keep the canvas geometry: a clamped x, a width that dies when the bar ends', () => {
-    const body = rulesAny('.mtrl-progress--indeterminate .mtrl-progress__bar-first').find((b) => b.includes('x:')) ?? '';
-    expect(body).toContain('x: max(0px, min(min(var(--mtrl-progress-l), var(--mtrl-progress-r)) - var(--mtrl-progress-cap)');
-    expect(body).toContain('(var(--mtrl-progress-r) - var(--mtrl-progress-l)) * 100');
-    // rest pose outside any animation: all bars empty — but on the parts only.
-    // The geometry rule also carries the wave window rect, which reads --l/--r
-    // by inheritance from the bar group the keyframes animate; a declared pose
-    // there would pin the window at zero width against the inherited values.
-    const rest = rulesAny('.mtrl-progress--indeterminate .mtrl-progress__bar-first').find((b) =>
-      b.includes('--mtrl-progress-l: 0%')
+    // one derivation rule for the five parts and the wave windows
+    const body = rulesContaining('.mtrl-progress--indeterminate :is(').find((b) => b.includes('x:')) ?? '';
+    expect(body).toContain('x: clamp(0px, min(var(--mtrl-progress-l), var(--mtrl-progress-r)) - var(--mtrl-progress-cap), 100% - 2 * var(--mtrl-progress-cap))');
+    expect(body).toContain('var(--mtrl-progress-span, calc((var(--mtrl-progress-r) - var(--mtrl-progress-l)) * 100))');
+    // No static rest pose: the registered initial 0% on both edges is the
+    // pose, under reduced motion and before each keyframe's first offset
+    // alike, so the parts declare no --l/--r of their own. The one base
+    // value is the ahead track's moving edge, and the between track takes
+    // the span override — zero to its tail, in place of the head-to-tail
+    // fallback.
+    expect(rulesAny('.mtrl-progress--indeterminate .mtrl-progress__bar-first').filter((b) => b.includes('--mtrl-progress-l:'))).toHaveLength(0);
+    expect(rulesAny('.mtrl-progress--indeterminate .mtrl-progress__between').join('\n')).toContain(
+      '--mtrl-progress-span: calc(var(--mtrl-progress-r) * 100)'
     );
-    expect(rest).toContain('--mtrl-progress-r: 0%');
-    expect(rest).not.toContain('x:');
     expect(body).not.toContain('--mtrl-progress-l: 0%');
   });
 
@@ -173,10 +188,21 @@ describe('progress stylesheet: the drawing', () => {
     expect(value('.mtrl-progress--indeterminate .mtrl-progress__ahead', 'animation')).toBe(
       'mtrl-progress-ahead-head 1750ms infinite'
     );
-    expect(value('.mtrl-progress--indeterminate .mtrl-progress__bar-first', 'animation')).toBe(
+    // the wavy windows run their bar's keyframes themselves — the clipPath
+    // subtree does not inherit the animated edges — so each bar and its
+    // window share one rule
+    const animationOf = (selector: string): string | undefined =>
+      rulesAny(selector).map((b) => b.match(/animation: ([^;]+);/)?.[1]).filter(Boolean).pop();
+    expect(animationOf('.mtrl-progress--indeterminate .mtrl-progress__bar-first')).toBe(
       'mtrl-progress-first-tail 1750ms infinite, mtrl-progress-first-head 1750ms infinite'
     );
-    expect(value('.mtrl-progress--indeterminate .mtrl-progress__bar-second', 'animation')).toBe(
+    expect(animationOf('.mtrl-progress--indeterminate .mtrl-progress__bar-first rect.mtrl-progress__wave-window')).toBe(
+      'mtrl-progress-first-tail 1750ms infinite, mtrl-progress-first-head 1750ms infinite'
+    );
+    expect(animationOf('.mtrl-progress--indeterminate .mtrl-progress__bar-second')).toBe(
+      'mtrl-progress-second-tail 1750ms infinite, mtrl-progress-second-head 1750ms infinite'
+    );
+    expect(animationOf('.mtrl-progress--indeterminate .mtrl-progress__bar-second rect.mtrl-progress__wave-window')).toBe(
       'mtrl-progress-second-tail 1750ms infinite, mtrl-progress-second-head 1750ms infinite'
     );
     const [from, to] = motionMedia();
