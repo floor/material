@@ -159,20 +159,20 @@ export interface ProgressEvents {
 
 /**
  * What the progress draws with. **Not part of the public contract** (3.0.0):
- * these five were on `ProgressComponent`, which tied the public type to one
- * way of drawing the indicator. They are still on the object the factory
+ * these were on `ProgressComponent`, which tied the public type to one way
+ * of drawing the indicator. They are still on the object the factory
  * returns, for the library's own code and tests; how the indicator is drawn
- * may change in any release. The canvas is the element's own:
- * `progress.element.querySelector('canvas')`. Nothing needs to call `resize`:
+ * may change in any release. The view is the element's own:
+ * `progress.element.querySelector('svg')`. Nothing needs to call `resize`:
  * the component observes its own size.
  * @internal
  */
 export interface ProgressInternals {
-  /** The canvas the indicator is drawn on */
-  canvas: HTMLCanvasElement;
-  /** Re-measures the canvas and redraws; the component does this on resize */
+  /** The SVG the indicator is drawn in */
+  view: SVGSVGElement;
+  /** Re-measures the view and redraws; the component does this on resize */
   resize: () => void;
-  /** The canvas again: these three named the parts of the SVG this replaced */
+  /** The drawing parts: the track, the active indicator, the buffer */
   track: SVGElement;
   indicator: SVGElement;
   buffer: SVGElement;

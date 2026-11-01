@@ -8,14 +8,14 @@ import {
   withDisabled,
   withLifecycle,
 } from "../../core/compose/features";
-import { withCanvas } from "./features/canvas";
+import { withView } from "./features/view";
 import { withState } from "./features/state";
 import { withAPI } from "./api";
 import { ProgressConfig, ProgressComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
 /**
- * Creates a new Progress component using canvas rendering
+ * Creates a new Progress component drawn on an SVG view
  * @param {ProgressConfig} config - Progress configuration object
  * @returns {ProgressComponent} Progress component instance
  *
@@ -32,7 +32,7 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
  * const loader = createProgress({
  *   variant: 'circular',
  *   indeterminate: true
- * });
+ *});
  * ```
  */
 const createProgress = (config: ProgressConfig = {}): ProgressComponent => {
@@ -40,7 +40,7 @@ const createProgress = (config: ProgressConfig = {}): ProgressComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {
-    // Create the component with the pipe pattern using canvas instead of complex DOM
+    // Create the component with the pipe pattern; the view draws the indicator
     const component = pipe(
       createBase,
       withEvents(),
@@ -48,12 +48,12 @@ const createProgress = (config: ProgressConfig = {}): ProgressComponent => {
       withVariant(baseConfig), // Add variant classes
       withDisabled(baseConfig), // Add disabled state
       withState(baseConfig), // Add state management first
-      // The lifecycle goes before the canvas so that destroying the component
-      // takes the element off the page as well as stopping the animation
+      // The lifecycle goes before the view so that destroying the component
+      // takes the element off the page as well as stopping the animations
       withLifecycle(),
-      withCanvas(baseConfig), // Add canvas rendering after state
+      withView(baseConfig), // Add the SVG view after state
       (comp) => {
-        // Add API after both state and canvas
+        // Add API after both state and view
         return withAPI(getApiConfig(comp))(comp);
       }
     )(baseConfig);

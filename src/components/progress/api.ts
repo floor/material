@@ -1,4 +1,4 @@
-// src/components/progress/api.ts - Canvas-based API
+// src/components/progress/api.ts - API over the SVG view
 
 import { PREFIX } from "../../core";
 import { ProgressComponent, ProgressInternals, ProgressThickness, ProgressShape, ProgressEvents, ProgressEventPayload } from "./types";
@@ -12,15 +12,15 @@ import {
 import { addClass, removeClass } from "../../core/dom";
 
 /**
- * Canvas component interface for API
+ * View component interface for API
  */
-interface CanvasComponent {
+interface ViewComponent {
   element: HTMLElement;
   // The component's emitter (withEvents), which `on()` now subscribes to.
   on?: (event: string, handler: EventCallback) => unknown;
   off?: (event: string, handler: EventCallback) => unknown;
   emit?: (event: string, data?: unknown) => unknown;
-  canvas: HTMLCanvasElement;
+  view: SVGSVGElement;
   getClass: (name: string) => string;
   label?: HTMLElement;
   state?: {
@@ -89,13 +89,13 @@ interface ApiOptions {
 }
 
 /**
- * Enhances a canvas-based progress component with a streamlined API
+ * Enhances the progress component with a streamlined API
  */
 export const withAPI =
   (options: ApiOptions) =>
-  (comp: CanvasComponent): ProgressComponent => {
+  (comp: ViewComponent): ProgressComponent => {
     // Get element references
-    const { element, getClass, canvas } = comp;
+    const { element, getClass, view } = comp;
 
     // The emitter, as every component's: handlers get `{ value, max }`. These
     // were DOM CustomEvents on the element, so handlers got `event.detail`
@@ -110,7 +110,7 @@ export const withAPI =
       else options.disabled.enable();
     };
 
-    // Update progress and redraw canvas
+    // Update progress and redraw the view
     const updateProgress = (value: number, max: number): void => {
       // Update ARIA attribute
       element.setAttribute("aria-valuenow", value.toString());
@@ -124,7 +124,7 @@ export const withAPI =
         label.textContent = formatter(value, max);
       }
 
-      // Redraw canvas using component's draw function
+      // Redraw the view using component's draw function
       if (typeof comp.draw === "function") {
         comp.draw();
       }
@@ -156,12 +156,13 @@ export const withAPI =
     const api: ProgressComponent & ProgressInternals = {
       // Element references
       element,
-      canvas: canvas as HTMLCanvasElement,
-      // The indicator is drawn on one canvas; these three named the elements
-      // of the SVG implementation this replaced
-      track: canvas as unknown as SVGElement,
-      indicator: canvas as unknown as SVGElement,
-      buffer: canvas as unknown as SVGElement,
+      view,
+      // The parts the indicator is drawn with, looked up in the view: the
+      // track and buffer of a determinate linear indicator, its active
+      // indicator, or the first track and bar of an indeterminate one
+      track: view.querySelector(`.${getClass(PROGRESS_CLASSES.TRACK)}`) ?? view,
+      indicator: view.querySelector(`.${getClass(PROGRESS_CLASSES.INDICATOR)}`) ?? view,
+      buffer: view.querySelector(`.${getClass(PROGRESS_CLASSES.BUFFER)}`) ?? view,
       getClass,
       resize: () => comp.resize?.(),
 

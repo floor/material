@@ -1,7 +1,13 @@
 // test/components/progress/progress.test.ts
 //
-// The real component in a JSDOM document with a recording 2D context: what it
-// renders, how it is labelled, and what it draws for a given value.
+// The real component in a JSDOM document: what it renders, how it is
+// labelled, and the geometry it writes for a given value. The drawing is an
+// SVG view: a determinate indicator's extents and dash are element
+// attributes, and the indeterminate motion is the stylesheet's, on the same
+// elements — so here the determinate geometry is asserted from the
+// attributes, the indeterminate structure from the elements, and the motion
+// timelines are pinned in test/styles/progress.test.ts (the keyframes) and
+// sampled in a browser (scripts/check-elements.ts).
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
@@ -11,6 +17,7 @@ g.window = dom.window;
 g.document = dom.window.document;
 g.HTMLElement = dom.window.HTMLElement;
 g.HTMLCanvasElement = dom.window.HTMLCanvasElement;
+g.SVGElement = dom.window.SVGElement;
 g.Element = dom.window.Element;
 g.Node = dom.window.Node;
 g.Event = dom.window.Event;
@@ -28,72 +35,37 @@ const flush = (time = performance.now()) => {
   for (const cb of pending) cb(time);
 };
 
-/** One drawn stroke or fill */
-interface Shape {
-  kind: 'line' | 'arc' | 'dot';
-  color: string;
-  lineWidth: number;
-  /** for a line: [x0, x1]; for an arc: [from, sweep]; for a dot: [x, y] */
-  at: [number, number];
-}
-const recordings = new WeakMap<HTMLCanvasElement, Shape[]>();
-
-dom.window.HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement) {
-  const canvas = this;
-  if (!recordings.has(canvas)) recordings.set(canvas, []);
-  let points: [number, number][] = [];
-  let arc: [number, number] | null = null;
-  const state = { fillStyle: '', strokeStyle: '', lineWidth: 0, lineCap: '', lineJoin: '' };
-  return {
-    get fillStyle() { return state.fillStyle; }, set fillStyle(v: string) { state.fillStyle = v; },
-    get strokeStyle() { return state.strokeStyle; }, set strokeStyle(v: string) { state.strokeStyle = v; },
-    get lineWidth() { return state.lineWidth; }, set lineWidth(v: number) { state.lineWidth = v; },
-    get lineCap() { return state.lineCap; }, set lineCap(v: string) { state.lineCap = v; },
-    get lineJoin() { return state.lineJoin; }, set lineJoin(v: string) { state.lineJoin = v; },
-    setTransform() {}, scale() {},
-    clearRect() { recordings.set(canvas, []); },
-    beginPath() { points = []; arc = null; },
-    moveTo(x: number, y: number) { points.push([x, y]); },
-    lineTo(x: number, y: number) { points.push([x, y]); },
-    arc(_x: number, _y: number, _r: number, from: number, to: number) { arc = [from, to - from]; },
-    closePath() {},
-    stroke() {
-      const shapes = recordings.get(canvas)!;
-      if (arc) shapes.push({ kind: 'arc', color: state.strokeStyle, lineWidth: state.lineWidth, at: arc });
-      else if (points.length) {
-        const xs = points.map((p) => p[0]);
-        shapes.push({ kind: 'line', color: state.strokeStyle, lineWidth: state.lineWidth, at: [Math.min(...xs), Math.max(...xs)] });
-      }
-    },
-    fill() {
-      const shapes = recordings.get(canvas)!;
-      if (arc) shapes.push({ kind: 'dot', color: state.fillStyle, lineWidth: 0, at: [0, 0] });
-    },
-  } as unknown as CanvasRenderingContext2D;
-} as any;
-
 import create from '../../../src/components/progress';
 import type { ProgressComponent, ProgressConfig, ProgressInternals } from '../../../src/components/progress/types';
 
-// The canvas is off the public type (3.0.0, a contract reservation) and still
-// on the object: these tests look at what is drawn, so they read it through
-// the internal type.
+// The view is off the public type (3.0.0, a contract reservation) and still
+// on the object: these tests read what is drawn, so they read it through the
+// internal type.
 const createProgress = (config?: ProgressConfig): ProgressComponent & ProgressInternals =>
   create(config) as ProgressComponent & ProgressInternals;
 
-const shapes = (p: { canvas?: unknown }): Shape[] => recordings.get(p.canvas as HTMLCanvasElement) ?? [];
-// JSDOM lays nothing out: give every element the width a browser would
+// JSDOM lays nothing out: give every element the width a browser would (the
+// canvas measured its own box; the view measures its own, so the mock has to
+// reach SVG elements too — hence Element.prototype)
 let elementWidth = 200;
-dom.window.HTMLElement.prototype.getBoundingClientRect = function () {
+dom.window.Element.prototype.getBoundingClientRect = function () {
   return { width: elementWidth, height: 4, top: 0, left: 0, right: elementWidth, bottom: 4, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
 };
 const sized = (_p: unknown, width: number) => { elementWidth = width; };
+
+/** The drawing element a class names, in this view */
+const part = (p: ProgressInternals, name: string): SVGElement | null =>
+  p.view.querySelector(`.mtrl-progress__${name}`);
+
+/** An attribute of a drawing element, as the component wrote it */
+const attr = (p: ProgressInternals, name: string, attribute: string): string | null =>
+  part(p, name)?.getAttribute(attribute) ?? null;
 
 beforeEach(() => { frames = []; document.body.innerHTML = ''; });
 afterEach(() => { frames = []; });
 
 describe('progress', () => {
-  test('is a labelled progressbar with a canvas and the value in its aria attributes', () => {
+  test('is a labelled progressbar with an SVG view and the value in its aria attributes', () => {
     const progress = createProgress({ value: 42, ariaLabel: 'Loading news article' });
     const el = progress.element;
     expect(el.classList.contains('mtrl-progress')).toBe(true);
@@ -103,9 +75,10 @@ describe('progress', () => {
     expect(el.getAttribute('aria-valuemin')).toBe('0');
     expect(el.getAttribute('aria-valuemax')).toBe('100');
     expect(el.getAttribute('aria-valuenow')).toBe('42');
-    const canvas = el.querySelector('canvas')!;
-    expect(canvas.classList.contains('mtrl-progress__canvas')).toBe(true);
-    expect(canvas.getAttribute('aria-hidden')).toBe('true');
+    const view = el.querySelector('svg')!;
+    expect(view.classList.contains('mtrl-progress__view')).toBe(true);
+    expect(view.getAttribute('aria-hidden')).toBe('true');
+    expect(view.getAttribute('focusable')).toBe('false');
     expect(createProgress({}).element.getAttribute('aria-label')).toBe('Loading');
   });
 
@@ -138,59 +111,53 @@ describe('progress', () => {
     expect(progress.element.classList.contains('mtrl-progress--disabled')).toBe(false);
   });
 
-  test('linear: the canvas is as tall as the track, 10px when it waves', () => {
+  test('linear: the view is as tall as the track, 10px when it waves', () => {
     sized(null, 240);
     const flat = createProgress({});
-    expect(flat.canvas.style.height).toBe('4px');
-    // The layout width is the container's. The bitmap stays a fixed width, so
-    // the markup does not wait for a measurement.
-    expect(flat.canvas.style.width).toBe('100%');
-    expect(flat.canvas.width).toBe(2048);
-    expect(flat.canvas.height).toBe(4);
+    expect(flat.view.style.height).toBe('4px');
+    // The layout width is the container's; the geometry is fractions of the
+    // viewBox, so the markup does not wait for a measurement.
+    expect(flat.view.style.width).toBe('100%');
+    expect(flat.view.getAttribute('viewBox')).toBe('0 0 240 4');
 
     const thick = createProgress({ thickness: 'thick' });
-    expect(thick.canvas.style.height).toBe('8px');
+    expect(thick.view.style.height).toBe('8px');
+    expect(thick.view.getAttribute('viewBox')).toBe('0 0 240 8');
 
     // 3dp of wave above and below a 4dp track is the 10dp the tokens describe
     const wavy = createProgress({ shape: 'wavy' });
-    expect(wavy.canvas.style.height).toBe('10px');
+    expect(wavy.view.style.height).toBe('10px');
+    expect(wavy.view.getAttribute('viewBox')).toBe('0 0 240 10');
   });
 
-  test('the canvas is sized from the tokens before it has a box or a context', () => {
-    const original = dom.window.HTMLCanvasElement.prototype.getContext;
-    dom.window.HTMLCanvasElement.prototype.getContext = (() => null) as typeof original;
+  test('the view is sized from the tokens before it has a box', () => {
     sized(null, 0);
-    try {
-      const linear = createProgress({ value: 40 });
-      expect(linear.canvas.style.width).toBe('100%');
-      expect(linear.canvas.style.height).toBe('4px');
-      expect(linear.canvas.width).toBe(2048);
-      expect(linear.canvas.height).toBe(4);
+    const linear = createProgress({ value: 40 });
+    expect(linear.view.style.width).toBe('100%');
+    expect(linear.view.style.height).toBe('4px');
+    // No box yet: the viewBox keeps the drawing's stand-in width, as the
+    // canvas's fixed bitmap did
+    expect(linear.view.getAttribute('viewBox')).toBe('0 0 2048 4');
 
-      const circular = createProgress({ variant: 'circular', indeterminate: true });
-      expect(circular.canvas.style.width).toBe('40px');
-      expect(circular.canvas.style.height).toBe('40px');
-      expect(circular.canvas.width).toBe(40);
-      expect(circular.canvas.height).toBe(40);
+    const circular = createProgress({ variant: 'circular', indeterminate: true });
+    expect(circular.view.style.width).toBe('40px');
+    expect(circular.view.style.height).toBe('40px');
+    expect(circular.view.getAttribute('viewBox')).toBe('0 0 40 40');
 
-      const wavy = createProgress({ variant: 'circular', shape: 'wavy' });
-      expect(wavy.canvas.style.width).toBe('48px');
-      expect(wavy.canvas.height).toBe(48);
+    const wavy = createProgress({ variant: 'circular', shape: 'wavy' });
+    expect(wavy.view.style.width).toBe('48px');
+    expect(wavy.view.getAttribute('viewBox')).toBe('0 0 48 48');
 
-      const thick = createProgress({ thickness: 'thick', shape: 'wavy' });
-      expect(thick.canvas.style.height).toBe('20px');
-      expect(thick.canvas.height).toBe(20);
-    } finally {
-      dom.window.HTMLCanvasElement.prototype.getContext = original;
-      sized(null, 200);
-    }
+    const thick = createProgress({ thickness: 'thick', shape: 'wavy' });
+    expect(thick.view.style.height).toBe('20px');
+    expect(thick.view.getAttribute('viewBox')).toBe('0 0 2048 20');
   });
 
   test('circular: 40px flat, 48px wavy, and anywhere from 24 to 240 on request', () => {
-    expect(createProgress({ variant: 'circular' }).canvas.style.width).toBe('40px');
-    expect(createProgress({ variant: 'circular', shape: 'wavy' }).canvas.style.width).toBe('48px');
+    expect(createProgress({ variant: 'circular' }).view.style.width).toBe('40px');
+    expect(createProgress({ variant: 'circular', shape: 'wavy' }).view.style.width).toBe('48px');
     const sizable = createProgress({ variant: 'circular', size: 96 });
-    expect(sizable.canvas.style.width).toBe('96px');
+    expect(sizable.view.style.width).toBe('96px');
     expect(sizable.getSize()).toBe(96);
     sizable.setSize(500);
     expect(sizable.getSize()).toBe(240);
@@ -198,70 +165,154 @@ describe('progress', () => {
     expect(sizable.getSize()).toBe(24);
   });
 
+  // The same windows the canvas drew, written as x and width: the round
+  // caps' overshoot is inside them (value 50 of a 200px track puts the
+  // indicator's window at 0…102 and the track's at 106…200, a 4dp gap plus
+  // the stroke between)
   test('linear determinate: an indicator, a gap, the track, and the stop dot', () => {
     sized(null, 200);
     const progress = createProgress({ value: 50 });
-    const drawn = shapes(progress);
-    const lines = drawn.filter((s) => s.kind === 'line');
-    expect(lines.length).toBe(2);
-    // the track comes first, then the indicator over it
-    const [track, indicator] = lines as [Shape, Shape];
-    expect(indicator.color).not.toBe(track.color);
-    expect(indicator.at[0]).toBeCloseTo(2, 0); // the round cap keeps its end inside
-    expect(indicator.at[1]).toBeCloseTo(100, 0);
-    // a 4dp gap plus the stroke separates the two
-    expect(track.at[0] - indicator.at[1]).toBeCloseTo(8, 0);
-    expect(track.at[1]).toBeCloseTo(198, 0);
-    // and the end of the track is marked
-    expect(drawn.some((s) => s.kind === 'dot')).toBe(true);
+    expect(attr(progress, 'indicator', 'x')).toBe('0.00');
+    expect(attr(progress, 'indicator', 'width')).toBe('102.00');
+    expect(attr(progress, 'track', 'x')).toBe('106.00');
+    expect(attr(progress, 'track', 'width')).toBe('94.00');
+    expect(attr(progress, 'stop', 'cx')).toBe('198.00');
+    expect(attr(progress, 'stop', 'r')).toBe('2.00');
+  });
+
+  test('the buffer sits between the indicator and the end of the track', () => {
+    sized(null, 200);
+    const progress = createProgress({ value: 30, buffer: 60 });
+    expect(attr(progress, 'buffer', 'x')).toBe('66.00');
+    expect(attr(progress, 'buffer', 'width')).toBe('56.00');
+    expect(attr(progress, 'indicator', 'width')).toBe('62.00');
+    expect(attr(progress, 'track', 'x')).toBe('66.00');
+  });
+
+  test('at the ends of the range, the part that says nothing is not drawn', () => {
+    sized(null, 200);
+    const empty = createProgress({ value: 0 });
+    expect(attr(empty, 'indicator', 'width')).toBe('0');
+    expect(attr(empty, 'track', 'width')).toBe('200.00');
+
+    const full = createProgress({ value: 100 });
+    expect(attr(full, 'indicator', 'width')).toBe('200.00');
+    expect(attr(full, 'track', 'width')).toBe('0');
   });
 
   test('the stop indicator can be turned off, and never shows while indeterminate', () => {
     sized(null, 200);
     const without = createProgress({ value: 50, showStopIndicator: false });
-    expect(shapes(without).some((s) => s.kind === 'dot')).toBe(false);
+    expect(attr(without, 'stop', 'r')).toBe('0');
 
     const indeterminate = createProgress({ indeterminate: true });
-    expect(shapes(indeterminate).some((s) => s.kind === 'dot')).toBe(false);
+    expect(part(indeterminate, 'stop')).toBeNull();
   });
 
+  // The arc starts at 12 o'clock and the track clears both its ends: the
+  // same dash and offset arithmetic, written as attributes (pathLength 100)
   test('circular determinate: the arc starts at 12 o\'clock and the track clears both its ends', () => {
     const progress = createProgress({ variant: 'circular', value: 25 });
-    const arcs = shapes(progress).filter((s) => s.kind === 'arc');
-    expect(arcs.length).toBe(2);
-    const [track, indicator] = arcs as [Shape, Shape];
-    expect(indicator.at[0]).toBeCloseTo(-Math.PI / 2, 5);
-    expect(indicator.at[1]).toBeCloseTo(Math.PI / 2, 5); // a quarter of the circle
-    // the track starts after the arc plus a gap and stops a gap before it
-    expect(track.at[0]).toBeGreaterThan(indicator.at[0] + indicator.at[1]);
-    expect(track.at[1]).toBeLessThan(2 * Math.PI - indicator.at[1]);
+    expect(attr(progress, 'indicator', 'stroke-dasharray')).toBe('25.000 100');
+    expect(attr(progress, 'track', 'stroke-dasharray')).toBe('62.268 100');
+    expect(attr(progress, 'track', 'stroke-dashoffset')).toBe('-31.366');
+
+    const empty = createProgress({ variant: 'circular', value: 0 });
+    expect(attr(empty, 'indicator', 'stroke-dasharray')).toBe('0 100');
+    expect(attr(empty, 'track', 'stroke-dasharray')).toBe('100.000 100');
+
+    const full = createProgress({ variant: 'circular', value: 100 });
+    expect(attr(full, 'indicator', 'stroke-dasharray')).toBe('100.000 100');
+    expect(attr(full, 'track', 'stroke-dasharray')).toBe('0 100');
   });
 
-  // M3 shows the indeterminate indicator on a fixed track too; it
-  // turns with the arc and clears both of its ends, at every frame.
-  test('a circular indeterminate indicator keeps its track, clear of both ends of the arc, as it turns', () => {
+  test('circular indeterminate: the rotors and the parts are in the view, and nothing is written', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
-    for (const time of [0, 350, 700, 1333, 2200, 4100]) {
-      flush(time);
-      const arcs = shapes(progress).filter((s) => s.kind === 'arc');
-      expect(arcs.length).toBe(2);
-      const [track, indicator] = arcs as [Shape, Shape];
-      expect(track.color).not.toBe(indicator.color);
-      const arcEnd = indicator.at[0] + indicator.at[1];
-      // the track starts a gap after the arc's end and stops a gap before its start
-      expect(track.at[0]).toBeGreaterThan(arcEnd);
-      expect(track.at[0] + track.at[1]).toBeLessThan(indicator.at[0] + 2 * Math.PI);
-      // the two gaps are the same
-      expect(track.at[0] - arcEnd).toBeCloseTo(indicator.at[0] + 2 * Math.PI - (track.at[0] + track.at[1]), 5);
+    const view = progress.view;
+    const dial = view.querySelector('.mtrl-progress__dial')!;
+    expect(dial.getAttribute('transform')).toBe('rotate(-90 20 20)');
+    const spin = dial.querySelector(':scope > .mtrl-progress__spin')!;
+    const kick = spin.querySelector(':scope > .mtrl-progress__kick')!;
+    // the geometry is the stylesheet's now: no dash attributes, the parts'
+    // pathLength is what its percentages are of
+    const track = kick.querySelector(':scope > .mtrl-progress__track')!;
+    const indicator = kick.querySelector(':scope > .mtrl-progress__indicator')!;
+    expect(track.getAttribute('pathLength')).toBe('100');
+    expect(indicator.getAttribute('pathLength')).toBe('100');
+    expect(track.getAttribute('stroke-dasharray')).toBeNull();
+    expect(indicator.getAttribute('stroke-dasharray')).toBeNull();
+  });
+
+  test('linear indeterminate: the five parts of the two-bar motion', () => {
+    const progress = createProgress({ indeterminate: true });
+    const view = progress.view;
+    // the track ahead of the first head, the two bars, the track between
+    // them and the track behind the second tail
+    expect(view.querySelectorAll('rect')).toHaveLength(5);
+    expect(part(progress, 'ahead')).not.toBeNull();
+    expect(part(progress, 'between')).not.toBeNull();
+    expect(part(progress, 'behind')).not.toBeNull();
+    expect(part(progress, 'bar-first')!.tagName).toBe('rect');
+    expect(part(progress, 'bar-second')!.tagName).toBe('rect');
+  });
+
+  test('a wavy indeterminate draws one pattern, carried by two clipped windows', () => {
+    const progress = createProgress({ indeterminate: true, shape: 'wavy' });
+    const view = progress.view;
+    const pattern = view.querySelector('.mtrl-progress__wave-def')!;
+    expect(pattern.getAttribute('d')).toMatch(/^M -?\d/);
+    const id = pattern.getAttribute('id')!;
+    for (const bar of ['bar-first', 'bar-second']) {
+      const group = part(progress, bar)!;
+      expect(group.tagName.toLowerCase()).toBe('g');
+      const clip = group.querySelector('clipPath rect.mtrl-progress__wave-window');
+      expect(clip).not.toBeNull();
+      const use = group.querySelector('.mtrl-progress__wave-travel use');
+      expect(use?.getAttribute('href')).toBe(`#${id}`);
     }
   });
 
-  test('a wavy indeterminate indicator waves its arc, never its track', () => {
-    const progress = createProgress({ variant: 'circular', indeterminate: true, shape: 'wavy' });
-    flush(500);
-    const drawn = shapes(progress);
-    expect(drawn.filter((s) => s.kind === 'arc').length).toBe(1); // the flat track
-    expect(drawn.filter((s) => s.kind === 'line').length).toBe(1); // the waved arc
+  test('a wavy determinate indicator is a moving path clipped to its window', () => {
+    sized(null, 200);
+    const progress = createProgress({ value: 50, shape: 'wavy' });
+    const path = part(progress, 'indicator')!;
+    expect(path.tagName.toLowerCase()).toBe('path');
+    // two wavelengths of travel either side of the box (λ = 40 determinate);
+    // flat at first — the amplitude fades in over 500ms, as the canvas's did
+    expect(path.getAttribute('d')).toMatch(/^M -80/);
+    expect(path.getAttribute('clip-path')).toMatch(/^url\(#/);
+    const window = progress.view.querySelector('rect.mtrl-progress__wave-window')!;
+    // the window is the indicator's extent: value 50's [0, 102]
+    expect(window.getAttribute('x')).toBe('0.00');
+    expect(window.getAttribute('width')).toBe('102.00');
+  });
+
+  // The component reads the window's clock; the frames are flushed on it too
+  const now = (): number => dom.window.performance.now();
+
+  test('a value change tweens through the same frames the canvas drew', () => {
+    sized(null, 200);
+    const progress = createProgress({ value: 50 });
+    const t0 = now();
+    progress.setValue(60);
+    // the canvas tween: linear, half way at half the 500ms (the tween's own
+    // start is a fraction of a ms after t0, so allow the hair of skew)
+    flush(t0 + 250);
+    expect(parseFloat(attr(progress, 'indicator', 'width'))).toBeCloseTo(112, 1); // (50 + 60) / 2 → 55%
+    flush(t0 + 500);
+    expect(parseFloat(attr(progress, 'indicator', 'width'))).toBeCloseTo(122, 1); // 60%
+  });
+
+  test('a retarget while the tween runs picks the new target up from where it is', () => {
+    sized(null, 200);
+    const progress = createProgress({ value: 50 });
+    const t0 = now();
+    progress.setValue(60);
+    progress.setValue(80); // the running tween takes it, from the same start
+    flush(t0 + 250);
+    expect(parseFloat(attr(progress, 'indicator', 'width'))).toBeCloseTo(132, 1); // 50 + 30/2 → 65%
+    flush(t0 + 500);
+    expect(parseFloat(attr(progress, 'indicator', 'width'))).toBeCloseTo(162, 1); // 80%
   });
 
   test('values are clamped, reported and announced', () => {
@@ -306,15 +357,15 @@ describe('progress', () => {
     const progress = createProgress({ value: 50 });
     progress.setThickness('thick');
     expect(progress.getThickness()).toBe(8);
-    expect(progress.canvas.style.height).toBe('8px');
+    expect(progress.view.style.height).toBe('8px');
     progress.setShape('wavy');
     expect(progress.getShape()).toBe('wavy');
-    expect(progress.canvas.style.height).toBe('20px'); // 8 + 2 * 6
+    expect(progress.view.style.height).toBe('20px'); // 8 + 2 * 6
     progress.setShape('flat');
-    expect(progress.canvas.style.height).toBe('8px');
+    expect(progress.view.style.height).toBe('8px');
   });
 
-  test('the label is optional and sits outside the canvas', () => {
+  test('the label is optional and sits outside the view', () => {
     const progress = createProgress({ value: 42, showLabel: true });
     const label = progress.element.querySelector('.mtrl-progress__label');
     expect(label?.textContent).toBe('42%');
@@ -325,10 +376,14 @@ describe('progress', () => {
     expect(createProgress({ value: 1 }).element.querySelector('.mtrl-progress__label')).toBeNull();
   });
 
-  test('hiding stops the animation and marks the element hidden', () => {
-    const progress = createProgress({ indeterminate: true });
+  // The indeterminate motion is the stylesheet's now: hiding it takes the
+  // element out of the layout (which pauses the animations) and cancels the
+  // script tweens; no frames are asked for again until a value changes
+  test('hiding stops the script tweens, marks the element hidden, and shows again', () => {
+    const progress = createProgress({ value: 10 });
     document.body.appendChild(progress.element);
     expect(progress.isVisible()).toBe(true);
+    progress.setValue(50); // a running tween
     progress.hide();
     expect(progress.element.hasAttribute('hidden')).toBe(true);
     expect(progress.isVisible()).toBe(false);
@@ -337,7 +392,12 @@ describe('progress', () => {
     expect(frames.length).toBe(0);
     progress.show();
     expect(progress.isVisible()).toBe(true);
-    expect(frames.length).toBeGreaterThan(0);
+    // and an indeterminate one asks for no frames at all: the motion is CSS
+    const indeterminate = createProgress({ indeterminate: true });
+    document.body.appendChild(indeterminate.element);
+    frames = [];
+    flush();
+    expect(frames.length).toBe(0);
   });
 
   test('destroy stops everything and removes the element', () => {
@@ -351,50 +411,30 @@ describe('progress', () => {
   });
 });
 
-// The colours are the theme where the indicator sits, not only the
-// page's. JSDOM does not inherit custom properties, so the section's tokens
-// are set on the indicator's own element here; in a browser they inherit from
-// any ancestor or shadow host (scripts/check-elements.ts samples the pixels,
-// and checks the redraw on a theme change of the section; the theme observer
-// is a module singleton bound to the first test file's document, so that is
-// checked in test/core/utils.theme.test.ts and in the browser, not here).
-describe('progress draws the theme of the section it is in', () => {
-  const root = document.documentElement.style;
-  beforeEach(() => {
-    root.setProperty('--mtrl-sys-color-primary', '#6750a4');
-    root.setProperty('--mtrl-sys-color-secondary-container', '#e8def8');
-  });
-  afterEach(() => {
-    root.removeProperty('--mtrl-sys-color-primary');
-    root.removeProperty('--mtrl-sys-color-secondary-container');
-  });
-  const dark = (el: HTMLElement): void => {
-    el.style.setProperty('--mtrl-sys-color-primary', '#d0bcff');
-    el.style.setProperty('--mtrl-sys-color-secondary-container', '#4a4458');
-  };
-  const colours = (p: { canvas?: unknown }): string[] => [...new Set(shapes(p).map((s) => s.color))].sort();
-
-  test('a themed section, with :root light: the indicator and track take its colours', () => {
-    for (const variant of ['linear', 'circular'] as const) {
-      const progress = createProgress({ variant, value: 50 });
-      dark(progress.element);
-      document.body.appendChild(progress.element);
-      progress.setValue(60);
-      flush(performance.now() + 5000);
-      expect(colours(progress)).toEqual(['#4a4458', '#d0bcff']);
-      progress.destroy();
+// The colours are the stylesheet's now — the parts carry no colour of their
+// own, and the sheet maps the theme roles onto them (test/styles/progress.ts
+// pins that mapping; scripts/check-elements.ts samples the computed colours
+// in a browser, where the roles inherit from the section or shadow host, and
+// checks a theme switch repaints through them).
+describe('the colours come from the theme where the view sits', () => {
+  test('no part carries a colour: no fill or stroke attribute, no inline colour', () => {
+    sized(null, 200);
+    for (const config of [
+      { value: 50 },
+      { indeterminate: true },
+      { variant: 'circular' as const, value: 50 },
+      { variant: 'circular' as const, indeterminate: true },
+      { value: 50, shape: 'wavy' as const },
+    ]) {
+      const progress = createProgress(config);
+      for (const node of progress.view.querySelectorAll('*')) {
+        expect(node.hasAttribute('fill')).toBe(false);
+        expect(node.hasAttribute('stroke')).toBe(false);
+      }
+      expect(progress.view.style.color).toBe('');
+      expect(progress.view.style.fill).toBe('');
+      expect(progress.view.style.stroke).toBe('');
     }
-  });
-
-  test('detached, it draws the fallbacks and reads its theme once attached', () => {
-    const progress = createProgress({ variant: 'circular', value: 50 });
-    dark(progress.element);
-    expect(colours(progress)).toEqual(['#6750A4', '#E8DEF8']);
-    document.body.appendChild(progress.element);
-    progress.setValue(60);
-    flush(performance.now() + 5000);
-    expect(colours(progress)).toEqual(['#4a4458', '#d0bcff']);
-    progress.destroy();
   });
 });
 

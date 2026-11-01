@@ -44,6 +44,25 @@ export const PROGRESS_CLASSES = {
   DISABLED: "progress--disabled",
   TEST: "progress--test",
   TRANSITION: "progress--transition",
+  /** The SVG the indicator is drawn in */
+  VIEW: "progress__view",
+  /** The dot that marks the end of a linear determinate track */
+  STOP: "progress__stop",
+  /** The five parts of an indeterminate linear indicator */
+  AHEAD: "progress__ahead",
+  BETWEEN: "progress__between",
+  BEHIND: "progress__behind",
+  BAR_FIRST: "progress__bar-first",
+  BAR_SECOND: "progress__bar-second",
+  /** The wave: the shared pattern, its moving group, and its window's clip */
+  WAVE: "progress__wave",
+  WAVE_DEF: "progress__wave-def",
+  WAVE_WINDOW: "progress__wave-window",
+  WAVE_TRAVEL: "progress__wave-travel",
+  /** The circular rotors: the dial is static, spin and kick animate */
+  DIAL: "progress__dial",
+  SPIN: "progress__spin",
+  KICK: "progress__kick",
 } as const;
 
 /**

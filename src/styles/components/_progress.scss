@@ -1,8 +1,12 @@
 // src/styles/components/_progress.scss
 //
-// Progress indicator. The indicator itself is drawn on a canvas, which reads
-// its colours from the theme, so this stylesheet only lays the element out:
-// the 4dp inset from the container edge that the guidelines ask for, the
+// Progress indicator. The indicator is drawn in an SVG view this sheet
+// styles: a determinate bar's extents and a circular arc's dash are written
+// as attributes by the component, and the indeterminate motion is CSS
+// animation on the drawing elements — the same positions, easings and
+// timings the M3 progress guidelines specify (m3.material.io,
+// components/progress-indicators). The sheet also lays the element out: the
+// 4dp inset from the container edge that the guidelines ask for, the
 // optional label, and the hidden and disabled states.
 @use "../../styles/abstract/base" as base;
 @use "../../styles/abstract/variables" as v;
@@ -12,10 +16,26 @@
 
 $component: "#{base.$prefix}-progress";
 
+// Head and tail positions of the indeterminate linear parts, as percentages
+// of the track. Registered so keyframes can interpolate them; inherited so a
+// wavy bar's group can carry them for its clip rect.
+@property --#{$component}-l { syntax: "<percentage>"; inherits: true; initial-value: 0%; }
+@property --#{$component}-r { syntax: "<percentage>"; inherits: true; initial-value: 0%; }
+// The circular indeterminate indicator's active sweep, in pathLength units
+// (100 is a full turn). Starts at the guidelines' minimum of 10%.
+@property --#{$component}-sweep { syntax: "<number>"; inherits: true; initial-value: 10; }
+
+// The drawing reads these lengths, which the component writes on the view as
+// inline custom properties: the stroke thickness (--stroke), its rounded cap
+// radius (--cap), the gap between indicator and track as a percentage of the
+// track (--gapp, linear) or of the circle's pathLength (--gap100, circular),
+// the wave's amplitude and wavelength (--amp, --wavelength), the circular
+// size (--size) and the wave's per-second rotation around it (--wave-rot).
+
 .#{$component} {
   position: relative;
   display: block;
-  // The canvas is the only child and defines the height; without this the
+  // The view is the only child and defines the height; without this the
   // line box adds a few pixels under it
   line-height: 0;
 
@@ -23,9 +43,26 @@ $component: "#{base.$prefix}-progress";
     display: none;
   }
 
-  &__canvas {
+  // ---------------------------------------------------------------------------
+  // The SVG view the indicator is drawn in
+  // ---------------------------------------------------------------------------
+  &__view {
     display: block;
     max-width: 100%;
+    // The rounded caps and the wave's travel overshoot the track; the view
+    // clips them at the element's box, as the canvas's bitmap did
+    overflow: hidden;
+  }
+
+  // The rotors. The dial holds the -90° start angle; spin and kick turn the
+  // circular indicator; wave-travel moves the wave inside its window. CSS
+  // transforms on SVG groups need the box and origin spelled out.
+  &__dial,
+  &__spin,
+  &__kick,
+  &__wave-travel {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
   }
 
   // ---------------------------------------------------------------------------
@@ -38,7 +75,7 @@ $component: "#{base.$prefix}-progress";
   }
 
   // ---------------------------------------------------------------------------
-  // Circular: sized by the canvas
+  // Circular: sized by the view
   // ---------------------------------------------------------------------------
   &--circular {
     display: inline-flex;
@@ -46,6 +83,63 @@ $component: "#{base.$prefix}-progress";
     justify-content: center;
     vertical-align: middle;
   }
+
+  // ---------------------------------------------------------------------------
+  // The drawing parts, linear: filled bars. A bar sits in the middle of the
+  // view's height (a wavy view is taller than the stroke) and is rounded by
+  // its cap radius, as the canvas's rounded rectangles were.
+  // ---------------------------------------------------------------------------
+  rect#{&}__track,
+  rect#{&}__buffer,
+  rect#{&}__indicator,
+  rect#{&}__ahead,
+  rect#{&}__between,
+  rect#{&}__behind,
+  rect#{&}__bar-first,
+  rect#{&}__bar-second {
+    y: calc((100% - var(--#{$component}-stroke)) / 2);
+    height: var(--#{$component}-stroke);
+    rx: var(--#{$component}-cap);
+  }
+
+  // The window a wave is clipped to spans the view's full height; its x and
+  // width are the bar's, written by the component (determinate) or derived
+  // with the parts below (indeterminate)
+  rect#{&}__wave-window {
+    y: 0;
+    height: 100%;
+  }
+
+  // A wave is drawn once as a path and moved by its travel group, so it is
+  // stroked rather than filled — on the path itself and on the group a wavy
+  // indeterminate bar carries it with (the stroke inherits into the
+  // referenced pattern)
+  path#{&}__indicator,
+  g#{&}__indicator,
+  &__wave {
+    fill: none;
+    stroke-width: var(--#{$component}-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  // The pattern in defs is never rendered directly, and a stroke set on it
+  // would win over the stroke its clones inherit from the bar that
+  // references them — so it sets none
+  &__wave-def {
+    fill: none;
+  }
+
+  // Colours (ProgressIndicatorTokens): the active indicator and the stop
+  // indicator take primary, the track secondary-container. The buffer is
+  // this library's own extension and takes primary-container.
+  rect#{&}__track { fill: t.color("secondary-container"); }
+  &__buffer { fill: t.color("primary-container"); }
+  rect#{&}__indicator { fill: t.color("primary"); }
+  g#{&}__indicator,
+  path#{&}__indicator,
+  &__wave { stroke: t.color("primary"); }
+  &__stop { fill: t.color("primary"); }
 
   // ---------------------------------------------------------------------------
   // Label, an extension of this library rather than an M3 element
@@ -90,5 +184,264 @@ $component: "#{base.$prefix}-progress";
 
   @include m.print {
     display: none;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The drawing parts, circular: stroked circles and arcs, pathLength 100 so
+// the dash values are percentages of the circle
+// ---------------------------------------------------------------------------
+.#{$component}--circular .#{$component}__track,
+.#{$component}--circular .#{$component}__indicator {
+  fill: none;
+  stroke-width: var(--#{$component}-stroke);
+  stroke-linecap: round;
+}
+
+.#{$component}--circular .#{$component}__track { stroke: t.color("secondary-container"); }
+.#{$component}--circular .#{$component}__indicator { stroke: t.color("primary"); }
+
+// The circles sit at the radius the wave leaves them: the view's size,
+// less half the stroke, less the wave's amplitude (zero unless wavy)
+.#{$component}--circular circle.#{$component}__track,
+.#{$component}--circular circle.#{$component}__indicator {
+  r: calc((var(--#{$component}-size) - var(--#{$component}-stroke)) / 2 - var(--#{$component}-amp, 0px));
+}
+
+// The circular indeterminate sweep: the indicator runs from the
+// guidelines' minimum of 10 to their maximum of 87 and back, and the track
+// is what remains of the circle, held a gap away on both sides of the arc
+// — the same dash and offset arithmetic the canvas drew, read live from
+// the animated sweep
+.#{$component}--circular.#{$component}--indeterminate .#{$component}__indicator {
+  stroke-dasharray: var(--#{$component}-sweep) 100;
+}
+
+.#{$component}--circular.#{$component}--indeterminate .#{$component}__track {
+  stroke-dasharray: max(0, calc(100 - var(--#{$component}-sweep) - 2 * min(var(--#{$component}-sweep), var(--#{$component}-gap100)))) 100;
+  stroke-dashoffset: calc(-1 * (var(--#{$component}-sweep) + min(var(--#{$component}-sweep), var(--#{$component}-gap100))));
+}
+
+// ---------------------------------------------------------------------------
+// The indeterminate linear parts: two bars crossing a track, per the M3
+// motion. Each part's head and tail are --l and --r; x and width are
+// derived from them with the same clamps the canvas applied to its
+// windows, so every frame the sheet composes is the frame the canvas
+// drew:
+//   x = max(0, min(min(l, r) - cap, 100% - 2·cap))
+//   width = clamp(max(l, r) + cap) - x, or 0 when the canvas's guard
+//           failed — the second min() operand is 0 exactly then
+// ---------------------------------------------------------------------------
+.#{$component}--indeterminate .#{$component}__ahead,
+.#{$component}--indeterminate .#{$component}__bar-first,
+.#{$component}--indeterminate .#{$component}__between,
+.#{$component}--indeterminate .#{$component}__bar-second,
+.#{$component}--indeterminate .#{$component}__behind,
+.#{$component}--indeterminate rect.#{$component}__wave-window {
+  x: max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))));
+
+  // The window spans from its left edge to its right edge, unless the
+  // guard killed it: a head-tail span that ended (bars, and the track
+  // ahead of the first head)
+  width: min(
+    calc(
+      min(calc(max(var(--#{$component}-l), var(--#{$component}-r)) + var(--#{$component}-cap)), 100%) -
+      max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))))
+    ),
+    calc((var(--#{$component}-r) - var(--#{$component}-l)) * 100)
+  );
+
+  // Rest pose, the frame the canvas drew at t=0: the track ahead of the
+  // first head is the whole track; every other part is nothing
+  --#{$component}-l: 0%;
+  --#{$component}-r: 0%;
+}
+
+.#{$component}--indeterminate .#{$component}__ahead {
+  --#{$component}-r: 100%;
+}
+
+// The between and behind tracks are guarded by their tail instead: the
+// canvas drew neither until the tail it tracks left the start
+.#{$component}--indeterminate .#{$component}__between,
+.#{$component}--indeterminate .#{$component}__behind {
+  width: min(
+    calc(
+      min(calc(max(var(--#{$component}-l), var(--#{$component}-r)) + var(--#{$component}-cap)), 100%) -
+      max(0px, min(calc(min(var(--#{$component}-l), var(--#{$component}-r)) - var(--#{$component}-cap)), calc(100% - 2 * var(--#{$component}-cap))))
+    ),
+    calc(var(--#{$component}-r) * 100)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Right to left: a linear indicator mirrors, so a value fills from the other
+// end, exactly as the canvas drew it. The circular indicator does not
+// mirror. A mirrored wave still travels to the right of the screen, so its
+// travel is reversed to cancel the mirror.
+// ---------------------------------------------------------------------------
+@include m.rtl-selector(".#{$component}--linear .#{$component}__view") {
+  transform: scaleX(-1);
+}
+
+@include m.rtl-selector(".#{$component}--linear .#{$component}__wave-travel") {
+  animation-direction: reverse;
+}
+
+// ---------------------------------------------------------------------------
+// The indeterminate motion, the M3 progress timelines as keyframes. Durations
+// and curves pair with PROGRESS_MOTION and PROGRESS_EASING in the component's
+// constants: the linear cycle is 1750ms with each edge on its own
+// delay-and-duration schedule, the circular cycle 6000ms of global spin plus
+// a 90° kick every 1500ms eased decelerate and a sweep that runs 10 → 87 → 10,
+// and the wave travels one wavelength per second.
+//
+// Scoped to no-preference: under reduced motion the parts keep the rest pose
+// above instead — the frame the canvas's draw(0) left on screen.
+// ---------------------------------------------------------------------------
+@media (prefers-reduced-motion: no-preference) {
+  // The linear parts. Percentages are of the 1750ms cycle:
+  //   first head     0 → 1000ms     0%      → 57.142857%
+  //   first tail     250 → 1250ms   14.285714% → 71.428571%
+  //   second head    650 → 1500ms   37.142857% → 85.714286%
+  //   second tail    900 → 1750ms   51.428571% → 100%
+  // Each edge eases emphasized-accelerate from the keyframe that starts it.
+  // Two pairs jump (0.001% ≈ 0.02ms): the second head's window opens at the
+  // gap the instant the head leaves the start, and the between track's end
+  // snaps from a gap before the end to the end when the first tail reaches
+  // it, as the canvas's branch picked those values stepwise.
+  .#{$component}--indeterminate {
+    .#{$component}__ahead {
+      animation: #{$component}-ahead-head 1750ms infinite;
+    }
+
+    .#{$component}__bar-first {
+      animation:
+        #{$component}-first-tail 1750ms infinite,
+        #{$component}-first-head 1750ms infinite;
+    }
+
+    .#{$component}__between {
+      animation:
+        #{$component}-between-head 1750ms infinite,
+        #{$component}-between-tail 1750ms infinite;
+    }
+
+    .#{$component}__bar-second {
+      animation:
+        #{$component}-second-tail 1750ms infinite,
+        #{$component}-second-head 1750ms infinite;
+    }
+
+    .#{$component}__behind {
+      animation: #{$component}-behind-tail 1750ms infinite;
+    }
+  }
+
+  // The circular rotors: 1080° of global spin over the 6000ms cycle, and a
+  // 90° kick every 1500ms taking 300ms, eased decelerate
+  .#{$component}--indeterminate .#{$component}__spin {
+    animation: #{$component}-spin 6000ms infinite linear;
+  }
+
+  .#{$component}--indeterminate .#{$component}__kick {
+    animation:
+      #{$component}-kick 6000ms infinite,
+      #{$component}-sweep 6000ms infinite;
+  }
+
+  // The wave travels one wavelength per second, to the right. A circular
+  // wave travels around the ring instead: one wavelength as an angle.
+  .#{$component}__wave-travel {
+    animation: #{$component}-travel 1000ms infinite linear;
+  }
+
+  .#{$component}--circular .#{$component}__wave-travel {
+    animation-name: #{$component}-travel-ring;
+  }
+
+  // --l / --r keyframes: head is the leading edge, tail the trailing. The
+  // head of the track ahead of the first bar runs a gap past each edge; the
+  // between track's head runs a gap past the end and its tail stops a gap
+  // short of it, as the canvas inset both from their neighbours.
+  @keyframes #{$component}-ahead-head {
+    0% { --#{$component}-l: calc(var(--#{$component}-gapp) * 1%); animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    57.142857% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
+    100% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
+  }
+
+  @keyframes #{$component}-first-head {
+    0% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    57.142857% { --#{$component}-r: 100%; }
+    100% { --#{$component}-r: 100%; }
+  }
+
+  @keyframes #{$component}-first-tail {
+    0%, 14.285714% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    71.428571% { --#{$component}-l: 100%; }
+    100% { --#{$component}-l: 100%; }
+  }
+
+  @keyframes #{$component}-between-head {
+    0%, 37.142857% { --#{$component}-l: 0%; }
+    37.143% { --#{$component}-l: calc(var(--#{$component}-gapp) * 1%); animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    85.714286% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
+    100% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
+  }
+
+  @keyframes #{$component}-between-tail {
+    0%, 14.285714% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    71.428571% { --#{$component}-r: calc(100% - var(--#{$component}-gapp) * 1%); }
+    71.43% { --#{$component}-r: 100%; }
+    100% { --#{$component}-r: 100%; }
+  }
+
+  @keyframes #{$component}-second-head {
+    0%, 37.142857% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    85.714286% { --#{$component}-r: 100%; }
+    100% { --#{$component}-r: 100%; }
+  }
+
+  @keyframes #{$component}-second-tail {
+    0%, 51.428571% { --#{$component}-l: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    100% { --#{$component}-l: 100%; }
+  }
+
+  @keyframes #{$component}-behind-tail {
+    0%, 51.428571% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    100% { --#{$component}-r: calc(100% - var(--#{$component}-gapp) * 1%); }
+  }
+
+  // The circular kick: 90° every 1500ms, each rise taking 300ms
+  @keyframes #{$component}-kick {
+    0% { rotate: 0deg; animation-timing-function: v.motion("easing-emphasized-decelerate"); }
+    5% { rotate: 90deg; }
+    25% { rotate: 90deg; animation-timing-function: v.motion("easing-emphasized-decelerate"); }
+    30% { rotate: 180deg; }
+    50% { rotate: 180deg; animation-timing-function: v.motion("easing-emphasized-decelerate"); }
+    55% { rotate: 270deg; }
+    75% { rotate: 270deg; animation-timing-function: v.motion("easing-emphasized-decelerate"); }
+    80% { rotate: 360deg; }
+    100% { rotate: 360deg; }
+  }
+
+  @keyframes #{$component}-spin {
+    to { rotate: 1080deg; }
+  }
+
+  // The sweep: linear out to the maximum, standard easing back to the
+  // minimum, both in half the cycle
+  @keyframes #{$component}-sweep {
+    0% { --#{$component}-sweep: 10; animation-timing-function: linear; }
+    50% { --#{$component}-sweep: 87; animation-timing-function: v.motion("easing-standard"); }
+    100% { --#{$component}-sweep: 10; }
+  }
+
+  @keyframes #{$component}-travel {
+    to { translate: var(--#{$component}-wavelength) 0; }
+  }
+
+  @keyframes #{$component}-travel-ring {
+    to { rotate: var(--#{$component}-wave-rot); }
   }
 }
