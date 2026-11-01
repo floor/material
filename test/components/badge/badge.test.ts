@@ -10,6 +10,9 @@
 // ARIA of the variant it left, so a small badge switched to large still carried
 // aria-hidden="true" and its count never reached assistive technology; and
 // removeClass() threw, forwarding to a method the composed badge never had.
+// A third defect, fixed later: the dot carried no accessible name and was
+// aria-hidden, so a non-counting badge never announced "New notification" as
+// the accessibility page asks; its label is now its announcement.
 //
 // Deliberately not asserted, because each is open: a badge created with label 0
 // or no label is visible where setLabel(0) and setLabel('') hide it; a numeric
@@ -65,14 +68,28 @@ describe('badge defaults', () => {
 });
 
 describe('badge variants', () => {
-  test('a small badge is a decorative dot without text', () => {
+  test('a small badge is a dot that announces New notification', () => {
+    // "Any numerical badges will have their number read, while non-counting
+    // badges will simply announce New notification" (m3.material.io/
+    // components/badges/accessibility, read 2026-11-01).
     const badge = createBadge({ variant: 'small', label: 7 });
     expect(has(badge, 'small')).toBe(true);
     expect(badge.getLabel()).toBe('');
-    expect(badge.element.getAttribute('aria-hidden')).toBe('true');
-    expect(badge.element.hasAttribute('role')).toBe(false);
+    expect(badge.element.getAttribute('role')).toBe('status');
+    expect(badge.element.getAttribute('aria-label')).toBe('New notification');
+    expect(badge.element.hasAttribute('aria-hidden')).toBe(false);
     badge.setLabel(8);
     expect(badge.getLabel()).toBe('');
+    expect(badge.element.getAttribute('aria-label')).toBe('New notification');
+  });
+
+  test('a string label is the dot\'s announcement, for another language', () => {
+    const badge = createBadge({ variant: 'small', label: 'Nouvelle notification' });
+    expect(badge.element.getAttribute('aria-label')).toBe('Nouvelle notification');
+    badge.setLabel('Neue Benachrichtigung');
+    expect(badge.element.getAttribute('aria-label')).toBe('Neue Benachrichtigung');
+    badge.setLabel('');
+    expect(badge.element.getAttribute('aria-label')).toBe('New notification');
   });
 
   test('switching small to large restores the label and exposes it', () => {
@@ -83,16 +100,18 @@ describe('badge variants', () => {
     expect(badge.getLabel()).toBe('3');
     expect(badge.element.getAttribute('role')).toBe('status');
     expect(badge.element.hasAttribute('aria-hidden')).toBe(false);
+    expect(badge.element.hasAttribute('aria-label')).toBe(false);
   });
 
-  test('switching large to small clears the text and hides it', () => {
+  test('switching large to small clears the text and announces the dot', () => {
     const badge = createBadge({ label: 42 });
     badge.setVariant('small');
     expect(has(badge, 'small')).toBe(true);
     expect(has(badge, 'large')).toBe(false);
     expect(badge.getLabel()).toBe('');
-    expect(badge.element.getAttribute('aria-hidden')).toBe('true');
-    expect(badge.element.hasAttribute('role')).toBe(false);
+    expect(badge.element.getAttribute('role')).toBe('status');
+    expect(badge.element.getAttribute('aria-label')).toBe('New notification');
+    expect(badge.element.hasAttribute('aria-hidden')).toBe(false);
   });
 });
 

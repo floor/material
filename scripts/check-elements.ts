@@ -4679,13 +4679,18 @@ try {
           (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild?.textContent ?? null;
         return { b1: text("b1"), b2: text("b2") };
       });
-    assert.equal(await page.getByRole("status").count(), 2);
+    assert.equal(await page.getByRole("status").count(), 3);
     assert.deepEqual(await shown(), { b1: "99+", b2: "New" });
-    assert.equal(
-      await page.evaluate(() => document.getElementById("b3")?.shadowRoot?.firstElementChild?.getAttribute("aria-hidden")),
-      "true"
+    assert.deepEqual(
+      await page.evaluate(() => {
+        const inner = document.getElementById("b3")?.shadowRoot?.firstElementChild as HTMLElement | null | undefined;
+        return inner
+          ? { role: inner.getAttribute("role"), label: inner.getAttribute("aria-label"), hidden: inner.getAttribute("aria-hidden"), text: inner.textContent }
+          : null;
+      }),
+      { role: "status", label: "New notification", hidden: null, text: "" }
     );
-    check("badge: text or label attribute is the label, max caps it; large is a status, small is hidden");
+    check("badge: text or label attribute is the label, max caps it; large and small are statuses, the dot announcing New notification");
 
     const updated = await page.evaluate(async () => {
       const b1 = document.getElementById("b1") as HTMLElement & { component: unknown };
