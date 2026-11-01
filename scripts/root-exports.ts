@@ -4,7 +4,8 @@
  *
  * Every root export is public API. This reads them from src/index.ts with the
  * type checker, values and types, and records for each whether it is public or
- * deprecated, and for a deprecated one the subpath that exports the same symbol.
+ * deprecated, a deprecated one's note resolved through its declaration, and for
+ * one leaving the root the subpath that exports the same symbol.
  * The record is scripts/fixtures/root-exports.json; the migration table users
  * read is generated beside it as root-exports.md while names are deprecated,
  * and frozen and verified once material 3.0.0 has removed them.
@@ -14,17 +15,20 @@
  */
 import ts from "typescript";
 import { join } from "node:path";
+import { deprecationOf } from "./export-deprecation";
 
 export type RootExport = {
   name: string;
   /** class: a value and a type, so `new`, `instanceof` and type positions all need it */
   kind: "value" | "type" | "class";
-  /** deprecated: moving to a subpath; renamed: the root exports it under a new name */
+  /** deprecated: moving to a subpath, or deprecated in place; renamed: the root exports it under a new name */
   status: "public" | "deprecated" | "renamed";
   /** Where to import a deprecated name from instead */
   path?: string;
   /** The name a renamed export has now, from the same root */
   to?: string;
+  /** declaration: the @deprecated tag is on the declaration, so the name is deprecated wherever it is imported from, not moving */
+  where?: "declaration";
 };
 
 const ROOT = join(import.meta.dir, "..");
@@ -40,15 +44,6 @@ export const SUBPATHS = ["dom", "compose", "theme", "state", "utils", "canvas", 
 
 const kindOf = (symbol: ts.Symbol): RootExport["kind"] =>
   symbol.flags & ts.SymbolFlags.Class ? "class" : symbol.flags & ts.SymbolFlags.Value ? "value" : "type";
-
-/** The @deprecated text on the root's export specifier, if any */
-const deprecation = (symbol: ts.Symbol): string | undefined => {
-  for (const declaration of symbol.declarations ?? []) {
-    const tag = ts.getJSDocTags(declaration).find((t) => t.tagName.text === "deprecated");
-    if (tag) return ts.getTextOfJSDocComment(tag.comment) ?? "";
-  }
-  return undefined;
-};
 
 /** The root, `material/core` and each core subpath, read with the type checker */
 function loadModules() {
@@ -66,11 +61,11 @@ function loadModules() {
   };
   /** `material/core` or `material/core/<subpath>` to its source entry */
   const fileOf = (path: string) => join(ROOT, path === "material/core" ? "src/core/index.ts" : `src/core/${path.slice("material/core/".length)}/index.ts`);
-  return { entries, resolve, exportsOf, fileOf };
+  return { entries, checker, resolve, exportsOf, fileOf };
 }
 
 export function readRootExports(): RootExport[] {
-  const { entries, resolve, exportsOf } = loadModules();
+  const { entries, checker, resolve, exportsOf } = loadModules();
   // The same symbol under the same exported name, not merely the same name: two
   // subpaths may export different functions under one name.
   const reach = new Map<ts.Symbol, Map<string, string>>();
@@ -88,8 +83,11 @@ export function readRootExports(): RootExport[] {
   return rootExports
     .map((symbol): RootExport => {
       const target = resolve(symbol);
-      const note = deprecation(symbol);
-      if (note === undefined) return { name: symbol.name, kind: kindOf(target), status: "public" };
+      const found = deprecationOf(checker, symbol);
+      if (!found) return { name: symbol.name, kind: kindOf(target), status: "public" };
+      // The declaration is deprecated, not this export: the name is deprecated wherever it is imported from
+      if (found.where === "declaration") return { name: symbol.name, kind: kindOf(target), status: "deprecated", where: "declaration" };
+      const note = found.note;
       // A rename: "Use <NewName>", where the root exports the same symbol as NewName
       const to = /^Use (\w+)\b/.exec(note)?.[1];
       if (to && to !== symbol.name && rootByName.get(to) === target) {
@@ -107,13 +105,26 @@ export function readRootExports(): RootExport[] {
 export function diffRootExports(pinned: RootExport[], now: RootExport[]): string[] {
   const before = new Map(pinned.map((e) => [e.name, e]));
   const after = new Map(now.map((e) => [e.name, e]));
-  const describe = (e: RootExport) => `${e.name} (${e.kind}, ${e.status}${e.path ? ` → ${e.path}` : ""}${e.to ? ` → ${e.to}` : ""})`;
+  const describe = (e: RootExport) =>
+    `${e.name} (${e.kind}, ${e.status}${e.path ? ` → ${e.path}` : ""}${e.to ? ` → ${e.to}` : ""}${e.where ? ", deprecated in place" : ""})`;
   return [
     ...now.filter((e) => !before.has(e.name)).map((e) => `added   ${describe(e)}`),
     ...pinned.filter((e) => !after.has(e.name)).map((e) => `removed ${describe(e)}`),
     ...now.filter((e) => before.has(e.name) && JSON.stringify(before.get(e.name)) !== JSON.stringify(e))
       .map((e) => `changed ${describe(before.get(e.name)!)} → ${describe(e)}`),
   ];
+}
+
+/**
+ * A name a release pinned as public that is gone now, with no deprecation in
+ * between: a removal has to be announced in an earlier release. Renamed and
+ * deprecated names are announced, so their absence is not reported.
+ */
+export function unannouncedRemovals(released: RootExport[], now: RootExport[]): string[] {
+  const current = new Set(now.map((e) => e.name));
+  return released
+    .filter((e) => e.status === "public" && !current.has(e.name))
+    .map((e) => `${e.name} (${e.kind}) was public in the release pin and is gone: deprecate it first, then remove it in a later release`);
 }
 
 export async function readPinned(): Promise<RootExport[]> {
@@ -151,7 +162,7 @@ export function verifyMigrationTable(rows: { name: string; path: string }[], now
 
 /** The migration table: each name leaving the root, and where to import it from */
 export function migrationTable(entries: RootExport[]): string {
-  const moved = entries.filter((e) => e.status === "deprecated");
+  const moved = entries.filter((e) => e.status === "deprecated" && e.where !== "declaration");
   const groups = new Map<string, RootExport[]>();
   for (const e of moved) groups.set(e.path!, [...(groups.get(e.path!) ?? []), e]);
   const lines = [
@@ -186,14 +197,14 @@ export function migrationTable(entries: RootExport[]): string {
 
 if (import.meta.main) {
   const now = readRootExports();
-  // While names are deprecated the table is generated from them; once they are gone it is frozen and verified
-  const leaving = now.some((e) => e.status === "deprecated");
+  // While names are moving off the root the table is generated from them; once they are gone it is frozen and verified
+  const leaving = now.some((e) => e.status === "deprecated" && e.where !== "declaration");
   if (process.argv.includes("--update")) {
     await Bun.write(FIXTURE, `${JSON.stringify(now, null, 2)}\n`);
     if (leaving) await Bun.write(TABLE, migrationTable(now));
-    const moved = now.filter((e) => e.status === "deprecated").length;
+    const deprecated = now.filter((e) => e.status === "deprecated").length;
     const renamed = now.filter((e) => e.status === "renamed").length;
-    console.log(`Wrote ${now.length} root exports (${now.length - moved - renamed} public, ${moved} deprecated, ${renamed} renamed)${leaving ? " and the migration table" : ""}.`);
+    console.log(`Wrote ${now.length} root exports (${now.length - deprecated - renamed} public, ${deprecated} deprecated, ${renamed} renamed)${leaving ? " and the migration table" : ""}.`);
   } else {
     const changes = diffRootExports(await readPinned(), now);
     const text = await Bun.file(TABLE).text();
