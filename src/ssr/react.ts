@@ -6,11 +6,11 @@
  * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. In development, a warning names the element.
  * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. Svelte has this same context limit and logs a development-only warning naming the element when required context leaves it without a shadow root.
  * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for a later 3.x release.
- * A `Suspense` boundary inside the component contributes its fallback to the first static pass, which does not throw; the host then re-renders on the retry backoff until no boundary inside it is still pending — wherever the boundary renders, inside an ordinary component as well — and the shadow root ships the resolved content (#461). A boundary that never resolves server-side ships its fallback in the root, at the retry cap.
+ * A `Suspense` boundary inside the component contributes its fallback to the first static pass, which does not throw; the host then re-renders on the retry backoff until no boundary inside it is still pending — wherever the boundary renders, inside an ordinary component as well, and whatever thenable the child suspends with — and the shadow root ships the resolved content (#461). A boundary that never resolves server-side ships its fallback in the root, at the retry cap.
  * @module ssr/react
  */
 import * as React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import "./index";
 
 const bridge = (globalThis as unknown as Record<symbol, {
@@ -202,6 +202,36 @@ const countPendingSubscriptions = (): { read: () => number; restore: () => void 
   return { read: () => calls, restore: () => { prototype.then = original; } };
 };
 
+/** What the string renderer writes for a boundary it did not wait for (#461). */
+const PENDING_BOUNDARY = "<!--$!-->";
+
+/**
+ * The subscription count above reads zero for a thenable whose `then` never
+ * dispatches through this realm's Promise.prototype: an object with its own
+ * `then` method, or a native Promise from another realm (#461). The string
+ * renderer, which never waits, instead marks a boundary it left pending in its
+ * own serialized output, whatever thenable the child threw and wherever the
+ * boundary renders; a boundary whose content it read synchronously carries no
+ * pending marker. The marker is the renderer's report, not the thenable's
+ * dispatch, so it sees every thenable kind. An error the boundary switched to
+ * client rendering also writes the marker; that host re-renders, and the next
+ * static pass throws the child's error and skips the root, as any child error
+ * does. The output is discarded — the shipped markup stays the static pass's.
+ */
+const boundaryStillPending = (element: React.ReactElement): boolean => {
+  serializingChildren = true;
+  try {
+    return renderToString(element).includes(PENDING_BOUNDARY);
+  } catch {
+    // The static pass above succeeded on the same tree, so this should not
+    // fail; if it does, shipping the static markup keeps the page's own error
+    // handling exactly as it is without this pass.
+    return false;
+  } finally {
+    serializingChildren = false;
+  }
+};
+
 bridge.react = (tag, props, children, prefix) => {
   // Nested hosts emit their own roots when React renders the outer tree.
   // A template from this pass would declare a shadow root twice.
@@ -210,6 +240,7 @@ bridge.react = (tag, props, children, prefix) => {
   if (suspendedGaveUp(children)) return undefined;
   // Sample outside a render. Doing it from the catch would nest renderToStaticMarkup.
   suspendFrame();
+  const element = React.createElement(tag, props, children);
   let markup: string;
   serializingChildren = true;
   const subscriptions = countPendingSubscriptions();
@@ -220,8 +251,9 @@ bridge.react = (tag, props, children, prefix) => {
     // the child's error. A boundary already inside the children catches its
     // own child's suspend, so this pass succeeds — and the subscription count
     // above still reports that suspend, at whatever depth the boundary renders
-    // (#461).
-    markup = renderToStaticMarkup(React.createElement(tag, props, children));
+    // (#461), for a thenable whose `then` runs through this realm's
+    // Promise.prototype.
+    markup = renderToStaticMarkup(element);
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
       // Returning lets the host finish. The page then renders this child and
@@ -250,11 +282,13 @@ bridge.react = (tag, props, children, prefix) => {
   }
   // A boundary inside the children caught a suspend during the pass: this
   // markup is fallback-shaped while the page's own stream waits for the data.
-  // Pending re-renders on the same backoff as a thrown suspend, so a page that
-  // waits for its data ships a root built from the resolved children. At the
-  // cap the current markup ships, as a boundary that never resolves always
-  // has.
-  if (subscriptions.read() > 0) {
+  // The count above reports a thenable that dispatched through this realm's
+  // Promise.prototype; a custom `then` or a Promise from another realm is
+  // reported by the string pass instead. Either signal means pending: the host
+  // re-renders on the same backoff as a thrown suspend, so a page that waits
+  // for its data ships a root built from the resolved children. At the cap the
+  // current markup ships, as a boundary that never resolves always has.
+  if (subscriptions.read() > 0 || boundaryStillPending(element)) {
     const attempt = nextAttempt(children);
     if (attempt <= MAX_SUSPENDS) {
       throw new Promise<void>((resolve) => { setTimeout(resolve, retryDelay(attempt)); });
