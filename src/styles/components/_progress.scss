@@ -431,8 +431,16 @@ $component: "#{base.$prefix}-progress";
     100% { --#{$component}-l: calc(100% + var(--#{$component}-gapp) * 1%); }
   }
 
+  // The between tail starts a gap behind the first tail, not at zero: the
+  // canvas held its window an absolute gap behind the first bar's tail at
+  // every frame, and easing from 0% to (100% - gapp%) fades that gap in
+  // instead — the track painted over the bar's head early in the cycle and
+  // began before the canvas's own guard (first tail past the gap) admitted
+  // it. From -gapp% with the same easing and interval, --r is the first
+  // tail less the gap exactly; while it is negative the span below is
+  // negative with it and nothing paints, which is that guard.
   @keyframes #{$component}-between-tail {
-    14.285714% { --#{$component}-r: 0%; animation-timing-function: v.motion("easing-emphasized-accelerate"); }
+    14.285714% { --#{$component}-r: calc(-1 * var(--#{$component}-gapp) * 1%); animation-timing-function: v.motion("easing-emphasized-accelerate"); }
     71.428571% { --#{$component}-r: calc(100% - var(--#{$component}-gapp) * 1%); }
     71.43% { --#{$component}-r: 100%; }
     100% { --#{$component}-r: 100%; }
