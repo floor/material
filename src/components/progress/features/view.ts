@@ -293,17 +293,17 @@ export const withView =
         // units = 360° = one full turn, and offset 100 lands where offset 0
         // began, so the loop rejoins itself exactly
         svg.style.setProperty(`--${prefix}-progress-wave-dash`, "100");
-        // The slide's own steps at fiftieths of the loop, which the
-        // keyframes join: equal angles are not equal distances on the wavy
-        // curve, so a uniform slide let the window wobble as the wave
-        // traveled under it — these hold its angle still. The loop is the
-        // ring's whole revolution now, so the stages run to fiftieths of
-        // that turn to keep each straight join as short as the eighths of
-        // the old one-wavelength loop were
+        // The slide's own curve at fiftieths of the loop: equal angles are
+        // not equal distances on the wavy curve, so a uniform slide let the
+        // window wobble as the wave traveled under it — the arc table as one
+        // linear() point list holds its angle still, read by the keyframes'
+        // easing. One property, not forty-nine: the element's inline style
+        // stays as small as the sheet's single keyframe line.
         const dashSteps = circularWaveDashSteps(radius, waveAmplitude, currentSize, 49);
-        dashSteps.forEach((step, i) => {
-          svg.style.setProperty(`--${prefix}-progress-ws-${i + 1}`, `${step}`);
-        });
+        svg.style.setProperty(
+          `--${prefix}-progress-slide`,
+          dashSteps.map((step, i) => `${step} ${((100 * (i + 1)) / (dashSteps.length + 1)).toFixed(0)}%`).join(", ")
+        );
       }
       svg.setAttribute("viewBox", `0 0 ${isCircular ? currentSize : lineWidth || 2048} ${height}`);
       if (!isCircular) {

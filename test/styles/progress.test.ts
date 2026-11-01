@@ -292,13 +292,14 @@ describe('progress stylesheet: the drawing', () => {
     expect(value('.mtrl-progress--circular path.mtrl-progress__indicator', 'animation')).toBe(
       'mtrl-progress-dash-ring var(--mtrl-progress-wave-dur, 1000ms) infinite linear'
     );
-    // the slide's staged stops must line up with the fiftieths the view
-    // writes its ws vars for — the interior stop count and the last stop
-    // pin that
+    // the slide's curve rides one custom property the view writes its
+    // fiftieths into, read by the easing instead of forty-nine keyframe
+    // stops — the easing reference and the flat from/to pair pin that, and
+    // no per-stop var may come back
     const dashRing = keyframes('mtrl-progress-dash-ring');
-    expect((dashRing.match(/--mtrl-progress-ws-\d+/g) ?? []).length).toBe(49);
-    expect(dashRing).toContain('var(--mtrl-progress-ws-49)');
+    expect(dashRing).toContain('animation-timing-function: linear(0, var(--mtrl-progress-slide), 1)');
     expect(dashRing).toContain('stroke-dashoffset: var(--mtrl-progress-wave-dash)');
+    expect(dashRing).not.toMatch(/--mtrl-progress-ws-\d+/);
   });
 
   test('rtl mirrors the linear view and reverses only the travel', () => {

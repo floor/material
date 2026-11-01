@@ -401,61 +401,22 @@ $component: "#{base.$prefix}-progress";
   // The slide passes through the curve's own arc table at fiftieths of
   // the loop: the wave runs longer where it climbs than where it rides the
   // circle, so equal angles are not equal distances on it, and a uniform
-  // slide let the window's start wobble a degree and a half round its
-  // hold as the wave traveled beneath. Between these the slide runs
-  // straight, which holds the window to a fifth of a degree at the worst
-  // size, measured over every size the factory admits.
+  // slide let the window's start wobble twelve degrees round its hold as
+  // the wave traveled beneath. The curve rides one custom property — the
+  // arc table as a linear() point list — read by the easing rather than by
+  // fifty keyframe stops: linear() joins its points with straight segments
+  // exactly as stops at the same fractions do, so the window holds to a
+  // fifth of a degree at the worst size, measured over every size the
+  // factory admits, while the sheet carries a single keyframe line and the
+  // geometry rides the element's own properties like every other geometry
+  // here. A browser without linear() drops the easing to this rule's own
+  // linear: the window wobbles as it did before the slide, and nothing
+  // else changes.
   @keyframes #{$component}-dash-ring {
-    from { stroke-dashoffset: 0; }
-    2% { stroke-dashoffset: var(--#{$component}-ws-1); }
-    4% { stroke-dashoffset: var(--#{$component}-ws-2); }
-    6% { stroke-dashoffset: var(--#{$component}-ws-3); }
-    8% { stroke-dashoffset: var(--#{$component}-ws-4); }
-    10% { stroke-dashoffset: var(--#{$component}-ws-5); }
-    12% { stroke-dashoffset: var(--#{$component}-ws-6); }
-    14% { stroke-dashoffset: var(--#{$component}-ws-7); }
-    16% { stroke-dashoffset: var(--#{$component}-ws-8); }
-    18% { stroke-dashoffset: var(--#{$component}-ws-9); }
-    20% { stroke-dashoffset: var(--#{$component}-ws-10); }
-    22% { stroke-dashoffset: var(--#{$component}-ws-11); }
-    24% { stroke-dashoffset: var(--#{$component}-ws-12); }
-    26% { stroke-dashoffset: var(--#{$component}-ws-13); }
-    28% { stroke-dashoffset: var(--#{$component}-ws-14); }
-    30% { stroke-dashoffset: var(--#{$component}-ws-15); }
-    32% { stroke-dashoffset: var(--#{$component}-ws-16); }
-    34% { stroke-dashoffset: var(--#{$component}-ws-17); }
-    36% { stroke-dashoffset: var(--#{$component}-ws-18); }
-    38% { stroke-dashoffset: var(--#{$component}-ws-19); }
-    40% { stroke-dashoffset: var(--#{$component}-ws-20); }
-    42% { stroke-dashoffset: var(--#{$component}-ws-21); }
-    44% { stroke-dashoffset: var(--#{$component}-ws-22); }
-    46% { stroke-dashoffset: var(--#{$component}-ws-23); }
-    48% { stroke-dashoffset: var(--#{$component}-ws-24); }
-    50% { stroke-dashoffset: var(--#{$component}-ws-25); }
-    52% { stroke-dashoffset: var(--#{$component}-ws-26); }
-    54% { stroke-dashoffset: var(--#{$component}-ws-27); }
-    56% { stroke-dashoffset: var(--#{$component}-ws-28); }
-    58% { stroke-dashoffset: var(--#{$component}-ws-29); }
-    60% { stroke-dashoffset: var(--#{$component}-ws-30); }
-    62% { stroke-dashoffset: var(--#{$component}-ws-31); }
-    64% { stroke-dashoffset: var(--#{$component}-ws-32); }
-    66% { stroke-dashoffset: var(--#{$component}-ws-33); }
-    68% { stroke-dashoffset: var(--#{$component}-ws-34); }
-    70% { stroke-dashoffset: var(--#{$component}-ws-35); }
-    72% { stroke-dashoffset: var(--#{$component}-ws-36); }
-    74% { stroke-dashoffset: var(--#{$component}-ws-37); }
-    76% { stroke-dashoffset: var(--#{$component}-ws-38); }
-    78% { stroke-dashoffset: var(--#{$component}-ws-39); }
-    80% { stroke-dashoffset: var(--#{$component}-ws-40); }
-    82% { stroke-dashoffset: var(--#{$component}-ws-41); }
-    84% { stroke-dashoffset: var(--#{$component}-ws-42); }
-    86% { stroke-dashoffset: var(--#{$component}-ws-43); }
-    88% { stroke-dashoffset: var(--#{$component}-ws-44); }
-    90% { stroke-dashoffset: var(--#{$component}-ws-45); }
-    92% { stroke-dashoffset: var(--#{$component}-ws-46); }
-    94% { stroke-dashoffset: var(--#{$component}-ws-47); }
-    96% { stroke-dashoffset: var(--#{$component}-ws-48); }
-    98% { stroke-dashoffset: var(--#{$component}-ws-49); }
+    from {
+      stroke-dashoffset: 0;
+      animation-timing-function: linear(0, var(--#{$component}-slide), 1);
+    }
     to { stroke-dashoffset: var(--#{$component}-wave-dash); }
   }
 

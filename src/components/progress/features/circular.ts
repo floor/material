@@ -106,14 +106,18 @@ export const circularIndeterminate = (
 /**
  * The wave's phase map round the ring, in cycles at each angle. The
  * measurements figure labels the wavelength itself — 15 at every size it
- * draws — and names no period count, so the wavelength is the fixed thing:
- * every period that fits the ring keeps it exactly, and one closing period
- * absorbs the circumference's remainder. The closing period always runs
- * long — a wavelength and change, never a squeezed one — so the wave never
- * oscillates faster there than its labelled wavelength paints it anywhere
- * else. The sine then completes whole cycles round the ring and meets
- * itself at the resting radius, where a closed ring of the nominal
- * wavelength alone would leave its last period torn open at the seam.
+ * draws — and the amplitude 1.6, and names no period count or closure
+ * rule; its own wave rides an open arc and never closes. So the page fixes
+ * the wavelength and the amplitude, and how a closed ring meets itself is
+ * this implementation's choice: the ring holds floor(2πR/λ) periods in
+ * all — all but the last at the labelled wavelength, the last carrying
+ * the circumference's remainder as extra length. The closing period
+ * always runs long — a wavelength and change, never a squeezed one — so
+ * the wave never oscillates faster there than its labelled wavelength
+ * paints it anywhere else. The sine then completes whole cycles round the
+ * ring and meets itself at the resting radius, where a ring of the
+ * nominal wavelength alone would leave its last period torn open at the
+ * seam.
  */
 const circularWaveShape = (radius: number, size: number) => {
   const lambda = circularWaveWavelength(size);
@@ -195,10 +199,12 @@ export const circularWaveRing = (
   // ring open where it meets itself, which the closing line would cut
   // straight across — a notch travelling round the ring once a second,
   // where the canvas, which draws the arc alone and never closes the ring,
-  // has none. The figure fixes the wavelength, so the shape keeps it for
-  // every period that fits and one closing period absorbs the remainder,
-  // running long — up to two wavelengths — rather than squeezed, so the
-  // ink never crowds at the seam: the sine completes whole cycles and the
+  // has none. The page fixes the wavelength and the amplitude and names no
+  // closure rule, so the closure is this implementation's choice: the ring
+  // holds floor(2πR/λ) periods in all, all but the last at the labelled
+  // wavelength, and the last carries the remainder as extra length —
+  // running long, up to two wavelengths, rather than squeezed, so the ink
+  // never crowds at the seam: the sine completes whole cycles and the
   // closing Z is a point, with the closing period's slope gentler through
   // its zero crossings than its neighbours', a kink the width of the
   // sample spacing and far below the ink's own thickness.
@@ -238,18 +244,20 @@ export const circularWaveRing = (
 
 /**
  * The dash offsets the ring's slide passes through at equal steps of its
- * loop, `count` of them between zero and the full shift. The closing
- * period breaks the pattern's symmetry round the ring, so the loop is a
- * whole revolution and the slide runs the ring's full length: one
- * pathLength unit returns exactly where it began. Each step holds the
- * window to an equal angle of that turn, and equal angles are not equal
- * distances on the wavy curve, so each reads the arc table — measured
- * backward from where the pattern meets itself, which is the stretch the
- * window's start has actually slid through. The first stretch forward
- * from 3 o'clock is not the same arc any more: the closing period makes
- * the ring asymmetric, and reading the wrong way lagged the window three
- * degrees behind its rotation. The keyframes join these with straight
- * segments, which holds the window still to a tenth of a degree.
+ * loop, `count` of them between zero and the full shift — the point list
+ * the slide's linear() easing reads, each point tagged with its loop
+ * fraction by the caller. The closing period breaks the pattern's
+ * symmetry round the ring, so the loop is a whole revolution and the
+ * slide runs the ring's full length: one pathLength unit returns exactly
+ * where it began. Each step holds the window to an equal angle of that
+ * turn, and equal angles are not equal distances on the wavy curve, so
+ * each reads the arc table — measured backward from where the pattern
+ * meets itself, which is the stretch the window's start has actually
+ * slid through. The first stretch forward from 3 o'clock is not the same
+ * arc any more: the closing period makes the ring asymmetric, and reading
+ * the wrong way lagged the window three degrees behind its rotation. The
+ * easing joins these with straight segments, which holds the window still
+ * to a fifth of a degree at the worst size the factory admits.
  */
 export const circularWaveDashSteps = (
   radius: number,
@@ -276,9 +284,9 @@ export const circularWaveWavelength = (size: number): number =>
   PROGRESS_WAVE.CIRCULAR.WAVELENGTH * (size / PROGRESS_MEASUREMENTS.CIRCULAR.SIZE);
 
 /**
- * The number of whole wavelengths the ring holds: the circumference over
- * the nominal wavelength, floored — N−1 periods at the nominal wavelength
- * and the closing period that carries the remainder as extra length. The
+ * The number of periods the ring holds in all: the circumference over the
+ * nominal wavelength, floored — N−1 of them at the nominal wavelength and
+ * one closing period that carries the remainder as extra length. The
  * closing period runs between one and two wavelengths, never less: a
  * remainder absorbed by squeezing (rounding up) would crowd the wave's
  * ink at the seam and bend its arc-length curve harder than the nominal
