@@ -137,6 +137,15 @@ Menus you can trust with keyboard and selection.
   wait; with the fix, 1,000/1,000 and 100/100. Test only: no product code,
   stylesheet, shared fixture or budget changes.
 
+- **`preupgrade:check` prints its mutation-control rows as `shift`, not `FAIL`
+  (#223).**
+  The mutation section runs every case without the pre-upgrade stylesheet to
+  prove the sheet is load-bearing — most elements must shift there and the
+  run's result is not a gate — so its rows now read `shift`, while the
+  with-stylesheet rows keep `FAIL`, and scanning the styles job log no longer
+  takes a control row for a failure. No gate, threshold, count or assertion
+  changes; the diff is the row printer and its mutation call site.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
