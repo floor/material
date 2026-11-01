@@ -433,15 +433,17 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 ### Bundling
 
-The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can move a placement to the wrong side.
+The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can rewrite those onto the wrong side. Logical margins are still in the sheet, and an old-target bundler can still rewrite those.
 
-The arms answer the `mtrl-rtl` marker and `[dir=rtl]` on an ancestor. What stays logical there, such as `margin-inline-start` and `padding-inline`, mirrors natively in the browser. The element sheets and the shadow sheets keep the logical form throughout.
+The arms answer `dir="rtl"` and the `mtrl-rtl` class on the component itself, on an ancestor, or on a shadow host; a nested `mtrl-ltr` island stays left to right. What stays logical, such as `margin-inline-start` and `padding-inline`, mirrors when `dir` is set. The marker class does not set the direction. The element sheets and the shadow sheets keep the logical form throughout.
 
 A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages.
 
 Those arms are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
 
-No shipped file carries `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules.
+Language alone does not flip the shipped stylesheets. Set `dir`, or the marker. An Arabic page with neither stays left to right for the placements these sheets arm.
+
+No shipped file carries a `:lang()` rule. The only `:dir()` rules are the two badge rules on the tabs element sheet.
 
 ## Building your own components
 
