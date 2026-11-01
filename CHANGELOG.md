@@ -167,10 +167,11 @@ Menus you can trust with keyboard and selection.
 - **CI's `browser (ssr)` row is two rows by engine, and it no longer decides
   the run (#216).**
   The row was the run's longest on the push before this change — 3m39s on
-  41330357545, against `browser (components-a)` at 3m26s — and on the pull
-  request run 41319020497 it held the run at 4m17s. Inside it, on the job log
-  of run 41317795666 where the script printed 193.7s, parity took 29.4s and
-  the three Chromium checks 36.3s against 127.8s for firefox and webkit.
+  41330357545, against `browser (components-a)` at 3m26s — and on the push
+  run 41319020497 at main 7c488c5f it held the run at 4m17s. Inside it, on
+  the job log of run 41317795666 where the script printed 193.7s, parity took
+  29.4s and the three Chromium checks 36.3s against 127.8s for firefox and
+  webkit.
   `scripts/check-ssr.ts` now takes parts the way `elements:check` does — `a` is
   parity and Chromium, `b` is firefox and webkit, and no argument runs every
   part — and CI runs them as `browser (ssr-a)` and `browser (ssr-b)`: 1m41s
@@ -198,6 +199,14 @@ Menus you can trust with keyboard and selection.
   public there and absent now (`test/build/export-pin-removals.test.ts`), and
   the `tests` job checks out with `fetch-depth: 0` so the tag is there. Tooling
   only: no API or runtime change.
+
+- **The release costs 11 bytes gzipped in the all-js row (127,769 to 127,780)
+  and 81 in the full stylesheet (63,645 to 63,726); the packed tarball is
+  882,680 bytes compressed, 5,096,854 unpacked in 1,625 files, against
+  882,445 and 5,095,982 in 1,625 files in 3.3.0.** The gzip rows, the unpacked
+  size and the file count read the same on this pull request's head as on main
+  at e57c811f; only four of the 17 packed rows, all CSS Brotli, differ between
+  them. No ceiling moved, and all seven README size rows stand as measured.
 
 ## [3.3.0] - 2026-11-01
 
