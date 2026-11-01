@@ -8,6 +8,7 @@
 // can break and which still reaches names carrying a dot or a colon.
 import { describe, test, expect, beforeEach } from "bun:test";
 import { withIcon } from "../../../../src/core/compose/features/icon";
+import type { ElementComponent } from "../../../../src/core/compose/component";
 import { PREFIX } from "../../../../src/core/config";
 import "../../../setup"; // Import the jsdom setup
 
@@ -26,7 +27,7 @@ describe("withIcon", () => {
 
   test("sets the icon after the label for a plain componentName", () => {
     const { element, label } = componentWithLabel("card");
-    const enhanced = withIcon({ componentName: "card" })({ element } as never);
+    const enhanced = withIcon({ componentName: "card" })({ element } as ElementComponent);
     enhanced.icon.setIcon("<i>♥</i>");
     expect(element.firstElementChild).toBe(label);
     expect(label.nextElementSibling?.classList.contains(`${PREFIX}-icon`)).toBe(true);
@@ -38,7 +39,7 @@ describe("withIcon", () => {
   for (const name of ['a"b', "a\\b", "a.b", "a:b"]) {
     test(`sets the icon after the label for componentName ${JSON.stringify(name)}`, () => {
       const { element, label } = componentWithLabel(name);
-      const enhanced = withIcon({ componentName: name })({ element } as never);
+      const enhanced = withIcon({ componentName: name })({ element } as ElementComponent);
       enhanced.icon.setIcon("<i>♥</i>");
       expect(element.firstElementChild).toBe(label);
       expect(label.nextElementSibling?.classList.contains(`${PREFIX}-icon`)).toBe(true);
@@ -46,9 +47,9 @@ describe("withIcon", () => {
   }
 
   test("sets the icon as the first child when there is no label", () => {
-    const element = document.createElement("div");
+    const element: HTMLElement = document.createElement("div");
     element.appendChild(document.createElement("b"));
-    const enhanced = withIcon({ componentName: "card" })({ element } as never);
+    const enhanced = withIcon({ componentName: "card" })({ element } as ElementComponent);
     enhanced.icon.setIcon("<i>♥</i>");
     expect(element.firstElementChild?.classList.contains(`${PREFIX}-icon`)).toBe(true);
   });
