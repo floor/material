@@ -3,10 +3,11 @@
 // server's HTML to the upgraded element.
 //
 // Each case is the server-style HTML of one element (the host and its light
-// DOM, as an adapter's server render emits it) in a page with the base styles
-// and `material/elements/preupgrade.css`. The host's box and two siblings after it
-// (inline text on its line, a block below) are measured, then the elements
-// script loads, the element upgrades, and they are measured again.
+// DOM, as an adapter's server render emits it) with the base styles and
+// `material/elements/preupgrade.css`. The host and its following siblings are
+// measured in a document that has not defined the subject, then equivalent
+// markup is measured in an upgraded document. Both documents are reused;
+// separate registries preserve the before/after definition boundary.
 //
 // The score is the Layout Instability (CLS) formula, impact fraction times
 // distance fraction, with the viewport replaced by the case's stage: 360 px
@@ -419,8 +420,9 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
 
 // Definitions cannot be removed from a CustomElementRegistry. Keep the plain
 // pre-upgrade page undefined for its lifetime, and reuse already-defined post
-// pages. The few rows that intentionally upgrade their neighbours get a fresh
-// child frame, so those definitions cannot leak into later pre-upgrade rows.
+// pages. Two isolated child registries serve the prepared-neighbour rows: one
+// defines button/text-field, the other also switch. Neither defines a subject
+// it measures, and those definitions cannot leak into the plain pre-page.
 const POST_PAGES = 4;
 let reusablePages: Promise<{ before: Page; after: Page[] }> | undefined;
 let beforeTail: Promise<unknown> = Promise.resolve();
@@ -438,6 +440,11 @@ const pages = () => reusablePages ??= (async () => {
   // neighbours, never the define-all entry used by the upgraded pages.
   await before.route("**/elements.js", route => route.abort());
   await before.goto(`http://127.0.0.1:${server.port}/fixture`);
+  await before.evaluate(() => {
+    const root = document.createElement("div");
+    root.id = "preupgrade-case";
+    document.body.append(root);
+  });
   const after = await Promise.all(Array.from({ length: POST_PAGES }, async () => {
     const p = await browser.newPage();
     await p.goto(`http://127.0.0.1:${server.port}/fixture`);
@@ -448,19 +455,60 @@ const pages = () => reusablePages ??= (async () => {
   return { before, after };
 })();
 
-const reset = async (p: Page, item: PreupgradeCase, preupgrade: boolean): Promise<void> => {
+const reset = async (p: MeasurementPage, item: PreupgradeCase, preupgrade: boolean, keepFrames = false): Promise<void> => {
   const width = (item.width ?? STAGE_WIDTH) + 40;
-  if (p.viewportSize()?.width !== width) await p.setViewportSize({ width, height: 800 });
-  await p.evaluate(({ html, preupgrade }) => {
-    document.body.replaceChildren();
+  if ("viewportSize" in p && p.viewportSize()?.width !== width) await p.setViewportSize({ width, height: 800 });
+  await p.evaluate(({ html, preupgrade, keepFrames }) => {
+    const root = keepFrames ? document.getElementById("preupgrade-case")! : document.body;
+    root.replaceChildren();
+    if (keepFrames) {
+      root.style.display = "";
+      document.querySelectorAll<HTMLIFrameElement>("iframe").forEach(frame => { frame.style.display = "none"; });
+    }
     document.body.removeAttribute("class");
     document.body.removeAttribute("style");
     document.documentElement.removeAttribute("dir");
     document.documentElement.style.cssText = "";
     document.documentElement.setAttribute("data-theme", "baseline");
     (document.querySelector('link[href="/preupgrade.css"]') as HTMLLinkElement).disabled = !preupgrade;
-    document.body.innerHTML = html;
-  }, { html: stage(item.html, item), preupgrade });
+    root.innerHTML = html;
+  }, { html: stage(item.html, item), preupgrade, keepFrames });
+};
+
+const preparedFrames = new Map<string, Frame>();
+const preparedFrame = async (p: Page, item: PreupgradeCase, preupgrade: boolean): Promise<Frame> => {
+  const key = item.element === "tabs" ? "tabs-neighbours" : "control-neighbours";
+  let target = preparedFrames.get(key);
+  if (!target) {
+    await p.evaluate(key => new Promise<void>(resolve => {
+      const frame = document.createElement("iframe");
+      frame.id = key;
+      frame.style.cssText = "position:fixed;left:0;top:0;border:0;height:800px";
+      frame.onload = () => resolve();
+      frame.src = "/fixture";
+      document.body.append(frame);
+    }), key);
+    const handle = await p.locator(`#${key}`).elementHandle();
+    try { target = (await handle!.contentFrame())!; } finally { await handle!.dispose(); }
+    await target.evaluate(async (element) => {
+      const css = "/dist/elements/css/index.js";
+      const entry = "/dist/elements/index.js";
+      await import(css);
+      const elements = await import(entry);
+      elements.defineButton();
+      elements.defineTextField();
+      if (element === "tabs") elements.defineSwitch();
+    }, item.element);
+    preparedFrames.set(key, target);
+  }
+  await p.evaluate(({ key, width }) => {
+    document.getElementById("preupgrade-case")!.style.display = "none";
+    const frame = document.getElementById(key) as HTMLIFrameElement;
+    frame.style.width = `${width}px`;
+    frame.style.display = "block";
+  }, { key, width: (item.width ?? STAGE_WIDTH) + 40 });
+  await reset(target, item, preupgrade);
+  return target;
 };
 
 const measureReused = async (p: Page, item: PreupgradeCase, preupgrade: boolean): Promise<[Snapshot, Snapshot]> => {
@@ -477,51 +525,16 @@ const measureReused = async (p: Page, item: PreupgradeCase, preupgrade: boolean)
   const prepared = await beforeTurn(async () => {
     const beforePage = pool.before;
     beforePage.on("pageerror", onError);
-    let frameElement;
     try {
-      await reset(beforePage, item, preupgrade);
-      let target: MeasurementPage = beforePage;
-      if (item.prepareNeighbors) {
-        // The parent remains undefined even when this row prepares button,
-        // text-field and switch neighbours in its isolated registry.
-        await beforePage.evaluate(({ width, html, preupgrade }) => new Promise<void>(resolve => {
-          document.body.replaceChildren();
-          const frame = document.createElement("iframe");
-          frame.id = "prepared-neighbours";
-          frame.style.cssText = `position:fixed;left:0;top:0;border:0;width:${width}px;height:800px`;
-          frame.onload = () => {
-            const doc = frame.contentDocument!;
-            (doc.querySelector('link[href="/preupgrade.css"]') as HTMLLinkElement).disabled = !preupgrade;
-            doc.body.innerHTML = html;
-            resolve();
-          };
-          frame.src = "/fixture";
-          document.body.append(frame);
-        }), { width: (item.width ?? STAGE_WIDTH) + 40, html: stage(item.html, item), preupgrade });
-        frameElement = await beforePage.locator("#prepared-neighbours").elementHandle();
-        target = (await frameElement!.contentFrame())!;
-        await target.evaluate(async (element) => {
-          const css = "/dist/elements/css/index.js";
-          const entry = "/dist/elements/index.js";
-          await import(css);
-          const elements = await import(entry);
-          elements.defineButton();
-          elements.defineTextField();
-          if (element === "tabs") elements.defineSwitch();
-        }, item.element);
-      }
+      await reset(beforePage, item, preupgrade, true);
+      const target: MeasurementPage = item.prepareNeighbors
+        ? await preparedFrame(beforePage, item, preupgrade) : beforePage;
       await settle(target);
       return {
         snapshot: await snapshot(target, hosts, siblings),
         anchor: preupgrade && item.fixedAnchor ? await anchor(target) : undefined,
       };
-    } finally {
-      if (frameElement) {
-        await frameElement.evaluate(frame => frame.remove());
-        await frameElement.dispose();
-      }
-      beforePage.off("pageerror", onError);
-    }
+    } finally { beforePage.off("pageerror", onError); }
   });
   p.on("pageerror", onError);
   try {
