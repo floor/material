@@ -11,3 +11,6 @@ globalThis.setTimeout = ((callback: TimerHandler, delay?: number, ...args: unkno
   }
   return schedule(callback, delay, ...args);
 }) as typeof setTimeout;
+
+// Bun loads each preload as its own module.
+export {};

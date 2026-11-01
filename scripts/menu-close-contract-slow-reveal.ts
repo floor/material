@@ -6,3 +6,6 @@ globalThis.setTimeout = ((callback: TimerHandler, delay?: number, ...args: unkno
   if (delay === 20) console.log("CLOSE_CONTRACT_SLOW_REVEAL_250MS");
   return schedule(callback, delay === 20 ? 250 : delay, ...args);
 }) as typeof setTimeout;
+
+// Bun loads each preload as its own module.
+export {};
