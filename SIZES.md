@@ -9,7 +9,7 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at f8343f68 on 2026-11-01. Regenerate with
+Measured at 637bdb66 on 2026-11-01. Regenerate with
 `bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
 these rows drift from a fresh measurement.
 
@@ -17,7 +17,7 @@ these rows drift from a fresh measurement.
 | Component | Minified | Gzipped | vs core | Deferred |
 | --- | ---: | ---: | ---: | ---: |
 | core | 8.2 KB | 3.1 KB | — |  |
-| badge | 16.4 KB | 5.4 KB | +2.3 KB |  |
+| badge | 15.9 KB | 5.3 KB | +2.2 KB |  |
 | bottom-app-bar | 11.6 KB | 4.2 KB | +1.1 KB |  |
 | bottom-sheet | 20.4 KB | 7.2 KB | +4.1 KB |  |
 | side-sheet | 18.8 KB | 6.7 KB | +3.6 KB |  |
@@ -48,11 +48,11 @@ these rows drift from a fresh measurement.
 | slider | 40.0 KB | 13.1 KB | +9.9 KB |  |
 | snackbar | 37.1 KB | 12.0 KB | +8.9 KB | +6.8 KB |
 | switch | 19.1 KB | 6.2 KB | +3.1 KB |  |
-| tabs | 43.0 KB | 13.5 KB | +10.4 KB | +6.8 KB |
+| tabs | 42.6 KB | 13.4 KB | +10.3 KB | +6.8 KB |
 | text-field | 29.3 KB | 8.9 KB | +5.8 KB |  |
 | timepicker | 32.2 KB | 11.1 KB | +8.0 KB |  |
 | top-app-bar | 13.2 KB | 4.5 KB | +1.4 KB |  |
 | tooltip | 17.7 KB | 6.0 KB | +2.9 KB |  |
 | toolbar | 33.9 KB | 11.1 KB | +8.0 KB | +6.8 KB |
-| all | 399.6 KB | 123.3 KB | +120.2 KB | +2.1 KB |
+| all | 399.1 KB | 123.3 KB | +120.2 KB | +2.1 KB |
 <!-- /size-table -->
