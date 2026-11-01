@@ -392,11 +392,18 @@ export const withView =
         const rect = el("rect", PROGRESS_CLASSES.WAVE_WINDOW) as SVGRectElement;
         clip.append(rect);
         svg.append(clip);
+        // The clip rides on a group the travel transform does not touch: a
+        // clip-path is read in the referencing element's own user space, so
+        // on the traveling path it would ride a wavelength along with the
+        // wave and the bar's extent would wobble instead of holding to the
+        // value the way the canvas's bitmap did.
+        const window = el("g", PROGRESS_CLASSES.WAVE_WINDOW) as SVGGElement;
         const travel = el("g", PROGRESS_CLASSES.WAVE_TRAVEL);
         const path = el("path", PROGRESS_CLASSES.INDICATOR, PROGRESS_CLASSES.WAVE) as SVGPathElement;
         travel.append(path);
-        svg.append(travel);
-        path.setAttribute("clip-path", `url(#${clip.getAttribute("id")})`);
+        window.append(travel);
+        window.setAttribute("clip-path", `url(#${clip.getAttribute("id")})`);
+        svg.append(window);
         parts.waveClip = rect;
         parts.indicator = path;
       } else {

@@ -288,7 +288,14 @@ describe('progress', () => {
     // two wavelengths of travel either side of the box (λ = 40 determinate);
     // flat at first — the amplitude fades in over 500ms, as the canvas's did
     expect(path.getAttribute('d')).toMatch(/^M -80/);
-    expect(path.getAttribute('clip-path')).toMatch(/^url\(#/);
+    // The clip rides on the wrapper group, not the path: a clip-path is read
+    // in the referencing element's own user space, so on the traveling path
+    // it would ride a wavelength along with the wave and the bar's extent
+    // would wobble instead of holding to the value
+    const clipGroup = path.closest('g')!.parentElement!;
+    expect(clipGroup.tagName.toLowerCase()).toBe('g');
+    expect(clipGroup.getAttribute('clip-path')).toMatch(/^url\(#/);
+    expect(path.getAttribute('clip-path')).toBeNull();
     const window = progress.view.querySelector('rect.mtrl-progress__wave-window')!;
     // the window is the indicator's extent: value 50's [0, 102]
     expect(window.getAttribute('x')).toBe('0.00');
