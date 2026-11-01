@@ -1,0 +1,16 @@
+// src/styles/abstract/_emit.scss
+//
+// Which direction form this compile emits. The default is logical: every
+// sheet the library itself adopts — the elements' shadow roots, the
+// pre-upgrade rules — keeps the native logical properties, which mirror on
+// the computed `dir` alone and never on `lang`.
+//
+// The two artefacts a consumer's bundler takes through a CSS pipeline,
+// `dist/styles.css` and `dist/styles/<name>.css`, are compiled once more with
+// `$direction-arms: true` (scripts/build-styles.ts): a bundler configured for
+// older browser targets rewrites `inset-inline-start` and the logical corner
+// radii into `:lang()` arms that match a language, never `dir="rtl"`
+// (src/styles/components/_text-field.scss), so those sheets carry the physical
+// side plus a direction arm instead — nothing left to lower. The entry
+// configures this module; every `@use` after it reads the same value.
+$direction-arms: false !default;

@@ -1,0 +1,123 @@
+// src/styles/abstract/_direction.scss
+//
+// The inline-start and inline-end insets and the four logical corner radii,
+// through the compile's direction form (abstract/_emit.scss).
+//
+// In the logical form (the default) these are the logical properties: the
+// sheet mirrors on the computed `dir`, and a bundler's lowering of them is the
+// consumer's own choice. In the arms form — the two artefacts a consumer's
+// bundler takes through a CSS pipeline, `dist/styles.css` and
+// `dist/styles/<name>.css` — the same call emits the physical side the value
+// matches left-to-right plus the mirrored side as a direction arm
+// (`rtl` in abstract/_mixins.scss), so no `:lang()` lowering of the sheet can
+// pin a start placement to the left edge of a right-to-left page.
+//
+// `$self: true` is the form for a value the site sets on itself (a factory's
+// root): the arm also matches the marker on that element. The arm resets the
+// base side to `auto` so the mirrored rule replaces the base one instead of
+// adding to it, exactly as the logical property resolves one side per
+// direction.
+@use 'base' as base;
+@use 'mixins' as m;
+@use 'emit' as emit;
+
+/// The inline-start inset.
+@mixin start($value, $self: false) {
+  @if emit.$direction-arms {
+    left: $value;
+    @include m.rtl($self) {
+      left: auto;
+      right: $value;
+    }
+  } @else {
+    inset-inline-start: $value;
+  }
+}
+
+/// The inline-end inset.
+@mixin end($value, $self: false) {
+  @if emit.$direction-arms {
+    right: $value;
+    @include m.rtl($self) {
+      right: auto;
+      left: $value;
+    }
+  } @else {
+    inset-inline-end: $value;
+  }
+}
+
+/// Both inline insets at once, `auto` allowed on either side — the pair a
+/// placement pins to one edge writes as one call, and the arm swaps the two
+/// values whole.
+@mixin sides($start, $end, $self: false) {
+  @if emit.$direction-arms {
+    left: $start;
+    right: $end;
+    @include m.rtl($self) {
+      left: $end;
+      right: $start;
+    }
+  } @else {
+    inset-inline-start: $start;
+    inset-inline-end: $end;
+  }
+}
+
+/// The four logical corner radii, `null` for a corner this rule does not
+/// declare. With all four the arms form is the physical `border-radius`
+/// shorthand and the arm swaps its start and end columns; with fewer, each
+/// declared corner is the physical longhand and the arm writes the mirrored
+/// longhand — the sites that round part of a box name every corner they own.
+@mixin corners(
+  $start-start: null, $start-end: null, $end-start: null, $end-end: null,
+  $self: false,
+) {
+  @if emit.$direction-arms {
+    @if $start-start and $start-end and $end-start and $end-end {
+      border-radius: $start-start $start-end $end-end $end-start;
+      @include m.rtl($self) {
+        border-radius: $start-end $start-start $end-start $end-end;
+      }
+    } @else {
+      @if $start-start { border-top-left-radius: $start-start; }
+      @if $start-end { border-top-right-radius: $start-end; }
+      @if $end-start { border-bottom-left-radius: $end-start; }
+      @if $end-end { border-bottom-right-radius: $end-end; }
+      @include m.rtl($self) {
+        @if $start-start { border-top-right-radius: $start-start; }
+        @if $start-end { border-top-left-radius: $start-end; }
+        @if $end-start { border-bottom-right-radius: $end-start; }
+        @if $end-end { border-bottom-left-radius: $end-end; }
+      }
+    }
+  } @else {
+    @if $start-start { border-start-start-radius: $start-start; }
+    @if $start-end { border-start-end-radius: $start-end; }
+    @if $end-start { border-end-start-radius: $end-start; }
+    @if $end-end { border-end-end-radius: $end-end; }
+  }
+}
+
+/// A direction arm this site aggregates by hand: the mirrored declarations of
+/// several placements in one block, so every shipped copy pays one prelude.
+/// Nothing in the logical form — the properties mirror natively there.
+@mixin arms($self: false) {
+  @if emit.$direction-arms {
+    @include m.rtl($self) {
+      @content;
+    }
+  }
+}
+
+/// Only the self arm, for a marker on the root this block is written in: the
+/// arm members of `arms` need the marker on an ancestor, and a part of a root
+/// that carries the marker itself is reached by the root's own selector. The
+/// logical form emits nothing.
+@mixin arms-self-only {
+  @if emit.$direction-arms {
+    &:where(.#{base.$prefix}-rtl, [dir='rtl']) {
+      @content;
+    }
+  }
+}

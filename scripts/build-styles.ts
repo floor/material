@@ -35,6 +35,21 @@ export function sassOptions(): sass.StringOptions<"sync"> {
 }
 
 /**
+ * The prelude that compiles a sheet in the direction-arms form: the physical
+ * side plus a direction arm instead of the logical inline insets and corner
+ * radii (abstract/_emit.scss, abstract/_direction.scss). Only the artefacts a
+ * consumer's bundler takes through a CSS pipeline are compiled this way —
+ * `dist/styles.css` and `dist/styles/<name>.css` — because those are the
+ * sheets an older-target bundler lowers into `:lang()` arms that match a
+ * language and never `dir="rtl"`. The elements' shadow sheets and the
+ * pre-upgrade rules are adopted by the runtime as-is and keep the logical
+ * properties, which mirror on the computed direction alone.
+ */
+export function directionArmsPrelude(): string {
+  return `@use "abstract/emit" as arms-config with ($direction-arms: true);\n`;
+}
+
+/**
  * The cascade-layer prelude on every `material/styles/*` asset, including
  * `styles/contrast`. Pre-upgrade is first: a file that only opens
  * `@layer mtrl.preupgrade` and is parsed earlier stays first, because this
@@ -59,8 +74,8 @@ export function inBaseLayer(css: string): string {
  * the contrast block: `compileExplicitContrast`).
  */
 export function compileThemeSources(sources: string[], emit: ContrastEmit = "all"): string {
-  const config = emit === "all" ? ""
-    : `@use "themes/base-theme" as contrast-config with ($contrast-emit: ${emit});\n`;
+  const config = directionArmsPrelude() + (emit === "all" ? ""
+    : `@use "themes/base-theme" as contrast-config with ($contrast-emit: ${emit});\n`);
   const body = sources.map((source, i) => `@use "${source}" as entry${i};`).join("\n");
   return sass.compileString(config + body, sassOptions()).css;
 }
@@ -106,7 +121,7 @@ export async function buildStyles(outdir: string, banner: string) {
   resolveStyleDependencies(Object.keys(componentStyles));
   await validateRuntimeDependencies(outdir);
   const options = sassOptions();
-  const full = sass.compileString(await readFile("src/styles/main.scss", "utf8"), options);
+  const full = sass.compileString(directionArmsPrelude() + await readFile("src/styles/main.scss", "utf8"), options);
 
   // Use Sass's parsed dependency graph, not text matching, to detect manifest drift.
   const loaded = full.loadedUrls.map(url => relative(resolve("src/styles"), fileURLToPath(url)).split(sep).join("/"));
