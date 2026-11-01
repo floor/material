@@ -206,10 +206,16 @@ describe("explicit contrast levels are opt-in", () => {
     // windows share one :is() derivation rule whose width reads a span
     // custom property — the between track's zero-to-tail window is the one
     // override — and the parts' rest pose is the registered initial values,
-    // declared nowhere.
+    // declared nowhere. The parity round hardened three of those rules: the
+    // circular track hides at the sweep's peak behind a stroke-opacity gate
+    // while its sub-unit dash still paints, the between's tail window holds
+    // a gap behind the first bar's tail so it never paints over the bar,
+    // and the wavy ring snaps to whole wave periods so it closes, its
+    // window's dash sliding through staged keyframes that follow the arc
+    // (styles/components/_progress.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("aff740457ea4e389c8c45e6c0e845fd01a5a2fcd6ff6ee563891c846bf2698b0");
-    expect(css.length).toBe(552371);
+      .toBe("860da18797d5da18218df3af0715d90c32fbecab98b82088944c4f104d3ad687");
+    expect(css.length).toBe(552909);
   });
 
   test("today's sheets still resolve to the fixture", () => {

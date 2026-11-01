@@ -492,6 +492,7 @@
     "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "tabs:check": "bun run scripts/check-tabs.ts",
     "slider:check": "bun run scripts/check-slider.ts",
+    "progress:check": "bun run scripts/check-progress.ts",
     "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
     "rtl:check": "bun run scripts/check-rtl.ts",
