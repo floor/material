@@ -208,3 +208,27 @@
     }
   }
 }
+
+/// An inline-start inset whose value states re-place (a switch's handle and
+/// state layer): the base names a custom property as the value's fallback and
+/// the states override the property (`start-value-set`), so the arms form
+/// carries one arm per subject while every state's move rides the property —
+/// a bundler lowers no custom property. The logical form is the plain logical
+/// inset, state overrides included; it mirrors natively and names no property.
+@mixin start-value($name, $value) {
+  @if emit.$direction-arms {
+    left: var(#{$name}, #{$value});
+  } @else {
+    inset-inline-start: $value;
+  }
+}
+
+/// A state's override of a `start-value` base: the property this state moves
+/// the subject to.
+@mixin start-value-set($name, $value) {
+  @if emit.$direction-arms {
+    #{$name}: #{$value};
+  } @else {
+    inset-inline-start: $value;
+  }
+}
