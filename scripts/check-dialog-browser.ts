@@ -218,12 +218,9 @@ export async function checkDialogScrimScope(page: Page): Promise<void> {
         } satisfies ScrimScope;
       }));
 
-      // A press on the page behind the scrim, just outside the container
-      const point = await page.evaluate(() => {
-        const { container } = (window as unknown as ScrimWindow).scrimDialog;
-        const box = container?.getBoundingClientRect();
-        return box ? { x: box.right + 10, y: box.bottom + 10 } : { x: window.innerWidth - 10, y: window.innerHeight - 10 };
-      });
+      // A press on the page behind the scrim, past the container and the
+      // dialog: a page-level scrim is there, a contained one is not
+      const point = await page.evaluate(() => ({ x: window.innerWidth - 10, y: window.innerHeight - 10 }));
       await page.mouse.move(point.x, point.y);
       await page.mouse.down();
       await page.mouse.up();
