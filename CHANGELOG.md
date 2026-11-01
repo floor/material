@@ -17,6 +17,70 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.2] - 2026-11-01
+
+Tooltips land where they point.
+
+### Fixed
+
+- **A tooltip sits at its offset on every side of its target (#171).**
+  The stylesheet's position classes carried margins of their own: 8px on
+  `--bottom` and `--right` on top of the 8px `calculatePosition` already
+  applies to every placement, so those two sides sat 16px away with the
+  arrow floating 8px off the target, while `--top`'s and `--left`'s margins
+  were dead rules on a fixed box. The four margins are gone; every
+  placement sits 8px from the target on the named side, the arrow filling
+  the gap with its tip on the target's edge, in left-to-right and
+  right-to-left alike. The twelve placements are now measured in
+  `scripts/check-tooltip.ts`.
+
+- **A tooltip stays on screen and its arrow points at the target at the
+  viewport edges (#173).** Clamping moved the surface without re-anchoring
+  the arrow, which kept pointing at empty space; a placement that crossed
+  the viewport was never flipped; the arrow class came from the requested
+  placement, so a flipped surface kept a class pointing the wrong way; and
+  left and right placements had no vertical constraint at all. The position
+  now flips to the opposite side when that keeps the surface on screen,
+  clamps to the viewport and re-anchors the arrow to the target, writes the
+  arrow class from the placement it ends on, and constrains both axes.
+  Seventeen cases are measured in both directions in the same check.
+
+- **A tooltip follows the scrolling container it was opened in, and
+  measures its surface as a fraction (#178).** Scroll events do not bubble,
+  so the window listener never heard a scrolling list, panel or dialog, and
+  the target slid away under a surface that stayed where the container left
+  it: the listener now captures container scrolls as well as page scrolls,
+  with the same flag on add and on both removals. The surface size comes
+  from its computed style rather than `offsetWidth`, whose integer rounding
+  made the 8px offset 8.3 and could leave a clamped surface a third of a
+  pixel outside the edge it was clamped to, and the coordinates are written
+  unrounded. The twelve placements and the collision rows are measured in
+  the same browser check.
+
+### Docs
+
+- **Every documented import is compiled against the packed package
+  (#220).** Four documented examples took constants from the package root,
+  which does not export them — `TIME_FORMAT` and `TIME_PICKER_TYPE` in the
+  timepicker README, `MENU_POSITION` in the menu's JSDoc example and
+  `SELECT_VARIANTS` in the select's — so a reader who copied one got a type
+  error and `undefined` at run time. Each constant is now imported from its
+  component's subpath, and `bun run docs-imports:check` collects every
+  import documented in a Markdown fence or an `@example` under `src/` and
+  compiles it against the packed package in the `package` job, so a
+  documented name must be one its specifier exports. Docs and tooling only:
+  no API change.
+
+### Internal
+
+- **The release costs 105 bytes gzipped in the all-js row (127,780 to
+  127,885) and saves 22 in the full stylesheet (63,726 to 63,704); the
+  packed tarball is 882,834 bytes compressed, 5,094,700 unpacked in 1,625
+  files, against 882,680 and 5,096,854 in 1,625 files in 3.3.1.** Measured
+  on main at b28afe0e, push run 41355367585, job 124994309034; this release
+  changes only the CHANGELOG and the version field. No ceiling moved, every
+  budget check passed, and all seven README size rows stand as printed.
+
 ## [3.3.1] - 2026-11-02
 
 Menus you can trust with keyboard and selection.
