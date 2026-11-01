@@ -63,6 +63,7 @@ $snap: 0s linear $midpoint;
     padding-inline-start: 20px;
   }
   &__toggle {
+    font: inherit;
     display: grid;
     place-items: center;
     position: relative;
@@ -93,6 +94,7 @@ $snap: 0s linear $midpoint;
   // Item: the hit target spans the rail; 64dp tall with the icon on top,
   // 56dp tall with the icon at the start.
   &__item {
+    font: inherit;
     position: relative;
     isolation: isolate;
     display: block;

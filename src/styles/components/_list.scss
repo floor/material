@@ -79,6 +79,7 @@ $component: "#{base.$prefix}-list";
   }
   &__item--three-line &__leading--video { width: 114px; height: 64px; }
   &__action {
+    font: inherit;
     appearance: none;
     position: absolute;
     inset: 0;
