@@ -335,8 +335,16 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
         await page.goto(`${origin}/${i === 0 ? "full" : "selective"}-${scenario.name}.html?${params}`);
         await page.locator('body[data-ready="true"]').waitFor();
         await page.evaluate(() => document.fonts.ready);
-        if (scenario.state === "hover") await page.getByRole("button").first().hover();
-        if (scenario.state === "focus") await page.keyboard.press("Tab");
+        if (scenario.state === "hover") {
+          await page.getByRole("button").first().hover();
+          await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+        } else {
+          await page.mouse.move(0, 0);
+        }
+        if (scenario.state === "focus") {
+          await page.keyboard.press("Tab");
+          await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+        }
       }));
       const capture = async (): Promise<Buffer[]> => {
         await Promise.all(pages.map((page, i) =>
