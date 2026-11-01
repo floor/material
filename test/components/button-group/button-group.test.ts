@@ -718,7 +718,7 @@ describe("Button group selection (Material 3 kinds)", () => {
     expect(group.buttons[0].element.style.paddingRight).toBe("");
   });
 
-  it("a neighbour narrows past its own padding; an end button takes all its growth from one side", () => {
+  it("a neighbour gives no more than its facing padding; an end button takes all its growth from one side", () => {
     const group = createButtonGroup({ buttons: [{ text: "A" }, { text: "B" }] });
     document.body.appendChild(group.element);
     group.buttons.forEach((b) => {
@@ -726,11 +726,12 @@ describe("Button group selection (Material 3 kinds)", () => {
       b.element.style.padding = "0 4px";
     });
     group.buttons[0].element.dispatchEvent(new dom.window.Event("pointerdown", { bubbles: true }));
-    // 15% of 100 is 15, under the 24dp limit: the neighbour gives all of it,
-    // its 4px of facing padding goes to zero and the rest comes off its width
-    expect(group.buttons[1].element.style.width).toBe("85px");
+    // 15% of 100 is 15, but the neighbour's facing padding is 4: it gives the
+    // padding and no more, so its label never clips, and the pressed button
+    // grows by what it actually got
+    expect(group.buttons[1].element.style.width).toBe("96px");
     expect(group.buttons[1].element.style.paddingLeft).toBe("0px");
-    expect(group.buttons[0].element.style.width).toBe("115px");
+    expect(group.buttons[0].element.style.width).toBe("104px");
     document.dispatchEvent(new dom.window.Event("pointerup"));
   });
 
