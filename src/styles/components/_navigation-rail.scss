@@ -219,9 +219,8 @@ $snap: 0s linear $midpoint;
     overflow: hidden;
     text-overflow: ellipsis;
     @include m.typography('label-medium');
-    // Both physical sides: the direction arms swap which one is live, and a
-    // transition that names a property the arms unset jumps instead of
-    // snapping (the switch's thumb learned this the hard way).
+    // Both physical sides: the arms swap which is live, and a transition
+    // that names a property the arms unset jumps instead of snapping.
     transition:
       inset-block-start $snap,
       left $snap,
@@ -280,18 +279,15 @@ $snap: 0s linear $midpoint;
   &--expanded &__badge--dot { inset-block-start: 25px; }
 
   // The start-edge insets above are the left-to-right form; these arms write
-  // the mirrored one. The subjects are the parts themselves, so a marker on
-  // the rail root — the class the runtime writes there, or its own dir —
-  // reaches through the ancestor arms.
+  // the mirrored one, a marker on the rail root included.
   @include m.rtl-selector('.#{$component}__indicator') { right: 20px; left: auto; }
   @include m.rtl-selector('.#{$component}__icon') { right: 36px; left: auto; }
   @include m.rtl-selector('.#{$component}__label') { right: 16px; left: auto; }
   @include m.rtl-selector('.#{$component}__badge') { right: 48px; left: auto; }
   @include m.rtl-selector('.#{$component}__badge--dot') { right: 54px; left: auto; }
 
-  // The expanded rules above carry the root's variant class, so a marker on
-  // the root itself needs the self form the plain parts get from their own
-  // compound (the fab-menu bottom-start trap).
+  // The expanded rules carry the variant class, so a marker on the root
+  // needs the self form (the fab-menu bottom-start trap).
   &--expanded {
     @include m.rtl(true) {
       .#{$component}__label { right: 68px; left: auto; }
@@ -322,8 +318,7 @@ $snap: 0s linear $midpoint;
     &:not([open]) { display: none; }
     &::backdrop { background: t.alpha('scrim', 0.32); }
 
-    // The modal docks at the start edge — left here, right in the other
-    // direction — and its large corners follow it.
+    // The modal docks at the start edge and its large corners follow it.
     @include m.rtl(true) {
       left: auto;
       right: 0;

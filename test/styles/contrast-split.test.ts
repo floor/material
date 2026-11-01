@@ -193,11 +193,14 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_fab-menu.scss).
     // The navigation bar and rail place their start edges on the physical
     // left and mirror them with the direction arms, not the insets a
-    // consumer's bundler lowers (styles/components/_navigation-bar.scss,
+    // consumer's bundler lowers; the bar's vertical arms share one :is()
+    // subject for both variants, and the bar's dot rides the badge's anchor
+    // through --mtrl-navigation-bar-dot-shift so one arm mirrors both
+    // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("2fd2fa43b6b08e25bac71bd89884fb59151f8434d6cf0ab053b05ba62f18b5ec");
-    expect(css.length).toBe(550002);
+      .toBe("0e674b7268ad9efeed28d55f66586c26950c4758f0fe09953d98314d3bbebc54");
+    expect(css.length).toBe(548390);
   });
 
   test("today's sheets still resolve to the fixture", () => {
