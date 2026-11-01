@@ -31,6 +31,9 @@ export async function checkDialogMount(page: Page, selected: readonly Mount[] = 
       const wrapper = document.createElement("div");
       stage.append(trigger, preserved, wrapper);
       document.body.append(stage);
+      // A contained dialog is centred in its container: give this mount a box
+      // a dialog fits in, or its actions sit above the page.
+      if (mount === "container") stage.style.cssText = "width:420px;height:280px;margin:12px;background:#eee";
       const overflow = document.body.style.overflow;
       document.body.style.overflow = "scroll";
       const dialog = state.createDialog({
