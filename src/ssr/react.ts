@@ -242,10 +242,20 @@ const probeBoundaryError = (element: React.ReactElement): BoundaryProbe => {
 const boundaryProbes = new WeakMap<object, BoundaryProbe>();
 
 /**
- * A settled probe has answered for its pass: a report is read where the ladder
- * decides, and a silence is replaced, because a boundary that is pending now
- * may fail on a later pass. An unsettled probe is awaited by the retry itself,
- * so the next pass always reads a settled answer (#461).
+ * The probe stored for this host, settled or not (#461).
+ */
+const storedBoundaryProbe = (children: React.ReactNode): BoundaryProbe | undefined => {
+  for (const node of childNodes(children)) {
+    const probe = boundaryProbes.get(node);
+    if (probe) return probe;
+  }
+  return undefined;
+};
+
+/**
+ * The probe this pass waits on: an unsettled stored one, or a fresh render.
+ * A settled silent answer is replaced — a boundary pending now may fail on a
+ * later pass — but only after the decision above has read it.
  */
 const boundaryProbe = (children: React.ReactNode, element: React.ReactElement): BoundaryProbe => {
   const nodes = childNodes(children);
@@ -391,22 +401,28 @@ bridge.react = (tag, props, children, prefix) => {
   // children. At the cap the current markup ships, as a boundary that never
   // resolves always has.
   if (subscriptions.read() > 0 || boundaryStillPending(element)) {
-    // A subscription count above zero is a thenable the boundary caught: that
-    // host is pending, never erroring, and pays no probe. The marker-only path
-    // (a custom `then` or a foreign realm) is the one the probe must read.
-    const probe = subscriptions.read() === 0 ? boundaryProbe(children, element) : undefined;
-    if (probe?.reported) {
-      clearAttempt(children);
-      return bridge.shadow(tag, markup, prefix) || undefined;
-    }
     const attempt = nextAttempt(children);
-    if (attempt <= MAX_SUSPENDS) {
-      // The retry waits for the probe's answer before its delay, so the next
-      // pass reads a settled one.
-      const wait = probe && !probe.settled ? probe.done : Promise.resolve();
-      throw new Promise<void>((resolve) => {
-        void wait.then(() => { setTimeout(resolve, retryDelay(attempt)); });
-      });
+    const withinCap = attempt <= MAX_SUSPENDS;
+    if (subscriptions.read() > 0) {
+      // A subscription is a thenable the boundary caught: pending by
+      // definition, never erroring, and it pays no probe.
+      if (withinCap) throw new Promise<void>((resolve) => { setTimeout(resolve, retryDelay(attempt)); });
+    } else {
+      // The marker-only path asks the probe. The stored probe's settled
+      // answer is the previous pass's: a report ships this pass's
+      // fallback-shaped markup at once. A silence is replaced, and the retry
+      // waits for the new probe's answer before its delay, so the next pass
+      // reads a settled one.
+      if (storedBoundaryProbe(children)?.reported) {
+        clearAttempt(children);
+        return bridge.shadow(tag, markup, prefix) || undefined;
+      }
+      const probe = withinCap ? boundaryProbe(children, element) : undefined;
+      if (probe && !probe.settled) {
+        throw new Promise<void>((resolve) => {
+          void probe.done.then(() => { setTimeout(resolve, retryDelay(attempt)); });
+        });
+      }
     }
   }
   clearAttempt(children);
