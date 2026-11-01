@@ -31,6 +31,10 @@ export const readPromise = (promise: Promise<string>): string => {
 
 const Late = ({ promise }: { promise: Promise<string> }) => h("i", null, readPromise(promise));
 
+/** #461 review: the same inner boundary wrapped in an ordinary component, so it exists only in the component's output. */
+const Wrap = ({ promise }: { promise: Promise<string> }) =>
+  h(React.Suspense, { fallback: null }, h(Late, { promise }));
+
 const pending = (ms: number, text: string): Promise<string> => new Promise((resolve) => { setTimeout(() => resolve(text), ms); });
 
 /** One fresh tree. A lazy component must not be reused from an earlier render. */
@@ -49,6 +53,9 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
     // the page's own stream waits for the resolved children.
     B2: h(Button, { id: "b2" }, h(React.Suspense, { fallback: null }, h(Late, { promise }))),
     B3: h(Tabs, { id: "b3" }, h(React.Suspense, { fallback }, h(Tab, { label: "One" }, h(Late, { promise }))), h(Tab, { label: "Two" }, "two")),
+    // #461 review: a boundary an element walk from the host cannot reach — only
+    // the renderer's own pending signal sees it.
+    B5: h(Button, { id: "b5" }, h(Wrap, { promise })),
     C: h(React.Suspense, { fallback }, h(({ promise: value }: { promise: Promise<string> }) => h(Button, { id: "c" }, readPromise(value)), { promise })),
     E: h(React.Suspense, { fallback }, h("div", null, h(Late, { promise }))),
     F: h(Button, { id: "f" }, h(Late, { promise })),
@@ -58,7 +65,7 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
   return node;
 };
 
-export const SUSPENSE_SHAPES = ["A", "A2", "B", "B2", "B3", "C", "E", "F"] as const;
+export const SUSPENSE_SHAPES = ["A", "A2", "B", "B2", "B3", "B5", "C", "E", "F"] as const;
 
 /** Renders inside a host so a check can count static passes. */
 export const renderCounts = { sibling: 0 };

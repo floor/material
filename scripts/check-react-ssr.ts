@@ -154,11 +154,13 @@ try {
         assert.match(result.html, /data-value="One"/, `React ${version} B3 snapshot keeps the boundary tab`);
         continue;
       }
-      if (name === "B2") {
+      if (name === "B2" || name === "B5") {
         // #461: an empty fallback leaves no light content at shell time, so a
         // fallback-state snapshot ships with no label slot at all and the
-        // resolved text stays unprojected until upgrade.
-        assert.match(result.html, /<span part="text label"/, `React ${version} B2 snapshot keeps the label slot`);
+        // resolved text stays unprojected until upgrade. B5 wraps the boundary
+        // in an ordinary component: the slot must survive that too, which a
+        // host-to-children walk cannot see but the renderer's signal can.
+        assert.match(result.html, /<span part="text label"/, `React ${version} ${name} snapshot keeps the label slot`);
       }
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
     }
