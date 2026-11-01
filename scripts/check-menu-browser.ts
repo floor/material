@@ -208,3 +208,101 @@ export async function checkMenuDisabledColors(page: Page): Promise<void> {
   }
   console.log("Passed packed menu disabled colours: icon, supporting text and shortcut share the label's 0.38 on baseline, vertical standard and vertical vibrant; selected disabled dims the selection colours; no hover layer on a disabled item.");
 }
+
+/**
+ * An item that is not rendered cannot take focus, so it is not a keyboard
+ * stop: the arrows, Home, End, typeahead and Enter move through and choose the
+ * items that are shown. Material asks for exactly those moves — "Initial
+ * focus: When a menu opens, focus should be placed on the first menu item",
+ * "Up and Down arrows — For open menus: Moves focus to the next item",
+ * "Home … Moves focus to the first item", "End … Moves focus to the last
+ * item", "Letters — Focus moves to the next menu item starting with letter"
+ * and "Space or Enter … Selects a menu item"
+ * (m3.material.io/components/menus/accessibility). A `display: none` item is
+ * not one of the items shown, and a browser will not focus it.
+ *
+ * The first, middle and last item of One–Two–Three–Four are hidden in turn.
+ * Each case opens the menu with a real ArrowDown, presses real keys, reads the
+ * focused item after each press and the item Enter chooses. Where the hidden
+ * item is still a stop, focus sticks on the item before it, or never enters the
+ * menu at all when the first item is hidden, and Enter chooses that item.
+ */
+export async function checkMenuHiddenItems(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  type Case = {
+    name: string;
+    hidden: string;
+    opened: string;
+    keys: Array<[string, string]>;
+    chosen: string;
+  };
+  const cases: Case[] = [
+    {
+      name: "middle",
+      hidden: "two",
+      opened: "one",
+      keys: [["End", "four"], ["Home", "one"], ["ArrowDown", "three"], ["ArrowDown", "four"], ["ArrowDown", "one"], ["t", "three"]],
+      chosen: "three",
+    },
+    {
+      name: "first",
+      hidden: "one",
+      opened: "two",
+      keys: [["ArrowUp", "four"], ["Home", "two"], ["End", "four"], ["ArrowDown", "two"], ["f", "four"]],
+      chosen: "four",
+    },
+    {
+      name: "last",
+      hidden: "four",
+      opened: "one",
+      keys: [["End", "three"], ["ArrowDown", "one"], ["Home", "one"], ["ArrowDown", "two"], ["t", "two"]],
+      chosen: "two",
+    },
+  ];
+  for (const { name, hidden, opened, keys, chosen } of cases) {
+    const hiddenDisplay = await page.evaluate((hidden) => {
+      document.body.replaceChildren();
+      const state = window as unknown as MenuWindow & { chosen: string | null };
+      state.chosen = null;
+      const opener = document.createElement("button");
+      opener.id = "menu-opener";
+      opener.textContent = "Edit";
+      document.body.append(opener);
+      opener.focus();
+      state.menu = state.createMenu({ opener, items: [
+        { id: "one", text: "One" },
+        { id: "two", text: "Two" },
+        { id: "three", text: "Three" },
+        { id: "four", text: "Four" },
+      ] });
+      const item = state.menu.element.querySelector<HTMLElement>(`[data-id="${hidden}"]`);
+      if (item) item.style.display = "none";
+      state.menu.on("select", (payload) => { state.chosen = payload.itemId; });
+      state.menu.open(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+      return item ? getComputedStyle(item).display : "missing";
+    }, hidden);
+    assert.equal(hiddenDisplay, "none", `menu, ${name} item hidden: the item is display: none, so it cannot be a stop`);
+    await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"));
+    // Focus is placed after the opening frame; when the first item shown is
+    // not the first item declared, a tree that treated the hidden item as a
+    // stop leaves focus outside the menu, so wait on the event's own budget
+    // rather than on that focus.
+    await page.waitForTimeout(250);
+    const focused = (): Promise<string | null> => page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? document.activeElement?.id ?? null);
+    const at = await focused();
+    assert.equal(at, opened, `menu, ${name} item hidden: opening puts focus on ${opened}, the first item shown (${at})`);
+    for (const [key, expected] of keys) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(120);
+      const active = await focused();
+      assert.equal(active, expected, `menu, ${name} item hidden: after ${key === "t" ? "typing t" : key} focus is on ${expected} (${active})`);
+    }
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(150);
+    const selected = await page.evaluate(() => (window as unknown as MenuWindow & { chosen: string | null }).chosen);
+    assert.equal(selected, chosen, `menu, ${name} item hidden: Enter chooses ${chosen}, the focused item (${selected})`);
+    await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());
+  }
+  await page.evaluate(() => document.body.replaceChildren());
+  console.log("Passed packed menu hidden items: with the first, middle or last item display: none, ArrowDown opens on the first item shown, the arrows, Home, End and typeahead move through the items shown and wrap past the hidden one, and Enter chooses the focused item.");
+}

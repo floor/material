@@ -130,6 +130,46 @@ describe('select as a combobox', () => {
     expect(activeText(last.input)).toBe('Extra large');
   });
 
+  test('an option that is not rendered is not a keyboard stop', async () => {
+    const { select, input } = await mount({ value: 's' });
+    await press(input, 'ArrowDown');
+    // A consumer hides an option with display: none. The option is still in
+    // the listbox, but a browser will not focus it (measured in Chromium
+    // 153), so it cannot be the option aria-activedescendant names.
+    const options = [...select.element.querySelectorAll<HTMLElement>('[role="option"]')];
+    options.find((option) => option.textContent?.trim() === 'Medium')!.style.display = 'none';
+    expect(activeText(input)).toBe('Small');
+    await press(input, 'ArrowDown');
+    expect(activeText(input)).toBe('Extra large'); // Large is disabled; Medium is hidden
+    await press(input, 'Home');
+    expect(activeText(input)).toBe('Extra small');
+    await press(input, 'End');
+    expect(activeText(input)).toBe('Extra large');
+    await press(input, 'm');
+    expect(activeText(input)).toBe('Extra large'); // nothing shown starts with m
+    await press(input, 'Enter');
+    expect(select.getValue()).toBe('xl');
+  });
+
+  test('opening marks no option when the selected one is not rendered', async () => {
+    const { select, input } = await mount({ value: 'm' });
+    await press(input, 'ArrowDown');
+    const options = [...select.element.querySelectorAll<HTMLElement>('[role="option"]')];
+    options.find((option) => option.textContent?.trim() === 'Medium')!.style.display = 'none';
+    await press(input, 'Escape');
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    const changes = mock((_event: { value: string }) => {});
+    select.on('change', changes);
+    // The next open starts on the selected option; it is hidden, so nothing
+    // is active and Enter has nothing to choose.
+    await press(input, 'ArrowDown');
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(input.getAttribute('aria-activedescendant')).toBeNull();
+    await press(input, 'Enter');
+    expect(changes).toHaveBeenCalledTimes(0);
+    expect(select.getValue()).toBe('m');
+  });
+
   test('Enter chooses the active option, reports change and closes, focus staying put', async () => {
     const { select, input } = await mount({ value: 's' });
     const changes = mock((_event: { value: string }) => {});

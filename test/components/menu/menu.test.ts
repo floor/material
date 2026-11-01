@@ -189,6 +189,46 @@ describe('menu', () => {
     expect(document.activeElement).toBe(rendered[0]);
   });
 
+  test('an item that is not rendered is not a keyboard stop', async () => {
+    const menu = createMenu({ opener, items });
+    await opened(menu);
+    const rendered = menuItems(menu);
+    // A consumer hides an item with display: none. The item is still in the
+    // document, but a browser will not focus it (measured in Chromium 153),
+    // so it cannot be a stop the arrows, Home, End or Enter reach.
+    rendered[1]!.style.display = 'none';
+    rendered[0]!.focus();
+    const press = (key: string) =>
+      (document.activeElement as HTMLElement).dispatchEvent(
+        new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+      );
+
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[2]); // Paste: disabled, but shown
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[3]);
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[0]); // the wrap skips the hidden item
+    press('ArrowUp');
+    expect(document.activeElement).toBe(rendered[3]);
+    press('Home');
+    expect(document.activeElement).toBe(rendered[0]);
+    press('End');
+    expect(document.activeElement).toBe(rendered[3]);
+  });
+
+  test('a menu whose first item is not rendered opens on the first item shown', async () => {
+    const menu = createMenu({ opener, items });
+    await submenuFeatureLoaded();
+    const first = menuItems(menu)[0]!;
+    first.style.display = 'none';
+    menu.open(new dom.window.KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    await after(200);
+    // Initial focus asks for the first item; the first item that can take it
+    // is the second one declared.
+    expect(document.activeElement).toBe(menuItems(menu)[1]);
+  });
+
   test('a disabled item cannot be chosen with the keyboard or the pointer', async () => {
     const chosen: string[] = [];
     const values: string[] = [];
