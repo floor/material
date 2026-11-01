@@ -4,6 +4,7 @@ const stall = Number(process.env.CLOSE_CONTRACT_STALL_MS ?? 0);
 const schedule = globalThis.setTimeout;
 globalThis.setTimeout = ((callback: TimerHandler, delay?: number, ...args: unknown[]) => {
   if (stall && delay === 3) {
+    console.log("CLOSE_CONTRACT_SCHEDULER_PAUSE");
     const deadline = performance.now() + stall;
     while (performance.now() < deadline) { /* controlled scheduler pause */ }
   }
