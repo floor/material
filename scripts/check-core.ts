@@ -17,7 +17,7 @@ import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpeners } from "./check-menu-opener-browser";
-import { checkDialogMount } from "./check-dialog-browser";
+import { checkDialogFocusReach, checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
@@ -55,6 +55,7 @@ try {
   await checkThemeContrast(page);
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
   await checkDialogMount(page);
+  await checkDialogFocusReach(page);
   await checkRadiosLayout(page, "factory", (name) => console.log(`  ok ${name}`));
   await checkCheckableValues(page, "factory");
   await page.evaluate(() => {

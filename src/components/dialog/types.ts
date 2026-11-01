@@ -1,6 +1,5 @@
 // src/components/dialog/types.ts
 import type { ButtonComponent } from "../button/types";
-import type { DividerComponent } from "../divider/types";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -355,9 +354,9 @@ export interface DialogStructure {
   content: HTMLElement;
   /** Only when the dialog has buttons, and set back to null when the last goes */
   footer: HTMLElement | null;
-  /** Divider components, not elements: the code reaches for `.element` on them */
-  headerDivider: DividerComponent | null;
-  footerDivider: DividerComponent | null;
+  /** The <hr> elements between the sections, only while shown */
+  headerDivider: HTMLElement | null;
+  footerDivider: HTMLElement | null;
   container: HTMLElement;
 }
 
