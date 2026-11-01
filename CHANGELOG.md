@@ -111,6 +111,19 @@ Menus you can trust with keyboard and selection.
   unchanged. The `check` status the ruleset requires is untouched, and the
   critical path is now `browser (components)` at 6m06s.
 
+- **CI's components row is two rows by measured duration, and the run drops
+  from 6m56s to 5m21s (#212).**
+  The `browser (components)` row held the run at 6m06s on the push run
+  41316827952, of which `core:check` was 138.9s and `consumer:check` 49.5s.
+  CI now runs it as `browser (components-a)` (`core:check` and
+  `carousel:check`) and `browser (components-b)` (the other ten): 3m17s and
+  2m52s on the push run 41319020497, and the run goes from 6m56s to 5m21s.
+  Every check still runs on every change, each exactly once —
+  `test/build/ci-commands.test.ts` holds the list and passes unchanged — and
+  the timing line `ssr:check` prints now names `browser (ssr)` rather than
+  `browser (components)`. The `check` status the ruleset requires is
+  untouched, and the critical path is now `browser (ssr)` at 4m17s.
+
 ## [3.3.0] - 2026-11-01
 
 Elements say everything the factories can.
