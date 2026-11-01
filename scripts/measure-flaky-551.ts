@@ -1,4 +1,4 @@
-// Temporary FLO-551 evidence only. Extract the unchanged shadow-menu sequence
+// Temporary shadow-menu focus evidence only. Extract the unchanged shadow-menu sequence
 // from main, run it repeatedly in CI, and retain every result. Never merge.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -61,7 +61,7 @@ ${selected}
     const result = {iteration,pass:error === null,ms:Math.round(performance.now()-started),openings,checks:checks-firstCheck,error,snapshot};
     results.push(result);
     await Bun.write("analysis/flaky-551/iteration-"+iteration+".json",JSON.stringify(result,null,2)+"\\n");
-    console.log("FLO551_ITERATION " + JSON.stringify({...result,snapshot:undefined}));
+    console.log("SHADOW_MENU_ITERATION " + JSON.stringify({...result,snapshot:undefined}));
     await page.evaluate(() => {
       const w=window as unknown as {__tl?:{menu:{destroy:()=>void}}};
       w.__tl?.menu.destroy();
@@ -71,9 +71,9 @@ ${selected}
   const targetFailures=failures.filter(result=>String(result.error).includes("menu top layer in a shadow root: still waiting after 5s for the open menu to take focus"));
   const summary={baseline:process.env.FLO_551_BASELINE,head:process.env.GITHUB_SHA,selectedHash:"${selectedHash}",iterations:results.length,passes:results.length-failures.length,failures:failures.length,targetFailures:targetFailures.length,rate:targetFailures.length/results.length,totalOpenings:results.reduce((sum,result)=>sum+Number(result.openings),0),timingsMs:results.map(result=>result.ms)};
   await Bun.write("analysis/flaky-551/summary.json",JSON.stringify(summary,null,2)+"\\n");
-  console.log("FLO551_SUMMARY " + JSON.stringify(summary));
+  console.log("SHADOW_MENU_SUMMARY " + JSON.stringify(summary));
   assert.equal(results.length,${count});
-  assert.equal(failures.length,targetFailures.length,"Unexpected failures are harness errors, not FLO-551");
+  assert.equal(failures.length,targetFailures.length,"Unexpected failures are harness errors, not the selected focus timeout");
   for(const result of results.filter(result=>result.pass)) assert.equal(result.checks,6,"Every passing sequence must run all six original assertions");
 } finally {
   await browser.close();

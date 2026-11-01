@@ -1,4 +1,4 @@
-name: FLO-551 focus evidence
+name: Shadow-menu focus evidence
 on:
   pull_request:
     branches: [main]
