@@ -256,7 +256,7 @@ import 'material/themes/desert';
 import 'material/themes/desert-contrast';
 ```
 
-The attribute is opt-in: the full stylesheet includes it, and selective styles add the two contrast imports above. Without the attribute, the system's `prefers-contrast: more` selects high contrast, with no import.
+The attribute is opt-in: the full stylesheet includes it, and selective styles add the two contrast imports above. Without the attribute, the system's `prefers-contrast: more` selects high contrast, with no import. On any other element it does nothing: the element inherits its theme carrier's level.
 
 How contrast resolves on nested themes, and how each level is derived, is in the [Theming guide](https://md3.io/docs/theming/#contrast).
 
