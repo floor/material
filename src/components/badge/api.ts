@@ -246,14 +246,12 @@ export const withAPI =
 
         // Update accessibility attributes: both variants are a status, and a
         // small badge's announcement is its accessible name.
+        component.element.removeAttribute("aria-hidden");
+        component.element.setAttribute("role", "status");
         if (variant === VARIANT_SMALL) {
           component.element.textContent = "";
-          component.element.setAttribute("role", "status");
           component.element.setAttribute("aria-label", smallBadgeLabel(component.config.label));
-          component.element.removeAttribute("aria-hidden");
         } else {
-          component.element.removeAttribute("aria-hidden");
-          component.element.setAttribute("role", "status");
           component.element.removeAttribute("aria-label");
 
           // Restore label for large badges

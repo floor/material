@@ -37,10 +37,7 @@ export const defaultConfig: BadgeConfig = {
  * accessibility, read 2026-11-01). A nonnumeric string label given to a small badge is
  * its announcement, so a page in another language passes its own text; the
  * count a large badge carries is not one.
- */
-const SMALL_BADGE_LABEL = "New notification";
-
-/**
+ *
  * The accessible name of a non-counting badge: its label when it is nonnumeric text,
  * "New notification" otherwise.
  *
@@ -50,8 +47,8 @@ const SMALL_BADGE_LABEL = "New notification";
  * @internal
  */
 export const smallBadgeLabel = (label: string | number | undefined): string =>
-  typeof label === "string" && label.trim() && Number.isNaN(Number(label))
-    ? label.trim() : SMALL_BADGE_LABEL;
+  typeof label === "string" && isNaN(+label)
+    ? label.trim() : "New notification";
 
 /**
  * Creates the base configuration for Badge component by merging user-provided
@@ -75,30 +72,8 @@ export const createBaseConfig = (config: BadgeConfig = {}): BadgeConfig =>
  * @category Components
  * @internal
  */
-export const getElementConfig = (config: BadgeConfig) => {
-  // Create the attributes object
-  const attributes: Record<string, string | number | boolean> = {};
-
-  // Both variants are a status; the dot's announcement is its accessible name,
-  // as a large badge's count is its text.
-  attributes.role = "status";
-  if (config.variant === "small") {
-    attributes["aria-label"] = smallBadgeLabel(config.label);
-  }
-
-  // Format the label if needed - small badges have no text
-  const formattedLabel =
-    config.variant === "small"
-      ? ""
-      : formatBadgeLabel(config.label || "", config.max);
-
-  return createElementConfig(config, {
-    tag: "span",
-    attributes,
-    className: config.class,
-    text: formattedLabel, // Use the formatted label
-  });
-};
+export const getElementConfig = (config: BadgeConfig) =>
+  createElementConfig(config, { tag: "span" });
 
 /**
  * Creates API configuration for the Badge component.

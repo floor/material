@@ -88,24 +88,14 @@ export const withVariant = (config: BadgeConfig) => <C extends BadgeFeatureHost>
   // Apply variant class
   component.element.classList.add(`${component.getClass('badge')}--${variant}`);
   
-  // Small badges (dot variant) don't have text: their label is the accessible
-  // name assistive technology reads, "New notification" by default.
+  // withElement does not consume a text option; the variant owns text and ARIA.
+  component.element.setAttribute('role', 'status');
   if (variant === VARIANT_SMALL) {
-    component.element.textContent = '';
-    component.element.setAttribute('role', 'status');
     component.element.setAttribute('aria-label', smallBadgeLabel(config.label));
     component.element.removeAttribute('aria-hidden');
   } else {
-    // Add accessibility for large badges
-    component.element.setAttribute('role', 'status');
     component.element.removeAttribute('aria-label');
-
-    // Set the label if available and variant is large
-    if (config.label !== undefined && config.label !== '') {
-      // Format the label according to max value
-      const formattedLabel = formatBadgeLabel(config.label, config.max);
-      component.element.textContent = formattedLabel;
-    }
+    component.element.textContent = formatBadgeLabel(config.label ?? '', config.max);
   }
   
   return component;
@@ -166,9 +156,7 @@ export const withMax = (config: BadgeConfig) => <C extends BadgeFeatureHost>(com
   // apart again. Visibility is decided in withVisibility, which runs for
   // every badge -- this feature returns early when there is no max.
   if (config.label !== undefined) {
-    const formattedLabel = formatBadgeLabel(config.label, config.max);
-    component.element.textContent = formattedLabel;
-
+    // withVariant already formatted the label with this same max.
     if (isBadgeOverflow(config.label, config.max)) {
       component.element.classList.add(`${component.getClass('badge')}--overflow`);
     }
