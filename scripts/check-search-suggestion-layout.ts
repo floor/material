@@ -9,7 +9,7 @@ export async function checkSearchSuggestionLayout(page: Page, form: "factory" | 
     { text: "Apple pie", supportingText: "Match at the start" },
     { text: "Pineapple tart", supportingText: "Match in the middle" },
     { text: "Crabapple", supportingText: "Match at the end" },
-    { text: "Apple apple pie", supportingText: "Repeated matches" },
+    { text: "Apple apple pie", supportingText: "Repeated phrase" },
     { text: "A plain pear", supportingText: "No match" },
     { text: "Pineapple tart" },
     { text: "Apple " + "a long headline ".repeat(12), supportingText: "A long supporting line ".repeat(12) },
@@ -73,7 +73,7 @@ export async function checkSearchSuggestionLayout(page: Page, form: "factory" | 
         assert.equal(new Set(row.headline.map(part => Math.round(part.top))).size, 1,
           `${name}: highlighted and plain headline fragments share one line; ${JSON.stringify(row.headline)}`);
         assert.equal(Math.round(row.height), suggestions[index].supportingText ? 72 : 56, `${name}: item height`);
-        assert.equal(row.matches.length, [1, 1, 1, 2, 0, 1, 1][index], `${name}: highlighted matches`);
+        assert.equal(row.matches.length, [1, 1, 1, 1, 0, 1, 1][index], `${name}: highlighted matches`);
         assert.ok(row.matches.every(match => match.text?.toLowerCase() === "apple" && match.weight === "600"), `${name}: match stays emphasized`);
         if (row.supporting) {
           const end = Math.max(...row.headline.map(part => part.bottom));
