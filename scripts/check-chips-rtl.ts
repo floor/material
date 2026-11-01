@@ -9,9 +9,9 @@
 // and both ::before touch targets — the action's, spanning the action, and the
 // remove's 48px one, anchored to the chip's end — stayed on the left-to-right
 // side. The partial now writes the physical sides and the right-to-left pair
-// as direction arms (the target's anchor reads custom properties on the chip
-// root, because a :not() placed after a ::before cannot cut the attribute
-// fallback), so the bundled and the unbundled sheet must agree.
+// as direction arms, and the trailing target as a physical edge pair with the
+// inline-start margin absorbing the difference, so no :not() has to follow a
+// ::before; the bundled and the unbundled sheet must agree.
 //
 // Every variant (assist, filter, input, suggestion) renders with a leading
 // icon, the filter chip with a trailing action and the input chip with its
@@ -107,7 +107,7 @@ const expectedDirection = (item: { dir?: Direction }, page: Direction): Directio
 
 interface Box { left: number; top: number; right: number; bottom: number; width: number; height: number }
 interface Corners { tl: number; tr: number; br: number; bl: number }
-interface Before { left: number | null; right: number | null; top: number | null; width: number | null; height: number | null }
+interface Before { left: number | null; right: number | null; marginLeft: number | null; top: number | null; width: number | null; height: number | null }
 
 interface ChipMeasure {
   root: Box;
@@ -142,7 +142,14 @@ const measure = (page: Page, cases: Case[]): Promise<Measured> =>
     };
     const before = (element: Element): Before => {
       const style = getComputedStyle(element, "::before");
-      return { left: number(style.left), right: number(style.right), top: number(style.top), width: number(style.width), height: number(style.height) };
+      return {
+        left: number(style.left),
+        right: number(style.right),
+        marginLeft: number(style.marginLeft),
+        top: number(style.top),
+        width: number(style.width),
+        height: number(style.height),
+      };
     };
     const read = (root: HTMLElement): ChipMeasure => {
       const action = root.querySelector(".mtrl-chip__action") as HTMLElement;
@@ -203,7 +210,14 @@ const measureElements = (page: Page, cases: ElementCase[]): Promise<Measured> =>
     };
     const before = (element: Element): Before => {
       const style = getComputedStyle(element, "::before");
-      return { left: number(style.left), right: number(style.right), top: number(style.top), width: number(style.width), height: number(style.height) };
+      return {
+        left: number(style.left),
+        right: number(style.right),
+        marginLeft: number(style.marginLeft),
+        top: number(style.top),
+        width: number(style.width),
+        height: number(style.height),
+      };
     };
     const read = (root: HTMLElement): ChipMeasure => {
       const action = root.querySelector(".mtrl-chip__action") as HTMLElement;
@@ -311,9 +325,21 @@ function assertChips(where: string, chips: Partial<Record<string, ChipMeasure>>,
         measured!.before.height !== null && near(measured!.before.height!, TARGET),
       `${where}: the ${key} chip's ${control} touch target is ${measured!.before.width}x${measured!.before.height}px; expected ${TARGET}x${TARGET}`,
     );
-    const anchor = measured!.before[side];
-    assert(anchor !== null, `${where}: the ${key} chip's ${control} touch target is anchored with ${side}=auto; expected 0 from its ${side} edge`);
-    assert(near(anchor!, 0), `${where}: the ${key} chip's ${control} touch target is anchored ${anchor}px from its ${side} edge; expected 0`);
+    // The target's box, not the declaration that places it: the start edge the
+    // direction puts it on is the chip's end, and its 48px runs from there back
+    // over the label. A physical edge pair with an auto start margin and a
+    // logical inset anchored to the inline end both resolve to this box; only
+    // the anchored-to-the-end one mirrors.
+    assert(
+      measured!.before.left !== null && measured!.before.marginLeft !== null,
+      `${where}: the ${key} chip's ${control} touch target leaves left or its start margin unresolved; cannot read its box`,
+    );
+    const edge = measured!.before.left! + measured!.before.marginLeft!;
+    const wanted = direction === "rtl" ? 0 : box.width - TARGET;
+    assert(
+      near(edge, wanted),
+      `${where}: the ${key} chip's ${control} touch target spans ${edge}px..${edge + TARGET}px of the ${box.width}px control; expected ${wanted}px..${wanted + TARGET}px, so its ${TARGET}px runs back from the chip's ${side} edge`,
+    );
     assert(
       measured!.before.top !== null && near(measured!.before.top!, box.height / 2),
       `${where}: the ${key} chip's ${control} touch target starts at top=${measured!.before.top}px; expected ${box.height / 2} (50% of the ${box.height}px control, before its centring transform)`,

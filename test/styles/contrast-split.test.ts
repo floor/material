@@ -180,9 +180,9 @@ describe("explicit contrast levels are opt-in", () => {
     // four custom properties on the root (styles/components/_datepicker.scss).
     // A chip's trailing control keeps its connected corners square on the side
     // it meets the chip and the chip's radius on the outside, and its 48dp
-    // touch target runs back from the chip's end: physical pairs and a target
-    // anchor read from two custom properties on the chip root, flipped by the
-    // direction arms, so the bundler's :lang() lowering cannot reach them
+    // touch target runs back from the chip's end: physical corners with one
+    // direction arm, and a target whose start margin mirrors with the element's
+    // computed direction, so the bundler's :lang() lowering cannot reach them
     // (styles/components/_chips.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
@@ -207,8 +207,8 @@ describe("explicit contrast levels are opt-in", () => {
     // so the bundler's :lang() lowering cannot reach them
     // (styles/components/_split-button.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("17a0aa0279ba5ac6f9f13c32a51c770272529bbb0f3d6fdfeed132540f04d1eb");
-    expect(css.length).toBe(542800);
+      .toBe("90e5cbeb9ba1b738815fae26bb603038f4c4ed89adbeb5d36b07f7c49bbeabf0");
+    expect(css.length).toBe(542189);
   });
 
   test("today's sheets still resolve to the fixture", () => {

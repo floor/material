@@ -17,19 +17,6 @@ $container: "#{base.$prefix}-chips";
     --#{base.$prefix}-chip-leading-color: #{t.color("primary")};
     --#{base.$prefix}-chip-trailing-color: #{t.color("on-surface-variant")};
     --#{base.$prefix}-chip-checkmark-color: currentColor;
-    // The trailing control's 48px touch target runs back from the chip's end:
-    // the control's physical end edge, which mirrors with the direction. The
-    // flip is carried by custom properties on the root because the ::before
-    // cannot take a direction arm itself: the attribute fallback's
-    // :not(:where(.mtrl-ltr, .mtrl-ltr *)) cannot follow a pseudo-element, so
-    // it would never cut a chip inside a nearer dir="ltr" (as the date
-    // picker's range band found).
-    --#{base.$prefix}-chip-trailing-target-left: auto;
-    --#{base.$prefix}-chip-trailing-target-right: 0;
-    @include m.rtl($self: true) {
-        --#{base.$prefix}-chip-trailing-target-left: 0;
-        --#{base.$prefix}-chip-trailing-target-right: auto;
-    }
     display: inline-flex;
     align-items: center;
     position: relative;
@@ -97,16 +84,22 @@ $container: "#{base.$prefix}-chips";
         padding-inline-end: 8px;
         justify-content: flex-start;
         // The edge that meets the chip's body is square; the one on the outside
-        // keeps the chip's radius. Physical pairs, with the right-to-left pair
+        // keeps the chip's radius. Physical corners with the right-to-left set
         // as an arm: the minifier lowers the logical corners into :lang() arms
-        // that never match dir="rtl" (_text-field.scss).
+        // that never match dir="rtl" (_text-field.scss). The arm sits on the
+        // control, so a marker on the chip root is an ancestor like any other,
+        // and both subjects share one :is(); written per subject it repeats the
+        // whole rule in every copy of this sheet, and an SSR page inlines it
+        // once per chip set.
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
-        @include m.rtl {
-            border-top-left-radius: inherit;
-            border-bottom-left-radius: inherit;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
+        @at-root {
+            :where(.#{base.$prefix}-rtl, :host(.#{base.$prefix}-rtl), [dir='rtl'])
+                :is(.#{$component}__remove, .#{$component}__trailing-action):not(.#{base.$prefix}-ltr *) {
+                border-radius: inherit;
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
         }
         color: var(--#{base.$prefix}-chip-trailing-color);
     }
@@ -236,18 +229,20 @@ $container: "#{base.$prefix}-chips";
     // end over the label's end, so it never sticks out past the chip -- centred on
     // the icon it overflowed by 7px, which a scrolling chip set would scroll to. It
     // was only under pointer: coarse, only vertically, and the remove button 32 wide.
-    // Physical sides: the action's target spans the action symmetrically, which needs
-    // no arm, and the trailing target's anchored edge is a custom property the root
-    // flips (above), because no arm can sit on the ::before itself.
+    // Physical sides: the action's target spans the action symmetrically, so it
+    // needs no arm. The trailing target pins both edges and lets the inline-start
+    // margin absorb the difference (a 48px box in the 26px control leaves -22px),
+    // so its anchor mirrors with the element's computed direction. The bundler
+    // leaves margin-inline-start alone; it lowers inset-inline-end into :lang()
+    // arms that never match dir="rtl" (_text-field.scss).
     &__action::before { content: ""; position: absolute; inset-block: -8px; left: 0; right: 0; }
     &__remove::before, &__trailing-action::before {
         content: "";
         position: absolute;
-        top: 50%;
-        left: var(--#{base.$prefix}-chip-trailing-target-left);
-        right: var(--#{base.$prefix}-chip-trailing-target-right);
+        inset: 50% 0 auto;
         width: 48px;
         height: 48px;
+        margin-inline-start: auto;
         transform: translateY(-50%);
     }
 }
