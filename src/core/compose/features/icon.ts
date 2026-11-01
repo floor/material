@@ -132,10 +132,15 @@ const createIcon = (
         if (config.iconPosition === "end") {
           element.appendChild(iconElement);
         } else {
-          // For 'start' position, insert after any existing label
-          const labelElement = element.querySelector(
-            `[class*="${PREFIX}-${config.componentName || "component"}__label"]`,
-          );
+          // For 'start' position, insert after any existing label. The label
+          // class is built from the configured componentName and prefix,
+          // which are data, not selector syntax: a quote or a backslash in
+          // either made the interpolated `[class*=...]` selector throw.
+          // getElementsByClassName compares the literal token, so every
+          // name reaches its label.
+          const labelElement = element.getElementsByClassName(
+            `${PREFIX}-${config.componentName || "component"}__label`,
+          )[0];
           if (labelElement) {
             // Insert after the label
             if (labelElement.nextSibling) {

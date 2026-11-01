@@ -11,6 +11,7 @@ import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
+import { checkComposeIconLabel } from "./check-compose-icon-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
@@ -46,6 +47,9 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createDialog } from 'material'; window.createDialog = createDialog;`);
+  // The public compose surface, for the icon label guard: what npm exports,
+  // not the source tree's module.
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { withIcon } from 'material/core/compose'; window.withIcon = withIcon;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -111,6 +115,7 @@ try {
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkComposeIconLabel(page);
   await checkTextField(page);
   await checkTextFieldTokens(page);
   await checkTextFieldAnatomy(page);
