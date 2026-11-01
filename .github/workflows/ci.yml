@@ -166,7 +166,7 @@ jobs:
         include:
           - group: elements
             browsers: chromium
-            checks: elements:check shadow-styles:check
+            checks: shadow-styles:check elements:check
           - group: adapters
             browsers: chromium
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
