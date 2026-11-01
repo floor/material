@@ -116,6 +116,24 @@ $component: '#{base.$prefix}-datepicker';
   &__mode-toggle {
     position: absolute; @include d.end(12px); bottom: 12px; font-size: 24px;
   }
+  // The arms above need the marker on an ancestor, and dir="rtl" may sit on
+  // this root instead — the runtime resolves the factory root from the
+  // nearest [dir], itself included (src/core/dom/direction.ts). These
+  // root-carried forms follow the inline arms, as the split-button's do.
+  // Nothing of them in the logical form.
+  @include d.arms-self-only {
+    .#{$component}__trigger { right: auto; left: 4px; }
+    .#{$component}__mode-toggle { right: auto; left: 12px; }
+  }
+  &--fullscreen {
+    @include d.arms-self-only {
+      .#{$component}__close { left: auto; right: 4px; }
+      .#{$component}__save { right: auto; left: 12px; }
+    }
+  }
+  &--docked {
+    @include d.arms-self-only { left: auto; right: 0; }
+  }
   // The month and year row is 56dp, as in Compose (48dp buttons, 4dp above and below).
   &__header { display: flex; align-items: center; padding: 4px 12px; min-height: 56px; box-sizing: border-box; }
   &__navigation { display: flex; flex: 1; }
