@@ -33,21 +33,23 @@ const INDEX = [
   "",
 ].join("\n");
 
+const DIRECT = ["/** @deprecated The module's own declaration. */", "export const direct = 1;", ""].join("\n");
+
 describe("an export's deprecation, resolved through its declaration", () => {
-  const read = async () => {
+  const exportsOf = async (entry: string, files: Record<string, string>) => {
     const directory = await mkdtemp(join(tmpdir(), "export-deprecation-"));
-    await writeFile(join(directory, "declaration.ts"), DECLARATION);
-    await writeFile(join(directory, "index.ts"), INDEX);
-    const program = ts.createProgram([join(directory, "index.ts")], {
+    for (const [name, text] of Object.entries(files)) await writeFile(join(directory, name), text);
+    const program = ts.createProgram([join(directory, entry)], {
       strict: true, skipLibCheck: true, noEmit: true,
       target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
     });
     const checker = program.getTypeChecker();
-    const source = program.getSourceFile(join(directory, "index.ts"));
-    if (!source) throw new Error("the index is not in the program");
-    const exports = checker.getExportsOfModule(checker.getSymbolAtLocation(source)!);
-    return Object.fromEntries(exports.map((symbol) => [symbol.name, deprecationOf(checker, symbol)]));
+    const source = program.getSourceFile(join(directory, entry));
+    if (!source) throw new Error(`${entry} is not in the program`);
+    const symbols = checker.getExportsOfModule(checker.getSymbolAtLocation(source)!);
+    return Object.fromEntries(symbols.map((symbol) => [symbol.name, deprecationOf(checker, symbol)]));
   };
+  const read = () => exportsOf("index.ts", { "declaration.ts": DECLARATION, "index.ts": INDEX });
 
   test("a tag on the declaration counts, with its note", async () => {
     expect((await read()).moved).toEqual({ note: "The whole symbol is deprecated.", where: "declaration" });
@@ -63,5 +65,10 @@ describe("an export's deprecation, resolved through its declaration", () => {
 
   test("the export site's tag wins over the declaration's, so a move keeps its path note", async () => {
     expect((await read()).tagged).toEqual({ note: "The export site says so.", where: "export" });
+  });
+
+  test("a module that declares and exports the name in place still has the declaration's tag", async () => {
+    // No alias hop: the exported symbol is the declaration, and the tag is still the declaration's
+    expect((await exportsOf("direct.ts", { "direct.ts": DIRECT })).direct).toEqual({ note: "The module's own declaration.", where: "declaration" });
   });
 });

@@ -17,19 +17,23 @@ export type Deprecation = {
   where: "export" | "declaration";
 };
 
-/** The @deprecated notes on a symbol's own declarations, in declaration order */
-const notesOn = (symbol: ts.Symbol): string[] =>
-  (symbol.declarations ?? [])
-    .flatMap((declaration) => ts.getJSDocTags(declaration))
-    .filter((tag) => tag.tagName.text === "deprecated")
-    .map((tag) => ts.getTextOfJSDocComment(tag.comment) ?? "");
+/** The @deprecated tag on a symbol's own declarations, and the kind of declaration it sits on */
+const tagOn = (symbol: ts.Symbol): Deprecation | undefined => {
+  for (const declaration of symbol.declarations ?? []) {
+    const tag = ts.getJSDocTags(declaration).find((t) => t.tagName.text === "deprecated");
+    if (!tag) continue;
+    // An export statement's specifier says why this export goes; anywhere else it is the declaration itself
+    return { note: ts.getTextOfJSDocComment(tag.comment) ?? "", where: ts.isExportSpecifier(declaration) ? "export" : "declaration" };
+  }
+  return undefined;
+};
 
-/** An export's deprecation: the export statement's tag, else the aliased declaration's */
+/** An export's deprecation: the export statement's tag, else the declaration's */
 export function deprecationOf(checker: ts.TypeChecker, symbol: ts.Symbol): Deprecation | undefined {
-  const own = notesOn(symbol)[0];
-  if (own !== undefined) return { note: own, where: "export" };
+  const own = tagOn(symbol);
+  if (own) return own;
+  // An `export *` chain hands back the declaration's own symbol, with no alias to follow
   const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
   if (target === symbol) return undefined;
-  const declared = notesOn(target)[0];
-  return declared === undefined ? undefined : { note: declared, where: "declaration" };
+  return tagOn(target);
 }
