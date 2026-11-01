@@ -22,17 +22,12 @@ const workflow = YAML.parse(await Bun.file(".github/workflows/publish.yml").text
 };
 const step = workflow.jobs.publish.steps.find(candidate => candidate.name === STEP_NAME);
 
-// What the network and npm would answer, as shell functions: `npm view` prints
-// the version list, `npm dist-tag add` returns NPM_ADD_EXIT, curl prints
-// CURL_TAGS or returns CURL_EXIT. Every call is logged for the assertions.
+// What the network and npm would answer, as shell functions: `npm dist-tag
+// add` returns NPM_ADD_EXIT, curl prints CURL_TAGS or returns CURL_EXIT. Every
+// call is logged for the assertions.
 const PRELUDE = [
   'npm() {',
   '  echo "npm $*" >> "$STUB_LOG"',
-  '  if [ "$1" = "view" ]; then',
-  '    [ "${NPM_VIEW_EXIT:-0}" = "0" ] || return "$NPM_VIEW_EXIT"',
-  '    printf "%s" "$NPM_VIEW"',
-  '    return 0',
-  '  fi',
   '  if [ "$1" = "dist-tag" ]; then',
   '    return "${NPM_ADD_EXIT:-0}"',
   '  fi',
@@ -53,10 +48,6 @@ interface Answers {
   tags?: string;
   /** What curl exits with (a registry error). */
   curlExit?: number;
-  /** What `npm view material@<version> version --json` answers. */
-  view?: string;
-  /** What `npm view` exits with. */
-  viewExit?: number;
   /** What `npm dist-tag add` exits with: 0 moves the tag, anything else is a refusal. */
   addExit?: number;
 }
@@ -82,8 +73,6 @@ const runStep = async (answers: Answers = {}): Promise<{ code: number; stdout: s
       GITHUB_STEP_SUMMARY: summary,
       CURL_TAGS: answers.tags ?? '{"legacy":"1.0.4","latest":"3.3.0"}',
       CURL_EXIT: String(answers.curlExit ?? 0),
-      NPM_VIEW: answers.view ?? '["3.1.0","3.2.7"]',
-      NPM_VIEW_EXIT: String(answers.viewExit ?? 0),
       NPM_ADD_EXIT: String(answers.addExit ?? 0),
     },
     stdout: "pipe",
@@ -101,14 +90,12 @@ describe("publish.yml's next dist-tag move", () => {
   // The ordering matrix: the tag is moved exactly when semver says it sorts
   // below the version just published, prereleases included (semver.org §11:
   // 3.3.1-next.1 sorts below 3.3.1, and an earlier release sorts below a later
-  // one). `view` is what npm answers for `<3.3.1`: a range with no prerelease
-  // comparator on the same major.minor.patch excludes every prerelease, and
-  // the release itself is outside its own range — the defect these hold down.
+  // one). Both behind prereleases are the regression: npm's range matching
+  // leaves prereleases out, so the step never moved them.
   test("a next below the published version is moved to it", async () => {
     const { code, stdout, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0"}',
-      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
     expect(log).toContain("npm dist-tag add material@3.3.1 next");
@@ -120,7 +107,6 @@ describe("publish.yml's next dist-tag move", () => {
     const { code, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.1-next.1"}',
-      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
     expect(log).toContain("npm dist-tag add material@3.3.1 next");
@@ -131,7 +117,6 @@ describe("publish.yml's next dist-tag move", () => {
     const { code, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0-next.1"}',
-      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
     expect(log).toContain("npm dist-tag add material@3.3.1 next");
@@ -142,7 +127,6 @@ describe("publish.yml's next dist-tag move", () => {
     const { code, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.1"}',
-      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
     expect(log).not.toContain("npm dist-tag add");
@@ -153,7 +137,6 @@ describe("publish.yml's next dist-tag move", () => {
     const { code, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.4.0-next.1"}',
-      view: '["3.2.7","3.3.0"]',
     });
     expect(code).toBe(0);
     expect(log).not.toContain("npm dist-tag add");
@@ -164,7 +147,6 @@ describe("publish.yml's next dist-tag move", () => {
     const { code, stdout, log, summary } = await runStep({
       version: "3.3.1",
       tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"3.3.0"}',
-      view: '["3.2.7","3.3.0"]',
       addExit: 1,
     });
     expect(code).toBe(0);
@@ -196,13 +178,13 @@ describe("publish.yml's next dist-tag move", () => {
     expect(log).not.toContain("npm ");
   });
 
-  test("an unreadable version list is reported, not failed", async () => {
-    const { code, log, summary } = await runStep({
-      tags: '{"legacy":"1.0.4","latest":"3.2.7","next":"3.1.0"}',
-      viewExit: 1,
+  test("a next tag that is not a version is reported, not failed", async () => {
+    const { code, stdout, log, summary } = await runStep({
+      tags: '{"legacy":"1.0.4","latest":"3.3.0","next":"not-a-version"}',
     });
     expect(code).toBe(0);
-    expect(summary).toContain("could not list");
     expect(log).not.toContain("npm dist-tag add");
+    expect(stdout).toContain("::warning title=next dist-tag::");
+    expect(summary).toContain("is not a version");
   });
 });
