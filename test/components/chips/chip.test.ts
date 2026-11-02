@@ -208,3 +208,18 @@ describe("chips-container integration", () => {
     expect(calls).toBe(0); expect(set.getChips()).toEqual([]);
   });
 });
+
+
+test("explicit names stay on every chip's primary focus target after label edits", () => {
+  for (const [type, factory] of Object.entries(factories)) {
+    const standalone = mount(factory({ label: "Chip", ariaLabel: "Chip details", ripple: false }));
+    const set = group([{ type: type as ChipConfig["type"], label: "Chip", ariaLabel: "Chip details", ripple: false }]);
+    for (const chip of [standalone, set.getChips()[0]]) {
+      chip.focus();
+      expect(document.activeElement?.getAttribute("aria-label")).toBe("Chip details");
+      chip.setLabel("Renamed").setText("Updated").setSelected(true).disable().enable();
+      chip.focus();
+      expect(document.activeElement?.getAttribute("aria-label")).toBe("Chip details");
+    }
+  }
+});
