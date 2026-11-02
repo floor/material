@@ -270,7 +270,9 @@ function better(next: Candidate, prev: Candidate, ranks: Map<string, number>): b
   if (nextRank !== prevRank) return nextRank > prevRank;
   const spec = cmpSpec(next.spec, prev.spec);
   if (spec !== 0) return spec > 0;
-  return next.order > prev.order;
+  // Equal order means the same rule: declarations are visited in source order,
+  // and CSS keeps the later declaration of a property within a rule.
+  return next.order >= prev.order;
 }
 
 const parsedCache = new Map<string, { rules: Rule[]; next: number; layers: string[] | null }>();

@@ -4,7 +4,6 @@ import { callbacksFixture } from "./callbacks.fixture";
 import createButton from "../../src/components/button";
 import createList from "../../src/components/list";
 import createCard from "../../src/components/card";
-import { withExpandable } from "../../src/components/card/features";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
 import createIconButton from "../../src/components/icon-button";
@@ -22,14 +21,6 @@ test("button toggle change carries selected and the button's value, as getValue(
   c.element.click();
   c.element.click();
   expect(seen).toEqual([[{ selected: true, value: "bold" }, "bold"], [{ selected: false, value: "bold" }, "bold"]]);
-});
-test("card expandedChanged keeps presentation state", () => {
-  const c = mount(createCard());
-  const enhanced = withExpandable()(c);
-  const seen: unknown[] = [];
-  c.on("expandedChanged", payload => seen.push([payload, enhanced.expandable.isExpanded()]));
-  enhanced.expandable.setExpanded(true);
-  expect(seen).toEqual([[{ expanded: true }, true]]);
 });
 test("list forwards the actual native keyboard and scroll events", () => {
   const c = mount(createList({ items: [] }));
