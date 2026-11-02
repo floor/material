@@ -501,6 +501,7 @@
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts",
+    "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
     "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
     "core:check": "bun run scripts/check-core.ts",
