@@ -17,6 +17,129 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-11-02
+
+Dialogs that hold their scrim and focus.
+
+### Changed
+
+- **The dialog shares its overlay, event host and tab stops with the rest of
+  the library (#182).**
+  Four pieces of dialog code each had a private copy of something the shared
+  modules already do: `getOverlayConfig` returned a div with no attributes;
+  `getApiConfig` copied every feature method into a second object and
+  `withAPI` wrapped each copy again in another arrow function; a full Divider
+  component drew a 1px rule `_dialog.scss` already paints; and a light-DOM tab
+  list (`querySelectorAll('button, [href], input, …')`) with its own
+  `handleTabKey` sat beside core's `tabStops`/`wrapTab`. Each is replaced by
+  the shared module. `DialogConfig`, `DialogComponent` and the DOM the dialog
+  produces are unchanged; the divider is a plain `<hr>`, styled by the same
+  stylesheet rules. One behaviour difference is declared and pinned:
+  `tabStops`/`wrapTab` walk open shadow roots, so a dialog whose content is a
+  custom element now starts focus inside that element's shadow root and Tabs
+  through it — before, focus stayed on the dialog's actions and the control
+  was unreachable. The dialog's `aria-hidden` initial-focus filter is kept:
+  `isTabStop` tests `[aria-hidden='true']` as well, so the dialog's initial
+  focus and `wrapTab`, and the side and bottom sheets' wrapping that already
+  used `wrapTab`, keep main's behaviour. The refactor pays: the dialog row
+  measures 12,295 bytes gzipped against 13,398 on main (−1,103 bytes, −1.1 kB,
+  budget 13,619), all components 125,266 against 125,720, packed all-js
+  126,966 against 127,417, and the tarball 874,875 compressed and 5,052,610
+  unpacked in 1,578 files against main's 875,869 and 5,056,122 in 1,578 files
+  (−994 and −3,512); the full stylesheet and inline SSR are unchanged at
+  63,697 gzip and 11,299. `scripts/check-dialog-browser.ts` opens a dialog
+  whose content is a text field and asserts the trap starts in its shadow
+  root, wraps to the actions and returns on Escape — red on main
+  (`'button' !== 'input'`), green here — and a focus unit test and a browser
+  check pin the `aria-hidden` filter in the initial focus and in `wrapTab`.
+
+### Fixed
+
+- **A reduced-motion dialog takes its initial focus (#233).**
+  Under `prefers-reduced-motion: reduce`, a dialog that opens left the focus
+  on the body instead of on its first control. The shared reduced-motion reset
+  (`src/styles/base/_reset.scss`) rewrites `transition-property` with
+  `visibility` in the list, and the dialog overlay's own transition lists
+  (`_dialog.scss`: the scrim's `background-color … , visibility 0s`) then give
+  `visibility` the fade's duration on open; in the task the `--visible` class
+  lands in, the first control still computes `visibility: hidden`, and
+  `focus()` on a hidden element does nothing — nothing focused it later.
+  Material's dialogs accessibility guidance states the contract: "When a
+  dialog appears, focus should automatically land on the first interactive
+  element within the dialog." `trapFocus` no longer calls `focus()` blind: it
+  focuses on the first frame the target is not `visibility: hidden` — the same
+  task under normal motion, a frame later under reduced motion.
+  `scripts/check-dialog-reduced-motion.ts` opens a dialog with
+  `reducedMotion: "reduce"`, waits for `afteropen` and asserts the first input
+  holds the focus: red on main `1e70c90f` (`dialog reduced motion:
+  {"active":"BODY","visibility":"visible"}` then `AssertionError: under
+  reduced motion the first control takes the initial focus`, `'BODY' !==
+  'first'`), green on the branch (`{"active":"first","visibility":"visible"}`
+  and the pass line).
+
+- **`afteropen` fires once the dialog's initial focus has landed (#236).**
+  `afteropen` announces that the dialog is ready, but it fired
+  `animationDuration` after `open()` even when the initial focus had not
+  landed yet. `scripts/check-dialog-afteropen.ts` opens a dialog with two
+  inputs at 0, 40 and 500 ms under both motion preferences and records
+  `document.activeElement` and the first control's computed `visibility`
+  inside the `afteropen` listener: on main `08e7ca3a` the reduced-motion cells
+  at 0 and 40 ms report `BODY` and `hidden`, and even the 500 ms cell — the
+  default duration, the surface already visible — still ends at `BODY`,
+  because main called `target.focus()` once and never retried. On the base
+  this branch stacks on (`d5c1d9d7`, #233) the focus lands by 500 ms, but the
+  0 and 40 ms reduced-motion cells still show `BODY` and `hidden` at
+  `afteropen`: the event can announce a dialog whose focus has not arrived.
+  The open timer now marks `afteropen` due, the focus wait holds it while it
+  runs, `focusWhenVisible` emits the held event the moment the focus lands,
+  and a close or a destroy drops the held event together with the wait; the
+  default 500 ms path is unchanged because the focus lands long before the
+  timer. The `afteropen` doc reads "(animationDuration after it was shown, or
+  once its initial focus lands if that is later)". The check passes all five
+  cells — `first` and `visible` — and both dialog guards run in CI:
+  `dialog-afteropen:check` and `dialog-reduced-motion:check` are package
+  scripts listed in `test/build/ci-commands.test.ts` and run in the
+  `browser (components-b)` group. Material specifies both halves — initial
+  focus on the first interactive element, and an enter and exit transition
+  pattern for appearance (read 2026-11-02).
+
+- **A contained dialog keeps its scrim inside its container (#179).**
+  A dialog created with `container` appended its overlay into that container,
+  but the overlay stayed `position: fixed` with `inset: 0`: the scrim covered
+  the whole viewport, caught clicks everywhere and centred the dialog on the
+  viewport, while `inertBackground` only made the container's siblings inert.
+  Measured in Chromium on a 900 × 700 page outside any website, with a
+  300 × 400 region: a static or relative container produced a `fixed` overlay
+  at `(0, 0) 900×700` — 5.25 times the region — a press outside the region
+  closed the dialog, and the page outside the container was not inert; the
+  no-container control showed the same fixed overlay with the page genuinely
+  inert. LTR and RTL measured identically. A non-body `container` now gives
+  the overlay `position: absolute`, so the scrim is the container's box, the
+  dialog is centred in it and a press outside does not dismiss it; a container
+  whose computed position is `static` is made `relative` while the overlay
+  lives in it, and its exact previous inline value (none included) is restored
+  when the dialog closes or is destroyed, while a positioned container is
+  left untouched. `document.body` (explicit or default) is unchanged, and
+  `layer: "top"` keeps the page-modal path through `showModal()` and its
+  `::backdrop`. The `container` and `layer` JSDoc and the module docs state
+  the new meaning and the top-layer exception. `scripts/check-dialog-browser.ts`
+  gains `checkDialogScrimScope`, run from `checkDialogMount` — so in CI's
+  `core:check`, against the packed factory, and in the standalone runner —
+  which asserts for static, positioned, no-container and explicit-body mounts
+  that the scrim's rectangle is the container's and does not cover the
+  viewport, while the page-modal mounts keep the page-covering scrim.
+
+### Internal
+
+- **The release removes 113 bytes gzipped from the all-js row (127,417 to
+  127,304) and moves the full stylesheet to 63,704 gzip, 7 bytes above the
+  published 3.4.0 build's 63,697; the packed tarball is 875,702 bytes
+  compressed, 5,056,234 unpacked in 1,578 files, against the published
+  3.4.0's 875,869 and 5,056,122 in 1,578 files.** Measured on main at
+  00ab8ba3, push run 41454371583, job 125307673206; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
 ## [3.4.0] - 2026-11-02
 
 Accessible names reach the control you focus.
@@ -5108,7 +5231,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.4.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.1...HEAD
+[3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
 [3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
