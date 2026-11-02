@@ -17,6 +17,161 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-11-02
+
+Accessible names reach the control you focus.
+
+### Added
+
+- **A text field names an unknown config key in development (#229).**
+  A config key the text field does not read was ignored without a word:
+  `{ maxlength: 10 }` beside the supported `maxLength`, or
+  `{ inputmode: "numeric" }`, which nothing reads, produced no attribute, no
+  property and no message. In development each unknown key is now named:
+  `[mtrl] text-field: unknown config key "maxlength"`. The known-key table is
+  typed against the config interfaces, so the compiler fails when the list and
+  an interface drift, in either direction. Production behaviour does not
+  change — the keys stay ignored in every mode — and a defined production
+  build erases the diagnostic, its loop and the key table with it. The text
+  field's warning browser check carries the unknown-key rows in all four
+  bundle modes (development, production, raw browser, missing environment) and
+  asserts the marker appears in development only; a field carrying all 38
+  supported keys stays quiet, as does a key that is known but fixed at build
+  time. The diagnostic fits the unchanged budgets, and no ceiling moved.
+
+- **Chips, select and search take an `ariaLabel` factory option (#231).**
+  The runtime `ariaLabel` never named the control that takes focus: a chip
+  kept its visible content, or a single-action set cell had no name at all;
+  the select kept its visible label; the search kept its placeholder. The chip
+  factories and `createChips`, `createSelect` and `createSearch` now accept
+  `ariaLabel` and forward it to the focus target — a gridcell for a
+  single-action set chip and its action button otherwise, and the select's and
+  search's native inputs. The name survives label, placeholder and value
+  edits; an explicit name wins over a set cell's content name and is
+  reapplied when the label changes, and removal and trailing actions keep
+  their own names. `ChipConfig` and its four named aliases, `SelectConfig` and
+  `SearchConfig` gain `ariaLabel?: string`, and typed fixtures exercise every
+  factory and reject non-string names. The packed browser check reads
+  Chromium's accessibility tree for the focused targets, their name sources
+  and DOM focus before asserting.
+
+### Fixed
+
+- **A focused chip-set cell is named from its content (#230).**
+  Assist, filter and suggestion chips inside a chip set focus their `gridcell`
+  wrapper, and the inner button is `aria-hidden`, so its visible label could
+  not supply the cell's accessible name; an audit of main found empty names on
+  all three focused cells despite visible text. Each single-action focus cell
+  is now named from its label during render, which also runs after label
+  edits; input-chip primary and removal targets keep their own names, and
+  two-action chips keep distinct action names. Material's chips guidance names
+  basic and selectable chips from their content and gives them the gridcell
+  role. A Chromium accessibility-tree regression enters the set with Tab,
+  moves through the cells with ArrowRight and checks the name of the actual
+  focused target: on main's product code ten single-action observations are
+  empty while the four two-action controls pass, and on the fix all fourteen
+  observations pass, including label edits and filter selection. No option,
+  type or styling token is added, and the fix costs 3 bytes gzipped on the
+  chips row.
+
+- **The text field's existing `ariaLabel` names the focused input (#228).**
+  On main, `createTextField({ ariaLabel: "Email address" })` named the wrapper
+  while the native input that receives focus had no name; with a visible label
+  the input kept `Email` and ignored the explicit name. Textareas behaved the
+  same way in filled and outlined variants. The runtime `ariaLabel` is now
+  forwarded through the native input attribute map, and `TextFieldConfig`
+  declares `ariaLabel?: string`, as `TextInputConfig` declares the forwarded
+  field. The label feature keeps its visible-label fallback and equal-name
+  handling, and a different explicit name stays stable across label edits; the
+  element keeps its explicit host naming. A Chromium check reads the
+  accessibility tree of the focused native textbox over twenty cases — input
+  and textarea, filled and outlined, explicit-name precedence, and
+  label-only, equal and empty fallback — plus sixteen label-edit observations.
+  It is red on main's product code and green on the fix. No alternate option,
+  style or SSR behaviour is introduced.
+
+- **The slider's existing accessible names reach its handles (#225).**
+  `createSlider({ ariaLabel: "Slide" })` named the wrapper while the focusable
+  `role="slider"` handle stayed unnamed, and the inherited `ariaLabelledBy`
+  option had the same routing defect. Both now apply to every handle: an
+  explicit `ariaLabel` takes precedence over the visible-label fallback,
+  following the switch and checkbox input naming, and `ariaLabelledBy` stays a
+  native ID reference, so external text changes update the computed name. A
+  range appends hidden, referenced `minimum` and `maximum` suffixes to each
+  handle's name, as the string-name path does. One shared naming pass covers
+  all handles, and unit coverage pins distinct suffix IDs for simultaneous
+  sliders and cleanup on destroy. The browser check reads Chromium's computed
+  accessibility tree for sixteen single and range scenarios, including live
+  reference renames: ten scenarios fail on main, and the branch passes all
+  sixteen. The pass fits the unchanged slider budget, and no option, styling
+  value or consumer edit is added.
+
+- **A non-counting badge announces "New notification" (#210).**
+  A visible dot exposed `aria-hidden="true"` with no role or accessible name,
+  and Chromium excluded both the factory dot and the shadow-root `<m-badge>`
+  dot from its accessibility tree; an attached destination had no badge
+  description, and an icon-only tab's explicit name omitted the dot. The dot
+  now exposes `role="status"` and `aria-label="New notification"` — a polite
+  live region — without `aria-hidden`, and still renders no text. Nonnumeric
+  text in `label` supplies a translated announcement, numeric values and
+  numeric strings keep the default, and a counting badge drops the dot's name
+  so its count reads normally. `withBadge` puts a visible dot's announcement
+  in the destination's description, preserving its name and existing
+  descriptions, and hide/show removes and restores the reference; tabs compose
+  the announcement after their own label, including icon-only tabs with an
+  explicit name. Material's badge accessibility guidance says non-counting
+  badges "will simply announce New notification". The browser check reads the
+  accessibility role, name and live-region properties of the actual factory
+  and shadow-root nodes over seven states and three tab cases: eighteen
+  assertions fail on main, and the check passes on the fix inside
+  `elements:check`.
+
+- **The switch thumb slides in every build (#162).**
+  The handle and its state layer spring on `inset-inline-start`. A bundler
+  targeting old browsers lowers that inset into `:lang()`-guarded `left` and
+  `right` rules while the base rule's transition list still names the logical
+  side, so the transitioned property is gone from the bundled sheet and the
+  handle jumps instead of sliding. The transition lists now name the physical
+  shorthand `inset` beside the existing `inset-inline-start` spring, on the
+  same fast-spatial token: `inset` covers the sides the lowering writes and
+  the pressed rule's `top`, and an engine too old to parse `inset` also rejects
+  `linear()`, so nothing that could animate loses a transition. No selector or
+  placement declaration changes, so direction behaviour is identical in every
+  case. `scripts/check-switch-transition.ts` bundles `dist/styles.css` as an
+  old-target consumer build does, toggles a factory-built switch in each
+  direction case and samples the handle every frame: it fails on main with no
+  intermediate sample in the `dir=rtl`, `lang=en` case, and passes all six
+  cases on the branch, each landing on its cold-rendered rest. At the merged
+  head the full stylesheet is 835,997 raw / 63,696 gzip / 44,585 brotli
+  (CI 41437183257), 8 bytes gzipped under main's 63,704, the switch row is
+  unchanged, and no budget moves.
+
+### Internal
+
+- **The contrast test's cascade model keeps a rule's later declaration (#239).**
+  The contrast test scored two declarations of one property in the same rule
+  as first-wins, where CSS keeps the later one. `better()` compared layer
+  rank, specificity and source order, and required a strictly greater order,
+  so the first of two declarations sharing all three stayed; the comparison
+  now accepts an equal order, and a second test pins that a later rule still
+  wins by its greater one. The fixture recording the model's output for 1,152
+  states was regenerated, and exactly 240 cells move: every one of them in the
+  72 desert states and none in ocean, by role `error` 72, `error-container`
+  72, `on-error-container` 72 and `on-error` 24. The desert root's `error`
+  becomes `#ba1a1a` from `#b3261e`, for one. Regenerating under the old model
+  reproduces the committed fixture byte for byte, so the model fix accounts
+  for every moved cell. Every change is under `test/`, so nothing in the
+  shipped package moves: the package job prints the same tarball line as
+  main's.
+
+- **The release adds 339 bytes gzipped in the all-js row (127,078 to
+  127,417) and moves the full stylesheet to 63,696 gzip; the packed tarball
+  is 875,871 bytes compressed, 5,056,122 unpacked in 1,578 files, against
+  874,849 and 5,052,835 in 1,578 files in 3.3.4.** Measured on main at
+  473e126a, push run 41439212121, job 125257027173; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
 ## [3.3.4] - 2026-11-02
 
 A lighter package, part two.
@@ -4953,7 +5108,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
 [3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
 [3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
