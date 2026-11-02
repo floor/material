@@ -69,6 +69,8 @@ export interface BadgeConfig {
   /** 
    * Text label inside the badge (for large badges)
    * Up to 4 characters, numbers exceeding max will show "{max}+"
+   * For a small dot, nonnumeric text supplies its accessible announcement;
+   * otherwise it announces "New notification" without rendering text.
    * @example "3" | "99+" | "New"
    */
   label?: string | number;

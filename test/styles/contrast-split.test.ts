@@ -199,9 +199,17 @@ describe("explicit contrast levels are opt-in", () => {
     // whole gap on every placement, so the cardinal bottom and right sides
     // sit 8px from the target with the arrow meeting it, exactly as the
     // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d11cb234bb857f21c85f34e66867822be343352320fdaa5fa84d412e60357cba");
-    expect(css.length).toBe(544228);
+      .toBe("7d0279b91c0b43c6bca514bdf6ff7d1747891ddfa419d2ae677f639e5624a0af");
+    expect(css.length).toBe(544313);
   });
 
   test("today's sheets still resolve to the fixture", () => {

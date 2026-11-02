@@ -46,14 +46,13 @@ export const withDom =
     });
 
     // Build accessible label for handles
-    const label = config.label || "";
-    const handleLabel = config.range && label ? `${label} minimum` : label;
-    const secondHandleLabel = label ? `${label} maximum` : "";
+    const label = config.ariaLabel || config.label || "";
 
     // An accessible handle: a div with the slider role, its value on ARIA, and
-    // its position from the value. The two handles differed only in the value,
-    // the index and the label, written out twice.
-    const handleElement = (index: 0 | 1, handleValue: number, name: string): HTMLElement => {
+    // its position from the value. The two handles differed only in the value
+    // and the index, written out twice. The name is set after both exist, from
+    // the one place that also carries the labelledby reference.
+    const handleElement = (index: 0 | 1, handleValue: number): HTMLElement => {
       const attributes: Record<string, string> = {
         role: "slider",
         "aria-valuemin": String(min),
@@ -65,10 +64,6 @@ export const withDom =
         "data-value": String(handleValue),
         "data-handle-index": String(index),
       };
-
-      if (name) {
-        attributes["aria-label"] = name;
-      }
 
       const element = createElement({
         tag: "div",
@@ -103,7 +98,7 @@ export const withDom =
       return element;
     };
 
-    const handle = handleElement(0, value, handleLabel);
+    const handle = handleElement(0, value);
     const valueBubble = bubbleElement(0, value);
 
     // Create second handle and value bubble for range sliders
@@ -114,9 +109,33 @@ export const withDom =
       const secondValue =
         config.secondValue !== undefined ? config.secondValue : max;
 
-      secondHandle = handleElement(1, secondValue, secondHandleLabel);
+      secondHandle = handleElement(1, secondValue);
       secondValueBubble = bubbleElement(1, secondValue);
     }
+
+    // Keep ID references live: changes to the external label rename the handles.
+    // A range appends its endpoint through a hidden, referenced suffix.
+    [handle, secondHandle].forEach((target, index) => {
+      if (!target) return;
+      const endpoint = config.range ? index ? "maximum" : "minimum" : "";
+      if (label) target.setAttribute("aria-label", endpoint ? `${label} ${endpoint}` : label);
+      if (config.ariaLabelledBy) {
+        let labelledBy = config.ariaLabelledBy;
+        if (endpoint) {
+          const suffix = createElement({
+            tag: "span",
+            text: endpoint,
+            attributes: {
+              id: `${getClass("slider")}-${Math.random().toString(36).slice(2, 9)}`,
+              hidden: true,
+            },
+            container: target,
+          });
+          labelledBy += ` ${suffix.id}`;
+        }
+        target.setAttribute("aria-labelledby", labelledBy);
+      }
+    });
 
     // A slider renders no form control of its own, so without these it
     // submits nothing. Nothing is created unless the slider is named; a range
