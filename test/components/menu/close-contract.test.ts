@@ -493,11 +493,24 @@ describe("split button follows the menu", () => {
     return { component, seen };
   };
 
+  // The split button loads its menu as a chunk on the first expand(): until it
+  // arrives, innerMenu is the stand-in and its element is a placeholder, not
+  // the surface these tests observe. Wait for the menu itself, then for its
+  // reveal.
+  const shownMenu = async (component: object): Promise<void> => {
+    for (let attempt = 0; attempt < 200; attempt += 1) {
+      const element = innerMenu(component)!.element;
+      if (element.isConnected) return shown(element);
+      await wait(10);
+    }
+    throw new Error("the split button's menu chunk did not arrive");
+  };
+
   test("dismissed by the user: isExpanded() is false and collapse is emitted in the same task", async () => {
     const { component, seen } = split();
     await wait();
     component.expand();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(component.isExpanded()).toBe(false);
     expect(component.trailingElement.getAttribute("aria-expanded")).toBe("false");
@@ -508,7 +521,7 @@ describe("split button follows the menu", () => {
     const { component, seen } = split();
     await wait();
     component.expand();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     component.collapse();
     component.expand();
     expect(component.isExpanded()).toBe(true);
