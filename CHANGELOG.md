@@ -17,6 +17,70 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.3] - 2026-11-02
+
+A lighter package, and progress that stays sharp.
+
+### Fixed
+
+- **A progress canvas redraws when the device pixel ratio changes (#234).**
+  A canvas sizes its backing store in physical pixels, but the shared resize
+  path watched the element's width only: a canvas created at ratio 1 and shown
+  at ratio 2 — browser zoom, or a window moved between a 1x and a Retina
+  display — kept its ratio 1 bitmap, so the wave drew twice its intended size,
+  soft and blocky, until a width change repaired it. The resize path now watches
+  the resolution media query at the current ratio, re-arms it at the new ratio,
+  and runs the same debounced measure and draw a width change runs; the linear
+  and the circular indicator share it, and `destroy()` removes the watcher. Both
+  are measured in `scripts/check-progress-dpr.ts` (`progress:check`), whose
+  viewport nudge leaves the indicator's width and the width observer unmoved, so
+  only the ratio watcher can pass it.
+
+### Changed
+
+- **The slider is one controller (#180).**
+  Four internal modules, one of them a 610-line pointer and keyboard module,
+  rebuilt the same element lookups, axis and fraction of the range on every
+  use, and every API call crossed the controller object, the arrows
+  `getApiConfig` built and `withAPI`'s wrappers. They are one
+  `features/controller.ts` that owns the track geometry, the track renderer and
+  the interaction; the public functions are installed once as the controller's
+  own, the legacy `slider` object shares them, and `api.ts` is gone. Seven
+  paths no call could reach are removed after proving them dead. Behaviour is
+  unchanged: the 91 pinned slider tests pass untouched, `event.slider` is still
+  the object `createSlider` returns, and the shared fraction arithmetic matches
+  the old two-step percentages over 120,012 combinations. The slider bundle,
+  built the same way on both sides, goes from 13,268 bytes gzipped to 11,947
+  (−1,321, −9.96 %).
+
+### Internal
+
+- **The package ships no unreachable module (#174).**
+  `bun run build` compiles every module in the tsc program, and
+  `scripts/prune-declarations.ts` removes unreachable declarations only, so
+  nine modules no export path reached still shipped as `.js`, and the element
+  pool in `core/dom/create.ts` had no runtime reference. Both are removed; the
+  export surface does not move, and `scripts/check-consumer.ts` still asserts
+  the nested module paths (`chips/chip`, `chips/chip/constants`,
+  `progress/features` and the rest) do not resolve.
+
+- **A leaner kernel: one class-token loop and one `normalizeEvent` pass (#177).**
+  `addClass`, `removeClass`, `toggleClass` and `hasClass` each repeated the same
+  single-name fast path, array unwrap and space-splitting fallback, and
+  `normalizeEvent` built the same eight-field result in three branches. One
+  `forEachClass` now normalizes once and applies every token, and the touch or
+  mouse point is picked once and the result built once. No public signature,
+  export or declaration changes, and the existing tests are unchanged; a class
+  matrix test and the three `normalizeEvent` outcomes pin the contracts.
+
+- **The release saves 1,158 bytes gzipped in the all-js row (127,885 to
+  126,727) and leaves the full stylesheet at 63,704; the packed tarball is
+  875,566 bytes compressed, 5,052,361 unpacked in 1,612 files, against 882,834
+  and 5,094,700 in 1,625 files in 3.3.2.** Measured on main at 238b8c22, push
+  run 41403660849, job 125141046911; this release changes only the CHANGELOG
+  and the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
 ## [3.3.2] - 2026-11-01
 
 Tooltips land where they point.
@@ -4815,7 +4879,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.3...HEAD
+[3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
 [3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
