@@ -113,13 +113,16 @@ Dialogs that hold their scrim and focus.
   at `(0, 0) 900×700` — 5.25 times the region — a press outside the region
   closed the dialog, and the page outside the container was not inert; the
   no-container control showed the same fixed overlay with the page genuinely
-  inert. LTR and RTL measured identically. A non-body `container` now gives
-  the overlay `position: absolute`, so the scrim is the container's box, the
-  dialog is centred in it and a press outside does not dismiss it; a container
-  whose computed position is `static` is made `relative` while the overlay
-  lives in it, and its exact previous inline value (none included) is restored
-  when the dialog closes or is destroyed, while a positioned container is
-  left untouched. `document.body` (explicit or default) is unchanged, and
+  inert. LTR and RTL measured identically. A non-body `container` that has
+  room for the dialog now gives the overlay `position: absolute`, so the
+  scrim is the container's box, the dialog is centred in it and a press
+  outside does not dismiss it; a container whose computed position is
+  `static` is made `relative` while the overlay lives in it, and its exact
+  previous inline value (none included) is restored when the dialog closes or
+  is destroyed, while a positioned container is left untouched. A collapsed,
+  hidden or too-small container keeps the page's scrim and centring, as it
+  had before, and is left untouched. `document.body` (explicit or default)
+  is unchanged, and
   `layer: "top"` keeps the page-modal path through `showModal()` and its
   `::backdrop`. The `container` and `layer` JSDoc and the module docs state
   the new meaning and the top-layer exception. `scripts/check-dialog-browser.ts`
