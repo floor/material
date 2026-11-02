@@ -10,6 +10,12 @@
 // not it changes a computed style today. The diff a missing sheet would make
 // is written to analysis/shadow-styles-chromium.json. From a probe taken
 // during the part B review.
+//
+// One page serves every fixture: the elements are defined once, and each
+// fixture is measured after the body has been cleared, so nothing a factory
+// portaled to the body outlives the fixture that put it there. This is the
+// page model scripts/check-elements.ts uses; a navigation per fixture re-ran
+// the whole element bundle 1,797 times.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -44,10 +50,19 @@ try {
   const page = await browser.newPage({ reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
+  await page.goto(server.url.href);
+  await page.waitForFunction(() => !!window.shadowStyles);
+  const guard = await page.evaluate(() => window.shadowStyles.settleGuard());
+  assert.equal(guard.ended, true, `The settle returned before a 60 ms transition in a shadow root ended (${guard.elapsed} ms)`);
+  console.log(`Settle guard: a 60 ms shadow-root transition ended before the settle returned (${guard.elapsed} ms).`);
   for (const fixture of fixtures) {
-    await page.goto(server.url.href);
-    await page.waitForFunction(() => !!window.shadowStyles);
-    const result = await page.evaluate(({ html, defaults }) => window.shadowStyles.probe(html, defaults), fixture);
+    const result = await page.evaluate(({ html, defaults }) => {
+      // The probe removes its own container, and a factory may have portaled a
+      // node (a menu, a tooltip) to the body: the fixture is measured on a body
+      // that holds only its markup, as a fresh page had it.
+      document.body.innerHTML = "";
+      return window.shadowStyles.probe(html, defaults);
+    }, fixture);
     result.roots.forEach(name => seen.add(name));
     report.push({ element: fixture.element, variant: fixture.variant, ...result });
   }

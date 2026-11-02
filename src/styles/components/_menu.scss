@@ -521,6 +521,17 @@ $component: "#{$prefix}-menu";
                 }
             }
 
+            // M3 puts a selected item's check before its label, never at the
+            // end: the vertical selected-state figure shows colour and shape
+            // alone, and the guidelines' select figures show a leading check
+            // (m3.material.io/components/menus/specs and /guidelines). The
+            // vertical item's 16px end padding has no room for the horizontal
+            // variant's trailing mark, which otherwise covers the last 14px
+            // of the label. An item with a submenu keeps the mark it has.
+            &--selected:not(.#{$component}__item--submenu)::after {
+                content: none;
+            }
+
             &--disabled {
                 color: color-mix(in srgb, var(--#{$prefix}-menu-label) 38%, transparent);
 

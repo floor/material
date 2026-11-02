@@ -94,7 +94,15 @@ describe('disabled states use the per-role tokens', () => {
   });
 
   test('switch: the selected disabled track keeps 12% rather than the enabled outline role', () => {
+    // The checked+disabled track rule sets no colour of its own; the disabled
+    // track rule (asserted above to carry on-surface 12%) follows the checked
+    // track rule in the sheet, so it wins the specificity tie and the selected
+    // disabled track keeps 12%.
     const checkedTrack = find('switch', /--disabled.*--checked .mtrl-switch__track$/)[0];
-    expect(declaration(checkedTrack, 'background-color')).toBe(onSurface(12));
+    expect(declaration(checkedTrack, 'background-color')).toBeUndefined();
+    const order = rules('switch');
+    const checked = order.findIndex((rule) => /\.mtrl-switch--checked .mtrl-switch__track$/.test(rule.selector));
+    const disabled = order.findIndex((rule) => /\.mtrl-switch--disabled .mtrl-switch__track$/.test(rule.selector));
+    expect(disabled).toBeGreaterThan(checked);
   });
 });
