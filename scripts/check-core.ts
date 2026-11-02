@@ -10,6 +10,7 @@ import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
+import { checkChipCellNames } from "./check-chip-cell-names";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
@@ -108,6 +109,7 @@ try {
   await checkCarouselWheelSubPixelSnap(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
+  await checkChipCellNames(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
