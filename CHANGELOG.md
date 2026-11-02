@@ -17,6 +17,80 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.4] - 2026-11-02
+
+A lighter package, part two.
+
+### Changed
+
+- **The split button loads its menu on first open (#168).**
+  The split button imported the menu at creation, so every page carrying one
+  fetched and parsed the menu whether or not it was ever opened.
+  `features/menu-on-demand.ts` now holds a stand-in with the menu's API; the
+  first open starts `import("../../menu")`, and the real menu is created and
+  replayed onto it — state, items, opener, position, selected, and the
+  listeners registered while it loaded. The button's own contract is not
+  deferred: on the click's tick `isExpanded()`, `aria-expanded` and the
+  `expand`/`change` events are there. The stand-in takes the menu's id shape
+  (`menu-<Date.now()>-<random>`) and names it in `aria-controls` at creation,
+  so the server render is byte-identical to the one before. The initial graph
+  goes from 17,760 to 9,677 bytes gzipped (budget 9,779), the deferred row is
+  17,313 (budget 17,459), and `menu/inner.ts` is the only menu module still in
+  the initial graph. `split-button:check` reads the build's chunk graph — no
+  chunk holding another menu module is statically reachable — and in the
+  browser it reads the first open's state, ARIA and events on the click's
+  tick, before the import's reply can run.
+
+- **The menu resolves its opener once and drops what cannot run (#184).**
+  The controller resolved the opener itself, because the opener feature runs
+  after it in the pipe; its fallback returned the component object for
+  `getElement()` and `input` openers, and a menu opened that way was never
+  placed. A replacement given to `setOpener()` kept the first anchor. The
+  opener is now asked through the component's public `getOpener()`, so the
+  events, the ARIA state and the placement share one resolution, and five
+  call sites became `reposition()`. The keyboard feature always runs before
+  the controller, so the 24-line initial-focus fallback, three guards around
+  its calls and the `Escape` branch behind one of them could not run and are
+  gone; the opener feature reads the keyboard feature's Tab tracker instead of
+  keeping its own document listener and timer. The cut measures 12,951 to
+  12,790 bytes gzipped in the excise harness, and the menu row measures 12,690
+  of its 13,056-byte budget in CI. `scripts/check-menu-opener-browser.ts`
+  opens a menu against a selector, an element, `{element}`, `{getElement()}`
+  and `{input}`, and against a `setOpener()` replacement, in LTR and RTL: each
+  lands below the current opener on its start edge.
+
+### Internal
+
+- **The size report prints Brotli beside gzip (#166).**
+  `scripts/size.ts`'s per-component table gains a Brotli column: the same
+  build's initial graph as the gzip column, through
+  `zlib.brotliCompressSync` at quality 11. It is reported, never gated —
+  every budget stays gzip and the gate lines are untouched. Two tests pin the
+  setting (equality with `node:zlib` at quality 11, and disagreement at
+  quality 1, so a changed quality cannot pass silently) and the measurement's
+  determinism.
+
+- **Thirty-five unreachable dist modules no longer ship (#200).**
+  `scripts/build.ts` pruned unreachable declarations only, so every module in
+  the tsc program still shipped its runtime file. A module now ships when an
+  `exports` target names it or a shipped module imports it, and the rest are
+  pruned; a new `dist-modules:check` walks the built `dist` from the nested
+  manifest and fails naming every module nothing can reach. The 35 removed
+  modules are 30 empty type-only siblings of 11 bytes each, three runtime
+  `types.js` copies (`menu` 342, `select` 84, `text-field` 380 bytes) and
+  `react/jsx.js` with `solid/jsx.js`, 1,172 bytes in all; their declarations
+  stay shipped and only the runtime files go. Every `size:check` row is
+  byte-identical to main's own package job, so nothing a consumer imports
+  moves.
+
+- **The release adds 351 bytes gzipped in the all-js row (126,727 to 127,078)
+  and leaves the full stylesheet at 63,703; the packed tarball is 874,849
+  bytes compressed, 5,052,835 unpacked in 1,578 files, against 875,566 and
+  5,052,361 in 1,612 files in 3.3.3.** Measured on main at 2f78c965, push run
+  41417375448, job 125184777237; this release changes only the CHANGELOG and
+  the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
 ## [3.3.3] - 2026-11-02
 
 A lighter package, and progress that stays sharp.
@@ -4879,7 +4953,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.4...HEAD
+[3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
 [3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
