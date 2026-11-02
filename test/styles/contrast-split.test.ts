@@ -214,9 +214,13 @@ describe("explicit contrast levels are opt-in", () => {
     // labelled wavelength, its window's dash sliding under a linear()
     // easing that reads the arc curve from one custom property
     // (styles/components/_progress.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("f4127d1a350830f3029217b80fbd43e96601fed1665ca79e2de43f02614b2d5c");
-    expect(css.length).toBe(552712);
+      .toBe("0f20284f163c99c0159b8d9b6028dd962941a1524f52f9787012c9592e048cd3");
+    expect(css.length).toBe(552564);
   });
 
   test("today's sheets still resolve to the fixture", () => {

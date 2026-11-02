@@ -233,62 +233,6 @@ const setupEventForwarding = (
   }
 };
 
-/**
- * Element pool for reusing elements
- */
-class ElementPool {
-  private pools = new Map<string, HTMLElement[]>();
-  private maxSize = 20;
-
-  acquire(tag: string = "div"): HTMLElement {
-    const pool = this.pools.get(tag);
-    if (pool?.length) {
-      const element = pool.pop()!;
-      element.className = "";
-      element.replaceChildren();
-      element.removeAttribute("id");
-      Object.keys(element.dataset).forEach(
-        (key) => delete element.dataset[key],
-      );
-      return element;
-    }
-    return document.createElement(tag);
-  }
-
-  release(element: HTMLElement): void {
-    const tag = element.tagName.toLowerCase();
-    let pool = this.pools.get(tag);
-
-    if (!pool) {
-      pool = [];
-      this.pools.set(tag, pool);
-    }
-
-    if (pool.length < this.maxSize) {
-      this.cleanElement(element);
-      pool.push(element);
-    }
-  }
-
-  private cleanElement(element: HTMLElement): void {
-    const handlers = element.__eventHandlers;
-    if (handlers) {
-      for (const event in handlers) {
-        element.removeEventListener(event, handlers[event]);
-      }
-      delete element.__eventHandlers;
-    }
-
-    element.className = "";
-    element.replaceChildren();
-    element.removeAttribute("id");
-    Object.keys(element.dataset).forEach((key) => delete element.dataset[key]);
-    element.parentNode?.removeChild(element);
-  }
-}
-
-let elementPool: ElementPool | undefined;
-const getElementPool = (): ElementPool => elementPool ??= new ElementPool();
 
 /**
  * Create an HTML element with comprehensive options and optimizations
@@ -389,41 +333,6 @@ export const createElement = (
   return element;
 };
 
-/**
- * Create a pooled HTML element
- * @param options - Element creation options
- * @returns Created HTML element from pool
- */
-export const createElementPooled = (
-  options: CreateElementOptions = {},
-): HTMLElement => {
-  const element = getElementPool().acquire(options.tag || "div");
-
-  // Apply properties similar to createElement but skip creating new element
-  if (options.html) setHTML(element, options.html);
-  else if (options.text) element.textContent = options.text;
-  if (options.id) element.id = options.id;
-
-  const classSource = options.className || options.class;
-  if (classSource) addClass(element, classSource);
-
-  if (options.data) Object.assign(element.dataset, options.data);
-  if (options.attributes) setAttributes(element, options.attributes);
-  if (options.forwardEvents)
-    setupEventForwarding(element, options.forwardEvents, options.context);
-  if (options.container) options.container.appendChild(element);
-  if (options.onCreate) options.onCreate(element, options.context);
-
-  return element;
-};
-
-/**
- * Release an element back to the pool
- * @param element - Element to release
- */
-export const releaseElement = (element: HTMLElement): void => {
-  getElementPool().release(element);
-};
 
 /**
  * Create an SVG element
