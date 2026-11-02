@@ -199,9 +199,14 @@ describe("explicit contrast levels are opt-in", () => {
     // whole gap on every placement, so the cardinal bottom and right sides
     // sit 8px from the target with the arrow meeting it, exactly as the
     // start and end placements always did (styles/components/_tooltip.scss).
+    // The generated themes take success, warning and info from the shared
+    // status roles and the error family from their own scheme, so no error
+    // fallback is emitted there; autumn's own status values, shadowed by its
+    // include, are gone too (styles/themes/_base-theme.scss,
+    // scripts/generate-themes.ts).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d11cb234bb857f21c85f34e66867822be343352320fdaa5fa84d412e60357cba");
-    expect(css.length).toBe(544228);
+      .toBe("107d8048e13ec8d41e3218f3e90748a1acc5dd67b52d0eb9137e0f0a60f6265a");
+    expect(css.length).toBe(542173);
   });
 
   test("today's sheets still resolve to the fixture", () => {
