@@ -14,6 +14,8 @@ Measured at 6d1b08eb on 2026-11-02. Regenerate with
 these rows drift from a fresh measurement.
 
 <!-- size-table -->
+| Component | Minified | Gzipped | vs core | Deferred |
+| --- | ---: | ---: | ---: | ---: |
 | core | 7.7 KB | 3.0 KB | — |  |
 | badge | 15.4 KB | 5.3 KB | +2.2 KB |  |
 | bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
