@@ -12,7 +12,9 @@
  * - Dividers for visual separation
  * - Confirmation dialog patterns
  * - Event handling for dialog lifecycle
- * 
+ * - A container (`container`): the scrim and the dialog's modality are scoped
+ *   to that element instead of the page
+ *
  * @module components/dialog
  * @category Components
  */
@@ -31,7 +33,7 @@ import {
 } from './features';
 import { withAPI } from './api';
 import { DialogConfig, DialogComponent } from './types';
-import { createBaseConfig, getElementConfig, getApiConfig } from './config';
+import { createBaseConfig, getElementConfig } from './config';
 
 /**
  * Creates a new Dialog component with the specified configuration.
@@ -119,7 +121,7 @@ const createDialog = (config: DialogConfig = {}): DialogComponent => {
       withDivider(),                               // Header/content divider
       withConfirm(),                               // Confirmation dialog helpers
       withLifecycle(),                             // Lifecycle management
-      comp => withAPI(getApiConfig(comp))(comp)    // Public API
+      withAPI                                     // Public API
     )(baseConfig);
 
     // Register event handlers from config

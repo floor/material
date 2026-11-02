@@ -8,28 +8,25 @@ import {
   withTextLabel,
 } from "../../core/compose/features";
 import {
-  withRange,
   withStates,
   withController,
   withTracks,
   withDom,
 } from "./features";
-import { withAPI } from "./api";
 import { SliderConfig, SliderComponent, SliderEventType } from "./types";
-import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
+import { createBaseConfig, getElementConfig } from "./config";
 
 /**
  * Creates a new Slider component
  *
  * Slider follows a clear architectural pattern:
  * 1. Base component - Creates the foundation with event system
- * 2. Feature enhancement - Adds specific capabilities (range, icons)
+ * 2. Feature enhancement - Adds specific capabilities (icons, labels)
  * 3. DOM creation - Creates DOM elements directly using optimized createElement
- * 4. Track rendering - Uses decorative DOM and CSS alongside accessible handles
- * 5. State management - Handles visual states and appearance
- * 6. Controller - Manages behavior, events, and UI rendering
+ * 4. State management - Handles visual states and appearance
+ * 5. Track rendering - Uses decorative DOM and CSS alongside accessible handles
+ * 6. Controller - Manages behavior, events, UI rendering and the public API
  * 7. Lifecycle - Handles component lifecycle events
- * 8. Public API - Exposes a clean, consistent API
  *
  * @param {SliderConfig} config - Slider configuration object
  * @returns {SliderComponent} Slider component instance
@@ -41,16 +38,13 @@ const createSlider = (config: SliderConfig = {}): SliderComponent => {
   try {
     // The controller resolves the public slider only when it emits a callback.
     // Create the component by composing features in a specific order
-    const component = pipe(
+    const slider: SliderComponent = pipe(
       // Base component with event system
       createBase,
       withEvents(),
 
       // Create the main slider element using standard withElement
       withElement(getElementConfig(baseConfig)),
-
-      // Add range configuration
-      withRange(baseConfig),
 
       // Create inner DOM elements (container, handle, valueBubble)
       withDom(baseConfig),
@@ -66,15 +60,9 @@ const createSlider = (config: SliderConfig = {}): SliderComponent => {
       // Add DOM rendering for tracks and ticks
       withTracks(baseConfig),
 
-      // Add state management and behavior
+      // Add state management, behavior and the public API
       withController(baseConfig, (): SliderComponent => slider)
     )(baseConfig);
-
-    // Generate the API configuration based on the enhanced component
-    const apiOptions = getApiConfig(component);
-
-    // Apply the public API layer
-    const slider: SliderComponent = withAPI(apiOptions)(component);
 
     // Register event handlers from config for convenience
     if (baseConfig.on && typeof slider.on === "function") {
