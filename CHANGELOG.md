@@ -17,6 +17,759 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-11-02
+
+Dialogs that hold their scrim and focus.
+
+### Changed
+
+- **The dialog shares its overlay, event host and tab stops with the rest of
+  the library (#182).**
+  Four pieces of dialog code each had a private copy of something the shared
+  modules already do: `getOverlayConfig` returned a div with no attributes;
+  `getApiConfig` copied every feature method into a second object and
+  `withAPI` wrapped each copy again in another arrow function; a full Divider
+  component drew a 1px rule `_dialog.scss` already paints; and a light-DOM tab
+  list (`querySelectorAll('button, [href], input, …')`) with its own
+  `handleTabKey` sat beside core's `tabStops`/`wrapTab`. Each is replaced by
+  the shared module. `DialogConfig`, `DialogComponent` and the DOM the dialog
+  produces are unchanged; the divider is a plain `<hr>`, styled by the same
+  stylesheet rules. One behaviour difference is declared and pinned:
+  `tabStops`/`wrapTab` walk open shadow roots, so a dialog whose content is a
+  custom element now starts focus inside that element's shadow root and Tabs
+  through it — before, focus stayed on the dialog's actions and the control
+  was unreachable. The dialog's `aria-hidden` initial-focus filter is kept:
+  `isTabStop` tests `[aria-hidden='true']` as well, so the dialog's initial
+  focus and `wrapTab`, and the side and bottom sheets' wrapping that already
+  used `wrapTab`, keep main's behaviour. The refactor pays: the dialog row
+  measures 12,295 bytes gzipped against 13,398 on main (−1,103 bytes, −1.1 kB,
+  budget 13,619), all components 125,266 against 125,720, packed all-js
+  126,966 against 127,417, and the tarball 874,875 compressed and 5,052,610
+  unpacked in 1,578 files against main's 875,869 and 5,056,122 in 1,578 files
+  (−994 and −3,512); the full stylesheet and inline SSR are unchanged at
+  63,697 gzip and 11,299. `scripts/check-dialog-browser.ts` opens a dialog
+  whose content is a text field and asserts the trap starts in its shadow
+  root, wraps to the actions and returns on Escape — red on main
+  (`'button' !== 'input'`), green here — and a focus unit test and a browser
+  check pin the `aria-hidden` filter in the initial focus and in `wrapTab`.
+
+### Fixed
+
+- **A reduced-motion dialog takes its initial focus (#233).**
+  Under `prefers-reduced-motion: reduce`, a dialog that opens left the focus
+  on the body instead of on its first control. The shared reduced-motion reset
+  (`src/styles/base/_reset.scss`) rewrites `transition-property` with
+  `visibility` in the list, and the dialog overlay's own transition lists
+  (`_dialog.scss`: the scrim's `background-color … , visibility 0s`) then give
+  `visibility` the fade's duration on open; in the task the `--visible` class
+  lands in, the first control still computes `visibility: hidden`, and
+  `focus()` on a hidden element does nothing — nothing focused it later.
+  Material's dialogs accessibility guidance states the contract: "When a
+  dialog appears, focus should automatically land on the first interactive
+  element within the dialog." `trapFocus` no longer calls `focus()` blind: it
+  focuses on the first frame the target is not `visibility: hidden` — the same
+  task under normal motion, a frame later under reduced motion.
+  `scripts/check-dialog-reduced-motion.ts` opens a dialog with
+  `reducedMotion: "reduce"`, waits for `afteropen` and asserts the first input
+  holds the focus: red on main `1e70c90f` (`dialog reduced motion:
+  {"active":"BODY","visibility":"visible"}` then `AssertionError: under
+  reduced motion the first control takes the initial focus`, `'BODY' !==
+  'first'`), green on the branch (`{"active":"first","visibility":"visible"}`
+  and the pass line).
+
+- **`afteropen` fires once the dialog's initial focus has landed (#236).**
+  `afteropen` announces that the dialog is ready, but it fired
+  `animationDuration` after `open()` even when the initial focus had not
+  landed yet. `scripts/check-dialog-afteropen.ts` opens a dialog with two
+  inputs at 0, 40 and 500 ms under both motion preferences and records
+  `document.activeElement` and the first control's computed `visibility`
+  inside the `afteropen` listener: on main `08e7ca3a` the reduced-motion cells
+  at 0 and 40 ms report `BODY` and `hidden`, and even the 500 ms cell — the
+  default duration, the surface already visible — still ends at `BODY`,
+  because main called `target.focus()` once and never retried. On the base
+  this branch stacks on (`d5c1d9d7`, #233) the focus lands by 500 ms, but the
+  0 and 40 ms reduced-motion cells still show `BODY` and `hidden` at
+  `afteropen`: the event can announce a dialog whose focus has not arrived.
+  The open timer now marks `afteropen` due, the focus wait holds it while it
+  runs, `focusWhenVisible` emits the held event the moment the focus lands,
+  and a close or a destroy drops the held event together with the wait; the
+  default 500 ms path is unchanged because the focus lands long before the
+  timer. The `afteropen` doc reads "(animationDuration after it was shown, or
+  once its initial focus lands if that is later)". The check passes all five
+  cells — `first` and `visible` — and both dialog guards run in CI:
+  `dialog-afteropen:check` and `dialog-reduced-motion:check` are package
+  scripts listed in `test/build/ci-commands.test.ts` and run in the
+  `browser (components-b)` group. Material specifies both halves — initial
+  focus on the first interactive element, and an enter and exit transition
+  pattern for appearance (read 2026-11-02).
+
+- **A contained dialog keeps its scrim inside its container (#179).**
+  A dialog created with `container` appended its overlay into that container,
+  but the overlay stayed `position: fixed` with `inset: 0`: the scrim covered
+  the whole viewport, caught clicks everywhere and centred the dialog on the
+  viewport, while `inertBackground` only made the container's siblings inert.
+  Measured in Chromium on a 900 × 700 page outside any website, with a
+  300 × 400 region: a static or relative container produced a `fixed` overlay
+  at `(0, 0) 900×700` — 5.25 times the region — a press outside the region
+  closed the dialog, and the page outside the container was not inert; the
+  no-container control showed the same fixed overlay with the page genuinely
+  inert. LTR and RTL measured identically. A non-body `container` that has
+  room for the dialog now gives the overlay `position: absolute`, so the
+  scrim is the container's box, the dialog is centred in it and a press
+  outside does not dismiss it; a container whose computed position is
+  `static` is made `relative` while the overlay lives in it, and its exact
+  previous inline value (none included) is restored when the dialog closes or
+  is destroyed, while a positioned container is left untouched. A collapsed,
+  hidden or too-small container keeps the page's scrim and centring, as it
+  had before, and is left untouched. `document.body` (explicit or default)
+  is unchanged, and
+  `layer: "top"` keeps the page-modal path through `showModal()` and its
+  `::backdrop`. The `container` and `layer` JSDoc and the module docs state
+  the new meaning and the top-layer exception. `scripts/check-dialog-browser.ts`
+  gains `checkDialogScrimScope`, run from `checkDialogMount` — so in CI's
+  `core:check`, against the packed factory, and in the standalone runner —
+  which asserts for static, positioned, no-container and explicit-body mounts
+  that the scrim's rectangle is the container's and does not cover the
+  viewport, while the page-modal mounts keep the page-covering scrim.
+
+### Internal
+
+- **The release removes 113 bytes gzipped from the all-js row (127,417 to
+  127,304) and moves the full stylesheet to 63,704 gzip, 7 bytes above the
+  published 3.4.0 build's 63,697; the packed tarball is 875,702 bytes
+  compressed, 5,056,234 unpacked in 1,578 files, against the published
+  3.4.0's 875,869 and 5,056,122 in 1,578 files.** Measured on main at
+  00ab8ba3, push run 41454371583, job 125307673206; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
+## [3.4.0] - 2026-11-02
+
+Accessible names reach the control you focus.
+
+### Added
+
+- **A text field names an unknown config key in development (#229).**
+  A config key the text field does not read was ignored without a word:
+  `{ maxlength: 10 }` beside the supported `maxLength`, or
+  `{ inputmode: "numeric" }`, which nothing reads, produced no attribute, no
+  property and no message. In development each unknown key is now named:
+  `[mtrl] text-field: unknown config key "maxlength"`. The known-key table is
+  typed against the config interfaces, so the compiler fails when the list and
+  an interface drift, in either direction. Production behaviour does not
+  change — the keys stay ignored in every mode — and a defined production
+  build erases the diagnostic, its loop and the key table with it. The text
+  field's warning browser check carries the unknown-key rows in all four
+  bundle modes (development, production, raw browser, missing environment) and
+  asserts the marker appears in development only; a field carrying all 38
+  supported keys stays quiet, as does a key that is known but fixed at build
+  time. The diagnostic fits the unchanged budgets, and no ceiling moved.
+
+- **Chips, select and search take an `ariaLabel` factory option (#231).**
+  The runtime `ariaLabel` never named the control that takes focus: a chip
+  kept its visible content, or a single-action set cell had no name at all;
+  the select kept its visible label; the search kept its placeholder. The chip
+  factories and `createChips`, `createSelect` and `createSearch` now accept
+  `ariaLabel` and forward it to the focus target — a gridcell for a
+  single-action set chip and its action button otherwise, and the select's and
+  search's native inputs. The name survives label, placeholder and value
+  edits; an explicit name wins over a set cell's content name and is
+  reapplied when the label changes, and removal and trailing actions keep
+  their own names. `ChipConfig` and its four named aliases, `SelectConfig` and
+  `SearchConfig` gain `ariaLabel?: string`, and typed fixtures exercise every
+  factory and reject non-string names. The packed browser check reads
+  Chromium's accessibility tree for the focused targets, their name sources
+  and DOM focus before asserting.
+
+### Fixed
+
+- **A focused chip-set cell is named from its content (#230).**
+  Assist, filter and suggestion chips inside a chip set focus their `gridcell`
+  wrapper, and the inner button is `aria-hidden`, so its visible label could
+  not supply the cell's accessible name; an audit of main found empty names on
+  all three focused cells despite visible text. Each single-action focus cell
+  is now named from its label during render, which also runs after label
+  edits; input-chip primary and removal targets keep their own names, and
+  two-action chips keep distinct action names. Material's chips guidance names
+  basic and selectable chips from their content and gives them the gridcell
+  role. A Chromium accessibility-tree regression enters the set with Tab,
+  moves through the cells with ArrowRight and checks the name of the actual
+  focused target: on main's product code ten single-action observations are
+  empty while the four two-action controls pass, and on the fix all fourteen
+  observations pass, including label edits and filter selection. No option,
+  type or styling token is added, and the fix costs 3 bytes gzipped on the
+  chips row.
+
+- **The text field's existing `ariaLabel` names the focused input (#228).**
+  On main, `createTextField({ ariaLabel: "Email address" })` named the wrapper
+  while the native input that receives focus had no name; with a visible label
+  the input kept `Email` and ignored the explicit name. Textareas behaved the
+  same way in filled and outlined variants. The runtime `ariaLabel` is now
+  forwarded through the native input attribute map, and `TextFieldConfig`
+  declares `ariaLabel?: string`, as `TextInputConfig` declares the forwarded
+  field. The label feature keeps its visible-label fallback and equal-name
+  handling, and a different explicit name stays stable across label edits; the
+  element keeps its explicit host naming. A Chromium check reads the
+  accessibility tree of the focused native textbox over twenty cases — input
+  and textarea, filled and outlined, explicit-name precedence, and
+  label-only, equal and empty fallback — plus sixteen label-edit observations.
+  It is red on main's product code and green on the fix. No alternate option,
+  style or SSR behaviour is introduced.
+
+- **The slider's existing accessible names reach its handles (#225).**
+  `createSlider({ ariaLabel: "Slide" })` named the wrapper while the focusable
+  `role="slider"` handle stayed unnamed, and the inherited `ariaLabelledBy`
+  option had the same routing defect. Both now apply to every handle: an
+  explicit `ariaLabel` takes precedence over the visible-label fallback,
+  following the switch and checkbox input naming, and `ariaLabelledBy` stays a
+  native ID reference, so external text changes update the computed name. A
+  range appends hidden, referenced `minimum` and `maximum` suffixes to each
+  handle's name, as the string-name path does. One shared naming pass covers
+  all handles, and unit coverage pins distinct suffix IDs for simultaneous
+  sliders and cleanup on destroy. The browser check reads Chromium's computed
+  accessibility tree for sixteen single and range scenarios, including live
+  reference renames: ten scenarios fail on main, and the branch passes all
+  sixteen. The pass fits the unchanged slider budget, and no option, styling
+  value or consumer edit is added.
+
+- **A non-counting badge announces "New notification" (#210).**
+  A visible dot exposed `aria-hidden="true"` with no role or accessible name,
+  and Chromium excluded both the factory dot and the shadow-root `<m-badge>`
+  dot from its accessibility tree; an attached destination had no badge
+  description, and an icon-only tab's explicit name omitted the dot. The dot
+  now exposes `role="status"` and `aria-label="New notification"` — a polite
+  live region — without `aria-hidden`, and still renders no text. Nonnumeric
+  text in `label` supplies a translated announcement, numeric values and
+  numeric strings keep the default, and a counting badge drops the dot's name
+  so its count reads normally. `withBadge` puts a visible dot's announcement
+  in the destination's description, preserving its name and existing
+  descriptions, and hide/show removes and restores the reference; tabs compose
+  the announcement after their own label, including icon-only tabs with an
+  explicit name. Material's badge accessibility guidance says non-counting
+  badges "will simply announce New notification". The browser check reads the
+  accessibility role, name and live-region properties of the actual factory
+  and shadow-root nodes over seven states and three tab cases: eighteen
+  assertions fail on main, and the check passes on the fix inside
+  `elements:check`.
+
+- **The switch thumb slides in every build (#162).**
+  The handle and its state layer spring on `inset-inline-start`. A bundler
+  targeting old browsers lowers that inset into `:lang()`-guarded `left` and
+  `right` rules while the base rule's transition list still names the logical
+  side, so the transitioned property is gone from the bundled sheet and the
+  handle jumps instead of sliding. The transition lists now name the physical
+  shorthand `inset` beside the existing `inset-inline-start` spring, on the
+  same fast-spatial token: `inset` covers the sides the lowering writes and
+  the pressed rule's `top`, and an engine too old to parse `inset` also rejects
+  `linear()`, so nothing that could animate loses a transition. No selector or
+  placement declaration changes, so direction behaviour is identical in every
+  case. `scripts/check-switch-transition.ts` bundles `dist/styles.css` as an
+  old-target consumer build does, toggles a factory-built switch in each
+  direction case and samples the handle every frame: it fails on main with no
+  intermediate sample in the `dir=rtl`, `lang=en` case, and passes all six
+  cases on the branch, each landing on its cold-rendered rest. At the merged
+  head the full stylesheet is 835,997 raw / 63,696 gzip / 44,585 brotli
+  (CI 41437183257), 8 bytes gzipped under main's 63,704, the switch row is
+  unchanged, and no budget moves.
+
+### Internal
+
+- **The contrast test's cascade model keeps a rule's later declaration (#239).**
+  The contrast test scored two declarations of one property in the same rule
+  as first-wins, where CSS keeps the later one. `better()` compared layer
+  rank, specificity and source order, and required a strictly greater order,
+  so the first of two declarations sharing all three stayed; the comparison
+  now accepts an equal order, and a second test pins that a later rule still
+  wins by its greater one. The fixture recording the model's output for 1,152
+  states was regenerated, and exactly 240 cells move: every one of them in the
+  72 desert states and none in ocean, by role `error` 72, `error-container`
+  72, `on-error-container` 72 and `on-error` 24. The desert root's `error`
+  becomes `#ba1a1a` from `#b3261e`, for one. Regenerating under the old model
+  reproduces the committed fixture byte for byte, so the model fix accounts
+  for every moved cell. Every change is under `test/`, so nothing in the
+  shipped package moves: the package job prints the same tarball line as
+  main's.
+
+- **The release adds 339 bytes gzipped in the all-js row (127,078 to
+  127,417) and moves the full stylesheet to 63,696 gzip; the packed tarball
+  is 875,871 bytes compressed, 5,056,122 unpacked in 1,578 files, against
+  874,849 and 5,052,835 in 1,578 files in 3.3.4.** Measured on main at
+  473e126a, push run 41439212121, job 125257027173; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
+## [3.3.4] - 2026-11-02
+
+A lighter package, part two.
+
+### Changed
+
+- **The split button loads its menu on first open (#168).**
+  The split button imported the menu at creation, so every page carrying one
+  fetched and parsed the menu whether or not it was ever opened.
+  `features/menu-on-demand.ts` now holds a stand-in with the menu's API; the
+  first open starts `import("../../menu")`, and the real menu is created and
+  replayed onto it — state, items, opener, position, selected, and the
+  listeners registered while it loaded. The button's own contract is not
+  deferred: on the click's tick `isExpanded()`, `aria-expanded` and the
+  `expand`/`change` events are there. The stand-in takes the menu's id shape
+  (`menu-<Date.now()>-<random>`) and names it in `aria-controls` at creation,
+  so the server render is byte-identical to the one before. The initial graph
+  goes from 17,760 to 9,677 bytes gzipped (budget 9,779), the deferred row is
+  17,313 (budget 17,459), and `menu/inner.ts` is the only menu module still in
+  the initial graph. `split-button:check` reads the build's chunk graph — no
+  chunk holding another menu module is statically reachable — and in the
+  browser it reads the first open's state, ARIA and events on the click's
+  tick, before the import's reply can run.
+
+- **The menu resolves its opener once and drops what cannot run (#184).**
+  The controller resolved the opener itself, because the opener feature runs
+  after it in the pipe; its fallback returned the component object for
+  `getElement()` and `input` openers, and a menu opened that way was never
+  placed. A replacement given to `setOpener()` kept the first anchor. The
+  opener is now asked through the component's public `getOpener()`, so the
+  events, the ARIA state and the placement share one resolution, and five
+  call sites became `reposition()`. The keyboard feature always runs before
+  the controller, so the 24-line initial-focus fallback, three guards around
+  its calls and the `Escape` branch behind one of them could not run and are
+  gone; the opener feature reads the keyboard feature's Tab tracker instead of
+  keeping its own document listener and timer. The cut measures 12,951 to
+  12,790 bytes gzipped in the excise harness, and the menu row measures 12,690
+  of its 13,056-byte budget in CI. `scripts/check-menu-opener-browser.ts`
+  opens a menu against a selector, an element, `{element}`, `{getElement()}`
+  and `{input}`, and against a `setOpener()` replacement, in LTR and RTL: each
+  lands below the current opener on its start edge.
+
+### Internal
+
+- **The size report prints Brotli beside gzip (#166).**
+  `scripts/size.ts`'s per-component table gains a Brotli column: the same
+  build's initial graph as the gzip column, through
+  `zlib.brotliCompressSync` at quality 11. It is reported, never gated —
+  every budget stays gzip and the gate lines are untouched. Two tests pin the
+  setting (equality with `node:zlib` at quality 11, and disagreement at
+  quality 1, so a changed quality cannot pass silently) and the measurement's
+  determinism.
+
+- **Thirty-five unreachable dist modules no longer ship (#200).**
+  `scripts/build.ts` pruned unreachable declarations only, so every module in
+  the tsc program still shipped its runtime file. A module now ships when an
+  `exports` target names it or a shipped module imports it, and the rest are
+  pruned; a new `dist-modules:check` walks the built `dist` from the nested
+  manifest and fails naming every module nothing can reach. The 35 removed
+  modules are 30 empty type-only siblings of 11 bytes each, three runtime
+  `types.js` copies (`menu` 342, `select` 84, `text-field` 380 bytes) and
+  `react/jsx.js` with `solid/jsx.js`, 1,172 bytes in all; their declarations
+  stay shipped and only the runtime files go. Every `size:check` row is
+  byte-identical to main's own package job, so nothing a consumer imports
+  moves.
+
+- **The release adds 351 bytes gzipped in the all-js row (126,727 to 127,078)
+  and leaves the full stylesheet at 63,703; the packed tarball is 874,849
+  bytes compressed, 5,052,835 unpacked in 1,578 files, against 875,566 and
+  5,052,361 in 1,612 files in 3.3.3.** Measured on main at 2f78c965, push run
+  41417375448, job 125184777237; this release changes only the CHANGELOG and
+  the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
+## [3.3.3] - 2026-11-02
+
+A lighter package, and progress that stays sharp.
+
+### Fixed
+
+- **A progress canvas redraws when the device pixel ratio changes (#234).**
+  A canvas sizes its backing store in physical pixels, but the shared resize
+  path watched the element's width only: a canvas created at ratio 1 and shown
+  at ratio 2 — browser zoom, or a window moved between a 1x and a Retina
+  display — kept its ratio 1 bitmap, so the wave drew twice its intended size,
+  soft and blocky, until a width change repaired it. The resize path now watches
+  the resolution media query at the current ratio, re-arms it at the new ratio,
+  and runs the same debounced measure and draw a width change runs; the linear
+  and the circular indicator share it, and `destroy()` removes the watcher. Both
+  are measured in `scripts/check-progress-dpr.ts` (`progress:check`), whose
+  viewport nudge leaves the indicator's width and the width observer unmoved, so
+  only the ratio watcher can pass it.
+
+### Changed
+
+- **The slider is one controller (#180).**
+  Four internal modules, one of them a 610-line pointer and keyboard module,
+  rebuilt the same element lookups, axis and fraction of the range on every
+  use, and every API call crossed the controller object, the arrows
+  `getApiConfig` built and `withAPI`'s wrappers. They are one
+  `features/controller.ts` that owns the track geometry, the track renderer and
+  the interaction; the public functions are installed once as the controller's
+  own, the legacy `slider` object shares them, and `api.ts` is gone. Seven
+  paths no call could reach are removed after proving them dead. Behaviour is
+  unchanged: the 91 pinned slider tests pass untouched, `event.slider` is still
+  the object `createSlider` returns, and the shared fraction arithmetic matches
+  the old two-step percentages over 120,012 combinations. The slider bundle,
+  built the same way on both sides, goes from 13,268 bytes gzipped to 11,947
+  (−1,321, −9.96 %).
+
+### Internal
+
+- **Nine unreachable modules no longer ship (#174).**
+  `bun run build` compiles every module in the tsc program, and
+  `scripts/prune-declarations.ts` removes unreachable declarations only, so
+  nine modules no export path reached still shipped as `.js`, and the element
+  pool in `core/dom/create.ts` had no runtime reference. Both are removed; the
+  export surface does not move, and `scripts/check-consumer.ts` still asserts
+  the nested module paths (`chips/chip`, `chips/chip/constants`,
+  `progress/features` and the rest) do not resolve.
+
+- **A leaner kernel: one class-token loop and one `normalizeEvent` pass (#177).**
+  `addClass`, `removeClass`, `toggleClass` and `hasClass` each repeated the same
+  single-name fast path, array unwrap and space-splitting fallback, and
+  `normalizeEvent` built the same eight-field result in three branches. One
+  `forEachClass` now normalizes once and applies every token, and the touch or
+  mouse point is picked once and the result built once. No public signature,
+  export or declaration changes, and the existing tests are unchanged; a class
+  matrix test and the three `normalizeEvent` outcomes pin the contracts.
+
+- **The release saves 1,158 bytes gzipped in the all-js row (127,885 to
+  126,727) and leaves the full stylesheet at 63,704; the packed tarball is
+  875,566 bytes compressed, 5,052,361 unpacked in 1,612 files, against 882,834
+  and 5,094,700 in 1,625 files in 3.3.2.** Measured on main at 238b8c22, push
+  run 41403660849, job 125141046911; this release changes only the CHANGELOG
+  and the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
+## [3.3.2] - 2026-11-01
+
+Tooltips land where they point.
+
+### Fixed
+
+- **A tooltip sits at its offset on every side of its target (#171).**
+  The stylesheet's position classes carried margins of their own: 8px on
+  `--bottom` and `--right` on top of the 8px `calculatePosition` already
+  applies to every placement, so those two sides sat 16px away with the
+  arrow floating 8px off the target, while `--top`'s and `--left`'s margins
+  were dead rules on a fixed box. The four margins are gone; every
+  placement sits 8px from the target on the named side, the arrow filling
+  the gap with its tip on the target's edge, in left-to-right and
+  right-to-left alike. The twelve placements are now measured in
+  `scripts/check-tooltip.ts`.
+
+- **A tooltip stays on screen and its arrow points at the target at the
+  viewport edges (#173).** Clamping moved the surface without re-anchoring
+  the arrow, which kept pointing at empty space; a placement that crossed
+  the viewport was never flipped; the arrow class came from the requested
+  placement, so a flipped surface kept a class pointing the wrong way; and
+  left and right placements had no vertical constraint at all. The position
+  now flips to the opposite side when that keeps the surface on screen,
+  clamps to the viewport and re-anchors the arrow to the target, writes the
+  arrow class from the placement it ends on, and constrains both axes.
+  Seventeen cases are measured in both directions in the same check.
+
+- **A tooltip follows the scrolling container it was opened in, and
+  measures its surface as a fraction (#178).** Scroll events do not bubble,
+  so the window listener never heard a scrolling list, panel or dialog, and
+  the target slid away under a surface that stayed where the container left
+  it: the listener now captures container scrolls as well as page scrolls,
+  with the same flag on add and on both removals. The surface size comes
+  from its computed style rather than `offsetWidth`, whose integer rounding
+  made the 8px offset 8.3 and could leave a clamped surface a third of a
+  pixel outside the edge it was clamped to, and the coordinates are written
+  unrounded. The twelve placements and the collision rows are measured in
+  the same browser check.
+
+### Docs
+
+- **Every documented import is compiled against the packed package
+  (#220).** Four documented examples took constants from the package root,
+  which does not export them — `TIME_FORMAT` and `TIME_PICKER_TYPE` in the
+  timepicker README, `MENU_POSITION` in the menu's JSDoc example and
+  `SELECT_VARIANTS` in the select's — so a reader who copied one got a type
+  error and `undefined` at run time. Each constant is now imported from its
+  component's subpath, and `bun run docs-imports:check` collects every
+  import documented in a Markdown fence or an `@example` under `src/` and
+  compiles it against the packed package in the `package` job, so a
+  documented name must be one its specifier exports. Docs and tooling only:
+  no API change.
+
+### Internal
+
+- **The release costs 105 bytes gzipped in the all-js row (127,780 to
+  127,885) and saves 22 in the full stylesheet (63,726 to 63,704); the
+  packed tarball is 882,834 bytes compressed, 5,094,700 unpacked in 1,625
+  files, against 882,680 and 5,096,854 in 1,625 files in 3.3.1.** Measured
+  on main at b28afe0e, push run 41355367585, job 124994309034; this release
+  changes only the CHANGELOG and the version field. No ceiling moved, every
+  budget check passed, and all seven README size rows stand as printed.
+
+## [3.3.1] - 2026-11-02
+
+Menus you can trust with keyboard and selection.
+
+### Fixed
+
+- **A vertical menu's selected item no longer draws a trailing check (#161).**
+  The horizontal menu's 18px check sits 12px from the item's end, past the
+  vertical item's 16px end padding, so it overlapped the label by 14px — long
+  labels had glyphs under it, in left-to-right and in right-to-left. A vertical
+  item keeps its container colour and its 12dp corner and paints no check, as
+  the menus specs and guidelines describe; `aria-selected` is unchanged. The
+  horizontal check is untouched: 18px, 12px from the end, 10px clear of the
+  label.
+
+- **The keyboard skips menu items and select options that are not shown (#172).**
+  An item kept in the DOM but hidden with `display: none` cannot take focus, yet
+  arrows and Enter treated it as a stop: a hidden option could become the
+  select's active descendant and Enter could commit an invisible value, and a
+  hidden first or middle menu item could make the menu, or everything after it,
+  unreachable. The keyboard now moves only through the items a person can see,
+  opens a menu on its first visible item and wraps through the visible ones, and
+  leaves the select without an active option when nothing is visible. Disabled
+  items still take focus and dividers still cannot, as the menus and lists
+  accessibility guidance describes.
+
+- **Submenus follow `setItems` (#175).**
+  After a menu's items were replaced, the right arrow resolved the focused
+  item's children through the list the menu had been created with: it opened the
+  old submenu, or nothing when the parent had been renamed, while the
+  replacement was on screen and returned by `getItems()`. A submenu now reads
+  the items it was opened with, so the key opens the replacement's next level
+  and focuses its items.
+
+### Internal
+
+- **`SIZES.md` publishes a measured size per component, and `bun run size` holds
+  it to the measurement (#160).**
+  The file lists every component's minified and gzipped size, its gzipped delta
+  against the kernel and its deferred gzip, generated from the measurement the
+  budgets already use (`bun run size --markdown`) and linked from the README's
+  Sizes section. A plain `bun run size` compares the committed rows with a fresh
+  measurement and fails on drift. `SIZES.md` is not packed, so nothing in the
+  package changes, and no new CI step or budget was added.
+
+- **CI runs the checks on every push to `main`, not only on a pull request
+  (#181).**
+  `.github/workflows/ci.yml` adds a `push` trigger for `main`, so every merge
+  commit now gets the checks its pull request ran, on the commit a `v*` tag and
+  a publish act on. Every existing trigger and step stays, and a run on `main`
+  is never cancelled by a newer one.
+
+- **`preupgrade:check` reuses pages and waits for settled layout, and the
+  evidence job drops from 22:57 to 2:44 (#195).**
+  With the same cases, assertions and measurements — the 1,789 styled result
+  objects match exactly, and the check itself goes from 21:23 to 1:38 — it
+  reuses one never-upgraded pre-page, two isolated prepared-neighbour
+  registries and four post-upgrade pages, and settles on fonts, images, finite
+  animations and two animation frames instead of fixed waits.
+
+- **`shadow-styles:check` measures every fixture on one page, and the group
+  drops from 5:52.8 to 3:08.8 (#198).**
+  With the same fixtures and findings — 37 elements, 1,797 fixtures and 11,311
+  cross-component classes on both trees, and the same five seeded findings when
+  the dialog stops adopting the button sheet — it navigates once and empties the
+  body before each probe, so the element bundle, the full stylesheet and the
+  element definitions are paid once instead of 1,797 times, and it no longer
+  reads every computed property of a node whose class already has its sheet
+  adopted. The `browser (elements)` job falls from 11m42s to 8m51s;
+  `elements:check`, which shares the job, is unchanged.
+
+- **`shadow-styles:check` waits on the fixture's work instead of a fixed sleep,
+  and the group drops from 3:10.0 to 2:12.6 (#202).**
+  With the same 37 elements, 1,797 fixtures and 11,311 cross-component classes,
+  and the same five seeded findings when the dialog stops adopting the button
+  sheet, the probe settles on the microtasks a build and an observer callback
+  queue, the fonts and images the fixture inserts, two animation frames and the
+  finite transitions it starts — in the document and in every shadow root it
+  reaches, nested hosts included. The `browser (elements)` job falls from 9m06s
+  to 8m04s; `elements:check`, which shares the job, is unchanged.
+
+- **CI's elements row is three rows by measured duration, and the run drops
+  from 8m58s to 6m56s (#211).**
+  The `browser (elements)` row held the run at 7m54s, of which
+  `elements:check` was 318.8s and `shadow-styles:check` 132.7s. `elements:check`
+  now takes parts — contiguous ranges of its sections, split before `menu in
+  the top layer`, 165s before the boundary and 154s after — and CI runs them as
+  `browser (elements-a)` and `browser (elements-b)`, with
+  `browser (shadow-styles)` a row of its own: 3m19s, 2m58s and 2m40s. Every
+  check still runs on every change — the two parts printed 489 and 191 checks,
+  the 680 the one row printed — and a local `bun run elements:check` is
+  unchanged. The `check` status the ruleset requires is untouched, and the
+  critical path is now `browser (components)` at 6m06s.
+
+- **CI's components row is two rows by measured duration, and the run drops
+  from 6m56s to 5m21s (#212).**
+  The `browser (components)` row held the run at 6m06s on the push run
+  41316827952, of which `core:check` was 138.9s and `consumer:check` 49.5s.
+  CI now runs it as `browser (components-a)` (`core:check` and
+  `carousel:check`) and `browser (components-b)` (the other ten): 3m17s and
+  2m52s on the push run 41319020497, and the run goes from 6m56s to 5m21s.
+  Every check still runs on every change, each exactly once —
+  `test/build/ci-commands.test.ts` holds the list and passes unchanged — and
+  the timing line `ssr:check` prints now names `browser (ssr)` rather than
+  `browser (components)`. The `check` status the ruleset requires is
+  untouched, and the critical path is now `browser (ssr)` at 4m17s.
+
+- **The menu close-contract test waits for the reveal it asserts, and its
+  pre-reveal cases no longer race the 20 ms reveal (#213).**
+  With the same 38 named cases, a positive reveal check now waits on the menu's
+  visible class through a `MutationObserver` with a 2 s deadline, the select's
+  and the split button's inner menus included, and the pre-reveal click and
+  Escape cases observe and dismiss in the task that opened the menu — no 3 ms
+  yield for a paused runner to stretch past the reveal. A bounded observer
+  still covers the 160 ms no-late-reveal window, now for Escape as well as
+  outside click. Measured before the fix on the unchanged test: 0/1,000
+  failures normally, 100/100 with a 40 ms scheduler pause before the old 3 ms
+  wait; with the fix, 1,000/1,000 and 100/100. Test only: no product code,
+  stylesheet, shared fixture or budget changes.
+
+- **`preupgrade:check` prints its mutation-control rows as `shift`, not `FAIL`
+  (#223).**
+  The mutation section runs every case without the pre-upgrade stylesheet to
+  prove the sheet is load-bearing — most elements must shift there and the
+  run's result is not a gate — so its rows now read `shift`, while the
+  with-stylesheet rows keep `FAIL`, and scanning the styles job log no longer
+  takes a control row for a failure. No gate, threshold, count or assertion
+  changes; the diff is the row printer and its mutation call site.
+
+- **The public types' union members and `extends` bases are pinned, and a
+  removal now fails a test instead of passing every gate (#226).**
+  The export pins record public names and kinds; the values a union accepts and
+  the bases an interface extends were checked by nothing. Measured on
+  77f4c63b, dropping `"medium"` from `FabSize`, dropping
+  `extends BaseComponentConfig` from `ButtonConfig` and dropping `"reset"` from
+  `ButtonConfig.type` each left `component-exports:check`, its 12 tests and
+  `bun run ts:check` green. `scripts/fixtures/type-shapes.json` now pins 295
+  shapes — 243 unions and 52 `extends`, read from the declarations on every
+  public subpath that resolves to a source entry (root, components and their
+  constants, core, elements and ssr), one entry per declaration and a property
+  union under `Interface.property` at any depth.
+  `test/type-shapes.test.ts` fails naming the type, then the member or base by
+  value, and `bun run type-shapes:update` regenerates the pin for a reviewed
+  diff; a union's members are sorted, because the checker orders them by
+  internal ids. Test and tooling only: no product code, budget or CI step
+  changes.
+
+- **CI's `browser (ssr)` row is two rows by engine, and it no longer decides
+  the run (#216).**
+  The row was the run's longest on the push before this change — 3m39s on
+  41330357545, against `browser (components-a)` at 3m26s — and on the push
+  run 41319020497 at main 7c488c5f it held the run at 4m17s. Inside it, on
+  the job log of run 41317795666 where the script printed 193.7s, parity took
+  29.4s and the three Chromium checks 36.3s against 127.8s for firefox and
+  webkit.
+  `scripts/check-ssr.ts` now takes parts the way `elements:check` does — `a` is
+  parity and Chromium, `b` is firefox and webkit, and no argument runs every
+  part — and CI runs them as `browser (ssr-a)` and `browser (ssr-b)`: 1m41s
+  and 3m11s on the push run 41334995191, where the longest row is
+  `browser (elements-a)` at 3m23s and the run is 4m31s against 4m41s. Every
+  sub-run still runs on every change, each exactly once, and
+  `test/build/ci-commands.test.ts` holds the list with `ssr:check:a` and
+  `ssr:check:b`; a local `bun run ssr:check` is unchanged. The Chromium browser
+  cache key is the one every other Chromium row already uses, so only the new
+  `firefox-webkit` key was cold on the first run. The `check` status the
+  ruleset requires is untouched.
+
+- **An export's deprecation is read through its declaration, and a public name
+  removed since the last release fails the pins (#222).**
+  Measured on 8b1ae397, adding `@deprecated` to the declaration a re-export
+  names left `root-exports:check` and `component-exports:check` green, and a
+  name deleted from a pin failed nothing, because each reader read the tags on
+  the re-export statement alone and neither compared its pins with a release.
+  `scripts/export-deprecation.ts` is now one resolver both readers share — the
+  export statement's tag wins, so a root move keeps its path note, and
+  otherwise the aliased declaration's tag counts — and the root pin records
+  such a deprecation as `deprecated` in place with `where: "declaration"`,
+  never in the migration table and never as a rename. Both readers also compare
+  their pins with the same files at the latest `v*` tag and fail on a name
+  public there and absent now (`test/build/export-pin-removals.test.ts`), and
+  the `tests` job checks out with `fetch-depth: 0` so the tag is there. Tooling
+  only: no API or runtime change.
+
+- **The release costs 11 bytes gzipped in the all-js row (127,769 to 127,780)
+  and 81 in the full stylesheet (63,645 to 63,726); the packed tarball is
+  882,680 bytes compressed, 5,096,854 unpacked in 1,625 files, against
+  882,445 and 5,095,982 in 1,625 files in 3.3.0.** The gzip rows, the unpacked
+  size and the file count read the same on this pull request's head as on main
+  at e57c811f; only four of the 17 packed rows, all CSS Brotli, differ between
+  them. No ceiling moved, and all seven README size rows stand as measured.
+
+## [3.3.0] - 2026-11-01
+
+Elements say everything the factories can.
+
+### Added
+
+- **`<m-button>` takes a toggle and a selected state (#157).**
+  With `toggle`, a button is a toggle button: a click flips it, the resting
+  shape swaps round to square, the host carries `aria-pressed`, and a `change`
+  event with `{ selected, value }` comes from the host, as `<m-icon-button>`
+  does. The `selected` attribute is the state at creation, the `selected`
+  property the live one; the attribute moves the state until the user or a
+  script changes it, and `form.reset()` restores its default. The factory
+  options are `toggle` and `selected`, and the framework props take the same
+  names. A `selected` attribute without `toggle` selects nothing.
+
+- **`<m-card>` aligns its actions row (#153).**
+  A card's slotted actions sat at the start of the row even though the
+  factory's button actions default to the end. `actions-align` takes `start`,
+  `center`, `end` (the default, as the factory's `actionsConfig.align` is) or
+  `space-between`; start and end follow the text direction. A change after
+  upgrade rebuilds the row without moving the light-DOM actions, and the
+  framework prop is `actionsAlign`. The pre-upgrade styles reserve the row at
+  its logical alignment, so a card with an actions region no longer grows 16px
+  when it upgrades.
+
+- **`<m-button>` places its icon after the label (#158).**
+  `icon-position="end"` puts the icon after the label and swaps the small
+  insets, as `iconPosition: "end"` does in the factory; `start` is the default
+  and keeps the leading icon the buttons guidelines describe. As on
+  `<m-extended-fab>`, the attribute is read at upgrade, and changing or
+  removing it rebuilds the button. The framework prop is `iconPosition`.
+
+- **FAB and extended FAB take a logical placement (#154).**
+  `<m-fab>`, `<m-extended-fab>`, `createFab` and `createExtendedFab` accept
+  `placement` — `none`, `top-start`, `top-end`, `bottom-start` or `bottom-end`
+  — and their framework props take the same name; `placement="bottom-end"`
+  names the trailing corner in every language, and the viewport margin stays
+  16px. The logical corners flip with `dir="rtl"` on the component or above
+  it, and with the `mtrl-rtl` class the runtime reflects: on the component's
+  own root, on an ancestor for a factory root, and on a custom element's
+  host; they follow a direction change while mounted, measured in Chromium on
+  both routes. The physical `position` values keep their left/right meaning
+  in RTL. `placement` wins over
+  `position`, including `none`; removing the attribute restores `position`,
+  and `MIGRATING.md` maps each physical corner to the logical one on both
+  sides.
+
+  The FAB menu keeps its `none`, `bottom-start` and `bottom-end` values and
+  its layouts; its inline edges are now written as physical sides with the
+  same direction arms, so it reads the direction the way FAB placement does,
+  root marker included: `dir="rtl"` or `mtrl-rtl` on the menu root flips the
+  outer menu, its inner close FAB and its list together. The review measured
+  what changes in the bundled `full-css` build: `dir="rtl"` on the page or an
+  ancestor now flips the menu, which the bundler's earlier `:lang()` lowering
+  of `inset-inline-*` did not match, and a page that is RTL only by language
+  (`<html lang="ar">` with no `dir`) no longer flips it, which that lowering
+  did. In the unbundled stylesheet and the elements' shadow sheets,
+  `dir="rtl"` flipped the menu before and still does, and the `mtrl-rtl`
+  class now flips it too.
+
+### Deprecated
+
+- **The physical FAB `position` values (#154).**
+  `top-left`, `top-right`, `bottom-left` and `bottom-right` on `<m-fab>`,
+  `<m-extended-fab>` and the two factories, with `setPosition` and
+  `getPosition`, are deprecated for removal in 4.0. They stay available
+  through 3.x and keep their physical meaning in RTL; `MIGRATING.md` maps
+  each to the `placement` naming the same corner in left-to-right and in
+  right-to-left.
+
+### Internal
+
+- **The release costs 15 bytes gzipped in the all-js row (127,754 to 127,769)
+  and 88 fewer in the full stylesheet (63,733 to 63,645); the packed tarball
+  is 882,445 bytes compressed, 5,095,982 unpacked in 1,625 files, against
+  878,746 and 5,067,838 in 1,623 files in 3.2.7.** No ceiling moved, and all
+  seven README size rows stand as measured.
+
 ## [3.2.7] - 2026-10-31
 
 A lighter package.
@@ -4481,7 +5234,14 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.2.7...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.1...HEAD
+[3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
+[3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
+[3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
+[3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
+[3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
+[3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
+[3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
 [3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/floor/material/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/floor/material/compare/v3.2.4...v3.2.5

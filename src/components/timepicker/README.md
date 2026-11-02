@@ -150,7 +150,8 @@ timePicker.destroy();
 ### 24-Hour Time Picker with Seconds
 
 ```javascript
-import { createTimePicker, TIME_FORMAT } from 'material';
+import { createTimePicker } from 'material';
+import { TIME_FORMAT } from 'material/components/timepicker';
 
 const timePicker = createTimePicker({
   title: 'Select time',
@@ -249,7 +250,8 @@ The TimePicker component supports all modern browsers:
 The `TimePicker` component includes comprehensive TypeScript definitions:
 
 ```typescript
-import { createTimePicker, TIME_PICKER_TYPE, TIME_FORMAT, TimePickerConfig } from 'material';
+import { createTimePicker, TimePickerConfig } from 'material';
+import { TIME_PICKER_TYPE, TIME_FORMAT } from 'material/components/timepicker';
 
 // Configuration with TypeScript
 const config: TimePickerConfig = {

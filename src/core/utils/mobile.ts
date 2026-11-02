@@ -96,41 +96,19 @@ function isMouseEvent(event: Event): event is MouseEvent {
  * This allows components to handle interactions uniformly
  */
 export const normalizeEvent = (event: Event): NormalizedEvent => {
-  // Handle TouchEvent
-  if (isTouchEvent(event) && event.touches.length > 0) {
-    const touch = event.touches[0];
-    return {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      pageX: touch.pageX,
-      pageY: touch.pageY,
-      target: event.target as EventTarget,
-      preventDefault: () => event.preventDefault(),
-      stopPropagation: () => event.stopPropagation(),
-      type: event.type
-    };
-  }
-  
-  // Handle MouseEvent
-  if (isMouseEvent(event)) {
-    return {
-      clientX: event.clientX,
-      clientY: event.clientY,
-      pageX: event.pageX,
-      pageY: event.pageY,
-      target: event.target as EventTarget,
-      preventDefault: () => event.preventDefault(),
-      stopPropagation: () => event.stopPropagation(),
-      type: event.type
-    };
-  }
-  
-  // Fallback for other event types
+  // A touch event with a point reads the point; a mouse event reads itself.
+  // Anything else has no coordinates and reports zero.
+  const point = isTouchEvent(event) && event.touches.length > 0
+    ? event.touches[0]
+    : isMouseEvent(event)
+      ? event
+      : undefined;
+
   return {
-    clientX: 0,
-    clientY: 0,
-    pageX: 0,
-    pageY: 0,
+    clientX: point ? point.clientX : 0,
+    clientY: point ? point.clientY : 0,
+    pageX: point ? point.pageX : 0,
+    pageY: point ? point.pageY : 0,
     target: event.target as EventTarget,
     preventDefault: () => event.preventDefault(),
     stopPropagation: () => event.stopPropagation(),

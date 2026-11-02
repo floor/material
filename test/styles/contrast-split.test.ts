@@ -224,9 +224,27 @@ describe("explicit contrast levels are opt-in", () => {
     // --mtrl-navigation-bar-dot-shift so one arm mirrors both
     // (styles/components/_navigation-bar.scss,
     // styles/components/_navigation-rail.scss).
+    // A vertical menu's selected item paints no trailing check: its 16px end
+    // padding has no room for the horizontal variant's mark, which covered
+    // the label, while the horizontal menu keeps its own
+    // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("10e08b0929fdad5c2163f0c533140d2da92e0f47ef05f6e668e971dc04ff15c0");
-    expect(css.length).toBe(537060);
+      .toBe("f751291cecec2462c05b147567b5d395850e4e664ddb48c94b474b196d007b51");
+    expect(css.length).toBe(537147);
   });
 
   test("today's sheets still resolve to the fixture", () => {
