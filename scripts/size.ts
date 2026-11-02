@@ -131,7 +131,9 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   snackbar: ["button", "icon-button"],
   select: ["text-field", "menu"],
   tabs: ["button", "badge"],
-  "split-button": ["button", "menu"],
+  // The menu's chunk is not listed: split button loads the menu on first open
+  // (menu/inner, its symbol module, is the only menu module still initial).
+  "split-button": ["button"],
   toolbar: ["button", "icon-button"],
   "fab-menu": ["fab"],
 };
@@ -212,7 +214,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "navigation-rail": kb(6.85), // 6,693 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   progress: kb(10.6),
   "loading-indicator": kb(9.5), // the Compose-exact shapes: 9,138 to 9,447, the first-arc split 149 B of it
-  "split-button": kb(17.45), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget: 18,228; 17,167 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 17,269 to 17,296 against d306d4c2 (36 of room before it, 9 after). kb(16.95) is 17,356 (60 above, short of 100); raised to kb(17) = 17,408 (112 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 17,307 to 17,460. kb(17.1) is 17,510 (50 above, short of 100); raised to kb(17.15) = 17,561 (101 above), Node 22.23.3 / npm 10.9.9
+  "split-button": kb(9.55), // the menu is loaded on first open (menu-on-demand.ts): 17,760 to 9,677 measured against ae4c8298, its first-open payload in DEFERRED_BUDGET_BYTES below. The menu/inner symbol module is the only menu module still initial. kb(9.5) is 9,728 (51 above, short of 100); raised to kb(9.55) = 9,779 (102 above)
   radios: kb(5.35),
   search: kb(11.05), // the open view in the top layer: 9,759; combobox, contained and divided: 10,114; minWidth and maxWidth: 10,161; trailing items, avatar, supporting text, reopening: 10,477; the deferred opening focus is cancelled: 10,509 to 10,566. kb(10.3) is 10,547, which does not fit; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, for the full-screen view: 10,518 to 10,956. kb(10.75) is 11,008 (52 above, short of 100); raised to kb(10.8) = 11,059 (103 above), Node 22.23.3 / npm 10.9.9
   select: kb(20.85), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter: 20,608; main's root class option on the forward merge: next 20,743 to 20,790; 20,821 on the A2 forward merge (17 B left); the menu's tabindex reset: 20,867, which does not fit kb(20.35). 20,853 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 20,863 to 21,016. kb(20.6) is 21,094 (78 above, short of 100); raised to kb(20.65) = 21,145 (129 above), Node 22.23.3 / npm 10.9.9
@@ -232,7 +234,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // material/core/shapes: every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
-  tooltip: kb(6.1), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
+  tooltip: 6_300, // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952; the on-screen fix (flip on the placement axis, both-axis clamp, arrow re-anchor on clamp, class derived from final geometry): 6,298 gzipped, the smallest correct form — re-anchoring unconditionally breaks the rich rows' requested anchor, and a centre-comparison anchor pick misses the target at a clamped edge (floor/material#173). kb(6.1) = 6,246 raised to 6,300 by the Floor orchestrator (Atlas decision, this fix only), 2026-11-01
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
@@ -247,6 +249,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
  */
 export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
   menu: kb(2.2), // the submenu feature, a chunk since then
+  "split-button": kb(17.05), // the menu chunk, its shared chunk and the submenu chunk: 17,313 measured against ae4c8298. kb(17.0) is 17,408 (95 above, short of 100); raised to kb(17.05) = 17,459 (146 above)
   "fab-menu": kb(10.6), // the baseline menu of the menu presentation; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 10,537 to 10,584 against d306d4c2. kb(10.4) is 10,649 (65 above, short of 100); raised to kb(10.45) = 10,700 (116 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 10,582 to 10,738. kb(10.55) is 10,803 (65 above, short of 100); raised to kb(10.6) = 10,854 (116 above), Node 22.23.3 / npm 10.9.9
 };
 
