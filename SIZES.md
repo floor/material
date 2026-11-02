@@ -9,7 +9,8 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at 627ed254 on 2026-11-01. Regenerate with
+Measured at 29dd0679 on 2026-11-01, except the bottom-sheet, side-sheet,
+dialog and all rows measured at 627ed254 (the #182 head). Regenerate with
 `bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
 these rows drift from a fresh measurement.
 
@@ -35,7 +36,7 @@ these rows drift from a fresh measurement.
 | fab-menu | 22.6 KB | 8.2 KB | +5.1 KB | +10.6 KB |
 | extended-fab | 17.9 KB | 6.0 KB | +2.9 KB |  |
 | icon-button | 19.2 KB | 6.4 KB | +3.3 KB |  |
-| list | 19.6 KB | 6.8 KB | +3.6 KB |  |
+| list | 19.5 KB | 6.8 KB | +3.6 KB |  |
 | menu | 40.1 KB | 12.6 KB | +9.5 KB | +2.1 KB |
 | navigation-bar | 16.6 KB | 6.0 KB | +2.9 KB |  |
 | navigation-rail | 19.0 KB | 6.8 KB | +3.7 KB |  |
@@ -45,12 +46,12 @@ these rows drift from a fresh measurement.
 | radios | 15.5 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.8 KB | 10.9 KB | +7.8 KB |  |
 | select | 69.2 KB | 20.7 KB | +17.6 KB | +2.1 KB |
-| slider | 40.0 KB | 13.1 KB | +9.9 KB |  |
+| slider | 40.0 KB | 13.1 KB | +10.0 KB |  |
 | snackbar | 37.1 KB | 12.0 KB | +8.9 KB | +6.8 KB |
 | switch | 19.1 KB | 6.2 KB | +3.1 KB |  |
 | tabs | 42.6 KB | 13.4 KB | +10.3 KB | +6.8 KB |
 | text-field | 29.3 KB | 8.9 KB | +5.8 KB |  |
-| timepicker | 32.2 KB | 11.1 KB | +8.0 KB |  |
+| timepicker | 32.1 KB | 11.1 KB | +8.0 KB |  |
 | top-app-bar | 13.2 KB | 4.5 KB | +1.4 KB |  |
 | tooltip | 17.5 KB | 6.1 KB | +3.0 KB |  |
 | toolbar | 33.9 KB | 11.1 KB | +8.0 KB | +6.8 KB |
