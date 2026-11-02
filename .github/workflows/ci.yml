@@ -145,6 +145,8 @@ jobs:
         run: bun run size:check
       - name: README examples, specifiers, sizes and links against the packed package
         run: bun run readme:check
+      - name: Documented imports, in every doc and JSDoc example, against the packed package
+        run: bun run docs-imports:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element
@@ -184,7 +186,7 @@ jobs:
             checks: core:check carousel:check
           - group: components-b
             browsers: chromium
-            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check readme-browser:check rtl:check
+            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check progress:check toolbar-card:check readme-browser:check rtl:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check

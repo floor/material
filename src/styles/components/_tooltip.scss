@@ -204,20 +204,7 @@ $arrow-size: 8px;
     }
   }
   
-  // Positioning classes
-  &--top {
-    margin-bottom: $arrow-size;
-  }
-  
-  &--bottom {
-    margin-top: $arrow-size;
-  }
-  
-  &--left {
-    margin-right: $arrow-size;
-  }
-  
-  &--right {
-    margin-left: $arrow-size;
-  }
+  // No position margins: calculatePosition (api.ts) already offsets every
+  // placement by DEFAULT_OFFSET, and a margin on top of it doubled the
+  // cardinal bottom and right gaps, arrows detached from the target.
 }
