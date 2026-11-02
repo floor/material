@@ -1,6 +1,5 @@
 // src/components/dialog/types.ts
 import type { ButtonComponent } from "../button/types";
-import type { DividerComponent } from "../divider/types";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -49,8 +48,9 @@ export type DialogFooterAlignment = 'right' | 'left' | 'center' | 'space-between
  * - open: Fired inside `open()`, once the dialog is open: `isOpen()` is true.
  *   The surface may not be visible yet, and focus may not be in it
  * - afteropen: Fired later, never inside `open()`: the dialog is visible and
- *   focus is in it (`animationDuration` after it was shown). Not fired when
- *   the dialog closes first
+ *   focus is in it (`animationDuration` after it was shown, or once its
+ *   initial focus lands if that is later). Not fired when the dialog closes
+ *   first
  * - beforeclose: Fired inside `close()`, before anything changes (can be prevented).
  *   Not fired when the browser has closed a top-layer dialog itself: nothing
  *   can refuse that
@@ -189,8 +189,22 @@ export interface DialogConfig {
    */
   trapFocus?: boolean;
   
-  /** 
-   * Parent element to append dialog to
+  /**
+   * Parent element to append dialog to.
+   *
+   * With any element but the body, the scrim covers that element rather than
+   * the page: it is sized to the container, the dialog is centred in it, and a
+   * click outside the container does not dismiss the dialog. This applies only
+   * when the container has room for the dialog -- at least its width and height
+   * as laid out in the container. A collapsed or smaller container keeps the
+   * page's scrim and centring, and is left untouched, so an unsized container
+   * cannot put the dialog above the page. A container whose computed `position`
+   * is `static` is made `relative` while the dialog's overlay is in it, and its
+   * own inline value (none included) is put back when the dialog closes or is
+   * destroyed. A positioned container is left as it is.
+   *
+   * `layer: "top"` ignores this: `showModal()` makes the dialog page-modal,
+   * with its `::backdrop` over the viewport.
    * @default document.body
    */
   container?: HTMLElement;
@@ -200,8 +214,9 @@ export interface DialogConfig {
    * `container` (or `document.body`) and kept there when it closes, and opens
    * it with `showModal()`: in the browser's top layer, above every z-index and
    * outside any clipping ancestor, with the rest of the page inert. The scrim
-   * is its `::backdrop`, and the overlay element is not used. Escape reaches
-   * the dialog as its `cancel` event.
+   * is its `::backdrop`, which covers the viewport whatever `container` names,
+   * and the overlay element is not used. Escape reaches the dialog as its
+   * `cancel` event.
    *
    * Where the browser has no `showModal()`, the dialog behaves as without it.
    */
@@ -355,9 +370,9 @@ export interface DialogStructure {
   content: HTMLElement;
   /** Only when the dialog has buttons, and set back to null when the last goes */
   footer: HTMLElement | null;
-  /** Divider components, not elements: the code reaches for `.element` on them */
-  headerDivider: DividerComponent | null;
-  footerDivider: DividerComponent | null;
+  /** The <hr> elements between the sections, only while shown */
+  headerDivider: HTMLElement | null;
+  footerDivider: HTMLElement | null;
   container: HTMLElement;
 }
 

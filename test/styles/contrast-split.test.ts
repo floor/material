@@ -195,9 +195,23 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("71ee2ecef6d3d152181efe09a0054204e927bd88cfe0dcd372aad99233e562dc");
+    expect(css.length).toBe(544364);
   });
 
   test("today's sheets still resolve to the fixture", () => {
