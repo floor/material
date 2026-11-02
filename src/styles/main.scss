@@ -20,7 +20,8 @@
 @use "utilities/visibility";
 @use "utilities/colors";
 @use "utilities/flexbox";
-@use "utilities/typography" as typo;
+// base/typography below emits the same `.mtrl-truncate` rule.
+@use "utilities/typography" as typo with ($compose-full: true);
 
 // Themes
 @use "themes/index";
