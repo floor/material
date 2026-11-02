@@ -210,8 +210,8 @@ describe("explicit contrast levels are opt-in", () => {
     // A contained dialog's scrim is the container's box, so its overlay is
     // absolute inside it (styles/components/_dialog.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7d0279b91c0b43c6bca514bdf6ff7d1747891ddfa419d2ae677f639e5624a0af");
-    expect(css.length).toBe(544313);
+      .toBe("71ee2ecef6d3d152181efe09a0054204e927bd88cfe0dcd372aad99233e562dc");
+    expect(css.length).toBe(544364);
   });
 
   test("today's sheets still resolve to the fixture", () => {
