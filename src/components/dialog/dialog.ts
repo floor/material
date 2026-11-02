@@ -12,7 +12,9 @@
  * - Dividers for visual separation
  * - Confirmation dialog patterns
  * - Event handling for dialog lifecycle
- * 
+ * - A container (`container`): the scrim and the dialog's modality are scoped
+ *   to that element instead of the page
+ *
  * @module components/dialog
  * @category Components
  */
