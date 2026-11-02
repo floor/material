@@ -458,6 +458,22 @@ export const withVisibility =
   const inerted: HTMLElement[] = [];
   /** The body's own overflow, put back when the dialog closes */
   let scrollLock: string | null = null;
+  // The frame a pending initial focus waits on, and the request that asked for
+  // it. A close, or a later request, cancels the wait: one opening's focus must
+  // not arrive in the next one.
+  let focusFrame: number | undefined;
+  let focusView: Window | undefined;
+  let focusRequest = 0;
+
+  const cancelFocusFrame = (): void => {
+    // The count also tells a settle already running that it is no longer wanted
+    focusRequest += 1;
+    if (focusFrame !== undefined) {
+      focusView?.cancelAnimationFrame(focusFrame);
+      focusFrame = undefined;
+      focusView = undefined;
+    }
+  };
 
   /**
    * Everything outside the dialog is taken out of the page while it is open:
@@ -501,6 +517,37 @@ export const withVisibility =
   // listener behind.
   const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
 
+  /**
+   * Focus the target once it can take the focus. Under prefers-reduced-motion
+   * the shared reset rewrites `transition-property`, and the overlay's
+   * visibility is left transitioning over the open duration: in the task the
+   * visible class lands in, the first control still computes
+   * `visibility: hidden`, so focus() on it leaves focus on the body. Under
+   * normal motion it is already visible and focus is immediate; under reduced
+   * motion it moves a frame after the surface is shown.
+   */
+  const focusWhenVisible = (target: HTMLElement): void => {
+    const view = target.ownerDocument.defaultView;
+    if (!view || typeof view.requestAnimationFrame !== "function") {
+      target.focus();
+      return;
+    }
+    // The newest request names the target: the one still waiting stands down
+    cancelFocusFrame();
+    const request = focusRequest;
+    const settle = (): void => {
+      focusFrame = undefined;
+      if (!opened || !target.isConnected || request !== focusRequest) return;
+      if (view.getComputedStyle(target).visibility !== "hidden") {
+        target.focus();
+        return;
+      }
+      focusFrame = view.requestAnimationFrame(settle);
+      focusView = view;
+    };
+    settle();
+  };
+
   const trapFocus = () => {
     inertBackground();
 
@@ -509,7 +556,7 @@ export const withVisibility =
     if (component.config.autofocus !== false) {
       const requested = component.element.querySelector("[autofocus]") as HTMLElement | null;
       const target = requested || tabStops(component.element)[0] || component.element;
-      target.focus();
+      focusWhenVisible(target);
     }
 
     if (component.config.trapFocus !== false) {
@@ -742,6 +789,8 @@ export const withVisibility =
       opened = false;
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
+      // A focus still waiting for its target is this opening's, and it ends here
+      cancelFocusFrame();
 
       // Get class names
       const dialogVisibleClass = `${component.getClass("dialog")}--visible`;
@@ -804,6 +853,7 @@ export const withVisibility =
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
+      cancelFocusFrame();
       cleanupEvents();
     },
   };
