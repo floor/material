@@ -3,10 +3,11 @@
 // server's HTML to the upgraded element.
 //
 // Each case is the server-style HTML of one element (the host and its light
-// DOM, as an adapter's server render emits it) in a page with the base styles
-// and `material/elements/preupgrade.css`. The host's box and two siblings after it
-// (inline text on its line, a block below) are measured, then the elements
-// script loads, the element upgrades, and they are measured again.
+// DOM, as an adapter's server render emits it) with the base styles and
+// `material/elements/preupgrade.css`. The host and its following siblings are
+// measured in a document that has not defined the subject, then equivalent
+// markup is measured in an upgraded document. Both documents are reused;
+// separate registries preserve the before/after definition boundary.
 //
 // The score is the Layout Instability (CLS) formula, impact fraction times
 // distance fraction, with the viewport replaced by the case's stage: 360 px
@@ -33,7 +34,7 @@
 //   bun run build && bun run scripts/check-preupgrade.ts [element…]
 
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
+import { chromium, type Frame, type Page } from "playwright";
 import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves, type KnownMove } from "./preupgrade-moves";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
@@ -130,6 +131,8 @@ const server = Bun.serve({
         return new Response(Bun.file("dist/elements/preupgrade.css"));
       case "/preupgrade/button.css":
         return new Response(Bun.file("dist/elements/preupgrade/button.css"));
+      case "/fixture":
+        return html(page("", true));
       case "/one":
         return html(page(stage(`<div><m-button>Save</m-button></div><div><m-switch id="switch">Wi-Fi</m-switch></div>`), false)
           .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
@@ -188,13 +191,26 @@ interface Point {
   h: number;
 }
 
-const settle = (p: Page): Promise<unknown> =>
+type MeasurementPage = Page | Frame;
+
+const settle = (p: MeasurementPage): Promise<unknown> =>
   p.evaluate(async () => {
     await document.fonts.ready;
-    for (let i = 0; i < 2; i++) await new Promise((r) => requestAnimationFrame(r));
+    await Promise.all(Array.from(document.images, image => image.decode().catch(() => {})));
+    // Let layout work queued by connectedCallback reach a frame, then await
+    // finite transitions instead of sleeping through every case. Infinite
+    // decorative animations (for example a progress indicator) never settle.
+    for (;;) {
+      for (let i = 0; i < 2; i++) await new Promise((r) => requestAnimationFrame(r));
+      const animations = document.getAnimations().filter(animation =>
+        (animation.playState === "running" || animation.pending) &&
+        animation.effect?.getComputedTiming().endTime !== Infinity);
+      if (!animations.length) break;
+      await Promise.all(animations.map(animation => animation.finished.catch(() => {})));
+    }
   });
 
-const snapshot = (p: Page, hosts: string, siblings: string): Promise<Snapshot> =>
+const snapshot = (p: MeasurementPage, hosts: string, siblings: string): Promise<Snapshot> =>
   p.evaluate(
     ([hostSelector, siblingSelector]) => {
       const box = (element: Element): Box => {
@@ -384,10 +400,6 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
     await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
-    // Factories that finish their layout on a later frame or timer. The host
-    // rows upgrade synchronously and ask for a shorter wait; the whole check
-    // must fit the browser job's budget.
-    await p.waitForTimeout(item?.settleMs ?? 300);
     await settle(p);
     const after = await snapshot(p, hosts, siblings);
     if (anchorBefore && item?.fixedAnchor) {
@@ -406,36 +418,184 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
   }
 };
 
-const runCases = async (preupgrade: boolean): Promise<Result[]> => {
-  const results: Result[] = [];
-  for (const [index, item] of cases.entries()) {
-    if (only.length && !only.includes(item.element)) continue;
-    // A row that pins an absolute host box asserts the stylesheet itself: with
-    // no stylesheet its height is the defect, and the mutation run would spend
-    // a second browser page per row measuring a number it does not assert.
-    if (!preupgrade && item.hostHeight !== undefined) continue;
-    const [before, after] = await measure(`/${index}`, preupgrade, item.host ?? "#stage > :first-child", "/elements.js", item);
-    const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
-    const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
-    const box = shiftOf(before.hosts[0], after.hosts[0]);
-    results.push({
-      name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0],
-      moved, moves, siblings: item.siblings, knownMoves: item.knownMoves,
-      boxMove: item.strictBox ? box : undefined,
-      hostHeight: preupgrade ? item.hostHeight : undefined,
-      subjectMove: item.element === "button" ? box : undefined,
-      labelBefore: before.labels[0] ?? null,
-      labelAfter: after.labels[0] ?? null,
-    });
+// Definitions cannot be removed from a CustomElementRegistry. Keep the plain
+// pre-upgrade page undefined for its lifetime, and reuse already-defined post
+// pages. Two isolated child registries serve the prepared-neighbour rows: one
+// defines button/text-field, the other also switch. Neither defines a subject
+// it measures, and those definitions cannot leak into the plain pre-page.
+const POST_PAGES = 4;
+let reusablePages: Promise<{ before: Page; after: Page[] }> | undefined;
+let beforeTail: Promise<unknown> = Promise.resolve();
+const beforeTurn = async <T>(read: () => Promise<T>): Promise<T> => {
+  const previous = beforeTail;
+  let release!: () => void;
+  beforeTail = new Promise<void>(resolve => { release = resolve; });
+  await previous;
+  try { return await read(); } finally { release(); }
+};
+
+const pages = () => reusablePages ??= (async () => {
+  const before = await browser.newPage();
+  // This page (and its child frames) may load only the explicitly prepared
+  // neighbours, never the define-all entry used by the upgraded pages.
+  await before.route("**/elements.js", route => route.abort());
+  await before.goto(`http://127.0.0.1:${server.port}/fixture`);
+  await before.evaluate(() => {
+    const root = document.createElement("div");
+    root.id = "preupgrade-case";
+    document.body.append(root);
+  });
+  const after = await Promise.all(Array.from({ length: POST_PAGES }, async () => {
+    const p = await browser.newPage();
+    await p.goto(`http://127.0.0.1:${server.port}/fixture`);
+    await p.addScriptTag({ url: "/elements.js", type: "module" });
+    await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+    return p;
+  }));
+  return { before, after };
+})();
+
+const reset = async (p: MeasurementPage, item: PreupgradeCase, preupgrade: boolean, keepFrames = false): Promise<void> => {
+  const width = (item.width ?? STAGE_WIDTH) + 40;
+  if ("viewportSize" in p && p.viewportSize()?.width !== width) await p.setViewportSize({ width, height: 800 });
+  await p.evaluate(({ html, preupgrade, keepFrames }) => {
+    const root = keepFrames ? document.getElementById("preupgrade-case")! : document.body;
+    root.replaceChildren();
+    if (keepFrames) {
+      root.style.display = "";
+      document.querySelectorAll<HTMLIFrameElement>("iframe").forEach(frame => { frame.style.display = "none"; });
+    }
+    document.body.removeAttribute("class");
+    document.body.removeAttribute("style");
+    document.documentElement.removeAttribute("dir");
+    document.documentElement.style.cssText = "";
+    document.documentElement.setAttribute("data-theme", "baseline");
+    (document.querySelector('link[href="/preupgrade.css"]') as HTMLLinkElement).disabled = !preupgrade;
+    root.innerHTML = html;
+  }, { html: stage(item.html, item), preupgrade, keepFrames });
+};
+
+const preparedFrames = new Map<string, Frame>();
+const preparedFrame = async (p: Page, item: PreupgradeCase, preupgrade: boolean): Promise<Frame> => {
+  const key = item.element === "tabs" ? "tabs-neighbours" : "control-neighbours";
+  let target = preparedFrames.get(key);
+  if (!target) {
+    await p.evaluate(key => new Promise<void>(resolve => {
+      const frame = document.createElement("iframe");
+      frame.id = key;
+      frame.style.cssText = "position:fixed;left:0;top:0;border:0;height:800px";
+      frame.onload = () => resolve();
+      frame.src = "/fixture";
+      document.body.append(frame);
+    }), key);
+    const handle = await p.locator(`#${key}`).elementHandle();
+    try { target = (await handle!.contentFrame())!; } finally { await handle!.dispose(); }
+    await target.evaluate(async (element) => {
+      const css = "/dist/elements/css/index.js";
+      const entry = "/dist/elements/index.js";
+      await import(css);
+      const elements = await import(entry);
+      elements.defineButton();
+      elements.defineTextField();
+      if (element === "tabs") elements.defineSwitch();
+    }, item.element);
+    preparedFrames.set(key, target);
   }
+  await p.evaluate(({ key, width }) => {
+    document.getElementById("preupgrade-case")!.style.display = "none";
+    const frame = document.getElementById(key) as HTMLIFrameElement;
+    frame.style.width = `${width}px`;
+    frame.style.display = "block";
+  }, { key, width: (item.width ?? STAGE_WIDTH) + 40 });
+  await reset(target, item, preupgrade);
+  return target;
+};
+
+const measureReused = async (p: Page, item: PreupgradeCase, preupgrade: boolean): Promise<[Snapshot, Snapshot]> => {
+  const pool = await pages();
+  const hosts = item.host ?? "#stage > :first-child";
+  const siblings = (item.siblings ?? SIBLINGS).join(", ");
+  const errors: string[] = [];
+  const onError = (error: Error) => { errors.push(error.message); };
+  const anchor = (target: MeasurementPage, selector?: string) => target.locator(hosts).evaluate((host, selector) => {
+    const element = selector ? host.shadowRoot!.querySelector(selector)! : host;
+    const r = element.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height, position: getComputedStyle(element).position };
+  }, selector);
+  const prepared = await beforeTurn(async () => {
+    const beforePage = pool.before;
+    beforePage.on("pageerror", onError);
+    try {
+      await reset(beforePage, item, preupgrade, true);
+      const target: MeasurementPage = item.prepareNeighbors
+        ? await preparedFrame(beforePage, item, preupgrade) : beforePage;
+      await settle(target);
+      return {
+        snapshot: await snapshot(target, hosts, siblings),
+        anchor: preupgrade && item.fixedAnchor ? await anchor(target) : undefined,
+      };
+    } finally { beforePage.off("pageerror", onError); }
+  });
+  p.on("pageerror", onError);
+  try {
+    await reset(p, item, preupgrade);
+    await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
+    await settle(p);
+    const after = await snapshot(p, hosts, siblings);
+    if (prepared.anchor && item.fixedAnchor) {
+      const anchorBefore = prepared.anchor;
+      const anchorAfter = await anchor(p, item.fixedAnchor);
+      assert.equal(anchorBefore.position, "fixed", `${item.variant}: pre-upgrade corner is fixed`);
+      assert.equal(anchorAfter.position, "fixed", `${item.variant}: upgraded corner is fixed`);
+      for (const key of ["x", "y", "width", "height"] as const) {
+        assert(Math.abs(anchorBefore[key] - anchorAfter[key]) < MOVE_LIMIT,
+          `${item.variant}: fixed ${key} moved from ${anchorBefore[key]} to ${anchorAfter[key]}`);
+      }
+    }
+    assert.deepEqual(errors, [], `/${cases.indexOf(item)}: page errors`);
+    return [prepared.snapshot, after];
+  } finally { p.off("pageerror", onError); }
+};
+
+const runCases = async (preupgrade: boolean): Promise<Result[]> => {
+  const pool = await pages();
+  const selected = cases.filter(item =>
+    (!only.length || only.includes(item.element)) &&
+    // Preserve the existing mutation exclusion: absolute-height rows assert
+    // the placeholder itself, not a no-styles comparison.
+    (preupgrade || item.hostHeight === undefined));
+  const results: Result[] = new Array(selected.length);
+  let next = 0;
+  await Promise.all(pool.after.map(async p => {
+    for (;;) {
+      const index = next++;
+      if (index >= selected.length) return;
+      const item = selected[index];
+      const [before, after] = await measureReused(p, item, preupgrade);
+      const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
+      const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
+      const box = shiftOf(before.hosts[0], after.hosts[0]);
+      results[index] = {
+        name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0],
+        moved, moves, siblings: item.siblings, knownMoves: item.knownMoves,
+        boxMove: item.strictBox ? box : undefined,
+        hostHeight: preupgrade ? item.hostHeight : undefined,
+        subjectMove: item.element === "button" ? box : undefined,
+        labelBefore: before.labels[0] ?? null,
+        labelAfter: after.labels[0] ?? null,
+      };
+    }
+  }));
   return results;
 };
 
 const label = (item: PreupgradeCase): string => (item.variant === "default" ? item.element : `${item.element} [${item.variant}]`);
 const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
 
-/** Print the rows; return the names that failed. */
-const report = (results: Result[], checkMoves: boolean): string[] => {
+/** Print the rows; return the names that failed. Control rows (the mutation run without the
+    pre-upgrade stylesheet) print "shift" instead of FAIL: their shifts are the expected proof
+    that the stylesheet reserves each box, not gate failures. */
+const report = (results: Result[], checkMoves: boolean, control = false): string[] => {
   const failed: string[] = [];
   for (const r of results) {
     const height = r.hostHeight === undefined ? ""
@@ -447,9 +607,10 @@ const report = (results: Result[], checkMoves: boolean): string[] => {
         ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
         : markOf(r, checkMoves);
     if (mark === "FAIL") failed.push(r.name);
+    const shown = control && mark === "FAIL" ? "shift" : mark;
     const box = r.subjectMove !== undefined ? `  box shift ${r.subjectMove.toFixed(2)}px` : "";
     const at = r.labelBefore || r.labelAfter ? `  ${labelPlace(r)}` : "";
-    console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}${at}`);
+    console.log(`  ${shown.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}${at}`);
   }
   return failed;
 };
@@ -483,9 +644,9 @@ try {
     "Button labels that move on upgrade",
   );
 
-  console.log("\nMutation: without the pre-upgrade styles:");
+  console.log("\nMutation: without the pre-upgrade styles (control rows, marked shift):");
   const without = await runCases(false);
-  report(without, false);
+  report(without, false, true);
 
   const defaults = without.filter((r) => !r.name.includes("["));
   const caught = defaults.filter((r) => r.score >= THRESHOLD);
@@ -657,7 +818,6 @@ try {
       assert.equal(before.shapeBelt, "48px", "marker-less markup is not pinned by the default tag before upgrade");
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
-      await p.waitForTimeout(300);
       await settle(p);
       const after = await p.evaluate(() => ({
         button: document.querySelector("m-button:not(#bare)")!.getBoundingClientRect().width,
@@ -755,7 +915,6 @@ try {
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
       await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
-      await p.waitForTimeout(300);
       await settle(p);
       const after = await fields();
       const tokens: Record<string, [string, string]> = {

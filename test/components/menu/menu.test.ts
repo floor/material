@@ -172,6 +172,31 @@ describe('menu', () => {
     expect(rendered.slice(1).every((i) => i.getAttribute('tabindex') === '-1')).toBe(true);
   });
 
+  // The one Tab fact the opener and keyboard features have to agree on: a
+  // close that asks for the opener must leave focus where the tab movement
+  // put it. One document Tab tracker serves both now.
+  test('a Tab key press suppresses the focus restore a close asks for', async () => {
+    const menu = createMenu({ opener, items });
+    menu.open(new dom.window.KeyboardEvent('keydown', { key: 'Enter' }));
+    await after(200);
+    expect(document.activeElement).toBe(menuItems(menu)[0]);
+
+    // Handled from the document, as the blur path sees it: the key press is
+    // recorded before the close runs.
+    document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    menu.close(undefined, true);
+    await after(400);
+    expect(menu.isOpen()).toBe(false);
+    expect(document.activeElement).not.toBe(opener);
+
+    // Without that key press, the same close returns focus to the opener.
+    await opened(menu);
+    menu.close(undefined, true);
+    await after(400);
+    expect(menu.isOpen()).toBe(false);
+    expect(document.activeElement).toBe(opener);
+  });
+
   test('the arrows, Home and End move focus, and disabled items are not skipped', async () => {
     const menu = createMenu({ opener, items });
     await opened(menu);

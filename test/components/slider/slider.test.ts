@@ -79,6 +79,30 @@ describe('slider handle', () => {
     expect(handles(slider)[0].hasAttribute('aria-valuetext')).toBe(false);
   });
 
+  test('uses an explicit accessible name before the visible-label fallback', async () => {
+    const slider = await mount({ ariaLabel: 'Slide', label: 'Visible label', range: true });
+    expect(handles(slider).map(handle => handle.getAttribute('aria-label'))).toEqual(['Slide minimum', 'Slide maximum']);
+    expect(slider.getLabel()).toBe('Visible label');
+  });
+
+  test('keeps range label references distinct across slider instances', async () => {
+    const first = await mount({ ariaLabelledBy: 'external-name', range: true });
+    const second = await mount({ ariaLabelledBy: 'external-name', range: true });
+    const ids = [...handles(first), ...handles(second)].map(handle => {
+      const [external, suffixId] = handle.getAttribute('aria-labelledby')!.split(' ');
+      expect(external).toBe('external-name');
+      const suffix = document.getElementById(suffixId)!;
+      expect(handle.contains(suffix)).toBe(true);
+      expect(suffix.hidden).toBe(true);
+      return suffixId;
+    });
+    expect(new Set(ids).size).toBe(4);
+    first.destroy();
+    expect(ids.slice(0, 2).every(id => !document.getElementById(id))).toBe(true);
+    expect(ids.slice(2).every(id => !!document.getElementById(id))).toBe(true);
+    second.destroy();
+  });
+
   test('announces formatted values through aria-valuetext', async () => {
     const slider = await mount({ value: 42, valueFormatter: (v) => `${v}%` });
     const [handle] = handles(slider);
