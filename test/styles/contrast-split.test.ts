@@ -199,9 +199,17 @@ describe("explicit contrast levels are opt-in", () => {
     // whole gap on every placement, so the cardinal bottom and right sides
     // sit 8px from the target with the arrow meeting it, exactly as the
     // start and end placements always did (styles/components/_tooltip.scss).
+    // The size cleanup keeps every computed value and drops only declarations
+    // a later identical one already carried: the slider handle's second
+    // `pointer-events: none` and the disabled handle's colours that the later
+    // disabled rule sets (styles/components/_slider.scss), the tooltip's
+    // explicit 12px/16px that Body Small emits (styles/components/_tooltip.scss),
+    // and the `.mtrl-flex`/`.mtrl-inline-flex`/`.mtrl-truncate` copies the full
+    // composition emitted twice (styles/utilities/_visibility.scss,
+    // styles/utilities/_typography.scss; main.scss composes each once).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d11cb234bb857f21c85f34e66867822be343352320fdaa5fa84d412e60357cba");
-    expect(css.length).toBe(544228);
+      .toBe("a997925d7d480d8ea4abbcac0ba8096ebf8333fe9e42a9b2db84215ca81b0c6f");
+    expect(css.length).toBe(543927);
   });
 
   test("today's sheets still resolve to the fixture", () => {
