@@ -433,9 +433,9 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 ### Bundling
 
-The build ships two direction forms. The full stylesheet and the per-component style sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties a bundler rewrites for old browser targets, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can rewrite those onto the wrong side. Logical margins are still in the sheet, and an old-target bundler can still rewrite those.
+The build ships two direction forms. The full stylesheet and the per-component sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties an old-target bundler rewrites, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can put them on the wrong side. Logical margins remain, and an old-target bundler can still rewrite those.
 
-The arms answer `dir="rtl"` and the `mtrl-rtl` class on the component itself, on an ancestor, or on a shadow host; a nested `mtrl-ltr` island stays left to right. What stays logical, such as `margin-inline-start` and `padding-inline`, mirrors when `dir` is set. The marker class does not set the direction. The element sheets and the shadow sheets keep the logical form throughout.
+The arms answer `dir="rtl"` and the `mtrl-rtl` class on the component itself, on an ancestor, or on a shadow host; a nested `mtrl-ltr` island stays left to right. What stays logical, such as `margin-inline-start`, mirrors when `dir` is set. The marker class does not set the direction. The element sheets and the shadow sheets keep the logical form throughout.
 
 A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages.
 
@@ -564,7 +564,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | Everything the root exports (`export * from 'material'`), without code splitting | 127.3 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.1 kB |
-| `material/styles`, the full stylesheet | 58.6 kB |
+| `material/styles`, the full stylesheet | 58.5 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
