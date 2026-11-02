@@ -798,7 +798,9 @@ export const withView =
     build();
     measure();
 
-    const resizeCleanup = observeCanvasResize(component.element, svg, resize);
+    // No canvas behind the SVG view, so the ratio watcher stays off; the
+    // width observer is all this view needs (core/canvas/resize.ts).
+    const resizeCleanup = observeCanvasResize(component.element, null, resize);
 
     if (isWavy() && !isIndeterminate()) {
       amplitudeStarted = (view?.performance ?? performance).now();
