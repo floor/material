@@ -346,11 +346,13 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
     // have their number read." The badge element is a role="status" live
     // region, and Chromium leaves live-region text out of an ancestor's
     // computed name — a badged tab measured as "Trips" alone — so the tab
-    // names itself from the parts that make it. A hidden or empty badge adds
+    // names itself from the parts that make it. A dot contributes its accessible
+    // label rather than rendered text. A hidden or empty counting badge adds
     // nothing: without one, an `ariaLabel` config keeps its attribute and a
     // plain tab keeps its content-derived name.
     const announceBadge = (): void => {
-      const count = tab.badge?.isVisible() ? tab.badge.getContent() : "";
+      const count = tab.badge?.isVisible()
+        ? tab.badge.element.getAttribute("aria-label") || tab.badge.getContent() : "";
       const label = baseConfig.ariaLabel || button.getText();
       const name = [label, count].filter(Boolean).join(", ");
       if (name !== label) {

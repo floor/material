@@ -2,7 +2,7 @@
  * The badge against the Material 3 badge pages, measured on the rendered item:
  * the standalone factory, `<m-badge>`, and a badge attached with `withBadge`.
  *
- * Read on 2026-10-29:
+ * Read on 2026-10-29, and the accessibility page again on 2026-11-01:
  *   https://m3.material.io/components/badges/specs
  *   https://m3.material.io/components/badges/guidelines
  *   https://m3.material.io/components/badges/accessibility
@@ -19,6 +19,7 @@
  * notification."
  */
 import assert from "node:assert/strict";
+import { checkBadgeAnnouncement } from "./check-badge-announcement-browser";
 import type { Page } from "playwright";
 
 type Box = { left: number; top: number; right: number; bottom: number; width: number; height: number };
@@ -37,8 +38,9 @@ interface Badge {
 /**
  * The badge at the specs' sizes, distances and max; an empty or zero label
  * shows nothing; a standalone badge keeps its place in the flow; and with a
- * `withBadge`-attached badge the item reads its count after its name, as the
- * accessibility page states.
+ * `withBadge`-attached badge the item reads the badge after its name, as the
+ * accessibility page states -- a count as its number, a dot as "New
+ * notification" (or the dot's string label, for another language).
  */
 export async function checkBadge(page: Page, check: (name: string) => void): Promise<void> {
   // One list for the whole check, asserted at the end, so one run on main
@@ -111,7 +113,15 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     await settle();
     const specs = {
       large: { box: box(large.element), radius: radius(large.element), distance: distance(large, largeAnchor, "ltr"), role: large.element.getAttribute("role") },
-      small: { box: box(small.element), radius: radius(small.element), distance: distance(small, smallAnchor, "ltr"), ariaHidden: small.element.getAttribute("aria-hidden") },
+      small: {
+        box: box(small.element),
+        radius: radius(small.element),
+        distance: distance(small, smallAnchor, "ltr"),
+        role: small.element.getAttribute("role"),
+        ariaLabel: small.element.getAttribute("aria-label"),
+        ariaHidden: small.element.getAttribute("aria-hidden"),
+        text: small.getLabel(),
+      },
       overflow: {
         box: box(overflow.element),
         radius: radius(overflow.element),
@@ -160,6 +170,12 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     const elementSmall = document.createElement("m-badge") as HTMLElement & { shadowRoot: ShadowRoot };
     elementSmall.setAttribute("variant", "small");
     stage.append(elementSmall);
+    // The dot's announcement is its label when it has one, so a page in
+    // another language passes its own text instead of "New notification".
+    const elementLocalised = document.createElement("m-badge") as HTMLElement & { shadowRoot: ShadowRoot };
+    elementLocalised.setAttribute("variant", "small");
+    elementLocalised.setAttribute("label", "Nouvelle notification");
+    stage.append(elementLocalised);
     const standalone = w.mtrl.createBadge({ label: 5 });
     stage.append(standalone.element);
     const after = document.createElement("span");
@@ -167,12 +183,16 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     stage.append(after);
     await settle();
     const elementInner = elementHost.shadowRoot.firstElementChild as HTMLElement;
+    const smallInner = elementSmall.shadowRoot.firstElementChild as HTMLElement;
+    const localisedInner = elementLocalised.shadowRoot.firstElementChild as HTMLElement;
     const standaloneStyle = getComputedStyle(standalone.element);
     const standaloneFlow = {
       host: box(elementHost),
       inner: box(elementInner),
       innerPosition: getComputedStyle(elementInner).position,
       smallHost: box(elementSmall),
+      smallInner: { role: smallInner.getAttribute("role"), ariaLabel: smallInner.getAttribute("aria-label"), ariaHidden: smallInner.getAttribute("aria-hidden"), text: smallInner.textContent },
+      localisedAriaLabel: localisedInner.getAttribute("aria-label"),
       factory: box(standalone.element),
       factoryPosition: standaloneStyle.position,
       factoryDisplay: standaloneStyle.display,
@@ -203,6 +223,13 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     dotButton.textContent = "Badge starred";
     stage.append(dotButton);
     const dotted = withBadge({ badge: 1, badgeConfig: { variant: "small" } })({ element: dotButton });
+
+    // A dot's string label is its announcement, so a page in another language
+    // passes its own text; the item reads it after its name like a count.
+    const localisedButton = document.createElement("button");
+    localisedButton.textContent = "Badge localized";
+    stage.append(localisedButton);
+    const localised = withBadge({ badge: "Nouvelle notification", badgeConfig: { variant: "small" } })({ element: localisedButton });
 
     const overflowButton = document.createElement("button");
     overflowButton.textContent = "Badge overflow";
@@ -237,7 +264,19 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
       role: enhanced.badge?.element.getAttribute("role"),
       badgeId: enhanced.badge?.element.id,
       describedBy: describedBy(button),
-      dot: { badgePresent: !!dotted.badge, ariaHidden: dotted.badge?.element.getAttribute("aria-hidden"), describedBy: describedBy(dotButton) },
+      dot: {
+        badgePresent: !!dotted.badge,
+        role: dotted.badge?.element.getAttribute("role"),
+        ariaLabel: dotted.badge?.element.getAttribute("aria-label"),
+        ariaHidden: dotted.badge?.element.getAttribute("aria-hidden"),
+        badgeId: dotted.badge?.element.id,
+        describedBy: describedBy(dotButton),
+      },
+      localised: {
+        ariaLabel: localised.badge?.element.getAttribute("aria-label"),
+        text: localised.badge?.getLabel(),
+        describedBy: describedBy(localisedButton),
+      },
       overflow: { text: overflowed.badge?.getLabel(), describedBy: describedBy(overflowButton) },
       zero: { visible: zeroed.badge?.isVisible(), describedBy: describedBy(zeroButton) },
       existing: { describedBy: describedBy(existingButton), badgeId: existing.badge?.element.id },
@@ -256,7 +295,7 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
   const descriptions = async (): Promise<Record<string, string | null>> => {
     const { nodes } = (await client.send("Accessibility.getFullAXTree")) as { nodes: AxNode[] };
     const read: Record<string, string | null> = {};
-    for (const name of ["Badge notifications", "Badge starred", "Badge overflow", "Badge drafts", "Badge existing", "Badge plain"]) {
+    for (const name of ["Badge notifications", "Badge starred", "Badge localized", "Badge overflow", "Badge drafts", "Badge existing", "Badge plain"]) {
       const node = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
       read[name] = node?.description?.value ?? null;
     }
@@ -299,7 +338,7 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     expect(specs.overflow.overflowClass && specs.overflow.box.height === 16, `overflow badge: marked and 16dp high, measured ${json({ marked: specs.overflow.overflowClass, height: specs.overflow.box.height })}`);
     expect(specs.overflow.box.width <= 34 && specs.overflow.box.width >= 16 && specs.overflow.maxWidth === "34px", `overflow badge: inside the 16x34dp container, measured ${specs.overflow.box.width}dp with max-width ${specs.overflow.maxWidth}`);
     expect(specs.overflow.radius === 8, `overflow badge: 8dp corner radius, measured ${specs.overflow.radius}dp`);
-    expect(specs.large.role === "status" && specs.small.ariaHidden === "true", `large badge is a status and the dot is hidden: ${json({ role: specs.large.role, ariaHidden: specs.small.ariaHidden })}`);
+    expect(specs.large.role === "status" && specs.small.role === "status" && specs.small.ariaLabel === "New notification" && specs.small.ariaHidden === null && specs.small.text === "", `a large badge is a status with its count as text, and the dot is a status that announces New notification: ${json({ largeRole: specs.large.role, small: { role: specs.small.role, ariaLabel: specs.small.ariaLabel, ariaHidden: specs.small.ariaHidden, text: specs.small.text } })}`);
   });
 
   step("badge: the specs' corner distances, left to right and right to left", () => {
@@ -331,18 +370,22 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
   step("badge: standalone, the badge takes its place in the flow, element and factory", () => {
     expect(standaloneFlow.host.width === 16 && standaloneFlow.host.height === 16, `<m-badge label="5">: the host is a 16dp badge, measured ${standaloneFlow.host.width}dp x ${standaloneFlow.host.height}dp`);
     expect(standaloneFlow.smallHost.width === 6 && standaloneFlow.smallHost.height === 6, `<m-badge variant="small">: the host is a 6dp dot, measured ${standaloneFlow.smallHost.width}dp x ${standaloneFlow.smallHost.height}dp`);
+    expect(standaloneFlow.smallInner.role === "status" && standaloneFlow.smallInner.ariaLabel === "New notification" && standaloneFlow.smallInner.ariaHidden === null && standaloneFlow.smallInner.text === "", `<m-badge variant="small">: the dot announces New notification and is not hidden, measured ${json(standaloneFlow.smallInner)}`);
+    expect(standaloneFlow.localisedAriaLabel === "Nouvelle notification", `<m-badge variant="small" label="Nouvelle notification">: its label is its announcement, measured ${json(standaloneFlow.localisedAriaLabel)}`);
     expect(standaloneFlow.innerPosition !== "absolute", `<m-badge>: the badge sits in the host's flow, position ${standaloneFlow.innerPosition}`);
     expect(standaloneFlow.factory.width === 16 && standaloneFlow.factory.height === 16, `a standalone factory badge is 16dp, measured ${standaloneFlow.factory.width}dp x ${standaloneFlow.factory.height}dp`);
     expect(standaloneFlow.factoryPosition !== "absolute", `a standalone factory badge is in flow, position ${standaloneFlow.factoryPosition}`);
     expect(standaloneFlow.afterLeft >= standaloneFlow.factory.right - 0.5, `a word after a standalone badge starts after it, at ${standaloneFlow.afterLeft}dp with the badge ending at ${standaloneFlow.factory.right}dp`);
   });
 
-  step("badge: withBadge has the item read the count after its name, and follows what the badge shows", () => {
+  step("badge: withBadge has the item read the badge after its name, and follows what the badge shows", () => {
     expect(attached.badgePresent && attached.text === "8" && attached.role === "status", `withBadge({badge: 8}): a large badge reads "8", got ${json({ present: attached.badgePresent, text: attached.text, role: attached.role })}`);
     expect(!!attached.badgeId && attached.describedBy === attached.badgeId, `the item describes the badge: aria-describedby=${json(attached.describedBy)}, badge id ${json(attached.badgeId)}`);
     expect(before["Badge notifications"] === "8", `the item's description reads the count after its name: ${json(before["Badge notifications"])}`);
-    expect(attached.dot.badgePresent && attached.dot.ariaHidden === "true" && attached.dot.describedBy === null, `a dot adds nothing: ${json(attached.dot)}`);
-    expect(before["Badge starred"] === null, `a dot adds nothing to the description: ${json(before["Badge starred"])}`);
+    expect(attached.dot.badgePresent && attached.dot.role === "status" && attached.dot.ariaLabel === "New notification" && attached.dot.ariaHidden === null, `a dot is a status that announces New notification and is not hidden: ${json(attached.dot)}`);
+    expect(!!attached.dot.badgeId && attached.dot.describedBy === attached.dot.badgeId, `the item describes the dot: aria-describedby=${json(attached.dot.describedBy)}, badge id ${json(attached.dot.badgeId)}`);
+    expect(before["Badge starred"] === "New notification", `a dot is read after its item's name: ${json(before["Badge starred"])}`);
+    expect(attached.localised.text === "" && attached.localised.ariaLabel === "Nouvelle notification" && attached.localised.describedBy !== null && before["Badge localized"] === "Nouvelle notification", `a dot's string label is its announcement in another language: ${json({ ...attached.localised, description: before["Badge localized"] })}`);
     expect(attached.overflow.text === "999+" && attached.overflow.describedBy !== null && before["Badge overflow"] === "999+", `a count past the max is read as shown: ${json({ text: attached.overflow.text, description: before["Badge overflow"] })}`);
     expect(attached.zero.visible === false && attached.zero.describedBy === null && before["Badge drafts"] === null, `a zero badge is not described: ${json({ visible: attached.zero.visible, describedBy: attached.zero.describedBy, description: before["Badge drafts"] })}`);
     expect(attached.existing.describedBy === `badge-existing-help ${attached.existing.badgeId}`, `an existing description survives: ${json(attached.existing)}`);
@@ -353,5 +396,6 @@ export async function checkBadge(page: Page, check: (name: string) => void): Pro
     expect(afterDestroy.describedBy === null && afterDestroy.inDocument === true && destroyed["Badge notifications"] === null, `destroy: the item stays and the description goes, attribute ${json(afterDestroy.describedBy)}, description ${json(destroyed["Badge notifications"])}`);
   });
 
+  await checkBadgeAnnouncement(page, check);
   assert.deepEqual(failures, [], `badge, measured against the M3 pages:\n  ${failures.join("\n  ")}`);
 }

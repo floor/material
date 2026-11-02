@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Exercise the packed shared ripple and component teardown in Chromium. */
 import { checkCheckableValues } from "./check-checkable-values";
+import { checkTextFieldNames } from "./check-text-field-names";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -9,7 +10,9 @@ import type createButton from "../src/components/button";
 import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
+import { checkFactoryFocusNames } from "./check-factory-focus-names";
 import { checkChips } from "./check-chips-browser";
+import { checkChipCellNames } from "./check-chip-cell-names";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
@@ -110,9 +113,12 @@ try {
   await checkCarouselWheelSubPixelSnap(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
+  await checkChipCellNames(page, artifacts);
+  await checkFactoryFocusNames(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkTextFieldNames(page);
   await checkTextField(page);
   await checkTextFieldTokens(page);
   await checkTextFieldAnatomy(page);

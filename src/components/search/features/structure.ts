@@ -149,7 +149,7 @@ export const withStructure =
   const inputAttributes: Record<string, string> = {
     type: "text",
     placeholder,
-    "aria-label": placeholder,
+    "aria-label": config.ariaLabel || placeholder,
     role: "combobox",
     "aria-autocomplete": "list",
     "aria-expanded": String(isViewState),
