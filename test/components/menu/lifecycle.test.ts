@@ -211,7 +211,10 @@ test("destroy releases document listeners and cancels Tab detection and typeahea
   tick();
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
   menu.element.querySelector(".mtrl-menu__item")!.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
-  expect(pending.size).toBeGreaterThanOrEqual(3);
+  // The keyboard feature's Tab reset and the typeahead reset. One Tab
+  // tracker serves the whole menu now: the opener feature reads the
+  // keyboard's instead of adding a second document listener and timer.
+  expect(pending.size).toBeGreaterThanOrEqual(2);
   menu.destroy();
   released();
 });

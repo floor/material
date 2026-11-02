@@ -35,22 +35,10 @@ const withOpener =
   // feature from the pipeline type. The host type requires the element.
   const tasks = createMenuTasks();
 
-  // Track keyboard navigation state
-  let isTabNavigation = false;
-
-  // Add an event listener to detect Tab key navigation
-  let tabTimeout: ReturnType<typeof setTimeout> | null = null;
-  const handleTabKey = (e: KeyboardEvent) => {
-    // Set flag when Tab key is pressed
-    isTabNavigation = e.key === "Tab";
-
-    // Reset flag after a short delay
-    tasks.clearTimeout(tabTimeout);
-    tabTimeout = tasks.setTimeout(() => {
-      isTabNavigation = false;
-    }, 100);
-  };
-  document.addEventListener("keydown", handleTabKey);
+  // The keyboard feature already tracks Tab navigation for its handlers; the
+  // same key press decides whether focus returns to the opener.
+  const isTabNavigationActive = (): boolean =>
+    component.keyboard?.isTabNavigationActive?.() ?? false;
 
   // Track opener state
   const state = {
@@ -366,7 +354,7 @@ const withOpener =
     const relatedTarget = e.relatedTarget as HTMLElement;
 
     // If this is tab navigation, always close the menu regardless of next focus target
-    if (isTabNavigation) {
+    if (isTabNavigationActive()) {
       tasks.setTimeout(() => {
         // Verify menu is still open (may have been closed in the meantime)
         if (component.menu && component.menu.isOpen()) {
@@ -413,8 +401,6 @@ const withOpener =
    */
   const cleanup = (): void => {
     tasks.cancelAll();
-    tabTimeout = null;
-    isTabNavigation = false;
     if (state.openerElement) {
       if (!config.manualOpen) {
         state.openerElement.removeEventListener("click", handleOpenerClick);
@@ -445,7 +431,6 @@ const withOpener =
     component.lifecycle.destroy = () => {
       if (tasks.destroyed) return;
       tasks.destroy();
-      document.removeEventListener("keydown", handleTabKey);
       cleanup();
       originalDestroy.call(component.lifecycle);
     };
@@ -466,7 +451,7 @@ const withOpener =
       setOpenerActive(false);
 
       // Handle focus restoration when requested
-      if (event.restoreFocus && !isTabNavigation) {
+      if (event.restoreFocus && !isTabNavigationActive()) {
         restoreFocusToOpener();
       }
     }

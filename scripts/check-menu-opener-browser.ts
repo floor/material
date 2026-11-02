@@ -76,3 +76,115 @@ export async function checkMenuOpeners(page: Page): Promise<void> {
   assert.notEqual(measured.trailingOpen.radius, measured.trailingClosed.radius, "and keeps its pressed shape while its menu is open");
   console.log(`Passed menu openers: a FAB (${measured.fabClosed.radius}, shadow kept) and an icon button keep their shape while their menu is open; the split button's trailing button takes its pressed shape (${measured.trailingClosed.radius} to ${measured.trailingOpen.radius}).`);
 }
+
+type MenuFactory = (config: Record<string, unknown>) => {
+  element: HTMLElement;
+  destroy: () => void;
+  open: (event?: Event) => unknown;
+  close: (event?: Event, restoreFocus?: boolean) => unknown;
+  setOpener: (opener: HTMLElement | string) => unknown;
+};
+type PlacementWindow = Window & { openers: { createMenu: MenuFactory } };
+
+/**
+ * The menu is placed against the opener it has now. The controller used to
+ * resolve the opener itself, and a component that exposes its element only
+ * through getElement() or input came back as the component: the placement read
+ * getBoundingClientRect() off it, threw, and the menu opened unplaced. For the
+ * same reason setOpener() kept placing against the first anchor. Every
+ * supported opener shape and a replacement given later are measured in the
+ * browser, in both directions, against the opener's own rectangle.
+ */
+export async function checkMenuOpenerPlacement(page: Page): Promise<void> {
+  const exceptions: string[] = [];
+  const onPageError = (error: Error) => exceptions.push(error.message);
+  page.on("pageerror", onPageError);
+  try {
+    for (const direction of ["ltr", "rtl"] as const) {
+      const measured = await page.evaluate(async (side) => {
+        const state = window as unknown as PlacementWindow;
+        document.documentElement.dir = side;
+        document.body.replaceChildren();
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 450));
+        const box = (element: HTMLElement) => {
+          const rect = element.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width };
+        };
+        const openerAt = (id: string, left: number, top: number) => {
+          const button = document.createElement("button");
+          button.id = id;
+          button.textContent = "Open";
+          button.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:120px;height:40px`;
+          document.body.append(button);
+          return button;
+        };
+        const items = [{ id: "one", text: "One" }, { id: "two", text: "Two" }];
+        const observe = (name: string, opener: HTMLElement, menu: { element: HTMLElement }) => ({
+          name,
+          opener: box(opener),
+          menu: box(menu.element),
+          placed: { top: menu.element.style.top, left: menu.element.style.left },
+          hidden: menu.element.getAttribute("aria-hidden"),
+        });
+        const results: ReturnType<typeof observe>[] = [];
+
+        const shapes: [string, (button: HTMLElement) => unknown][] = [
+          ["selector", (button) => `#${button.id}`],
+          ["element", (button) => button],
+          ["element property", (button) => ({ element: button })],
+          ["getElement()", (button) => ({ getElement: () => button })],
+          ["input", (button) => ({ input: button })],
+        ];
+        for (const [name, target] of shapes) {
+          document.body.replaceChildren();
+          const opener = openerAt("opener-shape", 220, 120);
+          const menu = state.openers.createMenu({ opener: target(opener) as never, items });
+          menu.open(new MouseEvent("click"));
+          await settle();
+          results.push(observe(name, opener, menu));
+          menu.destroy();
+        }
+
+        // A replacement given to setOpener() is where the menu opens next.
+        document.body.replaceChildren();
+        const first = openerAt("opener-first", 40, 40);
+        const second = openerAt("opener-second", 220, 120);
+        const menu = state.openers.createMenu({ opener: first, items });
+        menu.open(new MouseEvent("click"));
+        await settle();
+        menu.close();
+        await settle();
+        menu.setOpener(second);
+        menu.open(new MouseEvent("click"));
+        await settle();
+        results.push(observe("setOpener replacement", second, menu));
+        menu.destroy();
+
+        document.body.replaceChildren();
+        document.documentElement.dir = "ltr";
+        return results;
+      }, direction);
+
+      for (const case_ of measured) {
+        const label = `${direction} ${case_.name}`;
+        assert.notEqual(case_.placed.top, "", `${label}: the menu has no vertical placement`);
+        assert.notEqual(case_.placed.left, "", `${label}: the menu has no horizontal placement`);
+        assert.equal(case_.hidden, "false", `${label}: the menu is open`);
+        const top = parseFloat(case_.placed.top);
+        assert.ok(Math.abs(top - case_.opener.bottom) <= 1, `${label}: top ${top} is not the opener bottom ${case_.opener.bottom}`);
+        // The default placement is bottom-start, offset 0. Right to left, a
+        // menu wider than its opener aligns their right edges (position.ts).
+        const left = case_.placed.left === "auto" ? case_.menu.right - case_.menu.width : parseFloat(case_.placed.left);
+        const start = direction === "rtl" && case_.menu.width > case_.opener.width
+          ? case_.opener.right - case_.menu.width
+          : case_.opener.left;
+        assert.ok(Math.abs(left - start) <= 1, `${label}: left ${left} is not the opener start ${start}`);
+      }
+    }
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 100)));
+    assert.deepEqual(exceptions, [], "the menu placed every opener without a browser exception");
+  } finally {
+    page.off("pageerror", onPageError);
+  }
+  console.log("Passed menu opener placement: selector, element, element property, getElement() and input openers, and a setOpener() replacement, each below the current opener on its start edge in LTR and RTL.");
+}

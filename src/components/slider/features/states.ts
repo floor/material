@@ -1,6 +1,5 @@
 // src/components/slider/features/states.ts
 import { SLIDER_COLORS, SliderColor } from "../types";
-import { SLIDER_SIZES, SliderSize } from "../constants";
 import { SliderConfig } from "../types";
 
 /**
@@ -16,7 +15,6 @@ interface StatesHost {
   getClass: (name: string) => string;
   handle?: HTMLElement;
   secondHandle?: HTMLElement;
-  structure?: Record<string, HTMLElement | undefined>;
   formFields?: (HTMLInputElement | null)[] | null;
   renderTracks?: (state?: unknown) => void;
 }
@@ -27,8 +25,8 @@ export const withStates =
   // this one. A concrete parameter type would erase it — the defect fixed in
   // text field's withDensity (#109).
   <C extends StatesHost>(component: C) => {
-  const handle = component.handle ?? component.structure?.handle;
-  const secondHandle = component.secondHandle ?? component.structure?.secondHandle;
+  const handle = component.handle;
+  const secondHandle = component.secondHandle;
 
   const setFieldsDisabled = (disabled: boolean) => {
     for (const field of component.formFields ?? []) {
@@ -106,22 +104,6 @@ export const withStates =
     );
   }
 
-  /**
-   * Gets the active size class
-   */
-  function getActiveSize() {
-    // Check for size class names on the element
-    const sizeKeys = Object.keys(SLIDER_SIZES) as Array<
-      keyof typeof SLIDER_SIZES
-    >;
-    const foundKey = sizeKeys.find((sizeKey) =>
-      component.element.classList.contains(
-        `${component.getClass("slider")}--${sizeKey.toLowerCase()}`
-      )
-    );
-    return foundKey || "XS"; // Default to 'XS' (extra small)
-  }
-
   // Disabled from the start, before the listeners exist: this waited a task,
   // which let a disabled slider take keys until then. The track draws itself
   // next (withTracks), so there is nothing to redraw yet. #236.
@@ -191,52 +173,6 @@ export const withStates =
        */
       getColor() {
         return getActiveColor();
-      },
-
-      /**
-       * Sets slider size
-       * @param size Size variant
-       * @returns Appearance manager for chaining
-       */
-      setSize(size: SliderSize) {
-        // Remove existing size classes
-        const sizeKeys = Object.keys(SLIDER_SIZES) as Array<
-          keyof typeof SLIDER_SIZES
-        >;
-        sizeKeys.forEach((sizeKey) => {
-          component.element.classList.remove(
-            `${component.getClass("slider")}--${sizeKey.toLowerCase()}`
-          );
-        });
-
-        // Determine the size key to use
-        let sizeKey: string;
-        if (typeof size === "string" && size in SLIDER_SIZES) {
-          sizeKey = size;
-        } else if (typeof size === "number") {
-          // Find the key that matches this value
-          const entry = Object.entries(SLIDER_SIZES).find(
-            ([, value]) => value === size
-          );
-          sizeKey = entry ? entry[0] : "XS";
-        } else {
-          sizeKey = "XS"; // Default
-        }
-
-        // Add new size class
-        component.element.classList.add(
-          `${component.getClass("slider")}--${sizeKey.toLowerCase()}`
-        );
-
-        return this;
-      },
-
-      /**
-       * Gets slider size
-       * @returns Current size name
-       */
-      getSize() {
-        return getActiveSize();
       },
 
       /**

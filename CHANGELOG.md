@@ -17,6 +17,208 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.3.4] - 2026-11-02
+
+A lighter package, part two.
+
+### Changed
+
+- **The split button loads its menu on first open (#168).**
+  The split button imported the menu at creation, so every page carrying one
+  fetched and parsed the menu whether or not it was ever opened.
+  `features/menu-on-demand.ts` now holds a stand-in with the menu's API; the
+  first open starts `import("../../menu")`, and the real menu is created and
+  replayed onto it — state, items, opener, position, selected, and the
+  listeners registered while it loaded. The button's own contract is not
+  deferred: on the click's tick `isExpanded()`, `aria-expanded` and the
+  `expand`/`change` events are there. The stand-in takes the menu's id shape
+  (`menu-<Date.now()>-<random>`) and names it in `aria-controls` at creation,
+  so the server render is byte-identical to the one before. The initial graph
+  goes from 17,760 to 9,677 bytes gzipped (budget 9,779), the deferred row is
+  17,313 (budget 17,459), and `menu/inner.ts` is the only menu module still in
+  the initial graph. `split-button:check` reads the build's chunk graph — no
+  chunk holding another menu module is statically reachable — and in the
+  browser it reads the first open's state, ARIA and events on the click's
+  tick, before the import's reply can run.
+
+- **The menu resolves its opener once and drops what cannot run (#184).**
+  The controller resolved the opener itself, because the opener feature runs
+  after it in the pipe; its fallback returned the component object for
+  `getElement()` and `input` openers, and a menu opened that way was never
+  placed. A replacement given to `setOpener()` kept the first anchor. The
+  opener is now asked through the component's public `getOpener()`, so the
+  events, the ARIA state and the placement share one resolution, and five
+  call sites became `reposition()`. The keyboard feature always runs before
+  the controller, so the 24-line initial-focus fallback, three guards around
+  its calls and the `Escape` branch behind one of them could not run and are
+  gone; the opener feature reads the keyboard feature's Tab tracker instead of
+  keeping its own document listener and timer. The cut measures 12,951 to
+  12,790 bytes gzipped in the excise harness, and the menu row measures 12,690
+  of its 13,056-byte budget in CI. `scripts/check-menu-opener-browser.ts`
+  opens a menu against a selector, an element, `{element}`, `{getElement()}`
+  and `{input}`, and against a `setOpener()` replacement, in LTR and RTL: each
+  lands below the current opener on its start edge.
+
+### Internal
+
+- **The size report prints Brotli beside gzip (#166).**
+  `scripts/size.ts`'s per-component table gains a Brotli column: the same
+  build's initial graph as the gzip column, through
+  `zlib.brotliCompressSync` at quality 11. It is reported, never gated —
+  every budget stays gzip and the gate lines are untouched. Two tests pin the
+  setting (equality with `node:zlib` at quality 11, and disagreement at
+  quality 1, so a changed quality cannot pass silently) and the measurement's
+  determinism.
+
+- **Thirty-five unreachable dist modules no longer ship (#200).**
+  `scripts/build.ts` pruned unreachable declarations only, so every module in
+  the tsc program still shipped its runtime file. A module now ships when an
+  `exports` target names it or a shipped module imports it, and the rest are
+  pruned; a new `dist-modules:check` walks the built `dist` from the nested
+  manifest and fails naming every module nothing can reach. The 35 removed
+  modules are 30 empty type-only siblings of 11 bytes each, three runtime
+  `types.js` copies (`menu` 342, `select` 84, `text-field` 380 bytes) and
+  `react/jsx.js` with `solid/jsx.js`, 1,172 bytes in all; their declarations
+  stay shipped and only the runtime files go. Every `size:check` row is
+  byte-identical to main's own package job, so nothing a consumer imports
+  moves.
+
+- **The release adds 351 bytes gzipped in the all-js row (126,727 to 127,078)
+  and leaves the full stylesheet at 63,703; the packed tarball is 874,849
+  bytes compressed, 5,052,835 unpacked in 1,578 files, against 875,566 and
+  5,052,361 in 1,612 files in 3.3.3.** Measured on main at 2f78c965, push run
+  41417375448, job 125184777237; this release changes only the CHANGELOG and
+  the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
+## [3.3.3] - 2026-11-02
+
+A lighter package, and progress that stays sharp.
+
+### Fixed
+
+- **A progress canvas redraws when the device pixel ratio changes (#234).**
+  A canvas sizes its backing store in physical pixels, but the shared resize
+  path watched the element's width only: a canvas created at ratio 1 and shown
+  at ratio 2 — browser zoom, or a window moved between a 1x and a Retina
+  display — kept its ratio 1 bitmap, so the wave drew twice its intended size,
+  soft and blocky, until a width change repaired it. The resize path now watches
+  the resolution media query at the current ratio, re-arms it at the new ratio,
+  and runs the same debounced measure and draw a width change runs; the linear
+  and the circular indicator share it, and `destroy()` removes the watcher. Both
+  are measured in `scripts/check-progress-dpr.ts` (`progress:check`), whose
+  viewport nudge leaves the indicator's width and the width observer unmoved, so
+  only the ratio watcher can pass it.
+
+### Changed
+
+- **The slider is one controller (#180).**
+  Four internal modules, one of them a 610-line pointer and keyboard module,
+  rebuilt the same element lookups, axis and fraction of the range on every
+  use, and every API call crossed the controller object, the arrows
+  `getApiConfig` built and `withAPI`'s wrappers. They are one
+  `features/controller.ts` that owns the track geometry, the track renderer and
+  the interaction; the public functions are installed once as the controller's
+  own, the legacy `slider` object shares them, and `api.ts` is gone. Seven
+  paths no call could reach are removed after proving them dead. Behaviour is
+  unchanged: the 91 pinned slider tests pass untouched, `event.slider` is still
+  the object `createSlider` returns, and the shared fraction arithmetic matches
+  the old two-step percentages over 120,012 combinations. The slider bundle,
+  built the same way on both sides, goes from 13,268 bytes gzipped to 11,947
+  (−1,321, −9.96 %).
+
+### Internal
+
+- **Nine unreachable modules no longer ship (#174).**
+  `bun run build` compiles every module in the tsc program, and
+  `scripts/prune-declarations.ts` removes unreachable declarations only, so
+  nine modules no export path reached still shipped as `.js`, and the element
+  pool in `core/dom/create.ts` had no runtime reference. Both are removed; the
+  export surface does not move, and `scripts/check-consumer.ts` still asserts
+  the nested module paths (`chips/chip`, `chips/chip/constants`,
+  `progress/features` and the rest) do not resolve.
+
+- **A leaner kernel: one class-token loop and one `normalizeEvent` pass (#177).**
+  `addClass`, `removeClass`, `toggleClass` and `hasClass` each repeated the same
+  single-name fast path, array unwrap and space-splitting fallback, and
+  `normalizeEvent` built the same eight-field result in three branches. One
+  `forEachClass` now normalizes once and applies every token, and the touch or
+  mouse point is picked once and the result built once. No public signature,
+  export or declaration changes, and the existing tests are unchanged; a class
+  matrix test and the three `normalizeEvent` outcomes pin the contracts.
+
+- **The release saves 1,158 bytes gzipped in the all-js row (127,885 to
+  126,727) and leaves the full stylesheet at 63,704; the packed tarball is
+  875,566 bytes compressed, 5,052,361 unpacked in 1,612 files, against 882,834
+  and 5,094,700 in 1,625 files in 3.3.2.** Measured on main at 238b8c22, push
+  run 41403660849, job 125141046911; this release changes only the CHANGELOG
+  and the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
+## [3.3.2] - 2026-11-01
+
+Tooltips land where they point.
+
+### Fixed
+
+- **A tooltip sits at its offset on every side of its target (#171).**
+  The stylesheet's position classes carried margins of their own: 8px on
+  `--bottom` and `--right` on top of the 8px `calculatePosition` already
+  applies to every placement, so those two sides sat 16px away with the
+  arrow floating 8px off the target, while `--top`'s and `--left`'s margins
+  were dead rules on a fixed box. The four margins are gone; every
+  placement sits 8px from the target on the named side, the arrow filling
+  the gap with its tip on the target's edge, in left-to-right and
+  right-to-left alike. The twelve placements are now measured in
+  `scripts/check-tooltip.ts`.
+
+- **A tooltip stays on screen and its arrow points at the target at the
+  viewport edges (#173).** Clamping moved the surface without re-anchoring
+  the arrow, which kept pointing at empty space; a placement that crossed
+  the viewport was never flipped; the arrow class came from the requested
+  placement, so a flipped surface kept a class pointing the wrong way; and
+  left and right placements had no vertical constraint at all. The position
+  now flips to the opposite side when that keeps the surface on screen,
+  clamps to the viewport and re-anchors the arrow to the target, writes the
+  arrow class from the placement it ends on, and constrains both axes.
+  Seventeen cases are measured in both directions in the same check.
+
+- **A tooltip follows the scrolling container it was opened in, and
+  measures its surface as a fraction (#178).** Scroll events do not bubble,
+  so the window listener never heard a scrolling list, panel or dialog, and
+  the target slid away under a surface that stayed where the container left
+  it: the listener now captures container scrolls as well as page scrolls,
+  with the same flag on add and on both removals. The surface size comes
+  from its computed style rather than `offsetWidth`, whose integer rounding
+  made the 8px offset 8.3 and could leave a clamped surface a third of a
+  pixel outside the edge it was clamped to, and the coordinates are written
+  unrounded. The twelve placements and the collision rows are measured in
+  the same browser check.
+
+### Docs
+
+- **Every documented import is compiled against the packed package
+  (#220).** Four documented examples took constants from the package root,
+  which does not export them — `TIME_FORMAT` and `TIME_PICKER_TYPE` in the
+  timepicker README, `MENU_POSITION` in the menu's JSDoc example and
+  `SELECT_VARIANTS` in the select's — so a reader who copied one got a type
+  error and `undefined` at run time. Each constant is now imported from its
+  component's subpath, and `bun run docs-imports:check` collects every
+  import documented in a Markdown fence or an `@example` under `src/` and
+  compiles it against the packed package in the `package` job, so a
+  documented name must be one its specifier exports. Docs and tooling only:
+  no API change.
+
+### Internal
+
+- **The release costs 105 bytes gzipped in the all-js row (127,780 to
+  127,885) and saves 22 in the full stylesheet (63,726 to 63,704); the
+  packed tarball is 882,834 bytes compressed, 5,094,700 unpacked in 1,625
+  files, against 882,680 and 5,096,854 in 1,625 files in 3.3.1.** Measured
+  on main at b28afe0e, push run 41355367585, job 124994309034; this release
+  changes only the CHANGELOG and the version field. No ceiling moved, every
+  budget check passed, and all seven README size rows stand as printed.
+
 ## [3.3.1] - 2026-11-02
 
 Menus you can trust with keyboard and selection.
@@ -4751,7 +4953,10 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.3.4...HEAD
+[3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
+[3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
+[3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/floor/material/compare/v3.2.7...v3.3.0
 [3.2.7]: https://github.com/floor/material/compare/v3.2.6...v3.2.7

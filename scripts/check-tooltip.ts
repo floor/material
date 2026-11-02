@@ -12,6 +12,7 @@ declare global {
     ready: boolean;
     tooltip: TooltipComponent;
     mountTooltip: (config: TooltipConfig) => void;
+    mountPanelTooltip: (config: TooltipConfig) => void;
   }
 }
 
@@ -28,12 +29,21 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
   const direction = url.searchParams.get("dir") === "rtl" ? "rtl" : "ltr";
   return new Response(`<!doctype html><html dir="${direction}"><head><link rel="stylesheet" href="/styles.css">
   <style>body{margin:0}#target{position:absolute;left:300px;top:280px;width:40px;height:40px;border-radius:50%;
-  background:#ddd;border:0}.mtrl-tooltip{transition:none!important}</style></head><body>
+  background:#ddd;border:0}
+  #panel{position:fixed;left:20px;top:20px;width:200px;height:150px;overflow:auto;background:#eee}
+  #panel-inner{height:600px;width:400px}
+  #panel-target{margin:250px 0 0 100px;width:40px;height:40px;border-radius:50%;background:#ddd;border:0}
+  .mtrl-tooltip{transition:none!important}</style></head><body>
   <button id="target">&#9829;</button>
+  <div id="panel"><div id="panel-inner"><button id="panel-target">&#9829;</button></div></div>
   <script type="module">import { createTooltip } from '/tooltip.js';
   window.mountTooltip = (config) => {
     window.tooltip?.destroy();
     window.tooltip = createTooltip({ target: document.querySelector('#target'), visible: true, ...config });
+  };
+  window.mountPanelTooltip = (config) => {
+    window.tooltip?.destroy();
+    window.tooltip = createTooltip({ target: document.querySelector('#panel-target'), visible: true, ...config });
   };window.ready=true;</script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
 
@@ -386,9 +396,70 @@ try {
     scrolledRows.push({ name, position: scenario.position, layer: scenario.layer ?? "body", unscrolled: before, scrolled: after });
   }
 
+  // ── Scrolling containers ────────────────────────────────────────
+  // Scroll events do not bubble, so a window "scroll" listener without
+  // capture never hears a container scroll: the fixed surface stays where
+  // the container's scroll left it, pointing away from its target. The
+  // listener captures, so the surface follows the container too.
+  const panelBox = () => page.evaluate(() => {
+    const box = (element: Element) => {
+      const { top, left, right, bottom } = element.getBoundingClientRect();
+      return { top, left, right, bottom };
+    };
+    return { target: box(document.querySelector("#panel-target")!), tip: box(document.querySelector(".mtrl-tooltip")!) };
+  });
+  const containerRows: Record<string, unknown>[] = [];
+  for (const layer of [undefined, "top"] as const) for (const position of ["bottom", "right"] as const) {
+    const name = `container-scroll${layer ? " top-layer" : ""} ${position}`;
+    await page.evaluate(({ position, layer }) => {
+      document.querySelector("#panel")!.scrollTop = 100;
+      window.mountPanelTooltip({ position, layer, text: "Search, and filter" });
+    }, { position, layer });
+    await page.waitForTimeout(30);
+    const before = await panelBox();
+    // 80px keeps the target inside the panel's visible box, so no viewport
+    // clamp fires and the section measures following, not clamping
+    await page.evaluate(() => { document.querySelector("#panel")!.scrollTop = 180; });
+    await page.waitForTimeout(30);
+    const after = await panelBox();
+    const moved = { dx: after.target.left - before.target.left, dy: after.target.top - before.target.top };
+    const followed = { dx: after.tip.left - before.tip.left, dy: after.tip.top - before.tip.top };
+    if (moved.dx === 0 && moved.dy === 0) {
+      failures.push(`${name}: scrolling the container moved the target by 0,0 -- the section's setup broke`);
+    } else if (Math.abs(followed.dx - moved.dx) > 1 || Math.abs(followed.dy - moved.dy) > 1) {
+      failures.push(
+        `${name}: the container scrolled its target by ${moved.dx.toFixed(1)},${moved.dy.toFixed(1)} ` +
+        `but the surface moved ${followed.dx.toFixed(1)},${followed.dy.toFixed(1)}`,
+      );
+    }
+    containerRows.push({ name, position, layer: layer ?? "body", moved, followed });
+    await page.evaluate(() => window.tooltip?.destroy());
+  }
+
+  // ── The offset and the clamped edge ─────────────────────────────
+  // The surface is measured fractionally (its computed size, not the
+  // integer-rounded offsetWidth), so the 8px offset is 8 on the axis that
+  // measures a fractional width, and a clamp holds the surface inside the
+  // edge it clamped to, not a fraction of a pixel past it.
+  const offsetRows: Record<string, unknown>[] = [];
+  for (const position of ["left", "left-start", "left-end", "top", "bottom"] as const) {
+    const shown = await showAt(300, 280, position, undefined, 0, 0);
+    // gap() is keyed by the bare side: the start/end variants share its axis
+    const measured = gap(position.split("-")[0] as "left", shown.target, shown.tip);
+    near(failures, `offset ${position}: gap`, measured, 8, 0.1);
+    offsetRows.push({ name: `offset ${position}`, gap: measured });
+  }
+  {
+    // A one-line label whose start-aligned surface clamps at the right edge
+    const shown = await showAt(760, 280, "bottom-start", undefined, 0, 0);
+    const overshoot = shown.tip.right - shown.viewport.width;
+    near(failures, "clamped right edge: distance from the viewport edge", overshoot, 0, 0.1);
+    offsetRows.push({ name: "clamped right edge off the viewport edge", overshoot });
+  }
+
   assert.deepEqual(errors, []);
   // Every mismatch is collected, so one run names every failing case.
-  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, collision: collisionRows, scrolled: scrolledRows, failures, errors }, null, 2));
+  await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, collision: collisionRows, scrolled: scrolledRows, container: containerRows, offset: offsetRows, failures, errors }, null, 2));
   assert.deepEqual(failures, []);
-  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, collision: collisionRows.length, scrolled: scrolledRows.length, errors }, null, 2));
+  console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, collision: collisionRows.length, scrolled: scrolledRows.length, container: containerRows.length, offset: offsetRows.length, errors }, null, 2));
 } finally { await browser.close(); server.stop(true); }
