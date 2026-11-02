@@ -110,6 +110,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     root.classList.toggle(base.getClass("chip--avatar"), !!avatar);
     action.disabled = disabled;
     if (oneActionCell) {
+      root.setAttribute("aria-label", label.textContent ?? "");
       if (selectable) root.setAttribute("aria-selected", String(selected));
       root.setAttribute("aria-disabled", String(disabled));
     } else if (selectable) action.setAttribute("aria-checked", String(selected));

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Exercise the packed shared ripple and component teardown in Chromium. */
 import { checkCheckableValues } from "./check-checkable-values";
+import { checkTextFieldNames } from "./check-text-field-names";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -10,13 +11,14 @@ import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
+import { checkChipCellNames } from "./check-chip-cell-names";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
-import { checkMenuOpeners } from "./check-menu-opener-browser";
+import { checkMenuOpenerPlacement, checkMenuOpeners } from "./check-menu-opener-browser";
 import { checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
@@ -108,9 +110,11 @@ try {
   await checkCarouselWheelSubPixelSnap(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
+  await checkChipCellNames(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkTextFieldNames(page);
   await checkTextField(page);
   await checkTextFieldTokens(page);
   await checkTextFieldAnatomy(page);
@@ -121,6 +125,7 @@ try {
   await checkTextFieldSearchCancel(page, "factory");
   await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
+  await checkMenuOpenerPlacement(page);
   await checkControls(page);
   await checkMenu(page);
   await checkMenuDisabledColors(page);
