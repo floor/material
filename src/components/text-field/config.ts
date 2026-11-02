@@ -11,68 +11,6 @@ import { TEXT_FIELD_DEFAULTS } from "./constants";
 import { warnDev } from "../../core/utils/warn";
 
 /**
- * Development diagnostic, the pattern of the trailing-label one: a config
- * key nothing reads was silently ignored (`maxlength` where `maxLength` is
- * supported, an `inputmode` the field never reads), so it names each
- * unknown key. The key table is a `Record` over the key types themselves,
- * kept inside the body: the compiler errors the moment the list and the
- * interfaces drift apart, and the call site's literal check lets bundlers
- * erase the call — and, with every caller gone, this function, its loop
- * and the table — in production, while warnDev's own runtime guard keeps
- * the un-bundled paths safe. `multiline` is read by the shared text-input
- * feature although the component's own interface does not carry it.
- */
-const warnUnknownConfigKeys = (config: TextFieldConfig): void => {
-  const CONFIG_KEYS: Record<
-    keyof TextFieldConfig | keyof BaseComponentConfig | "multiline",
-    true
-  > = {
-    type: true,
-    variant: true,
-    density: true,
-    name: true,
-    label: true,
-    value: true,
-    placeholder: true,
-    required: true,
-    noAsterisk: true,
-    disabled: true,
-    readonly: true,
-    maxLength: true,
-    pattern: true,
-    autocomplete: true,
-    leadingIcon: true,
-    trailingIcon: true,
-    trailingIconLabel: true,
-    onTrailingClick: true,
-    supportingText: true,
-    error: true,
-    prefixText: true,
-    suffixText: true,
-    class: true,
-    prefix: true,
-    componentName: true,
-    className: true,
-    parent: true,
-    id: true,
-    title: true,
-    tabIndex: true,
-    style: true,
-    data: true,
-    role: true,
-    ariaLabel: true,
-    ariaDescribedBy: true,
-    ariaLabelledBy: true,
-    ariaHidden: true,
-    multiline: true,
-  };
-  for (const key of Object.keys(config)) {
-    if (key in CONFIG_KEYS) continue;
-    warnDev("text-field", `unknown config key "${key}"`);
-  }
-};
-
-/**
  * Default configuration for the TextField component
  */
 export const defaultConfig: TextFieldConfig = {
@@ -89,7 +27,28 @@ export const createBaseConfig = (
   config: TextFieldConfig = {}
 ): TextFieldConfig => {
   if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
-    warnUnknownConfigKeys(config);
+    // Development diagnostic, the pattern of the trailing-label one: a config key
+    // nothing reads was silently ignored (`maxlength` where `maxLength` is
+    // supported, an `inputmode` the field never reads), so it names each unknown
+    // key. The accepted keys are one string, cheaper in the bundle than a table
+    // of them; the runtime reads it as the checked set, and the compile-time
+    // checks below hold it against the interfaces — every accepted key must be
+    // listed, and every listed key must be accepted — so the two cannot drift
+    // quietly. The literal guard above lets bundlers erase this block, its loop
+    // and the list together in production, while warnDev's own runtime guard
+    // keeps the un-bundled paths safe. `multiline` is read by the shared
+    // text-input feature although the component's interface does not carry it.
+    type AcceptedKey = keyof TextFieldConfig | keyof BaseComponentConfig | "multiline";
+    type Words<S extends string> = S extends `${infer Word} ${infer Rest}` ? Word | Words<Rest> : S;
+    const KEY_LIST =
+      "type variant density name label value placeholder required noAsterisk disabled readonly maxLength pattern autocomplete leadingIcon trailingIcon trailingIconLabel onTrailingClick supportingText error prefixText suffixText class prefix componentName className parent id title tabIndex style data role ariaLabel ariaDescribedBy ariaLabelledBy ariaHidden multiline";
+    type ListedKey = Words<typeof KEY_LIST>;
+    const _complete: Exclude<AcceptedKey, ListedKey> extends never ? true : never = true;
+    const _sound: ListedKey extends AcceptedKey ? true : never = true;
+    const CONFIG_KEYS = KEY_LIST.split(" ");
+    for (const key of Object.keys(config)) {
+      if (!CONFIG_KEYS.includes(key)) warnDev("text-field", `unknown config key "${key}"`);
+    }
   }
   return createComponentConfig(defaultConfig, config, "text-field") as TextFieldConfig;
 };
