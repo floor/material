@@ -44,7 +44,7 @@ these rows drift from a fresh measurement.
 | split-button | 27.2 KB | 9.4 KB | +6.3 KB | +16.8 KB |
 | radios | 15.0 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.3 KB | 10.9 KB | +7.8 KB |  |
-| select | 67.6 KB | 20.5 KB | +17.4 KB | +2.1 KB |
+| select | 67.7 KB | 20.5 KB | +17.4 KB | +2.1 KB |
 | slider | 33.4 KB | 11.7 KB | +8.7 KB |  |
 | snackbar | 36.2 KB | 11.9 KB | +8.9 KB | +6.9 KB |
 | switch | 18.6 KB | 6.2 KB | +3.1 KB |  |
