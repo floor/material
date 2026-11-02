@@ -439,6 +439,11 @@ export const withVisibility =
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
+  // `afteropen` is due once the open duration has run and the initial focus
+  // has landed, whichever comes second. With a short animationDuration under
+  // reduced motion the surface's visibility is still transitioning when the
+  // timer fires, so the event waits here for the focus that ends the wait.
+  let afterOpenWaiting = false;
 
   // How long the events after opening and closing wait, unless configured:
   // the stylesheet grows the surface over duration-long2 and closes it over
@@ -464,15 +469,36 @@ export const withVisibility =
   let focusFrame: number | undefined;
   let focusView: Window | undefined;
   let focusRequest = 0;
+  // The opening's initial focus is still waiting for its target to become
+  // visible: `afteropen` waits with it
+  let focusPending = false;
 
   const cancelFocusFrame = (): void => {
     // The count also tells a settle already running that it is no longer wanted
     focusRequest += 1;
+    focusPending = false;
     if (focusFrame !== undefined) {
       focusView?.cancelAnimationFrame(focusFrame);
       focusFrame = undefined;
       focusView = undefined;
     }
+  };
+
+  const emitAfterOpen = (): void => {
+    afterOpenWaiting = false;
+    if (!opened || typeof component.emit !== "function") return;
+    component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
+  };
+
+  // The open duration has run: the event follows the initial focus when that
+  // is still waiting for the surface, and is emitted now otherwise
+  const afterOpenDue = (): void => {
+    afterOpenTimer = undefined;
+    if (focusPending) {
+      afterOpenWaiting = true;
+      return;
+    }
+    emitAfterOpen();
   };
 
   /**
@@ -530,6 +556,8 @@ export const withVisibility =
     const view = target.ownerDocument.defaultView;
     if (!view || typeof view.requestAnimationFrame !== "function") {
       target.focus();
+      focusPending = false;
+      if (afterOpenWaiting) emitAfterOpen();
       return;
     }
     // The newest request names the target: the one still waiting stands down
@@ -537,11 +565,21 @@ export const withVisibility =
     const request = focusRequest;
     const settle = (): void => {
       focusFrame = undefined;
-      if (!opened || !target.isConnected || request !== focusRequest) return;
-      if (view.getComputedStyle(target).visibility !== "hidden") {
-        target.focus();
+      if (request !== focusRequest) return;
+      if (!opened || !target.isConnected) {
+        // Nothing will take the focus: the wait is over, and `afteropen`
+        // follows the opening's own timer
+        focusPending = false;
+        if (afterOpenWaiting) emitAfterOpen();
         return;
       }
+      if (view.getComputedStyle(target).visibility !== "hidden") {
+        target.focus();
+        focusPending = false;
+        if (afterOpenWaiting) emitAfterOpen();
+        return;
+      }
+      focusPending = true;
       focusFrame = view.requestAnimationFrame(settle);
       focusView = view;
     };
@@ -698,6 +736,8 @@ export const withVisibility =
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
       clearTimeout(afterCloseTimer);
+      afterOpenWaiting = false;
+      focusPending = false;
 
       // In the top layer everything happens now: the dialog is styled in its
       // hidden state before it is made visible, which is what it animates from
@@ -710,9 +750,7 @@ export const withVisibility =
         component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
         // An `open` listener may have closed it again
         if (!opened) return;
-        afterOpenTimer = setTimeout(() => {
-          component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
-        }, openDuration);
+        afterOpenTimer = setTimeout(afterOpenDue, openDuration);
         return;
       }
 
@@ -754,9 +792,7 @@ export const withVisibility =
         trapFocus();
 
         if (typeof component.emit === "function") {
-          afterOpenTimer = setTimeout(() => {
-            component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
-          }, openDuration);
+          afterOpenTimer = setTimeout(afterOpenDue, openDuration);
         }
       }, 10);
     },
@@ -789,6 +825,7 @@ export const withVisibility =
       opened = false;
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
+      afterOpenWaiting = false;
       // A focus still waiting for its target is this opening's, and it ends here
       cancelFocusFrame();
 
@@ -853,6 +890,7 @@ export const withVisibility =
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
+      afterOpenWaiting = false;
       cancelFocusFrame();
       cleanupEvents();
     },
