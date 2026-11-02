@@ -18,6 +18,7 @@ type ReducedMotionWindow = Window & {
   reducedDialog?: ReturnType<typeof createDialog>;
   reducedTrigger?: HTMLButtonElement;
   afterOpen?: boolean;
+  afterOpenCount?: number;
 };
 
 const browser = await chromium.launch({ headless: true });
@@ -60,8 +61,10 @@ try {
     state.reducedDialog = dialog;
     state.reducedTrigger = trigger;
     state.afterOpen = false;
+    state.afterOpenCount = 0;
     dialog.on("afteropen", () => {
       state.afterOpen = true;
+      state.afterOpenCount = (state.afterOpenCount ?? 0) + 1;
     });
     dialog.open();
   });
@@ -96,33 +99,49 @@ try {
     const dialog = state.reducedDialog;
     if (!dialog) throw new Error("the dialog is missing");
     state.afterOpen = false;
+    state.afterOpenCount = 0;
     dialog.open();
   });
-  await page.waitForFunction(
-    () => (window as unknown as ReducedMotionWindow).afterOpen === true,
-    undefined,
-    { timeout: 5000 },
-  );
+  // The hidden first control keeps the initial focus pending, so this case
+  // cannot wait for afteropen: the event is held until that focus lands. Wait
+  // for the surface to be visible and for a retry frame to have run, then
+  // close and reopen from that pending state.
+  await page.waitForFunction(() => {
+    let host: Element | null = document.querySelector("#first");
+    while (host && ![...host.classList].some((name) => name.endsWith("--visible"))) host = host.parentElement;
+    return host !== null;
+  }, undefined, { timeout: 5000 });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const pending = await page.evaluate(() => ({
+    active: document.activeElement?.id || document.activeElement?.tagName || "none",
+    afterOpenCount: (window as unknown as ReducedMotionWindow).afterOpenCount ?? 0,
+  }));
+  console.log(`dialog open with the first control hidden: ${JSON.stringify(pending)}`);
+  assert.equal(pending.afterOpenCount, 0, "the held opening has not emitted afteropen");
+  assert.notEqual(pending.active, "first", "the hidden first control keeps the initial focus pending");
   // Close and reopen in one task: the second opening asks for a new target
   await page.evaluate(() => {
     const state = window as unknown as ReducedMotionWindow;
     const dialog = state.reducedDialog;
     if (!dialog) throw new Error("the dialog is missing");
     state.afterOpen = false;
+    state.afterOpenCount = 0;
     dialog.close();
     document.querySelector("#second")?.setAttribute("autofocus", "");
     dialog.open();
   });
   await page.waitForFunction(
-    () => (window as unknown as ReducedMotionWindow).afterOpen === true,
+    () => (window as unknown as ReducedMotionWindow).afterOpenCount === 1,
     undefined,
     { timeout: 5000 },
   );
   const reopened = await page.evaluate(() => ({
     active: document.activeElement?.id || document.activeElement?.tagName || "none",
+    afterOpenCount: (window as unknown as ReducedMotionWindow).afterOpenCount ?? 0,
   }));
   console.log(`dialog reopened: ${JSON.stringify(reopened)}`);
   assert.equal(reopened.active, "second", "the reopened dialog takes the new initial focus");
+  assert.equal(reopened.afterOpenCount, 1, "the reopened dialog emits afteropen once");
 
   // The old target becomes visible: the first opening's retry must be gone
   await page.evaluate(() => {
@@ -132,9 +151,11 @@ try {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const settled = await page.evaluate(() => ({
     active: document.activeElement?.id || document.activeElement?.tagName || "none",
+    afterOpenCount: (window as unknown as ReducedMotionWindow).afterOpenCount ?? 0,
   }));
   console.log(`dialog after the old target is shown: ${JSON.stringify(settled)}`);
   assert.equal(settled.active, "second", "a closed opening's retry does not take the focus back");
+  assert.equal(settled.afterOpenCount, 1, "no second afteropen after the old target is shown");
 
   assert.deepEqual(errors, [], "dialog page errors");
   console.log("Passed dialog reduced-motion focus: after afteropen the first control holds the focus, and a reopened dialog keeps its new one.");
