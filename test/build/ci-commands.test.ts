@@ -11,17 +11,17 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "elements-css:check", "tooling:check", "classes:check", "ssr-consumer:check", "size:check", "readme:check", "size",
+  "build", "elements-css:check", "tooling:check", "classes:check", "ssr-consumer:check", "size:check", "readme:check", "docs-imports:check", "size",
   "adapters:size",
   // the browser checks
-  "elements:check", "shadow-styles:check",
+  "elements:check:a", "elements:check:b", "shadow-styles:check",
   "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
   // the same SSR checks on the lowest peer version package.json allows
   "solid-ssr:floor", "vue-ssr:floor",
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check",
-  "core:check", "readme-browser:check", "rtl:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "ssr:check",
+  "core:check", "readme-browser:check", "rtl:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "ssr:check:a", "ssr:check:b",
 ];
 
 interface Step { run?: string; if?: string; "continue-on-error"?: unknown }

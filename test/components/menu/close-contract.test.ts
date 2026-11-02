@@ -8,6 +8,7 @@
 // dismissed at once, but never by the event that opened it.
 import { beforeEach, describe, expect, test } from "bun:test";
 import createMenu from "../../../src/components/menu";
+import { innerMenu } from "../../../src/components/menu/inner";
 import createSelect from "../../../src/components/select";
 import createSplitButton from "../../../src/components/split-button";
 import { callbacksFixture, wait } from "../callbacks.fixture";
@@ -41,8 +42,8 @@ beforeEach(() => {
 
 const ITEMS = [{ id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }];
 const VISIBLE = "mtrl-menu--visible";
-/** Past the 20ms the surface waits for and the 100ms its focus waits for */
-const SHOWN = 160;
+/** A bounded observation window for a reveal cancelled by dismissal. */
+const NO_REVEAL = 160;
 /** Past the 50ms the class waits for and the 300ms the removal waits for */
 const GONE = 420;
 const LAYERS = [undefined, "top"] as const;
@@ -60,8 +61,38 @@ const make = (config: Record<string, unknown> = {}) => {
   return { menu, opener, seen };
 };
 
-/** A key press or a click made after `open()` ran: events are stamped in milliseconds here */
-const later = (): Promise<void> => wait(3);
+/** Wait for the surface being asserted, with a deadline only to fail a stuck reveal. */
+const shown = (element: HTMLElement): Promise<void> => {
+  if (element.classList.contains(VISIBLE)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const observer = new MutationObserver(() => {
+      if (!element.classList.contains(VISIBLE)) return;
+      clearTimeout(deadline);
+      observer.disconnect();
+      resolve();
+    });
+    const deadline = setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`Menu did not reveal: ${element.className}, connected=${element.isConnected}`));
+    }, 2000);
+    observer.observe(element, { attributes: true, attributeFilter: ["class"] });
+  });
+};
+
+/** Observe the whole window, including a reveal that is removed again before it ends. */
+const staysHidden = async (element: HTMLElement): Promise<void> => {
+  let revealed = element.classList.contains(VISIBLE);
+  const observer = new MutationObserver((records) => {
+    revealed ||= element.classList.contains(VISIBLE) || records.some((record) => record.oldValue?.split(/\s+/).includes(VISIBLE));
+  });
+  observer.observe(element, { attributes: true, attributeFilter: ["class"], attributeOldValue: true });
+  try {
+    await wait(NO_REVEAL);
+    expect(revealed).toBe(false);
+  } finally {
+    observer.disconnect();
+  }
+};
 
 for (const layer of LAYERS) {
   describe(`menu close(), ${named(layer)}: the state and the event are there when it returns`, () => {
@@ -69,7 +100,7 @@ for (const layer of LAYERS) {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       expect(menu.isOpen()).toBe(true);
       expect(menu.element.getAttribute("popover")).toBe(layer ? "manual" : null);
       expect(menu.close()).toBe(menu);
@@ -91,7 +122,7 @@ for (const layer of LAYERS) {
       const { menu } = make({ layer });
       await wait();
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       expect(menu.element.classList.contains(VISIBLE)).toBe(true);
       menu.close();
       expect(menu.element.isConnected).toBe(true);
@@ -109,7 +140,7 @@ for (const layer of LAYERS) {
       menu.open();
       menu.open();
       expect(seen).toEqual(["open"]);
-      await wait(SHOWN);
+      await shown(menu.element);
       menu.open();
       expect(seen).toEqual(["open"]);
       menu.close();
@@ -138,7 +169,7 @@ for (const layer of LAYERS) {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       menu.close();
       menu.open();
       expect(menu.isOpen()).toBe(true);
@@ -146,6 +177,7 @@ for (const layer of LAYERS) {
       await wait(GONE);
       expect(menu.isOpen()).toBe(true);
       expect(menu.element.isConnected).toBe(true);
+      await shown(menu.element);
       expect(menu.element.classList.contains(VISIBLE)).toBe(true);
       expect(menu.element.getAttribute("aria-hidden")).toBe("false");
       expect(seen).toEqual(["open", "close", "open"]);
@@ -158,7 +190,7 @@ for (const layer of LAYERS) {
       menu.close();
       expect(menu.isOpen()).toBe(false);
       expect(seen).toEqual(["open", "close"]);
-      await wait(SHOWN);
+      await wait(NO_REVEAL);
       expect(menu.element.classList.contains(VISIBLE)).toBe(false);
       expect(menu.element.getAttribute("aria-hidden")).toBe("true");
       await wait(GONE);
@@ -173,12 +205,13 @@ for (const layer of LAYERS) {
       let once = true;
       menu.on("close", () => { if (once) { once = false; menu.open(); } });
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       menu.close();
       expect(menu.isOpen()).toBe(true);
       await wait(GONE);
       expect(menu.isOpen()).toBe(true);
       expect(menu.element.isConnected).toBe(true);
+      await shown(menu.element);
       expect(menu.element.classList.contains(VISIBLE)).toBe(true);
       expect(seen).toEqual(["open", "close", "open"]);
     });
@@ -192,23 +225,23 @@ for (const layer of LAYERS) {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await later();
+      // Observe and dismiss in open()'s task, before a queued reveal can run.
       expect(menu.element.classList.contains(VISIBLE)).toBe(false);
       document.body.dispatchEvent(click());
       expect(menu.isOpen()).toBe(false);
       expect(seen).toEqual(["open", "close"]);
-      await wait(SHOWN);
-      expect(menu.element.classList.contains(VISIBLE)).toBe(false);
+      await staysHidden(menu.element);
     });
 
     test("Escape before the surface is shown closes it", async () => {
       const { menu, seen } = make({ layer });
       await wait();
       menu.open();
-      await later();
+      expect(menu.element.classList.contains(VISIBLE)).toBe(false);
       document.body.dispatchEvent(escape());
       expect(menu.isOpen()).toBe(false);
       expect(seen).toEqual(["open", "close"]);
+      await staysHidden(menu.element);
     });
 
     // The pin the task flag failed: a real click or key press can be delivered
@@ -239,7 +272,7 @@ for (const layer of LAYERS) {
       other.dispatchEvent(click());
       expect(menu.isOpen()).toBe(true);
       expect(seen).toEqual(["open"]);
-      await wait(SHOWN);
+      await shown(menu.element);
       expect(menu.isOpen()).toBe(true);
       other.dispatchEvent(click());
       expect(menu.isOpen()).toBe(false);
@@ -260,7 +293,7 @@ for (const layer of LAYERS) {
       await wait(GONE);
       other.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
       expect(menu.isOpen()).toBe(true);
-      await wait(SHOWN);
+      await shown(menu.element);
       expect(menu.isOpen()).toBe(true);
       expect(selected).toEqual([]);
       expect(seen).toEqual(["open", "close", "open"]);
@@ -288,7 +321,7 @@ for (const layer of LAYERS) {
         expect([count("click"), count("keydown")]).toEqual([1, 1]);
         closed.close();
         expect([count("click"), count("keydown")]).toEqual([0, 0]);
-        await wait(SHOWN);
+        await wait(NO_REVEAL);
         expect([count("click"), count("keydown")]).toEqual([0, 0]);
 
         const destroyed = make({ layer }).menu;
@@ -298,7 +331,7 @@ for (const layer of LAYERS) {
         expect([count("click"), count("keydown")]).toEqual([1, 1]);
         destroyed.destroy();
         expect([count("click"), count("keydown")]).toEqual([0, 0]);
-        await wait(SHOWN);
+        await wait(NO_REVEAL);
         expect([count("click"), count("keydown")]).toEqual([0, 0]);
       } finally {
         document.addEventListener = add;
@@ -320,7 +353,7 @@ describe("a menu with a submenu open", () => {
       const submenu = (): HTMLElement | null => document.querySelector(".mtrl-menu--submenu");
 
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       menu.element.querySelector<HTMLElement>('[data-id="share"]')!.click();
       await wait(60);
       expect(submenu()).not.toBeNull();
@@ -332,7 +365,7 @@ describe("a menu with a submenu open", () => {
       expect(menu.element.isConnected).toBe(false);
 
       menu.open();
-      await wait(SHOWN);
+      await shown(menu.element);
       menu.element.querySelector<HTMLElement>('[data-id="share"]')!.click();
       await wait(60);
       submenu()!.querySelector<HTMLElement>('[data-id="link"]')!.click();
@@ -358,7 +391,7 @@ describe("payloads: only what can be cancelled carries preventDefault", () => {
     for (const name of ["open", "close"] as const) menu.on(name, (event) => { payloads[name] = event; });
     menu.on("select", (event) => { payloads.select = event; event.preventDefault(); });
     menu.open();
-    await wait(SHOWN);
+    await shown(menu.element);
     menu.element.querySelector<HTMLElement>('[data-id="copy"]')!.click();
     expect(menu.isOpen()).toBe(true);
     menu.close();
@@ -374,7 +407,7 @@ describe("payloads: only what can be cancelled carries preventDefault", () => {
     const payloads: Record<string, object> = {};
     for (const name of ["open", "close", "change"] as const) component.on(name, (event) => { payloads[name] = event; });
     component.open();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     document.querySelector<HTMLElement>('[data-id="m"]')!.click();
     expect(component.getValue()).toBe("m");
     expect(component.isOpen()).toBe(false);
@@ -395,7 +428,7 @@ describe("one menu open at a time", () => {
     first.menu.on("close", () => { order.push("first closed"); });
     second.menu.on("open", () => { order.push("second opened"); });
     first.menu.open();
-    await wait(SHOWN);
+    await shown(first.menu.element);
     second.menu.open();
     expect(first.menu.isOpen()).toBe(false);
     expect(second.menu.isOpen()).toBe(true);
@@ -417,7 +450,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     expect(component.close()).toBe(component);
     expect(component.isOpen()).toBe(false);
     expect(input.getAttribute("aria-expanded")).toBe("false");
@@ -430,7 +463,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     component.close();
     component.open();
     expect(component.isOpen()).toBe(true);
@@ -444,7 +477,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
     expect(component.isOpen()).toBe(false);
     expect(seen).toEqual(["open", "close"]);
@@ -464,7 +497,7 @@ describe("split button follows the menu", () => {
     const { component, seen } = split();
     await wait();
     component.expand();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(component.isExpanded()).toBe(false);
     expect(component.trailingElement.getAttribute("aria-expanded")).toBe("false");
@@ -475,7 +508,7 @@ describe("split button follows the menu", () => {
     const { component, seen } = split();
     await wait();
     component.expand();
-    await wait(SHOWN);
+    await shown(innerMenu(component)!.element);
     component.collapse();
     component.expand();
     expect(component.isExpanded()).toBe(true);
