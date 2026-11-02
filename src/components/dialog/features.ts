@@ -1,6 +1,5 @@
 // src/components/dialog/features.ts (partial updated code)
 
-import { getOverlayConfig } from "./config";
 import {
   DialogConfig,
   DialogButton,
@@ -13,12 +12,10 @@ import {
 } from "./types";
 import type { ApiOptions } from "./api";
 import createButton from "../button";
-import { createDivider } from "../divider"; // Import the divider component
-import type { DividerComponent } from "../divider/types";
 import { addClass, removeClass } from "../../core/dom/classes";
 
 import { setHTML } from "../../core/dom/html";
-import { activeElementOf, deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
+import { deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
 import { hideFromTopLayer, onModalEscape, onTopLayerClose, showInTopLayer, type ModalEscape } from "../../core/dom/layer";
 const DIALOG_EVENTS = {
   OPEN: "open",
@@ -48,24 +45,9 @@ export const withStructure =
   const titleId = `${uid}-title`;
   const contentId = `${uid}-content`;
 
-  // Create the overlay element
-  const overlayConfig = getOverlayConfig();
-  const overlay = document.createElement(overlayConfig.tag || "div");
-
-  // Add overlay classes
+  // Create the overlay element, the scrim behind the surface
+  const overlay = document.createElement("div");
   overlay.classList.add(component.getClass("dialog__overlay"));
-
-  // Set overlay attributes safely
-  if (
-    overlayConfig.attributes &&
-    typeof overlayConfig.attributes === "object"
-  ) {
-    Object.entries(overlayConfig.attributes).forEach(([key, value]) => {
-      if (key && typeof key === "string" && value !== undefined) {
-        overlay.setAttribute(key, String(value));
-      }
-    });
-  }
 
   // Set custom z-index if provided
   if (config.zIndex) {
@@ -160,11 +142,12 @@ export const withStructure =
     return footer;
   };
 
+  // A divider is an <hr> the dialog's own stylesheet paints: _dialog.scss set
+  // its margin, border, height and colour already. Constructing a divider
+  // component for it put that component's API in every dialog, dividers or not
   const createDividerElement = () => {
-    const divider = createDivider({
-      variant: "full-width",
-      class: component.getClass("dialog__divider"),
-    });
+    const divider = document.createElement("hr");
+    divider.classList.add(component.getClass("dialog__divider"));
     return divider;
   };
 
@@ -208,21 +191,21 @@ export const withStructure =
   component.element.appendChild(header);
 
   // Create divider elements if configured
-  let headerDivider: DividerComponent | null = null;
-  let footerDivider: DividerComponent | null = null;
+  let headerDivider: HTMLElement | null = null;
+  let footerDivider: HTMLElement | null = null;
 
   if (config.divider) {
     // Add header divider (between header and content)
     headerDivider = createDividerElement();
-    headerDivider.element.classList.add(
+    headerDivider.classList.add(
       component.getClass("dialog__header-divider"),
     );
-    component.element.appendChild(headerDivider.element);
+    component.element.appendChild(headerDivider);
 
     // If footer exists, add footer divider (between content and footer)
     if (footer) {
       footerDivider = createDividerElement();
-      footerDivider.element.classList.add(
+      footerDivider.classList.add(
         component.getClass("dialog__footer-divider"),
       );
     }
@@ -233,7 +216,7 @@ export const withStructure =
 
   // Add footer divider before footer if it exists
   if (footerDivider) {
-    component.element.appendChild(footerDivider.element);
+    component.element.appendChild(footerDivider);
   }
 
   // Add footer to dialog if exists
@@ -288,16 +271,15 @@ export const withDivider =
         // Handle header divider
         if (show && !component.structure.headerDivider) {
           // Create and add header divider
-          const headerDivider = createDivider({
-            variant: "full-width",
-            class: `${component.getClass(
-              "dialog__divider",
-            )} ${component.getClass("dialog__header-divider")}`,
-          });
+          const headerDivider = document.createElement("hr");
+          headerDivider.classList.add(
+            component.getClass("dialog__divider"),
+            component.getClass("dialog__header-divider"),
+          );
 
           // Insert after header, before content
           component.element.insertBefore(
-            headerDivider.element,
+            headerDivider,
             component.structure.content,
           );
 
@@ -308,16 +290,15 @@ export const withDivider =
             component.structure.footer &&
             !component.structure.footerDivider
           ) {
-            const footerDivider = createDivider({
-              variant: "full-width",
-              class: `${component.getClass(
-                "dialog__divider",
-              )} ${component.getClass("dialog__footer-divider")}`,
-            });
+            const footerDivider = document.createElement("hr");
+            footerDivider.classList.add(
+              component.getClass("dialog__divider"),
+              component.getClass("dialog__footer-divider"),
+            );
 
             // Insert before footer
             component.element.insertBefore(
-              footerDivider.element,
+              footerDivider,
               component.structure.footer,
             );
 
@@ -326,13 +307,13 @@ export const withDivider =
         } else if (!show) {
           // Remove header divider if it exists
           if (component.structure.headerDivider) {
-            component.structure.headerDivider.element.remove();
+            component.structure.headerDivider.remove();
             component.structure.headerDivider = null;
           }
 
           // Remove footer divider if it exists
           if (component.structure.footerDivider) {
-            component.structure.footerDivider.element.remove();
+            component.structure.footerDivider.remove();
             component.structure.footerDivider = null;
           }
         }
@@ -471,55 +452,12 @@ export const withVisibility =
   const scrim = top ? component.element : component.overlay;
 
   // Helper functions to handle focus trap
-  const focusableElements =
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
   let previouslyFocusedElement: HTMLElement | null = null;
   let mouseDownOnOverlay = false;
   /** Elements taken out of the page while the dialog is open */
   const inerted: HTMLElement[] = [];
   /** The body's own overflow, put back when the dialog closes */
   let scrollLock: string | null = null;
-
-  /**
-   * The elements a person can tab to inside the dialog, looked up when they
-   * press Tab rather than when the dialog opens, so buttons added later are
-   * part of the cycle.
-   */
-  const focusable = (): HTMLElement[] =>
-    (Array.from(
-      component.element.querySelectorAll(focusableElements)
-    ) as HTMLElement[]).filter(
-      (el) =>
-        !el.hasAttribute("disabled") &&
-        el.getAttribute("aria-hidden") !== "true" &&
-        (el.offsetWidth > 0 || el.offsetHeight > 0 || el === activeElementOf(el))
-    );
-
-  /**
-   * Tab cycles inside the dialog. The handler is kept here so it can be taken
-   * off again: the previous one was removed by name from an inner scope that
-   * never held it, so every open left another listener behind.
-   */
-  function handleTabKey(e: KeyboardEvent) {
-    if (e.key !== "Tab") return;
-    const elements = focusable();
-    if (elements.length === 0) {
-      // Nothing to move to: keep focus on the dialog itself
-      e.preventDefault();
-      component.element.focus();
-      return;
-    }
-    const first = elements[0];
-    const last = elements[elements.length - 1];
-    const active = activeElementOf(component.element);
-    if (e.shiftKey && (active === first || !component.element.contains(active))) {
-      last.focus();
-      e.preventDefault();
-    } else if (!e.shiftKey && active === last) {
-      first.focus();
-      e.preventDefault();
-    }
-  }
 
   /**
    * Everything outside the dialog is taken out of the page while it is open:
@@ -556,8 +494,11 @@ export const withVisibility =
     }
   };
 
-  // In the top layer the dialog may hold slotted content, which its own query
-  // does not see: Tab moves as the browser moves it, wrapped at the ends
+  // Tab moves as the browser moves it, wrapped at the ends: through slots to
+  // their content, which the dialog's own query did not see. The handler is
+  // kept here so it can be taken off again: the previous one was removed by
+  // name from an inner scope that never held it, so every open left another
+  // listener behind.
   const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
 
   const trapFocus = () => {
@@ -567,17 +508,16 @@ export const withVisibility =
     // dialog itself when it has none (M3 dialog accessibility, "Initial focus")
     if (component.config.autofocus !== false) {
       const requested = component.element.querySelector("[autofocus]") as HTMLElement | null;
-      const target = requested || (top ? tabStops(component.element) : focusable())[0] || component.element;
+      const target = requested || tabStops(component.element)[0] || component.element;
       target.focus();
     }
 
     if (component.config.trapFocus !== false) {
-      component.element.addEventListener("keydown", top ? handleWrap : handleTabKey);
+      component.element.addEventListener("keydown", handleWrap);
     }
   };
 
   const releaseFocus = () => {
-    component.element.removeEventListener("keydown", handleTabKey);
     component.element.removeEventListener("keydown", handleWrap);
     releaseBackground();
 

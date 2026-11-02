@@ -121,11 +121,122 @@ export async function checkDialogMount(page: Page, selected: readonly Mount[] = 
   console.log(`Passed dialog mounting checks (${selected.length} mounts): initial focus, Tab/Shift+Tab wrap, Escape, pointer action, reopen and background restoration.`);
 }
 
+// The trap's reach. A dialog's content can hold a custom element, whose
+// controls live in its shadow root -- every component in this library is one.
+// The trap uses the shared tabStops/wrapTab, which walk open shadow roots; the
+// light-DOM querySelectorAll it replaced could not reach a control in one, so
+// the trap stayed on the actions and the content's control was unreachable.
+type FocusWindow = Window & {
+  createDialog: typeof createDialog;
+  focusReachDialog?: ReturnType<typeof createDialog>;
+  focusReachTrigger?: HTMLButtonElement;
+};
+
+export async function checkDialogFocusReach(page: Page): Promise<void> {
+  const deepActive = () => page.evaluate(() => {
+    let active: Element | null = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    return active?.localName ?? "none";
+  });
+  await page.evaluate(() => {
+    class FocusReachField extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" }).innerHTML = '<input aria-label="Inside">';
+      }
+    }
+    if (!customElements.get("focus-reach-field")) customElements.define("focus-reach-field", FocusReachField);
+    const state = window as unknown as FocusWindow;
+    const trigger = document.createElement("button");
+    trigger.textContent = "Edit";
+    document.body.append(trigger);
+    trigger.focus();
+    state.focusReachTrigger = trigger;
+    const dialog = state.createDialog({
+      title: "Edit name", content: "<focus-reach-field></focus-reach-field>",
+      buttons: [{ text: "Done", closeDialog: true }], animationDuration: 0,
+    });
+    state.focusReachDialog = dialog;
+    dialog.open();
+  });
+  try {
+    await page.waitForFunction(() => {
+      const dialog = (window as unknown as FocusWindow).focusReachDialog!;
+      return dialog.element.classList.contains("mtrl-dialog--visible") && getComputedStyle(dialog.element).opacity === "1";
+    });
+    assert.equal(await deepActive(), "input", "focus starts in the content's shadow root, not on the actions");
+    await page.keyboard.press("Tab");
+    assert.equal(await deepActive(), "button", "Tab leaves the shadow control for the dialog's action");
+    await page.keyboard.press("Tab");
+    assert.equal(await deepActive(), "input", "Tab wraps from the last action back into the shadow content");
+    await page.keyboard.press("Shift+Tab");
+    assert.equal(await deepActive(), "button", "Shift+Tab wraps from the shadow content to the last action");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.evaluate(() => (window as unknown as FocusWindow).focusReachDialog!.isOpen()), false, "Escape still closes it");
+    assert.equal(await page.evaluate(() => document.activeElement === (window as unknown as FocusWindow).focusReachTrigger), true, "focus returns to the opener");
+  } finally {
+    await page.evaluate(() => {
+      const state = window as unknown as FocusWindow;
+      state.focusReachDialog?.destroy();
+      state.focusReachTrigger?.remove();
+      state.focusReachDialog = undefined;
+      state.focusReachTrigger = undefined;
+    });
+  }
+  console.log("Passed dialog focus reach: the trap starts in shadow content, wraps to the actions, and returns on Escape.");
+}
+
+// A control marked aria-hidden is not a candidate for initial focus: the old
+// light-DOM filter skipped it, and the shared tab-stop path has to keep that,
+// in either direction.
+type HiddenFocusWindow = Window & {
+  createDialog: typeof createDialog;
+  hiddenFocusDialog?: ReturnType<typeof createDialog>;
+  hiddenFocusTrigger?: HTMLButtonElement;
+};
+
+export async function checkDialogAriaHiddenFocus(page: Page): Promise<void> {
+  const visible = () => page.waitForFunction(() => {
+    const dialog = (window as unknown as HiddenFocusWindow).hiddenFocusDialog!;
+    return dialog.element.classList.contains("mtrl-dialog--visible") && getComputedStyle(dialog.element).opacity === "1";
+  });
+  for (const dir of ["ltr", "rtl"]) {
+    await page.evaluate((dir) => {
+      const state = window as unknown as HiddenFocusWindow;
+      const trigger = document.createElement("button");
+      trigger.textContent = "Open";
+      document.body.append(trigger);
+      trigger.focus();
+      const dialog = state.createDialog({
+        title: "Edit name", animationDuration: 0,
+        content: '<input id="hidden" aria-hidden="true"><input id="visible">',
+        buttons: [{ text: "Done", closeDialog: true }],
+      });
+      dialog.element.dir = dir;
+      state.hiddenFocusDialog = dialog;
+      state.hiddenFocusTrigger = trigger;
+      dialog.open();
+    }, dir);
+    await visible();
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.id ?? ""),
+      "visible",
+      `${dir}: initial focus skips a control marked aria-hidden`,
+    );
+    await page.evaluate(() => {
+      const state = window as unknown as HiddenFocusWindow;
+      state.hiddenFocusDialog!.destroy();
+      state.hiddenFocusTrigger!.remove();
+    });
+  }
+  console.log("Passed dialog aria-hidden focus: initial focus skips a control marked aria-hidden in left-to-right and right-to-left.");
+}
+
 // A focused reproduction without packing or running unrelated core checks.
-// Build first for the stylesheet, then: bun run scripts/check-dialog-browser.ts [mount…]
+// Build first for the stylesheet, then: bun run scripts/check-dialog-browser.ts [mount…|focus|hidden]
 if (import.meta.main) {
   const selected = process.argv.slice(2);
-  for (const mount of selected) assert(mounts.includes(mount as Mount), `Unknown mount: ${mount}`);
+  for (const mount of selected) assert(mount === "focus" || mount === "hidden" || mounts.includes(mount as Mount), `Unknown mount: ${mount}`);
   const bundle = await Bun.build({ entrypoints: ["src/components/dialog/index.ts"], target: "browser" });
   assert(bundle.success, String(bundle.logs));
   const browser = await chromium.launch({ headless: true });
@@ -138,7 +249,10 @@ if (import.meta.main) {
     await page.evaluate(async (entry) => {
       (window as unknown as DialogWindow).createDialog = (await import(entry)).default;
     }, `data:text/javascript;base64,${Buffer.from(await bundle.outputs[0].text()).toString("base64")}`);
-    await checkDialogMount(page, selected.length ? selected as Mount[] : mounts);
+    const mountNames = selected.filter((name) => name !== "focus" && name !== "hidden") as Mount[];
+    if (!selected.length || mountNames.length) await checkDialogMount(page, mountNames.length ? mountNames : mounts);
+    if (selected.includes("focus")) await checkDialogFocusReach(page);
+    if (selected.includes("hidden")) await checkDialogAriaHiddenFocus(page);
     assert.deepEqual(errors, [], "dialog page errors");
   } finally {
     await browser.close();
