@@ -130,6 +130,8 @@ jobs:
         with:
           name: dist
           path: dist
+      - name: Every dist JS module is reachable from the package exports
+        run: bun run dist-modules:check
       - name: Element CSS files and exports
         run: bun run elements-css:check
       - name: Build and consumer tooling types
@@ -186,7 +188,7 @@ jobs:
             checks: core:check carousel:check
           - group: components-b
             browsers: chromium
-            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check readme-browser:check rtl:check
+            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check readme-browser:check rtl:check progress:check switch-transition:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check

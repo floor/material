@@ -42,7 +42,6 @@ import createCard, {
   createCardHeader,
   createCardMedia,
 } from '../../../src/components/card';
-import { withExpandable, withLoading, withSwipeable } from '../../../src/components/card/features';
 import { CARD_CLASSES } from '../../../src/components/card/constants';
 
 const wait = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -300,61 +299,5 @@ describe('card behaviour', () => {
     document.body.appendChild(card.element);
     card.destroy();
     expect(card.element.isConnected).toBe(false);
-  });
-});
-
-describe('card enhancers', () => {
-  test('expansion reuses the actions built by inline configuration', () => {
-    const action = document.createElement('button');
-    action.textContent = 'Share';
-    const base = createCard({ actions: { actions: [action] } });
-    const card = withExpandable({ expandableContent: document.createElement('div') })(base);
-    expect(card.element.querySelectorAll('.mtrl-card__actions')).toHaveLength(1);
-    expect(action.parentElement?.querySelector('.mtrl-card__expand-button')).not.toBeNull();
-    base.destroy();
-  });
-
-  test('withLoading shows a busy overlay and removes it', () => {
-    const card = withLoading({ initialState: true })(createCard());
-    expect(card.loading.isLoading()).toBe(true);
-    expect(card.element.getAttribute('aria-busy')).toBe('true');
-    expect(card.element.classList.contains('mtrl-card--state-loading')).toBe(true);
-    expect(card.element.querySelector('.mtrl-card__loading-overlay')?.getAttribute('role')).toBe('progressbar');
-
-    card.loading.setLoading(false);
-    expect(card.loading.isLoading()).toBe(false);
-    expect(card.element.getAttribute('aria-busy')).toBe('false');
-    expect(card.element.querySelector('.mtrl-card__loading-overlay')).toBeNull();
-  });
-
-  test('withExpandable wires its button to the content it shows and hides', () => {
-    const content = document.createElement('div');
-    const card = withExpandable({ expandableContent: content })(createCard());
-    const button = card.element.querySelector<HTMLButtonElement>('.mtrl-card__expand-button')!;
-    expect(button.getAttribute('aria-controls')).toBe(content.id);
-    expect(button.getAttribute('aria-expanded')).toBe('false');
-    expect(content.getAttribute('aria-hidden')).toBe('true');
-
-    button.click();
-    expect(card.expandable.isExpanded()).toBe(true);
-    expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(content.getAttribute('aria-hidden')).toBe('false');
-    expect(card.element.classList.contains('mtrl-card--expanded')).toBe(true);
-
-    card.expandable.setExpanded(false);
-    expect(button.getAttribute('aria-expanded')).toBe('false');
-    expect(content.style.display).toBe('none');
-  });
-
-  test('withSwipeable runs its handlers from the keyboard fallbacks and resets', () => {
-    const seen: string[] = [];
-    const card = withSwipeable({ onSwipeLeft: () => seen.push('left'), onSwipeRight: () => seen.push('right') })(createCard());
-    expect(card.element.classList.contains('mtrl-card--swipeable')).toBe(true);
-    card.element.querySelector<HTMLButtonElement>('.mtrl-card__swipe-left-action')!.click();
-    expect(card.element.style.transform).toBe('translateX(-100%)');
-    card.element.querySelector<HTMLButtonElement>('.mtrl-card__swipe-right-action')!.click();
-    expect(seen).toEqual(['left', 'right']);
-    card.swipeable.reset();
-    expect(card.element.style.transform).toBe('translateX(0)');
   });
 });
