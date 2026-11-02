@@ -80,8 +80,64 @@ try {
   });
   console.log(`dialog reduced motion: ${JSON.stringify(seen)}`);
   assert.equal(seen.active, "first", "under reduced motion the first control takes the initial focus");
+
+  // A retry from the first opening must not outlive its close. A first control
+  // hidden by its own style keeps the retry pending; closed and reopened in the
+  // same task, the retry would still be running in the second opening, and it
+  // must not take the focus once its old target becomes visible.
+  await page.evaluate(() => {
+    const state = window as unknown as ReducedMotionWindow;
+    state.reducedDialog?.close();
+    const first = document.querySelector<HTMLElement>("#first");
+    if (first) first.style.visibility = "hidden";
+  });
+  await page.evaluate(() => {
+    const state = window as unknown as ReducedMotionWindow;
+    const dialog = state.reducedDialog;
+    if (!dialog) throw new Error("the dialog is missing");
+    state.afterOpen = false;
+    dialog.open();
+  });
+  await page.waitForFunction(
+    () => (window as unknown as ReducedMotionWindow).afterOpen === true,
+    undefined,
+    { timeout: 5000 },
+  );
+  // Close and reopen in one task: the second opening asks for a new target
+  await page.evaluate(() => {
+    const state = window as unknown as ReducedMotionWindow;
+    const dialog = state.reducedDialog;
+    if (!dialog) throw new Error("the dialog is missing");
+    state.afterOpen = false;
+    dialog.close();
+    document.querySelector("#second")?.setAttribute("autofocus", "");
+    dialog.open();
+  });
+  await page.waitForFunction(
+    () => (window as unknown as ReducedMotionWindow).afterOpen === true,
+    undefined,
+    { timeout: 5000 },
+  );
+  const reopened = await page.evaluate(() => ({
+    active: document.activeElement?.id || document.activeElement?.tagName || "none",
+  }));
+  console.log(`dialog reopened: ${JSON.stringify(reopened)}`);
+  assert.equal(reopened.active, "second", "the reopened dialog takes the new initial focus");
+
+  // The old target becomes visible: the first opening's retry must be gone
+  await page.evaluate(() => {
+    const first = document.querySelector<HTMLElement>("#first");
+    if (first) first.style.visibility = "visible";
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const settled = await page.evaluate(() => ({
+    active: document.activeElement?.id || document.activeElement?.tagName || "none",
+  }));
+  console.log(`dialog after the old target is shown: ${JSON.stringify(settled)}`);
+  assert.equal(settled.active, "second", "a closed opening's retry does not take the focus back");
+
   assert.deepEqual(errors, [], "dialog page errors");
-  console.log("Passed dialog reduced-motion focus: after afteropen the first control holds the focus.");
+  console.log("Passed dialog reduced-motion focus: after afteropen the first control holds the focus, and a reopened dialog keeps its new one.");
 } finally {
   await browser.close();
 }
