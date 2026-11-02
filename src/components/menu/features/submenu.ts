@@ -387,8 +387,10 @@ const withSubmenu =
       component.keyboard.setupKeyboardHandlers(
         submenuElement,
         // keyboard.ts reads `items` only; activeSubmenus was passed and
-        // never looked at.
-        { items: currentItems() },
+        // never looked at. They are this submenu's own items, taken from the
+        // item it was opened with: `setItems` may have replaced the menu's
+        // top-level list since.
+        { items: item.submenu },
         {
           closeSubmenu,
           handleNestedSubmenuClick,

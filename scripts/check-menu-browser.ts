@@ -208,3 +208,329 @@ export async function checkMenuDisabledColors(page: Page): Promise<void> {
   }
   console.log("Passed packed menu disabled colours: icon, supporting text and shortcut share the label's 0.38 on baseline, vertical standard and vertical vibrant; selected disabled dims the selection colours; no hover layer on a disabled item.");
 }
+
+/**
+ * An item that is not rendered cannot take focus, so it is not a keyboard
+ * stop: the arrows, Home, End, typeahead and Enter move through and choose the
+ * items that are shown. Material asks for exactly those moves — "Initial
+ * focus: When a menu opens, focus should be placed on the first menu item",
+ * "Up and Down arrows — For open menus: Moves focus to the next item",
+ * "Home … Moves focus to the first item", "End … Moves focus to the last
+ * item", "Letters — Focus moves to the next menu item starting with letter"
+ * and "Space or Enter … Selects a menu item"
+ * (m3.material.io/components/menus/accessibility). A `display: none` item is
+ * not one of the items shown, and a browser will not focus it.
+ *
+ * The first, middle and last item of One–Two–Three–Four are hidden in turn.
+ * Each case opens the menu with a real ArrowDown, presses real keys, reads the
+ * focused item after each press and the item Enter chooses. Where the hidden
+ * item is still a stop, focus sticks on the item before it, or never enters the
+ * menu at all when the first item is hidden, and Enter chooses that item.
+ */
+export async function checkMenuHiddenItems(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  type Case = {
+    name: string;
+    hidden: string;
+    opened: string;
+    keys: Array<[string, string]>;
+    chosen: string;
+  };
+  const cases: Case[] = [
+    {
+      name: "middle",
+      hidden: "two",
+      opened: "one",
+      keys: [["End", "four"], ["Home", "one"], ["ArrowDown", "three"], ["ArrowDown", "four"], ["ArrowDown", "one"], ["t", "three"]],
+      chosen: "three",
+    },
+    {
+      name: "first",
+      hidden: "one",
+      opened: "two",
+      keys: [["ArrowUp", "four"], ["Home", "two"], ["End", "four"], ["ArrowDown", "two"], ["f", "four"]],
+      chosen: "four",
+    },
+    {
+      name: "last",
+      hidden: "four",
+      opened: "one",
+      keys: [["End", "three"], ["ArrowDown", "one"], ["Home", "one"], ["ArrowDown", "two"], ["t", "two"]],
+      chosen: "two",
+    },
+  ];
+  for (const { name, hidden, opened, keys, chosen } of cases) {
+    const hiddenDisplay = await page.evaluate((hidden) => {
+      document.body.replaceChildren();
+      const state = window as unknown as MenuWindow & { chosen: string | null };
+      state.chosen = null;
+      const opener = document.createElement("button");
+      opener.id = "menu-opener";
+      opener.textContent = "Edit";
+      document.body.append(opener);
+      opener.focus();
+      state.menu = state.createMenu({ opener, items: [
+        { id: "one", text: "One" },
+        { id: "two", text: "Two" },
+        { id: "three", text: "Three" },
+        { id: "four", text: "Four" },
+      ] });
+      const item = state.menu.element.querySelector<HTMLElement>(`[data-id="${hidden}"]`);
+      if (item) item.style.display = "none";
+      state.menu.on("select", (payload) => { state.chosen = payload.itemId; });
+      state.menu.open(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+      return item ? getComputedStyle(item).display : "missing";
+    }, hidden);
+    assert.equal(hiddenDisplay, "none", `menu, ${name} item hidden: the item is display: none, so it cannot be a stop`);
+    await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"));
+    // Focus is placed after the opening frame; when the first item shown is
+    // not the first item declared, a tree that treated the hidden item as a
+    // stop leaves focus outside the menu, so wait on the event's own budget
+    // rather than on that focus.
+    await page.waitForTimeout(250);
+    const focused = (): Promise<string | null> => page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? document.activeElement?.id ?? null);
+    const at = await focused();
+    assert.equal(at, opened, `menu, ${name} item hidden: opening puts focus on ${opened}, the first item shown (${at})`);
+    for (const [key, expected] of keys) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(120);
+      const active = await focused();
+      assert.equal(active, expected, `menu, ${name} item hidden: after ${key === "t" ? "typing t" : key} focus is on ${expected} (${active})`);
+    }
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(150);
+    const selected = await page.evaluate(() => (window as unknown as MenuWindow & { chosen: string | null }).chosen);
+    assert.equal(selected, chosen, `menu, ${name} item hidden: Enter chooses ${chosen}, the focused item (${selected})`);
+    await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());
+  }
+  await page.evaluate(() => document.body.replaceChildren());
+  console.log("Passed packed menu hidden items: with the first, middle or last item display: none, ArrowDown opens on the first item shown, the arrows, Home, End and typeahead move through the items shown and wrap past the hidden one, and Enter chooses the focused item.");
+}
+
+/**
+ * A submenu opened after `setItems` serves the replacement, not the list the
+ * menu was created with. Material asks the right arrow to open the focused
+ * item's submenu — "Left and Right arrows — Opens or closes a submenu"
+ * (m3.material.io/components/menus/accessibility) — so the second level it
+ * opens belongs to the item on screen, replacement included.
+ *
+ * Two cases: the replacement keeps the top-level id and changes its children,
+ * and it renames the top-level id. On a tree whose second-level handler finds
+ * the parent item in the creation-time list, the first opens the old second
+ * level and focuses its old child, and the second opens nothing at all.
+ */
+export async function checkMenuSubmenuSetItems(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const original = [
+    { id: "one", text: "One" },
+    { id: "two", text: "Two", hasSubmenu: true, submenu: [
+      { id: "two-a", text: "Two A" },
+      { id: "two-b", text: "Two B", hasSubmenu: true, submenu: [
+        { id: "old-child", text: "Old child" },
+      ] },
+    ] },
+    { id: "three", text: "Three" },
+  ];
+  const replacement = (rootId: string) => [
+    { id: "one", text: "One" },
+    { id: rootId, text: "Two", hasSubmenu: true, submenu: [
+      { id: "new-a", text: "New A" },
+      { id: "new-b", text: "New B", hasSubmenu: true, submenu: [
+        { id: "new-child", text: "New child" },
+      ] },
+    ] },
+    { id: "three", text: "Three" },
+  ];
+  const focused = (): Promise<string | null> =>
+    page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? null);
+  const level = (depth: string) =>
+    page.evaluate((depth) => {
+      const menus = Array.from(
+        document.querySelectorAll<HTMLElement>(".mtrl-menu--submenu"),
+      ).filter((menu) =>
+        menu.getAttribute("data-level") === depth &&
+        menu.classList.contains("mtrl-menu--visible"),
+      );
+      const shown = menus[0];
+      return {
+        count: menus.length,
+        parent: shown?.getAttribute("data-parent-item") ?? null,
+        items: shown
+          ? Array.from(shown.querySelectorAll<HTMLElement>(".mtrl-menu__item"))
+            .map((item) => item.getAttribute("data-id"))
+          : [],
+      };
+    }, depth);
+  // Focus enters a submenu once its opening frame has run, which on a loaded
+  // CI runner can be after any fixed sleep. Wait for the state the assertion
+  // is about, then assert it: a failure still names what is on screen.
+  const waitForFocus = (id: string): Promise<unknown> =>
+    page.waitForFunction(
+      (id) => document.activeElement?.getAttribute("data-id") === id,
+      id, { timeout: 10000 },
+    ).catch(() => undefined);
+  const waitForLevel = (depth: string, parent?: string): Promise<unknown> =>
+    page.waitForFunction(({ depth, parent }: { depth: string; parent?: string }) => {
+      const active = document.activeElement as HTMLElement | null;
+      const menu = active?.closest?.(".mtrl-menu--submenu");
+      return !!menu &&
+        menu.getAttribute("data-level") === depth &&
+        menu.classList.contains("mtrl-menu--visible") &&
+        (!parent || menu.getAttribute("data-parent-item") === parent);
+    }, { depth, parent }, { timeout: 10000 }).catch(() => undefined);
+  for (const { name, rootId } of [
+    { name: "changed child", rootId: "two" },
+    { name: "renamed root", rootId: "deux" },
+  ]) {
+    await page.evaluate(({ original, replacement }) => {
+      document.body.replaceChildren();
+      const state = window as unknown as MenuWindow;
+      const opener = document.createElement("button");
+      opener.id = "menu-opener";
+      opener.textContent = "Edit";
+      document.body.append(opener);
+      opener.focus();
+      state.menu = state.createMenu({ opener, items: original });
+      state.menu.setItems(replacement);
+      state.menu.open(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    }, { original, replacement: replacement(rootId) });
+    await page.waitForFunction(() =>
+      (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"));
+    await waitForFocus("one");
+    let at = await focused();
+    assert.equal(at, "one",
+      `menu setItems, ${name}: opening focuses the replacement's first item (${at})`);
+    await page.keyboard.press("ArrowDown");
+    await waitForFocus(rootId);
+    at = await focused();
+    assert.equal(at, rootId,
+      `menu setItems, ${name}: ArrowDown reaches ${rootId} (${at})`);
+    await page.keyboard.press("ArrowRight");
+    await waitForLevel("1", rootId);
+    const first = await level("1");
+    assert.deepEqual([first.count, first.parent, first.items], [1, rootId, ["new-a", "new-b"]],
+      `menu setItems, ${name}: ArrowRight opens the replacement's first level (parent ${first.parent}, items ${first.items?.join(", ")})`);
+    at = await focused();
+    assert.equal(at, "new-a",
+      `menu setItems, ${name}: focus enters the first level it opened (${at})`);
+    await page.keyboard.press("ArrowDown");
+    await waitForFocus("new-b");
+    at = await focused();
+    assert.equal(at, "new-b",
+      `menu setItems, ${name}: ArrowDown reaches the replaced second-level item (${at})`);
+    await page.keyboard.press("ArrowRight");
+    await waitForLevel("2");
+    const second = await level("2");
+    assert.deepEqual([second.count, second.parent, second.items], [1, "new-b", ["new-child"]],
+      `menu setItems, ${name}: ArrowRight on new-b opens its new child (parent ${second.parent}, items ${second.items?.join(", ") || "none"})`);
+    at = await focused();
+    assert.equal(at, "new-child",
+      `menu setItems, ${name}: focus enters the second level it opened (${at})`);
+    await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());
+  }
+  await page.evaluate(() => document.body.replaceChildren());
+  console.log("Passed packed menu setItems submenus: after setItems changes a top-level item's children or renames the item, ArrowRight opens the replacement's levels and focuses its items.");
+}
+
+/**
+ * A vertical menu's selected item paints no trailing check. M3 puts the
+ * selected check before the label, and the vertical selected-state figure
+ * shows colour and shape alone (m3.material.io/components/menus/specs and
+ * /guidelines). The vertical item's 16px end padding leaves no room for the
+ * horizontal variant's 18px trailing mark, which would otherwise cover the
+ * last 14px of the label in either direction. The horizontal menu keeps its
+ * mark: 18px wide, 12px from the end, clear of the label.
+ */
+export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> {
+  const longText = "Vegetarian and gluten-free, no nuts";
+  const measure = () => page.evaluate(() => {
+    const menu = (window as unknown as MenuWindow).menu.element;
+    const item = menu.querySelector<HTMLElement>('[data-id="long"]')!;
+    const text = item.querySelector<HTMLElement>(".mtrl-menu__item-text")!;
+    const itemRect = item.getBoundingClientRect();
+    const textRect = text.getBoundingClientRect();
+    const pseudo = getComputedStyle(item, "::after");
+    const painted = pseudo.content !== "none" && pseudo.content !== "normal";
+    const width = parseFloat(pseudo.width);
+    // Both physical insets are set and the inline-start margin takes the
+    // space between, so the mark ends 12px from the item's physical end in
+    // either direction.
+    const left = document.documentElement.dir === "rtl"
+      ? itemRect.left + parseFloat(pseudo.left)
+      : itemRect.right - parseFloat(pseudo.right) - width;
+    const right = left + width;
+    return {
+      painted,
+      content: pseudo.content,
+      width,
+      height: parseFloat(pseudo.height),
+      trailingEdge: document.documentElement.dir === "rtl" ? left - itemRect.left : itemRect.right - right,
+      gap: document.documentElement.dir === "rtl" ? textRect.left - right : left - textRect.right,
+      overlap: painted ? Math.max(0, Math.min(right, textRect.right) - Math.max(left, textRect.left)) : 0,
+      selected: item.getAttribute("aria-selected"),
+    };
+  });
+  try {
+    for (const dir of ["ltr", "rtl"] as const) {
+      await page.evaluate(({ dir, longText }) => {
+        const state = window as unknown as MenuWindow;
+        document.body.replaceChildren();
+        document.documentElement.dir = dir;
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, variant: "vertical", items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "long", text: longText },
+          { id: "offline", text: "Offline mode" },
+        ] });
+        state.menu.setSelected("long");
+        document.body.append(state.menu.element);
+      }, { dir, longText });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const vertical = await measure();
+      assert.equal(vertical.selected, "true", `${dir}: the selected item is not announced as selected`);
+      assert.equal(vertical.overlap, 0, `${dir}: the selected item's trailing check (${JSON.stringify(vertical.content)}, ${vertical.width}px wide, ${vertical.trailingEdge}px from the end) overlaps its label by ${vertical.overlap}px`);
+      assert.equal(vertical.painted, false, `${dir}: a vertical menu's selected item still paints a trailing check`);
+
+      // The horizontal menu keeps its own mark, and its 40px end padding keeps it clear.
+      await page.evaluate(({ dir, longText }) => {
+        const state = window as unknown as MenuWindow;
+        state.menu.destroy();
+        document.body.replaceChildren();
+        document.documentElement.dir = dir;
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, width: "220px", items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "long", text: longText },
+          { id: "offline", text: "Offline mode" },
+        ] });
+        state.menu.setSelected("long");
+        document.body.append(state.menu.element);
+      }, { dir, longText });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const horizontal = await measure();
+      assert.equal(horizontal.selected, "true", `${dir} horizontal: the selected item is not announced as selected`);
+      assert.equal(horizontal.painted, true, `${dir} horizontal: the trailing check is gone`);
+      assert.ok(Math.abs(horizontal.trailingEdge - 12) <= 0.5, `${dir} horizontal: the check ends ${horizontal.trailingEdge}px from the item, not 12px`);
+      assert.ok(Math.abs(horizontal.width - 18) <= 0.5 && Math.abs(horizontal.height - 18) <= 0.5, `${dir} horizontal: the check is ${horizontal.width} by ${horizontal.height}, not 18 by 18`);
+      assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
+      assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
+    }
+  } finally {
+    await page.evaluate(() => {
+      (window as unknown as MenuWindow).menu?.destroy();
+      document.body.replaceChildren();
+      document.documentElement.dir = "";
+    });
+  }
+  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
+}
