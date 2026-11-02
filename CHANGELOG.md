@@ -55,7 +55,7 @@ A lighter package, and progress that stays sharp.
 
 ### Internal
 
-- **The package ships no unreachable module (#174).**
+- **Nine unreachable modules no longer ship (#174).**
   `bun run build` compiles every module in the tsc program, and
   `scripts/prune-declarations.ts` removes unreachable declarations only, so
   nine modules no export path reached still shipped as `.js`, and the element
