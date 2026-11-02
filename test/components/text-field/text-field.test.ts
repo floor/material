@@ -76,6 +76,15 @@ describe('text-field', () => {
     expect(mount({ label: 'Notes', type: 'multiline' }).input.tagName).toBe('TEXTAREA');
   });
 
+  test('an accessible name reaches the native control without drawing a label', () => {
+    for (const type of ['text', 'multiline']) {
+      const field = mount({ type, ariaLabel: 'Email address' });
+      expect(field.input.getAttribute('aria-label')).toBe('Email address');
+      expect(field.element.querySelector('label')).toBeNull();
+      field.destroy();
+    }
+  });
+
   // A text input strips newlines, so the live value of 'a\nb' is 'ab' while
   // the default stays 'a\nb'. A textarea keeps the newline. Both reset to
   // the value they had at creation.
