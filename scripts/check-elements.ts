@@ -4691,13 +4691,18 @@ try {
           (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild?.textContent ?? null;
         return { b1: text("b1"), b2: text("b2") };
       });
-    assert.equal(await page.getByRole("status").count(), 2);
+    assert.equal(await page.getByRole("status").count(), 3);
     assert.deepEqual(await shown(), { b1: "99+", b2: "New" });
-    assert.equal(
-      await page.evaluate(() => document.getElementById("b3")?.shadowRoot?.firstElementChild?.getAttribute("aria-hidden")),
-      "true"
+    assert.deepEqual(
+      await page.evaluate(() => {
+        const inner = document.getElementById("b3")?.shadowRoot?.firstElementChild as HTMLElement | null | undefined;
+        return inner
+          ? { role: inner.getAttribute("role"), label: inner.getAttribute("aria-label"), hidden: inner.getAttribute("aria-hidden"), text: inner.textContent }
+          : null;
+      }),
+      { role: "status", label: "New notification", hidden: null, text: "" }
     );
-    check("badge: text or label attribute is the label, max caps it; large is a status, small is hidden");
+    check("badge: text or label attribute is the label, max caps it; large and small are statuses, the dot announcing New notification");
 
     const updated = await page.evaluate(async () => {
       const b1 = document.getElementById("b1") as HTMLElement & { component: unknown };
@@ -12286,6 +12291,65 @@ try {
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
+  }
+
+  // ---------------------------------------------------------------- a dialog in a collapsed container
+  // A container with no box of its own -- an empty div has its width and no
+  // height -- must not move the dialog: scoping the scrim to the container
+  // centred the dialog on the container's zero height, above the top of the
+  // page. Such a container keeps the page's scrim and centring, and is left
+  // untouched, so a dialog mounted in an unsized container renders where it
+  // did before the container scoped the scrim.
+  await fresh(page, `<div id="collapsed-container" dir="ltr"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Dialog = { element: HTMLElement; overlay: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: { createDialog: (config: object) => Dialog } };
+      const wrap = document.getElementById("collapsed-container") as HTMLElement;
+      const dialog = w.mtrl.createDialog({
+        title: "Discard draft?",
+        subtitle: "This cannot be undone.",
+        closeButton: true,
+        content: "<p>Your changes will be lost.</p>",
+        container: wrap,
+      });
+      dialog.open();
+      await new Promise((r) => setTimeout(r, 700));
+      let last = "";
+      for (let i = 0; i < 40; i++) {
+        const r = dialog.element.getBoundingClientRect();
+        const now = `${r.left},${r.top}`;
+        if (now === last) break;
+        last = now;
+        await new Promise((r2) => setTimeout(r2, 50));
+      }
+      const round = (value: number): string => value.toFixed(2);
+      const failures: string[] = [];
+      const box = dialog.element.getBoundingClientRect();
+      const scrim = dialog.overlay.getBoundingClientRect();
+      const position = getComputedStyle(dialog.overlay).position;
+      const container = wrap.getBoundingClientRect();
+      if (container.height !== 0) failures.push(`the collapsed container is ${round(container.height)} px high, not 0`);
+      if (position !== "fixed") failures.push(`the scrim is ${position}, not fixed over the page`);
+      if (!(scrim.left === 0 && scrim.top === 0 && scrim.width === innerWidth && scrim.height === innerHeight)) {
+        failures.push(`the scrim is ${round(scrim.width)} x ${round(scrim.height)} at (${round(scrim.left)}, ${round(scrim.top)}), not the ${innerWidth} x ${innerHeight} viewport`);
+      }
+      if (box.top < 0 || box.left < 0 || box.right > innerWidth || box.bottom > innerHeight) {
+        failures.push(`the dialog is ${round(box.width)} x ${round(box.height)} at (${round(box.left)}, ${round(box.top)}), outside the viewport`);
+      }
+      const centred = Math.abs((box.left + box.right) / 2 - innerWidth / 2) <= 1 &&
+        Math.abs((box.top + box.bottom) / 2 - innerHeight / 2) <= 1;
+      if (!centred) failures.push("the dialog is not centred in the viewport");
+      if (wrap.style.position !== "") failures.push(`the container's inline position is "${wrap.style.position}", not untouched`);
+      const described = `${position} scrim ${round(scrim.width)} x ${round(scrim.height)}; dialog ${round(box.left)},${round(box.top)} ${round(box.width)} x ${round(box.height)}`;
+      dialog.close();
+      dialog.destroy();
+      return { failures, described };
+    });
+    console.log(`  collapsed container: ${measured.described}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("dialog: a collapsed container keeps the page's scrim and the dialog's viewport centring");
   }
 
   // ---------------------------------------------------------------- the side-sheet close under a page reset

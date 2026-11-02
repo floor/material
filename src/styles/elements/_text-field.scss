@@ -106,9 +106,15 @@
   }
 
   // Multiline reserves the textarea's box and first line. Compact multiline
-  // keeps the compact single-line height, as the upgraded input does.
+  // keeps the compact single-line height, as the upgraded input does. The
+  // value may hold line breaks: an inline-block's baseline is its last line,
+  // so each deeper line would push the page's baseline down and grow the
+  // host past the reserved box. An inline-flex container's baseline is its
+  // first item's, so the box and the first line stay put and the deeper
+  // lines stay clipped (#522).
   &[type='multiline'] {
     &::before {
+      display: inline-flex;
       height: v.text-field('height-multiline');
       padding-top: v.text-field('padding-top-multiline');
     }

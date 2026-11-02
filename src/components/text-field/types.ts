@@ -81,6 +81,9 @@ export interface TextFieldConfig {
   /** Label text */
   label?: string;
 
+  /** Accessible name for the input; the visible label is the fallback. */
+  ariaLabel?: string;
+
   /** Initial value */
   value?: string;
 
