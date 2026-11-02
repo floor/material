@@ -19,6 +19,13 @@ g.KeyboardEvent = dom.window.KeyboardEvent;
 g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+// jsdom has no Element.checkVisibility; the keyboard model asks it where a
+// browser would, so the test DOM answers as a browser does, off the computed
+// display. Without it every item counts as rendered, as in any DOM that lacks
+// the method.
+g.Element.prototype.checkVisibility = function (this: Element): boolean {
+  return g.getComputedStyle(this).display !== "none";
+};
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 // `tasks.requestAnimationFrame` goes through `window.requestAnimationFrame`,
 // and jsdom's own keeps a counter of outstanding frames per window that
@@ -165,6 +172,31 @@ describe('menu', () => {
     expect(rendered.slice(1).every((i) => i.getAttribute('tabindex') === '-1')).toBe(true);
   });
 
+  // The one Tab fact the opener and keyboard features have to agree on: a
+  // close that asks for the opener must leave focus where the tab movement
+  // put it. One document Tab tracker serves both now.
+  test('a Tab key press suppresses the focus restore a close asks for', async () => {
+    const menu = createMenu({ opener, items });
+    menu.open(new dom.window.KeyboardEvent('keydown', { key: 'Enter' }));
+    await after(200);
+    expect(document.activeElement).toBe(menuItems(menu)[0]);
+
+    // Handled from the document, as the blur path sees it: the key press is
+    // recorded before the close runs.
+    document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    menu.close(undefined, true);
+    await after(400);
+    expect(menu.isOpen()).toBe(false);
+    expect(document.activeElement).not.toBe(opener);
+
+    // Without that key press, the same close returns focus to the opener.
+    await opened(menu);
+    menu.close(undefined, true);
+    await after(400);
+    expect(menu.isOpen()).toBe(false);
+    expect(document.activeElement).toBe(opener);
+  });
+
   test('the arrows, Home and End move focus, and disabled items are not skipped', async () => {
     const menu = createMenu({ opener, items });
     await opened(menu);
@@ -187,6 +219,46 @@ describe('menu', () => {
     expect(document.activeElement).toBe(rendered[3]);
     press('Home');
     expect(document.activeElement).toBe(rendered[0]);
+  });
+
+  test('an item that is not rendered is not a keyboard stop', async () => {
+    const menu = createMenu({ opener, items });
+    await opened(menu);
+    const rendered = menuItems(menu);
+    // A consumer hides an item with display: none. The item is still in the
+    // document, but a browser will not focus it (measured in Chromium 153),
+    // so it cannot be a stop the arrows, Home, End or Enter reach.
+    rendered[1]!.style.display = 'none';
+    rendered[0]!.focus();
+    const press = (key: string) =>
+      (document.activeElement as HTMLElement).dispatchEvent(
+        new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+      );
+
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[2]); // Paste: disabled, but shown
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[3]);
+    press('ArrowDown');
+    expect(document.activeElement).toBe(rendered[0]); // the wrap skips the hidden item
+    press('ArrowUp');
+    expect(document.activeElement).toBe(rendered[3]);
+    press('Home');
+    expect(document.activeElement).toBe(rendered[0]);
+    press('End');
+    expect(document.activeElement).toBe(rendered[3]);
+  });
+
+  test('a menu whose first item is not rendered opens on the first item shown', async () => {
+    const menu = createMenu({ opener, items });
+    await submenuFeatureLoaded();
+    const first = menuItems(menu)[0]!;
+    first.style.display = 'none';
+    menu.open(new dom.window.KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    await after(200);
+    // Initial focus asks for the first item; the first item that can take it
+    // is the second one declared.
+    expect(document.activeElement).toBe(menuItems(menu)[1]);
   });
 
   test('a disabled item cannot be chosen with the keyboard or the pointer', async () => {

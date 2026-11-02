@@ -24,6 +24,8 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
     const js = await result.outputs[0].text();
     const diagnosticPresent = js.includes("trailingIconLabel/trailing-icon-label");
     assert.equal(diagnosticPresent, mode !== "production", "diagnostic is present in development bundles and stripped from production");
+    const unknownKeyDiagnostic = js.includes('unknown config key "');
+    assert.equal(unknownKeyDiagnostic, mode !== "production", "unknown-key diagnostic is present in development bundles and stripped from production");
     const page = await browser.newPage();
     try {
       await page.setContent("<!doctype html><html><body></body></html>");
@@ -34,7 +36,8 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
       for (const row of rows) {
         if (mode === "raw-browser" || mode === "missing-env") row.expected = 0;
         console.log(`${mode}: ${JSON.stringify(row)}`);
-        if (row.count !== row.expected || !row.unchanged || row.messages.some(message => !message.includes("trailingIconLabel") || !message.includes("trailing-icon-label"))) failures.push(`${mode}: ${row.name}: expected ${row.expected}, got ${row.count}; unchanged=${row.unchanged}`);
+        const tokens = row.tokens ?? ["trailingIconLabel", "trailing-icon-label"];
+        if (row.count !== row.expected || !row.unchanged || row.messages.some(message => !tokens.every(token => message.includes(token)))) failures.push(`${mode}: ${row.name}: expected ${row.expected}, got ${row.count}; unchanged=${row.unchanged}`);
       }
     } finally { await page.close(); }
   }
@@ -52,7 +55,7 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
           });
           assert(result.success && result.outputs.length === 1, String(result.logs));
           const code = await result.outputs[0].text();
-          const diagnosticIncluded = code.includes("trailingIconLabel/trailing-icon-label");
+          const diagnosticIncluded = code.includes("trailingIconLabel/trailing-icon-label") || code.includes('unknown config key "');
           console.log(`warning ${name} ${mode}: ${JSON.stringify({ raw: Buffer.byteLength(code), gzip: gzipSync(code, { level: 9 }).length, diagnosticIncluded })}`);
           if (mode === "production") assert(!diagnosticIncluded, `${name} production bundle strips the diagnostic`);
         }
@@ -62,7 +65,7 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
           });
           assert(!("on" in result), "Unexpected Vite watcher");
           const chunks = (Array.isArray(result) ? result : [result]).flatMap(output => output.output).filter(output => output.type === "chunk");
-          const diagnosticIncluded = chunks.some(chunk => chunk.code.includes("trailingIconLabel/trailing-icon-label"));
+          const diagnosticIncluded = chunks.some(chunk => chunk.code.includes("trailingIconLabel/trailing-icon-label") || chunk.code.includes('unknown config key "'));
           console.log(`warning text-field Vite production: ${JSON.stringify({ gzip: chunks.reduce((sum, chunk) => sum + gzipSync(chunk.code, { level: 9 }).length, 0), diagnosticIncluded })}`);
           assert(!diagnosticIncluded, "Vite production bundle strips the diagnostic");
         }

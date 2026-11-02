@@ -9,16 +9,24 @@ import { describe, test, expect } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { brotliCompressSync, constants } from 'node:zlib';
 import {
   BUDGET_BYTES,
   DEFERRED_BUDGET_BYTES,
   COMPONENTS,
   KNOWN_DEPS,
   SCENARIO_DEFS,
+  TABLE_CLOSE,
+  TABLE_OPEN,
   buildScenario,
+  brotliBytes,
   missingMeasuredScenarios,
+  renderSizesMarkdown,
+  renderSizesTable,
   sizeGateFails,
+  sizesTableDrift,
 } from '../../scripts/size';
+import type { Result, ScenarioName } from '../../scripts/size';
 
 describe('size gate', () => {
   test('each deferred budget is for a measured scenario, and positive', () => {
@@ -82,6 +90,112 @@ describe('size gate', () => {
       expect(names.has(name)).toBe(true);
       for (const dep of KNOWN_DEPS[name] ?? []) expect(names.has(dep)).toBe(true);
     }
+  });
+
+  test('table drift fails the command', () => {
+    expect(sizeGateFails({
+      buildFailures: [],
+      treeShakeFailures: [],
+      overBudget: [],
+      tableDrift: ['row 3: committed | button | … | — measured | button | … |'],
+    })).toBe(true);
+    expect(sizeGateFails({
+      buildFailures: [],
+      treeShakeFailures: [],
+      overBudget: [],
+      tableDrift: [],
+    })).toBe(false);
+  });
+});
+
+describe('the published table (SIZES.md)', () => {
+  // core at 2.9 KB gzipped, so every delta below is against it
+  // brBytes feeds only the console's brotli column; the published table ignores it
+  const row = (name: ScenarioName, minKB: number, gzKB: number, deferredGzBytes = 0): Result => ({
+    name,
+    minBytes: Math.round(minKB * 1024),
+    gzBytes: Math.round(gzKB * 1024),
+    brBytes: Math.round(gzKB * 1024 * 0.8),
+    deferredGzBytes,
+    minKB,
+    gzKB,
+    deltaKB: gzKB - 2.9,
+  });
+
+  const measured: readonly Result[] = [
+    row('core', 6.4, 2.9),
+    row('button', 24.1, 7.3, Math.round(6.2 * 1024)),
+    row('divider', 8.9, 3.6),
+    row('all', 300.0, 127.8),
+    row('shapes', 4.0, 1.5),
+  ];
+
+  test('renders the kernel, every table scenario and no other, in order', () => {
+    const names = [...renderSizesTable(measured).matchAll(/^\| ([A-Za-z][\w-]*) \|/gm)].map((match) => match[1]);
+    expect(names).toEqual(['Component', 'core', 'button', 'divider', 'all']);
+  });
+
+  test('formats what the console table prints: KB, a signed delta, a deferred gzip', () => {
+    const table = renderSizesTable(measured).split('\n');
+    expect(table.find((line) => line.startsWith('| core |'))).toBe('| core | 6.4 KB | 2.9 KB | — |  |');
+    expect(table.find((line) => line.startsWith('| button |'))).toBe('| button | 24.1 KB | 7.3 KB | +4.4 KB | +6.2 KB |');
+  });
+
+  test('the generated file carries the commit, the date and the markers', () => {
+    const file = renderSizesMarkdown(measured, { commit: '0293ea8d', date: '2026-10-31' });
+    expect(file).toContain('Measured at 0293ea8d on 2026-10-31.');
+    const table = file.slice(file.indexOf(TABLE_OPEN), file.indexOf(TABLE_CLOSE));
+    expect(table).toContain('| button |');
+  });
+
+  test('a regenerated table is not drift, whatever commit and date it names', () => {
+    const committed = renderSizesMarkdown(measured, { commit: 'old', date: '2026-01-01' });
+    const fresh = renderSizesMarkdown(measured, { commit: '0293ea8d', date: '2026-10-31' });
+    expect(sizesTableDrift(committed, fresh)).toEqual([]);
+  });
+
+  test('a changed size is drift that names the row and both sizes', () => {
+    const committed = renderSizesMarkdown(measured, { commit: 'x', date: '2026-10-31' });
+    const moved = measured.map((result) => (result.name === 'button' ? { ...result, gzKB: 7.4 } : result));
+    const fresh = renderSizesMarkdown(moved, { commit: 'x', date: '2026-10-31' });
+    const drift = sizesTableDrift(committed, fresh);
+    expect(drift.length).toBe(1);
+    expect(drift[0]).toContain('row 4');
+    expect(drift[0]).toContain('| button | 24.1 KB | 7.3 KB |');
+    expect(drift[0]).toContain('| button | 24.1 KB | 7.4 KB |');
+  });
+
+  test('a file without markers, or a dropped row, is drift', () => {
+    const fresh = renderSizesMarkdown(measured, { commit: 'x', date: '2026-10-31' });
+    expect(sizesTableDrift('# Component sizes\n\nno table', fresh).length).toBe(1);
+    const dropped = sizesTableDrift(renderSizesMarkdown(measured.slice(0, 3), { commit: 'x', date: '2026-10-31' }), fresh);
+    expect(dropped.length).toBe(1);
+    expect(dropped[0]).toContain('all');
+    expect(dropped[0]).toContain('(row missing)');
+  });
+});
+
+describe('brotli measurement', () => {
+  // The reported figure is the CDN one: quality 11, the setting
+  // check-adapter-size.ts gates adapters on. The sample is varied enough that
+  // a lower quality measurably disagrees, so the equality pins the setting.
+  const SAMPLE = new TextEncoder().encode(
+    Array.from({ length: 96 }, (_, i) => `export const hook${i} = (v) => v * ${i} + ${i % 7}; // ${'x'.repeat(i % 13)}\n`).join(''),
+  );
+
+  test('reports quality 11, not another quality', () => {
+    expect(brotliBytes(SAMPLE)).toBe(
+      brotliCompressSync(SAMPLE, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length,
+    );
+    expect(brotliBytes(SAMPLE)).not.toBe(
+      brotliCompressSync(SAMPLE, { params: { [constants.BROTLI_PARAM_QUALITY]: 1 } }).length,
+    );
+  });
+
+  test('is deterministic and smaller than the minified input it measures', () => {
+    expect(brotliBytes(SAMPLE)).toBe(brotliBytes(SAMPLE));
+    expect(brotliBytes(SAMPLE)).toBeGreaterThan(0);
+    expect(brotliBytes(SAMPLE)).toBeLessThan(SAMPLE.byteLength);
   });
 });
 

@@ -1,6 +1,5 @@
 // src/components/dialog/types.ts
 import type { ButtonComponent } from "../button/types";
-import type { DividerComponent } from "../divider/types";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -49,8 +48,9 @@ export type DialogFooterAlignment = 'right' | 'left' | 'center' | 'space-between
  * - open: Fired inside `open()`, once the dialog is open: `isOpen()` is true.
  *   The surface may not be visible yet, and focus may not be in it
  * - afteropen: Fired later, never inside `open()`: the dialog is visible and
- *   focus is in it (`animationDuration` after it was shown). Not fired when
- *   the dialog closes first
+ *   focus is in it (`animationDuration` after it was shown, or once its
+ *   initial focus lands if that is later). Not fired when the dialog closes
+ *   first
  * - beforeclose: Fired inside `close()`, before anything changes (can be prevented).
  *   Not fired when the browser has closed a top-layer dialog itself: nothing
  *   can refuse that
@@ -370,9 +370,9 @@ export interface DialogStructure {
   content: HTMLElement;
   /** Only when the dialog has buttons, and set back to null when the last goes */
   footer: HTMLElement | null;
-  /** Divider components, not elements: the code reaches for `.element` on them */
-  headerDivider: DividerComponent | null;
-  footerDivider: DividerComponent | null;
+  /** The <hr> elements between the sections, only while shown */
+  headerDivider: HTMLElement | null;
+  footerDivider: HTMLElement | null;
   container: HTMLElement;
 }
 

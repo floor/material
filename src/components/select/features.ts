@@ -54,6 +54,7 @@ export const withTextField =
 
     // Prevent typing in the input while keeping normal focus/visual behavior
     if (textField.input) {
+      if (config.ariaLabel) textField.input.setAttribute("aria-label", config.ariaLabel);
       // `input` is HTMLInputElement | HTMLTextAreaElement, and
       // addEventListener over a union falls back to the EventTarget
       // signature, which types the event as a plain Event. Annotating the
@@ -182,8 +183,14 @@ const setupCombobox = (
 
   const options = (): HTMLElement[] =>
     Array.from(menu.element.querySelectorAll<HTMLElement>('[role="option"]'));
+  // An option that is not rendered (display: none, its own or an ancestor's)
+  // cannot take focus either, so it is not a stop; a DOM without checkVisibility
+  // keeps every option, which is how the listbox behaved before.
   const enabled = (): HTMLElement[] =>
-    options().filter((option) => option.getAttribute("aria-disabled") !== "true");
+    options().filter(
+      (option) =>
+        option.getAttribute("aria-disabled") !== "true" && option.checkVisibility?.() !== false,
+    );
   const optionFor = (element: HTMLElement | null): SelectOption | undefined =>
     element
       ? state.options.find((option) => String(option.id) === element.getAttribute("data-id"))
@@ -207,7 +214,8 @@ const setupCombobox = (
     if (pending === "first") return setActive(list[0]);
     if (pending === "last") return setActive(list[list.length - 1]);
     const selectedId = state.selectedOption ? String(state.selectedOption.id) : null;
-    setActive(list.find((option) => option.getAttribute("data-id") === selectedId) ?? list[0]);
+    const selected = list.find((option) => option.getAttribute("data-id") === selectedId);
+    setActive(selectedId ? selected ?? null : list[0]);
   };
 
   const open = (start: "selected" | "first" | "last", event?: Event): void => {

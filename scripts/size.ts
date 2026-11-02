@@ -15,6 +15,10 @@
  * deferred column and are left out of `KNOWN_DEPS`, so their markers must not
  * appear in that initial graph.
  *
+ * Brotli is reported beside gzip for the same initial graph, at quality 11
+ * (`node:zlib`, the setting check-adapter-size.ts uses — what a CDN serves).
+ * It is reported, never gated: every budget in this file stays gzip.
+ *
  * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
  * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
  * least 100 bytes above the measured gzip. Explicit byte ceilings for a
@@ -31,16 +35,36 @@
  * same rule (scripts/check-package-size.ts). The merged tree measured 6,420,252;
  * measured plus 1% is above that ceiling, so it stays.
  *
+ * The published table. SIZES.md is generated from this script's own results by
+ * `bun run size --markdown > SIZES.md`, and a plain `bun run size` fails when
+ * the rows the committed file keeps between its `size-table` markers are not
+ * what a fresh measurement says — the pull request that changes a size
+ * refreshes the table, as readme:check has the README's `sizes` rows refreshed.
+ * The commit and the date in the file's header stand outside the markers, so
+ * they record when the table was regenerated without counting as drift.
+ *
  * Usage:
  *   bun run size
+ *   bun run size --markdown > SIZES.md
  */
 
 import { gzipSync } from "bun";
-import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { brotliCompressSync, constants } from "node:zlib";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 const root = resolve(import.meta.dir, "..");
+
+/** The commit the table was measured at, for the SIZES.md header. */
+const shortCommit = (): string => {
+  try {
+    return execFileSync("git", ["rev-parse", "--short=8", "HEAD"], { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+};
 
 // The bundler derives chunk names and the entry chunk's runtime id from the
 // module paths it is handed, so the entry lives in a fixed scratch inside the
@@ -107,7 +131,9 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   snackbar: ["button", "icon-button"],
   select: ["text-field", "menu"],
   tabs: ["button", "badge"],
-  "split-button": ["button", "menu"],
+  // The menu's chunk is not listed: split button loads the menu on first open
+  // (menu/inner, its symbol module, is the only menu module still initial).
+  "split-button": ["button"],
   toolbar: ["button", "icon-button"],
   "fab-menu": ["fab"],
 };
@@ -139,6 +165,14 @@ export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
 
 /** Tenth-of-a-KB ceiling, matching how sizes are quoted. */
 export const kb = (n: number): number => Math.floor(n * 1024);
+
+/**
+ * Brotli of the initial graph at quality 11 — what a CDN serves, the setting
+ * check-adapter-size.ts gates adapters on. Reported beside `gzBytes`; no
+ * budget reads it.
+ */
+export const brotliBytes = (bytes: Uint8Array): number =>
+  brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length;
 
 export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // The nearest-[dir] direction module (core/dom/direction, 3.2.2) is shared
@@ -180,7 +214,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "navigation-rail": kb(6.85), // 6,693 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   progress: kb(10.6),
   "loading-indicator": kb(9.5), // the Compose-exact shapes: 9,138 to 9,447, the first-arc split 149 B of it
-  "split-button": kb(17.45), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget: 18,228; 17,167 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 17,269 to 17,296 against d306d4c2 (36 of room before it, 9 after). kb(16.95) is 17,356 (60 above, short of 100); raised to kb(17) = 17,408 (112 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 17,307 to 17,460. kb(17.1) is 17,510 (50 above, short of 100); raised to kb(17.15) = 17,561 (101 above), Node 22.23.3 / npm 10.9.9
+  "split-button": kb(9.55), // the menu is loaded on first open (menu-on-demand.ts): 17,760 to 9,677 measured against ae4c8298, its first-open payload in DEFERRED_BUDGET_BYTES below. The menu/inner symbol module is the only menu module still initial. kb(9.5) is 9,728 (51 above, short of 100); raised to kb(9.55) = 9,779 (102 above)
   radios: kb(5.35),
   search: kb(11.05), // the open view in the top layer: 9,759; combobox, contained and divided: 10,114; minWidth and maxWidth: 10,161; trailing items, avatar, supporting text, reopening: 10,477; the deferred opening focus is cancelled: 10,509 to 10,566. kb(10.3) is 10,547, which does not fit; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, for the full-screen view: 10,518 to 10,956. kb(10.75) is 11,008 (52 above, short of 100); raised to kb(10.8) = 11,059 (103 above), Node 22.23.3 / npm 10.9.9
   select: kb(20.85), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter: 20,608; main's root class option on the forward merge: next 20,743 to 20,790; 20,821 on the A2 forward merge (17 B left); the menu's tabindex reset: 20,867, which does not fit kb(20.35). 20,853 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 20,863 to 21,016. kb(20.6) is 21,094 (78 above, short of 100); raised to kb(20.65) = 21,145 (129 above), Node 22.23.3 / npm 10.9.9
@@ -200,7 +234,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // material/core/shapes: every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
-  tooltip: kb(6.1), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
+  tooltip: 6_300, // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952; the on-screen fix (flip on the placement axis, both-axis clamp, arrow re-anchor on clamp, class derived from final geometry): 6,298 gzipped, the smallest correct form — re-anchoring unconditionally breaks the rich rows' requested anchor, and a centre-comparison anchor pick misses the target at a clamped edge (floor/material#173). kb(6.1) = 6,246 raised to 6,300 by the Floor orchestrator (Atlas decision, this fix only), 2026-11-01
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
@@ -215,6 +249,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
  */
 export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
   menu: kb(2.2), // the submenu feature, a chunk since then
+  "split-button": kb(17.05), // the menu chunk, its shared chunk and the submenu chunk: 17,313 measured against ae4c8298. kb(17.0) is 17,408 (95 above, short of 100); raised to kb(17.05) = 17,459 (146 above)
   "fab-menu": kb(10.6), // the baseline menu of the menu presentation; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 10,537 to 10,584 against d306d4c2. kb(10.4) is 10,649 (65 above, short of 100); raised to kb(10.45) = 10,700 (116 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 10,582 to 10,738. kb(10.55) is 10,803 (65 above, short of 100); raised to kb(10.6) = 10,854 (116 above), Node 22.23.3 / npm 10.9.9
 };
 
@@ -222,19 +257,107 @@ export interface SizeGateInput {
   readonly buildFailures: readonly string[];
   readonly treeShakeFailures: readonly unknown[];
   readonly overBudget: readonly string[];
+  /** Rows of the committed SIZES.md that a fresh measurement disagrees with. */
+  readonly tableDrift?: readonly string[];
 }
 
-/** The command fails if any scenario failed to build, leaked, or grew past its budget. */
+/** The command fails if any scenario failed to build, leaked, grew past its budget, or drifted from the committed table. */
 export const sizeGateFails = (input: SizeGateInput): boolean =>
   input.buildFailures.length > 0
   || input.treeShakeFailures.length > 0
-  || input.overBudget.length > 0;
+  || input.overBudget.length > 0
+  || (input.tableDrift?.length ?? 0) > 0;
 
 export const missingMeasuredScenarios = (
   measuredNames: readonly string[],
 ): readonly ScenarioName[] => {
   const measured = new Set(measuredNames);
   return SCENARIO_DEFS.map((scenario) => scenario.name).filter((name) => !measured.has(name));
+};
+
+// ── The published table (SIZES.md) ────────────────────────────────
+//
+// The same measurement as the console table, as Markdown: `core` (the kernel
+// every component starts from), every component, and `all`. The rows between
+// the markers are what a plain run compares the committed file against; the
+// header around them — the commit and the date — records when the table was
+// regenerated and is left out of the comparison.
+
+export const SIZES_FILE = "SIZES.md";
+export const TABLE_OPEN = "<!-- size-table -->";
+export const TABLE_CLOSE = "<!-- /size-table -->";
+
+const inTable = (name: ScenarioName): boolean =>
+  name === "core" || name === "all" || COMPONENTS.some((component) => component.name === name);
+
+const formatKB = (value: number): string => `${value.toFixed(1)} KB`;
+
+/** The table SIZES.md commits: one row for the kernel, each component, and `all`. */
+export const renderSizesTable = (results: readonly Result[]): string => {
+  const lines = [
+    "| Component | Minified | Gzipped | vs core | Deferred |",
+    "| --- | ---: | ---: | ---: | ---: |",
+  ];
+  for (const result of results.filter((result) => inTable(result.name))) {
+    const delta = result.name === "core"
+      ? "—"
+      : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
+    const deferred = result.deferredGzBytes === 0 ? "" : `+${formatKB(result.deferredGzBytes / 1024)}`;
+    lines.push(`| ${result.name} | ${formatKB(result.minKB)} | ${formatKB(result.gzKB)} | ${delta} | ${deferred} |`);
+  }
+  return lines.join("\n");
+};
+
+/** The whole generated file: how it was measured, at what commit, and the table. */
+export const renderSizesMarkdown = (
+  results: readonly Result[],
+  measuredAt: { commit: string; date: string },
+): string => [
+  "# Component sizes",
+  "",
+  "Measured by `bun run size` (scripts/size.ts). Each row imports only that",
+  "component's factories from the package entry, the way a consumer does, and",
+  "the numbers are what a bundler keeps. Minified and Gzipped are the initial",
+  "graph — the static chunks the import pulls in before any lazy load.",
+  "Deferred is the gzip of the chunks reached only through `import()`, which",
+  "loads on demand. `vs core` is the gzipped delta against the `core` kernel",
+  "(`pipe`, `createBase`, `withElement`) that every component starts from. A",
+  "scenario that carries another component's code fails the run, not this table.",
+  "",
+  `Measured at ${measuredAt.commit} on ${measuredAt.date}. Regenerate with`,
+  "`bun run size --markdown > SIZES.md`; a plain `bun run size` fails when",
+  "these rows drift from a fresh measurement.",
+  "",
+  TABLE_OPEN,
+  renderSizesTable(results),
+  TABLE_CLOSE,
+  "",
+].join("\n");
+
+/** Where the committed file and a fresh measurement disagree, row by row. */
+export const sizesTableDrift = (committed: string, fresh: string): readonly string[] => {
+  const rows = (text: string): readonly string[] | undefined => {
+    const open = text.indexOf(TABLE_OPEN);
+    const close = text.lastIndexOf(TABLE_CLOSE);
+    if (open === -1 || close === -1 || close < open) return undefined;
+    return text
+      .slice(open + TABLE_OPEN.length, close)
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  };
+  const committedRows = rows(committed);
+  const freshRows = rows(fresh);
+  if (committedRows === undefined || freshRows === undefined) {
+    return [`no ${TABLE_OPEN} … ${TABLE_CLOSE} block: regenerate with \`bun run size --markdown > SIZES.md\``];
+  }
+  const drift: string[] = [];
+  for (let index = 0; index < Math.max(committedRows.length, freshRows.length); index += 1) {
+    const was = committedRows[index] ?? "(row missing)";
+    const now = freshRows[index] ?? "(row missing)";
+    if (was !== now) drift.push(`row ${index + 1}: committed ${was} — measured ${now}`);
+  }
+  return drift;
 };
 
 // ── Markers ───────────────────────────────────────────────────────
@@ -325,10 +448,12 @@ interface Scenario {
   imports: readonly string[];
 }
 
-interface Result {
+export interface Result {
   name: ScenarioName;
   minBytes: number;
   gzBytes: number;
+  /** Brotli (quality 11) of the same initial graph `gzBytes` measures. */
+  brBytes: number;
   /** Gzip of extra JS chunks. Dynamic imports land here, not in `gzBytes`. */
   deferredGzBytes: number;
   minKB: number;
@@ -522,6 +647,10 @@ export const buildScenario = async (
 };
 
 const main = async (): Promise<void> => {
+  // `--markdown` writes the SIZES.md content to standard output, so everything
+  // else the run says goes to standard error and the file holds only the table.
+  const markdown = process.argv.includes("--markdown");
+  const report = markdown ? console.error : console.log;
   const coreSource = readTree(join(root, "src/core"));
   const sources = new Map<ComponentName, string>();
   for (const component of COMPONENTS) {
@@ -551,6 +680,7 @@ const main = async (): Promise<void> => {
 
     const { initialBytes, deferredBytes, texts } = built;
     const gzBytes = gzipSync(initialBytes).byteLength;
+    const brBytes = brotliBytes(initialBytes);
     const deferredGzBytes = deferredBytes.byteLength === 0 ? 0 : gzipSync(deferredBytes).byteLength;
 
     bundles.set(scenario.name, texts.join("\n"));
@@ -558,6 +688,7 @@ const main = async (): Promise<void> => {
       name: scenario.name,
       minBytes: initialBytes.byteLength,
       gzBytes,
+      brBytes,
       deferredGzBytes,
       minKB: initialBytes.byteLength / 1024,
       gzKB: gzBytes / 1024,
@@ -615,64 +746,66 @@ const main = async (): Promise<void> => {
   const COL_NAME = 20;
   const COL_MIN = 10;
   const COL_GZ = 9;
+  const COL_BR = 9;
   const COL_DELTA = 12;
   const COL_DEFERRED = 12;
   const showDeferred = results.some((result) => result.deferredGzBytes > 0);
-  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
+  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_BR + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
 
   const pad = (value: string, width: number): string => value.padStart(width);
   const sep = "─".repeat(LINE_W);
 
-  console.log("");
-  console.log("  mtrl — Component Sizes");
-  console.log("");
-  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"vs core".padStart(COL_DELTA)}`;
-  console.log(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
-  console.log(`  ${sep}`);
+  report("");
+  report("  mtrl — Component Sizes");
+  report("");
+  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"Brotli".padStart(COL_BR)}  ${"vs core".padStart(COL_DELTA)}`;
+  report(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
+  report(`  ${sep}`);
 
   for (const result of results) {
     const min = `${result.minKB.toFixed(1)} KB`;
     const gz = `${result.gzKB.toFixed(1)} KB`;
+    const br = `${(result.brBytes / 1024).toFixed(1)} KB`;
     const delta = result.name === "core"
       ? ""
       : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
-    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(delta, COL_DELTA)}`;
+    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(br, COL_BR)}  ${pad(delta, COL_DELTA)}`;
     if (!showDeferred) {
-      console.log(line);
+      report(line);
       continue;
     }
     const deferred = result.deferredGzBytes === 0
       ? ""
       : `+${(result.deferredGzBytes / 1024).toFixed(1)} KB`;
-    console.log(`${line}  ${pad(deferred, COL_DEFERRED)}`);
+    report(`${line}  ${pad(deferred, COL_DEFERRED)}`);
   }
 
-  console.log(`  ${sep}`);
-  console.log("");
+  report(`  ${sep}`);
+  report("");
 
   if (buildFailures.length > 0) {
-    console.log(`  ✗ Build: ${buildFailures.length} scenario(s) failed to compile`);
-    for (const name of buildFailures) console.log(`    ${name}`);
-    console.log("");
+    report(`  ✗ Build: ${buildFailures.length} scenario(s) failed to compile`);
+    for (const name of buildFailures) report(`    ${name}`);
+    report("");
   }
 
   if (treeShakeFailures.length === 0) {
     const checked = results.filter((result) => result.name !== "all").length;
     const expected = scenarios.length - 1;
-    console.log(
+    report(
       checked === expected
         ? `  ✓ Tree-shaking: all ${expected} scenarios clean — unused components excluded`
         : `  ✓ Tree-shaking: ${checked} measured scenario(s) clean`,
     );
   } else {
-    console.log(`  ✗ Tree-shaking: ${treeShakeFailures.length} leak(s) detected`);
-    console.log("");
+    report(`  ✗ Tree-shaking: ${treeShakeFailures.length} leak(s) detected`);
+    report("");
     for (const failure of treeShakeFailures) {
-      console.log(`    ${failure.scenario}: leaked ${failure.leaked} (marker: "${failure.marker}")`);
+      report(`    ${failure.scenario}: leaked ${failure.leaked} (marker: "${failure.marker}")`);
     }
   }
 
-  console.log("");
+  report("");
 
   const overBudget: string[] = [];
 
@@ -680,25 +813,46 @@ const main = async (): Promise<void> => {
     const budget = BUDGET_BYTES[scenario.name];
     const result = results.find((item) => item.name === scenario.name);
     if (!result) {
-      console.log(`  ✗ ${scenario.name}: not measured (build failed)`);
+      report(`  ✗ ${scenario.name}: not measured (build failed)`);
       continue;
     }
     const over = result.gzBytes > budget;
     if (over) overBudget.push(result.name);
-    console.log(
-      `  ${over ? "✗" : "✓"} ${result.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
+    report(
+      `  ${over ? "✗" : "✓"} ${scenario.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
     );
     const deferredBudget = DEFERRED_BUDGET_BYTES[scenario.name];
     if (deferredBudget !== undefined) {
       const deferredOver = result.deferredGzBytes > deferredBudget;
       if (deferredOver) overBudget.push(`${result.name} (deferred)`);
-      console.log(
+      report(
         `  ${deferredOver ? "✗" : "✓"} ${result.name} deferred: ${result.deferredGzBytes} bytes gzipped (budget ${deferredBudget})`,
       );
     }
   }
 
-  console.log("");
+  report("");
+
+  // The published table: regenerated on request, and on every plain run
+  // compared with the committed file, the way readme:check holds the README's
+  // `sizes` rows against size:check's measurement. A checkout without the file
+  // (the emitter, before the table lands) is not drift.
+  const tableDrift: string[] = [];
+  if (markdown) {
+    process.stdout.write(renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) }));
+  } else {
+    const sizesPath = join(root, SIZES_FILE);
+    if (existsSync(sizesPath)) {
+      const fresh = renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) });
+      tableDrift.push(...sizesTableDrift(readFileSync(sizesPath, "utf8"), fresh));
+      if (tableDrift.length === 0) {
+        report("  ✓ SIZES.md: the committed table matches this measurement");
+      } else {
+        for (const line of tableDrift) report(`  ✗ SIZES.md: ${line}`);
+      }
+      report("");
+    }
+  }
 
   rmSync(scratch, { recursive: true, force: true });
 
@@ -706,7 +860,7 @@ const main = async (): Promise<void> => {
     if (!buildFailures.includes(name)) buildFailures.push(name);
   }
 
-  if (sizeGateFails({ buildFailures, treeShakeFailures, overBudget })) {
+  if (sizeGateFails({ buildFailures, treeShakeFailures, overBudget, tableDrift })) {
     process.exit(1);
   }
 };
