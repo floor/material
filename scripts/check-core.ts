@@ -10,6 +10,7 @@ import type createButton from "../src/components/button";
 import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
+import { checkFactoryFocusNames } from "./check-factory-focus-names";
 import { checkChips } from "./check-chips-browser";
 import { checkChipCellNames } from "./check-chip-cell-names";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
@@ -111,6 +112,7 @@ try {
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
   await checkChipCellNames(page, artifacts);
+  await checkFactoryFocusNames(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
