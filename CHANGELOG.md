@@ -68,7 +68,7 @@ Search and form fields that behave.
 
 ### Fixed
 
-- **A search view created open focuses its input (FLO-787, #209).**
+- **A search view created open focuses its input (#209).**
   A search created with `initialState: "view"` opened its surface on the back
   button instead of the input: showing the surface moves focus to its first
   control — the back button, through `showModal()` for a full-screen view and
@@ -91,7 +91,7 @@ Search and form fields that behave.
   collapse.
 
 - **A two-line search suggestion keeps its highlighted headline on one line
-  (FLO-789, #218).**
+  (#218).**
   A two-line suggestion's label was a flex column in which plain text and
   the `<strong>` match were separate flex items, so a highlighted headline
   split into separate rows: in a standalone Chromium fixture on main,
@@ -113,7 +113,7 @@ Search and form fields that behave.
   root, "2 !== 1"), and all 28 rows pass on the branch, both renderings
   sharing y=107 and y=83 in either direction.
 
-- **A multiline text field holds its place before upgrade (FLO-522, #188).**
+- **A multiline text field holds its place before upgrade (#188).**
   A multiline text field's pre-upgrade surrogate paints every line of
   `attr(value)` (`white-space: pre`), and the painting `::before` was an
   `inline-block`, whose baseline is its last line. A value with line breaks
@@ -145,8 +145,7 @@ Search and form fields that behave.
   green on the branch at 0.0000 with no sibling movement and the compact box
   holding 280×40.
 
-- **Button-group neighbours keep their labels whole while pressed (FLO-552,
-  #183).**
+- **Button-group neighbours keep their labels whole while pressed (#183).**
   A held press on an end button of a standard group took a flat 24dp from
   its neighbour whatever the neighbour's facing padding: at s (16dp padding)
   that truncated the neighbour's label by 8px and at xs (12dp) by 12px for
@@ -178,7 +177,7 @@ Search and form fields that behave.
   bytes gzipped on the button-group row (12,203 to 12,240), 99 under the
   unchanged 12,339-byte budget.
 
-- **The native control reset reaches shadow roots (FLO-571, #221).**
+- **The native control reset reaches shadow roots (#221).**
   Native control defaults survived inside element shadow roots because
   document reset selectors cannot match shadow descendants. On main, a
   standalone Chromium audit of all 37 element families and ten extra
@@ -215,7 +214,7 @@ Search and form fields that behave.
 ### Internal
 
 - **The publish moves the next dist-tag to the version it just published, and
-  the check reads the tag against that version (FLO-1016, #217).**
+  the check reads the tag against that version (#217).**
   After a stable publish npm moves `latest` only, so `next` stayed on an
   older prerelease — `npm install material@next` installed a build older than
   `material` — and `scripts/check-dist-tags.ts` compared `next` against
