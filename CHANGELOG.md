@@ -88,11 +88,14 @@ Server rendering and tooling fixes.
   41652698059, job 125975279105; the 3.4.2 column is its release job, run
   41634352299, job 125912023077. The tarball is 95 bytes compressed and 316
   bytes unpacked larger in the same 1,578 files, all-js is 85 raw, 28 gzip
-  and 110 brotli larger, and the full stylesheet and the SSR bundle are
-  byte-identical. This release changes only the CHANGELOG and the version
-  field; no ceiling moved, the 886,000-byte package budget has 9,388 bytes
-  of headroom, every budget check passes and `SIZES.md` matches its
-  measurement.
+  and 110 brotli larger, and the SSR bundle is byte-identical. The base's
+  full stylesheet is byte-identical to 3.4.2's; on the release head the
+  built sheet's version banner carries v3.4.3, which leaves raw and gzip
+  unchanged at 833,834 and 63,565 and moves brotli from 44,522 to 44,567
+  (run 41653825314, job 125979102855). This release changes only the
+  CHANGELOG and the version field; no ceiling moved, the 886,000-byte
+  package budget has 9,388 bytes of headroom, every budget check passes and
+  `SIZES.md` matches its measurement.
 
 ## [3.4.2] - 2026-11-03
 
