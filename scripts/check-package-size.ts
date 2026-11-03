@@ -209,11 +209,12 @@ try {
   // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
   // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
   // The readable, comment-stripped dist (build-modules.ts strips formatting after
-  // the prunes): the fixture packs 849,002 where the same tree packed 881,592, so
-  // with today's local-to-CI offset (1,207) CI lands near 850,209. Rounded up to
-  // the next 1,000, 851,000. This job self-checks that estimate: a real figure
-  // above the ceiling fails here, and the margin is reviewed against the number
-  // this line prints.
+  // the prunes): the package job measures 850,951 B packed where main packed
+  // 882,799 (the local fixture packs 849,002; the tarball's local-to-CI offset
+  // depends on the packer). 851,000 left 49 B, so the ceiling carries about 1 kB
+  // over the measurement, as 883,000 did over 881,568 when it was set: 852,000.
+  // This job self-checks it: a real figure above the ceiling fails here, and the
+  // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
