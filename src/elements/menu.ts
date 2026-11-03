@@ -111,13 +111,28 @@ const findAnchor = (host: HTMLElement, anchor: MenuAnchor | undefined): HTMLElem
   return (root.getElementById?.(anchor) ?? document.getElementById(anchor)) as HTMLElement | null;
 };
 
+/**
+ * Drops the reference the opener wiring writes. This element renders its
+ * surface inside its own shadow root, and an id from outside that root does not
+ * reach into it, so the reference would dangle. What the opener opens is still
+ * declared: `aria-haspopup` and `aria-expanded` stay, as the toolbar's overflow
+ * button declares them itself. A factory menu moves its surface into the
+ * document when it opens, where the id resolves, and keeps the reference.
+ */
+const unlinkSurface = (c: MenuComponent): void => {
+  c.getOpener().removeAttribute("aria-controls");
+};
+
 /** Points the menu at its anchor, or at the stand-in while there is none. */
 const setAnchor = (c: MenuComponent, anchor: MenuAnchor | undefined): void => {
   const host = hosts.get(c);
   const standIn = standIns.get(c);
   if (!host || !standIn) return;
   const element = findAnchor(host, anchor) ?? standIn;
-  if (c.getOpener() !== element) c.setOpener(element);
+  if (c.getOpener() !== element) {
+    c.setOpener(element);
+    unlinkSurface(c);
+  }
 };
 
 /** An anchor given as an id may be rendered after the menu: looked up again before opening. */
@@ -132,7 +147,15 @@ const create = (config: MenuElementConfig): MenuElementComponent => {
   const standIn = document.createElement("span");
   // A property kept over a recreation may be null: the attribute then decides
   const opener = findAnchor(host, anchor) ?? findAnchor(host, host.getAttribute("anchor")) ?? standIn;
-  const menu = createMenu({ ...rest, items: rest.items ?? [], opener, closeOnSelect: !noCloseOnSelect, layer: "top" });
+  const menu = createMenu({
+    ...rest,
+    items: rest.items ?? [],
+    opener,
+    closeOnSelect: !noCloseOnSelect,
+    layer: "top",
+  });
+  // The surface this factory builds goes into the element's shadow root
+  unlinkSurface(menu);
   hosts.set(menu, host);
   standIns.set(menu, standIn);
   applied.set(menu, JSON.stringify(menu.getItems()));
