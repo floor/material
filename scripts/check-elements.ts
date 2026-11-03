@@ -28,6 +28,7 @@ import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkFabPlacement } from "./check-fab-placement-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
+import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -5472,6 +5473,8 @@ try {
   await checkButtonIconPosition(page, check);
 
   await checkButtonToggle(page, check);
+
+  await checkButtonGroupPress(page, check);
 
   // The rows the roving rule must get right. Read in the same turn as
   // connect, before the browser's own slotchange microtask.

@@ -297,6 +297,7 @@ dialog.#{$component} {
     }
 
     &-close {
+        font: inherit;
         display: flex;
         align-items: center;
         justify-content: center;

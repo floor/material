@@ -242,9 +242,26 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_switch.scss).
     // A contained dialog's scrim is the container's box, so its overlay is
     // absolute inside it (styles/components/_dialog.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
+    // The size cleanup keeps every computed value and drops only declarations
+    // a later identical one already carried: the slider handle's second
+    // `pointer-events: none` and the disabled handle's colours that the later
+    // disabled rule sets (styles/components/_slider.scss), the tooltip's
+    // explicit 12px/16px that Body Small emits (styles/components/_tooltip.scss),
+    // and the `.mtrl-flex`/`.mtrl-inline-flex`/`.mtrl-truncate` copies the full
+    // composition emitted twice (styles/utilities/_visibility.scss,
+    // styles/utilities/_typography.scss; main.scss composes each once).
+    // The generated themes take success, warning and info from the shared
+    // status roles and the error family from their own scheme, so no error
+    // fallback is emitted there; autumn's own status values, shadowed by its
+    // include, are gone too (styles/themes/_base-theme.scss,
+    // scripts/generate-themes.ts).
+    // Native controls carry their measured font/padding defaults in their own
+    // component sheets, so those defaults also reach element shadow roots.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5bbc7266eb422632d331305aa31d247ea73897a3aa04f118f2f7279ec0792428");
-    expect(css.length).toBe(540227);
+      .toBe("bc6a7a6a81c980a0ed648e79aff4f9d1a7d117f3a2233cc54bbe940b3c6bae83");
+    expect(css.length).toBe(542077);
   });
 
   test("today's sheets still resolve to the fixture", () => {

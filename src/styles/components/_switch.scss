@@ -71,6 +71,7 @@ $component: '#{base.$prefix}-switch';
 
   // Input (visually hidden but accessible)
   &__input {
+    font: inherit;
     position: absolute;
     opacity: 0;
     width: 100%;

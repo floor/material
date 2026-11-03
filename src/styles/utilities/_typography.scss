@@ -104,9 +104,15 @@ $prefix: base.$prefix;
   -moz-osx-font-smoothing: auto;
 }
 
-// Text overflow
-.#{$prefix}-truncate {
-  @include m.truncate;
+// Text overflow. The full stylesheet also composes base/typography, whose
+// `.mtrl-truncate` is identical and later; main.scss sets this so the full
+// sheet carries one copy, while `material/styles/utilities` keeps its own.
+$compose-full: false !default;
+
+@if not $compose-full {
+  .#{$prefix}-truncate {
+    @include m.truncate;
+  }
 }
 
 .#{$prefix}-overflow-ellipsis {
