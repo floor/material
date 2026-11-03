@@ -9,7 +9,7 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at feb0cc57 on 2026-11-03. Regenerate with
+Measured at 9c067054 on 2026-11-03. Regenerate with
 `bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
 these rows drift from a fresh measurement.
 
@@ -41,10 +41,10 @@ these rows drift from a fresh measurement.
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
 | loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.2 KB | 9.4 KB | +6.3 KB | +16.8 KB |
+| split-button | 27.5 KB | 9.5 KB | +6.4 KB | +16.8 KB |
 | radios | 15.0 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.4 KB | 10.9 KB | +7.8 KB |  |
-| select | 67.8 KB | 20.5 KB | +17.5 KB | +2.1 KB |
+| select | 41.9 KB | 13.2 KB | +10.1 KB | +10.4 KB |
 | slider | 33.7 KB | 11.8 KB | +8.8 KB |  |
 | snackbar | 36.2 KB | 11.9 KB | +8.9 KB | +6.9 KB |
 | switch | 18.6 KB | 6.2 KB | +3.1 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.9 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 392.6 KB | 122.7 KB | +119.7 KB | +2.1 KB |
+| all | 393.3 KB | 122.9 KB | +119.9 KB | +2.1 KB |
 <!-- /size-table -->
