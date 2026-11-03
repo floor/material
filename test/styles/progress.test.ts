@@ -77,8 +77,8 @@ describe('progress stylesheet', () => {
     expect(arms).toContain('.mtrl-progress--linear .mtrl-progress__label {\n  right: 0;\n');
     expect(arms).toContain(
       '.mtrl-progress--linear:where(.mtrl-rtl, [dir=rtl]) .mtrl-progress__label, ' +
-        ':where(.mtrl-rtl) .mtrl-progress--linear .mtrl-progress__label, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-progress--linear .mtrl-progress__label, ' +
+        ':where(.mtrl-rtl) .mtrl-progress--linear:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-progress__label, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-progress--linear:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-progress__label, ' +
         "[dir=rtl] .mtrl-progress--linear:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-progress__label {\n  right: auto;\n  left: 0;\n}",
     );
     // No logical side inset is left for a bundler to lower into a :lang() arm.

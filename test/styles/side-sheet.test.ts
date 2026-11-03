@@ -116,16 +116,16 @@ describe('side sheet stylesheet', () => {
     // writes the mirrored inner edge, under every marker form.
     expect(arms).toContain(
       '.mtrl-side-sheet--modal.mtrl-side-sheet--end:where(.mtrl-rtl, [dir=rtl]) .mtrl-side-sheet__container, ' +
-        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container, ' +
+        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container, ' +
         '[dir=rtl] .mtrl-side-sheet--modal.mtrl-side-sheet--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container {' +
         '\n  border-top-left-radius: 0;\n  border-bottom-left-radius: 0;' +
         `\n  border-top-right-radius: ${radius};\n  border-bottom-right-radius: ${radius};\n}`,
     );
     expect(arms).toContain(
       '.mtrl-side-sheet--modal.mtrl-side-sheet--start:where(.mtrl-rtl, [dir=rtl]) .mtrl-side-sheet__container, ' +
-        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container, ' +
+        ':where(.mtrl-rtl) .mtrl-side-sheet--modal.mtrl-side-sheet--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container, ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-side-sheet--modal.mtrl-side-sheet--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container, ' +
         '[dir=rtl] .mtrl-side-sheet--modal.mtrl-side-sheet--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-side-sheet__container {' +
         '\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;' +
         `\n  border-top-left-radius: ${radius};\n  border-bottom-left-radius: ${radius};\n}`,

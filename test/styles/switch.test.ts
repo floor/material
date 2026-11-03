@@ -50,13 +50,13 @@ describe('the switch handle moves on the start edge in every artefact', () => {
   });
 
   test('one arm per subject mirrors both, the base side reset to auto', () => {
-    // The marker may sit on the switch's own root or an ancestor; the
-    // attribute form is cut by a nearer ltr subtree.
+    // The marker may sit on the switch's own root or an ancestor; every arm
+    // is cut by a nearer ltr subtree.
     for (const subject of ['__track::after', '__thumb']) {
       const selector =
         `.mtrl-switch:where(.mtrl-rtl, [dir=rtl]) .mtrl-switch${subject}, ` +
-        `:where(.mtrl-rtl) .mtrl-switch .mtrl-switch${subject}, ` +
-        `:where(:host(.mtrl-rtl)) .mtrl-switch .mtrl-switch${subject}, ` +
+        `:where(.mtrl-rtl) .mtrl-switch:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-switch${subject}, ` +
+        `:where(:host(.mtrl-rtl)) .mtrl-switch:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-switch${subject}, ` +
         `[dir=rtl] .mtrl-switch:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-switch${subject}`;
       const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       expect(arms).toMatch(new RegExp(`${escaped} \\{[^}]*left: auto;[^}]*right: var\\(--mtrl-switch-(thumb|layer)-start`));

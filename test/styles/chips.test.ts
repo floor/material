@@ -151,7 +151,7 @@ describe('the secondary action mirrors in every artefact', () => {
         '\n}',
     );
     expect(arms).toContain(
-      ':where(.mtrl-rtl) .mtrl-chip__remove::before, :where(:host(.mtrl-rtl)) .mtrl-chip__remove::before, [dir=rtl] .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(.mtrl-rtl) .mtrl-chip__trailing-action::before, :where(:host(.mtrl-rtl)) .mtrl-chip__trailing-action::before, [dir=rtl] .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)) {' +
+      ':where(.mtrl-rtl) .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(:host(.mtrl-rtl)) .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), [dir=rtl] .mtrl-chip__remove::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(.mtrl-rtl) .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), :where(:host(.mtrl-rtl)) .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)), [dir=rtl] .mtrl-chip__trailing-action::before:not(:where(.mtrl-ltr, .mtrl-ltr *)) {' +
         '\n  right: auto;' +
         '\n  left: 0;' +
         '\n}',

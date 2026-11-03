@@ -197,17 +197,18 @@ describe('split button stylesheet', () => {
     expect(value('.mtrl-split-button .mtrl-split-button__leading', 'border-radius', armsCss)).toBe(leading);
     expect(value('.mtrl-split-button .mtrl-split-button__trailing', 'border-radius', armsCss)).toBe(trailing);
     // An ancestor direction reaches the parts through the class the runtime
-    // reflects, the shadow tree's host class, and a cut attribute fallback.
+    // reflects, the shadow tree's host class, and a cut attribute fallback;
+    // every form is cut at a nearer ltr subtree.
     for (const member of [
-      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__leading',
-      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__leading',
+      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__leading:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__leading:not(:where(.mtrl-ltr, .mtrl-ltr *))',
       '[dir=rtl] .mtrl-split-button .mtrl-split-button__leading:not(:where(.mtrl-ltr, .mtrl-ltr *))',
     ]) {
       expect(value(member, 'border-radius', armsCss)).toBe(trailing);
     }
     for (const member of [
-      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__trailing',
-      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__trailing',
+      ':where(.mtrl-rtl) .mtrl-split-button .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *))',
+      ':where(:host(.mtrl-rtl)) .mtrl-split-button .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *))',
       '[dir=rtl] .mtrl-split-button .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *))',
     ]) {
       expect(value(member, 'border-radius', armsCss)).toBe(leading);

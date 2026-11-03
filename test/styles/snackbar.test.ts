@@ -93,15 +93,15 @@ describe('snackbar stylesheet', () => {
     expect(arms).toContain('.mtrl-snackbar--start {\n  left: 16px;\n}');
     expect(arms).toContain('.mtrl-snackbar--end {\n  right: 16px;\n}');
     // One prelude, every marker form: the snackbar's own root, an ancestor's
-    // class, the shadow host's class, and the attribute cut by a nearer ltr.
+    // class, the shadow host's class, and every one cut by a nearer ltr.
     expect(arms).toContain(
-      '.mtrl-snackbar--start:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--start, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--start, ' +
+      '.mtrl-snackbar--start:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
         "[dir=rtl] .mtrl-snackbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  left: auto;\n  right: 16px;\n}",
     );
     expect(arms).toContain(
-      '.mtrl-snackbar--end:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--end, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--end, ' +
+      '.mtrl-snackbar--end:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-snackbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-snackbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
         "[dir=rtl] .mtrl-snackbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  right: auto;\n  left: 16px;\n}",
     );
     // No logical side inset is left for a bundler to lower into a :lang() arm.

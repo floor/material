@@ -64,27 +64,33 @@ describe('the direction switch', () => {
 
   test('the arms form is the physical side and the arm the hand series wrote', () => {
     expect(compile(SOURCES.start, true)).toBe(
-      '.a{left:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{left:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:16px}',
     );
     expect(compile(SOURCES.end, true)).toBe(
-      '.a{right:4px}:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{right:4px}:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:auto;left:4px}',
     );
     expect(compile(SOURCES.sides, true)).toBe(
-      '.a{left:0;right:auto}:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{left:0;right:auto}:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:0}',
     );
     expect(compile(SOURCES.cornersFull, true)).toBe(
-      '.a{border-radius:4px 8px 4px 8px}:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{border-radius:4px 8px 4px 8px}:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){border-radius:8px 4px 8px 4px}',
     );
     expect(compile(SOURCES.cornersPart, true)).toBe(
-      '.a{border-top-left-radius:0;border-bottom-left-radius:0}:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{border-top-left-radius:0;border-bottom-left-radius:0}:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){border-top-right-radius:0;border-bottom-right-radius:0}',
     );
     expect(compile(SOURCES.arms, true)).toBe(
-      '.a{left:1px}:where(.mtrl-rtl) .a,:where(:host(.mtrl-rtl)) .a,' +
+      '.a{left:1px}:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
       '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:1px}',
     );
     expect(compile(SOURCES.selfArms, true)).toBe(
@@ -94,17 +100,21 @@ describe('the direction switch', () => {
     // selector arm beside it, named at the block that holds the subject.
     expect(compile(SOURCES.deferred, true)).toBe(
       '.a{left:16px;left:0;right:auto}' +
-      ':where(.mtrl-rtl) .b,:where(:host(.mtrl-rtl)) .b,[dir=rtl] .b:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:16px;left:auto}',
+      ':where(.mtrl-rtl) .b:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .b:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      '[dir=rtl] .b:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:16px;left:auto}',
     );
     expect(compile(SOURCES.transition, true)).toBe('.a{transition:opacity 100ms linear,left 200ms ease,right 200ms ease}');
     // ... and the arms form flips that base under a self arm.
     expect(compile(SOURCES.flipStart, true)).toBe(
-      '.a{left:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,' +
-      ':where(:host(.mtrl-rtl)) .a,[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:16px}',
+      '.a{left:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){left:auto;right:16px}',
     );
     expect(compile(SOURCES.flipEnd, true)).toBe(
-      '.a{right:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a,' +
-      ':where(:host(.mtrl-rtl)) .a,[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:auto;left:16px}',
+      '.a{right:16px}.a:where(.mtrl-rtl,[dir=rtl]),:where(.mtrl-rtl) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      ':where(:host(.mtrl-rtl)) .a:not(:where(.mtrl-ltr,.mtrl-ltr *)),' +
+      '[dir=rtl] .a:not(:where(.mtrl-ltr,.mtrl-ltr *)){right:auto;left:16px}',
     );
     // The aggregated arm keeps the prelude the site wrote, markers and subject
     // list included, where the wrappers' own shapes do not fit.

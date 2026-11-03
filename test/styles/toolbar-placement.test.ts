@@ -32,15 +32,15 @@ describe('a placed toolbar docks on its inline edge', () => {
     expect(arms).toContain('.mtrl-toolbar--start {\n  left: var(--mtrl-toolbar-margin);\n}');
     expect(arms).toContain('.mtrl-toolbar--end {\n  right: var(--mtrl-toolbar-margin);\n}');
     // One prelude, every marker form: the toolbar's own root, an ancestor's
-    // class, the shadow host's class, and the attribute cut by a nearer ltr.
+    // class, the shadow host's class, and every one cut by a nearer ltr.
     expect(arms).toContain(
-      '.mtrl-toolbar--start:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-toolbar--start, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-toolbar--start, ' +
+      '.mtrl-toolbar--start:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-toolbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-toolbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
         "[dir=rtl] .mtrl-toolbar--start:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  left: auto;\n  right: var(--mtrl-toolbar-margin);\n}",
     );
     expect(arms).toContain(
-      '.mtrl-toolbar--end:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-toolbar--end, ' +
-        ':where(:host(.mtrl-rtl)) .mtrl-toolbar--end, ' +
+      '.mtrl-toolbar--end:where(.mtrl-rtl, [dir=rtl]), :where(.mtrl-rtl) .mtrl-toolbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
+        ':where(:host(.mtrl-rtl)) .mtrl-toolbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)), ' +
         "[dir=rtl] .mtrl-toolbar--end:not(:where(.mtrl-ltr, .mtrl-ltr *)) {\n  right: auto;\n  left: var(--mtrl-toolbar-margin);\n}",
     );
     // No logical side inset is left for a bundler to lower into a :lang() arm.
