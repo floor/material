@@ -31,6 +31,34 @@ test("the minified adapter emit keeps its imports and their order", () => {
   expect(minifyAdapterModule(EMIT)).toBe(output);
 });
 
+test("the minified emit keeps the adapters' runtime NODE_ENV check", () => {
+  // The transpiler defines process.env.NODE_ENV as "development" by default;
+  // without the build's self-define this compiles to `true`, and a production
+  // server render warns as if it were development.
+  const source = `globalThis[Symbol.for("adapter-minify-probe")] = (() => {
+    try {
+      return typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production";
+    } catch {
+      return false;
+    }
+  })();
+`;
+  const run = () => {
+    new Function(minifyAdapterModule(source))();
+    return (globalThis as unknown as Record<symbol, unknown>)[Symbol.for("adapter-minify-probe")];
+  };
+  const before = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = "production";
+    expect(run()).toBe(false);
+    process.env.NODE_ENV = "development";
+    expect(run()).toBe(true);
+  } finally {
+    if (before === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = before;
+  }
+});
+
 test("minification keeps the wrapper's behaviour and its comment-like data", () => {
   // The adapters have no exports: they register on a global and are imported
   // for that side effect. The probe fixture does the same, so the minified

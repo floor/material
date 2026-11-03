@@ -26,9 +26,15 @@ export function printRuntimeModule(filename: string, text: string): string {
 // (the same lag ci-commands.test.ts works around for Bun.YAML): the split
 // minifyWhitespace/minifyIdentifiers options are accepted and ignored, and
 // only `minify` shortens identifiers.
+//
+// The transpiler also substitutes `process.env.NODE_ENV` with "development"
+// unless told otherwise, which would compile the adapters' isDevelopment()
+// check to `true` and make every production server render warn. Defining the
+// expression to itself keeps the read at runtime, where it belongs.
 const adapterMinifier = new Bun.Transpiler({
   loader: "js",
   minify: true,
+  define: { "process.env.NODE_ENV": "process.env.NODE_ENV" },
 } as unknown as ConstructorParameters<typeof Bun.Transpiler>[0]);
 
 /**
