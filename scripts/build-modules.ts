@@ -211,6 +211,34 @@ function tokenNodes(file: ts.SourceFile): ts.Node[] {
   return tokens;
 }
 
+/** The tokens of a parsed module: JSDoc and zero-length tokens excluded. */
+function tokensOf(file: ts.SourceFile): string[] {
+  return tokenNodes(file).map((node) => node.getText(file)).filter((token) => token.length > 0);
+}
+
+/**
+ * Refuse two texts whose token streams differ: a fold (`process.env.NODE_ENV`
+ * turned into a literal), a rewritten literal or two joined tokens fails here,
+ * before the difference can reach a consumer.
+ */
+function assertTokenStreams(filename: string, before: string[], after: string[]): void {
+  const shared = Math.min(before.length, after.length);
+  for (let i = 0; i < shared; i += 1) {
+    if (before[i] !== after[i]) {
+      throw new Error(`${filename}: the strip changed token ${i + 1}: ${JSON.stringify(before[i])} -> ${JSON.stringify(after[i])}`);
+    }
+  }
+  if (before.length !== after.length) {
+    throw new Error(`${filename}: the strip changed the token count, ${before.length} -> ${after.length}`);
+  }
+}
+
+/** The strip's own guard, callable on any pair: the token stream must match token for token. */
+export function assertMatchingTokens(filename: string, before: string, after: string): void {
+  const parse = (text: string): ts.SourceFile => ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  assertTokenStreams(filename, tokensOf(parse(before)), tokensOf(parse(after)));
+}
+
 /**
  * Remove comments (except the ones a consumer's bundler and the licence need),
  * blank lines and indentation, and nothing else: no reprint, no constant fold,
@@ -298,18 +326,8 @@ export function stripModuleText(filename: string, text: string): string {
   const stripped = lines.length > 0 ? `${lines.join("\n")}\n` : "";
 
   const tokenPositions = tokenNodes(file).filter((node) => node.getText(file).length > 0);
-  const before = tokenPositions.map((node) => node.getText(file));
   const afterFile = ts.createSourceFile(filename, stripped, ts.ScriptTarget.Latest, true);
-  const after = tokenNodes(afterFile).map((node) => node.getText(afterFile)).filter((token) => token.length > 0);
-  const shared = Math.min(before.length, after.length);
-  for (let i = 0; i < shared; i += 1) {
-    if (before[i] !== after[i]) {
-      throw new Error(`${filename}: the strip changed token ${i + 1}: ${JSON.stringify(before[i])} -> ${JSON.stringify(after[i])}`);
-    }
-  }
-  if (before.length !== after.length) {
-    throw new Error(`${filename}: the strip changed the token count, ${before.length} -> ${after.length}`);
-  }
+  assertTokenStreams(filename, tokenPositions.map((node) => node.getText(file)), tokensOf(afterFile));
   const keptComments = (value: string): number => (value.match(/[@#]__PURE__|\/\*!|@license|@preserve/g) ?? []).length;
   if (keptComments(text) !== keptComments(stripped)) throw new Error(`${filename}: the strip dropped a kept comment`);
   const codeLines = new Set(tokenPositions.map((node) => file.getLineAndCharacterOfPosition(node.getStart(file)).line));

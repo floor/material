@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { stripShippedModules } from "../../scripts/build-modules";
+import { assertMatchingTokens, stripShippedModules } from "../../scripts/build-modules";
 
 /** A dist tree under a temporary directory, keyed by dist-relative path. */
 async function tree(files: Record<string, string>): Promise<string> {
@@ -73,6 +73,49 @@ test("prose comments go, the pure annotation and the licence banners stay", asyn
   expect(text).toContain("/*#__PURE__*/");
   expect(text).toContain("/*! material licence */");
   expect(text).toContain("/* @license MIT */");
+});
+
+test("the warn.js runtime check survives the strip", async () => {
+  // The reprinting strip folded this to `true`, so dev warnings ran in
+  // production. The shipped module must keep reading the environment.
+  const warn = [
+    "const isDevelopment = () => {",
+    "  try {",
+    '    return (typeof process !== "undefined" &&',
+    "      process.env != null &&",
+    '      process.env.NODE_ENV !== "production");',
+    "  }",
+    "  catch {",
+    "    return false;",
+    "  }",
+    "};",
+    "",
+  ].join("\n");
+  const directory = await tree({ "core/utils/warn.js": warn });
+  await stripShippedModules(directory);
+  const text = await readFile(join(directory, "core/utils/warn.js"), "utf8");
+  expect(text).toContain('process.env.NODE_ENV !== "production"');
+  expect(text).not.toContain("&& true");
+  expect(lines(text)).toEqual([
+    "const isDevelopment = () => {",
+    "try {",
+    'return (typeof process !== "undefined" &&',
+    "process.env != null &&",
+    'process.env.NODE_ENV !== "production");',
+    "}",
+    "catch {",
+    "return false;",
+    "}",
+    "};",
+  ]);
+});
+
+test("the token check refuses a folded NODE_ENV read", () => {
+  const original = 'const isDevelopment = () => process.env.NODE_ENV !== "production";\n';
+  const folded = "const isDevelopment = () => true;\n";
+  expect(() => assertMatchingTokens("core/utils/warn.js", original, folded)).toThrow(/changed token/);
+  // The unchanged text passes the same guard.
+  expect(() => assertMatchingTokens("core/utils/warn.js", original, original)).not.toThrow();
 });
 
 test("a regex, a template literal and a division are left alone", async () => {
