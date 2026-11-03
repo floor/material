@@ -5,7 +5,7 @@
 // activated, so the caller can open whatever it likes: the guidelines allow
 // other surfaces, a menu is only the usual one.
 //
-// The menu itself is a chunk: the first open loads it (menu-on-demand.ts).
+// The menu itself is a chunk: the first open loads it (menu/on-demand.ts).
 // Until it arrives the button's stand-in answers the menu's API, so its own
 // state, ARIA and events are still there when expand() returns.
 
@@ -14,7 +14,7 @@ import { MENU } from "../../menu/inner";
 import type { ElementComponent } from "../../../core/compose/component";
 import { ButtonsFeature, MenuFeature, SplitButtonConfig } from "../types";
 import { SPLIT_BUTTON_DEFAULTS } from "../constants";
-import { createOnDemandMenu } from "./menu-on-demand";
+import { createOnDemandMenu } from "../../menu/on-demand";
 
 /**
  * Adds a menu anchored to the trailing button
