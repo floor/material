@@ -1,6 +1,6 @@
 // test/build/ci-static-step.test.ts
 //
-// CI's static job runs its five checks side by side and prints each one's output
+// CI's static job runs its six checks side by side and prints each one's output
 // afterwards. Run under the shell Actions uses (bash -e -o pipefail), a failing
 // check used to end its background shell before its status was written, and the
 // step then stopped before printing anything: the log said "exit code 1" and
@@ -10,7 +10,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const SCRIPTS = ["ts:check", "lint", "test:naming", "test:types", "ids:check"];
+const SCRIPTS = ["ts:check", "lint", "test:naming", "test:types", "ids:check", "public-names:check"];
 interface Step { run?: string }
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
 const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as { jobs: { static: { steps: Step[] } } };
@@ -38,7 +38,7 @@ source "${join(directory, "step.sh")}"
 };
 
 describe("CI's static step", () => {
-  test("runs the five static checks", () => {
+  test("runs the six static checks", () => {
     expect(step).toBeDefined();
     expect(step!.run).toContain(`for script in ${SCRIPTS.join(" ")}; do`);
   });
