@@ -17,6 +17,45 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.5.1] - 2026-11-03
+
+Server rendering keeps the content a Suspense boundary resolved.
+
+### Fixed
+
+- **A server-rendered React tree keeps the content its Suspense boundaries
+  resolved (#192).**
+  The React bridge rendered each host with `renderToStaticMarkup` in a retry
+  loop that advanced only on a thrown suspend. A boundary inside the host
+  renders its fallback in that pass without throwing, so the declarative
+  shadow root shipped chrome built from the fallback while the light DOM
+  carried the resolved children: a button with an empty fallback shipped no
+  label span and no slot, a tab inside a boundary was missing from its
+  tablist, and the same held for a boundary wrapped in an ordinary component
+  and for a thenable whose `then` never dispatches through this realm's
+  `Promise.prototype` — an object carrying its own `then`, or a `Promise`
+  from another realm. The bridge now reads the renderer's own pending
+  report. A scoped pass-through counter on `Promise.prototype.then`, active
+  only for the nested static pass, reports a suspend the boundary caught;
+  when the count reads zero, a discarded `renderToString` pass reports
+  through the marker the string renderer writes for a boundary it left
+  pending, which speaks for any thenable in any realm. A boundary that
+  caught an error writes the same marker, so a discarded streaming render
+  (`renderToReadableStream`, or `renderToPipeableStream` on React 18)
+  settles an error through `onError` and the host's completion through
+  `allReady` on React 19 or `onAllReady` on React 18: an error ships once
+  every boundary in the host has finished, instead of re-rendering to the
+  retry cap. Both signals re-render the host on the existing backoff, a
+  boundary that never resolves still ships its fallback in the root at the
+  cap, and a host with no pending boundary keeps one static pass and one
+  string pass. The Vue and Solid bridges are untouched and no client byte
+  moves. The server-only React entry grows from 9,927 to 15,572 bytes
+  packed, and the package tarball from 883,675 to 884,987 bytes compressed
+  — 5,086,363 to 5,092,008 bytes unpacked, 1,577 files — inside the
+  tarball budget. Both package figures come from CI: push run 41693079259,
+  package job 126116811372, against 3.5.0's own push run 41679269958,
+  package job 126068766177.
+
 ## [3.5.0] - 2026-11-03
 
 Lighter right-to-left CSS, and a smaller Sass package.
@@ -5578,7 +5617,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.5.1...HEAD
+[3.5.1]: https://github.com/floor/material/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/floor/material/compare/v3.4.3...v3.5.0
 [3.4.3]: https://github.com/floor/material/compare/v3.4.2...v3.4.3
 [3.4.2]: https://github.com/floor/material/compare/v3.4.1...v3.4.2
