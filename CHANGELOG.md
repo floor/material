@@ -62,9 +62,8 @@ Search and form fields that behave.
   49 gzip and 54 brotli fewer — while all-js is byte-identical and
   `consumer:check` passes its 120 full and selective comparisons. The Sass
   sheet's own removal is 2,055 bytes against the shipped bundle's 1,983
-  because the bundle's minifier writes the removed values shorter. Its
-  re-pin after #237 and a fresh compile is Argus's re-check before the merge
-  line.
+  because the bundle's minifier writes the removed values shorter. Its pin
+  was re-taken after #237 merged and a fresh compile.
 
 ### Fixed
 
