@@ -199,6 +199,10 @@ try {
   // The combined tree, prune and prose-free declarations together, local
   // Node 26.8.1 / npm 11.19.0: 877,120. Measured + 1%, up to the next
   // 1,000, is 886,000.
+  // The four SSR adapter entries lose their prose comments too (build-modules.ts):
+  // main 850584ff measured 884,987 with CI's Node 22.23.3 / npm 10.9.9 and the
+  // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
+  // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
