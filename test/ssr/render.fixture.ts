@@ -6,6 +6,7 @@ import { cases } from "../../scripts/fixtures/preupgrade-cases";
 import { elements, cardElement, buttonElement } from "../../src/elements";
 import { registerStyles, RENDERED_HOST_ATTRIBUTE, styleText } from "../../src/elements/styles";
 import { SHADOW_BASE_STYLES, hostStyleText, type ElementSpec, type ElementComponent } from "../../src/elements/define";
+import { pruneStyles } from "../../src/ssr/prune-styles";
 import { configureHTML } from "../../src/core/dom/html";
 const { renderElement } = await import("../../src/ssr");
 
@@ -86,10 +87,16 @@ test("host and child snapshots precede setup mutations", () => {
 });
 test("styles use registry overrides and browser order", () => {
   const old = styleText("button")!;
-  registerStyles({ button: ".override{}" });
+  // A class the default render carries: an override that cannot match is
+  // dropped with the rules it replaces, which is the pruner's contract.
+  registerStyles({ button: ".mtrl-button{outline:0}" });
   try {
     const html = renderElement("m-button");
-    expect(html).toContain(`<style>${hostStyleText(buttonElement.spec)}\n${styleText("ripple")}\n${styleText("progress")}\n.override{}</style>`);
+    const sheet = /<style>([^]*)<\/style>/.exec(html)![1];
+    expect(sheet.startsWith(hostStyleText(buttonElement.spec)), "host sheet first").toBe(true);
+    expect(sheet.indexOf("@keyframes mtrl-ripple-expand"), "ripple before the registry override").toBeLessThan(
+      sheet.indexOf(".mtrl-button{outline:0}"));
+    expect(sheet.endsWith(".mtrl-button{outline:0}"), "the override is the button sheet").toBe(true);
     expect(html.match(/<style>/g)).toHaveLength(1);
     const links = renderElement("m-button", {}, "", { styles: "link", cssBase: "/css/" });
     expect([...links.matchAll(/href="([^"]+)"/g)].map(m => m[1])).toEqual([
@@ -159,7 +166,17 @@ test("eligible link and inline sequences match browser adoption names", () => {
     expect(urls, spec.name).toEqual([`hosts/${spec.name}`, ...names].map(name => `/css/${name}.css`));
     const inline = renderElement(`m-${spec.name}`);
     expect(inline, spec.name).toContain(` ${RENDERED_HOST_ATTRIBUTE}=""`);
-    expect(inline, spec.name).toContain(`<style>${[styleText(`host:${spec.name}`) ?? hostStyleText(spec), ...names.map(styleText)].join("\n")}</style>`);
+    const full = [styleText(`host:${spec.name}`) ?? hostStyleText(spec), ...names.map(styleText)].join("\n");
+    const sheet = /<style>([^]*)<\/style>/.exec(inline)![1];
+    // The inline sheet is the joined sources in adoption order, without the
+    // rules the emitted markup cannot match. The host sheet is never pruned:
+    // its selectors carry `:host` and `:not(`.
+    const present = new Set<string>();
+    for (const node of Array.from(parsed(inline).querySelector("template")!.content.querySelectorAll("*"))) {
+      for (const name of Array.from((node as Element).classList)) present.add(name);
+    }
+    expect(sheet, spec.name).toBe(pruneStyles(full, present));
+    expect(sheet.startsWith(hostStyleText(spec)), spec.name).toBe(true);
   }
 });
 test("missing registered styles fail clearly", () => {

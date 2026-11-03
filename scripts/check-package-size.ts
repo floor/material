@@ -99,10 +99,11 @@ try {
   // What a server-rendered page weighs, by style mode. No other check asserts it.
   // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
   // scenario whose size moves most with the number of elements.
-  // - inline (the default): each root carries its whole CSS as text in a <style>:
-  //   the host rules, the ripple, the element's stylesheet and its dependencies'
-  //   (16,345 B for a button, 11,383 for an icon button, 12,277 for a chip set).
-  //   Nothing is shared between roots, so the raw size is the sum over the roots.
+  // - inline (the default): each root carries the CSS its markup can match as
+  //   text in a <style>: the host rules, the ripple, the element's stylesheet
+  //   and its dependencies' (4,507 B for a button, 5,801 for an icon button,
+  //   6,159 for a chip set; a select, the largest root, 16,402). Nothing is
+  //   shared between roots, so the raw size is the sum over the roots.
   // - link: each root carries one <link> per stylesheet and no CSS text.
   // A ceiling fails when a root's CSS grows, or when link mode starts to carry CSS.
   // A floor fails when the page shrinks by more than the headroom: deduplication
@@ -128,6 +129,10 @@ try {
       // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
       // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
       // follow the measurement.
+      // The inline sheet drops the rules the rendered markup cannot match
+      // (src/ssr/prune-styles.ts): 253,639 raw, 5,325 gzip, CI's package job on
+      // this branch. Measured plus 1% or 100, rounded up to 50, is 256,200 raw
+      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200.
       inline: { options: {}, ...SSR_PAGE.inline },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion

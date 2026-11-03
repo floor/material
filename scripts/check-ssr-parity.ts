@@ -87,7 +87,7 @@ try {
     const urls = [...linked.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
     assert.deepEqual(urls, fallback ? [] : order.names.map(name => `/css/${name.replace("host:", "hosts/")}.css`), `${fixture.element}: link adoption order`);
     assert.deepEqual(order.sources, order.adopted, `${fixture.element}: inline source/adoption order`);
-    if (!fallback) assert.equal(ssr["host/shadow/css"], order.adopted.join("\n"), `${fixture.element}: inline/adopted CSS`);
+    if (!fallback) assert.equal(ssr["host/shadow/css"], order.expected, `${fixture.element}: inline sheet is the pruned join`);
     await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
     await page.waitForTimeout(400);
     const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);

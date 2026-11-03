@@ -40,7 +40,7 @@ export const SSR_ENTRY = { raw: 311_000, gzip: 113_000 } as const;
 
 /** check-package-size.ts: a server-rendered page of 44 roots, [floor, ceiling]. */
 export const SSR_PAGE = {
-  inline: { raw: [693_900, 707_200], gzip: [11_050, 11_300] },
+  inline: { raw: [251_100, 256_200], gzip: [5_200, 5_450] },
   link: { raw: [42_300, 43_200], gzip: [900, 1_150] },
 } as const;
 

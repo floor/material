@@ -36,6 +36,7 @@ const engines = [
 ];
 for (const engine of engines) {
   await run("security", engine);
+  await run("prune", engine);
   await run("upgrade", engine);
   await run("fallback", engine);
 }
