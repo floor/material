@@ -2,14 +2,15 @@ import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
 import { readdir } from "node:fs/promises";
 
-/** Drop runtime prose without losing the annotations consumers need for tree shaking. */
+/** Drop runtime prose without losing the annotations consumers need for tree shaking, or a licence banner. */
 export function printRuntimeModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
   const comments = new Map<number, number>();
   function visit(node: ts.Node): void {
     for (const position of [node.pos, node.end]) {
       for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
-        if (!/[@#]__PURE__/.test(text.slice(range.pos, range.end))) comments.set(range.pos, range.end);
+        const comment = text.slice(range.pos, range.end);
+        if (!/[@#]__PURE__/.test(comment) && !comment.startsWith("/*!")) comments.set(range.pos, range.end);
       }
     }
     node.getChildren(file).forEach(visit);
@@ -19,6 +20,14 @@ export function printRuntimeModule(filename: string, text: string): string {
     text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
   }
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
+}
+
+/** What every shipped runtime module goes through: prose out, PURE annotations and licence banners in. */
+export function stripRuntimeComments(filename: string, text: string): string {
+  return text.includes("__PURE__") ? printRuntimeModule(filename, text)
+    : ts.createPrinter({ removeComments: true }).printFile(
+      ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
+    );
 }
 
 /**
@@ -79,7 +88,9 @@ export function buildModules(outdir: string) {
         ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), printDeclarationModule(filename, text));
       }
       if (filename.endsWith("/ssr/react.js") || filename.endsWith("/ssr/svelte.js") || filename.endsWith("/ssr/vue.js") || filename.endsWith("/ssr/solid.js")) {
-        ts.sys.writeFile(filename, text.replace('"./index"', '"./index.js"'));
+        // The adapters ship in the package like every other runtime module, so
+        // they get the same strip after the specifier rewrite.
+        ts.sys.writeFile(filename, stripRuntimeComments(filename, text.replace('"./index"', '"./index.js"')));
       }
       if (filename.endsWith("/ssr/react.d.ts") || filename.endsWith("/ssr/svelte.d.ts") || filename.endsWith("/ssr/vue.d.ts") || filename.endsWith("/ssr/solid.d.ts")) ts.sys.writeFile(filename, printDeclarationModule(filename, text));
       return;
@@ -114,10 +125,7 @@ export function buildModules(outdir: string) {
     }
     if (filename.endsWith(".js")) {
       // Avoid shipping API prose twice while keeping ESM readable for debugging.
-      text = text.includes("__PURE__") ? printRuntimeModule(filename, text)
-        : ts.createPrinter({ removeComments: true }).printFile(
-          ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
-        );
+      text = stripRuntimeComments(filename, text);
     }
     if (filename.endsWith(".d.ts")) {
       // Shipped declarations carry signatures, not prose: hovers and the
