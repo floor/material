@@ -1,6 +1,5 @@
 // src/components/dialog/features.ts (partial updated code)
 
-import { getOverlayConfig } from "./config";
 import {
   DialogConfig,
   DialogButton,
@@ -13,12 +12,10 @@ import {
 } from "./types";
 import type { ApiOptions } from "./api";
 import createButton from "../button";
-import { createDivider } from "../divider"; // Import the divider component
-import type { DividerComponent } from "../divider/types";
 import { addClass, removeClass } from "../../core/dom/classes";
 
 import { setHTML } from "../../core/dom/html";
-import { activeElementOf, deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
+import { deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
 import { hideFromTopLayer, onModalEscape, onTopLayerClose, showInTopLayer, type ModalEscape } from "../../core/dom/layer";
 const DIALOG_EVENTS = {
   OPEN: "open",
@@ -48,24 +45,9 @@ export const withStructure =
   const titleId = `${uid}-title`;
   const contentId = `${uid}-content`;
 
-  // Create the overlay element
-  const overlayConfig = getOverlayConfig();
-  const overlay = document.createElement(overlayConfig.tag || "div");
-
-  // Add overlay classes
+  // Create the overlay element, the scrim behind the surface
+  const overlay = document.createElement("div");
   overlay.classList.add(component.getClass("dialog__overlay"));
-
-  // Set overlay attributes safely
-  if (
-    overlayConfig.attributes &&
-    typeof overlayConfig.attributes === "object"
-  ) {
-    Object.entries(overlayConfig.attributes).forEach(([key, value]) => {
-      if (key && typeof key === "string" && value !== undefined) {
-        overlay.setAttribute(key, String(value));
-      }
-    });
-  }
 
   // Set custom z-index if provided
   if (config.zIndex) {
@@ -160,11 +142,12 @@ export const withStructure =
     return footer;
   };
 
+  // A divider is an <hr> the dialog's own stylesheet paints: _dialog.scss set
+  // its margin, border, height and colour already. Constructing a divider
+  // component for it put that component's API in every dialog, dividers or not
   const createDividerElement = () => {
-    const divider = createDivider({
-      variant: "full-width",
-      class: component.getClass("dialog__divider"),
-    });
+    const divider = document.createElement("hr");
+    divider.classList.add(component.getClass("dialog__divider"));
     return divider;
   };
 
@@ -208,21 +191,21 @@ export const withStructure =
   component.element.appendChild(header);
 
   // Create divider elements if configured
-  let headerDivider: DividerComponent | null = null;
-  let footerDivider: DividerComponent | null = null;
+  let headerDivider: HTMLElement | null = null;
+  let footerDivider: HTMLElement | null = null;
 
   if (config.divider) {
     // Add header divider (between header and content)
     headerDivider = createDividerElement();
-    headerDivider.element.classList.add(
+    headerDivider.classList.add(
       component.getClass("dialog__header-divider"),
     );
-    component.element.appendChild(headerDivider.element);
+    component.element.appendChild(headerDivider);
 
     // If footer exists, add footer divider (between content and footer)
     if (footer) {
       footerDivider = createDividerElement();
-      footerDivider.element.classList.add(
+      footerDivider.classList.add(
         component.getClass("dialog__footer-divider"),
       );
     }
@@ -233,7 +216,7 @@ export const withStructure =
 
   // Add footer divider before footer if it exists
   if (footerDivider) {
-    component.element.appendChild(footerDivider.element);
+    component.element.appendChild(footerDivider);
   }
 
   // Add footer to dialog if exists
@@ -288,16 +271,15 @@ export const withDivider =
         // Handle header divider
         if (show && !component.structure.headerDivider) {
           // Create and add header divider
-          const headerDivider = createDivider({
-            variant: "full-width",
-            class: `${component.getClass(
-              "dialog__divider",
-            )} ${component.getClass("dialog__header-divider")}`,
-          });
+          const headerDivider = document.createElement("hr");
+          headerDivider.classList.add(
+            component.getClass("dialog__divider"),
+            component.getClass("dialog__header-divider"),
+          );
 
           // Insert after header, before content
           component.element.insertBefore(
-            headerDivider.element,
+            headerDivider,
             component.structure.content,
           );
 
@@ -308,16 +290,15 @@ export const withDivider =
             component.structure.footer &&
             !component.structure.footerDivider
           ) {
-            const footerDivider = createDivider({
-              variant: "full-width",
-              class: `${component.getClass(
-                "dialog__divider",
-              )} ${component.getClass("dialog__footer-divider")}`,
-            });
+            const footerDivider = document.createElement("hr");
+            footerDivider.classList.add(
+              component.getClass("dialog__divider"),
+              component.getClass("dialog__footer-divider"),
+            );
 
             // Insert before footer
             component.element.insertBefore(
-              footerDivider.element,
+              footerDivider,
               component.structure.footer,
             );
 
@@ -326,13 +307,13 @@ export const withDivider =
         } else if (!show) {
           // Remove header divider if it exists
           if (component.structure.headerDivider) {
-            component.structure.headerDivider.element.remove();
+            component.structure.headerDivider.remove();
             component.structure.headerDivider = null;
           }
 
           // Remove footer divider if it exists
           if (component.structure.footerDivider) {
-            component.structure.footerDivider.element.remove();
+            component.structure.footerDivider.remove();
             component.structure.footerDivider = null;
           }
         }
@@ -458,6 +439,11 @@ export const withVisibility =
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
+  // `afteropen` is due once the open duration has run and the initial focus
+  // has landed, whichever comes second. With a short animationDuration under
+  // reduced motion the surface's visibility is still transitioning when the
+  // timer fires, so the event waits here for the focus that ends the wait.
+  let afterOpenWaiting = false;
 
   // How long the events after opening and closing wait, unless configured:
   // the stylesheet grows the surface over duration-long2 and closes it over
@@ -471,55 +457,49 @@ export const withVisibility =
   const scrim = top ? component.element : component.overlay;
 
   // Helper functions to handle focus trap
-  const focusableElements =
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
   let previouslyFocusedElement: HTMLElement | null = null;
   let mouseDownOnOverlay = false;
   /** Elements taken out of the page while the dialog is open */
   const inerted: HTMLElement[] = [];
   /** The body's own overflow, put back when the dialog closes */
   let scrollLock: string | null = null;
+  // The frame a pending initial focus waits on, and the request that asked for
+  // it. A close, or a later request, cancels the wait: one opening's focus must
+  // not arrive in the next one.
+  let focusFrame: number | undefined;
+  let focusView: Window | undefined;
+  let focusRequest = 0;
+  // The opening's initial focus is still waiting for its target to become
+  // visible: `afteropen` waits with it
+  let focusPending = false;
 
-  /**
-   * The elements a person can tab to inside the dialog, looked up when they
-   * press Tab rather than when the dialog opens, so buttons added later are
-   * part of the cycle.
-   */
-  const focusable = (): HTMLElement[] =>
-    (Array.from(
-      component.element.querySelectorAll(focusableElements)
-    ) as HTMLElement[]).filter(
-      (el) =>
-        !el.hasAttribute("disabled") &&
-        el.getAttribute("aria-hidden") !== "true" &&
-        (el.offsetWidth > 0 || el.offsetHeight > 0 || el === activeElementOf(el))
-    );
+  const cancelFocusFrame = (): void => {
+    // The count also tells a settle already running that it is no longer wanted
+    focusRequest += 1;
+    focusPending = false;
+    if (focusFrame !== undefined) {
+      focusView?.cancelAnimationFrame(focusFrame);
+      focusFrame = undefined;
+      focusView = undefined;
+    }
+  };
 
-  /**
-   * Tab cycles inside the dialog. The handler is kept here so it can be taken
-   * off again: the previous one was removed by name from an inner scope that
-   * never held it, so every open left another listener behind.
-   */
-  function handleTabKey(e: KeyboardEvent) {
-    if (e.key !== "Tab") return;
-    const elements = focusable();
-    if (elements.length === 0) {
-      // Nothing to move to: keep focus on the dialog itself
-      e.preventDefault();
-      component.element.focus();
+  const emitAfterOpen = (): void => {
+    afterOpenWaiting = false;
+    if (!opened || typeof component.emit !== "function") return;
+    component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
+  };
+
+  // The open duration has run: the event follows the initial focus when that
+  // is still waiting for the surface, and is emitted now otherwise
+  const afterOpenDue = (): void => {
+    afterOpenTimer = undefined;
+    if (focusPending) {
+      afterOpenWaiting = true;
       return;
     }
-    const first = elements[0];
-    const last = elements[elements.length - 1];
-    const active = activeElementOf(component.element);
-    if (e.shiftKey && (active === first || !component.element.contains(active))) {
-      last.focus();
-      e.preventDefault();
-    } else if (!e.shiftKey && active === last) {
-      first.focus();
-      e.preventDefault();
-    }
-  }
+    emitAfterOpen();
+  };
 
   /**
    * Everything outside the dialog is taken out of the page while it is open:
@@ -556,9 +536,96 @@ export const withVisibility =
     }
   };
 
-  // In the top layer the dialog may hold slotted content, which its own query
-  // does not see: Tab moves as the browser moves it, wrapped at the ends
+  // A contained dialog's scrim covers the container, so the container is its
+  // containing block while the overlay lives in it. It is scoped only when the
+  // container holds the dialog: a collapsed, smaller or hidden one keeps the
+  // page's scrim and its centring, which is what it had before. A static container is
+  // made positioned for that; a positioned one is left as it is. The
+  // container's own inline value (empty when it had none) goes back on close or
+  // destroy.
+  let containerPosition: string | null = null;
+
+  const unscopeScrim = (): void => {
+    removeClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
+    if (containerPosition === null) return;
+    component.structure.container.style.position = containerPosition;
+    containerPosition = null;
+  };
+
+  const scopeScrim = (): void => {
+    const container = component.structure.container;
+    if (top || container === document.body) return;
+
+    // Measure the dialog as it lays out inside the container: its width and
+    // height there are what the container has to hold, and a static container
+    // is a containing block for the absolute overlay only once it is positioned.
+    if (getComputedStyle(container).position === "static") {
+      containerPosition ??= container.style.position;
+      container.style.position = "relative";
+    }
+    addClass(component.overlay, `${component.getClass("dialog__overlay")}--contained`);
+
+    // A box with no height centres the dialog on its edge, above the page; a
+    // smaller or hidden one clips or hides it. All keep the page's scrim and
+    // centring instead, and the container is left untouched.
+    if (
+      !container.clientHeight ||
+      container.clientWidth < component.element.offsetWidth ||
+      container.clientHeight < component.element.offsetHeight
+    ) {
+      unscopeScrim();
+    }
+  };
+
+  // Tab moves as the browser moves it, wrapped at the ends: through slots to
+  // their content, which the dialog's own query did not see. The handler is
+  // kept here so it can be taken off again: the previous one was removed by
+  // name from an inner scope that never held it, so every open left another
+  // listener behind.
   const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
+
+  /**
+   * Focus the target once it can take the focus. Under prefers-reduced-motion
+   * the shared reset rewrites `transition-property`, and the overlay's
+   * visibility is left transitioning over the open duration: in the task the
+   * visible class lands in, the first control still computes
+   * `visibility: hidden`, so focus() on it leaves focus on the body. Under
+   * normal motion it is already visible and focus is immediate; under reduced
+   * motion it moves a frame after the surface is shown.
+   */
+  const focusWhenVisible = (target: HTMLElement): void => {
+    const view = target.ownerDocument.defaultView;
+    if (!view || typeof view.requestAnimationFrame !== "function") {
+      target.focus();
+      focusPending = false;
+      if (afterOpenWaiting) emitAfterOpen();
+      return;
+    }
+    // The newest request names the target: the one still waiting stands down
+    cancelFocusFrame();
+    const request = focusRequest;
+    const settle = (): void => {
+      focusFrame = undefined;
+      if (request !== focusRequest) return;
+      if (!opened || !target.isConnected) {
+        // Nothing will take the focus: the wait is over, and `afteropen`
+        // follows the opening's own timer
+        focusPending = false;
+        if (afterOpenWaiting) emitAfterOpen();
+        return;
+      }
+      if (view.getComputedStyle(target).visibility !== "hidden") {
+        target.focus();
+        focusPending = false;
+        if (afterOpenWaiting) emitAfterOpen();
+        return;
+      }
+      focusPending = true;
+      focusFrame = view.requestAnimationFrame(settle);
+      focusView = view;
+    };
+    settle();
+  };
 
   const trapFocus = () => {
     inertBackground();
@@ -567,17 +634,16 @@ export const withVisibility =
     // dialog itself when it has none (M3 dialog accessibility, "Initial focus")
     if (component.config.autofocus !== false) {
       const requested = component.element.querySelector("[autofocus]") as HTMLElement | null;
-      const target = requested || (top ? tabStops(component.element) : focusable())[0] || component.element;
-      target.focus();
+      const target = requested || tabStops(component.element)[0] || component.element;
+      focusWhenVisible(target);
     }
 
     if (component.config.trapFocus !== false) {
-      component.element.addEventListener("keydown", top ? handleWrap : handleTabKey);
+      component.element.addEventListener("keydown", handleWrap);
     }
   };
 
   const releaseFocus = () => {
-    component.element.removeEventListener("keydown", handleTabKey);
     component.element.removeEventListener("keydown", handleWrap);
     releaseBackground();
 
@@ -669,6 +735,7 @@ export const withVisibility =
   };
 
   // Setup initial state
+  scopeScrim();
   if (isOpen) {
     if (top) showModal();
     addClass(
@@ -711,6 +778,8 @@ export const withVisibility =
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
       clearTimeout(afterCloseTimer);
+      afterOpenWaiting = false;
+      focusPending = false;
 
       // In the top layer everything happens now: the dialog is styled in its
       // hidden state before it is made visible, which is what it animates from
@@ -723,9 +792,7 @@ export const withVisibility =
         component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
         // An `open` listener may have closed it again
         if (!opened) return;
-        afterOpenTimer = setTimeout(() => {
-          component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
-        }, openDuration);
+        afterOpenTimer = setTimeout(afterOpenDue, openDuration);
         return;
       }
 
@@ -740,6 +807,8 @@ export const withVisibility =
         const container = component.structure.container || document.body;
         container.appendChild(component.overlay);
       }
+      // A previous close put the container's position back: take it again
+      scopeScrim();
 
       // An open dialog can be dismissed: Escape and the scrim, from now
       setupEvents();
@@ -767,9 +836,7 @@ export const withVisibility =
         trapFocus();
 
         if (typeof component.emit === "function") {
-          afterOpenTimer = setTimeout(() => {
-            component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
-          }, openDuration);
+          afterOpenTimer = setTimeout(afterOpenDue, openDuration);
         }
       }, 10);
     },
@@ -802,6 +869,9 @@ export const withVisibility =
       opened = false;
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
+      afterOpenWaiting = false;
+      // A focus still waiting for its target is this opening's, and it ends here
+      cancelFocusFrame();
 
       // Get class names
       const dialogVisibleClass = `${component.getClass("dialog")}--visible`;
@@ -837,6 +907,8 @@ export const withVisibility =
         if (!top && component.overlay && component.overlay.parentNode) {
           component.overlay.parentNode.removeChild(component.overlay);
         }
+        // The overlay no longer needs the container to be a containing block
+        unscopeScrim();
 
         if (typeof component.emit === "function") {
           component.emit(DIALOG_EVENTS.AFTER_CLOSE, { dialog: getComponent() });
@@ -864,7 +936,11 @@ export const withVisibility =
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
+      afterOpenWaiting = false;
+      cancelFocusFrame();
       cleanupEvents();
+      // Destroyed rather than closed: no afterclose is coming to restore it
+      unscopeScrim();
     },
   };
 
