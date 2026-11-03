@@ -4,10 +4,11 @@
  * Build first. Compile every public Sass entry from the packed tarball, as a
  * consumer does, and assert the partials no entry reaches stay out of it.
  *
- * The public Sass API is the one the README states and the Atlas decision of
- * 2026-11-01 records: the `themes`, `main` and `elements` entries, and the
- * eight M3 scheme-variant theme files a theme builder reads by path. A file
- * any of them loads has to ship, and a partial none of them loads does not.
+ * The public Sass API is the one the README states and the decision of
+ * 2026-11-01 (PR #189) records: the `themes`, `main` and `elements` entries,
+ * and the eight M3 scheme-variant theme files a theme builder reads by path. A
+ * file any of them loads has to ship, and a partial none of them loads does
+ * not.
  */
 import assert from "node:assert/strict";
 import { join } from "node:path";
