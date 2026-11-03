@@ -1,10 +1,29 @@
 // scripts/fixtures/ssr-parity.ts
 import { defineAll, elements, SHADOW_BASE_STYLES } from "../../dist/elements/index.js";
 import "../../dist/elements/css/index.js";
+import { hostStyleText } from "../../dist/elements/define.js";
 import { styleText } from "../../dist/elements/styles.js";
 import { setHTML } from "../../dist/core/dom/html.js";
+import { pruneStyles } from "../../src/ssr/prune-styles.ts";
 
 export type Snapshot = Record<string, string>;
+const css = (text: string): string => {
+  const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
+  return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
+};
+// Every root is compared pruned: the server inlines only the rules its markup
+// can match, and the factory adopts the whole sheet. The pruner reads the
+// registry's own text, as the server does: a shorthand re-serialized by CSSOM
+// can come back in another form, and pruning it again would move it twice.
+const classesOf = (root: ShadowRoot): string[] =>
+  Array.from(new Set(Array.from(root.querySelectorAll("*"), node => Array.from(node.classList)).flat()));
+const textsOf = (element: Element): readonly string[] | undefined => {
+  const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === element.localName)?.spec;
+  if (!spec) return undefined;
+  return [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles].map(name => styleText(name) ?? hostStyleText(spec));
+};
+const pruned = (texts: readonly string[], present: readonly string[]): string =>
+  css(pruneStyles(texts.join("\n"), new Set(present)));
 // Only generated ID families, never arbitrary authored IDs or ARIA values.
 const generated = /^(?:mtrl-|text-field-|select-|tabs-|tab-|radio-|checkbox-|switch-|menu-|search-|datepicker-|timepicker-|dialog-|card-)/;
 export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
@@ -31,10 +50,6 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
     return id;
   }).join("");
   const groups = new Map<string, string>();
-  const css = (text: string): string => {
-    const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
-    return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
-  };
   const walk = (node: Node, path: string): void => {
     if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
       result[`${path}/text`] = node.textContent ?? "";
@@ -80,9 +95,8 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
       // Any subsequent factory/authored style remains in the node comparison.
       const first = root.firstElementChild;
       const inline = !root.adoptedStyleSheets.length && first?.localName === "style" ? first : null;
-      const text = inline?.textContent ?? "";
-      result[`${path}/shadow/css`] = inline ? css(text) :
-        root.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n")).join("\n");
+      const texts = textsOf(node) ?? root.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"));
+      result[`${path}/shadow/css`] = inline ? css(inline.textContent ?? "") : pruned(texts, classesOf(root));
       Array.from(root.childNodes).filter(child => child !== inline).forEach((child, index) => walk(child, `${path}/shadow/${index}`));
     }
   };
@@ -95,12 +109,9 @@ const api = {
   styleOrder(host: Element) {
     const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === host.localName)!.spec;
     const names = [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles];
-    const normalize = (text: string) => {
-      const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
-      return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
-    };
+    const texts = textsOf(host)!;
     const adopted = host.shadowRoot!.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"));
-    return { names, sources: names.map(name => normalize(styleText(name)!)), adopted };
+    return { names, sources: texts.map(css), adopted, expected: pruned(texts, classesOf(host.shadowRoot!)) };
   },
   mount(html: string): Element {
     defineAll();
