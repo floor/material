@@ -7,6 +7,7 @@ import { getComponentDefaults } from "../core/config/global";
 import { setHTML } from "../core/dom/html";
 import { withServerScope } from "./server-dom";
 import { attributesText, serializeNode } from "./serialize";
+import { renderedClasses } from "./prune-styles";
 import { renderStyles } from "./styles";
 
 /** true emits an empty attribute; false, null and undefined omit it. Numbers must be finite. */
@@ -14,14 +15,14 @@ export type RenderAttributes = Readonly<Record<string, string | number | boolean
 /**
  * Tag prefix defaults to "m".
  *
- * `styles: "inline"` (the default) writes each root's whole CSS as a `<style>`:
- * styled at first paint in every engine, at two costs. gzip cannot see a
- * repeat further back than its 32 KB window: a select's root is about 44 KB
- * (30 selects measured 141.0 KB gzip against 5.0 KB brotli), and large roots
- * of different types in turn push each other out of it (30 measured 83.9 KB
- * against 8.1 KB). So serve brotli, or use link mode for pages with many
- * selects, or that mix large roots (text fields, dialogs) in turn. And the
- * HTML is 0.5 to 0.9 MB uncompressed for 30 to 44 roots.
+ * `styles: "inline"` (the default) writes each root's CSS as a `<style>`,
+ * without the rules its rendered markup can never match: styled at first paint
+ * in every engine, at two costs. Every root repeats its sheets, and gzip only
+ * reaches back its 32 KB window: 30 select roots of 16.4 KB each measure 7.1 KB
+ * gzip against 2.6 KB brotli, and roots of different types push each other out
+ * of the window. So serve brotli, or use link mode for pages that mix many
+ * large roots (text fields, dialogs) in turn. And the HTML is about 0.25 MB
+ * uncompressed for the checked 44-root page.
  *
  * `styles: "link"` writes `<link>` tags to the stylesheets under `cssBase`
  * (`dist/elements/css`). WebKit paints the roots unstyled until they arrive
@@ -233,11 +234,13 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
           const content = light.map(node => serializeNode(node, expand, depth + 1)).join("");
           return `<${element.localName}${attributesText(hostAttributes)}>${content}</${element.localName}>`;
         }
-        const styles = renderStyles(entry, options);
         scope.mount(element);
         const shadow = Array.from(element.shadowRoot!.childNodes)
           .filter(node => !isFallbackStyle(node))
           .map(node => serializeNode(node, expand, depth + 1)).join("");
+        // The mounted markup decides which rules the inline sheet can drop.
+        const styles = renderStyles(entry, options,
+          options.styles === "link" ? undefined : renderedClasses(element.shadowRoot!));
         if (depth === 0) rootShadow = styles + shadow;
         const content = shadowOnly && depth === 0 ? "" : light.map(node => serializeNode(node, expand, depth + 1)).join("");
         return `<${element.localName}${attributesText(hostAttributes)}><template shadowrootmode="open" shadowrootdelegatesfocus="">` +
