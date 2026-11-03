@@ -80,5 +80,21 @@ try {
   const probes = report.reduce((n, fixture) => n + fixture.rows.length, 0);
   const findings = [...missing].map(([key, properties]) => `${key.replaceAll("\t", " ")}: ${properties.size} computed properties differ`);
   assert.deepEqual(findings, [], `classes drawn without their sheet (add it to the element's spec.styles):\n${findings.join("\n")}`);
+  const reset = await page.evaluate(() => window.shadowStyles.auditControlReset());
+  await mkdir("analysis/browser", { recursive: true });
+  await Bun.write("analysis/browser/shadow-control-reset.json", JSON.stringify(reset, null, 2));
+  assert.deepEqual([...new Set(reset.map(row => row.element))].sort(), Object.values(elements).map(entry => entry.spec.name).sort());
+  const resetFailures: string[] = [];
+  for (const fixture of reset) {
+    assert.equal(fixture.elementCount, fixture.factoryCount, `${fixture.element} ${fixture.variant}: native control counts`);
+    for (const row of fixture.rows) {
+      assert.equal(row.tag, row.factoryTag, `${fixture.element}: control type`);
+      assert.equal(row.className, row.factoryClass, `${fixture.element}: control identity`);
+      if (Object.keys(row.differences).length) resetFailures.push(`${fixture.element} ${fixture.variant} ${row.className}: ${JSON.stringify(row.differences)}`);
+    }
+  }
+  assert.deepEqual(errors, []);
+  assert.deepEqual(resetFailures, [], `Shadow controls differ from factory padding, margin or font:\n${resetFailures.join("\n")}`);
+  console.log(`Passed shadow control reset: ${new Set(reset.map(row => row.element)).size} elements, ${reset.length} fixtures, ${reset.reduce((sum, fixture) => sum + fixture.rows.length, 0)} native controls match their factories.`);
   console.log(`Passed shadow styles: ${seen.size} elements, ${fixtures.length} fixtures, ${probes} cross-component classes, each with its sheet adopted.`);
 } finally { await browser.close(); server.stop(true); }
