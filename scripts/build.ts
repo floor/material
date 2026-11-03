@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
-import { buildModules, buildSSR } from "./build-modules";
+import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
@@ -50,6 +50,11 @@ try {
     // file no consumer can load: ship the reachable tree and nothing beside it.
     const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
     console.log(`Pruned ${modules.removed.length} unreachable modules (${modules.bytes} bytes)`);
+
+    // Readable, comment-stripped modules: identifiers and annotations stay, the
+    // formatting does not. The prunes above have already read the emit.
+    const stripped = await stripShippedModules(staging);
+    console.log(`Stripped ${stripped.files} modules (${stripped.bytes} bytes)`);
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);

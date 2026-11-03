@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
-import { readdir } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 
 /** Drop runtime prose without losing the annotations consumers need for tree shaking, or a licence banner. */
 export function printRuntimeModule(filename: string, text: string): string {
@@ -124,7 +124,9 @@ export function buildModules(outdir: string) {
       text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
     }
     if (filename.endsWith(".js")) {
-      // Avoid shipping API prose twice while keeping ESM readable for debugging.
+      // Avoid shipping API prose twice. Identifiers, pure annotations and licence
+      // banners stay: the build compacts only the formatting afterwards
+      // (`stripShippedModules`), so stack traces still name the code.
       text = stripRuntimeComments(filename, text);
     }
     if (filename.endsWith(".d.ts")) {
@@ -185,4 +187,50 @@ export async function buildSSR(outdir: string) {
   // the same registry the renderer reads, without any consumer setup.
   ts.sys.writeFile(entry, `/*! Bundled dependency notices\n${notices.join("\n").replace(/\*\//g, "* /")}*/\n` +
     'import "../elements/css/index.js";\n' + await Bun.file(entry).text());
+}
+
+/**
+ * The shipped modules keep their identifiers, their pure annotations and their
+ * licence banners; only the formatting goes. A consumer's bundler minifies what
+ * it keeps, so line breaks and indentation cost the tarball and buy nothing at
+ * runtime, while `node_modules/material` still debugs by name.
+ *
+ * Four sets are left exactly as emitted:
+ * - `ssr/`: the index is already minified, and the four adapter entries have
+ *   their own minification change;
+ * - `elements/css/`: `check-elements-css` compares the CSS text these modules
+ *   register with the shipped stylesheets, byte for byte;
+ * - `styles/`: the same check compares each style module with the import block
+ *   `elementStyleModule` generates, byte for byte;
+ * - every module carrying a `#__PURE__` annotation: no minifier in the
+ *   toolchain keeps annotations, and dropping one makes a consumer's bundle
+ *   grow (the annotation tells its tree-shaker the call is droppable).
+ *
+ * Runs after the prunes, so both parsers keep reading the emitted formatting.
+ */
+export async function stripShippedModules(outdir: string): Promise<{ files: number; bytes: number }> {
+  const transpiler = new Bun.Transpiler({ loader: "js", minifyWhitespace: true });
+  let files = 0;
+  let bytes = 0;
+  const walk = async (directory: string): Promise<void> => {
+    for (const entry of await readdir(join(outdir, directory), { withFileTypes: true })) {
+      const path = directory === "" ? entry.name : `${directory}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (path === "ssr" || path === "elements/css" || path === "styles") continue;
+        await walk(path);
+        continue;
+      }
+      if (!entry.name.endsWith(".js")) continue;
+      const file = join(outdir, path);
+      const text = await readFile(file, "utf8");
+      if (/\/\*[@#]__PURE__\*\//.test(text)) continue;
+      const stripped = transpiler.transformSync(text);
+      if (stripped === text) continue;
+      await writeFile(file, stripped);
+      files += 1;
+      bytes += text.length - stripped.length;
+    }
+  };
+  await walk("");
+  return { files, bytes };
 }
