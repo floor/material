@@ -15,6 +15,10 @@
  * deferred column and are left out of `KNOWN_DEPS`, so their markers must not
  * appear in that initial graph.
  *
+ * Brotli is reported beside gzip for the same initial graph, at quality 11
+ * (`node:zlib`, the setting check-adapter-size.ts uses — what a CDN serves).
+ * It is reported, never gated: every budget in this file stays gzip.
+ *
  * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
  * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
  * least 100 bytes above the measured gzip. Explicit byte ceilings for a
@@ -45,6 +49,7 @@
  */
 
 import { gzipSync } from "bun";
+import { brotliCompressSync, constants } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -126,7 +131,9 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   snackbar: ["button", "icon-button"],
   select: ["text-field", "menu"],
   tabs: ["button", "badge"],
-  "split-button": ["button", "menu"],
+  // The menu's chunk is not listed: split button loads the menu on first open
+  // (menu/inner, its symbol module, is the only menu module still initial).
+  "split-button": ["button"],
   toolbar: ["button", "icon-button"],
   "fab-menu": ["fab"],
 };
@@ -159,6 +166,14 @@ export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
 /** Tenth-of-a-KB ceiling, matching how sizes are quoted. */
 export const kb = (n: number): number => Math.floor(n * 1024);
 
+/**
+ * Brotli of the initial graph at quality 11 — what a CDN serves, the setting
+ * check-adapter-size.ts gates adapters on. Reported beside `gzBytes`; no
+ * budget reads it.
+ */
+export const brotliBytes = (bytes: Uint8Array): number =>
+  brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length;
+
 export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // The nearest-[dir] direction module (core/dom/direction, 3.2.2) is shared
   // by every entry, so every row below crosses its old ceiling by the module's
@@ -181,7 +196,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // main's press fix (0.10.6: a neighbour's width starts from its measured length) on the
   // forward merge: next 42c1a111 11,790 to 11,913. kb(11.7) is 11,980 (67 above, short of 100); raised to kb(11.75) = 12,032, Node 22.23.3 / npm 10.9.9.
   card: kb(6.85), // 6,653 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  carousel: 11_600, // opt-in wheel scrolling with momentum: 10.3 to 10.9 KB against 2ef11f0; 11,106 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the dir MutationObserver for a flip at rest (#126: logical 0 is physical 0, so no scroll fires and the layout stayed stale): 11,468 to 11,482 against 335f6578; 11,600 measured +1% to the next 50, approved by Atlas
+  carousel: 11_600, // opt-in wheel scrolling with momentum: 10.3 to 10.9 KB against 2ef11f0; 11,106 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the dir MutationObserver for a flip at rest (#126: logical 0 is physical 0, so no scroll fires and the layout stayed stale): 11,468 to 11,482 against 335f6578; 11,600 measured +1% to the next 50, approved as a one-off
   checkbox: kb(5.85), // Boolean change value plus the HTML valueAttribute token; main's isDisabled() on the forward merge: next 5,644 to 5,658. 5,645 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
   chips: kb(9.3), // Chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (follow-up): 9,305 to 9,319; 9,159 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   datepicker: kb(12.9), // Conformance; swiping; year list; full screen; read-only, required, one change shape: 12,332; aria-disabled: 12,412; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, and the docked picker's click by the marker: 12,407 to 12,878. kb(12.65) is 12,953 (75 above, short of 100); raised to kb(12.7) = 13,004 (126 above), Node 22.23.3 / npm 10.9.9
@@ -199,7 +214,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "navigation-rail": kb(6.85), // 6,693 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   progress: kb(10.6),
   "loading-indicator": kb(9.5), // the Compose-exact shapes: 9,138 to 9,447, the first-arc split 149 B of it
-  "split-button": kb(17.45), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget: 18,228; 17,167 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 17,269 to 17,296 against d306d4c2 (36 of room before it, 9 after). kb(16.95) is 17,356 (60 above, short of 100); raised to kb(17) = 17,408 (112 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 17,307 to 17,460. kb(17.1) is 17,510 (50 above, short of 100); raised to kb(17.15) = 17,561 (101 above), Node 22.23.3 / npm 10.9.9
+  "split-button": kb(9.55), // the menu is loaded on first open (menu-on-demand.ts): 17,760 to 9,677 measured against ae4c8298, its first-open payload in DEFERRED_BUDGET_BYTES below. The menu/inner symbol module is the only menu module still initial. kb(9.5) is 9,728 (51 above, short of 100); raised to kb(9.55) = 9,779 (102 above)
   radios: kb(5.35),
   search: kb(11.05), // the open view in the top layer: 9,759; combobox, contained and divided: 10,114; minWidth and maxWidth: 10,161; trailing items, avatar, supporting text, reopening: 10,477; the deferred opening focus is cancelled: 10,509 to 10,566. kb(10.3) is 10,547, which does not fit; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, for the full-screen view: 10,518 to 10,956. kb(10.75) is 11,008 (52 above, short of 100); raised to kb(10.8) = 11,059 (103 above), Node 22.23.3 / npm 10.9.9
   select: kb(20.85), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter: 20,608; main's root class option on the forward merge: next 20,743 to 20,790; 20,821 on the A2 forward merge (17 B left); the menu's tabindex reset: 20,867, which does not fit kb(20.35). 20,853 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 20,863 to 21,016. kb(20.6) is 21,094 (78 above, short of 100); raised to kb(20.65) = 21,145 (129 above), Node 22.23.3 / npm 10.9.9
@@ -219,12 +234,12 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // material/core/shapes: every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
-  tooltip: kb(6.1), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
+  tooltip: 6_300, // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952; the on-screen fix (flip on the placement axis, both-axis clamp, arrow re-anchor on clamp, class derived from final geometry): 6,298 gzipped, the smallest correct form — re-anchoring unconditionally breaks the rich rows' requested anchor, and a centre-comparison anchor pick misses the target at a clamped edge (floor/material#173). kb(6.1) = 6,246 raised to 6,300 for this fix only, 2026-11-01
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps: 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: 127_200, // search in the top layer: 115,628; its combobox and variants: 115,909; search's trailing items and reopening: 116,488; the date picker's field states and one change shape: 116,800; the text field's field, supporting text row and counter: 117,305; the toolbar: 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu: 122,060; the FAB menu motion: 122,085 to 122,178; merged with main at 5bc71da: 122,232; the Material shapes: 122,267 to 122,619; the text field's asterisk, live error and trailing button: 122,623 to 123,218 against 7cd57a6; slider and tabs positions without measuring: 123,940; the navigation bar: 124,071 to 125,033 against 746b127 (with the checkbox); the carousel's wheel scrolling after the forward merge: 125,722 against cc8250e; config on* options as listeners, after the second merge with next: 124,359. kb(121.45) is 124,364 (5 bytes of room, short of 100). kb(121.5) is 124,416 (57 above). 124,359 raised to kb(121.55), not grown, against 43a5d49e, Node 22.23.3 / npm 10.9.9; the inner menu behind a symbol, split button setItems and getItems, and `setItems` creates the split button's menu when it had none: 124,355 to 124,469 against 4da0cd98. kb(121.6) is 124,518 (49 above, short of 100); raised to kb(121.65) = 124,569 (100 above), Node 22.23.3 / npm 10.9.9; the snackbar's queued state and isOpen(), a queued snackbar leaving the queue when hidden, dropped or destroyed, isOpen() on the date picker and its opening click, the split button's destroyed guard (family 4): 124,474 to 124,580 against 58322f08. kb(121.75) is 124,672 (92 above, short of 100); raised to kb(121.8) = 124,723, Node 22.23.3 / npm 10.9.9; the dialog's open / close contract (family 1): 124,469 to 124,538 against f463146d. kb(121.7) is 124,620 (82 above, short of 100); raised to kb(121.75) = 124,672 (134 above), Node 22.23.3 / npm 10.9.9; the dialog dismissible when open() returns (family 1): 124,562, 110 of room, not raised; families 1 and 4 together, merged with next df25eb0f: 124,674. kb(121.8) is 124,723 (49 above, short of 100); raised to kb(121.85) = 124,774 (100 above), Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it (family 2): 124,566 to 124,613 against d306d4c2. kb(121.75) is 124,672 (59 above, short of 100); raised to kb(121.8) = 124,723 (110 above), Node 22.23.3 / npm 10.9.9; families 1, 2 and 4 together, merged with 2c2990cc: 124,718, then 124,692 with the dead preventDefault off the menu's and the select's payloads (select 20,883 to 20,863). kb(121.85) is 124,774 (82 above, short of 100); raised to kb(121.9) = 124,825 (133 above), Node 22.23.3 / npm 10.9.9; the FAB menu's open in the call (families 3 and 5), with next 5d263059 merged (the family 4 follow-ups): 124,755. kb(121.9) is 124,825 (70 above, short of 100); raised to kb(121.95) = 124,876 (121 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals (family 6): the shared stack in core/dom/layer with one window listener for the topmost modal, the key press sent on as a cancel event in the top layer, and the forced close, for the dialog: 124,706 to 124,917 against 905a6441. kb(122.05) is 124,979 (62 above, short of 100); raised to kb(122.1) = 125,030 (113 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals and the marker (family 6 A), merged with next 18158bdc: 124,756 to 125,152. kb(122.3) is 125,235 (83 above, short of 100); raised to kb(122.35) = 125,286 (134 above), Node 22.23.3 / npm 10.9.9; a key from inside another open <dialog> left to that dialog: 125,155 to 125,203. kb(122.35) is 125,286 (83 above, short of 100); raised to kb(122.4) = 125,337 (134 above), Node 22.23.3 / npm 10.9.9; the modal sheets and the modal drawer on the stack (family 6 B): 125,195 to 125,259. kb(122.4) is 125,337 (78 above, short of 100); raised to kb(122.45) = 125,388 (129 above), Node 22.23.3 / npm 10.9.9; the pickers and the full-screen search on the stack (family 6 C): 125,259 to 125,357. kb(122.5) is 125,440 (83 above, short of 100); raised to kb(122.55) = 125,491 (134 above), Node 22.23.3 / npm 10.9.9; main's button-group press fix (0.10.6) on the forward merge: 125,360 to 125,486 against 42c1a111. kb(122.6) is 125,542 (56 above, short of 100); raised to kb(122.65) = 125,593, Node 22.23.3 / npm 10.9.9; the child selector on this merge: 125,486 to 125,492. kb(122.6) is 125,542 (50 above, short of 100); the ceiling stays at kb(122.65) = 125,593 (101 above); the menu's RTL position in shadow roots (3.0.1): 125,593 locally, 125,597 in CI against 5a4bd423. kb(122.65) is 125,593 (4 below in CI); raised to kb(122.8) = 125,747 (150 above), Node 22.23.3 / npm 10.9.9; the carousel's dir observer for a flip at rest and the physical drag read (#126): 125,849 to 125,896 against 335f6578; 127,200 measured +1% to the next 50, approved by Atlas
+  all: 127_200, // search in the top layer: 115,628; its combobox and variants: 115,909; search's trailing items and reopening: 116,488; the date picker's field states and one change shape: 116,800; the text field's field, supporting text row and counter: 117,305; the toolbar: 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu: 122,060; the FAB menu motion: 122,085 to 122,178; merged with main at 5bc71da: 122,232; the Material shapes: 122,267 to 122,619; the text field's asterisk, live error and trailing button: 122,623 to 123,218 against 7cd57a6; slider and tabs positions without measuring: 123,940; the navigation bar: 124,071 to 125,033 against 746b127 (with the checkbox); the carousel's wheel scrolling after the forward merge: 125,722 against cc8250e; config on* options as listeners, after the second merge with next: 124,359. kb(121.45) is 124,364 (5 bytes of room, short of 100). kb(121.5) is 124,416 (57 above). 124,359 raised to kb(121.55), not grown, against 43a5d49e, Node 22.23.3 / npm 10.9.9; the inner menu behind a symbol, split button setItems and getItems, and `setItems` creates the split button's menu when it had none: 124,355 to 124,469 against 4da0cd98. kb(121.6) is 124,518 (49 above, short of 100); raised to kb(121.65) = 124,569 (100 above), Node 22.23.3 / npm 10.9.9; the snackbar's queued state and isOpen(), a queued snackbar leaving the queue when hidden, dropped or destroyed, isOpen() on the date picker and its opening click, the split button's destroyed guard (family 4): 124,474 to 124,580 against 58322f08. kb(121.75) is 124,672 (92 above, short of 100); raised to kb(121.8) = 124,723, Node 22.23.3 / npm 10.9.9; the dialog's open / close contract (family 1): 124,469 to 124,538 against f463146d. kb(121.7) is 124,620 (82 above, short of 100); raised to kb(121.75) = 124,672 (134 above), Node 22.23.3 / npm 10.9.9; the dialog dismissible when open() returns (family 1): 124,562, 110 of room, not raised; families 1 and 4 together, merged with next df25eb0f: 124,674. kb(121.8) is 124,723 (49 above, short of 100); raised to kb(121.85) = 124,774 (100 above), Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it (family 2): 124,566 to 124,613 against d306d4c2. kb(121.75) is 124,672 (59 above, short of 100); raised to kb(121.8) = 124,723 (110 above), Node 22.23.3 / npm 10.9.9; families 1, 2 and 4 together, merged with 2c2990cc: 124,718, then 124,692 with the dead preventDefault off the menu's and the select's payloads (select 20,883 to 20,863). kb(121.85) is 124,774 (82 above, short of 100); raised to kb(121.9) = 124,825 (133 above), Node 22.23.3 / npm 10.9.9; the FAB menu's open in the call (families 3 and 5), with next 5d263059 merged (the family 4 follow-ups): 124,755. kb(121.9) is 124,825 (70 above, short of 100); raised to kb(121.95) = 124,876 (121 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals (family 6): the shared stack in core/dom/layer with one window listener for the topmost modal, the key press sent on as a cancel event in the top layer, and the forced close, for the dialog: 124,706 to 124,917 against 905a6441. kb(122.05) is 124,979 (62 above, short of 100); raised to kb(122.1) = 125,030 (113 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals and the marker (family 6 A), merged with next 18158bdc: 124,756 to 125,152. kb(122.3) is 125,235 (83 above, short of 100); raised to kb(122.35) = 125,286 (134 above), Node 22.23.3 / npm 10.9.9; a key from inside another open <dialog> left to that dialog: 125,155 to 125,203. kb(122.35) is 125,286 (83 above, short of 100); raised to kb(122.4) = 125,337 (134 above), Node 22.23.3 / npm 10.9.9; the modal sheets and the modal drawer on the stack (family 6 B): 125,195 to 125,259. kb(122.4) is 125,337 (78 above, short of 100); raised to kb(122.45) = 125,388 (129 above), Node 22.23.3 / npm 10.9.9; the pickers and the full-screen search on the stack (family 6 C): 125,259 to 125,357. kb(122.5) is 125,440 (83 above, short of 100); raised to kb(122.55) = 125,491 (134 above), Node 22.23.3 / npm 10.9.9; main's button-group press fix (0.10.6) on the forward merge: 125,360 to 125,486 against 42c1a111. kb(122.6) is 125,542 (56 above, short of 100); raised to kb(122.65) = 125,593, Node 22.23.3 / npm 10.9.9; the child selector on this merge: 125,486 to 125,492. kb(122.6) is 125,542 (50 above, short of 100); the ceiling stays at kb(122.65) = 125,593 (101 above); the menu's RTL position in shadow roots (3.0.1): 125,593 locally, 125,597 in CI against 5a4bd423. kb(122.65) is 125,593 (4 below in CI); raised to kb(122.8) = 125,747 (150 above), Node 22.23.3 / npm 10.9.9; the carousel's dir observer for a flip at rest and the physical drag read (#126): 125,849 to 125,896 against 335f6578; 127,200 measured +1% to the next 50, approved as a one-off
   // the time picker draft and search widths: 116,200 on c3e3e18; 124,245 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
 };
 
@@ -234,6 +249,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
  */
 export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
   menu: kb(2.2), // the submenu feature, a chunk since then
+  "split-button": kb(17.05), // the menu chunk, its shared chunk and the submenu chunk: 17,313 measured against ae4c8298. kb(17.0) is 17,408 (95 above, short of 100); raised to kb(17.05) = 17,459 (146 above)
   "fab-menu": kb(10.6), // the baseline menu of the menu presentation; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 10,537 to 10,584 against d306d4c2. kb(10.4) is 10,649 (65 above, short of 100); raised to kb(10.45) = 10,700 (116 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 10,582 to 10,738. kb(10.55) is 10,803 (65 above, short of 100); raised to kb(10.6) = 10,854 (116 above), Node 22.23.3 / npm 10.9.9
 };
 
@@ -436,6 +452,8 @@ export interface Result {
   name: ScenarioName;
   minBytes: number;
   gzBytes: number;
+  /** Brotli (quality 11) of the same initial graph `gzBytes` measures. */
+  brBytes: number;
   /** Gzip of extra JS chunks. Dynamic imports land here, not in `gzBytes`. */
   deferredGzBytes: number;
   minKB: number;
@@ -662,6 +680,7 @@ const main = async (): Promise<void> => {
 
     const { initialBytes, deferredBytes, texts } = built;
     const gzBytes = gzipSync(initialBytes).byteLength;
+    const brBytes = brotliBytes(initialBytes);
     const deferredGzBytes = deferredBytes.byteLength === 0 ? 0 : gzipSync(deferredBytes).byteLength;
 
     bundles.set(scenario.name, texts.join("\n"));
@@ -669,6 +688,7 @@ const main = async (): Promise<void> => {
       name: scenario.name,
       minBytes: initialBytes.byteLength,
       gzBytes,
+      brBytes,
       deferredGzBytes,
       minKB: initialBytes.byteLength / 1024,
       gzKB: gzBytes / 1024,
@@ -726,10 +746,11 @@ const main = async (): Promise<void> => {
   const COL_NAME = 20;
   const COL_MIN = 10;
   const COL_GZ = 9;
+  const COL_BR = 9;
   const COL_DELTA = 12;
   const COL_DEFERRED = 12;
   const showDeferred = results.some((result) => result.deferredGzBytes > 0);
-  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
+  const LINE_W = COL_NAME + COL_MIN + COL_GZ + COL_BR + COL_DELTA + (showDeferred ? COL_DEFERRED : 0) + (showDeferred ? 6 : 4);
 
   const pad = (value: string, width: number): string => value.padStart(width);
   const sep = "─".repeat(LINE_W);
@@ -737,17 +758,18 @@ const main = async (): Promise<void> => {
   report("");
   report("  mtrl — Component Sizes");
   report("");
-  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"vs core".padStart(COL_DELTA)}`;
+  const header = `  ${"Component".padEnd(COL_NAME)}  ${"Minified".padStart(COL_MIN)}  ${"Gzipped".padStart(COL_GZ)}  ${"Brotli".padStart(COL_BR)}  ${"vs core".padStart(COL_DELTA)}`;
   report(showDeferred ? `${header}  ${"Deferred".padStart(COL_DEFERRED)}` : header);
   report(`  ${sep}`);
 
   for (const result of results) {
     const min = `${result.minKB.toFixed(1)} KB`;
     const gz = `${result.gzKB.toFixed(1)} KB`;
+    const br = `${(result.brBytes / 1024).toFixed(1)} KB`;
     const delta = result.name === "core"
       ? ""
       : `${result.deltaKB >= 0 ? "+" : ""}${result.deltaKB.toFixed(1)} KB`;
-    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(delta, COL_DELTA)}`;
+    const line = `  ${result.name.padEnd(COL_NAME)}  ${pad(min, COL_MIN)}  ${pad(gz, COL_GZ)}  ${pad(br, COL_BR)}  ${pad(delta, COL_DELTA)}`;
     if (!showDeferred) {
       report(line);
       continue;

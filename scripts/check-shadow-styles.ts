@@ -10,6 +10,12 @@
 // not it changes a computed style today. The diff a missing sheet would make
 // is written to analysis/shadow-styles-chromium.json. From a probe taken
 // during the part B review.
+//
+// One page serves every fixture: the elements are defined once, and each
+// fixture is measured after the body has been cleared, so nothing a factory
+// portaled to the body outlives the fixture that put it there. This is the
+// page model scripts/check-elements.ts uses; a navigation per fixture re-ran
+// the whole element bundle 1,797 times.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -44,10 +50,19 @@ try {
   const page = await browser.newPage({ reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
+  await page.goto(server.url.href);
+  await page.waitForFunction(() => !!window.shadowStyles);
+  const guard = await page.evaluate(() => window.shadowStyles.settleGuard());
+  assert.equal(guard.ended, true, `The settle returned before a 60 ms transition in a shadow root ended (${guard.elapsed} ms)`);
+  console.log(`Settle guard: a 60 ms shadow-root transition ended before the settle returned (${guard.elapsed} ms).`);
   for (const fixture of fixtures) {
-    await page.goto(server.url.href);
-    await page.waitForFunction(() => !!window.shadowStyles);
-    const result = await page.evaluate(({ html, defaults }) => window.shadowStyles.probe(html, defaults), fixture);
+    const result = await page.evaluate(({ html, defaults }) => {
+      // The probe removes its own container, and a factory may have portaled a
+      // node (a menu, a tooltip) to the body: the fixture is measured on a body
+      // that holds only its markup, as a fresh page had it.
+      document.body.innerHTML = "";
+      return window.shadowStyles.probe(html, defaults);
+    }, fixture);
     result.roots.forEach(name => seen.add(name));
     report.push({ element: fixture.element, variant: fixture.variant, ...result });
   }
@@ -65,5 +80,21 @@ try {
   const probes = report.reduce((n, fixture) => n + fixture.rows.length, 0);
   const findings = [...missing].map(([key, properties]) => `${key.replaceAll("\t", " ")}: ${properties.size} computed properties differ`);
   assert.deepEqual(findings, [], `classes drawn without their sheet (add it to the element's spec.styles):\n${findings.join("\n")}`);
+  const reset = await page.evaluate(() => window.shadowStyles.auditControlReset());
+  await mkdir("analysis/browser", { recursive: true });
+  await Bun.write("analysis/browser/shadow-control-reset.json", JSON.stringify(reset, null, 2));
+  assert.deepEqual([...new Set(reset.map(row => row.element))].sort(), Object.values(elements).map(entry => entry.spec.name).sort());
+  const resetFailures: string[] = [];
+  for (const fixture of reset) {
+    assert.equal(fixture.elementCount, fixture.factoryCount, `${fixture.element} ${fixture.variant}: native control counts`);
+    for (const row of fixture.rows) {
+      assert.equal(row.tag, row.factoryTag, `${fixture.element}: control type`);
+      assert.equal(row.className, row.factoryClass, `${fixture.element}: control identity`);
+      if (Object.keys(row.differences).length) resetFailures.push(`${fixture.element} ${fixture.variant} ${row.className}: ${JSON.stringify(row.differences)}`);
+    }
+  }
+  assert.deepEqual(errors, []);
+  assert.deepEqual(resetFailures, [], `Shadow controls differ from factory padding, margin or font:\n${resetFailures.join("\n")}`);
+  console.log(`Passed shadow control reset: ${new Set(reset.map(row => row.element)).size} elements, ${reset.length} fixtures, ${reset.reduce((sum, fixture) => sum + fixture.rows.length, 0)} native controls match their factories.`);
   console.log(`Passed shadow styles: ${seen.size} elements, ${fixtures.length} fixtures, ${probes} cross-component classes, each with its sheet adopted.`);
 } finally { await browser.close(); server.stop(true); }

@@ -66,6 +66,17 @@ describe("chip set as a grid", () => {
     expect(tabStops(chips)).toEqual([b!.element]);
   });
 
+  test("one-action focus cells keep their names in step with label edits", () => {
+    const chips = mount({ chips: (["assist", "filter", "suggestion"] as const).map(type => ({ type, label: type })) });
+    for (const chip of chips.getChips()) {
+      expect(chip.element.getAttribute("aria-label")).toBe(chip.getLabel());
+      chip.setLabel("Renamed chip");
+      expect(chip.element.getAttribute("aria-label")).toBe("Renamed chip");
+      chip.setText("Updated chip");
+      expect(chip.element.getAttribute("aria-label")).toBe("Updated chip");
+    }
+  });
+
   test("a two-action chip's action and remove button are targets in turn; Home and End reach the ends", () => {
     const chips = mount({ chips: [{ label: "A" }, { type: "input", label: "B" }, { label: "C" }] });
     const [a, b, c] = chips.getChips();

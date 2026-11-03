@@ -1,4 +1,5 @@
 /** Search in the packed build: the open view's place in the page and the top layer. */
+import { checkSearchSuggestionLayout } from "./check-search-suggestion-layout";
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
@@ -100,6 +101,58 @@ const dismissedBeforeItsOpeningFrame = async (page: Page): Promise<void> => {
     "A view dismissed before its opening frame stays dismissed");
 };
 
+/**
+ * Acceptance: the created-open initializer and an expansion both ask for the
+ * input's focus; a collapse before either frame has run cancels both requests.
+ * Frames asked for while a view is open are held here, so the initializer's
+ * task runs between the two requests — the order a slow first frame produces.
+ * A request the collapse missed focuses the input, whose focus reopens the view.
+ */
+const overlappingOpeningPaths = async (page: Page): Promise<void> => {
+  const result = await page.evaluate(() => new Promise<{ view: boolean; input: boolean }>((resolve) => {
+    const state = window as unknown as SearchWindow;
+    state.search?.destroy();
+    document.body.replaceChildren();
+    // Held frames keep their own ids, so a request cancelled is seen as one.
+    const raf = window.requestAnimationFrame, cancel = window.cancelAnimationFrame;
+    const held = new Map<number, FrameRequestCallback>();
+    let next = -1;
+    window.requestAnimationFrame = callback => {
+      if (!document.querySelector(".mtrl-search--view")) return raf.call(window, callback);
+      held.set(next, callback);
+      return next--;
+    };
+    window.cancelAnimationFrame = id => { if (!held.delete(id)) cancel.call(window, id); };
+    const release = (): void => {
+      window.requestAnimationFrame = raf;
+      window.cancelAnimationFrame = cancel;
+      for (const callback of [...held.values()]) callback(performance.now());
+      held.clear();
+    };
+    // Created open, then dismissed and expanded again in one task, before the
+    // initializer's timer.
+    state.search = state.createSearch({ initialState: "view", viewMode: "docked", suggestions: ["One"] });
+    const holder = document.createElement("div");
+    holder.append(state.search.element);
+    document.body.append(holder);
+    state.search.collapse();
+    state.search.expand();
+    // This timer is queued after the initializer's, so the initializer has asked
+    // for focus a second time by now. The collapse runs before any frame.
+    setTimeout(() => {
+      state.search.collapse();
+      release();
+      // Past the released frame, and past the 150ms a blur takes to close a view.
+      setTimeout(() => resolve({
+        view: !!document.querySelector(".mtrl-search--view"),
+        input: document.activeElement?.className === "mtrl-search__input",
+      }), 300);
+    }, 0);
+  }));
+  assert.deepEqual(result, { view: false, input: false },
+    "the initializer and the expansion both ask for focus; a collapse before the frames cancels both requests");
+};
+
 export async function checkSearch(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1000, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -197,8 +250,31 @@ export async function checkSearch(page: Page): Promise<void> {
   const back = await layout(page);
   assert.deepEqual([back.surface[3], back.after, back.popover], [56, bar.after, false], "Escape: back to a bar in the page");
 
+  // Created already open: showing the surface moves focus to its first control,
+  // the back button — for a modal dialog and for a popover — and this path never
+  // asked for the input. M3: a selected search entry point opens focused search.
+  for (const viewMode of ["fullscreen", "docked"] as const) {
+    await mount(page, { initialState: "view", viewMode, suggestions: ["One"] });
+    await page.waitForFunction(() => document.querySelector(".mtrl-search__surface")?.matches(":modal, :popover-open"));
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+    const created = await page.evaluate(() => {
+      const input = document.querySelector(".mtrl-search__input");
+      const leading = document.querySelector<HTMLElement>(".mtrl-search__leading-icon");
+      const active = document.activeElement;
+      return {
+        active: active === input ? "input" : active === leading ? "the back button" : active?.tagName ?? null,
+        ring: leading ? getComputedStyle(leading).outlineStyle : null,
+      };
+    });
+    assert.equal(created.active, "input", `created open, ${viewMode}: search opens on the input`);
+    assert.equal(created.ring, "none", `created open, ${viewMode}: the back button paints no focus ring over the input`);
+  }
+
+  await overlappingOpeningPaths(page);
+
   await checkSearchTokens(page);
   await checkSearchVariants(page);
+  await checkSearchSuggestionLayout(page, "factory");
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
   console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal; 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions; the contained default and the divided variant, docked and full screen, and the results' reveal; minWidth and maxWidth.");
 }

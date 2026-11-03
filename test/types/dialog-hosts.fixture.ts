@@ -1,27 +1,24 @@
 // Dialog's internal event hosts must accept the callback type supplied
-// by withEvents. These assertions are compiled, not executed. The private
-// DialogFeatureHost is reached through getApiConfig's parameter rather than
-// exported for a test. ts:check also checks the real composition pipeline.
+// by withEvents. These assertions are compiled, not executed. DialogFeatureHost
+// is the private host withAPI reads, exported by api.ts so this can name it.
+// ts:check also checks the real composition pipeline.
 import type { DialogComponent, DialogEvent, DialogFeatureComponent } from "../../src/components/dialog/types";
-import type { ApiOptions } from "../../src/components/dialog/api";
-import { getApiConfig } from "../../src/components/dialog/config";
+import type { ApiOptions, DialogFeatureHost } from "../../src/components/dialog/api";
 import type { EventCallback } from "../../src/core/state/emitter";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
-type FeatureHost = Parameters<typeof getApiConfig>[0];
-
 export const featureOnUsesCoreCallback: Equals<
   Parameters<DialogFeatureComponent["on"]>[1], EventCallback
 > = true;
 
-export const configOnUsesCoreCallback: Equals<
-  Parameters<FeatureHost["on"]>[1], EventCallback
+export const hostOnUsesCoreCallback: Equals<
+  Parameters<DialogFeatureHost["on"]>[1], EventCallback
 > = true;
 
-export const configOffUsesCoreCallback: Equals<
-  Parameters<FeatureHost["off"]>[1], EventCallback
+export const hostOffUsesCoreCallback: Equals<
+  Parameters<DialogFeatureHost["off"]>[1], EventCallback
 > = true;
 
 export const apiOnUsesCoreCallback: Equals<

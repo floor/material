@@ -29,7 +29,8 @@ export type {
  * Constants for select configuration
  * 
  * @example
- * import { createSelect, SELECT_VARIANTS } from 'material';
+ * import { createSelect } from 'material';
+ * import { SELECT_VARIANTS } from 'material/components/select/constants';
  * 
  * const select = createSelect({
  *   variant: SELECT_VARIANTS.OUTLINED,

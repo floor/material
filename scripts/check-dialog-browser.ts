@@ -31,6 +31,9 @@ export async function checkDialogMount(page: Page, selected: readonly Mount[] = 
       const wrapper = document.createElement("div");
       stage.append(trigger, preserved, wrapper);
       document.body.append(stage);
+      // A contained dialog is centred in its container: give this mount a box
+      // a dialog fits in, or its actions sit above the page.
+      if (mount === "container") stage.style.cssText = "width:420px;height:280px;margin:12px;background:#eee";
       const overflow = document.body.style.overflow;
       document.body.style.overflow = "scroll";
       const dialog = state.createDialog({
@@ -119,13 +122,257 @@ export async function checkDialogMount(page: Page, selected: readonly Mount[] = 
     }
   }
   console.log(`Passed dialog mounting checks (${selected.length} mounts): initial focus, Tab/Shift+Tab wrap, Escape, pointer action, reopen and background restoration.`);
+  await checkDialogScrimScope(page);
+}
+
+type ScrimContainer = "static" | "absolute" | "none" | "body";
+type ScrimWindow = Window & {
+  createDialog: typeof createDialog;
+  scrimDialog: {
+    dialog: ReturnType<typeof createDialog>;
+    container: HTMLElement | null;
+  };
+};
+
+type ScrimScope = {
+  overlayPosition: string;
+  scrimMatchesContainer: boolean | null;
+  scrimCoversViewport: boolean;
+  containerInlineWhileOpen: string | null;
+  openAfterOutsideClick?: boolean;
+  containerInlineAfterClose?: string | null;
+  containerInlineAfterDestroy?: string | null;
+};
+
+/**
+ * A dialog mounted in a container scopes its scrim to it: the scrim is the
+ * container's box, a press on the page outside it does not dismiss, and the
+ * container's own inline position (none included) comes back on close and on
+ * destroy. A positioned container is left as it is, and the page-level paths
+ * (no container, or the body) are unchanged.
+ */
+export async function checkDialogScrimScope(page: Page): Promise<void> {
+  const expected: Record<ScrimContainer, ScrimScope> = {
+    static: {
+      overlayPosition: "absolute", scrimMatchesContainer: true, scrimCoversViewport: false,
+      containerInlineWhileOpen: "relative", openAfterOutsideClick: true,
+      containerInlineAfterClose: "", containerInlineAfterDestroy: "",
+    },
+    absolute: {
+      overlayPosition: "absolute", scrimMatchesContainer: true, scrimCoversViewport: false,
+      containerInlineWhileOpen: "absolute", openAfterOutsideClick: true,
+      containerInlineAfterClose: "absolute", containerInlineAfterDestroy: "absolute",
+    },
+    none: {
+      overlayPosition: "fixed", scrimMatchesContainer: null, scrimCoversViewport: true,
+      containerInlineWhileOpen: null, openAfterOutsideClick: false,
+      containerInlineAfterClose: null, containerInlineAfterDestroy: null,
+    },
+    body: {
+      overlayPosition: "fixed", scrimMatchesContainer: null, scrimCoversViewport: true,
+      containerInlineWhileOpen: null, openAfterOutsideClick: false,
+      containerInlineAfterClose: null, containerInlineAfterDestroy: null,
+    },
+  };
+
+  for (const kind of ["static", "absolute", "none", "body"] as const) {
+    await page.evaluate((kind) => {
+      const state = window as unknown as ScrimWindow;
+      const container = kind === "none" || kind === "body" ? null : document.createElement("section");
+      if (container) {
+        // A static one carries no position at all: the inline value the
+        // dialog takes and must give back is the empty string
+        container.style.cssText =
+          `${kind === "absolute" ? "position:absolute;" : ""}margin:20px;width:340px;height:240px;background:rgb(200,220,240)`;
+        container.textContent = "Region";
+        document.body.prepend(container);
+      }
+      const dialog = state.createDialog({
+        title: "Contained?", content: "Body", animationDuration: 0,
+        ...(container ? { container } : kind === "body" ? { container: document.body } : {}),
+      });
+      state.scrimDialog = { dialog, container };
+      dialog.open();
+    }, kind);
+
+    const visible = () => page.waitForFunction(() => {
+      const { dialog } = (window as unknown as ScrimWindow).scrimDialog;
+      return getComputedStyle(dialog.overlay).visibility === "visible";
+    });
+    const inlinePosition = () => page.evaluate(() => {
+      const { container } = (window as unknown as ScrimWindow).scrimDialog;
+      return container ? container.style.position : null;
+    });
+
+    const measured: ScrimScope = { overlayPosition: "", scrimMatchesContainer: null, scrimCoversViewport: false, containerInlineWhileOpen: null };
+    try {
+      await visible();
+      Object.assign(measured, await page.evaluate(() => {
+        const { dialog, container } = (window as unknown as ScrimWindow).scrimDialog;
+        const scrim = dialog.overlay.getBoundingClientRect();
+        const box = container?.getBoundingClientRect();
+        return {
+          overlayPosition: getComputedStyle(dialog.overlay).position,
+          scrimMatchesContainer: box
+            ? scrim.x === box.x && scrim.y === box.y && scrim.width === box.width && scrim.height === box.height
+            : null,
+          scrimCoversViewport: scrim.x === 0 && scrim.y === 0 && scrim.width === window.innerWidth && scrim.height === window.innerHeight,
+          containerInlineWhileOpen: container ? container.style.position : null,
+        } satisfies ScrimScope;
+      }));
+
+      // A press on the page behind the scrim, past the container and the
+      // dialog: a page-level scrim is there, a contained one is not
+      const point = await page.evaluate(() => ({ x: window.innerWidth - 10, y: window.innerHeight - 10 }));
+      await page.mouse.move(point.x, point.y);
+      await page.mouse.down();
+      await page.mouse.up();
+      measured.openAfterOutsideClick = await page.evaluate(() => (window as unknown as ScrimWindow).scrimDialog.dialog.isOpen());
+
+      await page.evaluate(() => {
+        const { dialog } = (window as unknown as ScrimWindow).scrimDialog;
+        if (dialog.isOpen()) dialog.close();
+      });
+      await page.waitForFunction(() => {
+        const { dialog } = (window as unknown as ScrimWindow).scrimDialog;
+        return !dialog.isOpen() && !dialog.overlay.parentNode;
+      });
+      measured.containerInlineAfterClose = await inlinePosition();
+
+      // Destroy is the other way the dialog lets go of the container
+      await page.evaluate(() => (window as unknown as ScrimWindow).scrimDialog.dialog.open());
+      await visible();
+      await page.evaluate(() => (window as unknown as ScrimWindow).scrimDialog.dialog.destroy());
+      measured.containerInlineAfterDestroy = await inlinePosition();
+    } finally {
+      await page.evaluate(() => {
+        const state = window as unknown as ScrimWindow;
+        state.scrimDialog.dialog.destroy();
+        state.scrimDialog.container?.remove();
+      });
+    }
+    console.log(`dialog scrim ${kind}: ${JSON.stringify(measured)}`);
+    assert.deepEqual(measured, expected[kind], `${kind}: the scrim is the container's box and its position comes back`);
+  }
+  console.log("Passed dialog scrim checks: a contained dialog covers its container, an outside press keeps it open, and the container's inline position returns on close and destroy.");
+}
+
+// The trap's reach. A dialog's content can hold a custom element, whose
+// controls live in its shadow root -- every component in this library is one.
+// The trap uses the shared tabStops/wrapTab, which walk open shadow roots; the
+// light-DOM querySelectorAll it replaced could not reach a control in one, so
+// the trap stayed on the actions and the content's control was unreachable.
+type FocusWindow = Window & {
+  createDialog: typeof createDialog;
+  focusReachDialog?: ReturnType<typeof createDialog>;
+  focusReachTrigger?: HTMLButtonElement;
+};
+
+export async function checkDialogFocusReach(page: Page): Promise<void> {
+  const deepActive = () => page.evaluate(() => {
+    let active: Element | null = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    return active?.localName ?? "none";
+  });
+  await page.evaluate(() => {
+    class FocusReachField extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" }).innerHTML = '<input aria-label="Inside">';
+      }
+    }
+    if (!customElements.get("focus-reach-field")) customElements.define("focus-reach-field", FocusReachField);
+    const state = window as unknown as FocusWindow;
+    const trigger = document.createElement("button");
+    trigger.textContent = "Edit";
+    document.body.append(trigger);
+    trigger.focus();
+    state.focusReachTrigger = trigger;
+    const dialog = state.createDialog({
+      title: "Edit name", content: "<focus-reach-field></focus-reach-field>",
+      buttons: [{ text: "Done", closeDialog: true }], animationDuration: 0,
+    });
+    state.focusReachDialog = dialog;
+    dialog.open();
+  });
+  try {
+    await page.waitForFunction(() => {
+      const dialog = (window as unknown as FocusWindow).focusReachDialog!;
+      return dialog.element.classList.contains("mtrl-dialog--visible") && getComputedStyle(dialog.element).opacity === "1";
+    });
+    assert.equal(await deepActive(), "input", "focus starts in the content's shadow root, not on the actions");
+    await page.keyboard.press("Tab");
+    assert.equal(await deepActive(), "button", "Tab leaves the shadow control for the dialog's action");
+    await page.keyboard.press("Tab");
+    assert.equal(await deepActive(), "input", "Tab wraps from the last action back into the shadow content");
+    await page.keyboard.press("Shift+Tab");
+    assert.equal(await deepActive(), "button", "Shift+Tab wraps from the shadow content to the last action");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.evaluate(() => (window as unknown as FocusWindow).focusReachDialog!.isOpen()), false, "Escape still closes it");
+    assert.equal(await page.evaluate(() => document.activeElement === (window as unknown as FocusWindow).focusReachTrigger), true, "focus returns to the opener");
+  } finally {
+    await page.evaluate(() => {
+      const state = window as unknown as FocusWindow;
+      state.focusReachDialog?.destroy();
+      state.focusReachTrigger?.remove();
+      state.focusReachDialog = undefined;
+      state.focusReachTrigger = undefined;
+    });
+  }
+  console.log("Passed dialog focus reach: the trap starts in shadow content, wraps to the actions, and returns on Escape.");
+}
+
+// A control marked aria-hidden is not a candidate for initial focus: the old
+// light-DOM filter skipped it, and the shared tab-stop path has to keep that,
+// in either direction.
+type HiddenFocusWindow = Window & {
+  createDialog: typeof createDialog;
+  hiddenFocusDialog?: ReturnType<typeof createDialog>;
+  hiddenFocusTrigger?: HTMLButtonElement;
+};
+
+export async function checkDialogAriaHiddenFocus(page: Page): Promise<void> {
+  const visible = () => page.waitForFunction(() => {
+    const dialog = (window as unknown as HiddenFocusWindow).hiddenFocusDialog!;
+    return dialog.element.classList.contains("mtrl-dialog--visible") && getComputedStyle(dialog.element).opacity === "1";
+  });
+  for (const dir of ["ltr", "rtl"]) {
+    await page.evaluate((dir) => {
+      const state = window as unknown as HiddenFocusWindow;
+      const trigger = document.createElement("button");
+      trigger.textContent = "Open";
+      document.body.append(trigger);
+      trigger.focus();
+      const dialog = state.createDialog({
+        title: "Edit name", animationDuration: 0,
+        content: '<input id="hidden" aria-hidden="true"><input id="visible">',
+        buttons: [{ text: "Done", closeDialog: true }],
+      });
+      dialog.element.dir = dir;
+      state.hiddenFocusDialog = dialog;
+      state.hiddenFocusTrigger = trigger;
+      dialog.open();
+    }, dir);
+    await visible();
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.id ?? ""),
+      "visible",
+      `${dir}: initial focus skips a control marked aria-hidden`,
+    );
+    await page.evaluate(() => {
+      const state = window as unknown as HiddenFocusWindow;
+      state.hiddenFocusDialog!.destroy();
+      state.hiddenFocusTrigger!.remove();
+    });
+  }
+  console.log("Passed dialog aria-hidden focus: initial focus skips a control marked aria-hidden in left-to-right and right-to-left.");
 }
 
 // A focused reproduction without packing or running unrelated core checks.
-// Build first for the stylesheet, then: bun run scripts/check-dialog-browser.ts [mount…]
+// Build first for the stylesheet, then: bun run scripts/check-dialog-browser.ts [mount…|focus|hidden]
 if (import.meta.main) {
   const selected = process.argv.slice(2);
-  for (const mount of selected) assert(mounts.includes(mount as Mount), `Unknown mount: ${mount}`);
+  for (const mount of selected) assert(mount === "focus" || mount === "hidden" || mounts.includes(mount as Mount), `Unknown mount: ${mount}`);
   const bundle = await Bun.build({ entrypoints: ["src/components/dialog/index.ts"], target: "browser" });
   assert(bundle.success, String(bundle.logs));
   const browser = await chromium.launch({ headless: true });
@@ -138,7 +385,10 @@ if (import.meta.main) {
     await page.evaluate(async (entry) => {
       (window as unknown as DialogWindow).createDialog = (await import(entry)).default;
     }, `data:text/javascript;base64,${Buffer.from(await bundle.outputs[0].text()).toString("base64")}`);
-    await checkDialogMount(page, selected.length ? selected as Mount[] : mounts);
+    const mountNames = selected.filter((name) => name !== "focus" && name !== "hidden") as Mount[];
+    if (!selected.length || mountNames.length) await checkDialogMount(page, mountNames.length ? mountNames : mounts);
+    if (selected.includes("focus")) await checkDialogFocusReach(page);
+    if (selected.includes("hidden")) await checkDialogAriaHiddenFocus(page);
     assert.deepEqual(errors, [], "dialog page errors");
   } finally {
     await browser.close();
