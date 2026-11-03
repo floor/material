@@ -52,7 +52,7 @@ A lighter select and SSR package.
   The four `dist/ssr` adapter entries (`react.js`, `svelte.js`, `vue.js`,
   `solid.js`) are TypeScript emits, not bundles, and skipped the build's
   comment strip that every other runtime module goes through; the packed
-  package carried 54 prose comments across the four. They now go through the
+  package carried 74 prose comments across the four. They now go through the
   same strip, which keeps a `/*!` licence banner and the `/*#__PURE__*/`
   annotations, and `ssr-comments:check` fails the package job when a prose
   comment returns. The strip is comments-only: the four adapters' comment
