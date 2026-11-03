@@ -117,8 +117,8 @@ console.log(`The calendar is its own chunk: ${bodyChunk}`);
 
 // The red control: an entry that imports the surface eagerly. The same graph
 // walk must find the calendar initial, or the check above proves nothing.
-const shell = relative(join(scratch, "eager-entry.ts"), join(root, "src/components/datepicker/shell.ts"));
-const surface = relative(join(scratch, "eager-entry.ts"), join(root, "src/components/datepicker/surface.ts"));
+const shell = relative(scratch, join(root, "src/components/datepicker/shell.ts"));
+const surface = relative(scratch, join(root, "src/components/datepicker/surface.ts"));
 await Bun.write(
   join(scratch, "eager-entry.ts"),
   `import { createDatePickerShell } from ${JSON.stringify(shell)};\nimport { createCalendarSurface } from ${JSON.stringify(surface)};\nglobalThis._eager = () => createDatePickerShell({}, createCalendarSurface);\n`
