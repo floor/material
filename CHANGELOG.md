@@ -17,6 +17,41 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-11-03
+
+Lighter right-to-left CSS, and a smaller Sass package.
+
+### Changed
+
+- **The full stylesheet and the per-component stylesheets ship physical
+  sides with direction arms (#176).**
+  `material/styles` and `material/styles/<component>` no longer carry the
+  lowered logical insets and corner radii that a bundler targeting older
+  browsers rewrites. Each start or end inset is written as its physical side
+  plus a mirrored arm under the direction markers, so the properties such a
+  bundler rewrites are absent from the shipped sheets and no bundler pass can
+  put one on the wrong side. The rendered layout is unchanged. The arms
+  answer `dir="rtl"` on the document root or on the component root, the
+  runtime's `mtrl-rtl` class on the component, on an ancestor or on a shadow
+  host, and a nearer left-to-right boundary — a `dir="ltr"` subtree or an
+  `mtrl-ltr` island inside right-to-left content — stays left to right.
+  Logical margins stay logical and follow `dir`; `lang` alone is not a
+  direction and moves nothing; the marker class does not set the direction.
+  The element sheets and the shadow sheets keep the logical form throughout.
+  A consumer bundle of the full stylesheet falls from 63,565 bytes gzip to
+  58,669; the shipped source grows, because each arm is a rule the logical
+  form did not carry.
+
+- **The package ships only the Sass sources a public entry loads (#206).**
+  Three internal partials leave the published package:
+  `src/styles/abstract/_config.scss`, `src/styles/base/_foundation.scss` and
+  `src/styles/base/_typescale.scss`. No public entry loads them: the public
+  Sass API is `material/src/styles/main`, `material/src/styles/themes`,
+  `material/src/styles/elements` and the eight scheme-variant theme files
+  read by path, and all eleven compile from the packed package. An import of
+  one of the three by its internal path was never supported, and no longer
+  resolves. The package is 1,577 files instead of 1,578.
+
 ## [3.4.3] - 2026-11-03
 
 Server rendering and tooling fixes.
@@ -5543,7 +5578,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.4.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/floor/material/compare/v3.4.3...v3.5.0
 [3.4.3]: https://github.com/floor/material/compare/v3.4.2...v3.4.3
 [3.4.2]: https://github.com/floor/material/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
