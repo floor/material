@@ -4,7 +4,9 @@ import { readFileSync } from "node:fs";
 import "./css.fixture";
 import { configureHTML } from "../../src/core/dom/html";
 import { declarations, elements } from "../../src/elements";
+import createMenu from "../../src/components/menu";
 import { renderElement } from "../../src/ssr";
+import { withServerScope } from "../../src/ssr/server-dom";
 import { changelogSection } from "../../scripts/release-notes";
 
 const PROBE = "<mtrl-markup-probe></mtrl-markup-probe>";
@@ -54,6 +56,43 @@ const sank = (tag: string, attributes: Record<string, string>, children = ""): b
     configureHTML(null);
   }
   return hit;
+};
+
+/**
+ * True when a menu item carrying this string writes it through the HTML sink.
+ * A declaration the parent hands to a menu as an item (the select's options
+ * become menu items) has no reader of its own: the menu is the reader.
+ */
+const sankMenuItem = (attributes: Record<string, string>): boolean => {
+  let hit = false;
+  configureHTML({
+    sanitize(html) {
+      if (html === PROBE) hit = true;
+      return html;
+    },
+  });
+  try {
+    withServerScope(() => {
+      const opener = document.createElement("button");
+      document.body.appendChild(opener);
+      createMenu({ opener, items: [{ value: "a", text: "Item", ...attributes }] }).destroy();
+    });
+  } catch {
+    // A menu item the menu rejects is not a markup path.
+  } finally {
+    configureHTML(null);
+  }
+  return hit;
+};
+
+/**
+ * Declaration children whose parent reads them into a menu it loads later:
+ * the select creates its menu on the first open (components/menu/on-demand.ts),
+ * so the server render no longer builds it and the parent render alone cannot
+ * show the path. The menu's own item rendering is what writes the string.
+ */
+const menuReaders: Record<string, (attributes: Record<string, string>) => boolean> = {
+  "select-option": sankMenuItem,
 };
 
 const hostAttempts = (spec: Spec, name: string): Record<string, string>[] => {
@@ -128,6 +167,7 @@ const markupAttributes = (): string[] => {
         const iconOnly = `<m-${decl.name} value="a" aria-label="Item" selected ${probe}></m-${decl.name}>`;
         hit = sank(`m-${parent.name}`, parentAttributes(parent, { selection: "single", value: "a" }), iconOnly);
       }
+      if (!hit) hit = menuReaders[decl.name]?.({ [name]: PROBE }) ?? false;
       if (hit) found.add(`${decl.name} ${name}`);
     }
   }
