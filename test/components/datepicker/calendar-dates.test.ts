@@ -13,7 +13,7 @@
 // Found while clearing this file for strictNullChecks.
 
 import { describe, test, expect } from "bun:test";
-import { generateCalendarDates } from "../../../src/components/datepicker/utils";
+import { generateCalendarDates } from "../../../src/components/datepicker/surface";
 
 // March 2025 (month is 0-based, so 2 is March).
 const YEAR = 2025;

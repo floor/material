@@ -1,5 +1,5 @@
 // src/components/datepicker/utils.ts
-import { CalendarDate, MONTH_NAMES, MONTH_NAMES_SHORT } from './types';
+import { MONTH_NAMES, MONTH_NAMES_SHORT } from './types';
 
 /**
  * Parses a date from various input types
@@ -120,16 +120,6 @@ export const getDaysInMonth = (year: number, month: number): number => {
 };
 
 /**
- * Gets the first day of the month
- * @param year - Year
- * @param month - Month (0-11)
- * @returns Day of the week (0-6, where 0 is Sunday)
- */
-export const getFirstDayOfMonth = (year: number, month: number): number => {
-  return new Date(year, month, 1).getDay();
-};
-
-/**
  * Checks if two dates are the same day
  * @param date1 - First date
  * @param date2 - Second date
@@ -141,126 +131,6 @@ export const isSameDay = (date1: Date, date2: Date): boolean => {
     date1.getMonth() === date2.getMonth() &&
     date1.getFullYear() === date2.getFullYear()
   );
-};
-
-/**
- * Checks if a date is between two other dates (inclusive)
- * @param date - Date to check
- * @param startDate - Start date
- * @param endDate - End date
- * @returns True if date is between start and end, false otherwise
- */
-export const isDateInRange = (date: Date, startDate: Date, endDate: Date): boolean => {
-  const timestamp = date.getTime();
-  return timestamp >= startDate.getTime() && timestamp <= endDate.getTime();
-};
-
-/**
- * Generates calendar dates for a month
- * @param year - Year
- * @param month - Month (0-11)
- * @param selectedDate - Currently selected date
- * @param rangeEndDate - End date if range selection
- * @param minDate - Minimum selectable date
- * @param maxDate - Maximum selectable date
- * @returns Array of calendar dates
- */
-export const generateCalendarDates = (
-  year: number,
-  month: number,
-  selectedDate: Date | null = null,
-  rangeEndDate: Date | null = null,
-  minDate: Date | null = null,
-  maxDate: Date | null = null
-): CalendarDate[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // A bare `(minDate && …) || (maxDate && …)` yields null when both bounds are
-  // absent, so isDisabled was declared boolean while carrying null. Falsy
-  // either way, but a consumer testing `=== false` would have been wrong.
-  const outOfRange = (date: Date): boolean =>
-    Boolean((minDate && date < minDate) || (maxDate && date > maxDate));
-
-  const result: CalendarDate[] = [];
-  
-  // Calculate days needed from previous month
-  const firstDay = getFirstDayOfMonth(year, month);
-  const daysInPrevMonth = getDaysInMonth(year, month - 1);
-  
-  // Add days from previous month
-  for (let i = firstDay - 1; i >= 0; i--) {
-    const date = new Date(year, month - 1, daysInPrevMonth - i);
-    const isDisabled = outOfRange(date);
-    
-    result.push({
-      date,
-      day: date.getDate(),
-      isCurrentMonth: false,
-      isToday: isSameDay(date, today),
-      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      isDisabled
-    });
-  }
-  
-  // Add days from current month
-  const daysInMonth = getDaysInMonth(year, month);
-  for (let i = 1; i <= daysInMonth; i++) {
-    const date = new Date(year, month, i);
-    const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-    const isDisabled = outOfRange(date);
-    
-    const calendarDate: CalendarDate = {
-      date,
-      day: i,
-      isCurrentMonth: true,
-      isToday: isSameDay(date, today),
-      isSelected,
-      isDisabled
-    };
-    
-    // Handle range selection
-    if (selectedDate && rangeEndDate) {
-      calendarDate.isRangeStart = isSameDay(date, selectedDate);
-      calendarDate.isRangeEnd = isSameDay(date, rangeEndDate);
-      calendarDate.isRangeMiddle = isDateInRange(date, selectedDate, rangeEndDate) && 
-        !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
-    }
-    
-    result.push(calendarDate);
-  }
-  
-  // Add days from next month to complete the calendar grid (6 rows × 7 columns)
-  const totalDaysNeeded = 42; // 6 rows × 7 columns
-  const remainingDays = totalDaysNeeded - result.length;
-  
-  for (let i = 1; i <= remainingDays; i++) {
-    const date = new Date(year, month + 1, i);
-    const isDisabled = outOfRange(date);
-    
-    result.push({
-      date,
-      day: i,
-      isCurrentMonth: false,
-      isToday: isSameDay(date, today),
-      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      isDisabled
-    });
-  }
-  
-  return result;
-};
-
-/**
- * Adds days to a date
- * @param date - Base date
- * @param days - Number of days to add
- * @returns New date with days added
- */
-export const addDays = (date: Date, days: number): Date => {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
 };
 
 /**

@@ -924,6 +924,11 @@
   ],
   "datepicker/constants": [
     {
+      "name": "CALENDAR_ICON",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "DATEPICKER_CLASSES",
       "kind": "value",
       "status": "public"

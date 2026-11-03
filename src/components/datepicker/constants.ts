@@ -114,7 +114,16 @@ export const DATEPICKER_EVENTS = {
   VIEW_CHANGE: 'viewChange'
 } as const;
 
-/** Internal SVG assets; accessible names are on their buttons. */
+/** The trigger's calendar icon; the calendar's own live in ./surface, with it. */
+export const CALENDAR_ICON = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM5 10h14v10H5V10Zm0-4h14v2H5V6Zm2 6h4v4H7v-4Z"/></svg>';
+
+/**
+ * Internal SVG assets; accessible names are on their buttons.
+ *
+ * The calendar's own icons are repeated in ./surface, so the deferred entry
+ * carries only the trigger's icon until the calendar loads. This complete set
+ * stays for the module's public readers.
+ */
 export const DATEPICKER_ICONS = {
   calendar: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM5 10h14v10H5V10Zm0-4h14v2H5V6Zm2 6h4v4H7v-4Z"/></svg>',
   edit: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m3 17.25 11.06-11.06 3.75 3.75L6.75 21H3v-3.75ZM20.71 7.04l-1.83 1.83-3.75-3.75 1.83-1.83a1 1 0 0 1 1.41 0l2.34 2.34a1 1 0 0 1 0 1.41Z"/></svg>',

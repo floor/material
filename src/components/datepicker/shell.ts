@@ -1,62 +1,71 @@
 // src/components/datepicker/shell.ts
 //
 // The datepicker's synchronous half: the field, the trigger, the dialog
-// element, the value and draft state, the events, and the public API. It
-// paints nothing: the calendar is a surface module, built with the factory by
-// the default entry and imported on the first open by the deferred one. Both
-// entries run this same shell, so their synchronous contract — isOpen(), the
-// open/close events, a close while the surface is in flight — is one
+// element, the value and draft state, the events, and the public API. The
+// calendar is a surface module the entry builds through a factory: the default
+// entry passes createCalendarSurface, so the picker paints at creation, and the
+// deferred one passes a stand-in that imports the calendar on the first open.
+// Both entries run this same shell, so their synchronous contract — isOpen(),
+// the open/close events, a close while the surface is in flight — is one
 // implementation.
 
 import { pipe } from "../../core/compose";
 import { createBase, withElement } from "../../core/compose/component";
 import { withEvents, withDisabled, withLifecycle } from "../../core/compose/features";
 import { createElement } from "../../core/dom/create";
+import { createComponentConfig, createElementConfig } from "../../core/config/component";
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
 import { eventsFrom, onModalEscape, type EventsFrom, type ModalEscape } from "../../core/dom/layer";
-import { DATEPICKER_ICONS } from "./constants";
+import { CALENDAR_ICON, DEFAULT_DATE_FORMAT } from "./constants";
 import { PREFIX } from "../../core/config";
-import { createBaseConfig, getContainerConfig } from "./config";
-import { withAPI } from "./api";
 import { addMonths, formatDate, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
-import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
-import type { DatePickerSurface, DatePickerSurfaceContext } from "./surface";
+import type { DatePickerComponent, DatePickerConfig, DatePickerEvents, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
+import type { EventCallback } from "../../core/state/emitter";
+import type { DatePickerSurfaceFactory } from "./surface";
+
+export const defaultConfig: DatePickerConfig = {
+  variant: "docked", initialView: "day", selectionMode: "single",
+  dateFormat: DEFAULT_DATE_FORMAT, animate: true, closeOnSelect: false,
+};
+export const createBaseConfig = (config: DatePickerConfig = {}) =>
+  createComponentConfig(defaultConfig, config, "datepicker");
+export const getContainerConfig = (config: DatePickerConfig) => createElementConfig(config, {
+  tag: "div", forwardEvents: { keydown: true, click: true }, interactive: true,
+});
+
+/** Keep the typed public event API and fluent return identity at the boundary. */
+export function withAPI(
+  component: Omit<DatePickerComponent, "on" | "off">,
+  events: { on(event: string, handler: EventCallback): unknown; off(event: string, handler: EventCallback): unknown },
+): DatePickerComponent {
+  const api: DatePickerComponent = {
+    ...component,
+    on<K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) { events.on(event, handler); return api; },
+    off<K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) { events.off(event, handler); return api; },
+  };
+  return api;
+}
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
   typeof value === "object" && value !== null && !(value instanceof Date) && !Array.isArray(value);
 
 let nextId = 0;
-const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
-function lockScroll(doc: Document): () => void {
-  const lock = scrollLocks.get(doc) ?? { count: 0, overflow: doc.body.style.overflow };
-  lock.count++; scrollLocks.set(doc, lock); doc.body.style.overflow = "hidden";
-  return () => { if (--lock.count === 0) { doc.body.style.overflow = lock.overflow; scrollLocks.delete(doc); } };
-}
-
-/** Builds a calendar surface around the shell it belongs to. */
-export type DatePickerSurfaceFactory = (context: DatePickerSurfaceContext) => DatePickerSurface;
-
-/** What a deferred entry's dynamic import resolves to. */
-export interface DatePickerSurfaceModule {
-  createCalendarSurface: DatePickerSurfaceFactory;
-}
 
 /**
  * The datepicker factory both entries share.
  *
- * With a deferred loader the trigger's hover or focus starts the import
- * without opening anything, so the first open paints at once.
+ * The surface is built by the factory the entry passes: the calendar itself,
+ * or a stand-in that defers the import and hands over the calendar when it
+ * lands.
  *
  * @param config - The picker's configuration
- * @param eager - Builds the surface now, so the picker paints at creation
- * @param deferred - Imports the surface module on the first open or preload
+ * @param createSurface - Builds the surface now, so the picker paints at creation
  * @returns The public component
  */
 export function createDatePickerShell<M extends string = "single">(
   config: DatePickerConfig & { selectionMode?: M } = {},
-  eager?: DatePickerSurfaceFactory,
-  deferred?: () => Promise<DatePickerSurfaceModule>,
+  createSurface: DatePickerSurfaceFactory,
 ): DatePickerComponent<DatePickerValueOf<M>> {
   const settings = createBaseConfig(config);
   const base = pipe(createBase, withEvents(), withElement(getContainerConfig(settings)), withDisabled(settings), withLifecycle())(settings);
@@ -77,8 +86,6 @@ export function createDatePickerShell<M extends string = "single">(
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
   };
   const modal = state.variant !== "docked";
-  let surface: DatePickerSurface | null = null;
-  let loading = false;
   let opened = false, destroyed = false, navigationRequested = false, readOnly = false;
   // While it is open: a modal picker's place among the open modals (Escape is
   // a key press handled there, for the topmost one), and for a docked one the
@@ -87,7 +94,6 @@ export function createDatePickerShell<M extends string = "single">(
   const release = () => { escape?.stop(); from?.stop(); escape = from = undefined; };
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
-  let unlock: (() => void) | undefined;
   const label = createElement({ tag: "label", className: cls("label"), text: state.label, attributes: { for: `${id}-input` } });
   const field = createElement({ tag: "div", className: cls("anchor") });
   const input = doc.createElement("input");
@@ -95,7 +101,7 @@ export function createDatePickerShell<M extends string = "single">(
   if (settings.name) input.name = settings.name;
   input.placeholder = settings.placeholder || state.dateFormat; input.autocomplete = "off";
   input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
-  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, DATEPICKER_ICONS.calendar);
+  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, CALENDAR_ICON);
   trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
   // The supporting text, the date format unless given.
   const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });
@@ -106,15 +112,8 @@ export function createDatePickerShell<M extends string = "single">(
   dialog.setAttribute("aria-modal", String(modal));
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
-  const deferredEntry = deferred !== undefined;
-  if (modal) {
-    dialog.setAttribute("aria-labelledby", `${id}-title`);
-    // The title is rendered by the surface; a deferred picker names the
-    // dialog with the label until the target exists. The default entry paints
-    // the title with the factory, so its dialog keeps exactly today's markup.
-    if (deferredEntry) dialog.setAttribute("aria-label", state.label);
-  } else dialog.setAttribute("aria-label", state.label);
-  const announcement = createElement({ tag: "div", className: cls("sr-only"), attributes: { "aria-live": "polite", "aria-atomic": "true" } });
+  if (modal) dialog.setAttribute("aria-labelledby", `${id}-title`);
+  else dialog.setAttribute("aria-label", state.label);
   field.append(input, trigger); base.element.append(label, field, help, error, dialog);
   const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat) + (date && end ? ` - ${formatDate(end, state.dateFormat)}` : "");
   const getValue = (): DatePickerValue => committed ? committedEnd ? [new Date(committed), new Date(committedEnd)] : new Date(committed) : null;
@@ -140,26 +139,11 @@ export function createDatePickerShell<M extends string = "single">(
     if (!opened) return;
     opened = false; release();
     if (typeof dialog.close === "function") dialog.close(); else dialog.removeAttribute("open");
-    unlock?.(); unlock = undefined; resetDraft();
+    hideSurface();
+    resetDraft();
     trigger.setAttribute("aria-expanded", "false");
     if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
     if (!destroyed) base.emit("close", { value: getValue() });
-  };
-  // The surface module, the first time it is needed. A close while it flies
-  // leaves it mounted for the next open and never shows it.
-  const load = () => {
-    if (surface || loading || destroyed || !deferred) return;
-    loading = true;
-    deferred().then(({ createCalendarSurface }) => {
-      loading = false;
-      if (destroyed) return;
-      surface = createCalendarSurface(context);
-      surface.mount();
-      if (opened) surface.show();
-    }, (error: unknown) => {
-      loading = false;
-      console.error("Date picker surface failed to load:", error);
-    });
   };
   const open = () => {
     if (destroyed || opened || base.disabled.isDisabled() || readOnly) return;
@@ -174,8 +158,10 @@ export function createDatePickerShell<M extends string = "single">(
     // Whatever really had focus, through any shadow roots, gets it back.
     const opener = deepActiveElement();
     returnFocus = opener instanceof HTMLElement && opener !== doc.body ? opener : trigger;
-    // The state and `open` are synchronous; the paint waits for the surface.
-    if (surface) surface.show(); else load();
+    // The state and `open` are synchronous; the paint is the surface's. A
+    // deferred entry's stand-in starts its import here and paints when the
+    // calendar lands.
+    showSurface();
     base.emit("open", { value: getValue() });
   };
   const assignValue = (input: DatePickerInput, emit: boolean) => {
@@ -189,13 +175,13 @@ export function createDatePickerShell<M extends string = "single">(
     const end = Array.isArray(value) ? parseDate(value[1]) : null;
     if (!start || !state.isAllowed(start) || Array.isArray(value) && (!end || !state.isAllowed(end))) return;
     committed = end && end < start ? end : start; committedEnd = end && end < start ? start : end;
-    resetDraft(); setDisplayDate(committed); syncInput(); surface?.render(); if (emit) emitChange();
+    resetDraft(); setDisplayDate(committed); syncInput(); renderSurface(); if (emit) emitChange();
   };
   // setValue() and clear() are silent, as a native input set by script; the
   // user's entry and the calendar emit `change`.
   const clearValue = (emit: boolean) => {
     if (destroyed) return;
-    committed = null; committedEnd = null; resetDraft(); syncInput(); surface?.render(); if (emit) emitChange();
+    committed = null; committedEnd = null; resetDraft(); syncInput(); renderSurface(); if (emit) emitChange();
   };
   const onInputChange = () => {
     if (modal || destroyed || base.disabled.isDisabled()) return;
@@ -227,7 +213,7 @@ export function createDatePickerShell<M extends string = "single">(
       else if (!event.shiftKey && focused === last) { event.preventDefault(); first?.focus(); }
       return;
     }
-    surface?.key(event);
+    keySurface(event);
   };
   // A close request that is not a key press. The browser's cancel in the task
   // the picker opened in is the opening key's, when the page stopped that key
@@ -240,7 +226,7 @@ export function createDatePickerShell<M extends string = "single">(
     if (!modal && event.target instanceof Node && !event.composedPath().includes(base.element)) close(false);
     if (modal && event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close(); }
   };
-  const onDialogClick = (event: MouseEvent) => { surface?.click(event); onOutside(event); event.stopPropagation(); };
+  const onDialogClick = (event: MouseEvent) => { clickSurface(event); onOutside(event); event.stopPropagation(); };
   const onInputClick = () => { if (modal) open(); };
   const onFocusOut = (event: FocusEvent) => {
     // Native focus changes can run microtasks before activeElement has settled.
@@ -251,16 +237,11 @@ export function createDatePickerShell<M extends string = "single">(
   base.element.addEventListener("focusout", onFocusOut);
   dialog.addEventListener("click", onDialogClick); dialog.addEventListener("cancel", onCancel);
   input.addEventListener("change", onInputChange); input.addEventListener("click", onInputClick); doc.addEventListener("click", onOutside);
-  const context: DatePickerSurfaceContext = {
-    state, dialog, announcement, cls, view, modal,
-    closeOnSelect: settings.closeOnSelect === true,
-    isOpen: () => opened,
-    close: restoreFocus => close(restoreFocus),
-    commitDraft,
-    setDisplayDate,
-    lockScroll: () => { unlock = lockScroll(doc); },
-    setExpanded: value => trigger.setAttribute("aria-expanded", String(value)),
-  };
+  // The entry's surface: the calendar, or the stand-in that imports it. The
+  // tuple is the surface's whole runtime contract, so a stand-in forwards
+  // without this shell knowing which it holds.
+  const [showSurface, hideSurface, renderSurface, clickSurface, keySurface, validateSurface, destroySurface] =
+    createSurface(state, dialog, cls, view, trigger, !!settings.closeOnSelect, () => opened, close, commitDraft, setDisplayDate);
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();
@@ -289,7 +270,7 @@ export function createDatePickerShell<M extends string = "single">(
   const destroy = () => {
     if (destroyed) return;
     destroyed = true; close();
-    surface?.destroy();
+    destroySurface();
     doc.removeEventListener("click", onOutside); input.removeEventListener("change", onInputChange); input.removeEventListener("click", onInputClick);
     base.element.removeEventListener("click", onClick); base.element.removeEventListener("keydown", onKey); base.element.removeEventListener("focusout", onFocusOut);
     dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("cancel", onCancel);
@@ -306,29 +287,20 @@ export function createDatePickerShell<M extends string = "single">(
     setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
     clear() { clearValue(false); return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
-    setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; surface?.render(); if (state.inputMode) surface?.validate(); } return api; },
-    setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; surface?.render(); } return api; },
+    setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; renderSurface(); if (state.inputMode) validateSurface(); } return api; },
+    setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; renderSurface(); } return api; },
     calendar: {
-      goToDate(value) { const date = parseDate(value); if (date) { navigationRequested = !opened; setDisplayDate(date); surface?.render(); } },
-      nextMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1)); surface?.render(); },
-      prevMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1)); surface?.render(); },
-      nextYear() { navigationRequested = !opened; state.currentYear++; surface?.render(); }, prevYear() { navigationRequested = !opened; state.currentYear--; surface?.render(); },
-      showDayView() { state.currentView = "day"; state.inputMode = false; surface?.render(); },
-      showMonthView() { state.currentView = "month"; state.inputMode = false; surface?.render(); },
-      showYearView() { state.currentView = "year"; state.inputMode = false; surface?.render(); },
+      goToDate(value) { const date = parseDate(value); if (date) { navigationRequested = !opened; setDisplayDate(date); renderSurface(); } },
+      nextMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1)); renderSurface(); },
+      prevMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1)); renderSurface(); },
+      nextYear() { navigationRequested = !opened; state.currentYear++; renderSurface(); }, prevYear() { navigationRequested = !opened; state.currentYear--; renderSurface(); },
+      showDayView() { state.currentView = "day"; state.inputMode = false; renderSurface(); },
+      showMonthView() { state.currentView = "month"; state.inputMode = false; renderSurface(); },
+      showYearView() { state.currentView = "year"; state.inputMode = false; renderSurface(); },
       getCurrentView: () => state.currentView,
     },
   }, base);
   if (settings.value) assignValue(settings.value, false); else syncInput();
-  // The default entry builds the surface with the factory: the calendar is
-  // painted at creation, exactly as before the split.
-  if (eager) { surface = eager(context); surface.mount(); }
-  // A deferred entry starts the load on the intent that precedes the click:
-  // the trigger's hover or focus warms the chunk. The load is idempotent.
-  if (deferredEntry) {
-    trigger.addEventListener("pointerenter", load, { once: true });
-    trigger.addEventListener("focus", load, { once: true });
-  }
   setDisabled(!!settings.disabled);
   if (settings.required) input.required = true;
   if (settings.readOnly) setReadOnly(true);
