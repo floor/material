@@ -14,18 +14,34 @@
 // skipped for a listbox, whose combobox carries it.
 
 import type { EventCallback } from "../../core/state/emitter";
-import type { MenuComponent, MenuConfig, MenuContent, MenuPosition } from "./types";
+import type { MenuComponent, MenuConfig, MenuContent, MenuEvents, MenuPosition } from "./types";
 
 /** createMenu's configuration, except the items, which setItems may replace. */
 type MenuSettings = Omit<MenuConfig, "items">;
 
-/** A MenuComponent that creates the real menu on first open. */
-export type OnDemandMenu = MenuComponent & {
+/**
+ * The menu a select or a split button holds before the chunk arrives: the
+ * operations the two components reach on their own inner menu. The rest of
+ * the menu's API comes with the menu, which is why it is not here.
+ */
+export interface OnDemandMenu {
+  readonly element: HTMLElement;
   /** Starts the load without opening the menu, from the intent to open it. */
   preload(): void;
   /** Runs once the real menu exists, after an open that waited for it. */
   whenReady(callback: () => void): void;
-};
+  open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu;
+  close(event?: Event, restoreFocus?: boolean, skipAnimation?: boolean): OnDemandMenu;
+  isOpen(): boolean;
+  setItems(items: MenuContent[]): OnDemandMenu;
+  getItems(): MenuContent[];
+  setPosition(value: MenuPosition): OnDemandMenu;
+  getPosition(): MenuPosition;
+  setSelected(value: string | null): OnDemandMenu;
+  on<T extends keyof MenuEvents>(event: T, handler: MenuEvents[T]): OnDemandMenu;
+  on(event: string, handler: EventCallback): OnDemandMenu;
+  destroy(): void;
+}
 
 /**
  * A stand-in for the menu, replaced by it when the chunk lands
@@ -44,7 +60,6 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
   let current = items;
   let selected: string | null | undefined;
   let position: MenuPosition = settings.position ?? "bottom-end";
-  let opener: HTMLElement | string = settings.opener as HTMLElement;
   const openerElement: HTMLElement | null = typeof settings.opener === "string"
     ? null
     : (settings.opener as { element?: HTMLElement }).element ?? (settings.opener as HTMLElement);
@@ -78,7 +93,6 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
     // one when the surface arrives.
     if (selected !== undefined) created.setSelected(selected);
     if (position !== settings.position) created.setPosition(position);
-    if (opener !== settings.opener) created.setOpener(opener);
     if (opened) created.open(asked[0], asked[1]);
     for (const [event, set] of listeners) for (const listener of set) created.on(event, listener);
     listeners.clear();
@@ -108,7 +122,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return menu?.element ?? placeholder;
     },
 
-    open(event?: Event, interactionType?: "mouse" | "keyboard"): MenuComponent {
+    open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu {
       if (menu) {
         menu.open(event, interactionType);
         return api;
@@ -123,7 +137,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return api;
     },
 
-    close(event?: Event, restoreFocus = true, skipAnimation = false): MenuComponent {
+    close(event?: Event, restoreFocus = true, skipAnimation = false): OnDemandMenu {
       if (menu) {
         menu.close(event, restoreFocus, skipAnimation);
         return api;
@@ -136,16 +150,9 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return api;
     },
 
-    toggle(event?: Event): MenuComponent {
-      // isOpen(), not `opened`: once the menu is there, it holds the state
-      if (api.isOpen()) api.close(event);
-      else api.open(event);
-      return api;
-    },
-
     isOpen: (): boolean => (menu ? menu.isOpen() : opened),
 
-    setItems(items: MenuContent[]): MenuComponent {
+    setItems(items: MenuContent[]): OnDemandMenu {
       current = items;
       menu?.setItems(items);
       return api;
@@ -153,15 +160,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
 
     getItems: (): MenuContent[] => (menu ? menu.getItems() : current),
 
-    setOpener(value: HTMLElement | string): MenuComponent {
-      if (menu) menu.setOpener(value);
-      else opener = value;
-      return api;
-    },
-
-    getOpener: (): HTMLElement => (menu ? menu.getOpener() : (opener as HTMLElement)),
-
-    setPosition(value: MenuPosition): MenuComponent {
+    setPosition(value: MenuPosition): OnDemandMenu {
       if (menu) menu.setPosition(value);
       else position = value;
       return api;
@@ -169,27 +168,19 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
 
     getPosition: (): MenuPosition => (menu ? menu.getPosition() : position),
 
-    setSelected(value: string | null): MenuComponent {
+    setSelected(value: string | null): OnDemandMenu {
       if (menu) menu.setSelected(value);
       else selected = value;
       return api;
     },
 
-    getSelected: (): string | null => (menu ? menu.getSelected() : (selected ?? null)),
-
-    on(event: string, handler: EventCallback): MenuComponent {
+    on(event: string, handler: EventCallback): OnDemandMenu {
       if (menu) menu.on(event, handler);
       else {
         const set = listeners.get(event) ?? new Set<EventCallback>();
         set.add(handler);
         listeners.set(event, set);
       }
-      return api;
-    },
-
-    off(event: string, handler: EventCallback): MenuComponent {
-      if (menu) menu.off(event, handler);
-      else listeners.get(event)?.delete(handler);
       return api;
     },
 

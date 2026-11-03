@@ -9,19 +9,19 @@
 // Until it arrives the button's stand-in answers the menu's API, so its own
 // state, ARIA and events are still there when expand() returns.
 
-import type { MenuComponent, MenuContent } from "../../menu/types";
+import type { MenuContent } from "../../menu/types";
 import { MENU } from "../../menu/inner";
 import type { ElementComponent } from "../../../core/compose/component";
 import { ButtonsFeature, MenuFeature, SplitButtonConfig } from "../types";
 import { SPLIT_BUTTON_DEFAULTS } from "../constants";
-import { createOnDemandMenu } from "../../menu/on-demand";
+import { createOnDemandMenu, type OnDemandMenu } from "../../menu/on-demand";
 
 /**
  * Adds a menu anchored to the trailing button
  * @param {SplitButtonConfig} config - Component configuration
  * @returns {Function} Higher-order function that adds the menu
  */
-export const makeMenu = (config: SplitButtonConfig, trailing: HTMLElement, items: MenuContent[]): MenuComponent =>
+export const makeMenu = (config: SplitButtonConfig, trailing: HTMLElement, items: MenuContent[]): OnDemandMenu =>
   // Aligned to the trailing button and 4dp from it, as the guidelines ask.
   // The component opens and closes it, so the menu does not listen to the
   // opener itself.
