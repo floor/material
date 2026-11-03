@@ -508,6 +508,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts",
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
+    "select:check": "bun run scripts/check-select-on-demand.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
     "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts",
     "dialog-reduced-motion:check": "bun run scripts/check-dialog-reduced-motion.ts",

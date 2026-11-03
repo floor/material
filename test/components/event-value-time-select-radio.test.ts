@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import createTimePicker from "../../src/components/timepicker";
 import createSelect from "../../src/components/select";
 import createRadios from "../../src/components/radios";
-import { callbacksFixture, wait } from "./callbacks.fixture";
+import { callbacksFixture, menuReady, wait } from "./callbacks.fixture";
 import { innerMenu } from "../../src/components/menu/inner";
 
 const mount = callbacksFixture();
@@ -41,6 +41,9 @@ test("select empty option id reports the null getter while keeping option metada
     seen.push(event.value);
   });
   await wait();
+  // The menu loads on the open; the option is clicked once it is there
+  select.open();
+  await menuReady(select);
   innerMenu(select)!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
   expect(seen).toEqual([null]);
 });

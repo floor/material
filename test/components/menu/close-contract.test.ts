@@ -79,8 +79,22 @@ const shown = (element: HTMLElement): Promise<void> => {
   });
 };
 
-/** Observe the whole window, including a reveal that is removed again before it ends. */
-const staysHidden = async (element: HTMLElement): Promise<void> => {
+/**
+ * The select and the split button load their menu as a chunk on the first
+ * open(): until it arrives, innerMenu is the stand-in and its element is a
+ * placeholder, not the surface these tests observe. Wait for the menu itself,
+ * then for its reveal.
+ */
+const shownMenu = async (component: object): Promise<void> => {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    const element = innerMenu(component)!.element;
+    if (element.isConnected) return shown(element);
+    await wait(10);
+  }
+  throw new Error("the menu chunk did not arrive");
+};
+
+/** Observe the whole window, including a reveal that is removed again before it ends. */const staysHidden = async (element: HTMLElement): Promise<void> => {
   let revealed = element.classList.contains(VISIBLE);
   const observer = new MutationObserver((records) => {
     revealed ||= element.classList.contains(VISIBLE) || records.some((record) => record.oldValue?.split(/\s+/).includes(VISIBLE));
@@ -407,7 +421,7 @@ describe("payloads: only what can be cancelled carries preventDefault", () => {
     const payloads: Record<string, object> = {};
     for (const name of ["open", "close", "change"] as const) component.on(name, (event) => { payloads[name] = event; });
     component.open();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     document.querySelector<HTMLElement>('[data-id="m"]')!.click();
     expect(component.getValue()).toBe("m");
     expect(component.isOpen()).toBe(false);
@@ -450,7 +464,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     expect(component.close()).toBe(component);
     expect(component.isOpen()).toBe(false);
     expect(input.getAttribute("aria-expanded")).toBe("false");
@@ -463,7 +477,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     component.close();
     component.open();
     expect(component.isOpen()).toBe(true);
@@ -477,7 +491,7 @@ describe("select follows the menu", () => {
     const { component, seen, input } = select();
     await wait();
     component.open();
-    await shown(innerMenu(component)!.element);
+    await shownMenu(component);
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
     expect(component.isOpen()).toBe(false);
     expect(seen).toEqual(["open", "close"]);
@@ -493,18 +507,8 @@ describe("split button follows the menu", () => {
     return { component, seen };
   };
 
-  // The split button loads its menu as a chunk on the first expand(): until it
-  // arrives, innerMenu is the stand-in and its element is a placeholder, not
-  // the surface these tests observe. Wait for the menu itself, then for its
-  // reveal.
-  const shownMenu = async (component: object): Promise<void> => {
-    for (let attempt = 0; attempt < 200; attempt += 1) {
-      const element = innerMenu(component)!.element;
-      if (element.isConnected) return shown(element);
-      await wait(10);
-    }
-    throw new Error("the split button's menu chunk did not arrive");
-  };
+  // The split button loads its menu as a chunk on the first expand(): shownMenu
+  // waits for the menu itself rather than the stand-in's placeholder.
 
   test("dismissed by the user: isExpanded() is false and collapse is emitted in the same task", async () => {
     const { component, seen } = split();
