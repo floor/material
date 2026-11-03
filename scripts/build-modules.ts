@@ -195,13 +195,15 @@ export async function buildSSR(outdir: string) {
  * it keeps, so line breaks and indentation cost the tarball and buy nothing at
  * runtime, while `node_modules/material` still debugs by name.
  *
- * Four sets are left exactly as emitted:
+ * Five sets are left exactly as emitted:
  * - `ssr/`: the index is already minified, and the four adapter entries have
  *   their own minification change;
  * - `elements/css/`: `check-elements-css` compares the CSS text these modules
  *   register with the shipped stylesheets, byte for byte;
  * - `styles/`: the same check compares each style module with the import block
  *   `elementStyleModule` generates, byte for byte;
+ * - `svelte/`: `check-svelte` matches the generated barrel's export text
+ *   (`export { default as TextField } from "./TextField.svelte";`);
  * - every module carrying a `#__PURE__` annotation: no minifier in the
  *   toolchain keeps annotations, and dropping one makes a consumer's bundle
  *   grow (the annotation tells its tree-shaker the call is droppable).
@@ -216,7 +218,7 @@ export async function stripShippedModules(outdir: string): Promise<{ files: numb
     for (const entry of await readdir(join(outdir, directory), { withFileTypes: true })) {
       const path = directory === "" ? entry.name : `${directory}/${entry.name}`;
       if (entry.isDirectory()) {
-        if (path === "ssr" || path === "elements/css" || path === "styles") continue;
+        if (path === "ssr" || path === "elements/css" || path === "styles" || path === "svelte") continue;
         await walk(path);
         continue;
       }

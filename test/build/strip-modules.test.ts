@@ -37,16 +37,18 @@ test("a shipped module keeps its identifiers and loses its formatting", async ()
     .toBe("export declare const createWidget: (name: string) => unknown;\n");
 });
 
-test("the pure-annotated, SSR, element-CSS and style modules are untouched", async () => {
+test("the pure-annotated, SSR, element-CSS, style and svelte modules are untouched", async () => {
   const pure = 'export const values = /*#__PURE__*/ new Set(["a"]);\n';
   const ssr = "const a = 1;\nconst b = 2;\nexport { a, b };\n";
   const element = 'import { registerStyles } from "../styles.js";\nregisterStyles({ "base": "a  b" });\n';
   const style = 'import "./base.js";\nimport "./typography.css";\n';
+  const svelte = 'export { default as TextField } from "./TextField.svelte";\n';
   const directory = await tree({
     "components/pure.js": pure,
     "ssr/index.js": ssr,
     "elements/css/base.js": element,
     "styles/typography.js": style,
+    "svelte/index.js": svelte,
   });
   const { files } = await stripShippedModules(directory);
   expect(files).toBe(0);
@@ -54,4 +56,5 @@ test("the pure-annotated, SSR, element-CSS and style modules are untouched", asy
   expect(await readFile(join(directory, "ssr/index.js"), "utf8")).toBe(ssr);
   expect(await readFile(join(directory, "elements/css/base.js"), "utf8")).toBe(element);
   expect(await readFile(join(directory, "styles/typography.js"), "utf8")).toBe(style);
+  expect(await readFile(join(directory, "svelte/index.js"), "utf8")).toBe(svelte);
 });

@@ -45,8 +45,8 @@ export const SSR_PAGE = {
 } as const;
 
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
-// The readable, comment-stripped dist: the fixture packs 848,650 locally against
-// 881,592 before the strip, so the CI figure lands near 849,857 (the local-to-CI
+// The readable, comment-stripped dist: the fixture packs 849,002 locally against
+// 881,592 before the strip, so the CI figure lands near 850,209 (the local-to-CI
 // offset today is 1,207). Rounded up to the next 1,000.
 export const TARBALL_BYTES = 851_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.

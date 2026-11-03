@@ -209,8 +209,8 @@ try {
   // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
   // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
   // The readable, comment-stripped dist (build-modules.ts strips formatting after
-  // the prunes): the fixture packs 848,650 where the same tree packed 881,592, so
-  // with today's local-to-CI offset (1,207) CI lands near 849,857. Rounded up to
+  // the prunes): the fixture packs 849,002 where the same tree packed 881,592, so
+  // with today's local-to-CI offset (1,207) CI lands near 850,209. Rounded up to
   // the next 1,000, 851,000. This job self-checks that estimate: a real figure
   // above the ceiling fails here, and the margin is reviewed against the number
   // this line prints.
