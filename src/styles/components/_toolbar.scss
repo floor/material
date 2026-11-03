@@ -11,6 +11,7 @@
 @use '../../styles/abstract/variables' as v;
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
+@use '../../styles/abstract/direction' as d;
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-toolbar';
@@ -143,12 +144,15 @@ $component: '#{base.$prefix}-toolbar';
     max-height: calc(100% - 2 * var(--#{$component}-margin));
   }
 
+  // The placement class sits on this root, which the runtime may also mark:
+  // the self form covers a marker on the toolbar itself
+  // (abstract/_direction.scss).
   &--start {
-    inset-inline-start: var(--#{$component}-margin);
+    @include d.start(var(--#{$component}-margin), $self: true);
   }
 
   &--end {
-    inset-inline-end: var(--#{$component}-margin);
+    @include d.end(var(--#{$component}-margin), $self: true);
   }
 
   &--floating.#{$component}--bottom {

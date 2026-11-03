@@ -28,6 +28,13 @@ beforeAll(() => {
   }));
 });
 
+/** The same sheet in the form the lowered artefacts ship (arms mode). */
+const arms = (): string =>
+  compileString(
+    `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/list';`,
+    { loadPaths: ['src/styles'], style: 'expanded' },
+  ).css;
+
 describe('list stylesheet: the container, both variants', () => {
   test('the list paints no background and has no radius', () => {
     expect(declared('.mtrl-list', 'background')).toBeUndefined();
@@ -90,5 +97,18 @@ describe('list stylesheet: segmented', () => {
       expect([name, css.includes(`var(--mtrl-list-${name},`)]).toEqual([name, true]);
       expect([name, new RegExp(`--mtrl-list-${name}\\s*:`).test(css)]).toEqual([name, false]);
     }
+  });
+
+  test('a segmented group outer corners sit on the physical block edge in every artefact', () => {
+    // A block-edge pair (the first row's top two corners, the last row's
+    // bottom two): it mirrors to itself, so the lowered artefacts carry the
+    // physical pair with no direction arm, while the adopted sheets keep the
+    // logical pair (abstract/_direction.scss, scripts/build-styles.ts).
+    const radius = 'var(--mtrl-list-item-shape-outer, var(--mtrl-sys-shape-corner-large, 16px))';
+    expect(css).toContain(`border-start-start-radius: ${radius};`);
+    expect(arms()).toContain(`border-top-left-radius: ${radius};`);
+    expect(arms()).toContain(`border-bottom-right-radius: ${radius};`);
+    // No logical corner property is left for a bundler to lower into :lang().
+    expect(arms()).not.toMatch(/border-(start|end)-(start|end)-radius/);
   });
 });

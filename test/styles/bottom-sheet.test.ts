@@ -89,4 +89,22 @@ describe('bottom sheet stylesheet', () => {
     expect(css).not.toContain('9999px');
     expect(css).not.toContain('!important');
   });
+
+  test('the top corners sit on the physical block edge in every artefact', () => {
+    // CornerExtraLargeTop on the top pair only: a block-edge pair, which
+    // mirrors to itself, so the lowered artefacts carry the physical pair
+    // with no direction arm, while the adopted sheets keep the logical pair
+    // (abstract/_direction.scss, scripts/build-styles.ts).
+    const radius = 'var(--mtrl-sys-shape-corner-extra-large, 28px)';
+    expect(value('.mtrl-bottom-sheet__container', 'border-start-start-radius')).toBe(radius);
+    expect(value('.mtrl-bottom-sheet__container', 'border-start-end-radius')).toBe(radius);
+    const arms = compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/bottom-sheet';`,
+      { loadPaths: ['src/styles'], style: 'expanded' },
+    ).css.replace(/,\n/g, ', ');
+    expect(arms).toContain(`border-top-left-radius: ${radius};`);
+    expect(arms).toContain(`border-top-right-radius: ${radius};`);
+    expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
+    expect(arms).not.toContain('.mtrl-rtl');
+  });
 });

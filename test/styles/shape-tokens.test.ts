@@ -31,13 +31,9 @@ const LITERAL: Record<string, Record<string, string>> = {
   },
   // The outer radius, half the height, is a custom property (see the stylesheet)
   'button-group': {},
-  'split-button': {
-    '16px': 'outer corners, half the height, beside the small inner ones',
-    '20px': 'outer corners, half the height',
-    '28px': 'outer corners, half the height',
-    '48px': 'outer corners, half the height',
-    '68px': 'outer corners, half the height',
-  },
+  // The outer radius is the --mtrl-split-button-pill custom property, read by
+  // the physical pair beside the inner one (see the stylesheet)
+  'split-button': {},
   tabs: { '3px': 'the indicator\'s top corners: 3dp in PrimaryNavigationTabTokens, not a scale step' },
   menu: {
     '24px': 'SegmentedMenuTokens.ActiveContainerShape, 24dp: not a scale step',
