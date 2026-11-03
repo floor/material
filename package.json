@@ -131,6 +131,10 @@
       "types": "./dist/components/datepicker/constants.d.ts",
       "import": "./dist/components/datepicker/constants.js"
     },
+    "./components/datepicker/deferred": {
+      "types": "./dist/components/datepicker/deferred.d.ts",
+      "import": "./dist/components/datepicker/deferred.js"
+    },
     "./components/dialog": {
       "types": "./dist/components/dialog/index.d.ts",
       "import": "./dist/components/dialog/index.js"

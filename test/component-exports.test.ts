@@ -9,7 +9,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { componentNames, diffComponentExports, readComponentExports, readPinned } from "../scripts/component-exports";
+import { componentNames, deferredNames, diffComponentExports, readComponentExports, readPinned } from "../scripts/component-exports";
 import { readRootExports } from "../scripts/root-exports";
 
 const ROOT = join(import.meta.dir, "..");
@@ -111,17 +111,18 @@ describe("the manifest lists each component subpath", () => {
     expect(keys.filter((key) => key.includes("*"))).toEqual([]);
   });
 
-  test("one entry per component, and one per component with constants, exactly", () => {
+  test("one entry per component, and one per component with constants or a deferred entry, exactly", () => {
     const expected = componentNames().flatMap((name) => [
       `./components/${name}`,
       ...(existsSync(join(ROOT, `src/components/${name}/constants.ts`)) ? [`./components/${name}/constants`] : []),
+      ...(existsSync(join(ROOT, `src/components/${name}/deferred.ts`)) ? [`./components/${name}/deferred`] : []),
     ]);
     expect([...keys].sort()).toEqual(expected.sort());
   });
 
-  test("each entry points at that component's built index or constants", () => {
+  test("each entry points at that component's built index, constants or deferred module", () => {
     const wrong = keys.filter((key) => {
-      const file = key.endsWith("/constants") ? key.slice("./".length) : `${key.slice("./".length)}/index`;
+      const file = key.endsWith("/constants") || key.endsWith("/deferred") ? key.slice("./".length) : `${key.slice("./".length)}/index`;
       const entry = pkg.exports[key];
       return entry.types !== `./dist/${file}.d.ts` || entry.import !== `./dist/${file}.js` || Object.keys(entry).length !== 2;
     });
