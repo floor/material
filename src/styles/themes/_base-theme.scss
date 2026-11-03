@@ -142,23 +142,32 @@ $contrast-emit: all !default;
   --#{$prefix}-sys-color-on-info: #003355;
 }
 
-// Common status colors that should be available in all themes
-@mixin status-colors-light() {
-  // Error colors
+// Error colours: the fallback for a theme whose palette sets no error family.
+// A generated theme's tokens always include the error roles, so it emits
+// status-roles-* alone and no earlier value is shadowed in its rule.
+@mixin status-error-light() {
   --#{$prefix}-sys-color-error: #B3261E;
   --#{$prefix}-sys-color-on-error: #FFFFFF;
   --#{$prefix}-sys-color-error-container: #F9DEDC;
   --#{$prefix}-sys-color-on-error-container: #410E0B;
+}
+
+@mixin status-error-dark() {
+  --#{$prefix}-sys-color-error: #F2B8B5;
+  --#{$prefix}-sys-color-on-error: #601410;
+  --#{$prefix}-sys-color-error-container: #8C1D18;
+  --#{$prefix}-sys-color-on-error-container: #F9DEDC;
+}
+
+// Common status colors, for themes whose palette sets no error family
+@mixin status-colors-light() {
+  @include status-error-light();
 
   @include status-roles-light();
 }
 
 @mixin status-colors-dark() {
-  // Error colors
-  --#{$prefix}-sys-color-error: #F2B8B5;
-  --#{$prefix}-sys-color-on-error: #601410;
-  --#{$prefix}-sys-color-error-container: #8C1D18;
-  --#{$prefix}-sys-color-on-error-container: #F9DEDC;
+  @include status-error-dark();
 
   @include status-roles-dark();
 }
