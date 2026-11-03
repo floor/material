@@ -211,9 +211,17 @@ describe("explicit contrast levels are opt-in", () => {
     // absolute inside it (styles/components/_dialog.scss).
     // Search suggestion headlines stay inline around their highlighted match;
     // only the supporting span starts a block line (styles/components/_search.scss).
+    // The size cleanup keeps every computed value and drops only declarations
+    // a later identical one already carried: the slider handle's second
+    // `pointer-events: none` and the disabled handle's colours that the later
+    // disabled rule sets (styles/components/_slider.scss), the tooltip's
+    // explicit 12px/16px that Body Small emits (styles/components/_tooltip.scss),
+    // and the `.mtrl-flex`/`.mtrl-inline-flex`/`.mtrl-truncate` copies the full
+    // composition emitted twice (styles/utilities/_visibility.scss,
+    // styles/utilities/_typography.scss; main.scss composes each once).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0d7518c9ac0b1a2ffffc3d82e2d91008cba08fa3da0a88103c4332fad678c4c");
-    expect(css.length).toBe(544273);
+      .toBe("1cef5bdedf12a6c8214a9750f321e4fd82e29094f6cbb38ab4732f372825dc8f");
+    expect(css.length).toBe(543972);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -19,8 +19,6 @@ $arrow-size: 8px;
   border-radius: v.shape('extra-small'); // PlainTooltipTokens container-shape
   background-color: t.color('inverse-surface');
   color: t.color('inverse-on-surface');
-  font-size: 12px;
-  line-height: 16px;
   text-align: center;
   pointer-events: none;
   opacity: 0;

@@ -182,7 +182,6 @@ $component: '#{base.$prefix}-slider';
 
     // Create a T-shaped handle using pseudo-elements
     &::before {
-      pointer-events: none;
       content: '';
       position: absolute;
       width: 4px;
@@ -205,13 +204,8 @@ $component: '#{base.$prefix}-slider';
       .#{$component}--error & {
         background-color: t.color('error');
       }
-      
-      .#{$component}--disabled & {
-        background-color: t.color('on-surface');
-        opacity: 0.38;
-      }
     }
-    
+
     // Disabled pointer events on the pseudo-element
     &::before {
       pointer-events: none;
