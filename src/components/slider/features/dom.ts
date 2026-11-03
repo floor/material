@@ -22,11 +22,6 @@ export const withDom =
     secondHandle?: HTMLElement;
     secondValueBubble?: HTMLElement;
     formFields: (HTMLInputElement | null)[] | null;
-    getContainer: () => HTMLElement;
-    getHandle: () => HTMLElement;
-    getValueBubble: () => HTMLElement;
-    getSecondHandle?: () => HTMLElement | null;
-    getSecondValueBubble?: () => HTMLElement | null;
   } => {
     // Get prefixed class names
     const getClass = (className: string) => component.getClass(className);
@@ -37,9 +32,6 @@ export const withDom =
     const value = config.value !== undefined ? config.value : min;
     const isDisabled = config.disabled === true;
     const formatter = config.valueFormatter || ((val) => val.toString());
-
-    // Calculate initial position
-    const valuePercent = ((value - min) / (max - min)) * 100;
 
     // Create the slider container inside the main element
     const container = createElement({
@@ -54,55 +46,60 @@ export const withDom =
     });
 
     // Build accessible label for handles
-    const label = config.label || "";
-    const handleLabel = config.range && label ? `${label} minimum` : label;
-    const secondHandleLabel = label ? `${label} maximum` : "";
+    const label = config.ariaLabel || config.label || "";
 
-    // Create the main handle (kept as DOM for accessibility)
-    const handleAttributes: Record<string, string> = {
-      role: "slider",
-      "aria-valuemin": String(min),
-      "aria-valuemax": String(max),
-      "aria-valuenow": String(value),
-      "aria-orientation": config.orientation === "vertical" ? "vertical" : "horizontal",
-      tabindex: isDisabled ? "-1" : "0",
-      "aria-disabled": isDisabled ? "true" : "false",
-      "data-value": String(value),
-      "data-handle-index": "0",
+    // An accessible handle: a div with the slider role, its value on ARIA, and
+    // its position from the value. The two handles differed only in the value
+    // and the index, written out twice. The name is set after both exist, from
+    // the one place that also carries the labelledby reference.
+    const handleElement = (index: 0 | 1, handleValue: number): HTMLElement => {
+      const attributes: Record<string, string> = {
+        role: "slider",
+        "aria-valuemin": String(min),
+        "aria-valuemax": String(max),
+        "aria-valuenow": String(handleValue),
+        "aria-orientation": config.orientation === "vertical" ? "vertical" : "horizontal",
+        tabindex: isDisabled ? "-1" : "0",
+        "aria-disabled": isDisabled ? "true" : "false",
+        "data-value": String(handleValue),
+        "data-handle-index": String(index),
+      };
+
+      const element = createElement({
+        tag: "div",
+        className: getClass("slider__handle"),
+        attributes,
+        container: container,
+      });
+
+      setStyles(element, {
+        left: `${((handleValue - min) / (max - min)) * 100}%`,
+      });
+      return element;
     };
 
-    if (handleLabel) {
-      handleAttributes["aria-label"] = handleLabel;
-    }
+    // A value indicator: decorative text, hidden from assistive technology,
+    // which reads the handle's aria-valuenow instead.
+    const bubbleElement = (index: 0 | 1, bubbleValue: number): HTMLElement => {
+      const element = createElement({
+        tag: "div",
+        className: getClass("slider__value"),
+        attributes: {
+          "aria-hidden": "true",
+          "data-handle-index": String(index),
+        },
+        text: formatter(bubbleValue),
+        container: container,
+      });
 
-    const handle = createElement({
-      tag: "div",
-      className: getClass("slider__handle"),
-      attributes: handleAttributes,
-      container: container,
-    });
+      setStyles(element, {
+        left: `${((bubbleValue - min) / (max - min)) * 100}%`,
+      });
+      return element;
+    };
 
-    // Apply handle positioning
-    setStyles(handle, {
-      left: `${valuePercent}%`,
-    });
-
-    // Create the value bubble (kept as DOM for text rendering)
-    const valueBubble = createElement({
-      tag: "div",
-      className: getClass("slider__value"),
-      attributes: {
-        "aria-hidden": "true",
-        "data-handle-index": "0",
-      },
-      text: formatter(value),
-      container: container,
-    });
-
-    // Apply value bubble positioning
-    setStyles(valueBubble, {
-      left: `${valuePercent}%`,
-    });
+    const handle = handleElement(0, value);
+    const valueBubble = bubbleElement(0, value);
 
     // Create second handle and value bubble for range sliders
     let secondHandle: HTMLElement | undefined;
@@ -111,54 +108,34 @@ export const withDom =
     if (config.range) {
       const secondValue =
         config.secondValue !== undefined ? config.secondValue : max;
-      const secondValuePercent = ((secondValue - min) / (max - min)) * 100;
 
-      // Create the second handle
-      const secondHandleAttributes: Record<string, string> = {
-        role: "slider",
-        "aria-valuemin": String(min),
-        "aria-valuemax": String(max),
-        "aria-valuenow": String(secondValue),
-        "aria-orientation": config.orientation === "vertical" ? "vertical" : "horizontal",
-        tabindex: isDisabled ? "-1" : "0",
-        "aria-disabled": isDisabled ? "true" : "false",
-        "data-value": String(secondValue),
-        "data-handle-index": "1",
-      };
-
-      if (secondHandleLabel) {
-        secondHandleAttributes["aria-label"] = secondHandleLabel;
-      }
-
-      secondHandle = createElement({
-        tag: "div",
-        className: getClass("slider__handle"),
-        attributes: secondHandleAttributes,
-        container: container,
-      });
-
-      // Apply second handle positioning
-      setStyles(secondHandle, {
-        left: `${secondValuePercent}%`,
-      });
-
-      // Create the second value bubble
-      secondValueBubble = createElement({
-        tag: "div",
-        className: getClass("slider__value"),
-        attributes: {
-          "aria-hidden": "true",
-          "data-handle-index": "1",
-        },
-        text: formatter(secondValue),
-        container: container,
-      });
-
-      // Apply second value bubble positioning
-      setStyles(secondValueBubble, {
-        left: `${secondValuePercent}%`,
-      });
+      secondHandle = handleElement(1, secondValue);
+      secondValueBubble = bubbleElement(1, secondValue);
     }
+
+    // Keep ID references live: changes to the external label rename the handles.
+    // A range appends its endpoint through a hidden, referenced suffix.
+    [handle, secondHandle].forEach((target, index) => {
+      if (!target) return;
+      const endpoint = config.range ? index ? "maximum" : "minimum" : "";
+      if (label) target.setAttribute("aria-label", endpoint ? `${label} ${endpoint}` : label);
+      if (config.ariaLabelledBy) {
+        let labelledBy = config.ariaLabelledBy;
+        if (endpoint) {
+          const suffix = createElement({
+            tag: "span",
+            text: endpoint,
+            attributes: {
+              id: `${getClass("slider")}-${Math.random().toString(36).slice(2, 9)}`,
+              hidden: true,
+            },
+            container: target,
+          });
+          labelledBy += ` ${suffix.id}`;
+        }
+        target.setAttribute("aria-labelledby", labelledBy);
+      }
+    });
 
     // A slider renders no form control of its own, so without these it
     // submits nothing. Nothing is created unless the slider is named; a range
@@ -187,12 +164,5 @@ export const withDom =
       secondHandle,
       secondValueBubble,
       formFields,
-
-      // Add DOM query methods for compatibility
-      getContainer: () => container,
-      getHandle: () => handle,
-      getValueBubble: () => valueBubble,
-      getSecondHandle: () => secondHandle || null,
-      getSecondValueBubble: () => secondValueBubble || null,
     };
   };

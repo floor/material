@@ -76,6 +76,11 @@ afterEach(() => {
   document.body.replaceChildren();
   Reflect.deleteProperty(dom.window, "scrollY");
   Reflect.deleteProperty(dom.window, "scrollX");
+  if (sized.length) {
+    sized.length = 0;
+    if (nativeComputedStyle) g.getComputedStyle = nativeComputedStyle;
+    else Reflect.deleteProperty(g, "getComputedStyle");
+  }
 });
 
 /** A target at a known place in a wrapper, the page scrolled by 500px. */
@@ -96,22 +101,35 @@ const make = (config: Record<string, unknown>): TooltipComponent => {
   return tooltip;
 };
 
+// The api sizes the surface from its computed style. JSDOM computes nothing,
+// so each test hands its element a size and every other element stays on the
+// native path (restored in afterEach).
+const nativeComputedStyle = g.getComputedStyle as
+  | ((element: Element, pseudoElt?: string | null) => CSSStyleDeclaration)
+  | undefined;
+const sized: HTMLElement[] = [];
+const sizeSurface = (element: HTMLElement, width: string, height: string): void => {
+  sized.push(element);
+  g.getComputedStyle = (el: Element): CSSStyleDeclaration =>
+    el === element
+      ? ({ width, height } as CSSStyleDeclaration)
+      : nativeComputedStyle!(el);
+};
+
 describe("tooltip layer: top", () => {
   test("places every direction and alignment from layout size during a scale transition", () => {
     const { target } = setup();
     target.getBoundingClientRect = () =>
       ({ top: 100, bottom: 140, left: 400, right: 500, width: 100, height: 40 }) as DOMRect;
     const tooltip = make({ target });
-    Object.defineProperties(tooltip.element, {
-      offsetWidth: { configurable: true, value: 200 },
-      offsetHeight: { configurable: true, value: 40 },
-    });
+    sizeSurface(tooltip.element, "200px", "40px");
     tooltip.element.getBoundingClientRect = () =>
       ({ width: 180, height: 36 }) as DOMRect;
     tooltip.show(true);
     // The target's viewport rectangle is top 100, bottom 140, left 400,
-    // right 500; the surface's layout size is 200x40 and the offset 8. The
-    // page is scrolled by 500 (setup), which placement ignores: the surface is
+    // right 500; the surface's computed size is 200x40 and the offset 8,
+    // and the scaled visual rect must not feed placement. The page is
+    // scrolled by 500 (setup), which placement ignores: the surface is
     // `position: fixed`, so its top/left are viewport coordinates.
     const placements = [
       ["top", 52, 350], ["top-start", 52, 400], ["top-end", 52, 300],
@@ -129,6 +147,7 @@ describe("tooltip layer: top", () => {
   test("without a layer the tooltip is on the body, with no popover, at viewport coordinates", () => {
     const { target } = setup();
     const tooltip = make({ target });
+    sizeSurface(tooltip.element, "0px", "0px");
     expect(tooltip.element.parentNode).toBe(document.body);
     tooltip.show(true);
     expect(tooltip.element.hasAttribute("popover")).toBe(false);
@@ -142,6 +161,7 @@ describe("tooltip layer: top", () => {
   test("keeps its offset from the target when the page scrolls", () => {
     const { target } = setup();
     const tooltip = make({ target });
+    sizeSurface(tooltip.element, "0px", "0px");
     const scrollTo = (y: number, x: number) => {
       Object.defineProperty(dom.window, "scrollY", { value: y, configurable: true });
       Object.defineProperty(dom.window, "scrollX", { value: x, configurable: true });
@@ -158,6 +178,7 @@ describe("tooltip layer: top", () => {
   test("renders after its target as a manual popover, at viewport coordinates", () => {
     const { target, wrapper } = setup();
     const tooltip = make({ target, layer: "top" });
+    sizeSurface(tooltip.element, "0px", "0px");
     expect(tooltip.element.parentNode).toBe(wrapper);
     expect(target.nextElementSibling).toBe(tooltip.element);
     expect(tooltip.element.getAttribute("popover")).toBe("manual");
@@ -228,6 +249,7 @@ describe("tooltip layer: top", () => {
     removePopover();
     const { target } = setup();
     const tooltip = make({ target, layer: "top" });
+    sizeSurface(tooltip.element, "0px", "0px");
     expect(tooltip.element.parentNode).toBe(document.body);
     expect(tooltip.element.hasAttribute("popover")).toBe(false);
     tooltip.show(true);

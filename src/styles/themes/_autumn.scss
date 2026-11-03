@@ -59,19 +59,8 @@
     --#{$prefix}-sys-color-inverse-on-surface: #ffede5;
     --#{$prefix}-sys-color-inverse-primary: #ebbcac;
 
-    // Success colors
-    --#{$prefix}-sys-color-success: #85cfa9;
-    --#{$prefix}-sys-color-on-success: #00392d;
-
-    // Warning colors
-    --#{$prefix}-sys-color-warning: #ffb95c;
-    --#{$prefix}-sys-color-on-warning: #3f2200;
-
-    // Info colors
-    --#{$prefix}-sys-color-info: #99cbff;
-    --#{$prefix}-sys-color-on-info: #003060;
-
-    // Include status colors for light theme
+    // Success, warning, info and the error fallback, from the shared status
+    // roles (the values once written here were shadowed by this include)
     @include status-colors-light();
 
     &[data-theme-mode="dark"] {

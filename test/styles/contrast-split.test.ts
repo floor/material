@@ -195,11 +195,40 @@ describe("explicit contrast levels are opt-in", () => {
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
+    // The size cleanup keeps every computed value and drops only declarations
+    // a later identical one already carried: the slider handle's second
+    // `pointer-events: none` and the disabled handle's colours that the later
+    // disabled rule sets (styles/components/_slider.scss), the tooltip's
+    // explicit 12px/16px that Body Small emits (styles/components/_tooltip.scss),
+    // and the `.mtrl-flex`/`.mtrl-inline-flex`/`.mtrl-truncate` copies the full
+    // composition emitted twice (styles/utilities/_visibility.scss,
+    // styles/utilities/_typography.scss; main.scss composes each once).
+    // The generated themes take success, warning and info from the shared
+    // status roles and the error family from their own scheme, so no error
+    // fallback is emitted there; autumn's own status values, shadowed by its
+    // include, are gone too (styles/themes/_base-theme.scss,
+    // scripts/generate-themes.ts).
     // Native controls carry their measured font/padding defaults in their own
     // component sheets, so those defaults also reach element shadow roots.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("25ce3886f0bd807cf0fa47fc06aedda9e8efe70aa3f7472fb91544582b4cd5ba");
-    expect(css.length).toBe(544536);
+      .toBe("c1d1f2d02c48d5a6e3cd7de1f68f15b71e40f3da6f2599a72d318d809c8c7a47");
+    expect(css.length).toBe(541917);
   });
 
   test("today's sheets still resolve to the fixture", () => {

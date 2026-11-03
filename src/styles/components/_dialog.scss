@@ -25,6 +25,14 @@ $component: "#{base.$prefix}-dialog";
     padding: 24px;
     box-sizing: border-box;
 
+    // Inside a container that holds it, the scrim covers the container, not
+    // the viewport. A collapsed or smaller container keeps this fixed scrim:
+    // the dialog carries the class only while its container has room
+    // (dialog/features.ts).
+    &--contained {
+        position: absolute;
+    }
+
     // The scrim fades on its own colour rather than on opacity: the dialog is
     // its child, so fading the layer faded the dialog with it, and the two
     // opacities multiplied into what read as a cut.

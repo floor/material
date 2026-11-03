@@ -91,10 +91,16 @@ export const withAPI =
       // viewport origin before placing it again. This happens in one task, so
       // there is no visible intermediate position.
       component.element.style.left = "0px";
-      // offsetWidth/offsetHeight are layout dimensions: the entrance scale
-      // changes the visual rect but must not change placement or clamping.
-      const tooltipWidth = component.element.offsetWidth;
-      const tooltipHeight = component.element.offsetHeight;
+      // The computed width/height give the fractional layout size. The
+      // offsetWidth/offsetHeight this used to read round to integers per the
+      // CSSOM, so a text-sized surface measured a fraction of a pixel narrow
+      // and its far edge -- the one facing the target on left/right
+      // placements, the one a clamp holds at the viewport edge -- sat off by
+      // that fraction. Computed size, unlike getBoundingClientRect, also
+      // ignores the entrance scale.
+      const styles = getComputedStyle(component.element);
+      const tooltipWidth = parseFloat(styles.width);
+      const tooltipHeight = parseFloat(styles.height);
       // getBoundingClientRect() is relative to the viewport, and the surface is
       // `position: fixed` in every path (see the stylesheet), so the rectangle
       // is already in the coordinates the surface is placed in. The scroll
@@ -107,118 +113,80 @@ export const withAPI =
 
       let top = 0;
       let left = 0;
-      let arrowPosition: string | undefined;
 
-      // Calculate position based on position value
-      switch (position) {
-        case TOOLTIP_POSITIONS.TOP:
-          top = targetRect.top - tooltipHeight - offset;
-          left =
-            targetRect.left +
-            targetRect.width / 2 -
-            tooltipWidth / 2;
-          arrowPosition = "bottom";
-          break;
-
-        case TOOLTIP_POSITIONS.TOP_START:
-          top = targetRect.top - tooltipHeight - offset;
-          left = targetRect.left;
-          arrowPosition = "bottom-start";
-          break;
-
-        case TOOLTIP_POSITIONS.TOP_END:
-          top = targetRect.top - tooltipHeight - offset;
-          left =
-            targetRect.left + targetRect.width - tooltipWidth;
-          arrowPosition = "bottom-end";
-          break;
-
-        case TOOLTIP_POSITIONS.RIGHT:
-          top =
-            targetRect.top +
-            targetRect.height / 2 -
-            tooltipHeight / 2;
-          left = targetRect.left + targetRect.width + offset;
-          arrowPosition = "left";
-          break;
-
-        case TOOLTIP_POSITIONS.RIGHT_START:
-          top = targetRect.top;
-          left = targetRect.left + targetRect.width + offset;
-          arrowPosition = "left-start";
-          break;
-
-        case TOOLTIP_POSITIONS.RIGHT_END:
-          top =
-            targetRect.top + targetRect.height - tooltipHeight;
-          left = targetRect.left + targetRect.width + offset;
-          arrowPosition = "left-end";
-          break;
-
-        case TOOLTIP_POSITIONS.BOTTOM:
-          top = targetRect.top + targetRect.height + offset;
-          left =
-            targetRect.left +
-            targetRect.width / 2 -
-            tooltipWidth / 2;
-          arrowPosition = "top";
-          break;
-
-        case TOOLTIP_POSITIONS.BOTTOM_START:
-          top = targetRect.top + targetRect.height + offset;
-          left = targetRect.left;
-          arrowPosition = "top-start";
-          break;
-
-        case TOOLTIP_POSITIONS.BOTTOM_END:
-          top = targetRect.top + targetRect.height + offset;
-          left =
-            targetRect.left + targetRect.width - tooltipWidth;
-          arrowPosition = "top-end";
-          break;
-
-        case TOOLTIP_POSITIONS.LEFT:
-          top =
-            targetRect.top +
-            targetRect.height / 2 -
-            tooltipHeight / 2;
-          left = targetRect.left - tooltipWidth - offset;
-          arrowPosition = "right";
-          break;
-
-        case TOOLTIP_POSITIONS.LEFT_START:
-          top = targetRect.top;
-          left = targetRect.left - tooltipWidth - offset;
-          arrowPosition = "right-start";
-          break;
-
-        case TOOLTIP_POSITIONS.LEFT_END:
-          top =
-            targetRect.top + targetRect.height - tooltipHeight;
-          left = targetRect.left - tooltipWidth - offset;
-          arrowPosition = "right-end";
-          break;
-
-        default:
-          top = targetRect.top + targetRect.height + offset;
-          left =
-            targetRect.left +
-            targetRect.width / 2 -
-            tooltipWidth / 2;
-          arrowPosition = "top";
+      // Calculate position based on position value. Only the box is placed
+      // here; the arrow class is derived after any collision adjustment.
+      // The placement axis offsets the surface from the target's near or
+      // far edge; the cross axis aligns start (0), centre (half) or end.
+      // An unknown position reads as bottom, as the switch's default did.
+      const [side, anchor] = position.split("-");
+      const vertical = side !== "left" && side !== "right";
+      const align = anchor === "start" ? 0 : anchor === "end" ? 1 : 0.5;
+      if (vertical) {
+        top = side === "top"
+          ? targetRect.top - tooltipHeight - offset
+          : targetRect.bottom + offset;
+        left = targetRect.left + (targetRect.width - tooltipWidth) * align;
+      } else {
+        left = side === "left"
+          ? targetRect.left - tooltipWidth - offset
+          : targetRect.right + offset;
+        top = targetRect.top + (targetRect.height - tooltipHeight) * align;
       }
 
-      // Constrain to window boundaries
+      // Collision. The spec names no behaviour for it, so the surface stays
+      // on screen and its arrow keeps meeting the target: a surface that
+      // would cross the viewport on its placement axis flips to the other
+      // side, and a cross-axis clamp re-anchors the arrow to the first anchor
+      // that still overlaps the target. The class is then derived from where
+      // the surface actually sits, so no adjustment can leave it stale.
       const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      let suffix = anchor ? `-${anchor}` : "";
 
-      // Adjust horizontal position
-      if (left < 0) {
-        left = 0;
-      } else if (left + tooltipWidth > windowWidth) {
-        left = windowWidth - tooltipWidth;
+      // The placement axis: flip when the surface does not fit.
+      if (vertical) {
+        if (top < 0) top = targetRect.bottom + offset;
+        else if (top + tooltipHeight > windowHeight) {
+          top = targetRect.top - tooltipHeight - offset;
+        }
       }
 
-      return { top, left, arrowPosition };
+      // The cross axis: clamp inside the viewport. The clamps are no-ops in
+      // range; the flags, read before clamping, say whether one fired.
+      const clampedX = left < 0 || left + tooltipWidth > windowWidth;
+      const clampedY = top < 0 || top + tooltipHeight > windowHeight;
+      left = Math.max(0, Math.min(windowWidth - tooltipWidth, left));
+      top = Math.max(0, Math.min(windowHeight - tooltipHeight, top));
+
+      // Re-anchor: the arrow's 16px span sits 8px inside either edge of the
+      // surface, or centred. When the cross axis clamped, the first anchor
+      // whose span still overlaps the target replaces the requested one;
+      // mid-viewport nothing clamps and the requested anchor stands.
+      if (vertical ? clampedX : clampedY) {
+        const from = vertical ? left : top;
+        const size = vertical ? tooltipWidth : tooltipHeight;
+        const targetFrom = vertical ? targetRect.left : targetRect.top;
+        const targetTo = vertical ? targetRect.right : targetRect.bottom;
+        const spanAt = [from + 8, from + size / 2 - 8, from + size - 24];
+        const meet = spanAt.findIndex((x: number) => x + 16 > targetFrom && x < targetTo);
+        suffix = ["-start", "", "-end"][meet < 0 ? 2 : meet]!;
+      }
+
+      // The side the arrow points from: the surface sits on the opposite
+      // side of the target from where the class points. Derived from where
+      // the surface ended up, so a flip or clamp cannot leave it stale.
+      return {
+        top,
+        left,
+        arrowPosition: (vertical
+          ? top + tooltipHeight <= targetRect.top
+            ? "bottom"
+            : "top"
+          : left + tooltipWidth <= targetRect.left
+            ? "right"
+            : "left") + suffix,
+      };
     };
 
     /**
@@ -417,9 +385,12 @@ export const withAPI =
           // Update position
           this.updatePosition();
 
-          // Add resize listener
+          // Add resize listener. The scroll listener captures: scroll events
+          // do not bubble, so a target inside a scrollable container scrolls
+          // without the window itself ever scrolling, and only a capturing
+          // window listener sees it to reposition the fixed surface.
           window.addEventListener("resize", handleWindowResize);
-          window.addEventListener("scroll", handleWindowScroll);
+          window.addEventListener("scroll", handleWindowScroll, true);
           document.addEventListener("keydown", handleDocumentKeydown);
         };
 
@@ -454,7 +425,7 @@ export const withAPI =
 
           // Remove resize and scroll listeners
           window.removeEventListener("resize", handleWindowResize);
-          window.removeEventListener("scroll", handleWindowScroll);
+          window.removeEventListener("scroll", handleWindowScroll, true);
           document.removeEventListener("keydown", handleDocumentKeydown);
 
           // Out of the top layer once the exit transition has run
@@ -486,9 +457,12 @@ export const withAPI =
         // Calculate position
         const { top, left, arrowPosition } = calculatePosition();
 
-        // Update tooltip position
-        component.element.style.top = `${Math.round(top)}px`;
-        component.element.style.left = `${Math.round(left)}px`;
+        // Update tooltip position. The coordinates are written unrounded: an
+        // auto-sized surface has a fractional width, and rounding its position
+        // shifts the 8px offset by up to half a pixel -- and can push a
+        // clamped surface half a pixel past the viewport edge it was clamped to.
+        component.element.style.top = `${top}px`;
+        component.element.style.left = `${left}px`;
 
         // Update arrow position
         if (arrowPosition) {
@@ -525,7 +499,7 @@ export const withAPI =
 
         // Remove window events
         window.removeEventListener("resize", handleWindowResize);
-        window.removeEventListener("scroll", handleWindowScroll);
+        window.removeEventListener("scroll", handleWindowScroll, true);
         document.removeEventListener("keydown", handleDocumentKeydown);
         component.element.removeEventListener("mouseenter", handleTooltipMouseEnter);
         component.element.removeEventListener("mouseleave", handleTooltipMouseLeave);

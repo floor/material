@@ -622,15 +622,15 @@ try {
     "an icon-only tab: the ariaLabel keeps the badge after it");
   checks++;
 
-  // A dot badge holds no content, so it adds nothing to the name.
+  // A non-counting dot announces New notification after the destination.
   await mountNames({ scrollable: false, tabs: [
     { text: "Flights", value: "f", state: "active" },
     { text: "Trips", value: "t", badge: 8, badgeConfig: { variant: "small" } },
     { text: "Hotels", value: "h" },
   ] });
   await page.waitForTimeout(80);
-  assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels"],
-    "a dot badge: no content, nothing added to the name");
+  assert.deepEqual(await namesOf(page), ["Flights", "Trips, New notification", "Hotels"],
+    "a non-counting dot announces New notification after the tab name");
   checks++;
 
   // setText recomposes the name a badge rides on.
