@@ -96,3 +96,15 @@ test("the arrows scroll the highlighted suggestion into view and name no behavio
   press("ArrowDown");
   expect(calls).toEqual([{ block: "nearest" }]);
 });
+
+
+test("explicit input names survive placeholder edits while unnamed searches follow their hint", () => {
+  for (const ariaLabel of [undefined, "", "Search people by name"]) {
+    const search = mount(createSearch({ placeholder: "Search people", ariaLabel }));
+    const input = search.element.querySelector<HTMLInputElement>("input")!;
+    expect(input.getAttribute("aria-label")).toBe(ariaLabel || "Search people");
+    search.setPlaceholder("Find contacts").setValue("Ada");
+    expect(input.placeholder).toBe("Find contacts");
+    expect(input.getAttribute("aria-label")).toBe(ariaLabel || "Find contacts");
+  }
+});

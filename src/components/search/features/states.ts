@@ -55,6 +55,19 @@ export const withStates =
     focusFrame = null;
   };
   resources.add(cancelPendingFocus);
+  // Both ways into the view focus the input on the next animation frame:
+  // expanding from the bar, and being created open. A second request replaces
+  // the first, so one frame is ever pending: the collapse that follows cancels
+  // it, and a dismissed view does not take focus back.
+  const focusInputNextFrame = (): void => {
+    const input = component.structure?.input;
+    if (!input) return;
+    cancelPendingFocus();
+    focusFrame = requestAnimationFrame(() => {
+      focusFrame = null;
+      input.focus();
+    });
+  };
 
   // Helper to get prefixed class names
   const getClass = (className: string): string => {
@@ -176,12 +189,7 @@ export const withStates =
     structure?.input.setAttribute("aria-expanded", "true");
 
     // Focus input after transition
-    if (structure?.input) {
-      focusFrame = requestAnimationFrame(() => {
-        focusFrame = null;
-        structure.input.focus();
-      });
-    }
+    focusInputNextFrame();
 
     // Emit expand event
     if (component.emit) {
@@ -392,7 +400,13 @@ export const withStates =
   // page, which it cannot be before.
   if (currentState === SEARCH_STATES.VIEW) {
     setTimeout(() => {
-      if (currentState === SEARCH_STATES.VIEW && component.element.isConnected) openSurface();
+      if (currentState === SEARCH_STATES.VIEW && component.element.isConnected) {
+        openSurface();
+        // Showing the surface focuses its first control, the back button
+        // (showModal() for full screen, showPopover() for docked). M3: a
+        // selected search entry point opens focused search.
+        focusInputNextFrame();
+      }
     }, 0);
   }
 

@@ -20,6 +20,15 @@ const MORNING = { legacy: "1.0.4", next: "3.0.0-next.1", latest: "3.0.5" };
 const EVENING = { next: "3.1.0", latest: "3.2.1" };
 const EVENING_VERSIONS = ["3.0.0", "3.1.0", "3.2.0", "3.2.1"];
 
+/**
+ * A stable publish the registry has not caught up with: 3.3.0 is on npm and its
+ * `latest` still reads 3.2.7, so comparing `next` against `latest` alone says
+ * 3.1.0 is fine when the version just published says otherwise.
+ */
+const LAGGING = { legacy: "1.0.4", next: "3.1.0", latest: "3.2.7" };
+const LAGGING_VERSIONS = ["3.0.0", "3.1.0", "3.2.0", "3.2.7", "3.3.0"];
+const PUBLISHED = "3.3.0";
+
 /** No real waiting in a test. */
 const noSleep = (): Promise<void> => Promise.resolve();
 
@@ -43,6 +52,37 @@ describe("nextBehindLatest", () => {
     expect(nextBehindLatest({ latest: "3.0.5" })).toBeUndefined();
     expect(nextBehindLatest({ next: "3.0.6-next.0" })).toBeUndefined();
     expect(nextBehindLatest({})).toBeUndefined();
+  });
+});
+
+describe("the version a run just published", () => {
+  test("a lagging latest cannot hide a next below the published version", () => {
+    expect(nextBehindLatest(LAGGING, PUBLISHED)).toContain(
+      "next (3.1.0) is behind 3.3.0, the version just published (latest still shows 3.2.7)",
+    );
+  });
+
+  test("the same tags without the version are only stale, and that is what the version changes", () => {
+    expect(judgeNext(LAGGING, LAGGING_VERSIONS).skip).toContain("skipped");
+    const verdict = judgeNext(LAGGING, LAGGING_VERSIONS, PUBLISHED);
+    expect(verdict.problem).toContain("behind 3.3.0");
+    expect(verdict.skip).toBeUndefined();
+  });
+
+  test("next at the published version passes while latest still lags", () => {
+    expect(judgeNext({ next: "3.3.0", latest: "3.2.7" }, LAGGING_VERSIONS, PUBLISHED)).toEqual({});
+  });
+
+  test("next above the published version passes", () => {
+    expect(judgeNext({ next: "3.4.0-next.0", latest: "3.3.0" }, ["3.3.0", "3.4.0-next.0"], PUBLISHED)).toEqual({});
+  });
+
+  test("a published version below latest keeps the old comparison", () => {
+    expect(nextBehindLatest({ next: "3.0.0-next.1", latest: "3.0.5" }, "3.0.0-next.0")).toContain("behind latest (3.0.5)");
+  });
+
+  test("a missing latest compares against the published version", () => {
+    expect(nextBehindLatest({ next: "3.1.0" }, PUBLISHED)).toContain("behind 3.3.0, the version just published");
   });
 });
 
@@ -104,6 +144,38 @@ describe("the CLI with --tags", () => {
     expect(code).toBe(1);
     expect(err).toContain("next (3.1.0) is behind latest (3.2.1)");
   });
+
+  test("a <version> argument judges the tags against it, not a lagging latest", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dist-tags-"));
+    const file = join(dir, "lagging.json");
+    writeFileSync(file, JSON.stringify(LAGGING));
+    const root = new URL("../..", import.meta.url).pathname;
+    const proc = Bun.spawn(["bun", "run", "scripts/check-dist-tags.ts", PUBLISHED, "--tags", file], {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [code, out, err] = await Promise.all([
+      proc.exited,
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+    ]);
+    expect(code).toBe(1);
+    expect(out).toContain(file);
+    expect(err).toContain("next (3.1.0) is behind 3.3.0, the version just published (latest still shows 3.2.7)");
+  });
+
+  test("an unknown argument is a usage error, not a silent run", async () => {
+    const root = new URL("../..", import.meta.url).pathname;
+    const proc = Bun.spawn(["bun", "run", "scripts/check-dist-tags.ts", "3.3.0", "3.3.1"], {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [code, err] = await Promise.all([proc.exited, new Response(proc.stderr).text()]);
+    expect(code).toBe(2);
+    expect(err).toContain("Usage: check-dist-tags.ts [<version>] [--tags <file.json>]");
+  });
 });
 
 describe("checkTags retries a lagging registry", () => {
@@ -141,6 +213,33 @@ describe("checkTags retries a lagging registry", () => {
     expect(result.problem).toBeUndefined();
     expect(calls).toBe(1);
     expect(result.reads).toBe(1);
+  });
+});
+
+describe("checkTags with the published version", () => {
+  test("waits out a lagging registry instead of passing on a stale latest", async () => {
+    const answers = [
+      { tags: LAGGING, versions: LAGGING_VERSIONS },
+      { tags: { legacy: "1.0.4", next: "3.3.0", latest: "3.2.7" }, versions: LAGGING_VERSIONS },
+    ];
+    const result = await checkTags(async () => answers.shift()!, { tries: 5, sleep: noSleep, version: PUBLISHED });
+    expect(result.reads).toBe(2);
+    expect(result.problem).toBeUndefined();
+    expect(result.skip).toBeUndefined();
+    expect(result.tags.next).toBe("3.3.0");
+  });
+
+  test("fails after the last read when next never reaches the published version", async () => {
+    let calls = 0;
+    const result = await checkTags(async () => (calls++, { tags: LAGGING, versions: LAGGING_VERSIONS }), {
+      tries: 3,
+      sleep: noSleep,
+      version: PUBLISHED,
+    });
+    expect(result.problem).toContain("behind 3.3.0");
+    expect(result.skip).toBeUndefined();
+    expect(result.reads).toBe(3);
+    expect(calls).toBe(3);
   });
 });
 

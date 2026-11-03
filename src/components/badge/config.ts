@@ -31,6 +31,26 @@ export const defaultConfig: BadgeConfig = {
 };
 
 /**
+ * The name a non-counting badge announces. The accessibility page reads: "Any
+ * numerical badges will have their number read, while non-counting badges will
+ * simply announce New notification" (m3.material.io/components/badges/
+ * accessibility, read 2026-11-01). A nonnumeric string label given to a small badge is
+ * its announcement, so a page in another language passes its own text; the
+ * count a large badge carries is not one.
+ *
+ * The accessible name of a non-counting badge: its label when it is nonnumeric text,
+ * "New notification" otherwise.
+ *
+ * @param {string | number} [label] - Badge label
+ * @returns {string} The dot's announcement
+ * @category Components
+ * @internal
+ */
+export const smallBadgeLabel = (label: string | number | undefined): string =>
+  typeof label === "string" && isNaN(+label)
+    ? label.trim() : "New notification";
+
+/**
  * Creates the base configuration for Badge component by merging user-provided
  * config with default values.
  *
@@ -52,28 +72,8 @@ export const createBaseConfig = (config: BadgeConfig = {}): BadgeConfig =>
  * @category Components
  * @internal
  */
-export const getElementConfig = (config: BadgeConfig) => {
-  // Create the attributes object
-  const attributes: Record<string, string | number | boolean> = {};
-
-  // For large badges, set appropriate ARIA attributes for screen readers
-  if (config.variant !== "small") {
-    attributes.role = "status";
-  }
-
-  // Format the label if needed - small badges have no text
-  const formattedLabel =
-    config.variant === "small"
-      ? ""
-      : formatBadgeLabel(config.label || "", config.max);
-
-  return createElementConfig(config, {
-    tag: "span",
-    attributes,
-    className: config.class,
-    text: formattedLabel, // Use the formatted label
-  });
-};
+export const getElementConfig = (config: BadgeConfig) =>
+  createElementConfig(config, { tag: "span" });
 
 /**
  * Creates API configuration for the Badge component.
