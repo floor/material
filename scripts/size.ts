@@ -149,6 +149,10 @@ export const SCENARIO_DEFS = [
   // name, and one shape alone, which must not carry the other 34
   { name: "shapes", imports: ["materialShapePath"] },
   { name: "shape-heart", imports: ["shapeHeart", "polygonPath"] },
+  // material/components/datepicker/deferred, not the package root: the same
+  // date picker with its calendar imported on the first open. Its initial
+  // graph is the shell; the calendar is the deferred column.
+  { name: "datepicker-deferred", imports: ["createDeferredDatePicker"] },
 ] as const;
 
 export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
@@ -200,6 +204,9 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   checkbox: kb(5.85), // Boolean change value plus the HTML valueAttribute token; main's isDisabled() on the forward merge: next 5,644 to 5,658. 5,645 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
   chips: kb(9.3), // Chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (follow-up): 9,305 to 9,319; 9,159 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   datepicker: kb(12.9), // Conformance; swiping; year list; full screen; read-only, required, one change shape: 12,332; aria-disabled: 12,412; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, and the docked picker's click by the marker: 12,407 to 12,878. kb(12.65) is 12,953 (75 above, short of 100); raised to kb(12.7) = 13,004 (126 above), Node 22.23.3 / npm 10.9.9
+  // material/components/datepicker/deferred: the shell, with the calendar
+  // imported on the first open (its payload in DEFERRED_BUDGET_BYTES below).
+  "datepicker-deferred": kb(7.4),
   dialog: kb(13.3), // layer: "top", as the sheets: 12,047 to 12,870; the navigation bar's cascade layer name in every sheet: 12,999 to 13,005; 12,722 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the open / close contract (its own open state, the three tracked timers and their cancelling, the repeat-call and re-entry guards): 12,714 to 12,796 against f463146d. kb(12.55) is 12,851 (55 above, short of 100); raised to kb(12.6) = 12,902 (106 above), Node 22.23.3 / npm 10.9.9; dismissible when open() returns, except by the key press that opened it, and destroy() removing the document listeners: 12,796 to 12,821 against 67045e1e. kb(12.6) is 12,902 (81 above, short of 100); raised to kb(12.65) = 12,953 (132 above), Node 22.23.3 / npm 10.9.9; the opening key by a flag for the task of open(), in both layers, in place of the stamp: 12,821 to 12,814; Escape as a key press for the modals (family 6): the shared stack in core/dom/layer with one window listener for the topmost modal, the key press sent on as a cancel event in the top layer, and the forced close: 12,814 to 13,020 against 905a6441. kb(12.8) is 13,107 (87 above, short of 100); raised to kb(12.85) = 13,158 (138 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks): 13,020 to 13,201. kb(12.85) is 13,158 (43 under it) and kb(12.95) is 13,260 (59 above, short of 100); raised to kb(13) = 13,312 (111 above), Node 22.23.3 / npm 10.9.9; a key from inside another open <dialog> left to that dialog: 13,201 to 13,247. kb(13) is 13,312 (65 above, short of 100); raised to kb(13.05) = 13,363 (116 above), Node 22.23.3 / npm 10.9.9
   divider: kb(3.9),
   drawer: kb(8.45), // the modal drawer's layer: "top": 7,622 to 8,109; 7,864 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; Escape as a key press on the shared stack (family 6 B): the modal one pays core/dom/layer's stack and marker once, and the key press sent on as a cancel event in the top layer: 7,877 to 8,324. kb(8.2) is 8,396 (72 above, short of 100); raised to kb(8.25) = 8,448 (124 above), Node 22.23.3 / npm 10.9.9
@@ -252,6 +259,7 @@ export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
   "split-button": kb(17.05), // the menu chunk, its shared chunk and the submenu chunk: 17,313 measured against ae4c8298. kb(17.0) is 17,408 (95 above, short of 100); raised to kb(17.05) = 17,459 (146 above)
   select: kb(10.5), // the menu chunk and its shared chunk, loaded on the first open (menu/on-demand.ts): 10,650 measured at 1a46844c, the 10.4 KB the deferred column had rounded. kb(10.4) is 10,649, below the measurement; kb(10.5) = 10,752 (102 above), Node 22.23.3 / npm 10.9.9
   "fab-menu": kb(10.6), // the baseline menu of the menu presentation; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 10,537 to 10,584 against d306d4c2. kb(10.4) is 10,649 (65 above, short of 100); raised to kb(10.45) = 10,700 (116 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 10,582 to 10,738. kb(10.55) is 10,803 (65 above, short of 100); raised to kb(10.6) = 10,854 (116 above), Node 22.23.3 / npm 10.9.9
+  "datepicker-deferred": kb(7.1), // the calendar surface, imported on the first open: render, focus, day/month/year interaction and entry validation
 };
 
 export interface SizeGateInput {
@@ -442,6 +450,11 @@ const allowed = (name: ComponentName): ReadonlySet<ComponentName> => {
   return names;
 };
 
+/** A scenario whose entry is a component's own module, not the package root. */
+const SCENARIO_COMPONENTS: Partial<Record<ScenarioName, ComponentName>> = {
+  "datepicker-deferred": "datepicker",
+};
+
 // ── Build & measure ───────────────────────────────────────────────
 
 interface Scenario {
@@ -580,7 +593,9 @@ const scenarioSource = (scenario: Scenario, projectRoot: string, scratch: string
   const imports = scenario.imports.join(", ");
   const from = scenario.name === "shapes" || scenario.name === "shape-heart"
     ? specifier(join(projectRoot, "src/core/shapes/index.ts"))
-    : specifier(join(projectRoot, "src/index.ts"));
+    : scenario.name === "datepicker-deferred"
+      ? specifier(join(projectRoot, "src/components/datepicker/deferred.ts"))
+      : specifier(join(projectRoot, "src/index.ts"));
   return `import { ${imports} } from "${from}"; globalThis._v = [${imports}];`;
 };
 
@@ -729,7 +744,7 @@ const main = async (): Promise<void> => {
     const keep =
       scenario.name === "core" || scenario.name === "shapes" || scenario.name === "shape-heart"
         ? new Set<ComponentName>()
-        : allowed(scenario.name);
+        : allowed(SCENARIO_COMPONENTS[scenario.name] ?? scenario.name as ComponentName);
     for (const component of COMPONENTS) {
       if (keep.has(component.name)) continue;
       for (const marker of markers.get(component.name) ?? []) {

@@ -38,8 +38,9 @@ describe('size gate', () => {
   });
 
   test('budgets every measured scenario', () => {
-    // core, every component, all, and the two shapes scenarios
-    expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 4);
+    // core, every component, all, the two shapes scenarios and the deferred
+    // datepicker entry
+    expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 5);
     for (const scenario of SCENARIO_DEFS) {
       expect(BUDGET_BYTES[scenario.name]).toBeGreaterThan(0);
     }
