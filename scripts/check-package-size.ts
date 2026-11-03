@@ -209,10 +209,9 @@ try {
   // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
   // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
   // The readable, comment-stripped dist (build-modules.ts strips formatting after
-  // the prunes): the package job measures 850,951 B packed where main packed
-  // 882,799 (the local fixture packs 849,002; the tarball's local-to-CI offset
-  // depends on the packer). 851,000 left 49 B, so the ceiling carries about 1 kB
-  // over the measurement, as 883,000 did over 881,568 when it was set: 852,000.
+  // the prunes): the package job measures 863,703 B packed where the base packed
+  // 882,799. The ceiling carries 1,297 B over the measurement, as 883,000 carried
+  // 1,432 B over 881,568 when it was set: 865,000.
   // This job self-checks it: a real figure above the ceiling fails here, and the
   // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);

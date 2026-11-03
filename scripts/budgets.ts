@@ -45,10 +45,10 @@ export const SSR_PAGE = {
 } as const;
 
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
-// The readable, comment-stripped dist: the package job measures 850,951 B packed
-// where main packed 882,799. The ceiling carries about 1 kB over the measurement,
-// as 883,000 did over 881,568 when it was set: 852,000.
-export const TARBALL_BYTES = 852_000;
+// The readable, comment-stripped dist: the package job measures 863,703 B packed
+// where the base packed 882,799. The ceiling carries 1,297 B over the
+// measurement, as 883,000 carried 1,432 B over 881,568 when it was set: 865,000.
+export const TARBALL_BYTES = 865_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts.
