@@ -51,8 +51,8 @@ try {
     const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
     console.log(`Pruned ${modules.removed.length} unreachable modules (${modules.bytes} bytes)`);
 
-    // Readable, comment-stripped modules: identifiers and annotations stay, the
-    // formatting does not. The prunes above have already read the emit.
+    // Readable, comment-stripped modules: indentation and blank lines go, tokens
+    // and one line per statement stay. The prunes above have already read the emit.
     const stripped = await stripShippedModules(staging);
     console.log(`Stripped ${stripped.files} modules (${stripped.bytes} bytes)`);
 

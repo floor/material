@@ -125,8 +125,8 @@ export function buildModules(outdir: string) {
     }
     if (filename.endsWith(".js")) {
       // Avoid shipping API prose twice. Identifiers, pure annotations and licence
-      // banners stay: the build compacts only the formatting afterwards
-      // (`stripShippedModules`), so stack traces still name the code.
+      // banners stay: `stripShippedModules` removes indentation and blank lines
+      // afterwards and never reprints, so stack traces still name the code.
       text = stripRuntimeComments(filename, text);
     }
     if (filename.endsWith(".d.ts")) {
@@ -189,13 +189,147 @@ export async function buildSSR(outdir: string) {
     'import "../elements/css/index.js";\n' + await Bun.file(entry).text());
 }
 
+/** A comment the shipped file keeps: a pure annotation, a licence banner or an @license/@preserve block. */
+function keepComment(comment: string): boolean {
+  return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
+}
+
+/** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */
+function tokenNodes(file: ts.SourceFile): ts.Node[] {
+  const tokens: ts.Node[] = [];
+  const visit = (node: ts.Node): void => {
+    // A JSDoc comment is an AST node, not a token: the strip removes it as prose.
+    if (node.kind >= ts.SyntaxKind.FirstJSDocNode && node.kind <= ts.SyntaxKind.LastJSDocNode) return;
+    const children = node.getChildren(file);
+    if (children.length === 0) {
+      tokens.push(node);
+      return;
+    }
+    for (const child of children) visit(child);
+  };
+  visit(file);
+  return tokens;
+}
+
 /**
- * The shipped modules keep their identifiers, their pure annotations and their
- * licence banners; only the formatting goes. A consumer's bundler minifies what
- * it keeps, so line breaks and indentation cost the tarball and buy nothing at
- * runtime, while `node_modules/material` still debugs by name.
+ * Remove comments (except the ones a consumer's bundler and the licence need),
+ * blank lines and indentation, and nothing else: no reprint, no constant fold,
+ * no redefine. Every token, every line and every identifier stays as emitted.
+ * `process.env.NODE_ENV` is a runtime read in the package and stays one.
  *
- * Five sets are left exactly as emitted:
+ * The function checks its own work: the stripped text is parsed again and its
+ * token stream must equal the original's, every line that carried a token must
+ * still carry one, no line may grow, and every kept comment must survive.
+ */
+export function stripModuleText(filename: string, text: string): string {
+  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+
+  const removals = new Map<number, number>();
+  const protectedRanges: Array<[number, number]> = [];
+  function visitComments(node: ts.Node): void {
+    for (const position of [node.pos, node.end]) {
+      for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
+        const comment = text.slice(range.pos, range.end);
+        if (keepComment(comment)) protectedRanges.push([range.pos, range.end]);
+        else removals.set(range.pos, range.end);
+      }
+    }
+    node.getChildren(file).forEach(visitComments);
+  }
+  visitComments(file);
+
+  // Literal text is content, not formatting: whitespace inside a string, a
+  // template or a regex literal is part of what the program says, and a kept
+  // comment must reach the consumer exactly as written.
+  function visitLiterals(node: ts.Node): void {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node) || ts.isRegularExpressionLiteral(node)) {
+      protectedRanges.push([node.getStart(file), node.getEnd()]);
+      return;
+    }
+    node.getChildren(file).forEach(visitLiterals);
+  }
+  visitLiterals(file);
+  protectedRanges.sort(([a], [b]) => a - b);
+  let protectedIndex = 0;
+  const protectedAt = (position: number): boolean => {
+    while (protectedIndex < protectedRanges.length && protectedRanges[protectedIndex][1] <= position) protectedIndex += 1;
+    return protectedIndex < protectedRanges.length && protectedRanges[protectedIndex][0] <= position;
+  };
+
+  // Comments out. A space stands in where the comment separated two tokens, so
+  // a deletion can never join them; the offset map keeps every kept byte
+  // attributable to its source position.
+  let withoutComments = "";
+  const sourceOffset: number[] = [];
+  for (let i = 0; i < text.length; ) {
+    const end = removals.get(i);
+    if (end !== undefined) {
+      const before = withoutComments.length > 0 ? withoutComments[withoutComments.length - 1] : "";
+      const after = text[end] ?? "";
+      if (before !== "" && after !== "" && !/\s/.test(before) && !/\s/.test(after)) {
+        withoutComments += " ";
+        sourceOffset.push(i);
+      }
+      i = end;
+      continue;
+    }
+    withoutComments += text[i];
+    sourceOffset.push(i);
+    i += 1;
+  }
+
+  // Indentation and blank lines out, one newline per line break, so every
+  // statement keeps its own line and the file stays readable. Whitespace that
+  // belongs to a literal or a kept comment is left alone.
+  const lines: string[] = [];
+  let lineStart = 0;
+  for (const line of withoutComments.split("\n")) {
+    const start = lineStart;
+    lineStart += line.length + 1;
+    let first = 0;
+    while (first < line.length && (line[first] === " " || line[first] === "\t")) first += 1;
+    let last = line.length;
+    while (last > first && (line[last - 1] === " " || line[last - 1] === "\t")) last -= 1;
+    if (first === last) continue;
+    const from = first > 0 && !protectedAt(sourceOffset[start]) ? first : 0;
+    const to = last < line.length && !protectedAt(sourceOffset[start + line.length - 1]) ? last : line.length;
+    lines.push(line.slice(from, to));
+  }
+  const stripped = lines.length > 0 ? `${lines.join("\n")}\n` : "";
+
+  const tokenPositions = tokenNodes(file).filter((node) => node.getText(file).length > 0);
+  const before = tokenPositions.map((node) => node.getText(file));
+  const afterFile = ts.createSourceFile(filename, stripped, ts.ScriptTarget.Latest, true);
+  const after = tokenNodes(afterFile).map((node) => node.getText(afterFile)).filter((token) => token.length > 0);
+  const shared = Math.min(before.length, after.length);
+  for (let i = 0; i < shared; i += 1) {
+    if (before[i] !== after[i]) {
+      throw new Error(`${filename}: the strip changed token ${i + 1}: ${JSON.stringify(before[i])} -> ${JSON.stringify(after[i])}`);
+    }
+  }
+  if (before.length !== after.length) {
+    throw new Error(`${filename}: the strip changed the token count, ${before.length} -> ${after.length}`);
+  }
+  const keptComments = (value: string): number => (value.match(/[@#]__PURE__|\/\*!|@license|@preserve/g) ?? []).length;
+  if (keptComments(text) !== keptComments(stripped)) throw new Error(`${filename}: the strip dropped a kept comment`);
+  const codeLines = new Set(tokenPositions.map((node) => file.getLineAndCharacterOfPosition(node.getStart(file)).line));
+  const strippedLines = stripped.split("\n").filter((line) => line !== "");
+  if (strippedLines.length < codeLines.size) {
+    throw new Error(`${filename}: the strip joined lines, ${codeLines.size} code lines became ${strippedLines.length}`);
+  }
+  const longest = Math.max(0, ...text.split("\n").map((line) => line.length));
+  if (strippedLines.some((line) => line.length > longest)) throw new Error(`${filename}: the strip grew a line past ${longest} chars`);
+  return stripped;
+}
+
+/**
+ * The shipped modules keep their identifiers, their tokens, their pure
+ * annotations and their licence banners; indentation, blank lines and prose
+ * comments go. A consumer's bundler minifies what it keeps, so the formatting
+ * costs the tarball and buys nothing at runtime, while `node_modules/material`
+ * still debugs by name and still reads `process.env.NODE_ENV` at runtime.
+ *
+ * Four sets are left exactly as emitted:
  * - `ssr/`: the index is already minified, and the four adapter entries have
  *   their own minification change;
  * - `elements/css/`: `check-elements-css` compares the CSS text these modules
@@ -203,15 +337,11 @@ export async function buildSSR(outdir: string) {
  * - `styles/`: the same check compares each style module with the import block
  *   `elementStyleModule` generates, byte for byte;
  * - `svelte/`: `check-svelte` matches the generated barrel's export text
- *   (`export { default as TextField } from "./TextField.svelte";`);
- * - every module carrying a `#__PURE__` annotation: no minifier in the
- *   toolchain keeps annotations, and dropping one makes a consumer's bundle
- *   grow (the annotation tells its tree-shaker the call is droppable).
+ *   (`export { default as TextField } from "./TextField.svelte";`).
  *
  * Runs after the prunes, so both parsers keep reading the emitted formatting.
  */
 export async function stripShippedModules(outdir: string): Promise<{ files: number; bytes: number }> {
-  const transpiler = new Bun.Transpiler({ loader: "js", minifyWhitespace: true });
   let files = 0;
   let bytes = 0;
   const walk = async (directory: string): Promise<void> => {
@@ -225,8 +355,7 @@ export async function stripShippedModules(outdir: string): Promise<{ files: numb
       if (!entry.name.endsWith(".js")) continue;
       const file = join(outdir, path);
       const text = await readFile(file, "utf8");
-      if (/\/\*[@#]__PURE__\*\//.test(text)) continue;
-      const stripped = transpiler.transformSync(text);
+      const stripped = stripModuleText(file, text);
       if (stripped === text) continue;
       await writeFile(file, stripped);
       files += 1;
