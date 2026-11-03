@@ -15,6 +15,9 @@ export const DEFAULT_PREFIX = "m";
 
 const sources = new Map<string, string>();
 const fallbackStyles = new WeakSet<Node>();
+// What each root asked for, including sheets not registered yet: a sheet that
+// arrives with a lazy chunk is applied to the roots already waiting for it.
+const requested = new WeakMap<ShadowRoot, readonly string[]>();
 
 /** Internal registry access; preserves application registrations and overrides. */
 export const styleText = (name: string): string | undefined => sources.get(name);
@@ -122,10 +125,16 @@ export const preupgradeSheet = (css: string, prefixes: Iterable<string> = [DEFAU
  * Falls back to `<style>` elements where constructable stylesheets are missing.
  */
 export const applyStyles = (root: ShadowRoot, names: readonly string[]): void => {
+  requested.set(root, names);
   const known = names.filter((name) => sources.has(name));
   if (canAdopt()) {
     root.adoptedStyleSheets = known.map((name) => sheetFor(name, sources.get(name) as string));
     return;
+  }
+  // The previous fallback nodes are this root's, and the new list replaces
+  // them: appending again would duplicate every sheet already there.
+  for (const node of Array.from(root.querySelectorAll("style"))) {
+    if (fallbackStyles.has(node)) node.remove();
   }
   for (const name of known) {
     const style = document.createElement("style");
@@ -133,4 +142,21 @@ export const applyStyles = (root: ShadowRoot, names: readonly string[]): void =>
     fallbackStyles.add(style);
     root.append(style);
   }
+};
+
+/**
+ * Applies the styles a root asked for again, after a deferred sheet arrived.
+ * A sheet registered after `applyStyles` ran is not in the root's adopted
+ * list; re-running with the recorded names, in their recorded order, is what
+ * puts it where the cascade expects it.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
+ */
+export const reapplyStyles = (root: Node | null): void => {
+  if (!root || root.nodeType !== 11 || !("host" in root)) return;
+  const names = requested.get(root as ShadowRoot);
+  if (names) applyStyles(root as ShadowRoot, names);
 };

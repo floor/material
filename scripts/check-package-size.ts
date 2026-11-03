@@ -538,11 +538,20 @@ try {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
       assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
+      // The button's and the select's stylesheets each defer one sheet to the
+      // chunk that creates the part using it — the progress ring and the menu.
+      // Both still style that part from the parent's rules, so the probe is a
+      // selector only the deferred sheet itself has. The deferred sheet reaches
+      // the part before its first frame: check-lazy-sheets-browser proves it.
       if (fixture.name === "button-css") {
-        assert(text.includes(".mtrl-button") && text.includes(".mtrl-progress"));
+        assert(text.includes(".mtrl-button"));
+        assert(!text.includes(".mtrl-progress__label"), "The button's stylesheet still carries the progress sheet");
         assert(!text.includes(".mtrl-text-field"), "Unrelated component CSS retained");
       }
-      if (fixture.name === "select-css") assert(text.includes(".mtrl-menu") && text.includes(".mtrl-text-field"));
+      if (fixture.name === "select-css") {
+        assert(text.includes(".mtrl-text-field"));
+        assert(!text.includes(".mtrl-menu__item--selected"), "The select's stylesheet still carries the menu sheet");
+      }
     }
   }
 

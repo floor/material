@@ -10,10 +10,10 @@ import { pathToFileURL } from "node:url";
 import { createServer } from "vite";
 import { elements } from "../src/elements";
 import { hostStyleText } from "../src/elements/define";
-import { cascadeLayerOrder } from "./build-styles";
+import { cascadeLayerOrder, elementStyleModule, styleModuleSource } from "./build-styles";
 import { assertRollbackBeats, repeatedAttributeBytes, specificityText, type Specificity } from "./preupgrade-specificity";
 import { preupgradeRollback } from "../src/elements/styles";
-import { componentStyles, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
+import { componentStyles, deferredDependencies, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
 
 const dir = "dist/elements/css";
 const names = ["ripple", ...resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]))];
@@ -148,7 +148,9 @@ try {
 // The selective style modules import their dependencies before their own CSS.
 // For typography it is the fix itself: its sheet shares the mtrl.base layer
 // with the reset, at the same specificity, so the base has to load first
-// (test/styles/typography-order.test.ts measures both orders).
+// (test/styles/typography-order.test.ts measures both orders). A deferred
+// dependency is the one edge that is not an import: its sheet arrives with the
+// lazy chunk, through the loader.
 const styleModules: Array<[string, string[]]> = [
   ["typography", typographyDependencies],
   ...Object.entries(componentStyles).map(([name, entry]): [string, string[]] => [name, entry.dependencies]),
@@ -156,8 +158,19 @@ const styleModules: Array<[string, string[]]> = [
 for (const [name, dependencies] of styleModules) {
   assert.equal(
     await readFile(`dist/styles/${name}.js`, "utf8"),
-    dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") + `\nimport "./${name}.css";\n`,
+    styleModuleSource(name, dependencies, deferredDependencies[name] ?? []),
     `dist/styles/${name}.js must import its dependencies, then its own CSS`,
+  );
+}
+
+// The element modules are generated the same way, and a deferred dependency is
+// absent from their imports: importing the select CSS must not register the
+// menu's sheet up front.
+for (const name of names) {
+  assert.equal(
+    await readFile(join(dir, `${name}.js`), "utf8"),
+    elementStyleModule(name, await readFile(join(dir, `${name}.css`), "utf8"), name === "ripple" ? [] : ["ripple", ...componentStyles[name].dependencies], deferredDependencies[name] ?? []),
+    `dist/elements/css/${name}.js must import its dependencies and register its CSS`,
   );
 }
 

@@ -14,6 +14,7 @@
 // skipped for a listbox, whose combobox carries it.
 
 import type { EventCallback } from "../../core/state/emitter";
+import { loadSheet } from "../../core/dom/sheets";
 import type { MenuComponent, MenuConfig, MenuContent, MenuEvents, MenuPosition } from "./types";
 
 /** createMenu's configuration, except the items, which setItems may replace. */
@@ -104,8 +105,15 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
   const load = (): void => {
     if (menu || loading || destroyed) return;
     loading = true;
-    import("./index").then(
-      ({ default: createMenu }) => {
+    // The menu's sheet arrives with its chunk (the select's CSS entry defers
+    // it); the menu is created only once both are there, so its first frame
+    // is styled. A page that imports the menu's CSS itself has no loader, and
+    // this resolves at once.
+    Promise.all([
+      import("./index"),
+      loadSheet("menu", openerElement ?? settings.container ?? null),
+    ]).then(
+      ([{ default: createMenu }]) => {
         loading = false;
         if (destroyed) return;
         attach(createMenu({ ...settings, items: current } as MenuConfig));

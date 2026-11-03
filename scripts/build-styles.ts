@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import * as sass from "sass";
 import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, typographyStyles, typographyDependencies, utilityStyles,
-  contrastStyle, resolveStyleDependencies,
+  contrastStyle, deferredDependencies, resolveStyleDependencies,
 } from "./style-manifest";
 import { preupgradeSheet } from "../src/elements/styles";
 
@@ -15,11 +15,43 @@ export function cascadeLayerOrder(): string {
   return styleLayerOrder();
 }
 
-/** JS module for one element stylesheet. It registers shadow CSS and nothing else. */
-export function elementStyleModule(name: string, css: string, imports: string[]): string {
-  return imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
-    `\nimport { registerStyles } from "../styles.js";\n` +
-    `registerStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`;
+/**
+ * JS module for one element stylesheet. It registers shadow CSS and nothing
+ * else. A dependency in `deferred` is not imported: its sheet arrives with
+ * the lazy chunk that creates that part of the element, and the loader
+ * imports that chunk, whose module registers the sheet before `loadSheet`
+ * re-applies the root.
+ */
+export function elementStyleModule(name: string, css: string, imports: string[], deferred: string[] = []): string {
+  const eager = imports.filter(dependency => !deferred.includes(dependency));
+  const loaders = deferred.map(dependency =>
+    `setSheetLoader(${JSON.stringify(dependency)}, "shadow", root => import("./${dependency}.js").then(() => reapplyStyles(root)));`);
+  const register = `registerStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`;
+  return eager.map(dependency => `import "./${dependency}.js";`).join("\n") +
+    (loaders.length
+      ? `\nimport { setSheetLoader } from "../../core/dom/sheets.js";\nimport { registerStyles, reapplyStyles } from "../styles.js";\n`
+      : `\nimport { registerStyles } from "../styles.js";\n`) +
+    loaders.map(loader => `${loader}\n`).join("") +
+    register;
+}
+
+/**
+ * JS module for one selective style entry: the eager dependency imports, its
+ * own CSS, then the loader for each deferred dependency. The loader imports
+ * the dependency's entry, whose stylesheet asset the bundler loads with that
+ * chunk, so the sheet is applied when the import resolves.
+ */
+export function styleModuleSource(name: string, dependencies: string[], deferred: string[] = []): string {
+  const eager = dependencies.filter(dependency => !deferred.includes(dependency));
+  const loaders = deferred.map(dependency =>
+    `setSheetLoader(${JSON.stringify(dependency)}, "document", () => import("./${dependency}.js"));`);
+  return [
+    ...eager.map(dependency => `import "./${dependency}.js";`),
+    ...(loaders.length ? [`import { setSheetLoader } from "../core/dom/sheets.js";`] : []),
+    `import "./${name}.css";`,
+    ...loaders,
+    "",
+  ].join("\n");
 }
 
 /** One pre-upgrade file: the banner and the rules in `@layer mtrl.preupgrade`. */
@@ -147,8 +179,7 @@ export async function buildStyles(outdir: string, banner: string) {
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
-      await writeFile(`${outdir}/${path}.js`, dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") +
-        `\nimport "./${name}.css";\n`);
+      await writeFile(`${outdir}/${path}.js`, styleModuleSource(name, dependencies, deferredDependencies[name] ?? []));
       await writeFile(`${outdir}/${path}.d.ts`, "export {};\n");
     } else {
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
@@ -217,7 +248,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
-    await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports));
+    await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports, deferredDependencies[name] ?? []));
     await writeFile(`${dir}/${name}.css`, css);
     await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };

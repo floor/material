@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveStyleDependencies } from "../../scripts/style-manifest";
+import { componentStyles, deferredDependencies, resolveStyleDependencies } from "../../scripts/style-manifest";
 
 describe("CSS dependency validation", () => {
   test("orders shared dependencies once before their consumers", () => {
@@ -20,5 +20,16 @@ describe("CSS dependency validation", () => {
       a: { source: "a", dependencies: ["b"] },
       b: { source: "b", dependencies: ["a"] },
     })).toThrow("CSS dependency cycle");
+  });
+  test("defers only direct dependencies of an entry that loads them on demand", () => {
+    // The generated entry registers a loader per row and imports the rest; a
+    // transitive dependency would leave its sheet out of the initial graph
+    // with nobody loading it, and an eager one would ship twice.
+    for (const [name, deferred] of Object.entries(deferredDependencies)) {
+      expect(componentStyles[name], `${name} is not a style entry`).toBeDefined();
+      for (const dependency of deferred) {
+        expect(componentStyles[name].dependencies, `${name} does not depend on ${dependency}`).toContain(dependency);
+      }
+    }
   });
 });

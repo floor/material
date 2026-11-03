@@ -24,6 +24,7 @@
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
 import { trackDirection } from "../core/dom/direction";
+import { canLoadSheet } from "../core/dom/sheets";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -926,7 +927,13 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
       if (!prepared) {
         prepared = true;
         registerStyles({ [`host:${spec.name}`]: hostStyleText(spec) });
-        const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
+        // A dependency the component's CSS entry defers ships with the lazy
+        // chunk that creates it, and its loader re-applies the root; only a
+        // sheet nobody can load is missing. The component's own sheet is
+        // never deferred: with it absent, nothing the element renders is styled.
+        const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter(
+          (name) => !hasStyles(name) && !(name !== spec.name && canLoadSheet(name)),
+        );
         if (missing.length) {
           console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "material/elements/css/${spec.name}" first.`);
         }

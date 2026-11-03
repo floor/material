@@ -39,6 +39,20 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   toolbar: { source: "components/toolbar", dependencies: ["button", "icon-button"] },
 };
 
+/**
+ * Dependencies whose sheet ships with the importer's lazy chunk instead of the
+ * importer's own entry: the menu behind a select's on-demand menu, the progress
+ * ring behind a button's lazy progress. A row names a direct dependency of
+ * `componentStyles`, and only a dependency the component itself loads on
+ * demand qualifies: the generated entry imports the rest eagerly, and the lazy
+ * path awaits a loader that applies the deferred sheet before it creates the
+ * part. `test/build/style-manifest.test.ts` holds every row to that shape.
+ */
+export const deferredDependencies: Record<string, string[]> = {
+  select: ["menu"],
+  button: ["progress"],
+};
+
 // All shipped components have selective CSS entries.
 export const fullOnlyStyles: string[] = [];
 

@@ -1,6 +1,7 @@
 // src/components/button/features/progress.ts
 import type { ProgressConfig, ProgressComponent, ProgressEvents } from "../../progress/types";
 import { addClass, removeClass } from "../../../core/dom";
+import { loadSheet } from "../../../core/dom/sheets";
 import { ButtonConfig, IconAPI } from "../types";
 
 /**
@@ -46,15 +47,23 @@ interface ProgressEnhancedComponent {
 }
 
 /**
- * Dynamically imports and creates a progress component
+ * Dynamically imports and creates a progress component. The button's CSS
+ * entry defers the progress sheet to this chunk, so the sheet is applied
+ * before the ring is created and its first frame is styled.
  * @param config Progress configuration
+ * @param root A node in the tree the progress is inserted into
  * @returns Promise resolving to the progress component
  */
 const createProgressLazy = async (
-  config: ProgressConfig
+  config: ProgressConfig,
+  root: Node | null
 ): Promise<ProgressComponent> => {
-  // Dynamic import directly from progress.ts to avoid index re-exports
+  // Dynamic import directly from progress.ts to avoid index re-exports. Both
+  // loads start together; the ring is created only once the sheet is applied,
+  // so its first frame is styled.
+  const sheet = loadSheet("progress", root);
   const { default: createProgress } = await import("../../progress/progress");
+  await sheet;
   return createProgress(config);
 };
 
@@ -107,7 +116,7 @@ export const withProgress =
       if (progress) return progress;
 
       if (!progressPromise) {
-        progressPromise = createProgressLazy(progressConfig).then((p) => {
+        progressPromise = createProgressLazy(progressConfig, component.element).then((p) => {
           progress = p;
 
           // Add button-specific class to the progress element
