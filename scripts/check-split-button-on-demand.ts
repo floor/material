@@ -88,9 +88,10 @@ const visit = (key: string): void => {
 visit(entry);
 
 // A chunk holds the menu when one of its modules is the menu's own code: the
-// inner symbol module (menu/inner.ts) is the one menu module that stays initial.
+// inner symbol module (menu/inner.ts) and the stand-in (menu/on-demand.ts) are
+// the menu modules that stay initial.
 const isMenuModule = (path: string): boolean =>
-  /(^|\/)components\/menu\//.test(path) && !/(^|\/)components\/menu\/inner\.ts$/.test(path);
+  /(^|\/)components\/menu\//.test(path) && !/(^|\/)components\/menu\/(inner|on-demand)\.ts$/.test(path);
 const menuChunks = Object.keys(outputs).filter((key) =>
   Object.keys(outputs[key]!.inputs).some(isMenuModule)
 );

@@ -40,7 +40,11 @@ const cases: Record<string, Case> = {
   card: {},
   carousel: { markup: choices("carousel", "carousel-item"), event: "change", getter: "index", factoryEvent: "change", action: `host.next()` },
   menu: {}, fabMenu: {},
-  select: { markup: choices("select", "select-option"), event: "change", getter: "value", factoryEvent: "change", action: `host.component[Object.getOwnPropertySymbols(host.component).find(key => key.description === "mtrl.menu")].element.querySelector('[data-id="b"]').click()` },
+  // The select's menu is a chunk it loads on the first open
+  // (components/menu/on-demand.ts). The case does what a user does — press the
+  // closed select, then press an option — and waits for the listbox the press
+  // began, rather than loading the chunk first.
+  select: { markup: choices("select", "select-option"), event: "change", getter: "value", factoryEvent: "change", action: `host.shadowRoot.querySelector("input").click(); const deadline = performance.now() + 10000; let option = null; while (!(option = host.shadowRoot.querySelector('[data-id="b"]'))) { if (performance.now() > deadline) throw new Error("the first press did not open the listbox"); await new Promise(resolve => setTimeout(resolve, 10)); } option.click()` },
   splitButton: {}, tooltip: {}, toolbar: {}, snackbar: {}, dialog: {}, bottomSheet: {}, sideSheet: {},
   datepicker: { markup: '<m-datepicker label="Date" value="2026-09-10"></m-datepicker>', event: "change", getter: "value", factoryEvent: "change", action: `const input = host.shadowRoot.querySelector("input"); input.value = "09/12/2026"; input.dispatchEvent(new Event("change", { bubbles: true }))` },
   timepicker: { markup: '<m-timepicker value="09:30"></m-timepicker>', event: "confirm", getter: "value", factoryEvent: "confirm", factoryPath: "picker", changesTo: "10:30", action: `const picker = host.component.picker; picker.setType("input"); picker.open(); const hour = picker.dialogElement.querySelector('[data-type="hour"]'); hour.value = "10"; hour.dispatchEvent(new Event("change", { bubbles: true })); picker.dialogElement.querySelector('[class$="time-picker__confirm"]').click()` },

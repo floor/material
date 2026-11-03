@@ -1,7 +1,23 @@
 import { afterEach, beforeEach } from "bun:test";
 import { JSDOM } from "jsdom";
+import { innerMenu } from "../../src/components/menu/inner";
 
 export const wait = (ms = 30): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Waits for the menu a select or split button loads on demand to exist, so a
+ * test can start with the real surface. Until the chunk arrives, innerMenu is
+ * the stand-in and its element holds no items.
+ */
+export const menuReady = async (component: object, timeout = 2000): Promise<void> => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const element = innerMenu(component)?.element;
+    if (element?.querySelector('[role="menuitem"], [role="option"]')) return;
+    await wait(5);
+  }
+  throw new Error("the menu chunk did not arrive");
+};
 
 /** Isolate the real components and their DOM from other suites. */
 export const callbacksFixture = (): (<T extends { element: HTMLElement; destroy(): void }>(component: T) => T) => {

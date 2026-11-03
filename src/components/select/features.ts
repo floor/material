@@ -1,8 +1,8 @@
 // src/components/select/features.ts
 import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import createTextField from "../text-field";
-import createMenu from "../menu";
-import { MenuComponent, MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
+import { createOnDemandMenu, type OnDemandMenu } from "../menu/on-demand";
+import { MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
 import { MENU } from "../menu/inner";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";
 import { warnUnknownValue } from "../../core/utils/warn";
@@ -161,7 +161,7 @@ const processMenuItems = (
 const setupCombobox = (
   component: BaseComponent,
   textField: NonNullable<BaseComponent["textField"]>,
-  menu: MenuComponent,
+  menu: OnDemandMenu,
   state: { options: SelectOption[]; selectedOption: SelectOption | null },
   choose: (option: SelectOption, originalEvent?: Event) => void,
   prefix: string,
@@ -180,6 +180,8 @@ const setupCombobox = (
   let pending: "selected" | "first" | "last" = "selected";
   let buffer = "";
   let bufferTimer: ReturnType<typeof setTimeout> | null = null;
+  // What was typed before the listbox's chunk arrived, applied to it then
+  let queued = "";
 
   const options = (): HTMLElement[] =>
     Array.from(menu.element.querySelectorAll<HTMLElement>('[role="option"]'));
@@ -259,23 +261,40 @@ const setupCombobox = (
     return !!match;
   };
 
+  // Wires the input to the listbox that is now there and places the active
+  // option, including a character typed while the chunk was still loading
+  const connect = (): void => {
+    const list = menu.element.querySelector('[role="listbox"]');
+    if (list?.id) input.setAttribute("aria-controls", list.id);
+    placeActive();
+    const typed = queued;
+    queued = "";
+    for (const key of typed) typeahead(key);
+  };
+
+  // The menu renders its listbox when it is created; until its chunk arrives
+  // the stand-in has none, and whenReady places instead
+  const place = (): void => {
+    if (!menu.isOpen()) return;
+    if (menu.element.querySelector('[role="listbox"]')) connect();
+    else setTimeout(() => { if (menu.isOpen() && menu.element.querySelector('[role="listbox"]')) connect(); }, 0);
+  };
+
   menu.on("open", () => {
     input.setAttribute("aria-expanded", "true");
-    const connect = () => {
-      const list = menu.element.querySelector('[role="listbox"]');
-      if (list?.id) input.setAttribute("aria-controls", list.id);
-      placeActive();
-    };
-    // The menu renders its options on the next task after it is created
-    if (options().length) connect();
-    else setTimeout(connect, 0);
+    place();
   });
+
+  // The real menu replaces the stand-in when its chunk arrives: the listbox,
+  // and not the placeholder, is what aria-controls and the active option name
+  menu.whenReady(place);
 
   menu.on("close", () => {
     input.setAttribute("aria-expanded", "false");
     input.removeAttribute("aria-controls");
     setActive(null);
     pending = "selected";
+    queued = "";
   });
 
   input.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -345,7 +364,7 @@ const setupCombobox = (
     }
 
     // Space selects, unless it continues a search already being typed
-    if (e.key === " " && !buffer) {
+    if (e.key === " " && !buffer && !queued) {
       e.preventDefault();
       if (isOpen) commit(e);
       else open("selected", e);
@@ -354,8 +373,12 @@ const setupCombobox = (
 
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
-      if (!isOpen) {
-        open("selected", e);
+      if (!isOpen) open("selected", e);
+      if (!options().length) {
+        // The listbox's chunk has not arrived; the character is applied to it
+        // when it does, through connect()
+        queued += e.key;
+      } else if (!isOpen) {
         // The options are placed once the listbox has opened
         setTimeout(() => typeahead(e.key), 0);
       } else {
@@ -418,6 +441,10 @@ export const withMenu =
 
     // Convert options to menu items with proper recursive processing
     const menuItems = processMenuItems(state.options);
+    // The caller's own items replace the select's, as they did when the menu
+    // was created with them (`menu` is typed without items, and spread into
+    // the menu's configuration all the same)
+    const initialItems = (config.menu as { items?: MenuContent[] } | undefined)?.items ?? menuItems;
 
     // A select whose options are flat is a WAI-ARIA select-only combobox: the
     // input keeps focus and owns the keyboard, and the popup is a listbox whose
@@ -425,27 +452,35 @@ export const withMenu =
     // listbox, so such a select stays a menu button.
     const listbox = !state.options.some((option) => option && option.hasSubmenu);
 
-    const menu = createMenu({
-      opener: component.textField,
-      // Placed against the field, not the root: the supporting text row sits
-      // under it
-      positionTarget: component.textField.field,
-      items: menuItems,
-      position: (config.placement || "bottom-start") as MenuPosition,
-      width: "100%",
-      // Prefixed: `class` is not, so the menu carried a bare
-      // `select__menu` and `.mtrl-select__menu` matched nothing.
-      class: `${config.prefix || "mtrl"}-select__menu`,
-      closeOnSelect: true,
-      closeOnClickOutside: true,
-      closeOnEscape: true,
-      closeOnResize: true,
-      offset: 0,
-      container: component.element,
-      ...(config.layer ? { layer: config.layer } : {}),
-      ...(listbox ? { manualOpen: true, listbox: true, closeOnEscape: false } : {}),
-      ...(config.menu ?? {}),
-    });
+    const menu = createOnDemandMenu(
+      {
+        opener: component.textField,
+        // Placed against the field, not the root: the supporting text row sits
+        // under it
+        positionTarget: component.textField.field,
+        position: (config.placement || "bottom-start") as MenuPosition,
+        width: "100%",
+        // Prefixed: `class` is not, so the menu carried a bare
+        // `select__menu` and `.mtrl-select__menu` matched nothing.
+        class: `${config.prefix || "mtrl"}-select__menu`,
+        closeOnSelect: true,
+        closeOnClickOutside: true,
+        closeOnEscape: true,
+        closeOnResize: true,
+        offset: 0,
+        container: component.element,
+        ...(config.layer ? { layer: config.layer } : {}),
+        ...(listbox ? { manualOpen: true, listbox: true, closeOnEscape: false } : {}),
+        ...(config.menu ?? {}),
+      },
+      initialItems,
+    );
+
+    // The pointer and the focus that precede a first open start the menu's
+    // chunk, so it arrives with the gesture that opens the listbox
+    const preload = (): void => menu.preload();
+    textField.element.addEventListener("pointerdown", preload, { once: true, passive: true });
+    textField.input.addEventListener("focus", preload, { once: true });
 
     // Selecting an option, by pointer or by key
     const choose = (option: SelectOption, originalEvent?: Event) => {

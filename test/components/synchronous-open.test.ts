@@ -11,7 +11,7 @@ import createSplitButton from "../../src/components/split-button";
 import createDialog from "../../src/components/dialog";
 import createDatePicker from "../../src/components/datepicker";
 import createTimePicker from "../../src/components/timepicker";
-import { callbacksFixture, wait } from "./callbacks.fixture";
+import { callbacksFixture, menuReady, wait } from "./callbacks.fixture";
 
 const mount = callbacksFixture();
 const options = [{ id: "xs", text: "Extra small" }, { id: "s", text: "Small" }, { id: "m", text: "Medium" }];
@@ -39,6 +39,9 @@ describe("select: open() is synchronous", () => {
     test(`the first ${JSON.stringify(key)} on a closed select opens it on the selected option and is not lost`, async () => {
       const component = select();
       await wait();
+      // The focus starts the menu's chunk; the test starts once it has landed.
+      inputOf(component).focus();
+      await menuReady(component);
       const seen: string[] = [];
       component.on("open", () => { seen.push("open"); });
       const input = inputOf(component);
@@ -56,6 +59,8 @@ describe("select: open() is synchronous", () => {
   test("the first typed character on a closed select opens it and is not lost: the typeahead lands on its option", async () => {
     const component = select();
     await wait();
+    inputOf(component).focus();
+    await menuReady(component);
     const input = inputOf(component);
     const event = new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true });
     input.dispatchEvent(event);
@@ -74,6 +79,8 @@ describe("select: open() is synchronous", () => {
     for (const [key, index] of [["Home", 0], ["End", 2]] as const) {
       const component = select();
       await wait();
+      inputOf(component).focus();
+      await menuReady(component);
       const input = inputOf(component);
       const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
       input.dispatchEvent(event);
@@ -86,6 +93,8 @@ describe("select: open() is synchronous", () => {
   test("setValue and setOptions on a closed select are applied and leave it closed", async () => {
     const component = select();
     await wait();
+    inputOf(component).focus();
+    await menuReady(component);
     component.setValue("m");
     expect(component.getValue()).toBe("m");
     expect(component.getText()).toBe("Medium");
