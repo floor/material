@@ -9,7 +9,7 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at 1a46844c on 2026-11-03. Regenerate with
+Measured at 34b0225e on 2026-11-03. Regenerate with
 `bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
 these rows drift from a fresh measurement.
 
@@ -21,14 +21,14 @@ these rows drift from a fresh measurement.
 | bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
 | bottom-sheet | 19.9 KB | 7.2 KB | +4.1 KB |  |
 | side-sheet | 18.3 KB | 6.7 KB | +3.6 KB |  |
-| button | 21.9 KB | 7.4 KB | +4.4 KB | +6.9 KB |
-| button-group | 36.6 KB | 11.8 KB | +8.7 KB | +6.9 KB |
-| card | 19.5 KB | 6.6 KB | +3.6 KB | +9.7 KB |
+| button | 22.1 KB | 7.5 KB | +4.4 KB | +6.9 KB |
+| button-group | 36.7 KB | 11.8 KB | +8.8 KB | +6.9 KB |
+| card | 19.5 KB | 6.6 KB | +3.6 KB | +9.8 KB |
 | carousel | 30.2 KB | 11.2 KB | +8.1 KB |  |
 | checkbox | 16.3 KB | 5.6 KB | +2.6 KB |  |
 | chips | 27.9 KB | 9.1 KB | +6.1 KB |  |
 | datepicker | 37.2 KB | 12.7 KB | +9.7 KB |  |
-| dialog | 38.7 KB | 12.3 KB | +9.3 KB | +6.9 KB |
+| dialog | 38.9 KB | 12.4 KB | +9.3 KB | +6.9 KB |
 | divider | 9.7 KB | 3.7 KB | +0.7 KB |  |
 | drawer | 23.4 KB | 8.3 KB | +5.2 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
@@ -41,18 +41,18 @@ these rows drift from a fresh measurement.
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
 | loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.2 KB | 9.4 KB | +6.3 KB | +16.8 KB |
+| split-button | 27.4 KB | 9.5 KB | +6.4 KB | +16.8 KB |
 | radios | 15.0 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.4 KB | 10.9 KB | +7.8 KB |  |
-| select | 41.7 KB | 13.1 KB | +10.1 KB | +10.4 KB |
+| select | 41.8 KB | 13.2 KB | +10.1 KB | +10.4 KB |
 | slider | 33.7 KB | 11.8 KB | +8.8 KB |  |
-| snackbar | 36.2 KB | 11.9 KB | +8.9 KB | +6.9 KB |
+| snackbar | 36.4 KB | 12.0 KB | +9.0 KB | +6.9 KB |
 | switch | 18.6 KB | 6.2 KB | +3.1 KB |  |
-| tabs | 41.8 KB | 13.4 KB | +10.3 KB | +6.9 KB |
+| tabs | 41.9 KB | 13.4 KB | +10.4 KB | +6.9 KB |
 | text-field | 28.8 KB | 8.8 KB | +5.8 KB |  |
 | timepicker | 31.6 KB | 11.0 KB | +8.0 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.9 KB | 6.0 KB | +3.0 KB |  |
-| toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 393.0 KB | 122.9 KB | +119.8 KB | +2.1 KB |
+| toolbar | 33.2 KB | 11.1 KB | +8.0 KB | +6.9 KB |
+| all | 393.2 KB | 122.9 KB | +119.9 KB | +2.1 KB |
 <!-- /size-table -->
