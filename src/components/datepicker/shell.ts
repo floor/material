@@ -42,26 +42,22 @@ export interface DatePickerSurfaceModule {
   createCalendarSurface: DatePickerSurfaceFactory;
 }
 
-/** The factory's public component plus the load the deferred entry's intent triggers. */
-export interface DatePickerShell<M extends string = "single"> {
-  component: DatePickerComponent<DatePickerValueOf<M>>;
-  /** Starts the surface load without opening the picker. */
-  preload(): void;
-}
-
 /**
  * The datepicker factory both entries share.
+ *
+ * With a deferred loader the trigger's hover or focus starts the import
+ * without opening anything, so the first open paints at once.
  *
  * @param config - The picker's configuration
  * @param eager - Builds the surface now, so the picker paints at creation
  * @param deferred - Imports the surface module on the first open or preload
- * @returns The public component and its preload
+ * @returns The public component
  */
 export function createDatePickerShell<M extends string = "single">(
   config: DatePickerConfig & { selectionMode?: M } = {},
   eager?: DatePickerSurfaceFactory,
   deferred?: () => Promise<DatePickerSurfaceModule>,
-): DatePickerShell<M> {
+): DatePickerComponent<DatePickerValueOf<M>> {
   const settings = createBaseConfig(config);
   const base = pipe(createBase, withEvents(), withElement(getContainerConfig(settings)), withDisabled(settings), withLifecycle())(settings);
   const doc = base.element.ownerDocument;
@@ -327,9 +323,15 @@ export function createDatePickerShell<M extends string = "single">(
   // The default entry builds the surface with the factory: the calendar is
   // painted at creation, exactly as before the split.
   if (eager) { surface = eager(context); surface.mount(); }
+  // A deferred entry starts the load on the intent that precedes the click:
+  // the trigger's hover or focus warms the chunk. The load is idempotent.
+  if (deferredEntry) {
+    trigger.addEventListener("pointerenter", load, { once: true });
+    trigger.addEventListener("focus", load, { once: true });
+  }
   setDisabled(!!settings.disabled);
   if (settings.required) input.required = true;
   if (settings.readOnly) setReadOnly(true);
   // The runtime value follows the same mode the type names.
-  return { component: api as unknown as DatePickerComponent<DatePickerValueOf<M>>, preload: load };
+  return api as unknown as DatePickerComponent<DatePickerValueOf<M>>;
 }

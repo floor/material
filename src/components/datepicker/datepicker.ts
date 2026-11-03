@@ -16,6 +16,6 @@ import type { DatePickerComponent, DatePickerConfig, DatePickerValueOf } from ".
  */
 const createDatePicker = <M extends string = "single">(
   config: DatePickerConfig & { selectionMode?: M } = {},
-): DatePickerComponent<DatePickerValueOf<M>> => createDatePickerShell(config, createCalendarSurface).component;
+): DatePickerComponent<DatePickerValueOf<M>> => createDatePickerShell(config, createCalendarSurface);
 
 export default createDatePicker;

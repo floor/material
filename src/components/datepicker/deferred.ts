@@ -38,14 +38,6 @@ export type {
  */
 export const createDeferredDatePicker = <M extends string = "single">(
   config: DatePickerConfig & { selectionMode?: M } = {},
-): DatePickerComponent<DatePickerValueOf<M>> => {
-  const { component, preload } = createDatePickerShell(config, undefined, () => import("./surface"));
-  // The intent that precedes the click: the trigger's hover or focus warms
-  // the chunk so the first open is already there. The import is idempotent.
-  const trigger = component.element.querySelector<HTMLElement>('[data-action="open"]');
-  trigger?.addEventListener("pointerenter", preload, { once: true });
-  trigger?.addEventListener("focus", preload, { once: true });
-  return component;
-};
+): DatePickerComponent<DatePickerValueOf<M>> => createDatePickerShell(config, undefined, () => import("./surface"));
 
 export default createDeferredDatePicker;
