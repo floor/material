@@ -43,7 +43,7 @@ these rows drift from a fresh measurement.
 | loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
 | split-button | 27.2 KB | 9.4 KB | +6.3 KB | +16.8 KB |
 | radios | 15.0 KB | 5.2 KB | +2.1 KB |  |
-| search | 32.3 KB | 10.9 KB | +7.8 KB |  |
+| search | 32.4 KB | 10.9 KB | +7.8 KB |  |
 | select | 67.7 KB | 20.5 KB | +17.5 KB | +2.1 KB |
 | slider | 33.7 KB | 11.8 KB | +8.8 KB |  |
 | snackbar | 36.2 KB | 11.9 KB | +8.9 KB | +6.9 KB |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.9 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 392.4 KB | 122.7 KB | +119.6 KB | +2.1 KB |
+| all | 392.5 KB | 122.7 KB | +119.6 KB | +2.1 KB |
 <!-- /size-table -->
