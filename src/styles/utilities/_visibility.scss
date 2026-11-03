@@ -23,13 +23,8 @@ $prefix: base.$prefix;
   display: inline;
 }
 
-.#{$prefix}-flex {
-  display: flex;
-}
-
-.#{$prefix}-inline-flex {
-  display: inline-flex;
-}
+// `.mtrl-flex` and `.mtrl-inline-flex` live in utilities/flexbox: the full
+// stylesheet composed both files and emitted each class twice.
 
 .#{$prefix}-grid {
   display: grid;

@@ -95,6 +95,7 @@ $component: "#{base.$prefix}-side-sheet";
 
     // 16dp on the icon side, per the specs' start padding with an icon
     &__close {
+        font: inherit;
         // The button is the layer's and the 48px target's containing block. That
         // cannot come from the state layer's `:where()` rule alone: it adds no
         // specificity, so a page reset like `button { position: static }` would
@@ -109,7 +110,7 @@ $component: "#{base.$prefix}-side-sheet";
         height: 40px;
         margin-inline-end: -8px;
         padding: 0;
-        border: none;
+        border: 0;
         border-radius: 50%;
         background: transparent;
         color: t.color("on-surface-variant");

@@ -217,12 +217,14 @@ export const renderTheme = (spec: ThemeSpec): string => {
 
 @include create-theme("${spec.name}") {
     // Success, warning and info, as every theme has them; the scheme's own
-    // roles, error included, follow
-    @include status-colors-light();
+    // roles, error family included, follow. The scheme always sets the error
+    // family, so status-colors-* would only emit defaults the declarations
+    // below shadow.
+    @include status-roles-light();
 ${declarations(tokens.light, "    ")}
 
     &[data-theme-mode="dark"] {
-        @include status-colors-dark();
+        @include status-roles-dark();
 ${declarations(tokens.dark, "        ")}
     }
 }
