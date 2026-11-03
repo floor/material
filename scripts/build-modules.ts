@@ -22,6 +22,27 @@ export function printRuntimeModule(filename: string, text: string): string {
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
 }
 
+// The transpiler's full minify is newer than the installed @types/bun declares
+// (the same lag ci-commands.test.ts works around for Bun.YAML): the split
+// minifyWhitespace/minifyIdentifiers options are accepted and ignored, and
+// only `minify` shortens identifiers.
+const adapterMinifier = new Bun.Transpiler({
+  loader: "js",
+  minify: true,
+} as unknown as ConstructorParameters<typeof Bun.Transpiler>[0]);
+
+/**
+ * The SSR adapter entries ship minified. They are side-effect entries with no
+ * exports, read by no one from node_modules: 16,631 bytes of readable wrapper
+ * on main, and shrinking them is packed bytes off every install. The
+ * transpiler keeps the module format, the import specifiers (including the
+ * side-effect "./index.js") and their order; identifiers and syntax are
+ * shortened and the comments go.
+ */
+export function minifyAdapterModule(text: string): string {
+  return adapterMinifier.transformSync(text);
+}
+
 /** What every shipped runtime module goes through: prose out, PURE annotations and licence banners in. */
 export function stripRuntimeComments(filename: string, text: string): string {
   return text.includes("__PURE__") ? printRuntimeModule(filename, text)
@@ -88,9 +109,10 @@ export function buildModules(outdir: string) {
         ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), printDeclarationModule(filename, text));
       }
       if (filename.endsWith("/ssr/react.js") || filename.endsWith("/ssr/svelte.js") || filename.endsWith("/ssr/vue.js") || filename.endsWith("/ssr/solid.js")) {
-        // The adapters ship in the package like every other runtime module, so
-        // they get the same strip after the specifier rewrite.
-        ts.sys.writeFile(filename, stripRuntimeComments(filename, text.replace('"./index"', '"./index.js"')));
+        // The adapters ship in the package like every other runtime module,
+        // minified after the specifier rewrite: nothing imports their names,
+        // so only the side effects and the import order have to survive.
+        ts.sys.writeFile(filename, minifyAdapterModule(text.replace('"./index"', '"./index.js"')));
       }
       if (filename.endsWith("/ssr/react.d.ts") || filename.endsWith("/ssr/svelte.d.ts") || filename.endsWith("/ssr/vue.d.ts") || filename.endsWith("/ssr/solid.d.ts")) ts.sys.writeFile(filename, printDeclarationModule(filename, text));
       return;
