@@ -8,6 +8,7 @@
 @use "../../styles/abstract/variables" as v;
 @use "../../styles/abstract/functions" as f;
 @use "../../styles/abstract/mixins" as m;
+@use "../../styles/abstract/direction" as d;
 @use "../../styles/abstract/theme" as t;
 
 $component: "#{base.$prefix}-progress";
@@ -58,7 +59,7 @@ $component: "#{base.$prefix}-progress";
     white-space: nowrap;
 
     .#{$component}--linear & {
-      inset-inline-end: 0;
+      @include d.end(0, $arm: false);
       top: 100%;
       margin-top: 4px;
     }
@@ -67,6 +68,19 @@ $component: "#{base.$prefix}-progress";
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+    }
+  }
+
+  // The label's mirrored inset, in one arm that also covers a marker on this
+  // root: --linear and the runtime's direction mark are the same element, and
+  // the plain arm members need the marker on an ancestor
+  // (abstract/_direction.scss). Nothing of it in the logical form.
+  &--linear {
+    @include d.arms($self: true) {
+      .#{$component}__label {
+        right: auto;
+        left: 0;
+      }
     }
   }
 
