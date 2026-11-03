@@ -17,6 +17,37 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.5.3] - 2026-11-03
+
+Server-rendered roots carry only the CSS they use.
+
+### Performance
+
+- **Inline SSR roots carry only the rules their markup can match (#251).**
+  A server-rendered root ships its element stylesheet inline; before this
+  release every variant, size and state rule shipped in every root. The
+  inline sheet now drops a style rule only when every selector in its list
+  requires a class that is absent from the mounted shadow tree, the markup
+  the server just produced. Anything the analysis cannot prove is kept:
+  `:not`, `:has`, `:is`, `:where`, `:host(`, `::slotted`, `::part`, escaped
+  identifiers, selectors that require no class, and every at-rule that is not
+  a conditional group (`@keyframes`, `@property`, `@layer` and
+  `@starting-style` stay whole, so layer order cannot move); `@media`,
+  `@supports` and `@container` are pruned inside and dropped only when
+  nothing in them survives. Link mode is unchanged. A page of 44 roots falls
+  from 706,875 to 253,639 bytes raw, 11,299 to 5,325 gzipped and 4,939 to
+  2,906 brotli; the same page in link mode is unchanged at 42,991 / 1,046 /
+  675. The SSR entry moves from 307,188 / 111,938 to 308,694 / 112,599 bytes
+  raw and gzipped. The pruned sheet is read before upgrade and never after:
+  `attachShadow` removes a declarative root's children, and the element then
+  adopts the full sheet. A browser check diffs the inline sheet against the
+  full sheet through CSSOM and asserts that every dropped selector matches
+  nothing in the pre-upgrade shadow tree. A script that adds a class inside a
+  declarative root before upgrade sees base styling until upgrade. The
+  package packs 882,799 bytes compressed, 5,087,580 unpacked in 1,578 files,
+  201 bytes under the 883,000-byte ceiling; 3.5.2 as shipped packs 882,133 /
+  5,086,074 / 1,578.
+
 ## [3.5.2] - 2026-11-03
 
 A lighter select and SSR package.
@@ -5666,7 +5697,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.5.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.5.3...HEAD
+[3.5.3]: https://github.com/floor/material/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/floor/material/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/floor/material/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/floor/material/compare/v3.4.3...v3.5.0
