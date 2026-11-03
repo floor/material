@@ -190,4 +190,33 @@ describe('menu stylesheet', () => {
       expect(value('.mtrl-menu--vertical.mtrl-menu--inactive', 'border-radius')).toBe(corner(8));
     });
   });
+
+  test('the column ends round outwards on the physical block edge in every artefact', () => {
+    // A block-edge pair (the top two corners of the first item, the bottom
+    // two of the last): it mirrors to itself, so the lowered artefacts carry
+    // the physical pair with no direction arm, while the adopted sheets keep
+    // the logical pair that also mirrors to itself
+    // (abstract/_direction.scss, scripts/build-styles.ts).
+    const arms = compileString(
+      `@use 'abstract/emit' as config with ($direction-arms: true);\n@use 'components/menu';`,
+      { loadPaths: ['src/styles'], style: 'expanded' },
+    ).css.replace(/,\n/g, ', ');
+    expect(css).toContain(
+      '.mtrl-menu--vertical .mtrl-menu__item:first-child {\n' +
+        `  border-start-start-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n` +
+        `  border-start-end-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n}`,
+    );
+    expect(arms).toContain(
+      '.mtrl-menu--vertical .mtrl-menu__item:first-child {\n' +
+        `  border-top-left-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n` +
+        `  border-top-right-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n}`,
+    );
+    expect(arms).toContain(
+      '.mtrl-menu--vertical .mtrl-menu__item:last-child {\n' +
+        `  border-bottom-left-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n` +
+        `  border-bottom-right-radius: var(--mtrl-sys-shape-corner-medium, 12px);\n}`,
+    );
+    // No logical corner property is left for a bundler to lower into :lang().
+    expect(arms).not.toMatch(/border-(start|end)-(start|end)-radius/);
+  });
 });

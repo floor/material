@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Exercise the packed shared ripple and component teardown in Chromium. */
 import { checkCheckableValues } from "./check-checkable-values";
+import { checkTextFieldNames } from "./check-text-field-names";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -9,15 +10,18 @@ import type createButton from "../src/components/button";
 import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
+import { checkFactoryFocusNames } from "./check-factory-focus-names";
 import { checkChips } from "./check-chips-browser";
+import { checkChipCellNames } from "./check-chip-cell-names";
 import { checkCarouselWheel, checkCarouselWheelSubPixelSnap } from "./check-carousel-browser";
+import { checkComposeIconLabel } from "./check-compose-icon-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
-import { checkMenuOpeners } from "./check-menu-opener-browser";
-import { checkDialogMount } from "./check-dialog-browser";
+import { checkMenuOpenerPlacement, checkMenuOpeners } from "./check-menu-opener-browser";
+import { checkDialogAriaHiddenFocus, checkDialogFocusReach, checkDialogMount } from "./check-dialog-browser";
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
@@ -46,6 +50,9 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createDialog } from 'material'; window.createDialog = createDialog;`);
+  // The public compose surface, for the icon label guard: what npm exports,
+  // not the source tree's module.
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { withIcon } from 'material/core/compose'; window.withIcon = withIcon;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -55,6 +62,8 @@ try {
   await checkThemeContrast(page);
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
   await checkDialogMount(page);
+  await checkDialogFocusReach(page);
+  await checkDialogAriaHiddenFocus(page);
   await checkRadiosLayout(page, "factory", (name) => console.log(`  ok ${name}`));
   await checkCheckableValues(page, "factory");
   await page.evaluate(() => {
@@ -108,9 +117,13 @@ try {
   await checkCarouselWheelSubPixelSnap(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
+  await checkChipCellNames(page, artifacts);
+  await checkFactoryFocusNames(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkTextFieldNames(page);
+  await checkComposeIconLabel(page);
   await checkTextField(page);
   await checkTextFieldTokens(page);
   await checkTextFieldAnatomy(page);
@@ -121,6 +134,7 @@ try {
   await checkTextFieldSearchCancel(page, "factory");
   await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
+  await checkMenuOpenerPlacement(page);
   await checkControls(page);
   await checkMenu(page);
   await checkMenuDisabledColors(page);

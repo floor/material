@@ -12,6 +12,7 @@
 @use '../../styles/abstract/variables' as v;
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
+@use '../../styles/abstract/direction' as d;
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-snackbar';
@@ -74,12 +75,15 @@ $margin: 16px;
     translate: -50% 0;
   }
 
+  // The placement class sits on this root, which the runtime may also mark:
+  // the self form covers a marker on the snackbar itself
+  // (abstract/_direction.scss).
   &--start {
-    inset-inline-start: $margin;
+    @include d.start($margin, $self: true);
   }
 
   &--end {
-    inset-inline-end: $margin;
+    @include d.end($margin, $self: true);
   }
 
   // ---------------------------------------------------------------------------

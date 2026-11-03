@@ -225,6 +225,14 @@ Material describes [three contrast levels](https://m3.material.io/styles/color/s
 
 The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
 
+The elements' pre-upgrade rules are a third Sass entry. Until its script defines it, an element is its server-rendered light DOM; these rules give the undefined host the box it will have once the shadow root arrives, scoped to `:not(:defined)`. Configure the tag prefix when the elements use another one:
+
+```scss
+@use "material/src/styles/elements" with ($tag-prefix: "x");
+```
+
+The prefix defaults to `m`. The build emits the same rules, at the default prefix, as `material/elements/preupgrade.css`.
+
 ### Themes
 
 The baseline theme applies by default and follows the system light or dark preference. Choose a theme and mode on the root element:
@@ -241,7 +249,15 @@ document.documentElement.dataset.themeMode = 'dark';
 | Themes | Names | Where |
 |--------|-------|-------|
 | Baseline and the eleven others | `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel`, `highcontrast` | In the full stylesheet, and each as `material/themes/<name>` |
-| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>` only |
+| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>`, and as the Sass source `src/styles/themes/_<name>.scss` |
+
+The scheme variants are not forwarded by the Sass `themes` entry. They ship as Sass sources, and a theme builder reads them by path, as md3.io does:
+
+```scss
+@use "material/src/styles/themes/expressive";
+```
+
+Each variant is one file in `src/styles/themes`, `_<name>.scss` for the name of its row above.
 
 Every theme has three contrast levels. Set one with `data-theme-contrast` on the element that carries the theme:
 
@@ -433,11 +449,17 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 ### Bundling
 
-The full stylesheet ships no `:lang()` or `:dir()` rules. One shipped file is the exception: the tabs element sheet carries two `:host(:dir(rtl))` badge rules. Values that follow the reading direction use logical properties, such as `margin-inline-start` and `inset-inline-end`.
+The build ships two direction forms. The full stylesheet and the per-component sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties an old-target bundler rewrites, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can put them on the wrong side. Logical margins remain, and an old-target bundler can still rewrite those.
 
-A bundler can add direction rules of its own. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages. On the full stylesheet that is 12,426 `:lang()` arms, about 7.6 kB gzip — 12% of the 63.5 kB bundle.
+The arms answer `dir="rtl"` and the `mtrl-rtl` class on the component itself, on an ancestor, or on a shadow host; a nested `mtrl-ltr` island stays left to right. What stays logical, such as `margin-inline-start`, mirrors when `dir` is set. The marker class does not set the direction. The element sheets and the shadow sheets keep the logical form throughout.
 
-With current browser targets the bundler keeps the logical properties and emits none of them. In a build that targets old browsers the arms are needed, but they are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
+A bundler can still add direction rules of its own when it bundles the logical form. Bun's bundler does when its browser targets predate logical properties: Lightning CSS rewrites each logical declaration into physical ones, guarded by a `:lang()` list of the right-to-left languages.
+
+Those arms are an approximation: they key on the document's language, not its direction, so a page whose `dir` and language disagree gets the wrong side. Do not strip them: where language and direction agree, they are what mirrors the layout.
+
+Language alone does not flip the shipped stylesheets. Set `dir`, or the marker. An Arabic page with neither stays left to right for the placements these sheets arm.
+
+No shipped file carries a `:lang()` rule. The only `:dir()` rules are the two badge rules on the tabs element sheet.
 
 ## Building your own components
 
@@ -552,13 +574,13 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 <!-- sizes -->
 | Import | gzip |
 |--------|-----:|
-| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.7 kB |
+| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
-| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.2 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 127.8 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 127.3 kB |
 | `material/styles/base` | 2.9 kB |
-| `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 63.7 kB |
+| `material/styles/base` and `material/styles/button` | 5.1 kB |
+| `material/styles`, the full stylesheet | 58.7 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).

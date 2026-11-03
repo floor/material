@@ -132,8 +132,10 @@ describe("explicit contrast levels are opt-in", () => {
     // The text field's hidden icon parts: `[hidden]` on the leading and
     // trailing parts (styles/components/_text-field.scss).
     // A FAB menu at bottom-start anchors its list, its items and its FAB to
-    // the inline start, with direction arms for RTL, matched on an ancestor
-    // and on the menu root itself (styles/components/_fab-menu.scss).
+    // the inline start (styles/components/_fab-menu.scss); the arms that
+    // mirror them for RTL are written only by the direction switch's arms
+    // mode, which no adopted sheet compiles
+    // (styles/abstract/_direction.scss, scripts/build-styles.ts).
     // The outlined field's open notch stays unpainted in forced colours,
     // from the script's class and the input's own state.
     // The menu's submenu arrow also mirrors inside a shadow root.
@@ -172,7 +174,14 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/abstract/_mixins.scss, src/elements/define.ts). The values a
     // factory's root holds match a direction on that root itself (the class
     // the runtime reflects, or its own `dir`), not only an ancestor
-    // (styles/components/_datepicker.scss, styles/components/_toolbar.scss).
+    // (styles/components/_toolbar.scss).
+    // A date picker's trigger, docked calendar, mode toggle and full-screen
+    // buttons sit on the inline start and end in this sheet, mirrored by the
+    // direction switch's arms mode, so a consumer bundler's :lang() lowering
+    // cannot leave them on the left-to-right side of a right-to-left page,
+    // and its range band's bleed reads the direction from four custom
+    // properties on the root (styles/components/_datepicker.scss,
+    // styles/abstract/_direction.scss).
     // The side sheet mirrors its closed transform and solid overshoot cover
     // on its logical docked edge (styles/components/_side-sheet.scss).
     // The menu's disabled icon, supporting text and shortcut dim with the
@@ -184,20 +193,75 @@ describe("explicit contrast levels are opt-in", () => {
     // The badge sits at the spec's corner distance (6x6dp dot, 14x12dp large,
     // mirrored in RTL) and a standalone badge stays in flow
     // (styles/components/_badge.scss).
-    // FAB and extended FAB place the logical viewport corners through the
-    // physical utility each matches left-to-right and flip them with the
-    // direction arms (styles/abstract/_mixins.scss), whose selector lists do
-    // not pay the bundler's :lang() lowering (styles/components/_fab.scss);
-    // the physical aliases and all colour/type rules stay pinned. The FAB
-    // menu places its inline edges the same way
+    // FAB and extended FAB place the viewport corners on the inline edges,
+    // which the direction switch's arms mode writes as physical sides
+    // flipped by the direction arms, so the bundler's :lang() lowering
+    // cannot leave them on the left-to-right side of a right-to-left page
+    // (styles/components/_fab.scss, styles/abstract/_direction.scss); the
+    // physical aliases and all colour/type rules stay pinned. The FAB menu
+    // places its inline edges the same way
     // (styles/components/_fab-menu.scss).
+    // The split button writes each half's logical corner pair, its radii in
+    // custom properties, which the arms mode lowers to the physical pairs
+    // with the mirrored pair as a direction arm, so the bundler's :lang()
+    // lowering cannot reach them (styles/components/_split-button.scss,
+    // styles/abstract/_direction.scss).
+    // A placed toolbar or snackbar anchors to its own inline edge: the
+    // toolbar's hidden slide reads --mtrl-toolbar-dir, flipped by the
+    // marker the bar itself carries, and both are mirrored by the arms
+    // mode's self arms (styles/components/_toolbar.scss,
+    // styles/components/_snackbar.scss).
+    // The switch's handle and state layer ride the inline start, the spring
+    // naming the logical side; the arms mode lowers the side to a custom
+    // property every state re-places and names both physical sides, so the
+    // move animates on whichever side the direction chose
+    // (styles/components/_switch.scss, styles/abstract/_direction.scss).
+    // The navigation bar and rail place their start edges on the inline
+    // start, mirrored by the arms mode's direction arms, not the insets a
+    // consumer's bundler lowers; the rail's indicator slide animates the
+    // logical side, which the arms mode names on both physical sides, and
+    // the bar's dot rides the badge's anchor through
+    // --mtrl-navigation-bar-dot-shift so one arm mirrors both
+    // (styles/components/_navigation-bar.scss,
+    // styles/components/_navigation-rail.scss).
     // A vertical menu's selected item paints no trailing check: its 16px end
     // padding has no room for the horizontal variant's mark, which covered
     // the label, while the horizontal menu keeps its own
     // (styles/components/_menu.scss).
+    // The tooltip's position classes carry no margin: the API's offset is the
+    // whole gap on every placement, so the cardinal bottom and right sides
+    // sit 8px from the target with the arrow meeting it, exactly as the
+    // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
+    // The size cleanup keeps every computed value and drops only declarations
+    // a later identical one already carried: the slider handle's second
+    // `pointer-events: none` and the disabled handle's colours that the later
+    // disabled rule sets (styles/components/_slider.scss), the tooltip's
+    // explicit 12px/16px that Body Small emits (styles/components/_tooltip.scss),
+    // and the `.mtrl-flex`/`.mtrl-inline-flex`/`.mtrl-truncate` copies the full
+    // composition emitted twice (styles/utilities/_visibility.scss,
+    // styles/utilities/_typography.scss; main.scss composes each once).
+    // The generated themes take success, warning and info from the shared
+    // status roles and the error family from their own scheme, so no error
+    // fallback is emitted there; autumn's own status values, shadowed by its
+    // include, are gone too (styles/themes/_base-theme.scss,
+    // scripts/generate-themes.ts).
+    // Native controls carry their measured font/padding defaults in their own
+    // component sheets, so those defaults also reach element shadow roots.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0114dbb4584cd4a82469233685070c6fbf0da5fee9520dc393e1a08faed60a9");
-    expect(css.length).toBe(544376);
+      .toBe("3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a");
+    expect(css.length).toBe(537940);
   });
 
   test("today's sheets still resolve to the fixture", () => {
