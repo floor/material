@@ -209,9 +209,11 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_switch.scss).
     // A contained dialog's scrim is the container's box, so its overlay is
     // absolute inside it (styles/components/_dialog.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("71ee2ecef6d3d152181efe09a0054204e927bd88cfe0dcd372aad99233e562dc");
-    expect(css.length).toBe(544364);
+      .toBe("c0d7518c9ac0b1a2ffffc3d82e2d91008cba08fa3da0a88103c4332fad678c4c");
+    expect(css.length).toBe(544273);
   });
 
   test("today's sheets still resolve to the fixture", () => {
