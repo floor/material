@@ -17,11 +17,12 @@
 // root itself (the runtime resolves a factory root from the nearest [dir],
 // itself included — src/core/dom/direction.ts), the runtime's mtrl-rtl class
 // on the root or on an ancestor, a shadow host the sheet is injected into,
-// and a nearer dir="ltr" boundary inside an RTL page. A marker class is
-// placed with the CSS direction it resolved, never with the class alone.
-// lang="ar" alone is not a direction: nothing may move. A block-edge shape
-// (the menu's, the list's, the bottom sheet's top pair) mirrors to itself
-// and must stay put in every form.
+// and a nearer left-to-right boundary inside an RTL page — a dir="ltr"
+// subtree, or an mtrl-ltr island under an ancestor the runtime marked with
+// its class. A marker class is placed with the CSS direction it resolved,
+// never with the class alone. lang="ar" alone is not a direction: nothing may
+// move. A block-edge shape (the menu's, the list's, the bottom sheet's top
+// pair) mirrors to itself and must stay put in every form.
 //
 // One move is watched over time as well: the switch's handle rides its
 // spring to the checked position, on the live side in either direction and
@@ -394,6 +395,11 @@ const CASES: Case[] = [
   { name: "ancestor dir=rtl", dir: "rtl", wrapAttr: "dir=rtl" },
   { name: "root dir=ltr (in an RTL page)", dir: "ltr", rootAttr: "ltr", rootClass: "mtrl-ltr" },
   { name: "root mtrl-ltr, no dir (in an RTL page)", dir: "ltr", rootClass: "mtrl-ltr", rootStyle: "direction:ltr" },
+  // The class the runtime marks a resolved left-to-right root with, under an
+  // ancestor whose direction it resolved the other way: a nearer boundary
+  // wins however the ancestor above it was marked (the runtime's class here,
+  // dir on the page or an ancestor in the cases above).
+  { name: "mtrl-ltr island under an ancestor mtrl-rtl", dir: "ltr", wrapAttr: "class=mtrl-rtl", wrapStyle: "direction:rtl", rootClass: "mtrl-ltr", rootStyle: "direction:ltr" },
   { name: "lang=ar alone", lang: "ar" },
 ];
 
@@ -717,7 +723,8 @@ export async function checkRtlDirection(browser: Browser): Promise<void> {
         `trigger, mode toggle, full-screen buttons and docked calendar, the rail's parts, expanded labels and modal dock, ` +
         `the bar's badge, the FAB menu's own placement, the placed FAB, the snackbar's and toolbar's edges, the chip's ` +
         `action corners, the progress label, the sheets' corners and the switch's handle — mirrored for the page's dir, ` +
-        `a dir or mtrl-rtl on the root, an ancestor's mtrl-rtl, and cut by a nearer dir=ltr; lang=ar alone moves ` +
+        `a dir or mtrl-rtl on the root, an ancestor's mtrl-rtl, and cut by a nearer dir=ltr or an mtrl-ltr island; ` +
+        `lang=ar alone moves ` +
         `nothing; the block-edge pairs (menu, list, bottom sheet) and the auto bar's pill stay put in every form; a ` +
         `shadow host's mtrl-rtl reaches the sheet inside it; the switch's handle springs to checked in both directions.`,
     );

@@ -130,6 +130,23 @@ describe('the direction switch', () => {
     );
   });
 
+  test('an mtrl-ltr island under an mtrl-rtl ancestor stays left-to-right', () => {
+    // The runtime marks a root that resolved its nearest direction left to
+    // right with mtrl-ltr (src/core/dom/direction.ts). A nearer boundary wins
+    // whatever marked the ancestor above it, so every ancestor arm — the
+    // runtime's class, the shadow host's class and the dir attribute — cuts
+    // the island's subtree. Only the self arm, which matches an element that
+    // carries the right-to-left mark itself, is left whole.
+    const css = compile(SOURCES.start, true);
+    const cut = ':not(:where(.mtrl-ltr,.mtrl-ltr *))';
+    expect(css).toContain(`:where(.mtrl-rtl) .a${cut}`);
+    expect(css).toContain(`:where(:host(.mtrl-rtl)) .a${cut}`);
+    expect(css).toContain(`[dir=rtl] .a${cut}`);
+    // The hand series' uncut class arms are what mirrored the island.
+    expect(css).not.toContain(':where(.mtrl-rtl) .a,');
+    expect(css).toContain('.a:where(.mtrl-rtl,[dir=rtl])');
+  });
+
   test('a spring on an inline inset names both physical sides in the arms form', () => {
     const spring = `@use 'abstract/mixins' as m;\n.a { transition: m.spring(opacity, fast-effects); }\n` +
       `.b { transition: m.spring(inset-inline-start, fast-spatial); }`;
