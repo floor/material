@@ -5543,7 +5543,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.4.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.3...HEAD
+[3.4.3]: https://github.com/floor/material/compare/v3.4.2...v3.4.3
 [3.4.2]: https://github.com/floor/material/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
