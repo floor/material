@@ -75,7 +75,7 @@ const sankMenuItem = (attributes: Record<string, string>): boolean => {
     withServerScope(() => {
       const opener = document.createElement("button");
       document.body.appendChild(opener);
-      createMenu({ opener, items: [{ value: "a", text: "Item", ...attributes }] }).destroy();
+      createMenu({ opener, items: [{ id: "a", text: "Item", ...attributes }] }).destroy();
     });
   } catch {
     // A menu item the menu rejects is not a markup path.
