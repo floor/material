@@ -17,6 +17,83 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.3] - 2026-11-03
+
+Server rendering and tooling fixes.
+
+### Fixed
+
+- **The toolbar's overflow button renders the same on the server and in the
+  browser (#187).**
+  The button is built inside the toolbar's shadow root and wired as the
+  slotted menu's opener when the menu is built; on the server the menu is
+  never mounted, because `renderElement` mounts the host and serializes its
+  shadow root before the slotted children expand. Six declared parity
+  exceptions recorded the gap: `aria-expanded` and `aria-controls` were
+  missing, and the button's declared `aria-haspopup="menu"` became `"true"`
+  in the browser. The toolbar now declares `aria-expanded="false"` beside its
+  `aria-haspopup`, the opener wiring keeps a declared `aria-haspopup` and
+  only writes one when the opener has none, and a menu rendered by an element
+  drops the `aria-controls` its opener wiring wrote, after creation and after
+  an anchor change, because its surface stays inside the element's shadow
+  root, where an id from outside cannot resolve; a factory menu moves its
+  surface into the document when it opens, where the id resolves, and keeps
+  the reference. The six declarations are removed, and the parity check
+  passes both toolbar fixtures with no failures — `toolbar: 144 equal, 6
+  exceptions, 0 failures`, `toolbar: 252 equal, 4 exceptions, 0 failures` and
+  `SSR parity chromium: 8492 equal, 10 exceptions, 0 failures` in run
+  41652698059, job 125975279453. The ten exception matches that remain are
+  the roving `tabindex` entries, matched on both sides; the roving stop did
+  not move.
+
+- **The icon's label is looked up by class token, not by selector (#219).**
+  `withIcon` is public and passes `componentName` and `prefix` through
+  unforced, so a quote or a backslash in either made the interpolated
+  `[class*=…]` label lookup throw `Invalid selector`. The lookup now uses
+  `getElementsByClassName` with the literal token, the same token
+  `withTextLabel` writes. A committed Chromium guard in `core:check` drives
+  `material/core/compose` with a quote and a backslash in both values, beside
+  a plain control, and asserts the icon lands after the label carrying the
+  prefix's own token; it measures by `nextElementSibling` and the class
+  token, never by a selector. Measured CI-to-CI (main `7c488c5f`, run
+  41319020497, against the fix head, run 41321369439): core 3,184 bytes
+  gzipped unchanged, button 7,660 to 7,663, dialog 13,496 to 13,500, slider
+  13,372 to 13,373, all 126,219 to 126,223; every budget stays green and the
+  slider row's `vs core` delta is refreshed in `SIZES.md` from the same
+  measurement.
+
+### Internal
+
+- **A CI check keeps seat and persona names out of the tracked files (#244).**
+  It mirrors the internal-id check. `scripts/check-public-names.ts` walks the
+  tracked files (`git ls-files`), skips binaries, and fails on a seat name — a
+  role with a suffix, the numbered and hyphenated forms — or a persona name,
+  printing `file:line` and the line. The role words used as seats also match:
+  a determiner right before them, a possessive, a seat suffix or a team
+  address. The plain role words stay legal anywhere, the standard
+  `**Agent:** <model> · <role>` trailer is always allowed, and the
+  language's own `operator` (`operator fun`, `operatorToken`, "the spread
+  operator") is untouched. The one name list lives in
+  `scripts/public-names.ts` and holds only names the repository has already
+  published, plus the generic forms. The check runs in the static job beside
+  `ids:check`, and the attribution notes in `scripts/size.ts` were rewritten
+  to the fact; no budget, measured row or packed byte changed.
+
+- **The release reports the packed tarball at 876,612 bytes compressed,
+  5,052,664 unpacked in 1,578 files, full CSS 833,834 raw / 63,565 gzip /
+  44,522 brotli, all-js 414,248 / 127,336 / 105,649 and the SSR entry
+  307,188 / 111,938 / 90,951, against the published 3.4.2's 876,517 /
+  5,052,348 / 1,578, 833,834 / 63,565 / 44,522, 414,163 / 127,308 / 105,539
+  and 307,188 / 111,938 / 90,951.** Measured on main at `b5727058`, push run
+  41652698059, job 125975279105; the 3.4.2 column is its release job, run
+  41634352299, job 125912023077. The tarball is 95 bytes compressed and 316
+  bytes unpacked larger in the same 1,578 files, all-js is 85 raw, 28 gzip
+  and 110 brotli larger, and the full stylesheet and the SSR bundle are
+  byte-identical. This release changes only the CHANGELOG and the version
+  field; no ceiling moved, the 886,000-byte package budget has 9,388 bytes
+  of headroom, every budget check passes and `SIZES.md` matches its
+  measurement.
+
 ## [3.4.2] - 2026-11-03
 
 Search and form fields that behave.
