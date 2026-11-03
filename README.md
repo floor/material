@@ -225,6 +225,14 @@ Material describes [three contrast levels](https://m3.material.io/styles/color/s
 
 The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
 
+The elements' pre-upgrade rules are a third Sass entry. Until its script defines it, an element is its server-rendered light DOM; these rules give the undefined host the box it will have once the shadow root arrives, scoped to `:not(:defined)`. Configure the tag prefix when the elements use another one:
+
+```scss
+@use "material/src/styles/elements" with ($tag-prefix: "x");
+```
+
+The prefix defaults to `m`. The build emits the same rules, at the default prefix, as `material/elements/preupgrade.css`.
+
 ### Themes
 
 The baseline theme applies by default and follows the system light or dark preference. Choose a theme and mode on the root element:
@@ -241,7 +249,15 @@ document.documentElement.dataset.themeMode = 'dark';
 | Themes | Names | Where |
 |--------|-------|-------|
 | Baseline and the eleven others | `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel`, `highcontrast` | In the full stylesheet, and each as `material/themes/<name>` |
-| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>` only |
+| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>`, and as the Sass source `src/styles/themes/_<name>.scss` |
+
+The scheme variants are not forwarded by the Sass `themes` entry. They ship as Sass sources, and a theme builder reads them by path, as md3.io does:
+
+```scss
+@use "material/src/styles/themes/expressive";
+```
+
+Each variant is one file in `src/styles/themes`, `_<name>.scss` for the name of its row above.
 
 Every theme has three contrast levels. Set one with `data-theme-contrast` on the element that carries the theme:
 

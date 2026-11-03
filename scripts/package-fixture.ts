@@ -44,7 +44,10 @@ export async function createPackageFixture() {
   try {
     const stage = join(directory, "stage");
     const manifest = await Bun.file("package.json").json() as { files: string[] };
-    for (const path of [...manifest.files, "package.json", "README.md", "npm-readme.md", "LICENSE"]) {
+    // `files` holds what publishes stages and, with a leading `!`, what npm
+    // excludes: a publish packs the checkout and lets npm apply both.
+    const included = manifest.files.filter(path => !path.startsWith("!"));
+    for (const path of [...included, "package.json", "README.md", "npm-readme.md", "LICENSE"]) {
       await cp(path, join(stage, path), { recursive: true });
     }
     // As GitHub runs a step: bash, stopping at the first failing command.
