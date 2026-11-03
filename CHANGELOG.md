@@ -17,6 +17,361 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-11-02
+
+Dialogs that hold their scrim and focus.
+
+### Changed
+
+- **The dialog shares its overlay, event host and tab stops with the rest of
+  the library (#182).**
+  Four pieces of dialog code each had a private copy of something the shared
+  modules already do: `getOverlayConfig` returned a div with no attributes;
+  `getApiConfig` copied every feature method into a second object and
+  `withAPI` wrapped each copy again in another arrow function; a full Divider
+  component drew a 1px rule `_dialog.scss` already paints; and a light-DOM tab
+  list (`querySelectorAll('button, [href], input, …')`) with its own
+  `handleTabKey` sat beside core's `tabStops`/`wrapTab`. Each is replaced by
+  the shared module. `DialogConfig`, `DialogComponent` and the DOM the dialog
+  produces are unchanged; the divider is a plain `<hr>`, styled by the same
+  stylesheet rules. One behaviour difference is declared and pinned:
+  `tabStops`/`wrapTab` walk open shadow roots, so a dialog whose content is a
+  custom element now starts focus inside that element's shadow root and Tabs
+  through it — before, focus stayed on the dialog's actions and the control
+  was unreachable. The dialog's `aria-hidden` initial-focus filter is kept:
+  `isTabStop` tests `[aria-hidden='true']` as well, so the dialog's initial
+  focus and `wrapTab`, and the side and bottom sheets' wrapping that already
+  used `wrapTab`, keep main's behaviour. The refactor pays: the dialog row
+  measures 12,295 bytes gzipped against 13,398 on main (−1,103 bytes, −1.1 kB,
+  budget 13,619), all components 125,266 against 125,720, packed all-js
+  126,966 against 127,417, and the tarball 874,875 compressed and 5,052,610
+  unpacked in 1,578 files against main's 875,869 and 5,056,122 in 1,578 files
+  (−994 and −3,512); the full stylesheet and inline SSR are unchanged at
+  63,697 gzip and 11,299. `scripts/check-dialog-browser.ts` opens a dialog
+  whose content is a text field and asserts the trap starts in its shadow
+  root, wraps to the actions and returns on Escape — red on main
+  (`'button' !== 'input'`), green here — and a focus unit test and a browser
+  check pin the `aria-hidden` filter in the initial focus and in `wrapTab`.
+
+### Fixed
+
+- **A reduced-motion dialog takes its initial focus (#233).**
+  Under `prefers-reduced-motion: reduce`, a dialog that opens left the focus
+  on the body instead of on its first control. The shared reduced-motion reset
+  (`src/styles/base/_reset.scss`) rewrites `transition-property` with
+  `visibility` in the list, and the dialog overlay's own transition lists
+  (`_dialog.scss`: the scrim's `background-color … , visibility 0s`) then give
+  `visibility` the fade's duration on open; in the task the `--visible` class
+  lands in, the first control still computes `visibility: hidden`, and
+  `focus()` on a hidden element does nothing — nothing focused it later.
+  Material's dialogs accessibility guidance states the contract: "When a
+  dialog appears, focus should automatically land on the first interactive
+  element within the dialog." `trapFocus` no longer calls `focus()` blind: it
+  focuses on the first frame the target is not `visibility: hidden` — the same
+  task under normal motion, a frame later under reduced motion.
+  `scripts/check-dialog-reduced-motion.ts` opens a dialog with
+  `reducedMotion: "reduce"`, waits for `afteropen` and asserts the first input
+  holds the focus: red on main `1e70c90f` (`dialog reduced motion:
+  {"active":"BODY","visibility":"visible"}` then `AssertionError: under
+  reduced motion the first control takes the initial focus`, `'BODY' !==
+  'first'`), green on the branch (`{"active":"first","visibility":"visible"}`
+  and the pass line).
+
+- **`afteropen` fires once the dialog's initial focus has landed (#236).**
+  `afteropen` announces that the dialog is ready, but it fired
+  `animationDuration` after `open()` even when the initial focus had not
+  landed yet. `scripts/check-dialog-afteropen.ts` opens a dialog with two
+  inputs at 0, 40 and 500 ms under both motion preferences and records
+  `document.activeElement` and the first control's computed `visibility`
+  inside the `afteropen` listener: on main `08e7ca3a` the reduced-motion cells
+  at 0 and 40 ms report `BODY` and `hidden`, and even the 500 ms cell — the
+  default duration, the surface already visible — still ends at `BODY`,
+  because main called `target.focus()` once and never retried. On the base
+  this branch stacks on (`d5c1d9d7`, #233) the focus lands by 500 ms, but the
+  0 and 40 ms reduced-motion cells still show `BODY` and `hidden` at
+  `afteropen`: the event can announce a dialog whose focus has not arrived.
+  The open timer now marks `afteropen` due, the focus wait holds it while it
+  runs, `focusWhenVisible` emits the held event the moment the focus lands,
+  and a close or a destroy drops the held event together with the wait; the
+  default 500 ms path is unchanged because the focus lands long before the
+  timer. The `afteropen` doc reads "(animationDuration after it was shown, or
+  once its initial focus lands if that is later)". The check passes all five
+  cells — `first` and `visible` — and both dialog guards run in CI:
+  `dialog-afteropen:check` and `dialog-reduced-motion:check` are package
+  scripts listed in `test/build/ci-commands.test.ts` and run in the
+  `browser (components-b)` group. Material specifies both halves — initial
+  focus on the first interactive element, and an enter and exit transition
+  pattern for appearance (read 2026-11-02).
+
+- **A contained dialog keeps its scrim inside its container (#179).**
+  A dialog created with `container` appended its overlay into that container,
+  but the overlay stayed `position: fixed` with `inset: 0`: the scrim covered
+  the whole viewport, caught clicks everywhere and centred the dialog on the
+  viewport, while `inertBackground` only made the container's siblings inert.
+  Measured in Chromium on a 900 × 700 page outside any website, with a
+  300 × 400 region: a static or relative container produced a `fixed` overlay
+  at `(0, 0) 900×700` — 5.25 times the region — a press outside the region
+  closed the dialog, and the page outside the container was not inert; the
+  no-container control showed the same fixed overlay with the page genuinely
+  inert. LTR and RTL measured identically. A non-body `container` that has
+  room for the dialog now gives the overlay `position: absolute`, so the
+  scrim is the container's box, the dialog is centred in it and a press
+  outside does not dismiss it; a container whose computed position is
+  `static` is made `relative` while the overlay lives in it, and its exact
+  previous inline value (none included) is restored when the dialog closes or
+  is destroyed, while a positioned container is left untouched. A collapsed,
+  hidden or too-small container keeps the page's scrim and centring, as it
+  had before, and is left untouched. `document.body` (explicit or default)
+  is unchanged, and
+  `layer: "top"` keeps the page-modal path through `showModal()` and its
+  `::backdrop`. The `container` and `layer` JSDoc and the module docs state
+  the new meaning and the top-layer exception. `scripts/check-dialog-browser.ts`
+  gains `checkDialogScrimScope`, run from `checkDialogMount` — so in CI's
+  `core:check`, against the packed factory, and in the standalone runner —
+  which asserts for static, positioned, no-container and explicit-body mounts
+  that the scrim's rectangle is the container's and does not cover the
+  viewport, while the page-modal mounts keep the page-covering scrim.
+
+### Internal
+
+- **The release removes 113 bytes gzipped from the all-js row (127,417 to
+  127,304) and moves the full stylesheet to 63,704 gzip, 7 bytes above the
+  published 3.4.0 build's 63,697; the packed tarball is 875,702 bytes
+  compressed, 5,056,234 unpacked in 1,578 files, against the published
+  3.4.0's 875,869 and 5,056,122 in 1,578 files.** Measured on main at
+  00ab8ba3, push run 41454371583, job 125307673206; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
+## [3.4.0] - 2026-11-02
+
+Accessible names reach the control you focus.
+
+### Added
+
+- **A text field names an unknown config key in development (#229).**
+  A config key the text field does not read was ignored without a word:
+  `{ maxlength: 10 }` beside the supported `maxLength`, or
+  `{ inputmode: "numeric" }`, which nothing reads, produced no attribute, no
+  property and no message. In development each unknown key is now named:
+  `[mtrl] text-field: unknown config key "maxlength"`. The known-key table is
+  typed against the config interfaces, so the compiler fails when the list and
+  an interface drift, in either direction. Production behaviour does not
+  change — the keys stay ignored in every mode — and a defined production
+  build erases the diagnostic, its loop and the key table with it. The text
+  field's warning browser check carries the unknown-key rows in all four
+  bundle modes (development, production, raw browser, missing environment) and
+  asserts the marker appears in development only; a field carrying all 38
+  supported keys stays quiet, as does a key that is known but fixed at build
+  time. The diagnostic fits the unchanged budgets, and no ceiling moved.
+
+- **Chips, select and search take an `ariaLabel` factory option (#231).**
+  The runtime `ariaLabel` never named the control that takes focus: a chip
+  kept its visible content, or a single-action set cell had no name at all;
+  the select kept its visible label; the search kept its placeholder. The chip
+  factories and `createChips`, `createSelect` and `createSearch` now accept
+  `ariaLabel` and forward it to the focus target — a gridcell for a
+  single-action set chip and its action button otherwise, and the select's and
+  search's native inputs. The name survives label, placeholder and value
+  edits; an explicit name wins over a set cell's content name and is
+  reapplied when the label changes, and removal and trailing actions keep
+  their own names. `ChipConfig` and its four named aliases, `SelectConfig` and
+  `SearchConfig` gain `ariaLabel?: string`, and typed fixtures exercise every
+  factory and reject non-string names. The packed browser check reads
+  Chromium's accessibility tree for the focused targets, their name sources
+  and DOM focus before asserting.
+
+### Fixed
+
+- **A focused chip-set cell is named from its content (#230).**
+  Assist, filter and suggestion chips inside a chip set focus their `gridcell`
+  wrapper, and the inner button is `aria-hidden`, so its visible label could
+  not supply the cell's accessible name; an audit of main found empty names on
+  all three focused cells despite visible text. Each single-action focus cell
+  is now named from its label during render, which also runs after label
+  edits; input-chip primary and removal targets keep their own names, and
+  two-action chips keep distinct action names. Material's chips guidance names
+  basic and selectable chips from their content and gives them the gridcell
+  role. A Chromium accessibility-tree regression enters the set with Tab,
+  moves through the cells with ArrowRight and checks the name of the actual
+  focused target: on main's product code ten single-action observations are
+  empty while the four two-action controls pass, and on the fix all fourteen
+  observations pass, including label edits and filter selection. No option,
+  type or styling token is added, and the fix costs 3 bytes gzipped on the
+  chips row.
+
+- **The text field's existing `ariaLabel` names the focused input (#228).**
+  On main, `createTextField({ ariaLabel: "Email address" })` named the wrapper
+  while the native input that receives focus had no name; with a visible label
+  the input kept `Email` and ignored the explicit name. Textareas behaved the
+  same way in filled and outlined variants. The runtime `ariaLabel` is now
+  forwarded through the native input attribute map, and `TextFieldConfig`
+  declares `ariaLabel?: string`, as `TextInputConfig` declares the forwarded
+  field. The label feature keeps its visible-label fallback and equal-name
+  handling, and a different explicit name stays stable across label edits; the
+  element keeps its explicit host naming. A Chromium check reads the
+  accessibility tree of the focused native textbox over twenty cases — input
+  and textarea, filled and outlined, explicit-name precedence, and
+  label-only, equal and empty fallback — plus sixteen label-edit observations.
+  It is red on main's product code and green on the fix. No alternate option,
+  style or SSR behaviour is introduced.
+
+- **The slider's existing accessible names reach its handles (#225).**
+  `createSlider({ ariaLabel: "Slide" })` named the wrapper while the focusable
+  `role="slider"` handle stayed unnamed, and the inherited `ariaLabelledBy`
+  option had the same routing defect. Both now apply to every handle: an
+  explicit `ariaLabel` takes precedence over the visible-label fallback,
+  following the switch and checkbox input naming, and `ariaLabelledBy` stays a
+  native ID reference, so external text changes update the computed name. A
+  range appends hidden, referenced `minimum` and `maximum` suffixes to each
+  handle's name, as the string-name path does. One shared naming pass covers
+  all handles, and unit coverage pins distinct suffix IDs for simultaneous
+  sliders and cleanup on destroy. The browser check reads Chromium's computed
+  accessibility tree for sixteen single and range scenarios, including live
+  reference renames: ten scenarios fail on main, and the branch passes all
+  sixteen. The pass fits the unchanged slider budget, and no option, styling
+  value or consumer edit is added.
+
+- **A non-counting badge announces "New notification" (#210).**
+  A visible dot exposed `aria-hidden="true"` with no role or accessible name,
+  and Chromium excluded both the factory dot and the shadow-root `<m-badge>`
+  dot from its accessibility tree; an attached destination had no badge
+  description, and an icon-only tab's explicit name omitted the dot. The dot
+  now exposes `role="status"` and `aria-label="New notification"` — a polite
+  live region — without `aria-hidden`, and still renders no text. Nonnumeric
+  text in `label` supplies a translated announcement, numeric values and
+  numeric strings keep the default, and a counting badge drops the dot's name
+  so its count reads normally. `withBadge` puts a visible dot's announcement
+  in the destination's description, preserving its name and existing
+  descriptions, and hide/show removes and restores the reference; tabs compose
+  the announcement after their own label, including icon-only tabs with an
+  explicit name. Material's badge accessibility guidance says non-counting
+  badges "will simply announce New notification". The browser check reads the
+  accessibility role, name and live-region properties of the actual factory
+  and shadow-root nodes over seven states and three tab cases: eighteen
+  assertions fail on main, and the check passes on the fix inside
+  `elements:check`.
+
+- **The switch thumb slides in every build (#162).**
+  The handle and its state layer spring on `inset-inline-start`. A bundler
+  targeting old browsers lowers that inset into `:lang()`-guarded `left` and
+  `right` rules while the base rule's transition list still names the logical
+  side, so the transitioned property is gone from the bundled sheet and the
+  handle jumps instead of sliding. The transition lists now name the physical
+  shorthand `inset` beside the existing `inset-inline-start` spring, on the
+  same fast-spatial token: `inset` covers the sides the lowering writes and
+  the pressed rule's `top`, and an engine too old to parse `inset` also rejects
+  `linear()`, so nothing that could animate loses a transition. No selector or
+  placement declaration changes, so direction behaviour is identical in every
+  case. `scripts/check-switch-transition.ts` bundles `dist/styles.css` as an
+  old-target consumer build does, toggles a factory-built switch in each
+  direction case and samples the handle every frame: it fails on main with no
+  intermediate sample in the `dir=rtl`, `lang=en` case, and passes all six
+  cases on the branch, each landing on its cold-rendered rest. At the merged
+  head the full stylesheet is 835,997 raw / 63,696 gzip / 44,585 brotli
+  (CI 41437183257), 8 bytes gzipped under main's 63,704, the switch row is
+  unchanged, and no budget moves.
+
+### Internal
+
+- **The contrast test's cascade model keeps a rule's later declaration (#239).**
+  The contrast test scored two declarations of one property in the same rule
+  as first-wins, where CSS keeps the later one. `better()` compared layer
+  rank, specificity and source order, and required a strictly greater order,
+  so the first of two declarations sharing all three stayed; the comparison
+  now accepts an equal order, and a second test pins that a later rule still
+  wins by its greater one. The fixture recording the model's output for 1,152
+  states was regenerated, and exactly 240 cells move: every one of them in the
+  72 desert states and none in ocean, by role `error` 72, `error-container`
+  72, `on-error-container` 72 and `on-error` 24. The desert root's `error`
+  becomes `#ba1a1a` from `#b3261e`, for one. Regenerating under the old model
+  reproduces the committed fixture byte for byte, so the model fix accounts
+  for every moved cell. Every change is under `test/`, so nothing in the
+  shipped package moves: the package job prints the same tarball line as
+  main's.
+
+- **The release adds 339 bytes gzipped in the all-js row (127,078 to
+  127,417) and moves the full stylesheet to 63,696 gzip; the packed tarball
+  is 875,871 bytes compressed, 5,056,122 unpacked in 1,578 files, against
+  874,849 and 5,052,835 in 1,578 files in 3.3.4.** Measured on main at
+  473e126a, push run 41439212121, job 125257027173; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
+## [3.3.4] - 2026-11-02
+
+A lighter package, part two.
+
+### Changed
+
+- **The split button loads its menu on first open (#168).**
+  The split button imported the menu at creation, so every page carrying one
+  fetched and parsed the menu whether or not it was ever opened.
+  `features/menu-on-demand.ts` now holds a stand-in with the menu's API; the
+  first open starts `import("../../menu")`, and the real menu is created and
+  replayed onto it — state, items, opener, position, selected, and the
+  listeners registered while it loaded. The button's own contract is not
+  deferred: on the click's tick `isExpanded()`, `aria-expanded` and the
+  `expand`/`change` events are there. The stand-in takes the menu's id shape
+  (`menu-<Date.now()>-<random>`) and names it in `aria-controls` at creation,
+  so the server render is byte-identical to the one before. The initial graph
+  goes from 17,760 to 9,677 bytes gzipped (budget 9,779), the deferred row is
+  17,313 (budget 17,459), and `menu/inner.ts` is the only menu module still in
+  the initial graph. `split-button:check` reads the build's chunk graph — no
+  chunk holding another menu module is statically reachable — and in the
+  browser it reads the first open's state, ARIA and events on the click's
+  tick, before the import's reply can run.
+
+- **The menu resolves its opener once and drops what cannot run (#184).**
+  The controller resolved the opener itself, because the opener feature runs
+  after it in the pipe; its fallback returned the component object for
+  `getElement()` and `input` openers, and a menu opened that way was never
+  placed. A replacement given to `setOpener()` kept the first anchor. The
+  opener is now asked through the component's public `getOpener()`, so the
+  events, the ARIA state and the placement share one resolution, and five
+  call sites became `reposition()`. The keyboard feature always runs before
+  the controller, so the 24-line initial-focus fallback, three guards around
+  its calls and the `Escape` branch behind one of them could not run and are
+  gone; the opener feature reads the keyboard feature's Tab tracker instead of
+  keeping its own document listener and timer. The cut measures 12,951 to
+  12,790 bytes gzipped in the excise harness, and the menu row measures 12,690
+  of its 13,056-byte budget in CI. `scripts/check-menu-opener-browser.ts`
+  opens a menu against a selector, an element, `{element}`, `{getElement()}`
+  and `{input}`, and against a `setOpener()` replacement, in LTR and RTL: each
+  lands below the current opener on its start edge.
+
+### Internal
+
+- **The size report prints Brotli beside gzip (#166).**
+  `scripts/size.ts`'s per-component table gains a Brotli column: the same
+  build's initial graph as the gzip column, through
+  `zlib.brotliCompressSync` at quality 11. It is reported, never gated —
+  every budget stays gzip and the gate lines are untouched. Two tests pin the
+  setting (equality with `node:zlib` at quality 11, and disagreement at
+  quality 1, so a changed quality cannot pass silently) and the measurement's
+  determinism.
+
+- **Thirty-five unreachable dist modules no longer ship (#200).**
+  `scripts/build.ts` pruned unreachable declarations only, so every module in
+  the tsc program still shipped its runtime file. A module now ships when an
+  `exports` target names it or a shipped module imports it, and the rest are
+  pruned; a new `dist-modules:check` walks the built `dist` from the nested
+  manifest and fails naming every module nothing can reach. The 35 removed
+  modules are 30 empty type-only siblings of 11 bytes each, three runtime
+  `types.js` copies (`menu` 342, `select` 84, `text-field` 380 bytes) and
+  `react/jsx.js` with `solid/jsx.js`, 1,172 bytes in all; their declarations
+  stay shipped and only the runtime files go. Every `size:check` row is
+  byte-identical to main's own package job, so nothing a consumer imports
+  moves.
+
+- **The release adds 351 bytes gzipped in the all-js row (126,727 to 127,078)
+  and leaves the full stylesheet at 63,703; the packed tarball is 874,849
+  bytes compressed, 5,052,835 unpacked in 1,578 files, against 875,566 and
+  5,052,361 in 1,612 files in 3.3.3.** Measured on main at 2f78c965, push run
+  41417375448, job 125184777237; this release changes only the CHANGELOG and
+  the version field. No ceiling moved, every budget check passed, and all
+  seven README size rows stand as printed.
+
 ## [3.3.3] - 2026-11-02
 
 A lighter package, and progress that stays sharp.
@@ -4879,7 +5234,10 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.3.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.1...HEAD
+[3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
+[3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
+[3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/floor/material/compare/v3.3.2...v3.3.3
 [3.3.2]: https://github.com/floor/material/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/floor/material/compare/v3.3.0...v3.3.1

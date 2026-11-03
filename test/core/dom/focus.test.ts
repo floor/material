@@ -122,6 +122,13 @@ describe('tabStops and wrapTab', () => {
     expect(modal().ids()).toEqual(['first', 'inner', 'last']);
   });
 
+  test('skips an element hidden from assistive technology with aria-hidden, and keeps the ones after it', () => {
+    const stage = document.createElement('div');
+    stage.innerHTML = '<input id="hidden" aria-hidden="true"><input id="visible">';
+    document.body.append(stage);
+    expect(tabStops(stage).map((element) => element.id)).toEqual(['visible']);
+  });
+
   test('Tab from the last stop goes to the first, Shift+Tab from the first to the last', () => {
     const { container } = modal();
     const [first, , last] = tabStops(container);

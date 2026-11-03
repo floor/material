@@ -73,7 +73,6 @@ interface SearchElementConfig extends SearchConfig {
   noClearButton?: boolean;
   noExpandOnFocus?: boolean;
   noCollapseOnBlur?: boolean;
-  ariaLabel?: string;
   trailingIcon?: string;
   trailingLabel?: string;
   avatar?: string;
@@ -143,7 +142,7 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
   if (widthMin !== undefined) setWidth(search, "min", widthMin);
   if (widthMax !== undefined) setWidth(search, "max", widthMax);
   const input = search.element.querySelector("input") as HTMLInputElement;
-  // The factory takes no aria-label: the placeholder names the combobox.
+  // The host manages its mutable label independently of the factory config.
   if (ariaLabel) input.setAttribute("aria-label", ariaLabel);
 
   const { on, off } = search;
@@ -204,7 +203,7 @@ const searchSpec = {
       type: "string",
       config: "placeholder",
       update: (c, v, host) => {
-        // The factory names the combobox after its placeholder: aria-label wins.
+        // Reapply the current host label after updating the placeholder fallback.
         c.setPlaceholder(v === null ? "Search" : String(v));
         const label = host.getAttribute("aria-label");
         if (label !== null) c.input.setAttribute("aria-label", label);

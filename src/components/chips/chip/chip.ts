@@ -110,6 +110,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     root.classList.toggle(base.getClass("chip--avatar"), !!avatar);
     action.disabled = disabled;
     if (oneActionCell) {
+      root.setAttribute("aria-label", label.textContent ?? "");
       if (selectable) root.setAttribute("aria-selected", String(selected));
       root.setAttribute("aria-disabled", String(disabled));
     } else if (selectable) action.setAttribute("aria-checked", String(selected));
@@ -129,6 +130,9 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       trailingAction.setAttribute("aria-label", options.trailingLabel ?? (options.trailingMenu ? `${text} options` : `Remove ${text}`));
       if (!options.cell) root.setAttribute("aria-label", text);
     }
+    // Applied last, after every content-derived name above: an explicit label
+    // wins, and a set's cell keeps naming itself from its content without one.
+    if (options.ariaLabel) (oneActionCell ? root : action).setAttribute("aria-label", options.ariaLabel);
   };
   // Set once the chip has been made: a change after that animates its icons, the first
   // render does not (see --motion in the stylesheet).

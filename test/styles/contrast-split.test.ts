@@ -199,6 +199,18 @@ describe("explicit contrast levels are opt-in", () => {
     // whole gap on every placement, so the cardinal bottom and right sides
     // sit 8px from the target with the arrow meeting it, exactly as the
     // start and end placements always did (styles/components/_tooltip.scss).
+    // The switch handle and its state layer spring on `inset` — the physical
+    // shorthand covering the sides an old-target bundler lowers the inset into
+    // (`left`, `right`, and the pressed rule's `top`) — beside the logical
+    // inset, because the bundler moves the placement to `:lang()`-guarded
+    // physical rules while the transition list keeps the logical name, leaving
+    // those builds' handle untransitioned; an engine too old to parse `inset`
+    // also rejects `linear()` and never animated these entries before either
+    // (styles/components/_switch.scss).
+    // A contained dialog's scrim is the container's box, so its overlay is
+    // absolute inside it (styles/components/_dialog.scss).
+    // Search suggestion headlines stay inline around their highlighted match;
+    // only the supporting span starts a block line (styles/components/_search.scss).
     // The size cleanup keeps every computed value and drops only declarations
     // a later identical one already carried: the slider handle's second
     // `pointer-events: none` and the disabled handle's colours that the later
@@ -208,8 +220,8 @@ describe("explicit contrast levels are opt-in", () => {
     // composition emitted twice (styles/utilities/_visibility.scss,
     // styles/utilities/_typography.scss; main.scss composes each once).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("a997925d7d480d8ea4abbcac0ba8096ebf8333fe9e42a9b2db84215ca81b0c6f");
-    expect(css.length).toBe(543927);
+      .toBe("c0d7518c9ac0b1a2ffffc3d82e2d91008cba08fa3da0a88103c4332fad678c4c");
+    expect(css.length).toBe(544273);
   });
 
   test("today's sheets still resolve to the fixture", () => {
