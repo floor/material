@@ -17,6 +17,55 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.5.2] - 2026-11-03
+
+A lighter select and SSR package.
+
+### Performance
+
+- **The select loads its menu on first open (#247).**
+  The select no longer carries the menu in its initial graph. A stand-in
+  answers the menu's API at creation — `open()`, `close()`, `isOpen()`,
+  `setItems()`, `getItems()`, `setPosition()`, `getPosition()`,
+  `setSelected()` and the event subscriptions — writes the opener's
+  creation-time ARIA and opens the real menu when the chunk arrives; the
+  focus and the pointer that tend to precede an open start the fetch, and a
+  key pressed while the chunk is in flight is queued and applied to the real
+  listbox with the option it would have opened on. The first open is
+  unchanged for keyboard and pointer: `open()` still sets `isOpen()`, the
+  input's `aria-expanded` and emits `open` before it returns. A select-only
+  combobox carries `role=combobox`, `aria-haspopup=listbox` and
+  `aria-expanded=false` at creation and names the listbox through
+  `aria-controls` only while it is open; a select with submenus carries the
+  menu opener's creation-time ARIA, and the real menu replaces the
+  placeholder id. Server rendering is unchanged, and the menu element is
+  still created detached and appended only on open. The select's initial
+  graph falls from 21,002 to 13,406 bytes gzipped; its menu chunk and that
+  chunk's shared code are 10,650 bytes gzipped on first open. The stand-in
+  was narrowed to the operations the select and the split button reach, and
+  the split button's total moves 7 bytes (9,580 to 9,595 initial, 17,253 to
+  17,245 deferred).
+
+### Internal
+
+- **The SSR adapter entries ship without source comments (#248).**
+  The four `dist/ssr` adapter entries (`react.js`, `svelte.js`, `vue.js`,
+  `solid.js`) are TypeScript emits, not bundles, and skipped the build's
+  comment strip that every other runtime module goes through; the packed
+  package carried 74 prose comments across the four. They now go through the
+  same strip, which keeps a `/*!` licence banner and the `/*#__PURE__*/`
+  annotations, and `ssr-comments:check` fails the package job when a prose
+  comment returns. The strip is comments-only: the four adapters' comment
+  bytes account for the whole drop, and the tarball ceiling is lowered from
+  886,000 to 883,000 bytes. The package figures are CI's: 3.5.1 as shipped
+  packs 884,987 bytes compressed, 5,092,008 unpacked in 1,577 files (its
+  push run 41696556867, package job 126129069537); the strip alone takes
+  the tarball to 881,568 bytes compressed, 3,419 fewer, and 5,084,183
+  unpacked, 7,825 fewer (push run 41698740401, package job 126136730148);
+  with the select's new menu chunk file counted in, this release's base
+  packs 882,133 bytes compressed, 5,086,074 unpacked in 1,578 files (push
+  run 41705115044, package job 126158886748).
+
 ## [3.5.1] - 2026-11-03
 
 Server rendering keeps the content a Suspense boundary resolved.
@@ -5617,7 +5666,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.5.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.5.2...HEAD
+[3.5.2]: https://github.com/floor/material/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/floor/material/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/floor/material/compare/v3.4.3...v3.5.0
 [3.4.3]: https://github.com/floor/material/compare/v3.4.2...v3.4.3

@@ -1,29 +1,56 @@
-// src/components/split-button/features/menu-on-demand.ts
+// src/components/menu/on-demand.ts
 //
-// The split button's menu, as the button holds it before the menu's chunk has
-// arrived. The menu is most of what a split button with items costs, so it is
-// loaded on the first open rather than with the component.
+// A menu the component holds before the menu's chunk has arrived. The menu is
+// most of what a select or a split button with items costs, so it is loaded on
+// the first open (or a little earlier, from the intent that precedes it)
+// rather than with the component.
 //
-// The button's own contract is not deferred: expand() has set isExpanded(),
-// aria-expanded and emitted expand/change before it returns, exactly as when
-// the menu was created with the component. The menu's open() or close() lands
-// when the chunk arrives; its events, from it or from the user's next
-// interaction, reach the listeners wired at creation.
+// The component's own contract is not deferred: open() has set isOpen(), the
+// ARIA and emitted the open event before it returns, exactly as when the menu
+// was created with the component. The menu's open() or close() lands when the
+// chunk arrives; its events, from it or from the user's next interaction,
+// reach the listeners wired at creation. The opener's ARIA is the menu's own
+// rule (menu/features/opener.ts), written at creation for a menu popup and
+// skipped for a listbox, whose combobox carries it.
 
-import type { EventCallback } from "../../../core/state/emitter";
-import type { MenuComponent, MenuConfig, MenuContent, MenuPosition } from "../../menu/types";
+import type { EventCallback } from "../../core/state/emitter";
+import type { MenuComponent, MenuConfig, MenuContent, MenuEvents, MenuPosition } from "./types";
 
 /** createMenu's configuration, except the items, which setItems may replace. */
 type MenuSettings = Omit<MenuConfig, "items">;
 
 /**
- * A MenuComponent that creates the real menu on first open
+ * The menu a select or a split button holds before the chunk arrives: the
+ * operations the two components reach on their own inner menu. The rest of
+ * the menu's API comes with the menu, which is why it is not here.
+ */
+export interface OnDemandMenu {
+  readonly element: HTMLElement;
+  /** Starts the load without opening the menu, from the intent to open it. */
+  preload(): void;
+  /** Runs once the real menu exists, after an open that waited for it. */
+  whenReady(callback: () => void): void;
+  open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu;
+  close(event?: Event, restoreFocus?: boolean, skipAnimation?: boolean): OnDemandMenu;
+  isOpen(): boolean;
+  setItems(items: MenuContent[]): OnDemandMenu;
+  getItems(): MenuContent[];
+  setPosition(value: MenuPosition): OnDemandMenu;
+  getPosition(): MenuPosition;
+  setSelected(value: string | null): OnDemandMenu;
+  on<T extends keyof MenuEvents>(event: T, handler: MenuEvents[T]): OnDemandMenu;
+  on(event: string, handler: EventCallback): OnDemandMenu;
+  destroy(): void;
+}
+
+/**
+ * A stand-in for the menu, replaced by it when the chunk lands
  *
  * @param settings - The menu's configuration, without items
  * @param items - The items the menu starts with
- * @returns A stand-in for the menu, replaced by it when the chunk lands
+ * @returns The stand-in
  */
-export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[]): MenuComponent => {
+export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[]): OnDemandMenu => {
   let menu: MenuComponent | null = null;
   let loading = false;
   let destroyed = false;
@@ -33,20 +60,27 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
   let current = items;
   let selected: string | null | undefined;
   let position: MenuPosition = settings.position ?? "bottom-end";
-  // The split button always hands over its trailing element
-  let opener: HTMLElement | string = settings.opener as HTMLElement;
   const openerElement: HTMLElement | null = typeof settings.opener === "string"
     ? null
     : (settings.opener as { element?: HTMLElement }).element ?? (settings.opener as HTMLElement);
   // The menu's opener names the menu it controls, with an id of this shape
   // (menu/features/opener.ts), before the menu is ever shown. The stand-in is
-  // that name until the real menu is created and replaces it: the button's
+  // that name until the real menu is created and replaces it: the component's
   // ARIA, and the server render, are the same as with the menu at creation.
   const placeholder = document.createElement("div");
   placeholder.id = `menu-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  openerElement?.setAttribute("aria-controls", placeholder.id);
+  // A listbox popup belongs to a combobox, which carries its own ARIA
+  if (!settings.listbox) {
+    if (openerElement && !openerElement.hasAttribute("aria-haspopup")) {
+      openerElement.setAttribute("aria-haspopup", "true");
+    }
+    openerElement?.setAttribute("aria-expanded", "false");
+    openerElement?.setAttribute("aria-controls", placeholder.id);
+  }
   // Listeners added before the menu is there, replayed onto it after
   const listeners = new Map<string, Set<EventCallback>>();
+  // Callers waiting for the real menu, run after it exists
+  let ready: (() => void)[] = [];
 
   const notify = (event: string, payload: unknown): void => {
     for (const listener of listeners.get(event) ?? []) listener(payload);
@@ -59,16 +93,18 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
     // one when the surface arrives.
     if (selected !== undefined) created.setSelected(selected);
     if (position !== settings.position) created.setPosition(position);
-    if (opener !== settings.opener) created.setOpener(opener);
     if (opened) created.open(asked[0], asked[1]);
     for (const [event, set] of listeners) for (const listener of set) created.on(event, listener);
     listeners.clear();
+    const waiting = ready;
+    ready = [];
+    for (const callback of waiting) callback();
   };
 
   const load = (): void => {
     if (menu || loading || destroyed) return;
     loading = true;
-    import("../../menu").then(
+    import("./index").then(
       ({ default: createMenu }) => {
         loading = false;
         if (destroyed) return;
@@ -76,23 +112,24 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       },
       (error: unknown) => {
         loading = false;
-        console.error("Split button menu failed to load:", error);
+        console.error("Menu failed to load:", error);
       },
     );
   };
 
-  const api: MenuComponent = {
+  const api: OnDemandMenu = {
     get element(): HTMLElement {
       return menu?.element ?? placeholder;
     },
 
-    open(event?: Event, interactionType?: "mouse" | "keyboard"): MenuComponent {
+    open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu {
       if (menu) {
         menu.open(event, interactionType);
         return api;
       }
       if (!opened) {
         opened = true;
+        if (!settings.listbox) openerElement?.setAttribute("aria-expanded", "true");
         notify("open", { menu: api, originalEvent: event });
       }
       asked = [event, interactionType];
@@ -100,28 +137,22 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return api;
     },
 
-    close(event?: Event, restoreFocus = true, skipAnimation = false): MenuComponent {
+    close(event?: Event, restoreFocus = true, skipAnimation = false): OnDemandMenu {
       if (menu) {
         menu.close(event, restoreFocus, skipAnimation);
         return api;
       }
       if (opened) {
         opened = false;
+        if (!settings.listbox) openerElement?.setAttribute("aria-expanded", "false");
         notify("close", { menu: api, originalEvent: event });
       }
       return api;
     },
 
-    toggle(event?: Event): MenuComponent {
-      // isOpen(), not `opened`: once the menu is there, it holds the state
-      if (api.isOpen()) api.close(event);
-      else api.open(event);
-      return api;
-    },
-
     isOpen: (): boolean => (menu ? menu.isOpen() : opened),
 
-    setItems(items: MenuContent[]): MenuComponent {
+    setItems(items: MenuContent[]): OnDemandMenu {
       current = items;
       menu?.setItems(items);
       return api;
@@ -129,15 +160,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
 
     getItems: (): MenuContent[] => (menu ? menu.getItems() : current),
 
-    setOpener(value: HTMLElement | string): MenuComponent {
-      if (menu) menu.setOpener(value);
-      else opener = value;
-      return api;
-    },
-
-    getOpener: (): HTMLElement => (menu ? menu.getOpener() : (opener as HTMLElement)),
-
-    setPosition(value: MenuPosition): MenuComponent {
+    setPosition(value: MenuPosition): OnDemandMenu {
       if (menu) menu.setPosition(value);
       else position = value;
       return api;
@@ -145,15 +168,13 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
 
     getPosition: (): MenuPosition => (menu ? menu.getPosition() : position),
 
-    setSelected(value: string | null): MenuComponent {
+    setSelected(value: string | null): OnDemandMenu {
       if (menu) menu.setSelected(value);
       else selected = value;
       return api;
     },
 
-    getSelected: (): string | null => (menu ? menu.getSelected() : (selected ?? null)),
-
-    on(event: string, handler: EventCallback): MenuComponent {
+    on(event: string, handler: EventCallback): OnDemandMenu {
       if (menu) menu.on(event, handler);
       else {
         const set = listeners.get(event) ?? new Set<EventCallback>();
@@ -163,15 +184,19 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return api;
     },
 
-    off(event: string, handler: EventCallback): MenuComponent {
-      if (menu) menu.off(event, handler);
-      else listeners.get(event)?.delete(handler);
-      return api;
+    preload: (): void => {
+      load();
+    },
+
+    whenReady: (callback: () => void): void => {
+      if (menu) callback();
+      else if (!destroyed) ready.push(callback);
     },
 
     destroy(): void {
       destroyed = true;
       listeners.clear();
+      ready = [];
       menu?.destroy();
     },
   };

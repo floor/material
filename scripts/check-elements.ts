@@ -192,7 +192,7 @@ try {
     <m-select id="event-select" value="a"><m-select-option value="a">Alpha</m-select-option><m-select-option value="">None</m-select-option></m-select>
     <m-radios id="event-radios"><m-radio value="a">Alpha</m-radio><m-radio value="">None</m-radio></m-radios>`);
   {
-    const values = await page.evaluate(() => {
+    const values = await page.evaluate(async () => {
       type TimeHost = HTMLElement & { value: string; component: {
         getValue: () => string;
         on: (name: string, handler: (event: { value: string; draftValue?: string }) => void) => void;
@@ -201,7 +201,7 @@ try {
       } };
       type ChoiceHost = HTMLElement & { value: string | null; component: {
         getValue: () => string | null; on: (name: string, handler: (event: { value: string | null }) => void) => void;
-        menu?: { element: HTMLElement }; radios?: Array<{ input: HTMLInputElement }>;
+        radios?: Array<{ input: HTMLInputElement }>;
       } };
       const time = document.getElementById("event-time") as TimeHost;
       const select = document.getElementById("event-select") as ChoiceHost;
@@ -233,7 +233,17 @@ try {
       untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
       untouched.component.picker.open();
       untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
-      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Object.getOwnPropertySymbols(select.component).find((key) => key.description === "mtrl.menu")!].element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      // The select's listbox is a chunk it loads on the first open
+      // (components/menu/on-demand.ts): press the field, wait for the listbox
+      // the press began, then press the option without a value.
+      select.shadowRoot!.querySelector<HTMLInputElement>("input")!.click();
+      const deadline = performance.now() + 10000;
+      let empty: HTMLElement | null = null;
+      while (!(empty = select.shadowRoot!.querySelector<HTMLElement>('[data-id=""]'))) {
+        if (performance.now() > deadline) throw new Error("the first press did not open the select's listbox");
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      empty.click();
       radios.component.radios![0].input.click();
       radios.component.radios![1].input.click();
       return result;

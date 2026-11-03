@@ -9,7 +9,7 @@ import {
 import type { MenuContent } from "../menu/types";
 import { MENU, type MenuOwner } from "../menu/inner";
 import { makeMenu } from "./features/menu";
-import type { MenuComponent } from "../menu/types";
+import type { OnDemandMenu } from "../menu/on-demand";
 import { SPLIT_BUTTON_CLASSES, SPLIT_BUTTON_EVENTS } from "./constants";
 
 interface ApiOptions {
@@ -159,7 +159,7 @@ export const withAPI =
     // A menu closed from the outside, by Escape or a click elsewhere, has to
     // bring the button's state back with it
     // Runs for the menu made at creation, or by the first setItems
-    const wire = (menu: MenuComponent): void => {
+    const wire = (menu: OnDemandMenu): void => {
       // A trailing button that opens this component's own menu says so. The
       // menu's opener wiring sets a plain "true", so this comes after it.
       trailing.element.setAttribute("aria-haspopup", "menu");
