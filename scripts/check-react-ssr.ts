@@ -136,7 +136,7 @@ try {
     assert.doesNotMatch(clientRender, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
-    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderAborted, renderCeiling, renderGiveUp } = await import(suspenseServer) as SuspenseServer;
+    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderInnerError, renderMixedBoundary, renderAborted, renderCeiling, renderGiveUp, renderBoundaryGiveUp } = await import(suspenseServer) as SuspenseServer;
     const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
     for (const [name, result] of shapes) {
       assert.equal(suspendError(result.errors), false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
@@ -148,6 +148,23 @@ try {
       }
       assert.match(result.html, /<template shadowrootmode="open"/, `React ${version} ${name} shadow`);
       assert.match(result.html, name === "A2" ? /lazy loaded/ : /loaded 5/, `React ${version} ${name} content`);
+      if (name === "B3") {
+        // #461: a tabs root absorbs its items, so the snapshot itself must carry
+        // the boundary's tab, not only the streamed light DOM.
+        assert.match(result.html, /data-value="One"/, `React ${version} B3 snapshot keeps the boundary tab`);
+        continue;
+      }
+      if (name === "B2" || name === "B5" || name === "B6" || name === "B7") {
+        // #461: an empty fallback leaves no light content at shell time, so a
+        // fallback-state snapshot ships with no label slot at all and the
+        // resolved text stays unprojected until upgrade. B5 wraps the boundary
+        // in an ordinary component: the slot must survive that too, which a
+        // host-to-children walk cannot see but the renderer's signal can.
+        // B6 and B7 suspend on a thenable whose `then` never dispatches through
+        // this realm's Promise.prototype — its own method, or another realm's
+        // native Promise — so only the renderer's own pending report sees them.
+        assert.match(result.html, /<span part="text label"/, `React ${version} ${name} snapshot keeps the label slot`);
+      }
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
     }
     console.log(`React ${version}: suspending children streamed (${shapes.map(([name]) => name).join(", ")})`);
@@ -155,6 +172,32 @@ try {
     assert.ok(mislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} mislabelled child onError ${JSON.stringify(mislabelled.errors)}`);
     assert.ok(mislabelled.ms < 1000, `React ${version} mislabelled child retried for ${mislabelled.ms.toFixed(0)} ms`);
     console.log(`React ${version}: a child error copying the production suspend text surfaced in ${mislabelled.ms.toFixed(0)} ms`);
+    // #461 round 4: a boundary INSIDE the host catches the error in every
+    // pass, so a retry ladder can never succeed. The error must surface at
+    // once with the fallback-shaped root, as the page renders without the
+    // bridge — the boundary's client-render marker rides the page stream.
+    for (const kind of ["throw", "reject"] as const) {
+      const inner = await renderInnerError(kind);
+      assert.ok(inner.errors.some((error) => error.includes("backend down")), `React ${version} inner-boundary ${kind} onError ${JSON.stringify(inner.errors)}`);
+      assert.ok(inner.ms < 1000, `React ${version} inner-boundary ${kind} surfaced in ${inner.ms.toFixed(0)} ms — an error must not enter the retry ladder`);
+      assert.match(inner.html, /<template shadowrootmode="open"/, `React ${version} inner-boundary ${kind} ships the fallback-shaped root`);
+      assert.match(inner.html, /error fallback/, `React ${version} inner-boundary ${kind} fallback`);
+      assert.match(inner.html, /<!--\$!-->/, `React ${version} inner-boundary ${kind} boundary switched to client rendering`);
+      console.log(`React ${version}: an inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
+    }
+    // #461 round 5: an error in one boundary must not end the host's wait for
+    // a still-pending sibling boundary. The error surfaces while the sibling's
+    // own-`then` resource is unresolved; the host ships only once both are
+    // finished, so the resolved label reaches the shadow root's label slot.
+    const mixed = await renderMixedBoundary();
+    assert.ok(mixed.errors.some((error) => error.includes("backend down")), `React ${version} mixed-boundary onError ${JSON.stringify(mixed.errors)}`);
+    assert.ok(mixed.ms < 1000, `React ${version} mixed-boundary settled in ${mixed.ms.toFixed(0)} ms`);
+    assert.match(mixed.html, /<template shadowrootmode="open"/, `React ${version} mixed-boundary ships the shadow root`);
+    assert.match(mixed.html, /<span part="text label"/, `React ${version} mixed-boundary keeps the label slot for the resolved sibling`);
+    assert.match(mixed.html, /<slot/, `React ${version} mixed-boundary projects the resolved label`);
+    assert.match(mixed.html, /loaded 5/, `React ${version} mixed-boundary resolved label`);
+    assert.match(mixed.html, /<!--\$!-->/, `React ${version} mixed-boundary error boundary switched to client rendering`);
+    console.log(`React ${version}: a pending sibling kept its label slot beside an erroring boundary, settled in ${mixed.ms.toFixed(0)} ms`);
     // The production bundle loads React's production server build and its own copy of the
     // bridge, which samples that build's throw site. Importing it replaces the shared SSR
     // slot, so keep the development slot and put it back before the cases that follow.
@@ -163,11 +206,28 @@ try {
     const devSlot = ssrSlots[ssrSymbol];
     const prodServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}-prod.js`;
     await Bun.write(prodServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun", "production"));
-    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
+    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderInnerError: renderProductionInnerError, renderMixedBoundary: renderProductionMixedBoundary, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
     const production = await renderProductionShapes();
     const productionMislabelled = await renderProductionMislabelled();
     assert.ok(productionMislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} production mislabelled child onError ${JSON.stringify(productionMislabelled.errors)}`);
     assert.ok(productionMislabelled.ms < 1000, `React ${version} production mislabelled child retried for ${productionMislabelled.ms.toFixed(0)} ms`);
+    // #461 round 4, in the production bundle too: prompt error delivery.
+    for (const kind of ["throw", "reject"] as const) {
+      const inner = await renderProductionInnerError(kind);
+      assert.ok(inner.errors.some((error) => error.includes("backend down")), `React ${version} production inner-boundary ${kind} onError ${JSON.stringify(inner.errors)}`);
+      assert.ok(inner.ms < 1000, `React ${version} production inner-boundary ${kind} surfaced in ${inner.ms.toFixed(0)} ms — an error must not enter the retry ladder`);
+      assert.match(inner.html, /<template shadowrootmode="open"/, `React ${version} production inner-boundary ${kind} ships the fallback-shaped root`);
+      console.log(`React ${version}: production inner-boundary ${kind} error surfaced in ${inner.ms.toFixed(0)} ms`);
+    }
+    // #461 round 5, in the production bundle too: the pending sibling keeps its
+    // label slot beside the erroring boundary.
+    const productionMixed = await renderProductionMixedBoundary();
+    assert.ok(productionMixed.errors.some((error) => error.includes("backend down")), `React ${version} production mixed-boundary onError ${JSON.stringify(productionMixed.errors)}`);
+    assert.ok(productionMixed.ms < 1000, `React ${version} production mixed-boundary settled in ${productionMixed.ms.toFixed(0)} ms`);
+    assert.match(productionMixed.html, /<template shadowrootmode="open"/, `React ${version} production mixed-boundary ships the shadow root`);
+    assert.match(productionMixed.html, /<span part="text label"/, `React ${version} production mixed-boundary keeps the label slot for the resolved sibling`);
+    assert.match(productionMixed.html, /loaded 5/, `React ${version} production mixed-boundary resolved label`);
+    console.log(`React ${version}: production mixed-boundary kept the pending sibling's label slot, settled in ${productionMixed.ms.toFixed(0)} ms`);
     const productionCap = await mtrlWarnings(() => renderProductionGiveUp());
     ssrSlots[ssrSymbol] = devSlot;
     for (const name of ["A", "F"] as const) {
@@ -180,6 +240,22 @@ try {
       assert.match(result.html, /<slot/, `React ${version} production ${name} projects resolved children`);
     }
     console.log(`React ${version}: production shapes A and F streamed with a shadow root`);
+    // The inner-boundary shapes must hold in the production bundle too, not only
+    // in development: the snapshot chrome is the product behavior (#461).
+    for (const name of ["B2", "B3", "B5", "B6", "B7"] as const) {
+      const result = production.find(([shape]) => shape === name)?.[1];
+      assert.ok(result, `React ${version} production ${name} missing`);
+      assert.equal(suspendError(result.errors), false, `React ${version} production ${name} onError ${JSON.stringify(result.errors)}`);
+      assert.equal(/<!--\$!-->/.test(result.html), false, `React ${version} production ${name} client-rendered`);
+      assert.match(result.html, /<template shadowrootmode="open"/, `React ${version} production ${name} shadow`);
+      assert.match(result.html, /loaded 5/, `React ${version} production ${name} content`);
+      if (name === "B3") {
+        assert.match(result.html, /data-value="One"/, `React ${version} production B3 snapshot keeps the boundary tab`);
+        continue;
+      }
+      assert.match(result.html, /<span part="text label"/, `React ${version} production ${name} snapshot keeps the label slot`);
+    }
+    console.log(`React ${version}: production B2, B3, B5, B6 and B7 keep their snapshot chrome`);
     const productionGaveUp = productionCap.result;
     assert.equal(suspendError(productionGaveUp.errors) || productionGaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), false, `React ${version} production cap onError ${JSON.stringify(productionGaveUp.errors)}`);
     assert.match(productionGaveUp.html, /loaded 5/, `React ${version} production cap content`);
@@ -220,6 +296,15 @@ try {
     assert.equal(gaveUpRun.warnings.length, 1, `React ${version} cap warnings ${JSON.stringify(gaveUpRun.warnings)}`);
     assert.match(gaveUpRun.warnings[0] ?? "", /<m-button id="count">/, `React ${version} cap warning ${gaveUpRun.warnings[0]}`);
     console.log(`React ${version}: child resolving past the retry cap streamed in ${gaveUp.ms.toFixed(0)} ms after ${gaveUp.sibling} sibling renders, no shadow root; one warning`);
+    // #461: the cap for a boundary caught INSIDE the host. The ladder must run
+    // (sibling renders; a single-pass snapshot would count one) and the
+    // fallback-shaped root must still ship when the boundary never resolves.
+    const boundaryCap = await renderBoundaryGiveUp();
+    assert.match(boundaryCap.html, /shadowrootmode/, `React ${version} inner-boundary cap ships the fallback-shaped root`);
+    assert.doesNotMatch(boundaryCap.html, /loaded 5/, `React ${version} inner-boundary cap keeps unresolved content out`);
+    assert.ok(boundaryCap.ms >= 9000 && boundaryCap.ms < 12000, `React ${version} inner-boundary cap completed at ${boundaryCap.ms.toFixed(0)} ms`);
+    assert.ok(boundaryCap.sibling > 20 && boundaryCap.sibling < 55, `React ${version} inner-boundary cap sibling renders ${boundaryCap.sibling}`);
+    console.log(`React ${version}: a never-resolving inner boundary shipped its fallback-shaped root at ${boundaryCap.ms.toFixed(0)} ms after ${boundaryCap.sibling} sibling renders`);
     const suspenseHtml: string = await renderHydration();
     const suspenseClient = await bundle("scripts/fixtures/react-ssr-suspense-client.ts", "browser");
     assert.doesNotMatch(suspenseClient, /linkedom|DOMParser|SSR element nesting/);
