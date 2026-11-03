@@ -17,6 +17,237 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.4.2] - 2026-11-03
+
+Search and form fields that behave.
+
+### Performance
+
+- **The full stylesheet drops declarations it emitted twice (#237).**
+  The full-css row sat close to its 63,750-byte gzip ceiling, so the cuts are
+  output-preserving ones found by a measurement-only study of the CI bundle:
+  the slider's handle carried a second `pointer-events: none` and a disabled
+  `background-color`/`opacity` that the later disabled rule sets; the full
+  composition emitted `.mtrl-flex`, `.mtrl-inline-flex` and `.mtrl-truncate`
+  twice, so `main.scss` now skips the duplicate while
+  `material/styles/utilities` keeps its own copies of every class it promises
+  on its own; and the tooltip declared a `font-size` and `line-height` the
+  Body Small mixin already emits. The sheet's pin records the result.
+  Measured on the PR's head against main `d0bae1a7`: full CSS 835,645 raw /
+  63,583 gzip / 44,519 brotli against 835,945 / 63,704 / 44,554 — 300 raw,
+  121 gzip and 35 brotli fewer — the README full-stylesheet row moves from
+  63.7 to 63.6 kB, and the unchanged ceiling leaves 167 bytes of gzip
+  headroom. The study's second cut, the theme defaults, needed the contrast
+  model corrected first and ships as #240; a third, adjacent identical rules,
+  was not reproducible from source. The re-pin after merging #218 and #183
+  moved the full sheet's pin to 543,972 bytes with an empty census diff.
+
+- **Generated themes stop writing status colours their own tokens shadow
+  (#240).**
+  Every generated theme emitted the shared status colours and then its own
+  scheme's tokens, and every scheme sets the error family; within one rule
+  the later declaration wins, so four error defaults — error, on-error,
+  error-container and on-error-container — were shadowed a few lines below by
+  the same rule's tokens. `renderTheme` now emits `status-roles-*` alone, the
+  error fallback moves to `status-error-light/dark`, and
+  `status-colors-light/dark` composes the two for the hand themes whose
+  palettes set no error family (ocean, forest, spring, sunset, autumn);
+  autumn also drops the six success, warning and info values its own include
+  had overridden. Nothing a consumer computes changes: the contrast fixture
+  records no moved cell, 13 of the sheet's 3,216 rules differ, 54
+  declarations are removed and none added, and resolving each changed rule
+  last-wins gives the same property map before and after. Measured on the
+  PR's head against main (push run 41426058704): full CSS 833,962 raw /
+  63,655 gzip / 44,577 brotli against 835,945 / 63,704 / 44,631 — 1,983 raw,
+  49 gzip and 54 brotli fewer — while all-js is byte-identical and
+  `consumer:check` passes its 120 full and selective comparisons. The Sass
+  sheet's own removal is 2,055 bytes against the shipped bundle's 1,983
+  because the bundle's minifier writes the removed values shorter. Its
+  re-pin after #237 and a fresh compile is Argus's re-check before the merge
+  line.
+
+### Fixed
+
+- **A search view created open focuses its input (FLO-787, #209).**
+  A search created with `initialState: "view"` opened its surface on the back
+  button instead of the input: showing the surface moves focus to its first
+  control — the back button, through `showModal()` for a full-screen view and
+  `showPopover()` for a docked one — and the created-open path never
+  scheduled the focus that `expandToView()` defers to the next animation
+  frame. Material's search guidelines (read 2026-11-01) state the contract:
+  "When a search entry point is selected, it opens focused search." Both ways
+  into the view now ask for the input on the next animation frame through one
+  helper, and a collapse before that frame cancels the request, so a
+  dismissed view does not take focus back; the helper also cancels any
+  pending request before queueing its own, because the expansion and the
+  created-open initializer could each queue a frame and a collapse cancelled
+  only the last, so the earlier frame took focus and reopened the dismissed
+  view. `scripts/check-search-browser.ts` mounts the search created open in
+  both view modes, waits for the top layer and reads which element holds
+  focus: on main the active element is the back button and the check fails
+  with "created open, fullscreen: search opens on the input"; the branch
+  passes, including the review's created-open, then collapse and expand in
+  one task before the initializer's timer, with frames held until the
+  collapse.
+
+- **A two-line search suggestion keeps its highlighted headline on one line
+  (FLO-789, #218).**
+  A two-line suggestion's label was a flex column in which plain text and
+  the `<strong>` match were separate flex items, so a highlighted headline
+  split into separate rows: in a standalone Chromium fixture on main,
+  `Apple` and ` pie` had text-range tops 76 and 100px, and `Pineapple tart`
+  occupied three headline lines and made the row 108px tall. The headline
+  fragments now stay in normal inline flow and the supporting span is a
+  block; two-line rows measure 72px, match emphasis is preserved, and both
+  headline and supporting text keep their ellipsis truncation. The product
+  change is confined to suggestion CSS, and the full-sheet goldens record
+  the intentional selector and declaration change. Material's search specs
+  and guidelines (read 2026-11-01) use list content for suggestions, and its
+  list guidelines place supporting text below the label. The browser
+  regression measures seven rows in LTR and RTL, in factory and actual
+  shadow-root rendering — matches at the start, middle and end, a repeated
+  phrase, no match, a one-line control and long text — and checks text-range
+  alignment, 72/56px row heights, supporting-line placement, emphasis and
+  truncation: on main's product code it splits the highlighted headline's
+  fragments (101 against 125 in the factory, 77 against 101 in the shadow
+  root, "2 !== 1"), and all 28 rows pass on the branch, both renderings
+  sharing y=107 and y=83 in either direction.
+
+- **A multiline text field holds its place before upgrade (FLO-522, #188).**
+  A multiline text field's pre-upgrade surrogate paints every line of
+  `attr(value)` (`white-space: pre`), and the painting `::before` was an
+  `inline-block`, whose baseline is its last line. A value with line breaks
+  therefore dragged the page's baseline down a line height per extra line
+  and grew the reserved host box once the content overflowed it; at upgrade
+  everything snapped back. Measured on main in server-served Chromium pages
+  outside any website: a filled field with a four-line value went from 118
+  to 100px tall at upgrade and moved an inline sibling up 72px, the compact
+  variant grew 54, 74 or 94px to 40, and 42 harness rows were red with a
+  layout-shift score up to 0.0501 against the 0.01 threshold — only
+  line-break values failed, and LTR and RTL measured identically. One
+  declaration, `display: inline-flex` on the multiline pre-upgrade
+  `::before` (`src/styles/elements/_text-field.scss`), fixes it: an
+  inline-flex container's baseline is its first flex item's, the first
+  painted line, so the reserved box (100px, compact 40px) and the first-line
+  alignment hold for any number of lines, and the deeper lines stay clipped
+  by the existing `overflow: clip`. It extends the box and first-line
+  reservation to line-break values rather than changing it: the one-line
+  geometry is unchanged. Material gives no height token for a multiline text
+  field — only the single-line container has one, "Filled text field
+  container height 56dp" — and its guidelines say "Text areas are
+  fixed-height fields" (read 2026-11-01). The declaration ships only in the
+  pre-upgrade stylesheet; its 20 bytes ride the three artefacts that carry
+  it (`dist/elements/preupgrade.css`, the text field's pre-upgrade sheet and
+  the pre-upgrade CSS string), the packed tarball grows 136 bytes compressed
+  and 425 unpacked, and no budget row moves. `preupgrade:check` carries the
+  four line-break cases: red on main with the inline sibling moving −24, −48
+  and −24px and the compact case −20px plus a 0.0501 layout-shift score,
+  green on the branch at 0.0000 with no sibling movement and the compact box
+  holding 280×40.
+
+- **Button-group neighbours keep their labels whole while pressed (FLO-552,
+  #183).**
+  A held press on an end button of a standard group took a flat 24dp from
+  its neighbour whatever the neighbour's facing padding: at s (16dp padding)
+  that truncated the neighbour's label by 8px and at xs (12dp) by 12px for
+  the whole hold, in LTR and RTL — the padding collapsed to zero and the
+  rest came off the width, so the label ellipsised through the 450ms
+  `:active` spring and stayed ellipsised while held; even an everyday 124px
+  pressed button clipped 3px at s. At m the padding is 24dp, the clip is
+  0px, which is why only xs and s were reported. The cause:
+  `BUTTON_GROUP_COMPRESSION_LIMIT = 24`, one constant for every size — the
+  trailing-space padding of the Compose ancestry, which is only the m size's
+  padding here (12/16/24/48/64 by size) — and `compress()` bounded the
+  neighbour's loss by that constant rather than by its own facing padding,
+  while the stylesheet's 58px min-width is deliberately overridden for the
+  gesture. `compress()` now reads the neighbour's facing padding first and
+  bounds its loss by `min(facing, 24)`, so a text button never loses more
+  than its padding, l and xl (48/64dp) are untouched because the constant
+  binds first, and an icon button keeps the width-only room of 24dp. The
+  pressed button grows by what its neighbours could actually give, and the
+  group's width never changes. Material's button-group specs (read
+  2026-11-01): "When a button is pressed, standard button groups modify the
+  width and shape of that button and adjacent buttons." The press check with
+  real layout holds a pointer on the end and middle button at m, s and xs in
+  both directions and asserts each neighbour's label keeps its whole text
+  mid-ease and settled, that neighbours narrow and the pressed button
+  widens, that the group width never changes and release restores it: on
+  main `s ltr, end button pressed: neighbour 0 clips its label mid-ease —
+  scrollWidth 233 > clientWidth 227` (the four m cases pass, the control),
+  and the branch passes all 12 press cases, 711 checks. The fix costs 37
+  bytes gzipped on the button-group row (12,203 to 12,240), 99 under the
+  unchanged 12,339-byte budget.
+
+- **The native control reset reaches shadow roots (FLO-571, #221).**
+  Native control defaults survived inside element shadow roots because
+  document reset selectors cannot match shadow descendants. On main, a
+  standalone Chromium audit of all 37 element families and ten extra
+  configurations found 34 mismatching controls out of 372 across 47
+  fixtures: seventeen distinct control classes in twelve families differed —
+  UA Arial / 13.3333px / 400 with normal line height survived on inputs and
+  buttons, and FAB, FAB-menu and the datepicker's icon controls kept the UA's
+  1px 6px padding instead of zero; no margin mismatch was found. The measured
+  font and padding defaults now sit in existing blocks of eleven component
+  sheets covering those twelve families (the FAB sheet also styles FAB-menu's
+  FAB): `font: inherit` normalizes the affected inputs and buttons and
+  `padding: 0` normalizes the FABs and the five datepicker icon controls, and
+  the picker's icon-control block moves before its 24px font-size rules so
+  those sizes stay intact. The shared shadow sheet and the document reset
+  keep their original code; the full-sheet selector census is unchanged and
+  the declaration hash and length golden records the targeted additions.
+  Material's FAB and date-picker specs (read 2026-11-01) fix the geometry and
+  type values, which are preserved; the native defaults now match the
+  existing factory normalization. The browser check compares each actual
+  element with the same factory configuration in light DOM, cloning
+  node-valued entries, and measures every padding and margin edge and the
+  font family, size, weight, style, variant, stretch, line height and letter
+  spacing, including closed-surface controls: on main it reports all 34
+  differences (a switch input at Arial / 13.3333px / 400 against the
+  factory's Courier New monospace / 19px / 500, a FAB at 1px 6px against
+  zero), and the branch passes all 372 comparisons across 47 fixtures and 37
+  element families. The targeted form fits the strict 707,200-byte inline
+  SSR ceiling, which a shared reset overshot by 4,559 raw bytes; inline SSR
+  stays at its baseline and the full stylesheet grows 160 raw / 23 gzip,
+  after the already touched side sheet's close control moved from
+  `border: none` to the equivalent `border: 0` to land 63,749 gzip, one byte
+  under the unchanged ceiling. #237 and #240 clear the room for it.
+
+### Internal
+
+- **The publish moves the next dist-tag to the version it just published, and
+  the check reads the tag against that version (FLO-1016, #217).**
+  After a stable publish npm moves `latest` only, so `next` stayed on an
+  older prerelease — `npm install material@next` installed a build older than
+  `material` — and `scripts/check-dist-tags.ts` compared `next` against
+  whatever `latest` the registry returned, which stays stale for minutes
+  after a publish, so a behind `next` passed on the first read and the check
+  could not catch it. The publish job now reads the dist-tags endpoint after
+  a stable publish and, when `next` exists and sorts below the version just
+  published by semver's precedence (prereleases included), runs
+  `npm dist-tag add material@<version> next` under the same
+  trusted-publishing identity; a prerelease publish skips the step, a `next`
+  at or above the version is left alone, and a refused move, an unreadable
+  registry or a tag that is not a version only warns — a publish that
+  happened is never failed or rolled back by what follows it. The check
+  takes an optional `<version>` and compares `next` against the higher of
+  `latest` and it, so a lagging registry cannot produce an early pass, and
+  the dist-tags job passes the tag's version. The workflow change has its own
+  bash test reading the step from `publish.yml` against stubbed `npm` and
+  `curl`; before it, the check passed early on a stale `latest` and the step
+  did not exist. The 3.4.2 publish is the first run whose publish job carries
+  the new dist-tag step, and the release report quotes what that step printed.
+
+- **The release grows the all-js row by 4 bytes gzipped (127,304 to
+  127,308; 414,105 raw to 414,163 and 105,598 brotli to 105,539) and trims
+  the full stylesheet to 63,565 gzip, 139 below the published 3.4.1 build's
+  63,704 (836,048 raw to 833,834, 44,557 brotli to 44,529); the inline SSR
+  row is unchanged at 706,875 / 11,299 / 4,939; the packed tarball is 876,518
+  bytes compressed, 5,052,348 unpacked in 1,578 files, against the published
+  3.4.1's 875,702 and 5,056,234 in 1,578 files.** Measured on main at
+  6b3dcb15, push run 41631364244, job 125901892498; this release changes only
+  the CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and all seven README size rows stand as printed.
+
 ## [3.4.1] - 2026-11-02
 
 Dialogs that hold their scrim and focus.
@@ -5234,7 +5465,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.4.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.4.2...HEAD
+[3.4.2]: https://github.com/floor/material/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/floor/material/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/floor/material/compare/v3.3.4...v3.4.0
 [3.3.4]: https://github.com/floor/material/compare/v3.3.3...v3.3.4
