@@ -27,7 +27,7 @@ these rows drift from a fresh measurement.
 | carousel | 30.2 KB | 11.2 KB | +8.1 KB |  |
 | checkbox | 16.3 KB | 5.6 KB | +2.6 KB |  |
 | chips | 27.9 KB | 9.1 KB | +6.1 KB |  |
-| datepicker | 37.2 KB | 12.7 KB | +9.7 KB |  |
+| datepicker | 37.4 KB | 12.9 KB | +9.8 KB |  |
 | dialog | 38.7 KB | 12.3 KB | +9.3 KB | +6.9 KB |
 | divider | 9.7 KB | 3.7 KB | +0.7 KB |  |
 | drawer | 23.4 KB | 8.3 KB | +5.2 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.9 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 393.0 KB | 122.9 KB | +119.8 KB | +2.1 KB |
+| all | 392.8 KB | 122.9 KB | +119.9 KB | +2.1 KB |
 <!-- /size-table -->
