@@ -10,7 +10,7 @@ export function printRuntimeModule(filename: string, text: string): string {
     for (const position of [node.pos, node.end]) {
       for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
         const comment = text.slice(range.pos, range.end);
-        if (!/[@#]__PURE__/.test(comment) && !comment.startsWith("/*!")) comments.set(range.pos, range.end);
+        if (!keepComment(comment)) comments.set(range.pos, range.end);
       }
     }
     node.getChildren(file).forEach(visit);
@@ -49,12 +49,51 @@ export function minifyAdapterModule(text: string): string {
   return adapterMinifier.transformSync(text);
 }
 
-/** What every shipped runtime module goes through: prose out, PURE annotations and licence banners in. */
+/** The comments a module carries that the shipped text keeps, in source order. */
+export function keptCommentsOf(filename: string, text: string): string[] {
+  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  const kept = new Set<string>();
+  function visit(node: ts.Node): void {
+    for (const position of [node.pos, node.end]) {
+      for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
+        const comment = text.slice(range.pos, range.end);
+        if (keepComment(comment)) kept.add(comment);
+      }
+    }
+    node.getChildren(file).forEach(visit);
+  }
+  visit(file);
+  return [...kept];
+}
+
+/**
+ * The strip's licence guard, callable on any pair: every kept comment the
+ * source carries must occur in the result, or the build stops naming the file
+ * and the comment that went missing.
+ */
+export function assertKeptCommentsSurvive(filename: string, source: string, stripped: string): void {
+  for (const comment of keptCommentsOf(filename, source)) {
+    if (!stripped.includes(comment)) {
+      throw new Error(`${filename}: the readable dist dropped a kept comment: ${comment.replace(/\s+/g, " ").slice(0, 200)}`);
+    }
+  }
+}
+
+/**
+ * What every shipped runtime module goes through: prose out, PURE annotations
+ * and licence banners in. A module that carries a kept comment takes the
+ * banner-keeping printer; every other module takes the plain comment-free
+ * printer, so its output is byte-identical to what it was. The strip checks
+ * itself: a kept comment the result no longer holds fails the build, naming
+ * the file and the comment.
+ */
 export function stripRuntimeComments(filename: string, text: string): string {
-  return text.includes("__PURE__") ? printRuntimeModule(filename, text)
+  const stripped = keptCommentsOf(filename, text).length > 0 ? printRuntimeModule(filename, text)
     : ts.createPrinter({ removeComments: true }).printFile(
       ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
     );
+  assertKeptCommentsSurvive(filename, text, stripped);
+  return stripped;
 }
 
 /**
