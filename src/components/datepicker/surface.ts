@@ -1,10 +1,10 @@
 // src/components/datepicker/surface.ts
 //
-// The datepicker's calendar: its render, its focus handling and every
-// interaction with the days, months and years. The default entry builds this
-// with the factory, so the picker paints at creation, as it always has. The
-// deferred entry imports this module on the first open (or the trigger's
-// intent to open) and builds the same calendar when the chunk lands.
+// The opt-in entry's calendar: its render, its focus handling and every
+// interaction with the days, months and years. The deferred entry imports this
+// module on the first open (or the trigger's intent to open) and builds the
+// calendar when the chunk lands. The default entry's calendar is not this
+// module: its picker keeps the modules it always had, untouched.
 //
 // Everything the surface needs from the shell arrives as the tuple the shell
 // hands the factory: the state it renders, the dialog it paints into, the
@@ -40,7 +40,7 @@ export type DatePickerSurfaceInput = [
   setDisplayDate: (date: Date) => void,
 ];
 
-/** Builds the surface the shell calls: the calendar, or the deferred entry's stand-in. */
+/** Builds the surface the shell calls: the calendar, which the stand-in builds when its chunk lands. */
 export type DatePickerSurfaceFactory = (...input: DatePickerSurfaceInput) => DatePickerSurface;
 
 /** The calendar half of a datepicker: show, hide, render, click, key, validate, destroy. */

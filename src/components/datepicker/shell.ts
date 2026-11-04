@@ -1,13 +1,11 @@
 // src/components/datepicker/shell.ts
 //
-// The datepicker's synchronous half: the field, the trigger, the dialog
+// The opt-in entry's synchronous half: the field, the trigger, the dialog
 // element, the value and draft state, the events, and the public API. The
-// calendar is a surface module the entry builds through a factory: the default
-// entry passes createCalendarSurface, so the picker paints at creation, and the
-// deferred one passes a stand-in that imports the calendar on the first open.
-// Both entries run this same shell, so their synchronous contract — isOpen(),
-// the open/close events, a close while the surface is in flight — is one
-// implementation.
+// calendar is a surface module the entry builds through a factory, and the
+// deferred entry passes a stand-in that imports it on the first open. The
+// default entry keeps its own modules untouched; this shell and its surface
+// are what an opt-in caller pays for, so the default's bytes do not move.
 
 import { pipe } from "../../core/compose";
 import { createBase, withElement } from "../../core/compose/component";
@@ -53,14 +51,13 @@ const isRangeObject = (value: DatePickerInput): value is { start: Date | string;
 let nextId = 0;
 
 /**
- * The datepicker factory both entries share.
+ * The deferred entry's factory.
  *
- * The surface is built by the factory the entry passes: the calendar itself,
- * or a stand-in that defers the import and hands over the calendar when it
- * lands.
+ * The surface is built by the factory the entry passes: here always a stand-in
+ * that defers the import and hands over the calendar when it lands.
  *
  * @param config - The picker's configuration
- * @param createSurface - Builds the surface now, so the picker paints at creation
+ * @param createSurface - Builds the surface now, so the picker answers at creation
  * @returns The public component
  */
 export function createDatePickerShell<M extends string = "single">(

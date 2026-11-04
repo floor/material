@@ -1,10 +1,14 @@
 // src/components/datepicker/deferred.ts
 //
-// The opt-in entry: the same synchronous shell as the default picker — the
-// field, the trigger, isOpen(), the open/close events, a cancellable close
+// The opt-in entry: a synchronous shell with the default picker's contract —
+// the field, the trigger, isOpen(), the open/close events, a cancellable close
 // while the surface is in flight — with the calendar imported on the first
 // open instead of built at creation. The trigger's pointerenter or focus
 // starts that import a little earlier, without opening anything.
+//
+// The shell and the surface are the opt-in entry's own modules, so the default
+// entry keeps the modules it always had, byte for byte; what they repeat of
+// the default's code is what an opt-in caller pays for, and nobody else does.
 //
 // What the surface paints is what waits: the calendar, its initial focus and
 // its aria title. Until it lands the dialog carries `aria-label` as its name,
