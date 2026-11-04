@@ -33,9 +33,11 @@ A smaller, readable package.
   and behaves exactly as built. The build checks its own output by parsing it
   again and refusing it unless the token stream matches the original token
   for token, every line that carried a token still carries one, no line grows
-  and every kept comment survives. `dist/ssr/`, `dist/elements/css/`,
-  `dist/styles/` and `dist/svelte/` are left exactly as emitted, because
-  their checks compare generated text byte for byte.
+  and every kept comment survives. `dist/elements/css/`, `dist/styles/` and
+  `dist/svelte/` are left exactly as emitted, because their checks compare
+  generated text byte for byte. `dist/ssr/` is left as emitted too, for a
+  different reason: its index is already minified, and its four adapter
+  entries have their own minification, below.
 
 - **The SSR adapter entries ship minified (#256).**
   `material/ssr/react`, `svelte`, `vue` and `solid` are side-effect entries
@@ -44,9 +46,10 @@ A smaller, readable package.
   2,745 to 1,474, vue 2,730 to 1,360, solid 806 to 456), and
   `ssr-comments:check` holds each under a byte ceiling. This is the only
   minification in the package: every other shipped `.js` stays readable as
-  above, and `dist/ssr/index.js` was already minified. Each adapter keeps its
-  runtime `process.env.NODE_ENV` read, so a production build still takes the
-  non-development path.
+  above, and `dist/ssr/index.js` was already minified. The react and svelte
+  entries read `process.env.NODE_ENV` for their development warnings and keep
+  that read at runtime, so a production build still takes the non-development
+  path; the vue and solid entries do not read it.
 
 ### Internal
 
