@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
+    // Class fields stay assignment semantics: `true` (the default at ES2022)
+    // defines them with Object.defineProperty, which would change when a
+    // subclass field is installed and read.
+    "useDefineForClassFields": false,
     "module": "ESNext",
     "moduleResolution": "node",
     "declaration": true,
