@@ -15,6 +15,7 @@
         "@types/react-dom": "^19",
         "@typescript-eslint/eslint-plugin": "^8.33.1",
         "@vue/server-renderer": "^3.5",
+        "acorn": "^8.18.0",
         "babel-preset-solid": "^1.9",
         "eslint": "8",
         "jsdom": "^26.0.0",

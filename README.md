@@ -591,7 +591,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 
 ## Browser support
 
-Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
+Current Chrome, Edge, Firefox and Safari. The JavaScript targets ES2022, parsed in CI with acorn 8: a parser that stops before ES2022 cannot load the package. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
 
 ## Upgrading
 
