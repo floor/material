@@ -135,12 +135,6 @@ export const createTimePickerAPI = (
     dialogElement.classList.add('active');
     focusField();
   };
-  // A click on the backdrop lands on the dialog element itself, outside its box.
-  const handleClickOutside = (event: MouseEvent) => {
-    if (event.target !== dialog) return;
-    const box = dialog.getBoundingClientRect();
-    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
-  };
   const focusField = () => {
     const field = dialog.querySelector<HTMLElement>('[data-active="true"]') ?? dialog.querySelector<HTMLElement>('input, button');
     field?.focus();
@@ -360,17 +354,8 @@ export const createTimePickerAPI = (
     },
     
     destroy() {
-      // Close if open
-      if (isOpen) {
-        this.close();
-      }
-      
-      // Remove from DOM
-      if (modalElement && modalElement.parentNode) {
-        modalElement.parentNode.removeChild(modalElement);
-      }
-      
-      // Call lifecycle destroy
+      if (isOpen) this.close();
+      modalElement?.remove();
       options.lifecycle.destroy();
     },
     
@@ -387,6 +372,11 @@ export const createTimePickerAPI = (
   
   // Set up event handlers for the time picker dialog
   dialogElement.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+      const box = dialog.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
+      return;
+    }
     const target = event.target as HTMLElement;
     
     // Handle cancel button click
@@ -415,7 +405,6 @@ export const createTimePickerAPI = (
   dialog.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault();
   });
-  dialog.addEventListener('click', handleClickOutside);
 
   // The initial render uses the same synchronization path as later renders.
   render();
