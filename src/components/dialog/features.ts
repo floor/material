@@ -434,8 +434,6 @@ export const withVisibility =
   // key press handled there, for the topmost one, and never the key press
   // that opened the dialog.
   let escape: ModalEscape | undefined;
-  // True while the dialog sends a key press on as a `cancel` of its own
-  let asking = false;
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -666,25 +664,19 @@ export const withVisibility =
     // top-layer dialog no `cancel` and never forces one closed. closeOnEscape:
     // false still takes the key: it is the topmost modal's.
     escape?.stop();
-    escape = onModalEscape(component.element, () => {
-      // In the top layer the key press asks as the browser's `cancel` did, on
-      // the <dialog>: what listens for it there (<m-dialog>, which asks its
-      // host first) still hears every Escape, and can still refuse it
-      if (top) {
-        asking = true;
-        component.element.dispatchEvent(new Event("cancel", { cancelable: true }));
-        asking = false;
-      } else if (component.config.closeOnEscape !== false) visibility.close();
-    });
-    // What is not a key press (a back gesture) asks through `cancel` too
-    if (top) component.element.addEventListener("cancel", handleCancel);
+    escape = onModalEscape(
+      component.element,
+      () => {
+        if (component.config.closeOnEscape !== false) visibility.close();
+      },
+      top && (() => component.element.dispatchEvent(new Event("cancel", { cancelable: true }))),
+    );
   };
 
   const cleanupEvents = () => {
     scrim.removeEventListener("mousedown", handleOverlayMouseDown);
     document.removeEventListener("mouseup", handleOverlayMouseUp);
     escape?.stop();
-    component.element.removeEventListener("cancel", handleCancel);
   };
 
   /**
@@ -710,18 +702,6 @@ export const withVisibility =
       visibility.close();
     }
     mouseDownOnOverlay = false;
-  }
-
-  // The dialog stays open unless the dialog decides: a close request goes
-  // through close(), so the close event comes once and beforeclose can keep it
-  // open. A `cancel` from the browser in the task the dialog opened in is the
-  // opening key's, when the page stopped that key press before it reached the
-  // window: it is a new event, which only the task can tell.
-  function handleCancel(e: Event) {
-    e.preventDefault();
-    if ((asking || !escape?.opening) && component.config.closeOnEscape !== false && visibility.isOpen()) {
-      visibility.close();
-    }
   }
 
   /** Shows the <dialog> modal; without a document to show it in, just open */

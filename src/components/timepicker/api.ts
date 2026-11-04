@@ -117,14 +117,6 @@ export const createTimePickerAPI = (
   // dialog's cancel event, and before that a document listener that closed
   // every open picker.
   let escape: ModalEscape | undefined;
-  // A close request that is not a key press (a back gesture) still arrives as
-  // the dialog's cancel. The browser's cancel in the task the picker opened in
-  // is the opening key's, when the page stopped that key press before it
-  // reached the window.
-  const handleCancel = (event: Event) => {
-    event.preventDefault();
-    if (!escape?.opening) cancel();
-  };
   // Shows the surface of an open picker. At creation (the `open` option) it
   // runs a task later: by then the caller has put the picker in the page, and
   // a modal <dialog> must not be moved once it is shown.
@@ -418,7 +410,6 @@ export const createTimePickerAPI = (
     
   });
 
-  dialog.addEventListener('cancel', handleCancel);
   // The dialog is in the component's element, which can sit in a form: Enter
   // in its fields moves between them and must not submit that form.
   dialog.addEventListener('keydown', (event) => {

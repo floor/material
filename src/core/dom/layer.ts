@@ -14,10 +14,12 @@ export interface TopLayerOptions {
   kind: TopLayerKind;
 }
 
-type Layered = HTMLElement & Partial<Pick<HTMLDialogElement, "showModal" | "close" | "open">>;
+type Layered = Omit<HTMLElement, "showPopover"> &
+  Partial<Pick<HTMLDialogElement & HTMLElement, "showModal" | "close" | "open" | "showPopover">>;
 
-// Hides the owner asked for, so onTopLayerClose reports only the others.
-const ownHides = new WeakSet<Element>();
+// Hides the owner asked for (Element -> 1), event dispatch numbers
+// (Event -> number), and active marker counts per window (Window -> number).
+const seen = new WeakMap<object, number>();
 
 /**
  * Whether the browser can show an element of this kind in the top layer:
@@ -28,16 +30,13 @@ const ownHides = new WeakSet<Element>();
  * @returns True where the browser supports it
  */
 export const supportsTopLayer = (kind: TopLayerKind): boolean =>
-  kind === "modal"
-    ? typeof HTMLDialogElement === "function" &&
-      typeof HTMLDialogElement.prototype.showModal === "function"
-    : typeof HTMLElement === "function" &&
-      typeof HTMLElement.prototype.showPopover === "function";
+  typeof (kind === "modal"
+    ? typeof HTMLDialogElement === "function" && HTMLDialogElement.prototype.showModal
+    : typeof HTMLElement === "function" && HTMLElement.prototype.showPopover) === "function";
 
 /** Whether an element is showing in the top layer. */
 const isShown = (element: Layered): boolean =>
-  element.open === true ||
-  (typeof element.showPopover === "function" && element.matches(":popover-open"));
+  !!(element.open || (element.showPopover && element.matches(":popover-open")));
 
 /**
  * Shows an element in the top layer, above everything else on the page
@@ -57,18 +56,17 @@ const isShown = (element: Layered): boolean =>
  * @returns True when the element is in the top layer
  */
 export const showInTopLayer = (
-  element: HTMLElement,
+  element: Layered,
   { kind }: TopLayerOptions,
 ): boolean => {
-  const layered = element as Layered;
-  ownHides.delete(element);
+  seen.delete(element);
   if (kind === "modal") {
-    if (typeof layered.showModal !== "function") return false;
-    if (!layered.open) layered.showModal();
+    if (!element.showModal) return false;
+    if (!element.open) element.showModal();
     return true;
   }
-  if (typeof element.showPopover !== "function") return false;
-  element.setAttribute("popover", kind === "popover-auto" ? "auto" : "manual");
+  if (!element.showPopover) return false;
+  element.setAttribute("popover", kind.slice(8));
   if (!isShown(element)) element.showPopover();
   return true;
 };
@@ -79,11 +77,10 @@ export const showInTopLayer = (
  *
  * @param element - The element shown with showInTopLayer
  */
-export const hideFromTopLayer = (element: HTMLElement): void => {
-  const layered = element as Layered;
-  if (!isShown(layered)) return;
-  ownHides.add(element);
-  if (layered.open === true && typeof layered.close === "function") layered.close();
+export const hideFromTopLayer = (element: Layered): void => {
+  if (!isShown(element)) return;
+  seen.set(element, 1);
+  if (element.open) element.close?.();
   else element.hidePopover();
 };
 
@@ -103,13 +100,13 @@ export const onTopLayerClose = (
   callback: () => void,
 ): (() => void) => {
   const listener = (event: Event): void => {
-    // A popover reports on `toggle`, a dialog on `close`: a dialog fires
-    // `toggle` too, and counting both would report its close twice.
-    if ((event.type === "toggle") !== element.hasAttribute("popover")) return;
-    // The events are queued: by now the element may be shown again
-    if ((event as ToggleEvent).newState === "open" || isShown(element)) return;
-    if (ownHides.delete(element)) return;
-    callback();
+    if (
+      (event.type === "toggle") === element.hasAttribute("popover") &&
+      (event as ToggleEvent).newState !== "open" &&
+      !isShown(element) &&
+      !seen.delete(element)
+    )
+      callback();
   };
   element.addEventListener("toggle", listener);
   element.addEventListener("close", listener);
@@ -128,24 +125,27 @@ export const onTopLayerClose = (
  */
 export const inertOutside = (keep: Element): (() => void) => {
   const made: Element[] = [];
-  let node: Element = keep;
-  for (;;) {
-    const parent = node.parentNode;
-    if (!parent) break;
-    for (const sibling of Array.from(parent.children)) {
-      if (sibling === node || sibling.hasAttribute("inert") || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(sibling.tagName)) continue;
-      sibling.setAttribute("inert", "");
-      made.push(sibling);
+  for (
+    let node: Element | null = keep, parent: ParentNode | null | undefined;
+    (parent = node?.parentNode);
+  ) {
+    for (const sibling of parent.children) {
+      if (
+        sibling !== node &&
+        !sibling.hasAttribute("inert") &&
+        !/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(sibling.tagName)
+      ) {
+        sibling.setAttribute("inert", "");
+        made.push(sibling);
+      }
     }
-    if (parent === document.body || parent === document.documentElement) break;
-    // Out of a shadow root, on to its host
-    const next = parent instanceof ShadowRoot ? parent.host : parent.parentElement ? (parent as Element) : null;
-    if (!next) break;
-    node = next;
+    node =
+      parent === document.body
+        ? null
+        : (parent as ShadowRoot).host || (parent.parentElement && (parent as Element));
   }
   return () => {
-    for (const element of made) element.removeAttribute("inert");
-    made.length = 0;
+    made.splice(0).forEach((el) => el.removeAttribute("inert"));
   };
 };
 
@@ -160,49 +160,38 @@ export interface EventsFrom {
 // The order in which key presses and clicks began their dispatch, kept while
 // an overlay is open: one capture listener on the window numbers each event
 // before it reaches anything else.
-const MARKED = ["keydown", "click"];
-const order = new WeakMap<Event, number>();
-const marking = new WeakMap<Window, number>();
 let clock = 0;
 const mark = (event: Event): void => {
-  order.set(event, ++clock);
+  seen.set(event, ++clock);
+};
+
+const toggleMark = (view: Window, d: number): void => {
+  const u = (seen.get(view) ?? 0) + d;
+  seen.set(view, u);
+  if (u === (d + 1) / 2)
+    for (const t of ["keydown", "click"])
+      if (d > 0) view.addEventListener(t, mark, true);
+      else view.removeEventListener(t, mark, true);
 };
 
 /**
  * Tells the events that came after this call from the one that was already
  * on its way: "the event that opened an overlay never dismisses it".
  *
- * An overlay adds its dismiss listeners in `open()`, and the click or the key
- * press that called `open()` then reaches them, on its way up. It is not
- * told apart by time (event times are whole milliseconds in some browsers,
- * and equal times cannot be ordered) nor by the task (a real key press can
- * be delivered before any timer has run), but by the dispatch itself: every
- * event passes the window's capture phase first, where one listener numbers
- * it. An event numbered after the call came after it; the one in flight has
- * an earlier number, or none.
- *
- * The browser's own `cancel` for a modal `<dialog>` is not covered: it is a
- * new event, created after `open()` (see `ModalEscape.opening`).
- *
  * @param element - An element of the overlay, which says which window it is in
  * @returns `after(event)`, and `stop()` for when the overlay closes
  */
 export const eventsFrom = (element: HTMLElement): EventsFrom => {
-  const view = element.ownerDocument.defaultView as Window;
-  const users = marking.get(view) ?? 0;
-  // One marker for every open overlay of the window
-  if (!users) MARKED.forEach((type) => view.addEventListener(type, mark, true));
-  marking.set(view, users + 1);
-  const since = clock;
-  let live = true;
+  const view = element.ownerDocument.defaultView!;
+  let since = clock;
+  toggleMark(view, 1);
   return {
-    after: (event) => (order.get(event) ?? 0) > since,
+    after: (event) => (seen.get(event) ?? 0) > since,
     stop: () => {
-      if (!live) return;
-      live = false;
-      const left = (marking.get(view) as number) - 1;
-      marking.set(view, left);
-      if (!left) MARKED.forEach((type) => view.removeEventListener(type, mark, true));
+      if (since >= 0) {
+        since = -1;
+        toggleMark(view, -1);
+      }
     },
   };
 };
@@ -221,44 +210,33 @@ export interface ModalEscape {
 }
 
 interface EscapeEntry extends ModalEscape {
-  element: HTMLElement;
-  view: Window;
-  escape: () => void;
-  from: EventsFrom;
+  e: HTMLElement;
+  v: Window & typeof globalThis;
+  s: number;
+  d: () => unknown;
 }
 
 // The open modals, in the order they opened: the last one is on top.
 const escapes: EscapeEntry[] = [];
 
 const onEscapeKey = (event: KeyboardEvent): void => {
-  // A key something inside the modal has used (a menu, a select, a field)
-  // and an Escape that cancels an IME composition are not the modal's
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return;
   let at = escapes.length;
-  while (at-- && escapes[at].view !== event.currentTarget);
+  while (
+    at-- &&
+    (escapes[at].v !== event.currentTarget ||
+      (!escapes[at].e.isConnected && (escapes[at].stop(), true)))
+  );
   const top = escapes[at];
-  if (!top) return;
-  // Taken out of the document without being closed: it is not open, and must
-  // not keep the key from the modal under it, or from the page
-  if (!top.element.isConnected) {
-    top.stop();
-    onEscapeKey(event);
-    return;
-  }
-  // Focus inside an open <dialog> that is not this modal: one shown above it
-  // that is not on the stack (another component's, the page's own). The
-  // browser has made the rest inert, and Escape is that dialog's `cancel`.
-  for (const node of event.composedPath() as Partial<Element>[]) {
-    if (node.localName === "dialog" && node.hasAttribute?.("open")) {
-      if (node !== top.element) return;
-      break;
-    }
-  }
-  // Prevented, so the browser sends a modal <dialog> no `cancel`: it lets a
-  // page refuse two of those in a row and forces the third
+  const open = (event.composedPath() as Partial<Element>[]).find(
+    (n) => n.localName === "dialog" && n.hasAttribute?.("open"),
+  );
+  if (!top || (open && open !== top.e)) return;
   event.preventDefault();
-  // The key press that opened the modal is prevented too, and goes no further
-  if (top.from.after(event)) top.escape();
+  if ((seen.get(event) ?? 0) > top.s) {
+    top.opening = false;
+    top.d();
+  }
 };
 
 /**
@@ -270,28 +248,39 @@ const onEscapeKey = (event: KeyboardEvent): void => {
  *
  * @param element - The modal's element, which says which window it is in
  * @param escape - Called for an Escape that is the modal's: it closes, or refuses
+ * @param d - Optional key handler when Escape dispatches a cancelable `cancel` event
  * @returns The modal's entry: `opening`, and `stop()` for when it closes
  */
-export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEscape => {
-  const view = element.ownerDocument.defaultView as Window;
-  const from = eventsFrom(element);
+export const onModalEscape = (
+  element: HTMLElement,
+  escape: () => void,
+  d?: (() => unknown) | false,
+): ModalEscape => {
+  const v = element.ownerDocument.defaultView!;
+  const onCancel = (event: Event): void => {
+    event.preventDefault();
+    if (!entry.opening) escape();
+  };
   const entry: EscapeEntry = {
-    element,
-    view,
-    escape,
-    from,
+    e: element,
+    v,
+    s: clock,
+    d: d || escape,
     opening: true,
     stop: () => {
       const at = escapes.indexOf(entry);
       if (at < 0) return;
       escapes.splice(at, 1);
-      from.stop();
-      if (!escapes.some((other) => other.view === view)) view.removeEventListener("keydown", onEscapeKey);
+      toggleMark(v, -1);
+      element.removeEventListener("cancel", onCancel);
+      if (!escapes.some((other) => other.v === v))
+        v.removeEventListener("keydown", onEscapeKey);
     },
   };
+  toggleMark(v, 1);
   escapes.push(entry);
-  // Adding the same listener again does nothing
-  view.addEventListener("keydown", onEscapeKey);
+  element.addEventListener("cancel", onCancel);
+  v.addEventListener("keydown", onEscapeKey);
   setTimeout(() => {
     entry.opening = false;
   }, 0);

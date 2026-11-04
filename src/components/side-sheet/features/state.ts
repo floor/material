@@ -136,22 +136,12 @@ export const withState =
     // leaving for the browser's own controls
     const handleTab = (event: KeyboardEvent): void => wrapTab(element, event);
 
-    // A close request that is not a key press (a back gesture) reaches the
-    // topmost modal as its cancel event; the sheet decides. The `cancel` of
-    // the task it opened in is the opening key's, when the page stopped that
-    // key press before it reached the window.
-    const handleCancel = (event: Event): void => {
-      event.preventDefault();
-      if (!escape?.opening && config.closeOnEscape) hide();
-    };
-
     if (config.open) open = true;
     apply();
     if (open) onStack(true);
 
     let stopCloses: (() => void) | null = null;
     if (top) {
-      element.addEventListener("cancel", handleCancel);
       element.addEventListener("click", handleBackdropClick);
       element.addEventListener("keydown", handleTab);
       // a close the browser made on its own still closes the sheet
@@ -175,7 +165,6 @@ export const withState =
           document.removeEventListener("keydown", handleKeydown);
           structure.scrim?.removeEventListener("click", handleScrimClick);
           structure.closeButton?.removeEventListener("click", handleCloseClick);
-          element.removeEventListener("cancel", handleCancel);
           element.removeEventListener("click", handleBackdropClick);
           element.removeEventListener("keydown", handleTab);
           trap(false);
