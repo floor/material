@@ -1990,6 +1990,18 @@
       "\"tertiary-fixed-dim\""
     ]
   },
+  "ThemeVariant": {
+    "kind": "union",
+    "members": [
+      "\"content\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"tonal-spot\"",
+      "\"vibrant\""
+    ]
+  },
   "ThrottleComponent": {
     "kind": "extends",
     "bases": [
