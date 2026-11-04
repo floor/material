@@ -24,7 +24,7 @@ const COMMANDS = [
   "core:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "base-lite:check", "ssr:check:a", "ssr:check:b",
 ];
 
-interface Step { run?: string; if?: string; "continue-on-error"?: unknown }
+interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
 interface Job {
   needs?: string | string[];
   if?: string;
@@ -105,6 +105,27 @@ describe("CI (.github/workflows/ci.yml)", () => {
       }
     }
     expect(loose).toEqual([]);
+  });
+
+  // A command that hangs runs until the run is cancelled. On 2026-11-03 the
+  // adapters job's checks step held its job for 30 minutes, and the step's log
+  // was gone afterwards, so nothing named the sub-check that hung. A step that
+  // loops over a group of commands therefore carries a deadline that fails on
+  // its own, and logs each sub-check's start and its end.
+  test("bounds a hung group of checks, and names each sub-check it runs", () => {
+    const unbounded: string[] = [];
+    for (const [jobName, job] of Object.entries(workflow.jobs)) {
+      for (const step of job.steps) {
+        const run = step.run ?? "";
+        if (!run.includes("for script in ${{ matrix.")) continue;
+        const label = `${jobName}: ${step.name ?? "unnamed step"}`;
+        const minutes = step["timeout-minutes"];
+        if (typeof minutes !== "number" || minutes < 1 || minutes > 10) unbounded.push(`${label}: timeout-minutes is ${String(minutes)}`);
+        if (!run.includes('echo "::group::$script (start)"')) unbounded.push(`${label}: no start line`);
+        if (!run.includes('echo "$script: passed in $((SECONDS - start))s"')) unbounded.push(`${label}: no end line`);
+      }
+    }
+    expect(unbounded).toEqual([]);
   });
 
   test("gates the required `check` status on every other job", () => {
