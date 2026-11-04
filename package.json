@@ -131,6 +131,10 @@
       "types": "./dist/components/datepicker/constants.d.ts",
       "import": "./dist/components/datepicker/constants.js"
     },
+    "./components/datepicker/deferred": {
+      "types": "./dist/components/datepicker/deferred.d.ts",
+      "import": "./dist/components/datepicker/deferred.js"
+    },
     "./components/dialog": {
       "types": "./dist/components/dialog/index.d.ts",
       "import": "./dist/components/dialog/index.js"
@@ -510,6 +514,7 @@
     "carousel:check": "bun run scripts/check-carousel.ts",
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts",
+    "datepicker-deferred:check": "bun run scripts/check-datepicker-deferred.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
     "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts",
     "dialog-reduced-motion:check": "bun run scripts/check-dialog-reduced-motion.ts",

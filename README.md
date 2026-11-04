@@ -447,6 +447,20 @@ document.body.append(button.element);
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
+### The date picker's deferred entry
+
+A date picker can bring its calendar on demand too. Import the factory from the component's `deferred` entry instead of the root:
+
+```typescript
+import { createDeferredDatePicker } from 'material/components/datepicker/deferred';
+```
+
+It is the same picker and the same API: the field, the trigger and the open and close state are there when the factory returns. The calendar is imported on the first open, or on the pointer or focus on the trigger that precedes it.
+
+Until it arrives the dialog has no calendar and no focus into it, and `aria-expanded` stays `false`. The dialog is named by `aria-label` because the title its name points at does not exist yet.
+
+Opening and closing are never held behind the load. The open state answers at once, and so does a close while the calendar is in flight; the calendar mounts when its chunk lands and stays closed. Read the open state rather than the dialog's markup while an open is in flight.
+
 ### Bundling
 
 The build ships two direction forms. The full stylesheet and the per-component sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties an old-target bundler rewrites, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can put them on the wrong side. Logical margins remain, and an old-target bundler can still rewrite those.

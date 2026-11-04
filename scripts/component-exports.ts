@@ -36,9 +36,13 @@ const kindOf = (symbol: ts.Symbol): ComponentExport["kind"] =>
 export const constantsNames = (): string[] =>
   componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/constants.ts`))).map((name) => `${name}/constants`);
 
+/** The `material/components/<name>/deferred` subpaths, pinned beside the indexes */
+export const deferredNames = (): string[] =>
+  componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/deferred.ts`))).map((name) => `${name}/deferred`);
+
 export function readComponentExports(): ComponentExports {
-  const names = [...componentNames(), ...constantsNames()].sort();
-  const files = names.map((name) => join(ROOT, `src/components/${name.endsWith("/constants") ? `${name}.ts` : `${name}/index.ts`}`));
+  const names = [...componentNames(), ...constantsNames(), ...deferredNames()].sort();
+  const files = names.map((name) => join(ROOT, `src/components/${name.endsWith("/constants") || name.endsWith("/deferred") ? `${name}.ts` : `${name}/index.ts`}`));
   const program = ts.createProgram(files, {
     strict: true, skipLibCheck: true, noEmit: true,
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
