@@ -130,11 +130,13 @@ Lighter pages: an opt-in base stylesheet.
   2,830 — 1,141 gzip bytes fewer per page — and a consumer bundle that
   imports only it measures 12,999 / 1,644 against 40,809 / 2,939. It emits
   into `mtrl.base`, so the cascade order every stylesheet declares is
-  unchanged, and the full stylesheet keeps its pinned sha256 and length
+  unchanged; the full stylesheet's test compile, pinned in
+  `test/styles/contrast-split.test.ts`, keeps its sha256 and length
   (537,940 bytes,
-  `3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a`);
-  the reset and the body rule moved into mixins and partials that emit the
-  same bytes. Its own budget row is 1,750 bytes gzipped (the measured 1,644
+  `3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a`),
+  and the published `dist/styles.css` is byte-identical to 3.5.4 apart
+  from the version banner; the reset and the body rule moved into mixins
+  and partials that emit the same bytes. Its own budget row is 1,750 bytes gzipped (the measured 1,644
   plus max(1%, 100 bytes), rounded up to the next 50) and the README row
   reads 1.6 kB. `test/styles/base-lite.test.ts` compiles the sheet and
   asserts the kept selectors, tokens and switch, and the absence of the
