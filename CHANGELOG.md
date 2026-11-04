@@ -17,6 +17,50 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.5.4] - 2026-11-04
+
+A smaller, readable package.
+
+### Changed
+
+- **A readable, comment-stripped dist (#255).**
+  `bun run build` now removes comments, blank lines and indentation from the
+  shipped runtime modules after the declaration and reachability prunes, and
+  nothing else: no reprint, no constant fold, no redefine. Every token, every
+  line and every identifier stays as emitted, `process.env.NODE_ENV` stays a
+  runtime read, and every `/*#__PURE__*/`, `/*!`, `@license` and `@preserve`
+  comment is kept verbatim, so `node_modules/material` still debugs by name
+  and behaves exactly as built. The build checks its own output by parsing it
+  again and refusing it unless the token stream matches the original token
+  for token, every line that carried a token still carries one, no line grows
+  and every kept comment survives. `dist/elements/css/`, `dist/styles/` and
+  `dist/svelte/` are left exactly as emitted, because their checks compare
+  generated text byte for byte. `dist/ssr/` is left as emitted too, for a
+  different reason: its index is already minified, and its four adapter
+  entries have their own minification, below.
+
+- **The SSR adapter entries ship minified (#256).**
+  `material/ssr/react`, `svelte`, `vue` and `solid` are side-effect entries
+  with no exports, so their readable emit only cost tarball bytes. The four
+  entries fall from 16,631 to 7,561 bytes (react 10,350 to 4,271, svelte
+  2,745 to 1,474, vue 2,730 to 1,360, solid 806 to 456), and
+  `ssr-comments:check` holds each under a byte ceiling. This is the only
+  minification in the package: every other shipped `.js` stays readable as
+  above, and `dist/ssr/index.js` was already minified. The react and svelte
+  entries read `process.env.NODE_ENV` for their development warnings and keep
+  that read at runtime, so a production build still takes the non-development
+  path; the vue and solid entries do not read it.
+
+### Internal
+
+- **The npm tarball budget drops to 865,000 bytes (#255).**
+  The readable strip and the minified adapter entries leave the packed
+  package well under the old 883,000-byte ceiling, so the ratchet follows
+  the measurement down. The package packs 862,559 bytes compressed, 4,822,567
+  unpacked in 1,578 files, 2,441 bytes under the 865,000-byte ceiling; 3.5.3
+  as shipped packs 882,799 / 5,087,580 / 1,578, so this release is 20,240
+  bytes smaller packed and 265,013 smaller unpacked in the same file count.
+
 ## [3.5.3] - 2026-11-03
 
 Server-rendered roots carry only the CSS they use.
@@ -5697,7 +5741,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.5.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.5.4...HEAD
+[3.5.4]: https://github.com/floor/material/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/floor/material/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/floor/material/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/floor/material/compare/v3.5.0...v3.5.1
