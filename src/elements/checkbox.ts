@@ -13,7 +13,8 @@
 
 import createCheckbox from "../components/checkbox";
 import type { CheckboxComponent, CheckboxConfig, CheckboxChangePayload } from "../components/checkbox/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 const checkboxSpec = {
   name: "checkbox",
@@ -62,7 +63,7 @@ const checkboxSpec = {
   },
 } satisfies ElementSpec<CheckboxComponent>;
 
-export const checkboxElement = defineElement<CheckboxComponent>(checkboxSpec);
+export const checkboxElement = defineFormElement<CheckboxComponent>(checkboxSpec);
 export type CheckboxSpec = typeof checkboxSpec;
 /** `<m-checkbox>` as a ref or a query returns it. */
 export type CheckboxElement = ElementInstance<CheckboxSpec, CheckboxComponent>;

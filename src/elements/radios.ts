@@ -18,9 +18,10 @@
 import createRadios from "../components/radios";
 import type { RadioOptionConfig, RadiosComponent, RadiosConfig } from "../components/radios/types";
 import {
-  createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
+  createDeclarationClass, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
 } from "./define";
+import { defineFormElement } from "./define-form";
 
 const declaredRadios = (host: HTMLElement): RadioOptionConfig[] => {
   const radioTag = host.localName.replace(/radios$/, "radio");
@@ -148,7 +149,7 @@ const radiosSpec = {
   observeChildren: updateRadios,
 } satisfies ElementSpec<RadiosComponent>;
 
-export const radiosElement = defineElement<RadiosComponent>(radiosSpec);
+export const radiosElement = defineFormElement<RadiosComponent>(radiosSpec);
 export type RadiosSpec = typeof radiosSpec;
 /** `<m-radios>` as a ref or a query returns it. */
 export type RadiosElement = ElementInstance<RadiosSpec, RadiosComponent>;

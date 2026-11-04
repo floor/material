@@ -41,9 +41,10 @@ import type {
 } from "../components/search/types";
 import { PREFIX } from "../core/config";
 import {
-  createDeclarationClass, defineElement, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions, type ElementAttributes,
+  createDeclarationClass, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions, type ElementAttributes,
   type ElementInstance, type ElementSpec,
 } from "./define";
+import { defineFormElement } from "./define-form";
 
 /** The factory's events, and the element's own names for four of them. */
 export interface SearchElementEvents extends SearchEvents {
@@ -300,7 +301,7 @@ const searchSpec = {
   observeChildren: updateSuggestions,
 } satisfies ElementSpec<SearchElementComponent>;
 
-export const searchElement = defineElement<SearchElementComponent>(searchSpec);
+export const searchElement = defineFormElement<SearchElementComponent>(searchSpec);
 export type SearchSpec = typeof searchSpec;
 /** `<m-search>` as a ref or a query returns it. */
 export type SearchElement = ElementInstance<SearchSpec, SearchElementComponent>;

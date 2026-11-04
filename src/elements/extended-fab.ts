@@ -22,7 +22,8 @@
 
 import createExtendedFab from "../components/extended-fab";
 import type { ExtendedFabComponent, ExtendedFabConfig } from "../components/extended-fab/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 import { FLOATING_HOST_STYLES } from "./floating-placement";
 
@@ -64,7 +65,7 @@ const extendedFabSpec = {
   setup: submitOnClick,
 } satisfies ElementSpec<ExtendedFabComponent>;
 
-export const extendedFabElement = defineElement<ExtendedFabComponent>(extendedFabSpec);
+export const extendedFabElement = defineFormElement<ExtendedFabComponent>(extendedFabSpec);
 export type ExtendedFabSpec = typeof extendedFabSpec;
 /** `<m-extended-fab>` as a ref or a query returns it. */
 export type ExtendedFabElement = ElementInstance<ExtendedFabSpec, ExtendedFabComponent>;

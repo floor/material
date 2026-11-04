@@ -28,7 +28,8 @@
 import createTextField from "../components/text-field";
 import { checkTrailingLabel } from "../components/text-field/api";
 import type { TextFieldComponent, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
-import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 /** The text field, with the methods the element adds to it. */
 export type TextFieldElementComponent = TextFieldComponent & {
@@ -176,7 +177,7 @@ if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; }
   },
 });
 
-export const textFieldElement = defineElement<TextFieldElementComponent>(textFieldSpec);
+export const textFieldElement = defineFormElement<TextFieldElementComponent>(textFieldSpec);
 export type TextFieldSpec = typeof textFieldSpec;
 /** `<m-text-field>` as a ref or a query returns it. */
 export type TextFieldElement = ElementInstance<TextFieldSpec, TextFieldElementComponent>;

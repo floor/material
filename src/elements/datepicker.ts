@@ -45,7 +45,8 @@
 import createDatePicker from "../components/datepicker";
 import type { DatePickerComponent, DatePickerConfig, DatePickerValue } from "../components/datepicker/types";
 import { toIsoValue } from "../components/datepicker/utils";
-import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 /** The date picker, with what the element adds to it. */
 export interface DatepickerElementComponent extends DatePickerComponent {
@@ -183,7 +184,7 @@ const datepickerSpec = {
   },
 } satisfies ElementSpec<DatepickerElementComponent>;
 
-export const datepickerElement = defineElement<DatepickerElementComponent>(datepickerSpec);
+export const datepickerElement = defineFormElement<DatepickerElementComponent>(datepickerSpec);
 export type DatepickerSpec = typeof datepickerSpec;
 /** `<m-datepicker>` as a ref or a query returns it. */
 export type DatepickerElement = ElementInstance<DatepickerSpec, DatepickerElementComponent>;

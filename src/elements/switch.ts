@@ -14,7 +14,8 @@
 
 import createSwitch from "../components/switch";
 import type { SwitchComponent, SwitchConfig, SwitchChangePayload } from "../components/switch/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 const switchSpec = {
   name: "switch",
@@ -66,7 +67,7 @@ const switchSpec = {
   },
 } satisfies ElementSpec<SwitchComponent>;
 
-export const switchElement = defineElement<SwitchComponent>(switchSpec);
+export const switchElement = defineFormElement<SwitchComponent>(switchSpec);
 export type SwitchSpec = typeof switchSpec;
 /** `<m-switch>` as a ref or a query returns it. */
 export type SwitchElement = ElementInstance<SwitchSpec, SwitchComponent>;

@@ -29,9 +29,10 @@ import { innerMenu } from "../components/menu/inner";
 import type { SelectComponent, SelectConfig, SelectOption } from "../components/select/types";
 import type { TextFieldVariant } from "../components/text-field/types";
 import {
-  createDeclarationClass, defineElement, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions,
+  createDeclarationClass, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions,
   type ElementAttributes, type ElementHost, type ElementInstance, type ElementSpec,
 } from "./define";
+import { defineFormElement } from "./define-form";
 
 const declaredOptions = (host: HTMLElement): SelectOption[] => {
   const optionTag = `${host.localName}-option`;
@@ -179,7 +180,7 @@ const selectSpec = {
   observeChildren: updateOptions,
 } satisfies ElementSpec<SelectComponent>;
 
-export const selectElement = defineElement<SelectComponent>(selectSpec);
+export const selectElement = defineFormElement<SelectComponent>(selectSpec);
 export type SelectSpec = typeof selectSpec;
 /** `<m-select>` as a ref or a query returns it. */
 export type SelectElement = ElementInstance<SelectSpec, SelectComponent>;

@@ -404,24 +404,49 @@ const hasContent = (host: HTMLElement): boolean =>
     (node) => (node.nodeType === 1 && !isDeclarativeTemplate(node)) || (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
   );
 
+/**
+ * The class `createElementClass` builds. `defineFormElement` extends it; the
+ * hooks are how the form class reaches state the base class keeps private.
+ * Internal to the element layer: not exported from `material/elements`.
+ */
+export interface ElementClass<C extends ElementComponent> extends HTMLElement {
+  component: C | null;
+  internals: ElementInternals | null;
+  /** Pushes the current state to the associated form; `defineFormElement` overrides this. */
+  syncForm(): void;
+  /** Returns to the attributes' defaults, as a form reset does. */
+  resetToDefaults(): void;
+  /** Marks the state as the user's, as a restored form state is. */
+  markDirty(): void;
+  /** Runs `fn` without re-dispatching the events it causes. */
+  quietly(fn: () => void): void;
+  /** Applies a restored form state, once the component exists. */
+  formBuild(component: C): void;
+}
+
+/** A constructor of `ElementClass`; the element layer's `customElements.define` target. */
+export interface ElementClassConstructor<C extends ElementComponent> {
+  new (): ElementClass<C>;
+  prototype: ElementClass<C>;
+}
+
 /** The element class for a spec. Called on first use, never at import. */
-export const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): CustomElementConstructor => {
+export const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): ElementClassConstructor<C> => {
   // The live properties an attribute is the default of, and those attributes.
   const backed = [...(spec.model ? [spec.model] : []), ...(spec.defaults ?? [])];
   const backing = new Set(backed.map(kebab));
 
   class MElement extends HTMLElement implements ElementHost<C> {
-    static formAssociated = !!spec.form;
     static observedAttributes = [
       ...Object.keys(spec.attributes ?? {}),
       ...(spec.slot ? [spec.slot.attribute] : []),
     ];
 
     component: C | null = null;
-    readonly internals: ElementInternals | null;
+    /** The host's form internals; the `defineFormElement` class attaches them. */
+    internals: ElementInternals | null = null;
 
     #pending = new Map<string, unknown>();
-    #restoreState: string | null = null;
     #silent = 0;
     /** The model was changed by the user or by script: its attributes no longer move it. */
     #dirty = false;
@@ -437,7 +462,6 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     constructor() {
       super();
       this.attachShadow({ mode: "open", delegatesFocus: true });
-      this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
       if (backed.length) {
         // Every event the host dispatches, from the factory or a spec's setup,
         // reports a user change: silent changes dispatch nothing. A state
@@ -490,36 +514,37 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       if (this.#dirty && backing.has(name)) return;
       if (attribute.update) {
         this.#quietly(() => attribute.update?.(this.component as C, read(this, name, attribute.type), this));
-        this.#syncForm();
+        this.syncForm();
       } else {
         this.#rebuild(true);
       }
     }
 
-    // Form-associated callbacks; only reached when the spec has a form.
+    // Hooks for the class defineFormElement builds: form participation lives
+    // in define-form.ts, so a page that defines no form element does not carry it.
 
-    formResetCallback(): void {
-      // Attributes are the defaults: rebuilding from them is the reset.
+    /** Pushes the current state to the associated form; the form class overrides this. */
+    syncForm(): void {}
+
+    /** Returns to the attributes' defaults, as a form reset does. */
+    resetToDefaults(): void {
       this.#dirty = false;
       this.#pending.clear();
       this.#rebuild(false);
     }
 
-    formStateRestoreCallback(state: unknown): void {
-      if (typeof state !== "string" || !spec.form?.restore) return;
-      this.#dirty = true; // a restored state is the user's, as natively
-      if (!this.component) {
-        this.#restoreState = state; // applied once the component is built
-        return;
-      }
-      this.#quietly(() => spec.form?.restore?.(this.component as C, state));
-      this.#syncForm();
+    /** Marks the state as the user's, as a restored form state is. */
+    markDirty(): void {
+      this.#dirty = true;
     }
 
-    formDisabledCallback(disabled: boolean): void {
-      const form = spec.form;
-      if (this.component && form?.disable) this.#quietly(() => form.disable?.(this.component as C, disabled));
+    /** Runs `fn` without re-dispatching the events it causes. */
+    quietly(fn: () => void): void {
+      this.#quietly(fn);
     }
+
+    /** Applies the form class's restored state, once the component exists. */
+    formBuild(_component: C): void {}
 
     getProperty(name: string): unknown {
       const property = spec.properties?.[name];
@@ -536,7 +561,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         return;
       }
       this.#quietly(() => property.set(this.component as C, value));
-      this.#syncForm();
+      this.syncForm();
     }
 
     callMethod(name: string, args: unknown[]): unknown {
@@ -547,7 +572,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       const result = (method as (...a: unknown[]) => unknown).apply(component, args);
       // A method that moves the model (`toggle()`, `select()`) sets it by script.
       if (backed.some((property, i) => this.getProperty(property) !== before[i])) this.#dirty = true;
-      this.#syncForm();
+      this.syncForm();
       return result === component ? this : result;
     }
 
@@ -623,7 +648,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
 
       for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
         const handler = (payload: never): void => {
-          this.#syncForm();
+          this.syncForm();
           if (this.#silent) return;
           const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
           this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
@@ -634,7 +659,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       }
       for (const event of spec.form?.events ?? []) {
         if (spec.events?.[event]) continue;
-        const handler = (): void => this.#syncForm();
+        const handler = (): void => this.syncForm();
         events.on?.(event, handler);
         this.#cleanup.push(() => events.off?.(event, handler));
       }
@@ -645,11 +670,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         if (property) this.#quietly(() => property.set(component, value));
       }
       this.#pending.clear();
-      if (this.#restoreState !== null) {
-        const state = this.#restoreState;
-        this.#restoreState = null;
-        this.#quietly(() => spec.form?.restore?.(component, state));
-      }
+      this.formBuild(component);
 
       if (spec.form?.activate) {
         // A click on the host itself (a <label for> pointing at it) activates the control.
@@ -680,7 +701,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
             });
           }
           if (updated) {
-            this.#syncForm(); // an in-place update can change the form value (a removed selection)
+            this.syncForm(); // an in-place update can change the form value (a removed selection)
             return;
           }
           if (observe || (spec.slot && !this.#slot && hasContent(this))) this.#rebuild(true);
@@ -693,7 +714,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         });
       }
 
-      this.#syncForm();
+      this.syncForm();
     }
 
     /**
@@ -764,26 +785,6 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       }
       this.#teardown();
       if (this.isConnected) this.#build();
-    }
-
-    #syncForm(): void {
-      const form = spec.form;
-      const internals = this.internals;
-      if (!form || !internals || !this.component) return;
-      const value = form.value(this.component, this);
-      if (form.state) internals.setFormValue(value, form.state(this.component));
-      else internals.setFormValue(value);
-      // Not again while it stays valid: setting the validity was most of a
-      // property set's cost, and a toggled checkbox that is not required
-      // stays valid. The internals say whether they already are;
-      // an invalid one is set every time, as its message or flags may change.
-      const control = form.control?.(this.component);
-      if (control) {
-        const validity = control.validity;
-        if (!(validity.valid && internals.validity.valid)) {
-          internals.setValidity(validity, control.validationMessage, control);
-        }
-      }
     }
   }
 
@@ -900,17 +901,19 @@ export interface ElementDefinition<C extends ElementComponent> {
 }
 
 /**
- * Creates the definition for a spec. Nothing is built or registered until
- * `element` or `define()` is used, so the module can be imported on a server.
+ * Creates the definition for a spec, building its class with `createClass`.
+ * Nothing is built or registered until `element` or `define()` is used, so the
+ * module can be imported on a server.
  *
- * @experimental The element authoring API (`defineElement`, `ElementSpec`,
- * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
- * versioning in 3.x: it may change in a minor release. The elements the
- * library defines, and their attributes, properties and events, are not.
+ * @internal Shared by `defineElement` and `defineFormElement`; `createClass`
+ * decides whether the element participates in a form.
  */
-export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>): ElementDefinition<C> => {
+export const createDefinition = <C extends ElementComponent, S extends ElementSpec<C>>(
+  spec: S,
+  createClass: (spec: S) => CustomElementConstructor,
+): ElementDefinition<C> => {
   let element: CustomElementConstructor | null = null;
-  const getElement = (): CustomElementConstructor => (element ??= createElementClass(spec));
+  const getElement = (): CustomElementConstructor => (element ??= createClass(spec));
   const registered = new Set<CustomElementConstructor>();
   let prepared = false;
 
@@ -946,4 +949,20 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
       return tag;
     },
   };
+};
+
+/**
+ * Creates the definition for a spec that is not a form control; a spec with a
+ * `form` throws at definition time. Form participation lives in
+ * `defineFormElement` (`material/elements`), so a page that defines no form
+ * element does not carry it.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
+ */
+export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>): ElementDefinition<C> => {
+  if (spec.form) throw new Error("defineElement: form specs need defineFormElement");
+  return createDefinition(spec, createElementClass);
 };

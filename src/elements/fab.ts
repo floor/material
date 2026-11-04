@@ -21,7 +21,8 @@
 
 import createFab from "../components/fab";
 import type { FabComponent, FabConfig } from "../components/fab/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 import { FLOATING_HOST_STYLES } from "./floating-placement";
 
@@ -48,7 +49,7 @@ const fabSpec = {
   setup: submitOnClick,
 } satisfies ElementSpec<FabComponent>;
 
-export const fabElement = defineElement<FabComponent>(fabSpec);
+export const fabElement = defineFormElement<FabComponent>(fabSpec);
 export type FabSpec = typeof fabSpec;
 /** `<m-fab>` as a ref or a query returns it. */
 export type FabElement = ElementInstance<FabSpec, FabComponent>;

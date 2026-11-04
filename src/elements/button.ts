@@ -20,7 +20,8 @@
 
 import createButton from "../components/button";
 import type { ButtonChangePayload, ButtonComponent, ButtonConfig } from "../components/button/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
 const buttonSpec = {
@@ -76,7 +77,7 @@ const buttonSpec = {
   setup: submitOnClick,
 } satisfies ElementSpec<ButtonComponent>;
 
-export const buttonElement = defineElement<ButtonComponent>(buttonSpec);
+export const buttonElement = defineFormElement<ButtonComponent>(buttonSpec);
 export type ButtonSpec = typeof buttonSpec;
 /** `<m-button>` as a ref or a query returns it. */
 export type ButtonElement = ElementInstance<ButtonSpec, ButtonComponent>;

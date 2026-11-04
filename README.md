@@ -364,7 +364,7 @@ The API for writing elements of your own is experimental and may change in a min
 
 | Status | Names, all from `material/elements` |
 |--------|-------------------------------------|
-| Experimental: outside semantic versioning in 3.x | `defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES` |
+| Experimental: outside semantic versioning in 3.x | `defineElement`, `defineFormElement`, `ElementSpec`, `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES` |
 
 ## React, Vue, Svelte and Solid
 

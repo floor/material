@@ -1,7 +1,7 @@
 // test/build/experimental-element-api.test.ts
 //
 // The element authoring API is public and outside semver in 3.x (a contract
-// reservation for 3.0.0): each of its five exports says so where an editor
+// reservation for 3.0.0): each of its six exports says so where an editor
 // shows it, in the TSDoc block on the declaration, and the README says it once.
 // A tag is a comment, so no type fixture can see it: the source is read.
 import { describe, expect, test } from "bun:test";
@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 
 const EXPERIMENTAL: [name: string, file: string, declaration: RegExp][] = [
   ["defineElement", "src/elements/define.ts", /export const defineElement\b/],
+  ["defineFormElement", "src/elements/define-form.ts", /export const defineFormElement\b/],
   ["ElementSpec", "src/elements/define.ts", /export interface ElementSpec\b/],
   ["SHADOW_BASE_STYLES", "src/elements/define.ts", /export const SHADOW_BASE_STYLES\b/],
   ["registerStyles", "src/elements/styles.ts", /export const registerStyles\b/],
@@ -33,12 +34,12 @@ describe("the element authoring API is tagged experimental", () => {
     });
   }
 
-  test("all five are still exports of material/elements", () => {
+  test("all six are still exports of material/elements", () => {
     const index = readFileSync("src/elements/index.ts", "utf8");
     for (const [name] of EXPERIMENTAL) expect(index).toMatch(new RegExp(`\\b${name}\\b`));
   });
 
-  test("the README says it once, with the five names", () => {
+  test("the README says it once, with the six names", () => {
     const readme = readFileSync("README.md", "utf8");
     const sentence = readme.split("\n").find((line) => line.includes("outside semantic versioning in 3.x")) ?? "";
     for (const [name] of EXPERIMENTAL) expect(sentence).toContain(`\`${name}\``);

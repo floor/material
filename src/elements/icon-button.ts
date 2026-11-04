@@ -22,7 +22,8 @@
 
 import createIconButton from "../components/icon-button";
 import type { IconButtonChangePayload, IconButtonComponent, IconButtonConfig } from "../components/icon-button/types";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
 const iconButtonSpec = {
@@ -80,7 +81,7 @@ const iconButtonSpec = {
   setup: submitOnClick,
 } satisfies ElementSpec<IconButtonComponent>;
 
-export const iconButtonElement = defineElement<IconButtonComponent>(iconButtonSpec);
+export const iconButtonElement = defineFormElement<IconButtonComponent>(iconButtonSpec);
 export type IconButtonSpec = typeof iconButtonSpec;
 /** `<m-icon-button>` as a ref or a query returns it. */
 export type IconButtonElement = ElementInstance<IconButtonSpec, IconButtonComponent>;

@@ -50,6 +50,7 @@ import { timepickerElement, defineTimepicker } from "./timepicker";
 import { searchElement, searchSuggestionDeclaration, defineSearch } from "./search";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
+export { defineFormElement } from "./define-form";
 export type {
   DefineOptions, ElementSpec, ElementDefinition, ElementComponent, ElementHost, ElementInstance,
   ElementAttributes, ElementProperties, ElementSlotText, ElementSlots, ElementSlotProp, ElementMarkup, ElementEvents, ElementMethods, ElementProps,

@@ -41,7 +41,8 @@ import {
   type TimePickerComponent, type TimePickerConfig, type TimePickerEvents, type TimePickerInputEvent, type TimePickerValueEvent,
 } from "../components/timepicker/types";
 import { createEmitter, type EventCallback } from "../core/state/emitter";
-import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 /** The time picker as the element sees it: its value can be empty. */
 export interface TimepickerElementComponent {
@@ -247,7 +248,7 @@ const timepickerSpec = {
   },
 } satisfies ElementSpec<TimepickerElementComponent>;
 
-export const timepickerElement = defineElement<TimepickerElementComponent>(timepickerSpec);
+export const timepickerElement = defineFormElement<TimepickerElementComponent>(timepickerSpec);
 export type TimepickerSpec = typeof timepickerSpec;
 /** `<m-timepicker>` as a ref or a query returns it. */
 export type TimepickerElement = ElementInstance<TimepickerSpec, TimepickerElementComponent>;

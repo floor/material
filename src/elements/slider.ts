@@ -18,7 +18,8 @@
 import createSlider from "../components/slider";
 import type { SliderColor, SliderComponent, SliderConfig } from "../components/slider/types";
 import { SLIDER_SIZES, type SliderSize } from "../components/slider/constants";
-import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { defineFormElement } from "./define-form";
 
 const COLORS: readonly SliderColor[] = ["primary", "secondary", "tertiary", "error"];
 
@@ -173,7 +174,7 @@ const sliderSpec = {
   setup: (host, component) => nameHandles(component, host),
 } satisfies ElementSpec<SliderComponent>;
 
-export const sliderElement = defineElement<SliderComponent>(sliderSpec);
+export const sliderElement = defineFormElement<SliderComponent>(sliderSpec);
 export type SliderSpec = typeof sliderSpec;
 /** `<m-slider>` as a ref or a query returns it. */
 export type SliderElement = ElementInstance<SliderSpec, SliderComponent>;
