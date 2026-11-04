@@ -94,7 +94,7 @@ for (const doc of docs) {
 // (.github/CONTRIBUTING.md).
 /** What the table prints: kB of 1,000 bytes, one decimal. */
 const tableSize = (bytes: number): string => (bytes / 1000).toFixed(1);
-const SIZE_ROWS = ["button-initial", "button", "form", "all-js", "base-css", "button-css", "full-css"] as const;
+const SIZE_ROWS = ["button-initial", "button", "form", "all-js", "base-css", "base-lite-css", "button-css", "full-css"] as const;
 const measuredFile = Bun.file("analysis/package-size.json");
 assert(await measuredFile.exists(), "analysis/package-size.json is missing: run `bun run size:check` first");
 const measured = await measuredFile.json() as { sizes: Record<string, { gzip: number }> };
