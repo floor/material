@@ -44,6 +44,9 @@ export const SSR_PAGE = {
   link: { raw: [42_300, 43_200], gzip: [900, 1_150] },
 } as const;
 
+/** check-ssr-comments.ts: each shipped SSR adapter entry, minified by the build (bytes). */
+export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, solid: 600 } as const;
+
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
 export const TARBALL_BYTES = 883_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
