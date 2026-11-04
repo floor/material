@@ -3,9 +3,16 @@
 // The opt-in entry's synchronous half: the field, the trigger, the dialog
 // element, the value and draft state, the events, and the public API. The
 // calendar is a surface module the entry builds through a factory, and the
-// deferred entry passes a stand-in that imports it on the first open. The
-// default entry keeps its own modules untouched; this shell and its surface
-// are what an opt-in caller pays for, so the default's bytes do not move.
+// deferred entry passes a stand-in that imports it on the first open.
+//
+// The default's API module is imported here, and its calendar paint, helpers
+// and icon set are imported by the surface; none of those modules changes for
+// it, so the default's bytes do not move. The config is the exception: it is
+// repeated below, because ./config imports ./constants, which would make
+// ./constants a module shared between this first load and the deferred
+// calendar chunk — and a shared module is hoisted whole, so the calendar's
+// five-icon object would ship in the first load. This shell therefore touches
+// ./constants not at all.
 
 import { pipe } from "../../core/compose";
 import { createBase, withElement } from "../../core/compose/component";
@@ -15,35 +22,25 @@ import { createComponentConfig, createElementConfig } from "../../core/config/co
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
 import { eventsFrom, onModalEscape, type EventsFrom, type ModalEscape } from "../../core/dom/layer";
-import { CALENDAR_ICON, DEFAULT_DATE_FORMAT } from "./constants";
+import { withAPI } from "./api";
 import { PREFIX } from "../../core/config";
 import { addMonths, formatDate, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
-import type { DatePickerComponent, DatePickerConfig, DatePickerEvents, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
-import type { EventCallback } from "../../core/state/emitter";
+import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 import type { DatePickerSurfaceFactory } from "./surface";
 
+/** The trigger's calendar icon: DATEPICKER_ICONS.calendar, kept out of that object's import. */
+const TRIGGER_ICON = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM5 10h14v10H5V10Zm0-4h14v2H5V6Zm2 6h4v4H7v-4Z"/></svg>';
+
+/** The default entry's config, repeated so this module imports no constant. */
 export const defaultConfig: DatePickerConfig = {
   variant: "docked", initialView: "day", selectionMode: "single",
-  dateFormat: DEFAULT_DATE_FORMAT, animate: true, closeOnSelect: false,
+  dateFormat: "MM/DD/YYYY", animate: true, closeOnSelect: false,
 };
 export const createBaseConfig = (config: DatePickerConfig = {}) =>
   createComponentConfig(defaultConfig, config, "datepicker");
 export const getContainerConfig = (config: DatePickerConfig) => createElementConfig(config, {
   tag: "div", forwardEvents: { keydown: true, click: true }, interactive: true,
 });
-
-/** Keep the typed public event API and fluent return identity at the boundary. */
-export function withAPI(
-  component: Omit<DatePickerComponent, "on" | "off">,
-  events: { on(event: string, handler: EventCallback): unknown; off(event: string, handler: EventCallback): unknown },
-): DatePickerComponent {
-  const api: DatePickerComponent = {
-    ...component,
-    on<K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) { events.on(event, handler); return api; },
-    off<K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) { events.off(event, handler); return api; },
-  };
-  return api;
-}
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
   typeof value === "object" && value !== null && !(value instanceof Date) && !Array.isArray(value);
@@ -98,7 +95,7 @@ export function createDatePickerShell<M extends string = "single">(
   if (settings.name) input.name = settings.name;
   input.placeholder = settings.placeholder || state.dateFormat; input.autocomplete = "off";
   input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
-  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, CALENDAR_ICON);
+  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, TRIGGER_ICON);
   trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
   // The supporting text, the date format unless given.
   const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });

@@ -6,9 +6,10 @@
 // open instead of built at creation. The trigger's pointerenter or focus
 // starts that import a little earlier, without opening anything.
 //
-// The shell and the surface are the opt-in entry's own modules, so the default
-// entry keeps the modules it always had, byte for byte; what they repeat of
-// the default's code is what an opt-in caller pays for, and nobody else does.
+// The shell and the calendar interaction are the opt-in entry's own code; the
+// paint, the date helpers, the API wrapper and the icon set are imported from
+// the default entry's modules, which are untouched. So the new code is the
+// shell and the interaction, and the default's bytes do not move.
 //
 // What the surface paints is what waits: the calendar, its initial focus and
 // its aria title. Until it lands the dialog carries `aria-label` as its name,
