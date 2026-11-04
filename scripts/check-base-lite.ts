@@ -22,9 +22,14 @@ console.log(`base ${Buffer.byteLength(base)} B raw / ${gzip(base)} gzip; ` +
 assert(saving > 0, "base-lite is not lighter than base");
 
 // Same banner and cascade order as every material/styles asset, and the rules
-// in the base layer rather than a layer of their own.
-assert.equal(css.split("\n")[1], base.split("\n")[1], "base-lite declares a different cascade order");
-assert(css.split("\n")[1]!.startsWith("@layer "), "base-lite has no layer-order prelude");
+// in the base layer rather than a layer of their own. The order is the text
+// between the banner's newline and the base layer's block.
+const orderOf = (text: string): string => {
+  const head = text.slice(0, text.indexOf("@layer mtrl.base{"));
+  return head.slice(head.lastIndexOf("\n") + 1);
+};
+assert.equal(orderOf(css), orderOf(base), "base-lite declares a different cascade order");
+assert(orderOf(css).startsWith("@layer "), "base-lite has no layer-order prelude");
 assert(css.includes("@layer mtrl.base{"), "base-lite does not emit into mtrl.base");
 assert(!css.includes("@layer mtrl.base-lite{"), "base-lite opened a layer of its own");
 
@@ -62,8 +67,20 @@ try {
   const darkSurface = await role("light", surface);
   const darkOnSurface = await role("light", onSurface);
   assert.notEqual(darkSurface, lightSurface, "the OS dark preference does not change the roles");
-  assert.equal((await bodyStyle()).background, darkSurface, "body does not paint the surface role (dark)");
-  assert.equal((await bodyStyle()).color, darkOnSurface, "body text does not use the on-surface role (dark)");
+  // The body carries the theme's colour transition, so read it once the new
+  // roles have settled rather than mid-fade; the assertions below still report
+  // the value when the transition never lands.
+  await page.waitForFunction(
+    ([background, color]) => {
+      const style = getComputedStyle(document.body);
+      return style.backgroundColor === background && style.color === color;
+    },
+    [darkSurface, darkOnSurface],
+    { timeout: 2_000 },
+  ).catch(() => {});
+  const darkBody = await bodyStyle();
+  assert.equal(darkBody.background, darkSurface, "body does not paint the surface role (dark)");
+  assert.equal(darkBody.color, darkOnSurface, "body text does not use the on-surface role (dark)");
 
   // Both dark scopes stay selectable: .dark-theme and [data-theme=baseline].
   await page.emulateMedia({ colorScheme: "light" });
