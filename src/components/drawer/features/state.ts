@@ -88,8 +88,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   // A modal drawer's place among the open modals, while it is open: Escape is
   // a key press handled there, for the topmost one, in both layers
   let escape: ModalEscape | undefined;
-  // True while the drawer sends a key press on as a `cancel` of its own
-  let asking = false;
   // In the top layer the root's ::backdrop is the scrim
   const scrimElement = isModal && !top ? doc.createElement("div") : null;
   if (scrimElement) {
@@ -129,21 +127,8 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   function handleFocus(): void {
     if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
-  // A close request reaches the topmost modal as its cancel event; the drawer
-  // decides. The browser's `cancel` of the task it opened in is the opening
-  // key's, when the page stopped that key press before it reached the window.
-  const handleCancel = (event: Event): void => {
-    event.preventDefault();
-    if ((asking || !escape?.opening) && dismissible) close();
-  };
-  // Escape as a key press. In the top layer it asks as the browser's `cancel`
-  // did, on the <dialog>: <m-drawer> refuses it there (no-close-on-escape).
   const onEscape = (): void => {
-    if (top) {
-      asking = true;
-      root.dispatchEvent(new Event("cancel", { cancelable: true }));
-      asking = false;
-    } else if (dismissible) close();
+    if (dismissible) close();
   };
   // The root covers the page, so a click beside the sheet lands on it, as on
   // the ::backdrop behind it
@@ -204,7 +189,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   }
   let stopCloses: (() => void) | null = null;
   if (top) {
-    root.addEventListener("cancel", handleCancel);
     root.addEventListener("click", handleBackdropClick);
     // A close the browser made on its own still closes the drawer
     stopCloses = onTopLayerClose(root, close);
@@ -223,7 +207,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
       destroyed = true; isOpen = false; deactivate(); synchronize();
       scrimElement?.removeEventListener("click", close);
       scrimElement?.remove();
-      root.removeEventListener("cancel", handleCancel);
       root.removeEventListener("click", handleBackdropClick);
       stopCloses?.();
     },

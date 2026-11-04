@@ -368,10 +368,6 @@ const createDatePicker = <M extends string = "single">(
     if ("onscrollend" in view) return;
     clearTimeout(quiet); quiet = setTimeout(settle, 150);
   };
-  // A close request that is not a key press. The browser's cancel in the task
-  // the picker opened in is the opening key's, when the page stopped that key
-  // press before it reached the window.
-  const onCancel = (event: Event) => { event.preventDefault(); if (!escape?.opening) close(); };
   const onOutside = (event: MouseEvent) => {
     // The click that called open() reaches the document after it: the event
     // that opened the picker never dismisses it, and only that one
@@ -388,7 +384,7 @@ const createDatePicker = <M extends string = "single">(
   };
   base.element.addEventListener("click", onClick); base.element.addEventListener("keydown", onKey);
   base.element.addEventListener("focusout", onFocusOut); dialog.addEventListener("focusin", onFocus);
-  dialog.addEventListener("click", onDialogClick); dialog.addEventListener("input", onEntry); dialog.addEventListener("cancel", onCancel);
+  dialog.addEventListener("click", onDialogClick); dialog.addEventListener("input", onEntry);
   dialog.addEventListener("scroll", onScroll, true); dialog.addEventListener("scrollend", onScroll, true);
   input.addEventListener("change", onInputChange); input.addEventListener("click", onInputClick); doc.addEventListener("click", onOutside);
   const setDisabled = (disabled: boolean) => {
@@ -421,7 +417,7 @@ const createDatePicker = <M extends string = "single">(
     destroyed = true; close();
     doc.removeEventListener("click", onOutside); input.removeEventListener("change", onInputChange); input.removeEventListener("click", onInputClick);
     base.element.removeEventListener("click", onClick); base.element.removeEventListener("keydown", onKey); base.element.removeEventListener("focusout", onFocusOut);
-    dialog.removeEventListener("focusin", onFocus); dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("input", onEntry); dialog.removeEventListener("cancel", onCancel);
+    dialog.removeEventListener("focusin", onFocus); dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("input", onEntry);
     dialog.removeEventListener("scroll", onScroll, true); dialog.removeEventListener("scrollend", onScroll, true); clearTimeout(quiet);
     base.lifecycle.destroy();
   };
