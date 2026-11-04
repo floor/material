@@ -17,6 +17,95 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-11-04
+
+ES2022 browser JS.
+
+### Changed
+
+- **The browser JavaScript compiles at ES2022 (#264).**
+  The published browser JavaScript now compiles at ES2022 instead of
+  ES2020, as one whole-dist target; `useDefineForClassFields: false` keeps
+  today's assignment semantics for class fields, where at ES2022 the
+  TypeScript default flips them to `Object.defineProperty` definitions (the
+  flag differs from that default in two shipped files). The floor is
+  measured, not assumed: parsing all 642 JS files of the published 3.5.4
+  package with acorn 8.18 finds 186 that fail ES2019, 185 of which parse at
+  ES2020 — so the browser floor today is ES2020, carried by optional
+  chaining (153 files) and `??` (127 files) — and exactly one file,
+  `dist/ssr/index.js`, that already fails ES2020 and ES2021 and ships
+  logical assignment and native private fields; no file fails ES2022. The
+  README's browser-support section names the new floor, and
+  `npm-readme.md` carries the same sentence. The emit is smaller: of the
+  560 shipped tsc-emitted files, 545 are byte-identical and 15 shrink by
+  4,223 bytes raw in all — 4,026 of them `dist/elements/define.js`, the
+  only file with native private members and methods (it also gains two
+  static blocks for its static class fields) — while the other 14 drop 9 to
+  21 bytes each as `??=` stays native. Element pages measured from the
+  packed package — each component's `define*` element plus its CSS, in
+  brotli — are all down and none grows: 15,695 bytes over all 40 rows,
+  mean 392, range 289 to 463. The component initial and deferred rows
+  (`SIZES.md`, gzip) are byte-identical to main's — the factory pages carry
+  none of the element runtime, and every deferred value is unchanged — so
+  the table needs no update. The packed-consumer rows that do move:
+  `all-js` 127,444 → 127,428 bytes gzip (−16), `form` 20,393 → 20,387 (−6),
+  `button-initial` 7,566 → 7,563 (−3), and `button`, `slider`,
+  `navigation-rail` and `text-field` by 2 to 3; apart from the SSR entry
+  below, no gzip row grows, and every budget stays green. (`all-js` brotli
+  moves +160 bytes and `button` +6 bytes: cross-chunk dictionary drift;
+  `size` and `size:check` are the gate and both pass.) The one row whose
+  gzip grows is the SSR entry: 112,599 → 112,609 bytes gzip (+10; raw
+  308,694 → 308,739, +45; brotli +77). Cause: the `dist/ssr` build now
+  applies the explicit `useDefineForClassFields: false`, so its copy of the
+  classes assigns instance fields in the constructor where Bun left them
+  native — which is how the browser dist has always emitted them — and it
+  stays inside `size:check`'s SSR budget, with the SSR consumer and browser
+  checks green.
+
+  **Compatibility:** The browser JS now requires an ES2022-capable parser
+  (it was ES2020); bundlers that parse ES2020 but not ES2022 should update.
+
+### Internal
+
+- **The published syntax floor is checked (#264).**
+  `bun run syntax:check` parses every `.js`, `.mjs` and `.cjs` file the
+  package ships at `ecmaVersion: 2022` with acorn 8, and fails with
+  file:line:column on the first file that needs a later edition. It runs in
+  the package job on the build's dist, so the floor cannot drift silently.
+  `test/build/syntax-floor.test.ts` passes what the ES2022 target emits —
+  private members, a static block, class fields, private-in — and fails a
+  regex `v` fixture (ES2024, first asserted valid at `ecmaVersion: 2024`)
+  with file, line and message; it reads `.js`, `.mjs` and `.cjs` in
+  subdirectories and ignores declarations, CSS and JSON.
+  `test/build/ci-commands.test.ts` keeps the command in the CI list.
+
+- **The size cost of the ES2022 target: a smaller package, and one row
+  larger.**
+  Against 3.6.0's published package job: `all-js` 414,644 raw / 127,428
+  gzip / 105,827 brotli against 414,669 / 127,444 / 105,667; the full
+  stylesheet 628,272 / 58,669 / 42,164 and the inline SSR page 253,639 /
+  5,325 / 2,906, byte-identical; and the packed tarball 862,802 bytes
+  compressed, 4,830,984 unpacked in 1,582 files against 863,526 and
+  4,837,005 in 1,582 files — 724 bytes smaller packed and 6,021 unpacked in
+  the same number of files. Every one of the 40 `adapters:size` element
+  pages is smaller, like-for-like: 15,695 bytes brotli in all, mean 392,
+  range 289 to 463; every adapter import stays within the check's
+  1,700-byte brotli ceiling over its element. The component rows that move
+  (raw / gzip / brotli): `form` 65,250 / 20,387 / 18,174 against 65,257 /
+  20,393 / 18,225; `button-initial` 22,463 / 7,563 / 6,778 against 22,466
+  / 7,566 / 6,774; `button` 41,301 / 13,940 / 12,648 against 41,304 /
+  13,942 / 12,642; `slider` 34,967 / 12,165 / 11,018 against 34,970 /
+  12,167 / 11,036; `navigation-rail` 19,340 / 7,072 / 6,407 against
+  19,346 / 7,075 / 6,412; `text-field` 30,836 / 9,517 / 8,571 against
+  30,842 / 9,520 / 8,574; and the SSR entry 308,739 / 112,609 / 91,640
+  against 308,694 / 112,599 / 91,563 (+45 / +10 / +77, the cause in the
+  Changed section). base-lite-css is 12,999 / 1,644 / 1,306 against its
+  1,750-byte budget, and the `size` table's 41 rows are byte-identical to
+  main's, so SIZES.md needs no update. Measured on main at 5fc52c21, push
+  run 41800107765, package job 126473784266; this release changes only the
+  CHANGELOG and the version field. No ceiling moved, every budget check
+  passed, and every README size row stands as printed.
+
 ## [3.6.0] - 2026-11-04
 
 Lighter pages: an opt-in base stylesheet.
@@ -41,11 +130,13 @@ Lighter pages: an opt-in base stylesheet.
   2,830 — 1,141 gzip bytes fewer per page — and a consumer bundle that
   imports only it measures 12,999 / 1,644 against 40,809 / 2,939. It emits
   into `mtrl.base`, so the cascade order every stylesheet declares is
-  unchanged, and the full stylesheet keeps its pinned sha256 and length
+  unchanged; the full stylesheet's test compile, pinned in
+  `test/styles/contrast-split.test.ts`, keeps its sha256 and length
   (537,940 bytes,
-  `3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a`);
-  the reset and the body rule moved into mixins and partials that emit the
-  same bytes. Its own budget row is 1,750 bytes gzipped (the measured 1,644
+  `3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a`),
+  and the published `dist/styles.css` is byte-identical to 3.5.4 apart
+  from the version banner; the reset and the body rule moved into mixins
+  and partials that emit the same bytes. Its own budget row is 1,750 bytes gzipped (the measured 1,644
   plus max(1%, 100 bytes), rounded up to the next 50) and the README row
   reads 1.6 kB. `test/styles/base-lite.test.ts` compiles the sheet and
   asserts the kept selectors, tokens and switch, and the absence of the
@@ -5821,7 +5912,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.6.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.7.0...HEAD
+[3.7.0]: https://github.com/floor/material/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/floor/material/compare/v3.5.4...v3.6.0
 [3.5.4]: https://github.com/floor/material/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/floor/material/compare/v3.5.2...v3.5.3
