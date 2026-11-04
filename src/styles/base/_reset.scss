@@ -1,5 +1,7 @@
 // src/styles/base/_reset.scss
 
+@use "../abstract/mixins" as m;
+
 // Modern CSS Reset
 // Adapted and simplified for mtrl
 
@@ -49,20 +51,7 @@ select {
 // component transitions (transform, height, position, clip) changes at once.
 // The fades keep the duration their component gave them. Components' own
 // reduced-motion rules still apply on top of this.
-@media (prefers-reduced-motion: reduce) {
-  html:focus-within {
-    scroll-behavior: auto;
-  }
-  
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-property: opacity, color, background-color, border-color, outline-color, box-shadow, visibility !important;
-    scroll-behavior: auto !important;
-  }
-}
+@include m.global-reduced-motion;
 
 // Reset button styles
 button {

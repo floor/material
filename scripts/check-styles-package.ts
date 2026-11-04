@@ -27,9 +27,12 @@ const ENTRIES = [
 ];
 
 // Loaded by no public entry: internal, and not packed (1,091 B unpacked).
+// `base/_reduced-motion.scss` is the build's own source for the base-lite
+// reduced-motion switch; no consumer entry loads it.
 const INTERNAL = [
   "src/styles/abstract/_config.scss",
   "src/styles/base/_foundation.scss",
+  "src/styles/base/_reduced-motion.scss",
   "src/styles/base/_typescale.scss",
 ];
 

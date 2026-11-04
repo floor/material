@@ -1,0 +1,22 @@
+// src/styles/base/_body-theme.scss
+
+@use "../abstract/base";
+@use "../abstract/mixins" as m;
+
+// The page's theme: surface and on-surface, the body-medium type role, and the
+// colour transition when light or dark changes. Split from _document.scss so
+// `material/styles/base-lite` carries the theme without the reset;
+// _document.scss uses this partial, so `material/styles/base` is unchanged.
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--#{base.$prefix}-sys-color-surface);
+    color: var(--#{base.$prefix}-sys-color-on-surface);
+    font-family: var(--#{base.$prefix}-sys-typescale-body-medium-font);
+    font-size: var(--#{base.$prefix}-sys-typescale-body-medium-font-size);
+    line-height: var(--#{base.$prefix}-sys-typescale-body-medium-line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    @include m.motion-transition(background-color, color);
+}

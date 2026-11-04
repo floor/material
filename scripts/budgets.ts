@@ -26,6 +26,7 @@ export const PACKAGE_GZIP = {
   form: 20_400,
   "all-js": 128_550,
   "base-css": 3_050,
+  "base-lite-css": 1_750,
   "button-css": 5_300,
   "select-css": 8_400,
   "slider-css": 4_850,

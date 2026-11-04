@@ -70,7 +70,8 @@ describe("material/styles/typography", () => {
     expect(build).toContain('emit("styles/typography", typographyStyles, typographyDependencies)');
     // The rules lived in mtrl.base. A new layer name would change the order
     // every stylesheet declares, which is what keeps load order from mattering.
-    expect(build).toContain('name === "typography" ? "base"');
+    // base-lite joins them: its rules belong in the base layer too.
+    expect(build).toContain('name === "typography" || name === "base-lite" ? "base"');
     expect(typographySources).toEqual(["base/typescale", "base/typography"]);
   });
 
