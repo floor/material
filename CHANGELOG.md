@@ -17,6 +17,86 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-11-04
+
+Lighter pages: an opt-in base stylesheet.
+
+### Added
+
+- **An opt-in base stylesheet carries the theme without the reset or the
+  ripple (#259).**
+  `material/styles/base-lite` is a second base for pages built from elements:
+  it carries the baseline colour roles in light and dark — including the
+  selectable `[data-theme=baseline]` pair — the typeface, shape and body
+  typescale tokens, the body theme, and the global reduced-motion switch. It
+  leaves out the three groups the full base carries for a whole page: the
+  contrast modes, the reset, and the light-DOM ripple utility. Component
+  styles live in shadow roots and carry their own reset and transitions, so
+  an element-path page pays for the full base's page-level rules without
+  using them; importing the sheet instead of `material/styles/base` is the
+  whole opt-in, and every other import is unchanged. Factory pages keep
+  `material/styles/base`: its ripple utility is what the light-DOM factory
+  components draw, and base-lite does not carry it. The price: the sheet
+  measures 13,398 bytes raw / 1,689 gzip against the full base's 22,547 /
+  2,830 — 1,141 gzip bytes fewer per page — and a consumer bundle that
+  imports only it measures 12,999 / 1,644 against 40,809 / 2,939. It emits
+  into `mtrl.base`, so the cascade order every stylesheet declares is
+  unchanged, and the full stylesheet keeps its pinned sha256 and length
+  (537,940 bytes,
+  `3e662716aecd56ad0a2aa91ada737ec13999f2d8373625067f3ade1e52a4065a`);
+  the reset and the body rule moved into mixins and partials that emit the
+  same bytes. Its own budget row is 1,750 bytes gzipped (the measured 1,644
+  plus max(1%, 100 bytes), rounded up to the next 50) and the README row
+  reads 1.6 kB. `test/styles/base-lite.test.ts` compiles the sheet and
+  asserts the kept selectors, tokens and switch, and the absence of the
+  contrast, reset and ripple groups; `base-lite:check` (browser, Chromium)
+  resolves the roles in light and dark, the body theme, `.dark-theme` and
+  `[data-theme=baseline]`, and the reduced-motion switch, then censuses the
+  rules for the dropped groups: red on main when wired alone in #260 with
+  `dist/styles/base-lite.css is missing`, green on #259. Material sources
+  (read 2026-11-04): [design tokens overview](https://m3.material.io/foundations/design-tokens/overview),
+  [color roles](https://m3.material.io/styles/color/roles), [type scale
+  tokens](https://m3.material.io/styles/typography/type-scale-tokens). The
+  reset, the ripple utility and the cascade order are this library's, not
+  M3's.
+
+### Internal
+
+- **A hung browser check fails in about eight minutes and names the
+  sub-check that hung (#261).**
+  A push run's `browser (adapters)` job once sat for 30 minutes 1 second with
+  its Checks step never completing, and the cancelled job's log was not
+  retained, so which sub-check hung could not be read. The browser matrix's
+  Checks step now carries `timeout-minutes: 8`, and every sub-check writes a
+  start line (`::group::<script> (start)`) and an end line (`<script>:
+  passed in Ns`), so a hang fails the step in about eight minutes and the
+  last log line names the open sub-check; no retry is added, so a hang stays
+  a failure. `test/build/ci-commands.test.ts` fails any matrix Checks step
+  that has no 1-to-10-minute deadline, no start line or no end line, so the
+  guard cannot be lost silently; on main at the PR's base the new test fails
+  three ways (deadline undefined, no start line, no end line) and on the
+  branch it passes with the rest of the file (6 pass). The cap is a little
+  over twice the slowest browser group's whole job on the same run (3 m 42 s)
+  and two and a half times this group's green rerun (3 m 10 s). Only the
+  browser matrix's checks step is bounded: the static job's parallel loop and
+  the single-command steps keep no deadline, and
+  `scripts/check-at-peer-floor.ts` still waits on its child processes without
+  one; the eight-minute step deadline bounds their effect on this job
+  meanwhile.
+
+- **The size cost is the new stylesheet's: the all-js row (414,669 raw /
+  127,444 gzip / 105,667 brotli), the full stylesheet (628,272 / 58,669 /
+  42,180) and the inline SSR page (253,639 / 5,325 / 2,906) are
+  byte-identical to 3.5.4's published package job, and the packed tarball is
+  863,525 bytes compressed, 4,837,005 unpacked in 1,582 files, against
+  862,559 and 4,822,567 in 1,578 files (run 41785139874, job 126425774578) —
+  966 bytes larger packed and 14,438 unpacked in four more files; the new
+  base-lite-css row reads 12,999 raw / 1,644 gzip / 1,305 brotli against its
+  1,750-byte budget.** Measured on main at 90873cfd, push run 41787866015,
+  job 126434414351; this release changes only the CHANGELOG and the version
+  field. No ceiling moved, every budget check passed, and every README size
+  row, the new base-lite row among them, stands as printed.
+
 ## [3.5.4] - 2026-11-04
 
 A smaller, readable package.
@@ -5741,7 +5821,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.5.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/floor/material/compare/v3.5.4...v3.6.0
 [3.5.4]: https://github.com/floor/material/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/floor/material/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/floor/material/compare/v3.5.1...v3.5.2
