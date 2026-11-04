@@ -427,6 +427,18 @@
       "types": "./dist/core/utils/index.d.ts",
       "import": "./dist/core/utils/index.js"
     },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    },
+    "./theme/variants": {
+      "types": "./dist/theme/variants.d.ts",
+      "import": "./dist/theme/variants.js"
+    },
+    "./theme/image": {
+      "types": "./dist/theme/image.d.ts",
+      "import": "./dist/theme/image.js"
+    },
     "./styles/*": {
       "types": "./dist/styles/*.d.ts",
       "import": "./dist/styles/*.js"
@@ -459,6 +471,7 @@
   },
   "files": [
     "dist",
+    "NOTICE",
     "src/styles",
     "!src/styles/abstract/_config.scss",
     "!src/styles/base/_foundation.scss",
