@@ -44,6 +44,9 @@ export const SSR_PAGE = {
   link: { raw: [42_300, 43_200], gzip: [900, 1_150] },
 } as const;
 
+/** check-ssr-comments.ts: each shipped SSR adapter entry, minified by the build (bytes). */
+export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, solid: 600 } as const;
+
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
 // The readable, comment-stripped dist: the package job measures 863,703 B packed
 // where the base packed 882,799. The ceiling carries 1,297 B over the
