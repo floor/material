@@ -224,11 +224,21 @@ jobs:
         with:
           browsers: ${{ matrix.browsers }}
       - name: Checks (${{ matrix.checks }})
+        # A check that hangs must fail on its own, and name itself. On
+        # 2026-11-03 this step held the adapters job for 30 minutes until the
+        # run was cancelled, and the job's log was not retained afterwards, so
+        # the sub-check that hung could not be read. The deadline ends a hang
+        # within about eight minutes, and each sub-check logs its start and its
+        # end, so the last line before a timeout names the one that hung. No
+        # retry: a hang stays a failure.
+        timeout-minutes: 8
         run: |
           for script in ${{ matrix.checks }}; do
-            echo "::group::$script"
+            start=$SECONDS
+            echo "::group::$script (start)"
             bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
+            echo "$script: passed in $((SECONDS - start))s"
           done
       - name: Browser comparison artifacts
         if: always()
