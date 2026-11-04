@@ -75,9 +75,9 @@ Lighter pages: an opt-in base stylesheet.
   that has no 1-to-10-minute deadline, no start line or no end line, so the
   guard cannot be lost silently; on main at the PR's base the new test fails
   three ways (deadline undefined, no start line, no end line) and on the
-  branch it passes with the rest of the file (6 pass). The cap is a little
-  over twice the slowest browser group's whole job on the same run (3 m 42 s)
-  and two and a half times this group's green rerun (3 m 10 s). Only the
+  branch it passes with the rest of the file (6 pass). The cap is 2.1 times
+  the slowest browser job on the same run (components-b, 3 m 50 s) and 2.9
+  times this group's green rerun (2 m 45 s). Only the
   browser matrix's checks step is bounded: the static job's parallel loop and
   the single-command steps keep no deadline, and
   `scripts/check-at-peer-floor.ts` still waits on its child processes without
