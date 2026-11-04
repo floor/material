@@ -127,9 +127,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   function handleFocus(): void {
     if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
-  const onEscape = (): void => {
-    if (dismissible) close();
-  };
   // The root covers the page, so a click beside the sheet lands on it, as on
   // the ::backdrop behind it
   const handleBackdropClick = (event: MouseEvent): void => {
@@ -150,7 +147,13 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     previousFocus = deepActiveElement() as HTMLElement | null;
     if (root.isConnected) acquireModal(root);
     escape?.stop();
-    escape = onModalEscape(root, onEscape);
+    escape = onModalEscape(
+      root,
+      () => {
+        if (dismissible) close();
+      },
+      top && (() => root.dispatchEvent(new Event("cancel", { cancelable: true }))),
+    );
     doc.addEventListener("keydown", handleKeydown);
     doc.addEventListener("focusin", handleFocus);
     frame = requestAnimationFrame(() => {

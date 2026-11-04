@@ -647,6 +647,36 @@ describe('dialog: Escape is a key press, in both layers', () => {
     expect(dialog.isOpen()).toBe(true);
   });
 
+  test('top layer: the synthetic cancel event is cancelable and preventDefault() sets defaultPrevented', async () => {
+    const { dialog } = make({ layer: 'top' });
+    const events: Array<{ cancelable: boolean; defaultPrevented: boolean }> = [];
+    dialog.element.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      events.push({ cancelable: event.cancelable, defaultPrevented: event.defaultPrevented });
+    }, true);
+    dialog.open();
+    await after(SETTLED);
+    press();
+    expect(events).toEqual([{ cancelable: true, defaultPrevented: true }]);
+    expect(dialog.isOpen()).toBe(true);
+  });
+
+  test('default layer: Escape dispatches no synthetic cancel, so a capture cancel listener cannot keep it open', async () => {
+    const { dialog } = make();
+    let cancels = 0;
+    dialog.element.addEventListener('cancel', (event) => {
+      cancels++;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+    dialog.open();
+    await after(SETTLED);
+    press();
+    expect(cancels).toBe(0);
+    expect(dialog.isOpen()).toBe(false);
+  });
+
   // What is not a key press still arrives as the dialog's cancel (a back
   // gesture), and the browser forces the third one refused in a row: it closes
   // the <dialog> without asking. The dialog's state follows whatever closed it.

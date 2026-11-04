@@ -664,9 +664,13 @@ export const withVisibility =
     // top-layer dialog no `cancel` and never forces one closed. closeOnEscape:
     // false still takes the key: it is the topmost modal's.
     escape?.stop();
-    escape = onModalEscape(component.element, () => {
-      if (component.config.closeOnEscape !== false && visibility.isOpen()) visibility.close();
-    });
+    escape = onModalEscape(
+      component.element,
+      () => {
+        if (component.config.closeOnEscape !== false) visibility.close();
+      },
+      top && (() => component.element.dispatchEvent(new Event("cancel", { cancelable: true }))),
+    );
   };
 
   const cleanupEvents = () => {

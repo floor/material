@@ -213,6 +213,7 @@ interface EscapeEntry extends ModalEscape {
   e: HTMLElement;
   v: Window & typeof globalThis;
   s: number;
+  d: () => unknown;
 }
 
 // The open modals, in the order they opened: the last one is on top.
@@ -227,15 +228,14 @@ const onEscapeKey = (event: KeyboardEvent): void => {
       (!escapes[at].e.isConnected && (escapes[at].stop(), true)))
   );
   const top = escapes[at];
-  if (!top) return;
   const open = (event.composedPath() as Partial<Element>[]).find(
     (n) => n.localName === "dialog" && n.hasAttribute?.("open"),
   );
-  if (open && open !== top.e) return;
+  if (!top || (open && open !== top.e)) return;
   event.preventDefault();
   if ((seen.get(event) ?? 0) > top.s) {
     top.opening = false;
-    top.e.dispatchEvent(new top.v.Event("cancel"));
+    top.d();
   }
 };
 
@@ -248,9 +248,14 @@ const onEscapeKey = (event: KeyboardEvent): void => {
  *
  * @param element - The modal's element, which says which window it is in
  * @param escape - Called for an Escape that is the modal's: it closes, or refuses
+ * @param d - Optional key handler when Escape dispatches a cancelable `cancel` event
  * @returns The modal's entry: `opening`, and `stop()` for when it closes
  */
-export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEscape => {
+export const onModalEscape = (
+  element: HTMLElement,
+  escape: () => void,
+  d?: (() => unknown) | false,
+): ModalEscape => {
   const v = element.ownerDocument.defaultView!;
   const onCancel = (event: Event): void => {
     event.preventDefault();
@@ -260,6 +265,7 @@ export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEs
     e: element,
     v,
     s: clock,
+    d: d || escape,
     opening: true,
     stop: () => {
       const at = escapes.indexOf(entry);
