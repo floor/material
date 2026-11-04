@@ -208,6 +208,12 @@ try {
   // main 850584ff measured 884,987 with CI's Node 22.23.3 / npm 10.9.9 and the
   // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
   // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
+  // The readable, comment-stripped dist (build-modules.ts strips formatting after
+  // the prunes): the package job measures 863,703 B packed where the base packed
+  // 882,799. The ceiling carries 1,297 B over the measurement, as 883,000 carried
+  // 1,432 B over 881,568 when it was set: 865,000.
+  // This job self-checks it: a real figure above the ceiling fails here, and the
+  // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
