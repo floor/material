@@ -462,6 +462,7 @@
     "src/styles",
     "!src/styles/abstract/_config.scss",
     "!src/styles/base/_foundation.scss",
+    "!src/styles/base/_reduced-motion.scss",
     "!src/styles/base/_typescale.scss"
   ],
   "scripts": {
@@ -488,6 +489,7 @@
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
+    "base-lite:check": "bun run scripts/check-base-lite.ts",
     "theme-root-scope:check": "bun run scripts/check-theme-root-scope.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",

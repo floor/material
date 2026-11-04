@@ -442,6 +442,11 @@ try {
     // The base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
     // Merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
     { name: "base-css", code: "import 'material/styles/base';", gzip: PACKAGE_GZIP["base-css"] },
+    // The opt-in theme-only base: the roles, the tokens, the body theme and
+    // the global reduced-motion switch, with no reset, ripple or contrast
+    // modes. It has no `.mtrl-` class of its own, so its side-effect
+    // assertions are in the block below.
+    { name: "base-lite-css", code: "import 'material/styles/base-lite';", gzip: PACKAGE_GZIP["base-lite-css"] },
     // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
     // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
     { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: PACKAGE_GZIP["button-css"] },
@@ -543,7 +548,14 @@ try {
     if (css) {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
-      assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
+      if (fixture.name === "base-lite-css") {
+        assert(text.includes("--mtrl-ref-typeface-plain") && text.includes("--mtrl-sys-shape-corner-"), "base-lite tokens were discarded");
+        assert(text.includes("prefers-reduced-motion"), "base-lite lost the global reduced-motion switch");
+        assert(!text.includes(".mtrl-ripple") && !text.includes("prefers-contrast") && !text.includes("box-sizing"),
+          "base-lite carries a group it promises to drop");
+      } else {
+        assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
+      }
       if (fixture.name === "button-css") {
         assert(text.includes(".mtrl-button") && text.includes(".mtrl-progress"));
         assert(!text.includes(".mtrl-text-field"), "Unrelated component CSS retained");

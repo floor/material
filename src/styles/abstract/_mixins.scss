@@ -358,6 +358,27 @@ $sheet-overshoot-guard: 32px;
   }
 }
 
+// The page-wide switch, not a slot: movement stops, fades stay, and anything
+// that moves changes at once. The reset includes it in place; the opt-in
+// `material/styles/base-lite` emits it on its own, because that sheet drops the
+// rest of the reset and the switch is not optional.
+@mixin global-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-property: opacity, color, background-color, border-color, outline-color, box-shadow, visibility !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
 @mixin high-contrast {
   @media (forced-colors: active) {
     @content;
