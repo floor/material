@@ -98,7 +98,7 @@
  *
  * const expandButton = createIconButton({
  *   icon: expandMore,
- *   ariaLabel: 'Show trip details',
+ *   ariaLabel: 'Trip details',
  * });
  * expandButton.element.setAttribute('aria-expanded', 'false');
  * expandButton.element.setAttribute('aria-controls', details.id);
@@ -108,7 +108,6 @@
  *   details.hidden = !expanded;
  *   expandButton.element.setAttribute('aria-expanded', String(expanded));
  *   expandButton.setIcon(expanded ? expandLess : expandMore);
- *   expandButton.setAriaLabel(expanded ? 'Hide trip details' : 'Show trip details');
  * });
  *
  * const expandableCard = createCard({

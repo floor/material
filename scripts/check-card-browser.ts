@@ -198,7 +198,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
 
     const expandButton = createIconButton({
       icon: expandMore,
-      ariaLabel: "Show trip details",
+      ariaLabel: "Trip details",
     });
     expandButton.element.id = "trip-expand-toggle";
     expandButton.element.setAttribute("aria-expanded", "false");
@@ -208,7 +208,6 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
       details.hidden = !expanded;
       expandButton.element.setAttribute("aria-expanded", String(expanded));
       expandButton.setIcon(expanded ? expandLess : expandMore);
-      expandButton.setAriaLabel(expanded ? "Hide trip details" : "Show trip details");
     });
 
     const expandableCard = createCard({
@@ -242,42 +241,44 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   assert.equal(await loadingCard.locator(".mtrl-card__content").textContent(), "Markets closed higher across Europe.");
   assert.equal(await loadingCard.locator(".mtrl-card__content").isVisible(), true);
 
-  // Verify Recipe (b) initial collapsed ARIA (aria-pressed must be absent) and hidden state
+  // Verify Recipe (b) initial collapsed ARIA (aria-pressed must be absent, accessible name constant) and hidden state
   const toggleBtn = page.locator("#trip-expand-toggle");
   const detailsRegion = page.locator("#trip-card-details");
+  const initialName = await toggleBtn.getAttribute("aria-label");
+  assert.equal(initialName, "Trip details");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "false");
   assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
   assert.equal(await toggleBtn.getAttribute("aria-controls"), "trip-card-details");
-  assert.equal(await toggleBtn.getAttribute("aria-label"), "Show trip details");
   assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z");
   assert.equal(await detailsRegion.isVisible(), false);
   assert.equal(await detailsRegion.evaluate(el => (el as HTMLElement).hidden && getComputedStyle(el).display === "none"), true);
 
-  // Keyboard toggle with Enter: expands region, swaps glyph, updates ARIA (aria-pressed still absent), and keeps focus on toggle
+  // Keyboard toggle with Enter: expands region, swaps glyph, updates aria-expanded (aria-pressed still absent, accessible name identical), and keeps focus on toggle
   await toggleBtn.focus();
   await page.keyboard.press("Enter");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "true");
   assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
-  assert.equal(await toggleBtn.getAttribute("aria-label"), "Hide trip details");
+  assert.equal(await toggleBtn.getAttribute("aria-label"), initialName);
   assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z");
   assert.equal(await detailsRegion.isVisible(), true);
   assert.equal(await detailsRegion.evaluate(el => !(el as HTMLElement).hidden && getComputedStyle(el).display === "block"), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");
 
-  // Keyboard toggle with Space: collapses region, swaps glyph back, updates ARIA (aria-pressed still absent), and keeps focus on toggle
+  // Keyboard toggle with Space: collapses region, swaps glyph back, updates aria-expanded (aria-pressed still absent, accessible name identical), and keeps focus on toggle
   await page.keyboard.press("Space");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "false");
   assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
-  assert.equal(await toggleBtn.getAttribute("aria-label"), "Show trip details");
+  assert.equal(await toggleBtn.getAttribute("aria-label"), initialName);
   assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z");
   assert.equal(await detailsRegion.isVisible(), false);
   assert.equal(await detailsRegion.evaluate(el => (el as HTMLElement).hidden && getComputedStyle(el).display === "none"), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");
 
-  // Keyboard toggle with Space again: re-expands region and keeps focus on toggle
+  // Keyboard toggle with Space again: re-expands region (accessible name still identical) and keeps focus on toggle
   await page.keyboard.press("Space");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "true");
   assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
+  assert.equal(await toggleBtn.getAttribute("aria-label"), initialName);
   assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z");
   assert.equal(await detailsRegion.isVisible(), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");

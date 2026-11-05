@@ -100,7 +100,7 @@ import {
  * details.hidden = true;
  * const expandButton = createIconButton({
  *   icon: expandMore,
- *   ariaLabel: 'Show trip details',
+ *   ariaLabel: 'Trip details',
  * });
  * expandButton.element.setAttribute('aria-expanded', 'false');
  * expandButton.element.setAttribute('aria-controls', details.id);
@@ -109,7 +109,6 @@ import {
  *   details.hidden = !expanded;
  *   expandButton.element.setAttribute('aria-expanded', String(expanded));
  *   expandButton.setIcon(expanded ? expandLess : expandMore);
- *   expandButton.setAriaLabel(expanded ? 'Hide trip details' : 'Show trip details');
  * });
  * const expandableCard = createCard({ variant: 'elevated', content: { text: 'Summary' } });
  * expandableCard.setHeader(createCardHeader({ title: 'Trip summary', action: expandButton.element }));
