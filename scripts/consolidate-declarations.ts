@@ -367,9 +367,14 @@ class Consolidation {
    * Keep the file of every private module another barrel needs and no barrel
    * exports, plus everything those files reach: a folded module would have to
    * gain a public export to stay reachable.
+   *
+   * A declaration that documents a shipped source file is that file's public
+   * face rather than an internal module of a barrel: folding it would leave the
+   * source with no declaration beside it, and the generated shape an adapter
+   * ships is not the pass's to change.
    */
   chooseKept(): void {
-    const seeds: string[] = [];
+    const seeds: string[] = [...this.modules.keys()].filter((file) => this.files.has(file.slice(0, -DTS.length)));
     for (const need of this.needs()) {
       if (need.name === "*" || this.exportingBarrel(need.target, need.name)) continue;
       const group = this.canonical(need.target);

@@ -102,6 +102,33 @@ describe("consolidateDeclarations", () => {
     }
   });
 
+  test("keeps a declaration that documents a shipped source file", async () => {
+    const directory = await tree({
+      "index.d.ts": 'export * from "./core/index.js";\n',
+      "core/index.d.ts": 'export { default as Widget } from "./widget.svelte";\n',
+      // The `.svelte` file ships and its declaration sits beside it, so the
+      // pass leaves the pair alone even though no exports entry names it.
+      "core/widget.svelte": "<script lang=\"ts\">let { count = 0 }: { count?: number } = $props();</script>\n",
+      "core/widget.svelte.d.ts": "declare const Widget: (props: { count?: number }) => unknown;\nexport default Widget;\n",
+      "core/helper.d.ts": "export interface Helper { value: string }\n",
+    });
+    try {
+      const result = await consolidateDeclarations(directory, {
+        ".": { types: "./index.d.ts" },
+        "./core": { types: "./core/index.d.ts" },
+      });
+      expect(result.kept).toEqual(["core/widget.svelte.d.ts"]);
+      expect(result.removed).toEqual(["core/helper.d.ts"]);
+      const remaining = await listing(directory);
+      expect(remaining).toContain("core/widget.svelte.d.ts");
+      const barrel = await readFile(join(directory, "core/index.d.ts"), "utf8");
+      expect(barrel).toContain('export { default as Widget } from "./widget.svelte";');
+      expect(barrel).not.toContain("declare const Widget");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("the merged barrel carries the folded declarations, with the collision renamed", async () => {
     const directory = await tree(FILES);
     try {
