@@ -1,11 +1,34 @@
 material
+Icon glyphs (Material Symbols and Material Icons)
+
+The package embeds SVG path data from Material Symbols and Material Icons
+(https://github.com/google/material-design-icons), Copyright Google LLC,
+licensed under the Apache License, Version 2.0. The glyphs ship compiled into
+the JavaScript under dist/, and one ships as a CSS mask data URI in the menu
+stylesheet. In the repository they are declared in:
+
+- src/components/chips/chip/chip.ts
+- src/components/datepicker/constants.ts
+- src/components/fab-menu/config.ts
+- src/components/navigation-rail/constants.ts
+- src/components/search/constants.ts
+- src/components/select/constants.ts
+- src/components/select/features.ts
+- src/components/side-sheet/features/structure.ts
+- src/components/snackbar/constants.ts
+- src/components/split-button/constants.ts
+- src/components/toolbar/config.ts
+- src/styles/components/_menu.scss
+
 Runtime colour (material/theme)
 
 The files under src/theme/vendor are a copy of material-color-utilities
 (https://github.com/material-foundation/material-color-utilities),
 Copyright 2021 Google LLC, licensed under the Apache License, Version 2.0.
-Each copied file keeps its original copyright and licence header. The full
-licence text follows.
+Each copied file keeps its original copyright and licence header.
+
+The full licence text follows.
+
 
 
                                  Apache License
@@ -185,7 +208,7 @@ licence text follows.
 
    END OF TERMS AND CONDITIONS
 
-   Copyright 2021 Google LLC
+   Copyright Google LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
