@@ -501,6 +501,7 @@
     "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
+    "declaration-docs:check": "bun run scripts/check-declaration-docs.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",

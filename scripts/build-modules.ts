@@ -97,9 +97,12 @@ export function stripRuntimeComments(filename: string, text: string): string {
 }
 
 /**
- * Drop declaration prose: signatures, not documentation, are the shipped
- * contract. The published API docs build from src (typedoc reads
- * `./src/index.ts`), and editors still resolve the same types.
+ * Ship the declarations with their JSDoc, and nothing else: a typed consumer
+ * gets the deprecation notes and the hover documentation for every option, and
+ * the line comments and plain block comments that only served the source go.
+ * A JSDoc block reaches the declaration it documents, whole, because its
+ * `@deprecated` tag names the replacement and its prose is what an editor
+ * shows on hover.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -114,6 +117,7 @@ export function printDeclarationModule(filename: string, text: string): string {
   }
   visit(file);
   for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
+    if (keepDeclarationComment(text.slice(start, end))) continue;
     text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
   }
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
@@ -259,6 +263,11 @@ export async function buildSSR(outdir: string) {
 /** A comment the shipped file keeps: a pure annotation, a licence banner or an @license/@preserve block. */
 function keepComment(comment: string): boolean {
   return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
+}
+
+/** A comment a shipped declaration keeps: the JSDoc block, whole, and no other. */
+function keepDeclarationComment(comment: string): boolean {
+  return /^\/\*\*(?!\/)/.test(comment);
 }
 
 /** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */
