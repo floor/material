@@ -2,6 +2,7 @@
 import { PREFIX } from "../config";
 import { getComponentDefaults, type ComponentConfigMap } from "./global";
 import type { EventCondition } from "../dom/create";
+type StyleDeclaration = Partial<CSSStyleDeclaration>;
 
 /**
  * Base component configuration interface
@@ -174,9 +175,10 @@ export const createElementConfig = (
     name: config.name,
     title: config.title,
     tabIndex: config.tabIndex,
-    style: (options.style || config.style
-      ? { ...options.style, ...config.style }
-      : undefined) as Partial<CSSStyleDeclaration> | undefined,
+    style:
+      options.style || config.style
+        ? { ...options.style, ...config.style } as StyleDeclaration
+        : undefined,
     // Data attributes
     data: config.data,
     // ARIA attributes
