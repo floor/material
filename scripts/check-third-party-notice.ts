@@ -12,9 +12,9 @@
  * - while a shipped file carries Material Symbols' 960-unit grid, NOTICE names
  *   Material Symbols. The grid is the `viewBox` the glyphs are drawn on; a
  *   notice that stops naming the set while the set still ships fails here;
- * - every packed `dist/theme/vendor/**/*.js` file carries the one-line
+ * - every packed `.js` file under `dist/theme/vendor/` carries the one-line
  *   `@license` pointer to `NOTICE` with the exact copyright year from its
- *   `src/theme/vendor/**/*.js` source.
+ *   `src/theme/vendor/` source.
  *
  * A missing NOTICE fails at the first assertion, which is main before the
  * notice ships.
