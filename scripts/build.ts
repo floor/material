@@ -4,6 +4,7 @@ import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
+import { stripInternalDeclarationDocs } from "./strip-internal-declaration-docs";
 import { emitSvelte } from "./svelte-package";
 
 const outdir = "./dist";
@@ -50,6 +51,12 @@ try {
     // `exports` entry can name; ship only those a consumer import can reach.
     const pruned = await pruneDeclarations(staging, manifest.exports);
     console.log(`Pruned ${pruned.removed.length} unreachable declarations (${pruned.bytes} bytes)`);
+
+    // Keep JSDoc on every declaration reachable from `exports` (including
+    // re-exports, heritage clauses, and signature-referenced types) and strip
+    // non-`@deprecated` JSDoc on strictly internal declarations.
+    const internalDocs = await stripInternalDeclarationDocs(staging, manifest.exports);
+    console.log(`Stripped JSDoc from ${internalDocs.declarations} internal declarations across ${internalDocs.files} files (${internalDocs.bytes} bytes)`);
 
     // A module no export target reaches and no shipped module imports is a
     // file no consumer can load: ship the reachable tree and nothing beside it.
