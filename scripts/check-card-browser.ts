@@ -2,7 +2,7 @@
 /**
  * Check the packed Card builders and the documented loading and expandable
  * card compositions (createCard + createProgress and createCard +
- * createIconButton({ toggle: true })) from the public entry points in Chromium.
+ * createIconButton) from the public entry points in Chromium.
  */
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -158,7 +158,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   assert.equal(await root.locator(".mtrl-card__content--no-padding").evaluate(element => getComputedStyle(element).padding), "0px");
 
   // Recipe (a): Loading card composed from public entry points (createCard + createProgress)
-  // Recipe (b): Expandable card composed from public entry points (createCard + createIconButton({ toggle: true }))
+  // Recipe (b): Expandable card composed from public entry points (createCard + plain createIconButton, APG disclosure)
   await page.evaluate(() => {
     const state = window as unknown as CardWindow;
     const { createCard, createCardHeader, createCardContent, createProgress, createIconButton } = state.cardCompositions;
@@ -187,28 +187,28 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
     state.cards.push(loadingCard);
     document.body.append(loadingCard.element);
 
-    // (b) Expandable card with createIconButton({ toggle: true }), aria-expanded, aria-controls, and hidden region
-    const chevronDown = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
-    const chevronUp = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
+    // (b) Expandable card with plain createIconButton (no toggle / no aria-pressed), aria-expanded, aria-controls, and hidden region
+    const expandMore = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+    const expandLess = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
     const details = createCardContent({
       text: "Full itinerary, check-in instructions, and local transit passes.",
     });
     details.id = "trip-card-details";
     details.hidden = true;
 
-    const expandToggle = createIconButton({
-      toggle: true,
-      icon: chevronDown,
-      selectedIcon: chevronUp,
+    const expandButton = createIconButton({
+      icon: expandMore,
       ariaLabel: "Show trip details",
     });
-    expandToggle.element.id = "trip-expand-toggle";
-    expandToggle.element.setAttribute("aria-expanded", "false");
-    expandToggle.element.setAttribute("aria-controls", details.id);
-    expandToggle.on("change", ({ selected }) => {
-      details.hidden = !selected;
-      expandToggle.element.setAttribute("aria-expanded", String(selected));
-      expandToggle.element.setAttribute("aria-label", selected ? "Hide trip details" : "Show trip details");
+    expandButton.element.id = "trip-expand-toggle";
+    expandButton.element.setAttribute("aria-expanded", "false");
+    expandButton.element.setAttribute("aria-controls", details.id);
+    expandButton.on("click", () => {
+      const expanded = details.hidden;
+      details.hidden = !expanded;
+      expandButton.element.setAttribute("aria-expanded", String(expanded));
+      expandButton.setIcon(expanded ? expandLess : expandMore);
+      expandButton.setAriaLabel(expanded ? "Hide trip details" : "Show trip details");
     });
 
     const expandableCard = createCard({
@@ -220,7 +220,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
     expandableCard.setHeader(createCardHeader({
       title: "Trip summary",
       subtitle: "May 15–17",
-      action: expandToggle.element,
+      action: expandButton.element,
     }));
     expandableCard.addContent(details);
     state.cards.push(expandableCard);
@@ -242,31 +242,34 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   assert.equal(await loadingCard.locator(".mtrl-card__content").textContent(), "Markets closed higher across Europe.");
   assert.equal(await loadingCard.locator(".mtrl-card__content").isVisible(), true);
 
-  // Verify Recipe (b) initial collapsed ARIA and hidden state
+  // Verify Recipe (b) initial collapsed ARIA (aria-pressed must be absent) and hidden state
   const toggleBtn = page.locator("#trip-expand-toggle");
   const detailsRegion = page.locator("#trip-card-details");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "false");
-  assert.equal(await toggleBtn.getAttribute("aria-pressed"), "false");
+  assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
   assert.equal(await toggleBtn.getAttribute("aria-controls"), "trip-card-details");
   assert.equal(await toggleBtn.getAttribute("aria-label"), "Show trip details");
+  assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z");
   assert.equal(await detailsRegion.isVisible(), false);
   assert.equal(await detailsRegion.evaluate(el => (el as HTMLElement).hidden && getComputedStyle(el).display === "none"), true);
 
-  // Keyboard toggle with Enter: expands region, updates ARIA, and keeps focus on toggle
+  // Keyboard toggle with Enter: expands region, swaps glyph, updates ARIA (aria-pressed still absent), and keeps focus on toggle
   await toggleBtn.focus();
   await page.keyboard.press("Enter");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "true");
-  assert.equal(await toggleBtn.getAttribute("aria-pressed"), "true");
+  assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
   assert.equal(await toggleBtn.getAttribute("aria-label"), "Hide trip details");
+  assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z");
   assert.equal(await detailsRegion.isVisible(), true);
   assert.equal(await detailsRegion.evaluate(el => !(el as HTMLElement).hidden && getComputedStyle(el).display === "block"), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");
 
-  // Keyboard toggle with Space: collapses region, updates ARIA, and keeps focus on toggle
+  // Keyboard toggle with Space: collapses region, swaps glyph back, updates ARIA (aria-pressed still absent), and keeps focus on toggle
   await page.keyboard.press("Space");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "false");
-  assert.equal(await toggleBtn.getAttribute("aria-pressed"), "false");
+  assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
   assert.equal(await toggleBtn.getAttribute("aria-label"), "Show trip details");
+  assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z");
   assert.equal(await detailsRegion.isVisible(), false);
   assert.equal(await detailsRegion.evaluate(el => (el as HTMLElement).hidden && getComputedStyle(el).display === "none"), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");
@@ -274,7 +277,8 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   // Keyboard toggle with Space again: re-expands region and keeps focus on toggle
   await page.keyboard.press("Space");
   assert.equal(await toggleBtn.getAttribute("aria-expanded"), "true");
-  assert.equal(await toggleBtn.getAttribute("aria-pressed"), "true");
+  assert.equal(await toggleBtn.getAttribute("aria-pressed"), null);
+  assert.equal(await toggleBtn.locator("path").getAttribute("d"), "M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z");
   assert.equal(await detailsRegion.isVisible(), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), "trip-expand-toggle");
 

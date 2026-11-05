@@ -15,7 +15,7 @@
  * - Support for header, content, media, and actions sections
  * - Interactive behavior with elevation changes on hover
  * - Draggable capability
- * - Composable loading and expandable states using `createProgress` and `createIconButton({ toggle: true })`
+ * - Composable loading and expandable states using `createProgress` and `createIconButton`
  *
  * The API includes methods for:
  * - {@link CardComponent.addContent | Adding content}
@@ -84,11 +84,11 @@
  *
  * @example
  * ```typescript
- * // Recipe (b): Expandable card composed with createCard + createIconButton({ toggle: true })
+ * // Recipe (b): Expandable card composed with createCard + plain createIconButton (WAI-ARIA APG disclosure pattern)
  * import { createCard, createCardContent, createCardHeader, createIconButton } from 'material';
  *
- * const chevronDown = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
- * const chevronUp = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
+ * const expandMore = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+ * const expandLess = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
  *
  * const details = createCardContent({
  *   text: 'Full itinerary, check-in instructions, and local transit passes.',
@@ -96,19 +96,19 @@
  * details.id = 'trip-card-details';
  * details.hidden = true;
  *
- * const expandToggle = createIconButton({
- *   toggle: true,
- *   icon: chevronDown,
- *   selectedIcon: chevronUp,
+ * const expandButton = createIconButton({
+ *   icon: expandMore,
  *   ariaLabel: 'Show trip details',
  * });
- * expandToggle.element.setAttribute('aria-expanded', 'false');
- * expandToggle.element.setAttribute('aria-controls', details.id);
+ * expandButton.element.setAttribute('aria-expanded', 'false');
+ * expandButton.element.setAttribute('aria-controls', details.id);
  *
- * expandToggle.on('change', ({ selected }) => {
- *   details.hidden = !selected;
- *   expandToggle.element.setAttribute('aria-expanded', String(selected));
- *   expandToggle.element.setAttribute('aria-label', selected ? 'Hide trip details' : 'Show trip details');
+ * expandButton.on('click', () => {
+ *   const expanded = details.hidden;
+ *   details.hidden = !expanded;
+ *   expandButton.element.setAttribute('aria-expanded', String(expanded));
+ *   expandButton.setIcon(expanded ? expandLess : expandMore);
+ *   expandButton.setAriaLabel(expanded ? 'Hide trip details' : 'Show trip details');
  * });
  *
  * const expandableCard = createCard({
@@ -118,7 +118,7 @@
  * expandableCard.setHeader(createCardHeader({
  *   title: 'Trip summary',
  *   subtitle: 'May 15–17',
- *   action: expandToggle.element,
+ *   action: expandButton.element,
  * }));
  * expandableCard.addContent(details);
  * ```
