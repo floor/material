@@ -571,14 +571,18 @@ describe('slider track geometry', () => {
 
   test('the corner radius and the handle height follow the size', async () => {
     const radii = { XS: 8, S: 8, M: 12, L: 16, XL: 28 } as const;
+    const steps = { XS: 'small', S: 'small', M: 'medium', L: 'large', XL: 'extra-large' } as const;
     const heights = { XS: 44, S: 44, M: 52, L: 68, XL: 108 } as const;
     for (const size of ['XS', 'S', 'M', 'L', 'XL'] as const) {
       const slider = await sized({ value: 50, size });
       // A piece carries the size's outer corner at the end of the track it reaches
       // and the inside corner at the gap. The track has neither a radius nor a clip.
+      // The outer corner reads the shape token, its px the fallback, so a theme's
+      // corners reach the pieces.
+      const outer = `var(--mtrl-sys-shape-corner-${steps[size]}, ${radii[size]}px)`;
       const [active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment')).slice(1);
-      expect(active!.style.borderRadius).toBe(`${radii[size]}px 2px 2px ${radii[size]}px`);
-      expect(inactive!.style.borderRadius).toBe(`2px ${radii[size]}px ${radii[size]}px 2px`);
+      expect(active!.style.borderRadius).toBe(`${outer} 2px 2px ${outer}`);
+      expect(inactive!.style.borderRadius).toBe(`2px ${outer} ${outer} 2px`);
       expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe('');
       expect(slider.element.style.getPropertyValue('--mtrl-slider-handle-height')).toBe(`${heights[size]}px`);
     }

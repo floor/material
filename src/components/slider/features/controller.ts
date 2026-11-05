@@ -21,6 +21,7 @@ import type { EventCallback } from "../../../core/state/emitter";
 import { defaultConfig, sliderSizeClass } from "../config";
 import { SLIDER_MEASUREMENTS, SLIDER_SIZES, type SliderSize } from "../constants";
 import { PREFIX } from "../../../core/config";
+import { cornerToken, type ShapeStep } from "../../../core/theme/shape";
 import { setHTML } from "../../../core/dom/html";
 import { setFormValue } from "../../../core/dom/form-value";
 import { activeElementOf } from "../../../core/dom/focus";
@@ -79,6 +80,9 @@ const getExternalTrackRadius = (size?: SliderSize): number => {
   if (trackHeight <= SLIDER_SIZES.L) return 16;
   return 28;
 };
+
+/** The steps of the track's corner radii (M3 shape scale: 8 / 12 / 16 / 28). */
+const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
 
 /**
  * Where a value sits along a track `width` wide, from its fraction of the range,
@@ -256,11 +260,13 @@ export const withTracks =
     const firstGap = gapOf("first");
     const secondGap = gapOf("second");
     // The corner each end of a piece carries: the outer radius where the piece
-    // reaches an end of the track, the inside corner at a gap. border-radius's
-    // order is top-left, top-right, bottom-right, bottom-left, so the pair turns
-    // with the axis: a mirrored or vertical slider puts the outer end elsewhere.
+    // reaches an end of the track, the inside corner at a gap. The outer corner
+    // reads the shape token with its px fallback, so a theme's corners reach these
+    // inline styles. border-radius's order is top-left, top-right, bottom-right,
+    // bottom-left, so the pair turns with the axis: a mirrored or vertical slider
+    // puts the outer end elsewhere.
     const radiusOf = (start: Along, end: Along): string => {
-      const outer = `${corner}px`, inside = `${INSIDE_CORNER}px`;
+      const outer = cornerToken(TRACK_STEPS[corner]!, corner, PREFIX), inside = `${INSIDE_CORNER}px`;
       const atStart = cmp(start, A0) === 0 ? outer : inside;
       const atEnd = cmp(end, A1) === 0 ? outer : inside;
       return {
@@ -299,9 +305,21 @@ export const withTracks =
     }
     // A standard slider has no inactive piece at the start of the track.
     const standard = !config.centered && !(config.range && state.secondValue !== null);
-    // A piece that meets an end of the slider keeps that end: nothing clips the
-    // track, and a piece shorter than the corner radius has its radii scaled to
-    // fit (as Skia's RoundRect does), so no end has to be dropped to avoid a sliver.
+    // A discrete slider's pieces stop at the end ticks. Compose's drawTrack keeps
+    // its corner threshold for the ends whenever the slider has tick fractions,
+    // even where short pieces are otherwise kept: a piece that would only fill the
+    // inset before the first tick or after the last one is dropped, so the end tick
+    // is the track's visual end (Slider.kt drawTrack,
+    // `tickFractions.isNotEmpty()`). A continuous track has no ticks to stop at:
+    // its end pieces keep their ends, and a piece shorter than the corner radius
+    // has its radii scaled to fit (as Skia's RoundRect does), so no end has to be
+    // dropped to avoid a sliver.
+    if (config.ticks) {
+      parts.forEach((part) => {
+        if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
+        else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
+      });
+    }
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);

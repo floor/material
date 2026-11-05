@@ -266,9 +266,14 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // The slider's track carries no corner and clips nothing: each piece of track
+    // takes its own outer corner where it reaches an end of the slider and the
+    // 2dp inside corner at a handle gap, both written by the controller, and the
+    // stop indicator's centre sits 6dp from the track's end at every size
+    // (styles/components/_slider.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1514d0f92dba071138f28de3ae6f485ede7dd17f587bc341fe6590cd8e06be1a");
-    expect(css.length).toBe(538104);
+      .toBe("7854c5273686e4c0a41daf5627700c46815f8841c31781e7a5163ef6f3863b30");
+    expect(css.length).toBe(538088);
   });
 
   test("today's sheets still resolve to the fixture", () => {
