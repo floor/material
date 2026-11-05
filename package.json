@@ -491,6 +491,7 @@
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
     "base-lite:check": "bun run scripts/check-base-lite.ts",
     "component-sheets:check": "bun run scripts/check-component-sheets.ts",
+    "density:check": "bun run scripts/check-density.ts",
     "theme-root-scope:check": "bun run scripts/check-theme-root-scope.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
