@@ -17,7 +17,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.8.0] - <date at release>
+## [3.8.0] - 2026-11-06
 
 Colour that adapts at runtime.
 
