@@ -10673,6 +10673,59 @@ try {
     await page.evaluate(() => (document.getElementById("ps-modal") as HTMLDialogElement).close());
     check("snackbar: its action dispatches action once and closes once, focus returns, and it goes back to its root");
 
+    // F8 moves focus to an actionable snackbar's action inside the shadow
+    // root, and dispatches the focus event; focus-shortcut="false" turns the
+    // shortcut off, and the element reopens without it.
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      (document.getElementById("ps-save") as HTMLElement).focus();
+      const bar = root.getElementById("ps-bar") as Host & { __focus: number };
+      bar.__focus = 0;
+      // The element's re-dispatch is a CustomEvent; the host also receives
+      // the browser's own retargeted focus event, which this count ignores.
+      bar.addEventListener("focus", (event) => {
+        if (event instanceof CustomEvent) bar.__focus++;
+      });
+      bar.show();
+    });
+    await wait(500);
+    await page.keyboard.press("F8");
+    await wait(100);
+    const shortcut = await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      const bar = root.getElementById("ps-bar") as Host & { __focus: number };
+      const action = bar.component?.element.querySelector('[class*="snackbar__action"]') as HTMLElement;
+      let deep = document.activeElement as Element | null;
+      while (deep?.shadowRoot?.activeElement) deep = deep.shadowRoot.activeElement;
+      return { stamped: action.getAttribute("aria-keyshortcuts"), focused: deep === action, focusEvent: bar.__focus, events: [...events] };
+    });
+    assert.deepEqual(shortcut, { stamped: "F8", focused: true, focusEvent: 1, events: ["open"] });
+
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      bar.setAttribute("focus-shortcut", "false");
+    });
+    await wait(100);
+    await page.evaluate(() => (document.getElementById("ps-save") as HTMLElement).focus());
+    await page.keyboard.press("F8");
+    await wait(100);
+    const noShortcut = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const action = bar.component?.element.querySelector('[class*="snackbar__action"]') as HTMLElement;
+      let deep = document.activeElement as Element | null;
+      while (deep?.shadowRoot?.activeElement) deep = deep.shadowRoot.activeElement;
+      return { stamped: action.getAttribute("aria-keyshortcuts"), focused: deep === action, open: bar.component?.element.matches(":popover-open") };
+    });
+    assert.deepEqual(noShortcut, { stamped: null, focused: false, open: true });
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => void };
+      bar.removeAttribute("focus-shortcut");
+      bar.hide();
+    });
+    await wait(500);
+    check("snackbar: F8 moves focus to the action in the shadow root and dispatches focus; focus-shortcut=false turns it off");
+
     // duration in place: it hides on its own after it
     await page.evaluate(() => {
       const { root, events } = (window as unknown as PopWin).__pop;
