@@ -156,12 +156,24 @@ try {
     }, { config: JSON.stringify(config), height });
     await page.waitForTimeout(40);
     return page.evaluate(() => {
-      const track = document.querySelector(".mtrl-slider__track")!.getBoundingClientRect();
+      const trackElement = document.querySelector<HTMLElement>(".mtrl-slider__track")!;
+      const track = trackElement.getBoundingClientRect();
       const centre = (el: Element) => { const b = el.getBoundingClientRect(); return { x: b.x + b.width / 2 - track.x, y: b.y + b.height / 2 - track.y }; };
       const icon = document.querySelector<HTMLElement>(".mtrl-slider__inset-icon");
       const iconBox = icon && !icon.hidden ? icon.getBoundingClientRect() : null;
       return {
         track: { width: track.width, height: track.height },
+        // What the track does to its pieces, and what each piece carries at its ends.
+        clip: { overflow: getComputedStyle(trackElement).overflow, radius: getComputedStyle(trackElement).borderTopLeftRadius },
+        segments: [...document.querySelectorAll<HTMLElement>(".mtrl-slider__segment")].map(segment => {
+          const box = segment.getBoundingClientRect();
+          const style = getComputedStyle(segment);
+          return {
+            x: box.x - track.x,
+            width: box.width,
+            radius: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius],
+          };
+        }),
         handles: [...document.querySelectorAll('[role="slider"]')].map(h => ({ ...centre(h), orientation: h.getAttribute("aria-orientation") })),
         dots: [...document.querySelectorAll<HTMLElement>(".mtrl-slider__dot")].filter(dot => !dot.hidden).map(centre),
         icon: iconBox && { x: iconBox.x - track.x, y: iconBox.y - track.y, size: iconBox.width, inactive: icon!.classList.contains("mtrl-slider__inset-icon--inactive") },
@@ -170,16 +182,67 @@ try {
   };
   const near = (actual: number, expected: number, what: string) =>
     assert(Math.abs(actual - expected) < 1, `${what}: ${actual} where M3 puts ${expected}`);
-  // A standard slider ends its inactive track with one stop, a corner radius (8) from the end.
+  // A standard slider ends its inactive track with one stop, 6px from the end.
   let shown = await paint({ value: 50, label: "Volume" });
   near(shown.handles[0]!.x, 160, "standard handle");
   assert.equal(shown.dots.length, 1, "standard slider stops");
-  near(shown.dots[0]!.x, 312, "standard end stop");
+  near(shown.dots[0]!.x, 314, "standard end stop");
   // Range and centred sliders are inactive at both ends, so both carry a stop.
   for (const config of [{ range: true, value: 20, secondValue: 80 }, { centered: true, min: -50, max: 50, value: 25 }]) {
     shown = await paint({ ...config, label: "Volume" });
-    assert.deepEqual(shown.dots.map(dot => Math.round(dot.x)), [8, 312], `stops of ${JSON.stringify(config)}`);
+    assert.deepEqual(shown.dots.map(dot => Math.round(dot.x)), [6, 314], `stops of ${JSON.stringify(config)}`);
   }
+  // The ends of the track, at the values that used to lose them. Each piece owns
+  // both of its ends: the outer corner of its size where it reaches an end of the
+  // slider and the 2dp inside corner (TrackInsideCornerSize) at a handle gap. Nothing
+  // clips the track, so a piece shorter than the corner keeps its own end. Before,
+  // 10% of an L slider showed no active track and 90% no trailing one, a short piece
+  // at an end was cut flat by the track's radius, and the stop sat a whole corner in.
+  const outerCorners = { L: 16, XL: 28 } as const, GAP = 8, WIDTH = 320;
+  for (const named of ["L", "XL"] as const) {
+    const corner = outerCorners[named];
+    for (const value of [0, 5, 10, 50, 90, 95, 100]) {
+      shown = await paint({ size: named, value, label: "Volume" });
+      const name = `${named} slider at ${value}%`;
+      assert.equal(shown.clip.overflow, "visible", `${name}: the track clips its pieces`);
+      assert.equal(shown.clip.radius, "0px", `${name}: the track carries a corner`);
+      // Positions in CSS pixels from the track's start. The front is 0px, the
+      // trailing piece runs to the track's end; both stop one gap from the handle.
+      const front = (WIDTH * value) / 100, [, active, trailing] = shown.segments;
+      near(active!.x, 0, `${name}: active track start`);
+      near(active!.width, Math.max(0, front - GAP), `${name}: active track length`);
+      // Top-left, top-right, bottom-right, bottom-left: a standard slider runs left
+      // to right, so the outer corner is on its outer side and 2px at the gap.
+      if (active!.width > 0) assert.deepEqual(active!.radius, [`${corner}px`, "2px", "2px", `${corner}px`], `${name}: active track corners`);
+      if (trailing!.width > 0) {
+        near(trailing!.x, front + GAP, `${name}: trailing track start`);
+        near(trailing!.x + trailing!.width, WIDTH, `${name}: trailing track end`);
+        assert.deepEqual(trailing!.radius, ["2px", `${corner}px`, `${corner}px`, "2px"], `${name}: trailing track corners`);
+      } else assert.equal(value, 100, `${name}: the trailing track is missing`);
+      // The stop's centre is 6px from the end of the track at every size, and an end
+      // of track with no inactive piece has no stop.
+      if (value < 100) {
+        assert.equal(shown.dots.length, 1, `${name}: end stops`);
+        near(shown.dots[0]!.x, WIDTH - 6, `${name}: end stop`);
+      } else assert.equal(shown.dots.length, 0, `${name}: a stop past the end of the track`);
+    }
+  }
+  // Every value: both pieces sit inside the track, they stop one gap from the
+  // handle, and neither is missing while it has room. A piece shorter than the
+  // corner used to be collapsed to nothing, which is the bug this keeps out.
+  const swept = await page.evaluate(() => {
+    window.mount({ size: "XL", value: 0, label: "Volume" }, 320, "baseline", "light");
+    const missing: number[] = [];
+    for (let value = 0; value <= 100; value++) {
+      window.slider.setValue(value);
+      const track = document.querySelector(".mtrl-slider__track")!.getBoundingClientRect();
+      const [active, trailing] = [...document.querySelectorAll(".mtrl-slider__segment")].slice(1).map(segment => segment.getBoundingClientRect());
+      if (active!.left - track.left > 0.5 || track.right - trailing!.right > 0.5) missing.push(value);
+      if (value >= 5 && value <= 95 && (active!.width < 0.1 || trailing!.width < 0.1)) missing.push(value);
+    }
+    return missing;
+  });
+  assert.deepEqual(swept, [], "values at which a piece of track is missing or short of its end");
   // The inset icon: 24px on M, 10px into the active track, centred across it...
   shown = await paint({ value: 50, size: "M", insetIcon: '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>', label: "Volume" });
   assert(shown.icon && !shown.icon.inactive, "inset icon on the active track");
@@ -196,9 +259,13 @@ try {
   assert.equal(shown.handles[0]!.orientation, "vertical");
   near(shown.track.height, 240, "vertical track length"); near(shown.track.width, 56, "vertical track thickness");
   near(shown.handles[0]!.y, 96, "vertical handle"); near(shown.handles[0]!.x, 28, "vertical handle centring");
-  near(shown.dots[0]!.y, 16, "vertical end stop");
-  shown = await paint({ orientation: "vertical", topToBottom: true, value: 25, ariaLabel: "Volume" }, 240);
+  near(shown.dots[0]!.y, 6, "vertical end stop");
+  // A vertical slider turns the corners with its axis: the outer end is the one the
+  // axis starts from, which is the bottom unless topToBottom.
+  assert.deepEqual(shown.segments[1]!.radius, ["2px", "2px", "16px", "16px"], "vertical track corners");
+  shown = await paint({ orientation: "vertical", topToBottom: true, size: "L", value: 25, ariaLabel: "Volume" }, 240);
   near(shown.handles[0]!.y, 60, "top-to-bottom handle");
+  assert.deepEqual(shown.segments[1]!.radius, ["16px", "16px", "2px", "2px"], "top-to-bottom track corners");
 
   // The icon beside the track, level with it, before or after it; the label above or
   // below (both positions used to change nothing on screen).
@@ -428,7 +495,7 @@ try {
       const host = document.querySelector("m-slider") as HTMLElement;
       const root = host.shadowRoot!;
       const box = (selector: string) => [...root.querySelectorAll<HTMLElement>(selector)]
-        .map(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, w: rect.width }; })
+        .map(element => { const rect = element.getBoundingClientRect(); const style = getComputedStyle(element); return { x: rect.x, w: rect.width, r: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius] }; })
         .filter(rect => rect.w > 0);
       return { handle: box("[part=handle]"), segment: box("[part=segment]"), dot: box("[part=dot]") };
     });
@@ -447,6 +514,11 @@ try {
   mirrored("element slider handle", ltrElement.handle[0]!, rtlElement.handle[0]!);
   ltrElement.segment.forEach((segment, index) => mirrored(`element slider segment[${index}]`, segment, rtlElement.segment[index]!));
   if (ltrElement.dot[0]) mirrored("element slider stop", ltrElement.dot[0], rtlElement.dot[0]!);
+  // A mirrored slider mirrors the pieces' corners too: the outer end is on the
+  // right. The start piece of a standard slider is empty and the boxes drop it, so
+  // the active piece is first in both lists.
+  assert.deepEqual(ltrElement.segment[0]!.r, ["8px", "2px", "2px", "8px"], "LTR active track corners");
+  assert.deepEqual(rtlElement.segment[0]!.r, ["2px", "8px", "8px", "2px"], "RTL active track corners");
 
   const timings: Record<string, number> = {};
   for (const [name, target] of [["dom", page], ["canvas", old]] as const) {

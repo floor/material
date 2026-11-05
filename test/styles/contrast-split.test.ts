@@ -278,9 +278,14 @@ describe("explicit contrast levels are opt-in", () => {
     // removed from the dialog, menu, select, slider, tabs and timepicker
     // component sheets (styles/components/_dialog.scss, _menu.scss,
     // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
+    // The slider's track carries no corner and clips nothing: each piece of track
+    // takes its own outer corner where it reaches an end of the slider and the
+    // 2dp inside corner at a handle gap, both written by the controller, and the
+    // stop indicator's centre sits 6dp from the track's end at every size
+    // (styles/components/_slider.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c544dd5af9a562bc1097eb905b026fdce4f6cb31b06962530591b2375b2ced13");
-    expect(css.length).toBe(532080);
+      .toBe("31445ec937cfe4f1c9c4199c09014a4aa9cdf02ff9ee975ab7227aba15cfe85c");
+    expect(css.length).toBe(532064);
   });
 
   test("today's sheets still resolve to the fixture", () => {

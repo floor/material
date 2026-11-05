@@ -460,6 +460,7 @@
   "files": [
     "dist",
     "src/styles",
+    "!dist/package.json",
     "!src/styles/abstract/_config.scss",
     "!src/styles/base/_foundation.scss",
     "!src/styles/base/_reduced-motion.scss",
