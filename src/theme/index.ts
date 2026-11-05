@@ -12,10 +12,18 @@
  * `material/theme`.
  *
  * The entry is split so a bundle carries only the variant it asks for:
- * `createScheme` takes the variant's constructor, and this module imports one
- * of them (tonal-spot, Material's default). `material/theme/variants` offers
- * the name-based lookup for a page that switches variants at runtime, and
- * `material/theme/image` the dominant-colour path.
+ * `createScheme` takes the variant's factory, and this module exports one per
+ * variant — a bundled page keeps the factory it imports, plus the tonal-spot
+ * default `createScheme` needs, and tree-shakes the rest.
+ * `material/theme/variants` offers the name-based lookup for a page that
+ * switches variants at runtime, and `material/theme/image` the dominant-colour
+ * path.
+ *
+ * The scheme classes themselves are not exported: their constructor takes the
+ * colour-spec version, which no option here selects, and a class a consumer
+ * could call with `"2025"` would drag that whole spec branch into every
+ * bundle. A factory fixes the argument list at the three values the API
+ * exposes, so the 2025 branch is unreachable and not shipped.
  *
  * Material's source: m3.material.io > Styles > Color > Dynamic color.
  *
@@ -25,33 +33,46 @@
 import { DynamicScheme } from "./vendor/dynamiccolor/dynamic_scheme";
 import { MaterialDynamicColors } from "./vendor/dynamiccolor/material_dynamic_colors";
 import { Hct } from "./vendor/hct/hct";
+import { SchemeContent } from "./vendor/scheme/scheme_content";
+import { SchemeExpressive } from "./vendor/scheme/scheme_expressive";
+import { SchemeFidelity } from "./vendor/scheme/scheme_fidelity";
+import { SchemeMonochrome } from "./vendor/scheme/scheme_monochrome";
+import { SchemeNeutral } from "./vendor/scheme/scheme_neutral";
 import { SchemeTonalSpot } from "./vendor/scheme/scheme_tonal_spot";
+import { SchemeVibrant } from "./vendor/scheme/scheme_vibrant";
 import { argbFromHex, hexFromArgb } from "./vendor/utils/string_utils";
 import { SCHEME_ROLES } from "./roles";
 
 export { Hct };
-export { SchemeContent } from "./vendor/scheme/scheme_content";
-export { SchemeExpressive } from "./vendor/scheme/scheme_expressive";
-export { SchemeFidelity } from "./vendor/scheme/scheme_fidelity";
-export { SchemeMonochrome } from "./vendor/scheme/scheme_monochrome";
-export { SchemeNeutral } from "./vendor/scheme/scheme_neutral";
-export { SchemeTonalSpot } from "./vendor/scheme/scheme_tonal_spot";
-export { SchemeVibrant } from "./vendor/scheme/scheme_vibrant";
 export type { DynamicScheme };
 
-/** A scheme constructor: the source colour, whether it is dark, and the contrast level. */
-export type SchemeConstructor = new (source: Hct, dark: boolean, contrastLevel: number) => DynamicScheme;
+/** A scheme factory: the source colour, whether it is dark, and the contrast level. */
+export type SchemeFactory = (source: Hct, dark: boolean, contrastLevel: number) => DynamicScheme;
+
+/** The tonal-spot variant, Material's default theme. */
+export const tonalSpot: SchemeFactory = (source, dark, contrast) => new SchemeTonalSpot(source, dark, contrast);
+/** The vibrant variant. */
+export const vibrant: SchemeFactory = (source, dark, contrast) => new SchemeVibrant(source, dark, contrast);
+/** The expressive variant. */
+export const expressive: SchemeFactory = (source, dark, contrast) => new SchemeExpressive(source, dark, contrast);
+/** The fidelity variant. */
+export const fidelity: SchemeFactory = (source, dark, contrast) => new SchemeFidelity(source, dark, contrast);
+/** The content variant. */
+export const content: SchemeFactory = (source, dark, contrast) => new SchemeContent(source, dark, contrast);
+/** The neutral variant. */
+export const neutral: SchemeFactory = (source, dark, contrast) => new SchemeNeutral(source, dark, contrast);
+/** The monochrome variant. */
+export const monochrome: SchemeFactory = (source, dark, contrast) => new SchemeMonochrome(source, dark, contrast);
 
 /** The mode of the generated scheme: a light or a dark one. */
 export type SchemeMode = "light" | "dark";
 
 export interface SchemeOptions {
   /**
-   * The variant to generate, as its constructor — `SchemeTonalSpot`,
-   * `SchemeVibrant`, or another of the seven. Default `SchemeTonalSpot`,
-   * Material's default theme.
+   * The variant to generate, as its factory — `tonalSpot`, `vibrant`, or
+   * another of the seven. Default `tonalSpot`, Material's default theme.
    */
-  variant?: SchemeConstructor;
+  variant?: SchemeFactory;
   /** Generate the dark scheme. Default `"light"`. */
   mode?: SchemeMode;
   /**
@@ -68,12 +89,12 @@ export interface SchemeOptions {
  * @param options The variant, the mode, and the contrast level.
  *
  * @example
- * const scheme = createScheme("#6750a4", { variant: SchemeVibrant, mode: "dark" });
+ * const scheme = createScheme("#6750a4", { variant: vibrant, mode: "dark" });
  */
 export function createScheme(seed: string | number | Hct, options: SchemeOptions = {}): DynamicScheme {
   const source = typeof seed === "string" ? Hct.fromInt(argbFromHex(seed)) : typeof seed === "number" ? Hct.fromInt(seed) : seed;
-  const Scheme = options.variant ?? SchemeTonalSpot;
-  return new Scheme(source, options.mode === "dark", options.contrast ?? 0);
+  const variant = options.variant ?? tonalSpot;
+  return variant(source, options.mode === "dark", options.contrast ?? 0);
 }
 
 export interface ApplyOptions {

@@ -1,5 +1,19 @@
 import { expect, test } from "bun:test";
-import { applyScheme, createScheme, Hct, type DynamicScheme, type SchemeConstructor } from "../../src/theme";
+import * as theme from "../../src/theme";
+import {
+  applyScheme,
+  content,
+  createScheme,
+  expressive,
+  fidelity,
+  Hct,
+  monochrome,
+  neutral,
+  tonalSpot,
+  vibrant,
+  type DynamicScheme,
+  type SchemeFactory,
+} from "../../src/theme";
 import { createSchemeByName, type ThemeVariant } from "../../src/theme/variants";
 import { SCHEME_ROLES } from "../../src/theme/roles";
 import { MaterialDynamicColors } from "../../src/theme/vendor/dynamiccolor/material_dynamic_colors";
@@ -34,7 +48,18 @@ function rolesOf(scheme: DynamicScheme, prefix = "mtrl"): Record<string, string>
   return roles;
 }
 
-const VARIANTS: Record<ThemeVariant, SchemeConstructor> = {
+const VARIANTS: Record<ThemeVariant, SchemeFactory> = {
+  "tonal-spot": tonalSpot,
+  vibrant,
+  expressive,
+  fidelity,
+  content,
+  neutral,
+  monochrome,
+};
+
+/** The reference: the ported scheme classes, called directly. */
+const SCHEME_CLASSES: Record<ThemeVariant, new (source: Hct, dark: boolean, contrast: number, specVersion?: string) => DynamicScheme> = {
   "tonal-spot": SchemeTonalSpot,
   vibrant: SchemeVibrant,
   expressive: SchemeExpressive,
@@ -50,12 +75,12 @@ test("every variant, mode and contrast level matches the reference constructor c
   let compared = 0;
   for (const seed of seeds) {
     const source = Hct.fromInt(argbFromHex(seed));
-    for (const [name, Scheme] of Object.entries(VARIANTS)) {
+    for (const [name, Scheme] of Object.entries(SCHEME_CLASSES)) {
       for (const mode of ["light", "dark"] as const) {
         for (const contrast of contrasts) {
           const expected = new Scheme(source, mode === "dark", contrast);
           const named = rolesOf(createSchemeByName(seed, { variant: name as ThemeVariant, mode, contrast }));
-          const direct = rolesOf(createScheme(seed, { variant: Scheme, mode, contrast }));
+          const direct = rolesOf(createScheme(seed, { variant: VARIANTS[name as ThemeVariant], mode, contrast }));
           expect(named, `${seed} ${name} ${mode} ${contrast}`).toEqual(rolesOf(expected));
           expect(direct, `${seed} ${name} ${mode} ${contrast}`).toEqual(named);
           compared += 1;
@@ -64,6 +89,18 @@ test("every variant, mode and contrast level matches the reference constructor c
     }
   }
   expect(compared).toBe(210);
+});
+
+test("the entry exports variant factories, not the scheme classes", () => {
+  expect(Object.keys(theme).filter((name) => /^Scheme/.test(name))).toEqual([]);
+  for (const name of Object.values(VARIANTS)) expect(typeof name).toBe("function");
+});
+
+test("every factory produces a scheme pinned to the 2021 colour spec", () => {
+  for (const [name, factory] of Object.entries(VARIANTS)) {
+    const scheme = factory(Hct.fromInt(argbFromHex("#6750a4")), false, 0);
+    expect((scheme as DynamicScheme & { specVersion: string }).specVersion, name).toBe("2021");
+  }
 });
 
 test("the seed may be a hex string, an ARGB integer or an Hct", () => {

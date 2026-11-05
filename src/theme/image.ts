@@ -5,7 +5,7 @@
  * `sourceColorFromImage` quantizes the image's pixels and scores the result —
  * the quantizer, the scorer and the image reader. It lives on its own subpath
  * so a bundle that asks only for `createScheme` and `applyScheme` never pulls
- * them: in the probe's scheme bundle the path is 0 B.
+ * them.
  *
  * @module theme/image
  */

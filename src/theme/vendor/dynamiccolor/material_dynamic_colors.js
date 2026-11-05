@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ColorSpecDelegateImpl2025 } from './color_spec_2025.js';
+import { ColorSpecDelegateImpl2021 } from './color_spec_2021.js';
 /**
  * DynamicColors for the colors in the Material Design system.
  */
@@ -292,7 +292,7 @@ export class MaterialDynamicColors {
     }
 }
 MaterialDynamicColors.contentAccentToneDelta = 15.0;
-MaterialDynamicColors.colorSpec = new ColorSpecDelegateImpl2025();
+MaterialDynamicColors.colorSpec = new ColorSpecDelegateImpl2021();
 /** @deprecated Use primaryPaletteKeyColor() instead. */
 MaterialDynamicColors.primaryPaletteKeyColor = MaterialDynamicColors.colorSpec.primaryPaletteKeyColor();
 /** @deprecated Use secondaryPaletteKeyColor() instead. */
