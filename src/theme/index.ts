@@ -41,7 +41,7 @@ import { SchemeNeutral } from "./vendor/scheme/scheme_neutral";
 import { SchemeTonalSpot } from "./vendor/scheme/scheme_tonal_spot";
 import { SchemeVibrant } from "./vendor/scheme/scheme_vibrant";
 import { argbFromHex, hexFromArgb } from "./vendor/utils/string_utils";
-import { SCHEME_ROLES } from "./roles";
+import { camel, SCHEME_ROLES } from "./roles";
 
 export { Hct };
 export type { DynamicScheme };
@@ -104,9 +104,6 @@ export interface ApplyOptions {
    */
   prefix?: string;
 }
-
-/** `on-surface-variant` back to `onSurfaceVariant`, the library's spelling. */
-const camel = (role: string): string => role.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase());
 
 /**
  * Writes the scheme's role colours to `--<prefix>-sys-color-*` on the target,

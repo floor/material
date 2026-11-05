@@ -4757,6 +4757,7 @@ try {
     check("badge: renders as the factory does with the global stylesheet");
 
     // Baseline declared no status roles, so these had no background.
+    // Status roles are harmonised to the theme primary, as M3 custom colours, so high contrast reaches 7:1.
     const status = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
       return Object.fromEntries(["success", "warning", "info"].map((color) => {
@@ -4767,9 +4768,9 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
-      info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 107, 94)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(167, 58, 16)", color: "rgb(255, 255, 255)" },
+      info: { bg: "rgb(55, 91, 169)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
   }

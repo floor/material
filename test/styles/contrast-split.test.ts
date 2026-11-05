@@ -266,9 +266,13 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // The three status seeds (success, warning, info) are harmonised to each
+    // theme's primary colour and emitted at standard, medium and high contrast
+    // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
+    // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1514d0f92dba071138f28de3ae6f485ede7dd17f587bc341fe6590cd8e06be1a");
-    expect(css.length).toBe(538104);
+      .toBe("b7454d9642c9f091459b32860ca7babd0c98cf043d7a5511e9f41d95626808b5");
+    expect(css.length).toBe(549426);
   });
 
   test("today's sheets still resolve to the fixture", () => {
