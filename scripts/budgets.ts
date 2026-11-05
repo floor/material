@@ -71,4 +71,11 @@ export const CONSUMER_INITIAL_GZIP = {
   // scheme and 24,000 B with the image path, stay above them.
   theme: 17_250,
   "theme-image": 20_800,
+  // The opt-in 2025 spec, on its own entry: new rows, set from the CI
+  // measurement on the entry's first green run, 20,569 B and 24,143 B, plus
+  // max(1%, 100 B), rounded up to the next 50. The default entries keep their
+  // 20,500 / 24,000 B ceilings; those ceilings do not apply to this entry
+  // (owner-side ruling, 2026-11-05).
+  "theme-2025": 20_800,
+  "theme-2025-image": 24_400,
 } as const;
