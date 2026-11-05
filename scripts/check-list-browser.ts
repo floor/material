@@ -17,6 +17,11 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
     const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
     const more = document.createElement("button"); more.textContent = "More"; more.id = "list-more"; more.style.color = "inherit"; more.style.font = "inherit";
     more.addEventListener("click", () => state.controlClicks++);
+    // The list accepts a component instance here and unwraps its element. The
+    // cast keeps this runtime check independent of the slot's type, so the same
+    // check runs against the behavior from before the slot took instances.
+    const wifiControl = state.inputs.createSwitch({}) as unknown as HTMLElement;
+    const syncControl = state.inputs.createSwitch({ ariaLabel: "Background sync" }) as unknown as HTMLElement;
     state.materialList = state.core.createList({ ariaLabel: "Material list anatomy", items: [
       { kind: "subheader", headline: "People and places" },
       { id: "one", headline: "One line", leading: { type: "icon", content: icon }, trailing: { type: "text", content: "5 min" } },
@@ -25,8 +30,8 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
       { kind: "divider", inset: true },
       { id: "video", headline: "Video", supportingText: "A small preview", leading: { type: "video", content: icon } },
       { id: "large", headline: "Large video", lines: 3, supportingText: "This supporting text can occupy two lines within the available space.", leading: { type: "video", content: icon } },
-      { id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: state.inputs.createSwitch({}) } },
-      { id: "sync", headline: "Sync", supportingText: "Every hour", trailing: { type: "control", content: state.inputs.createSwitch({ ariaLabel: "Background sync" }) } },
+      { id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: wifiControl } },
+      { id: "sync", headline: "Sync", supportingText: "Every hour", trailing: { type: "control", content: syncControl } },
       { id: "control", headline: "Independent action", trailing: { type: "control", content: more } },
       { id: "disabled", headline: "Disabled", disabled: true },
       { id: "long", headline: "A long headline that must truncate within this list without causing horizontal overflow", supportingText: "Detail" },
