@@ -136,6 +136,7 @@ const REFERENCE: Record<"light" | "dark", Record<string, string>> = {
     "surface-container-highest": "#e6e0e9", "surface-variant": "#e7e0eb", "on-surface": "#1d1b20",
     "on-surface-variant": "#49454e", outline: "#7a757f", "outline-variant": "#cac4cf", shadow: "#000000",
     scrim: "#000000", "inverse-surface": "#322f35", "inverse-on-surface": "#f5eff7", "inverse-primary": "#cfbdfe",
+    success: "#006b5e", "on-success": "#ffffff", warning: "#a73a10", "on-warning": "#ffffff", info: "#375ba9", "on-info": "#ffffff",
   },
   dark: {
     primary: "#cfbdfe", "on-primary": "#36275d", "primary-container": "#4d3d75", "on-primary-container": "#e9ddff",
@@ -147,6 +148,7 @@ const REFERENCE: Record<"light" | "dark", Record<string, string>> = {
     "surface-container-highest": "#36343a", "surface-variant": "#49454e", "on-surface": "#e6e0e9",
     "on-surface-variant": "#cac4cf", outline: "#948f99", "outline-variant": "#49454e", shadow: "#000000",
     scrim: "#000000", "inverse-surface": "#e6e0e9", "inverse-on-surface": "#322f35", "inverse-primary": "#65558f",
+    success: "#7ad7c6", "on-success": "#003730", warning: "#ffb59d", "on-warning": "#5d1800", info: "#b1c5ff", "on-info": "#002c70",
   },
 };
 
@@ -155,5 +157,82 @@ test("the default seed's scheme matches the pinned reference values", () => {
     const roles = rolesOf(createSchemeByName("#6750a4", { mode }));
     expect(roles, mode).toEqual(REFERENCE[mode]);
     expect(Object.keys(roles).sort()).toEqual(Object.keys(REFERENCE[mode]).sort());
+  }
+});
+
+const luminance = (hex: string): number => {
+  const [r, g, b] = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+};
+
+const contrastRatio = (a: string, b: string): number => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi! + 0.05) / (lo! + 0.05);
+};
+
+test("runtime status roles reach 4.5:1 at standard/medium and 7:1 at high while keeping warning inside 36.5–66.4°", () => {
+  const seeds = ["#6750a4", "#006493", "#9a7a3e", "#2e6c00", "#984816", "#006e2b", "#4196cb", "#8f4e00", "#3e2723", "#7d8c73", "#2b4d56"];
+  for (const seed of seeds) {
+    for (const variant of Object.keys(VARIANTS) as ThemeVariant[]) {
+      for (const mode of ["light", "dark"] as const) {
+        for (const contrast of [0, 0.5, 1]) {
+          const minimum = contrast === 1 ? 7 : 4.5;
+          const roles = rolesOf(createSchemeByName(seed, { variant, mode, contrast }));
+          for (const pair of ["success", "warning", "info"] as const) {
+            expect(contrastRatio(roles[`on-${pair}`]!, roles[pair]!)).toBeGreaterThanOrEqual(minimum);
+          }
+          if (mode === "light" || contrast === 0) {
+            const warningHue = Hct.fromInt(argbFromHex(roles.warning!)).hue;
+            expect(warningHue).toBeGreaterThanOrEqual(36.5);
+            expect(warningHue).toBeLessThanOrEqual(66.4);
+          }
+        }
+      }
+    }
+  }
+});
+
+test("status role resolution leaves error, on-error, error-container and on-error-container untouched across all parity seeds, variants and contrasts", () => {
+  const seeds = ["#6750a4", "#b3261e", "#00696d"];
+  const contrasts = [-1, -0.5, 0, 0.5, 1];
+  const colors = new MaterialDynamicColors();
+  for (const seed of seeds) {
+    const source = Hct.fromInt(argbFromHex(seed));
+    for (const [name, Scheme] of Object.entries(SCHEME_CLASSES)) {
+      for (const mode of ["light", "dark"] as const) {
+        for (const contrast of contrasts) {
+          const fresh = new Scheme(source, mode === "dark", contrast);
+          const expectedError = {
+            error: hexFromArgb(colors.error().getArgb(fresh)),
+            "on-error": hexFromArgb(colors.onError().getArgb(fresh)),
+            "error-container": hexFromArgb(colors.errorContainer().getArgb(fresh)),
+            "on-error-container": hexFromArgb(colors.onErrorContainer().getArgb(fresh)),
+          };
+
+          const first = createScheme(seed, { variant: VARIANTS[name as ThemeVariant], mode, contrast });
+          const originalPalette = first.errorPalette;
+          const firstRoles = rolesOf(first);
+          expect(first.errorPalette).toBe(originalPalette);
+          expect({
+            error: firstRoles.error,
+            "on-error": firstRoles["on-error"],
+            "error-container": firstRoles["error-container"],
+            "on-error-container": firstRoles["on-error-container"],
+          }, `${seed} ${name} ${mode} ${contrast} first`).toEqual(expectedError);
+
+          // A second scheme built and applied immediately after gives identical error roles.
+          const second = createScheme(seed, { variant: VARIANTS[name as ThemeVariant], mode, contrast });
+          const secondRoles = rolesOf(second);
+          expect({
+            error: secondRoles.error,
+            "on-error": secondRoles["on-error"],
+            "error-container": secondRoles["error-container"],
+            "on-error-container": secondRoles["on-error-container"],
+          }, `${seed} ${name} ${mode} ${contrast} second`).toEqual(expectedError);
+        }
+      }
+    }
   }
 });
