@@ -73,6 +73,14 @@ describe("the publish-time Sass normalization", () => {
     expect(normalize(source)).toBe("a {\n--x: color-mix(\n  in srgb,\n  var(--y) 38%,\n  transparent\n);\ncolor: red;\n}\n");
   });
 
+  test("keeps reading a selector after interpolation closes", () => {
+    // `.#{$layout}--stack` closes an interpolation and continues the selector.
+    // A tokenizer that reads the `}` as a block end takes `--stack` for a
+    // custom property and leaves every line after it indented and commented.
+    const source = ".#{$layout}--stack {\n  display: flex;\n  // alignment\n  gap: 4px;\n}\n";
+    expect(normalize(source)).toBe(".#{$layout}--stack {\ndisplay: flex;\ngap: 4px;\n}\n");
+  });
+
   test("keeps slashes inside a custom property's value", () => {
     // Sass emits this value as raw text: `//example.com` is not a comment, and
     // a regex strip would delete it from the shipped source.

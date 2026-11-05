@@ -13,10 +13,13 @@
  *
  * A `//` inside a quoted string or an unquoted `url(...)` is likewise content,
  * not a comment: the icon maps and masks in these files carry an SVG data
- * URL's `http://www.w3.org/2000/svg`. That is why this is a tokenizer and not a
- * regex; the patterns sit in the same files a regex would eat (for example
- * abstract/_mixins.scss and components/_menu.scss). The compiled-CSS guard
- * over every public entry lives in scripts/check-styles-package.ts.
+ * URL's `http://www.w3.org/2000/svg`. Interpolation is tracked too, so the `}`
+ * that closes `#{...}` is text: in `.#{$layout}--stack {` the `--` continues a
+ * selector, and reading it as a custom property would leave every following
+ * line of that file indented and commented. That is why this is a tokenizer and
+ * not a regex; the patterns sit in the same files a regex would eat (for
+ * example abstract/_mixins.scss and components/_menu.scss). The compiled-CSS
+ * guard over every public entry lives in scripts/check-styles-package.ts.
  */
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -45,6 +48,7 @@ export function normalizeStyleSource(source: string): string {
   let custom = false;
   let customParens = 0;
   let customBraces = 0;
+  let interpolation = 0;
   let customShift = 0;
   let commentShift = 0;
   let statementStart = true;
@@ -255,6 +259,29 @@ export function normalizeStyleSource(source: string): string {
       i += 1;
       lineHasContent = true;
       statementStart = false;
+      continue;
+    }
+
+    if (char === "#" && source[i + 1] === "{") {
+      // Interpolation. Its braces are text, not a block, and the closing `}` is
+      // not a statement start: in `.#{$layout}--stack {` the `--` that follows
+      // is part of a selector, not a custom property. Reading it as one would
+      // keep every line after it indented and every `//` after it raw.
+      out += "#{";
+      i += 2;
+      interpolation += 1;
+      lineHasContent = true;
+      statementStart = false;
+      continue;
+    }
+
+    if (interpolation > 0 && (char === "{" || char === "}")) {
+      // A brace nested in interpolation pairs with its own kind and never
+      // touches the block state.
+      out += char;
+      i += 1;
+      interpolation += char === "{" ? 1 : -1;
+      lineHasContent = true;
       continue;
     }
 
