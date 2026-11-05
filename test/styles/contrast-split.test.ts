@@ -283,8 +283,8 @@ describe("explicit contrast levels are opt-in", () => {
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5d5779ab376b97542073a9b43a7fc59128bba4ed6ab792c20bd2aabb90170801");
-    expect(css.length).toBe(542183);
+      .toBe("6ef9c1317d90479e15f1e3c6c18879868e1355e150d8b05eb0ac248f4631ce91");
+    expect(css.length).toBe(542464);
   });
 
   test("today's sheets still resolve to the fixture", () => {
