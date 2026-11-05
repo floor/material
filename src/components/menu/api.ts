@@ -1,7 +1,6 @@
 // src/components/menu/api.ts
 
 import { MenuComponent, MenuContent, MenuPosition } from "./types";
-import { OPEN_WITH_INITIAL_FOCUS, type InitialFocusOpen } from "./inner";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -15,11 +14,7 @@ import type { EventCallback } from "../../core/state/emitter";
  */
 export interface ApiOptions {
   menu: {
-    open: (
-      event?: Event,
-      interactionType?: "mouse" | "keyboard",
-      initialFocus?: "first" | "last",
-    ) => void;
+    open: (event?: Event, interactionType?: "mouse" | "keyboard") => void;
     close: (
       event?: Event,
       restoreFocus?: boolean,
@@ -77,7 +72,7 @@ const withAPI =
   ({ menu, opener, events, lifecycle }: ApiOptions) =>
   (component: ComponentWithElements): MenuComponent => {
     // Create the enhanced component
-    const menuComponent: MenuComponent & InitialFocusOpen = {
+    const menuComponent: MenuComponent = {
       element: component.element,
 
       /**
@@ -93,14 +88,6 @@ const withAPI =
 
         menu.open(event, interactionType);
         return this;
-      },
-
-      // The intent rides this symbol rather than a third argument on the
-      // public open: an added public option would be a minor, and this ships
-      // in a patch. The controller and the on-demand stand-in are internal,
-      // so the intent keeps its parameter all the way there.
-      [OPEN_WITH_INITIAL_FOCUS](event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last") {
-        menu.open(event, interactionType, initialFocus);
       },
 
       /**

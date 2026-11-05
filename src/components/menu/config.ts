@@ -126,8 +126,8 @@ type MenuApiHost = MenuFeatureHost &
 
 export const getApiConfig = (component: MenuApiHost): ApiOptions => ({
   menu: {
-    open: (event, interactionType, initialFocus) =>
-      component.menu?.open(event, interactionType, initialFocus),
+    open: (event, interactionType) =>
+      component.menu?.open(event, interactionType),
     close: (event, restoreFocus, skipAnimation) =>
       component.menu?.close(event, restoreFocus, skipAnimation),
     toggle: (event, interactionType) =>

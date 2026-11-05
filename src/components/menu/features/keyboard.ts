@@ -124,24 +124,28 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
   /**
    * Sets up initial focus within the menu
    * @param menuElement - The menu element to set focus within
-   * @param interactionType - How the menu was opened; focus lands on the
-   *   first item either way, so this is kept only for callers
+   * @param interactionType - How the menu was opened: a key focuses an item,
+   *   a pointer the surface
+   * @param openingEvent - The event the menu opened on, when there was one
    */
   const handleInitialFocus = (
     menuElement: HTMLElement,
     interactionType: "keyboard" | "mouse",
-    initialFocus: "first" | "last" = "first",
+    openingEvent?: Event,
   ): void => {
     // Reset typeahead when menu opens
     resetTypeahead();
 
     const items = menuItems(menuElement);
 
-    // ArrowUp on an opener asks for the last item. It is the last item focus
-    // can reach, so a disabled one is skipped, as the opener's own ArrowUp
-    // case does; when every item is disabled the last still takes focus,
-    // because the menu leaves focus nowhere otherwise.
-    const target = initialFocus === "last"
+    // The opening event is the intent: ArrowUp opens on the last item, as the
+    // menu button pattern asks, and every other open takes the first. The last
+    // item focus can reach skips a disabled one; when every item is disabled
+    // the last still takes focus, because the menu leaves focus nowhere
+    // otherwise.
+    const last = openingEvent instanceof KeyboardEvent &&
+      (openingEvent.key === "ArrowUp" || openingEvent.key === "Up");
+    const target = last
       ? [...items].reverse().find(
           (item) => !item.classList.contains(component.getClass("menu__item--disabled")),
         ) ?? items[items.length - 1]

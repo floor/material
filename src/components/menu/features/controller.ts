@@ -424,12 +424,10 @@ const withController =
    * Opens the menu
    * @param {Event} [event] - Optional event that triggered the open
    * @param {'mouse'|'keyboard'} [interactionType='mouse'] - Type of interaction that triggered the open
-   * @param {'first'|'last'} [initialFocus='first'] - Which item a keyboard open focuses
    */
   const openMenu = (
     event?: Event,
     interactionType?: "mouse" | "keyboard",
-    initialFocus: "first" | "last" = "first",
   ): void => {
     if (tasks.destroyed || state.visible) return;
 
@@ -504,7 +502,7 @@ const withController =
         component.keyboard?.handleInitialFocus(
           component.element,
           interactionType,
-          initialFocus,
+          event,
         );
       }, 100);
 
@@ -813,10 +811,10 @@ const withController =
     ...component,
     submenu,
     menu: {
-      open: (event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last") => {
+      open: (event?: Event, interactionType?: "mouse" | "keyboard") => {
         // Left undefined so openMenu can read the event; defaulting here fed
         // it "mouse" whatever opened the menu
-        openMenu(event, interactionType, initialFocus);
+        openMenu(event, interactionType);
         return component;
       },
 

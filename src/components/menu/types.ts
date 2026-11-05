@@ -601,11 +601,7 @@ export interface KeyboardActions {
 }
 
 export interface MenuControllerApi {
-  open: (
-    event?: Event,
-    interactionType?: "mouse" | "keyboard",
-    initialFocus?: "first" | "last",
-  ) => void;
+  open: (event?: Event, interactionType?: "mouse" | "keyboard") => void;
   close: (
     event?: Event,
     restoreFocus?: boolean,
@@ -708,7 +704,7 @@ export interface MenuFeatureHost {
     handleInitialFocus: (
       menuElement: HTMLElement,
       interactionType: "keyboard" | "mouse",
-      initialFocus?: "first" | "last"
+      openingEvent?: Event
     ) => void;
     // Read by the opener feature, so a menu has one Tab tracker rather than
     // two: the same key press decides focus for both.

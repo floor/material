@@ -47,7 +47,6 @@ export const withAPI =
       next: boolean,
       originalEvent: Event | null = null,
       interactionType?: "keyboard" | "mouse",
-      initialFocus?: "first" | "last",
     ): void => {
       if (expanded === next) return;
       expanded = next;
@@ -55,9 +54,9 @@ export const withAPI =
       trailing.element.setAttribute("aria-expanded", String(expanded));
 
       if (menu) {
-        // The interaction type decides where the menu puts focus: an item for
-        // a key, the surface for the pointer; the intent says which item.
-        if (expanded) menu.open(originalEvent ?? undefined, interactionType, initialFocus);
+        // The interaction type decides where the menu puts focus: the first
+        // item for a key, the surface for the pointer.
+        if (expanded) menu.open(originalEvent ?? undefined, interactionType);
         else menu.close(originalEvent ?? undefined);
       }
 
@@ -173,16 +172,13 @@ export const withAPI =
 
     // ArrowDown and ArrowUp on a closed trailing button open the menu on its
     // first and last item, which is what the menu's own opener does with them
-    // (menu/features/opener.ts). Enter and Space arrive as the click above.
-    // The intent travels with the open, so the menu's initial focus picks the
-    // item itself: no timer here can race the menu's own.
+    // (menu/features/opener.ts). The opening event carries which one: the
+    // menu's initial focus reads ArrowUp and takes the last item, so no timer
+    // here can race the menu's own. Enter and Space arrive as the click above.
     const handleTrailingKeydown = (event: KeyboardEvent): void => {
-      const openFirst = event.key === "ArrowDown" || event.key === "Down";
-      const openLast = event.key === "ArrowUp" || event.key === "Up";
-      if (!openFirst && !openLast) return;
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
       event.preventDefault();
-      if (expanded) return;
-      setExpanded(true, event, "keyboard", openLast ? "last" : "first");
+      if (!expanded) setExpanded(true, event, "keyboard");
     };
     trailing.element.addEventListener("keydown", handleTrailingKeydown);
 
