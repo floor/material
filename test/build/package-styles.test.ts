@@ -81,6 +81,23 @@ describe("the publish-time Sass normalization", () => {
     expect(normalize(source)).toBe(".#{$layout}--stack {\ndisplay: flex;\ngap: 4px;\n}\n");
   });
 
+  test("keeps reading a declaration value after an interpolation closes", () => {
+    // Same trap one level in: the interpolation closes inside a property value,
+    // a dashed token follows it, and the value continues on the next line. Read
+    // depth-blind, the `}` starts a statement, `--fallback` opens a custom
+    // property, and the continuation line and its comment stay raw.
+    const source = "a {\n  font-family: #{$family}--fallback, // the stack\n    sans-serif;\n  color: red;\n}\n";
+    expect(normalize(source)).toBe("a {\nfont-family: #{$family}--fallback,\nsans-serif;\ncolor: red;\n}\n");
+  });
+
+  test("keeps reading a selector after nested interpolation closes", () => {
+    // Interpolation nests. If depth is not counted, the inner `}` closes the
+    // outer interpolation early, the `--stack` after it opens a custom
+    // property, and the rule body keeps its indentation and silent comment.
+    const source = ".#{ if($compact, #{ $dense }, #{ $roomy }) }--stack {\n  // alignment\n  display: flex;\n}\n";
+    expect(normalize(source)).toBe(".#{ if($compact, #{ $dense }, #{ $roomy }) }--stack {\ndisplay: flex;\n}\n");
+  });
+
   test("keeps slashes inside a custom property's value", () => {
     // Sass emits this value as raw text: `//example.com` is not a comment, and
     // a regex strip would delete it from the shipped source.
