@@ -4,7 +4,7 @@ import { withEvents, withDisabled, withLifecycle } from "../../core/compose/feat
 import { createElement } from "../../core/dom/create";
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
-import { eventsFrom, onModalEscape, type EventsFrom, type ModalEscape } from "../../core/dom/layer";
+import { eventsFrom, onModalEscape, type EventsFrom } from "../../core/dom/layer";
 import { DATEPICKER_ICONS } from "./constants";
 import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
@@ -55,8 +55,8 @@ const createDatePicker = <M extends string = "single">(
   // While it is open: a modal picker's place among the open modals (Escape is
   // a key press handled there, for the topmost one), and for a docked one the
   // marker that tells the click that opened it from every later one
-  let escape: ModalEscape | undefined, from: EventsFrom | undefined;
-  const release = () => { escape?.stop(); from?.stop(); escape = from = undefined; };
+  let guard: Partial<EventsFrom> | undefined;
+  const release = () => { guard?.stop?.(); guard = undefined; };
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
   let unlock: (() => void) | undefined;
@@ -183,7 +183,7 @@ const createDatePicker = <M extends string = "single">(
   const open = () => {
     if (destroyed || opened || base.disabled.isDisabled() || readOnly) return;
     opened = true; release();
-    if (modal) escape = onModalEscape(dialog, () => close()); else from = eventsFrom(dialog);
+    guard = modal ? onModalEscape(dialog, () => close()) : eventsFrom(dialog);
     resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
     let initial = committed ?? today;
     if (state.minDate && initial < state.minDate) initial = state.minDate;
@@ -303,10 +303,9 @@ const createDatePicker = <M extends string = "single">(
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); return; }
     if (event.key === "Tab" && modal) {
       const elements = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input:not(:disabled)'));
-      const first = elements[0], last = elements.at(-1);
       const focused = activeElementOf(dialog);
-      if (event.shiftKey && focused === first) { event.preventDefault(); last?.focus(); }
-      else if (!event.shiftKey && focused === last) { event.preventDefault(); first?.focus(); }
+      const target = event.shiftKey ? focused === elements[0] && elements.at(-1) : focused === elements.at(-1) && elements[0];
+      if (target) { event.preventDefault(); target.focus(); }
       return;
     }
     const target = event.target instanceof HTMLElement ? event.target : null;
@@ -371,7 +370,7 @@ const createDatePicker = <M extends string = "single">(
   const onOutside = (event: MouseEvent) => {
     // The click that called open() reaches the document after it: the event
     // that opened the picker never dismisses it, and only that one
-    if (!opened || (from && !from.after(event))) return;
+    if (!opened || (guard?.after && !guard.after(event))) return;
     if (!modal && event.target instanceof Node && !event.composedPath().includes(base.element)) close(false);
     if (modal && event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close(); }
   };

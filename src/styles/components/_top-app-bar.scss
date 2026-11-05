@@ -18,8 +18,10 @@ $component: '#{base.$prefix}-top-app-bar';
   display: flex;
   align-items: center;
   width: 100%;
+  // Without the base reset: the 16px side padding must stay inside the width.
+  box-sizing: border-box;
   background-color: t.color('surface');
-  
+
   // Default type (small) - 64dp height as per specs
   height: 64px;
   padding: 0 16px;
@@ -86,6 +88,8 @@ $component: '#{base.$prefix}-top-app-bar';
       display: flex;
       align-items: center;
       width: 100%;
+      // Without the base reset: the row's 16px side padding must stay inside the width.
+      box-sizing: border-box;
       padding: 0 16px;
       
       &:first-child {
@@ -112,6 +116,8 @@ $component: '#{base.$prefix}-top-app-bar';
       display: flex;
       align-items: center;
       width: 100%;
+      // Without the base reset: the row's 16px side padding must stay inside the width.
+      box-sizing: border-box;
       padding: 0 16px;
       
       &:first-child {

@@ -105,6 +105,8 @@ $component: '#{base.$prefix}-radios';
     cursor: pointer;
     padding: 4px 0;
     min-height: 48px;
+    // Without the base reset: the 4px padding must stay inside the 48px row.
+    box-sizing: border-box;
     color: t.color('on-surface');
 
     // Body Large, as the checkbox and switch labels: a list item's headline.

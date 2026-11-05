@@ -19,6 +19,8 @@ $component: '#{base.$prefix}-bottom-app-bar';
   align-items: center;
   justify-content: space-between;
   height: 80px; // Default height as per specs
+  // Without the base reset: the 12px/16px padding must stay inside the 80px.
+  box-sizing: border-box;
   padding: 12px 16px 12px 4px; // top/bottom 12px, right 16px, left 4px
   background-color: t.color('surface-container');
   
