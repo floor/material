@@ -10,7 +10,7 @@ import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
 import { withAPI } from "./api";
 import { renderCalendar } from "./render";
-import { addDays, addMonths, formatDate, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
+import { addDays, addMonths, DEFAULT_LOCALE, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
@@ -39,13 +39,15 @@ const createDatePicker = <M extends string = "single">(
   const id = `${PREFIX}-datepicker-${++nextId}`;
   const cls = (name: string) => base.getClass(`datepicker__${name}`);
   const today = parseDate(new Date())!;
+  const locale = settings.locale || DEFAULT_LOCALE;
   const state: DatePickerState = {
     id, prefix: PREFIX, label: settings.label || "Select date", selectedDate: null, rangeEndDate: null,
     // The full-screen list has no month or year views.
     currentView: settings.variant !== "fullscreen" && ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
-    dateFormat: settings.dateFormat || "MM/DD/YYYY", variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
+    locale, firstDayOfWeek: getFirstDayOfWeek(locale),
+    dateFormat: config.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
@@ -60,18 +62,22 @@ const createDatePicker = <M extends string = "single">(
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
   let unlock: (() => void) | undefined;
-  const label = createElement({ tag: "label", className: cls("label"), text: state.label, attributes: { for: `${id}-input` } });
-  const field = createElement({ tag: "div", className: cls("anchor") });
-  const input = doc.createElement("input");
-  input.className = cls("input"); input.id = `${id}-input`; input.type = "text"; input.readOnly = modal;
-  if (settings.name) input.name = settings.name;
-  input.placeholder = settings.placeholder || state.dateFormat; input.autocomplete = "off";
-  input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
-  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, DATEPICKER_ICONS.calendar);
-  trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
+  const make = (tag: string, name: string, text?: string, attributes?: Record<string, string | boolean>) =>
+    createElement({ tag, className: cls(name), text, attributes });
+  const label = make("label", "label", state.label, { for: `${id}-input` });
+  const field = make("div", "anchor");
+  const input = make("input", "input", undefined, {
+    id: `${id}-input`, type: "text", placeholder: settings.placeholder || state.dateFormat, autocomplete: "off",
+    "aria-describedby": `${id}-help ${id}-error`, ...(settings.name ? { name: settings.name } : {}),
+  }) as HTMLInputElement;
+  input.readOnly = modal;
+  const trigger = make("button", "trigger", undefined, {
+    type: "button", "data-action": "open", "aria-label": "Choose date", "aria-haspopup": "dialog", "aria-controls": `${id}-dialog`, "aria-expanded": "false",
+  }) as HTMLButtonElement;
+  setHTML(trigger, DATEPICKER_ICONS.calendar);
   // The supporting text, the date format unless given.
-  const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });
-  const error = createElement({ tag: "div", className: cls("error"), attributes: { id: `${id}-error`, "aria-live": "polite" } });
+  const help = make("div", "help", settings.supportingText || state.dateFormat, { id: `${id}-help` });
+  const error = make("div", "error", undefined, { id: `${id}-error`, "aria-live": "polite" });
   const dialog = doc.createElement("dialog"); dialog.id = `${id}-dialog`; dialog.className = cls("calendar");
   dialog.classList.add(base.getClass(`datepicker--${modal ? "modal" : "docked"}`));
   if (state.variant === "fullscreen") dialog.classList.add(base.getClass("datepicker--fullscreen"));
@@ -79,9 +85,9 @@ const createDatePicker = <M extends string = "single">(
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
   if (modal) dialog.setAttribute("aria-labelledby", `${id}-title`); else dialog.setAttribute("aria-label", state.label);
-  const announcement = createElement({ tag: "div", className: cls("sr-only"), attributes: { "aria-live": "polite", "aria-atomic": "true" } });
+  const announcement = make("div", "sr-only", undefined, { "aria-live": "polite", "aria-atomic": "true" });
   field.append(input, trigger); base.element.append(label, field, help, error, dialog);
-  const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat) + (date && end ? ` - ${formatDate(end, state.dateFormat)}` : "");
+  const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat, state.locale) + (date && end ? ` - ${formatDate(end, state.dateFormat, state.locale)}` : "");
   const getValue = (): DatePickerValue => committed ? committedEnd ? [new Date(committed), new Date(committedEnd)] : new Date(committed) : null;
   const syncInput = () => {
     input.value = formatted(committed, committedEnd); input.removeAttribute("aria-invalid"); error.textContent = "";
@@ -155,7 +161,7 @@ const createDatePicker = <M extends string = "single">(
     if (current && kept) current.scrollTop = kept.top + (shiftBy === null ? 0 : current.scrollHeight - kept.height);
     shiftBy = null;
     centre();
-    announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString(state.locale, { month: "long", year: "numeric" });
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
     else if (focus) focusCurrent();
   };
@@ -225,7 +231,7 @@ const createDatePicker = <M extends string = "single">(
   const validateEntries = (): boolean => {
     const fields = Array.from(dialog.querySelectorAll<HTMLInputElement>('[data-entry]'));
     if (!fields.length) return !!state.selectedDate && state.isAllowed(state.selectedDate) && (state.selectionMode !== "range" || !!state.rangeEndDate && state.isAllowed(state.rangeEndDate));
-    const values = fields.map(field => parseInputDate(field.value, state.dateFormat));
+    const values = fields.map(field => parseInputDate(field.value, state.dateFormat, state.locale));
     let valid = true;
     fields.forEach((field, index) => {
       const date = values[index];
@@ -237,7 +243,7 @@ const createDatePicker = <M extends string = "single">(
     if (valid) {
       state.selectedDate = values[0]; state.rangeEndDate = values[1] ?? null; setDisplayDate(values[0]!);
       const headline = dialog.querySelector<HTMLElement>(`.${cls("headline")}`);
-      if (headline) headline.textContent = formatDate(state.selectedDate, "MMM D, YYYY") + (state.rangeEndDate ? ` – ${formatDate(state.rangeEndDate, "MMM D, YYYY")}` : "");
+      if (headline) headline.textContent = formatDate(state.selectedDate, "MMM D, YYYY", state.locale) + (state.rangeEndDate ? ` – ${formatDate(state.rangeEndDate, "MMM D, YYYY", state.locale)}` : "");
     }
     return valid;
   };
@@ -246,7 +252,7 @@ const createDatePicker = <M extends string = "single">(
     if (modal || destroyed || base.disabled.isDisabled()) return;
     if (!input.value.trim()) { clearValue(true); return; }
     const pieces = state.selectionMode === "range" ? input.value.split(' - ') : [input.value];
-    const dates = pieces.map(value => parseInputDate(value, state.dateFormat));
+    const dates = pieces.map(value => parseInputDate(value, state.dateFormat, state.locale));
     if (dates.length !== (state.selectionMode === 'range' ? 2 : 1) || dates.some(date => !date || !state.isAllowed(date)) || dates[1] && dates[0] && dates[1] < dates[0]) {
       input.setAttribute("aria-invalid", "true"); error.textContent = `Enter a selectable ${state.selectionMode === "range" ? "date range" : "date"} (${state.dateFormat}).`; return;
     }
@@ -323,8 +329,8 @@ const createDatePicker = <M extends string = "single">(
       else if (event.key === "ArrowRight") next = addDays(date, ahead);
       else if (event.key === "ArrowUp") next = addDays(date, -7);
       else if (event.key === "ArrowDown") next = addDays(date, 7);
-      else if (event.key === "Home") next = addDays(date, -date.getDay());
-      else if (event.key === "End") next = addDays(date, 6 - date.getDay());
+      else if (event.key === "Home") next = addDays(date, -((date.getDay() - state.firstDayOfWeek + 7) % 7));
+      else if (event.key === "End") next = addDays(date, 6 - ((date.getDay() - state.firstDayOfWeek + 7) % 7));
       else if (event.key === "PageUp" || event.key === "PageDown") next = addMonths(date, (event.key === "PageUp" ? -1 : 1) * (event.shiftKey ? 12 : 1));
       else return;
       event.preventDefault();
@@ -381,11 +387,20 @@ const createDatePicker = <M extends string = "single">(
     // Use the destination so moving between days cannot close the popup mid-click.
     if (!destroyed && opened && !modal && event.relatedTarget instanceof Node && !base.element.contains(event.relatedTarget)) close(false);
   };
-  base.element.addEventListener("click", onClick); base.element.addEventListener("keydown", onKey);
-  base.element.addEventListener("focusout", onFocusOut); dialog.addEventListener("focusin", onFocus);
-  dialog.addEventListener("click", onDialogClick); dialog.addEventListener("input", onEntry);
-  dialog.addEventListener("scroll", onScroll, true); dialog.addEventListener("scrollend", onScroll, true);
-  input.addEventListener("change", onInputChange); input.addEventListener("click", onInputClick); doc.addEventListener("click", onOutside);
+  const listeners: [EventTarget, string, EventListener, boolean?][] = [
+    [base.element, "click", onClick as EventListener],
+    [base.element, "keydown", onKey as EventListener],
+    [base.element, "focusout", onFocusOut as EventListener],
+    [dialog, "focusin", onFocus as EventListener],
+    [dialog, "click", onDialogClick as EventListener],
+    [dialog, "input", onEntry],
+    [dialog, "scroll", onScroll, true],
+    [dialog, "scrollend", onScroll, true],
+    [input, "change", onInputChange],
+    [input, "click", onInputClick],
+    [doc, "click", onOutside as EventListener],
+  ];
+  for (const [el, ev, fn, cap] of listeners) el.addEventListener(ev, fn, cap);
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();
@@ -414,12 +429,12 @@ const createDatePicker = <M extends string = "single">(
   const destroy = () => {
     if (destroyed) return;
     destroyed = true; close();
-    doc.removeEventListener("click", onOutside); input.removeEventListener("change", onInputChange); input.removeEventListener("click", onInputClick);
-    base.element.removeEventListener("click", onClick); base.element.removeEventListener("keydown", onKey); base.element.removeEventListener("focusout", onFocusOut);
-    dialog.removeEventListener("focusin", onFocus); dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("input", onEntry);
-    dialog.removeEventListener("scroll", onScroll, true); dialog.removeEventListener("scrollend", onScroll, true); clearTimeout(quiet);
+    for (const [el, ev, fn, cap] of listeners) el.removeEventListener(ev, fn, cap);
+    clearTimeout(quiet);
     base.lifecycle.destroy();
   };
+  const showView = (v: DatePickerView) => () => { state.currentView = v; state.inputMode = false; render(); };
+  const nav = (fn: () => void) => () => { navigationRequested = !opened; fn(); render(); };
   const api = withAPI({
     element: base.element, input, getClass: base.getClass,
     disabled: { enable: () => setDisabled(false), disable: () => setDisabled(true), isDisabled: () => base.disabled.isDisabled() }, lifecycle: { destroy }, destroy,
@@ -434,13 +449,11 @@ const createDatePicker = <M extends string = "single">(
     setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
     setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
     calendar: {
-      goToDate(value) { const date = parseDate(value); if (date) { navigationRequested = !opened; setDisplayDate(date); render(); } },
-      nextMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1)); render(); },
-      prevMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1)); render(); },
-      nextYear() { navigationRequested = !opened; state.currentYear++; render(); }, prevYear() { navigationRequested = !opened; state.currentYear--; render(); },
-      showDayView() { state.currentView = "day"; state.inputMode = false; render(); },
-      showMonthView() { state.currentView = "month"; state.inputMode = false; render(); },
-      showYearView() { state.currentView = "year"; state.inputMode = false; render(); },
+      goToDate(value) { const date = parseDate(value); if (date) nav(() => setDisplayDate(date))(); },
+      nextMonth: nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1))),
+      prevMonth: nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1))),
+      nextYear: nav(() => state.currentYear++), prevYear: nav(() => state.currentYear--),
+      showDayView: showView("day"), showMonthView: showView("month"), showYearView: showView("year"),
       getCurrentView: () => state.currentView,
     },
   }, base);
