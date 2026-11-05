@@ -125,9 +125,31 @@ try {
     // the reads below see the settled colours rather than the frame the change
     // began in.
     for (const id of ["inside-filled", "inside-text", "outside-filled", "outside-text"]) {
-      getComputedStyle(document.getElementById(id)!).backgroundColor;
+      const style = getComputedStyle(document.getElementById(id)!);
+      style.backgroundColor;
+      style.color;
     }
-    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    // Only CSS transitions are awaited: an animation that never ends (any
+    // `iterations: Infinity`, such as an indeterminate progress indicator)
+    // never resolves `.finished`, and waiting on it would hang this check until
+    // the step timeout. The wait also races a deadline, so a transition that
+    // somehow never settles fails the check with a named message instead of
+    // passing it silently.
+    const transitions = document.getAnimations().filter((animation): animation is CSSTransition => animation instanceof CSSTransition);
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        Promise.all(transitions.map((transition) => transition.finished.catch(() => undefined))),
+        new Promise<never>((_resolve, reject) => {
+          deadline = setTimeout(
+            () => reject(new Error(`the button colour transitions did not finish within 2000ms (${transitions.length} running)`)),
+            2_000
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(deadline);
+    }
 
     const after = {
       rootPrimary: getComputedStyle(root).getPropertyValue("--mtrl-sys-color-primary").trim(),
