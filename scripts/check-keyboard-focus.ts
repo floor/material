@@ -254,7 +254,7 @@ const TARGET_SPECS: readonly TargetSpec[] = [
   { target: "side-sheet-close", component: "SideSheet", part: "button.mtrl-side-sheet__close" },
   { target: "snackbar-action", component: "Snackbar", part: "button.mtrl-snackbar__action" },
   { target: "snackbar-close", component: "Snackbar", part: "button.mtrl-snackbar__close" },
-  { target: "datepicker-input", component: "DatePicker", part: "input.mtrl-datepicker__input (readonly)" },
+  { target: "datepicker-input", component: "DatePicker", part: "input.mtrl-datepicker__input (readonly)", allowsPointerIndicator: true },
   { target: "carousel-slide-primary", component: "Carousel", part: ".mtrl-carousel__item (primary)" },
   { target: "carousel-cta-button", component: "Carousel", part: "a.mtrl-carousel__button" },
   { target: "carousel-slide-compacted", component: "Carousel", part: ".mtrl-carousel__item (compacted)" },
@@ -808,7 +808,7 @@ async function evaluateKeyboardFocusOnTarget(
     if (targetId === "fab-menu-item") {
       (window as unknown as { __openFabMenu: () => void }).__openFabMenu();
     }
-    (el.closest(".demo-box") ?? el).scrollIntoView({ block: "center", inline: "center" });
+    (el.closest(".demo-box") ?? el).scrollIntoView({ behavior: "instant", block: "center", inline: "center" });
     if (targetId === "carousel-slide-compacted") {
       const scroller = el.closest(".mtrl-carousel")?.querySelector<HTMLElement>(".mtrl-carousel__scroller");
       if (scroller) {
@@ -853,7 +853,7 @@ async function evaluateKeyboardFocusOnTarget(
     const el = document.querySelector<HTMLElement>(`[data-focus-target="${targetId}"]`)!;
     document.getElementById("__tab-predecessor")?.remove();
     if (document.activeElement !== el) {
-      el.focus();
+      (el as HTMLElement & { focus(options?: FocusOptions & { focusVisible?: boolean }): void }).focus({ focusVisible: true });
     }
     const active = document.activeElement === el;
     if ("restoreTabindex" in el.dataset) {
@@ -1229,7 +1229,46 @@ async function installBrowserHelpers(page: Page): Promise<void> {
           }
         }
 
-        // 3. Check filled TextField / Select active indicator bar (.mtrl-text-field__field::before)
+        // 3. Check box-shadow change (inset or outer shadow >= 3:1 against adjacent surface)
+        if (after.boxShadow !== "none" && after.boxShadow !== before.boxShadow) {
+          const shadowColorMatch = /rgba?\([^)]+\)/.exec(after.boxShadow);
+          if (shadowColorMatch) {
+            const rawFg = parseColor(shadowColorMatch[0]);
+            const isInset = /\binset\b/.test(after.boxShadow);
+            const lengths = after.boxShadow
+              .replace(/rgba?\([^)]+\)/g, "")
+              .match(/-?[\d.]+px/g)
+              ?.map(v => parseFloat(v)) ?? [];
+            const spread = lengths[3] ?? lengths[2] ?? 0;
+            const useOuterSurface = !isInset && spread >= 0;
+            const surface = resolveSurfaceColor(item.node, useOuterSurface);
+            const fg = blend(rawFg, surface);
+            const ratio = contrastRatio(fg, surface);
+            if (useOuterSurface && spread > 0) {
+              activeRingNode = item.node;
+              activeOutward = Math.max(activeOutward, spread);
+            } else if (isInset && Math.abs(spread) > 0) {
+              activeRingNode = item.node;
+              activeInsetOffset = Math.max(activeInsetOffset, Math.abs(spread));
+            }
+            if (mode === "forced-colors") {
+              if (rawFg[3] > 0 && ratio >= 3.0) {
+                visible = true;
+                bestContrast = Math.max(bestContrast, ratio);
+                reason = `box-shadow ${shadowColorMatch[0]} (${item.key})`;
+              }
+            } else if (ratio >= 3.0) {
+              visible = true;
+              bestContrast = Math.max(bestContrast, ratio);
+              reason = `box-shadow (${ratio.toFixed(2)}:1 on ${item.key})`;
+            } else if (!visible) {
+              bestContrast = Math.max(bestContrast, ratio);
+              reason = `box-shadow contrast ${ratio.toFixed(2)}:1 < 3.0:1 (${shadowColorMatch[0]} on ${item.key})`;
+            }
+          }
+        }
+
+        // 4. Check filled TextField / Select active indicator bar (.mtrl-text-field__field::before)
         if (item.key === "text-field-field::before") {
           const barThickness = Math.max(after.height, after.borderTopWidth, after.borderBottomWidth);
           const barChanged =
@@ -1381,7 +1420,7 @@ async function evaluatePointerFocusOnTarget(
     }
     const el = document.querySelector<HTMLElement>(`[data-focus-target="${targetId}"]`)!;
     el.blur();
-    el.scrollIntoView({ block: "center", inline: "center" });
+    el.scrollIntoView({ behavior: "instant", block: "center", inline: "center" });
     const stopClose = (e: Event) => {
       e.stopImmediatePropagation();
       e.preventDefault();
