@@ -14,10 +14,10 @@
  * menu opens when its chunk arrives.
  *
  * Its keyboard contract is the menu's own opener's: Enter, Space and ArrowDown
- * on the trailing button open the menu with its first item focused, while a
- * pointer open leaves focus on the menu surface. A click a key produces is a
- * MouseEvent with no pointer count, and the menu decides where focus lands
- * from the interaction type it is opened with.
+ * on the trailing button open the menu with its first item focused, ArrowUp
+ * with its last, while a pointer open leaves focus on the menu surface. A
+ * click a key produces is a MouseEvent with no pointer count, and the menu
+ * decides where focus lands from the interaction type it is opened with.
  */
 import assert from "node:assert/strict";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -317,6 +317,33 @@ try {
   await keyboardOpen("Enter");
   await keyboardOpen("Space");
   await keyboardOpen("ArrowDown");
+
+  // ArrowUp is the opener's other direction: it opens on the last item.
+  await page.keyboard.press("ArrowUp");
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("role") === "menuitem",
+    null,
+    { timeout: 5_000, polling: 10 }
+  );
+  const lastFocused = await page.evaluate(() => {
+    const active = document.activeElement as HTMLElement;
+    const menu = document.querySelector(".mtrl-menu--visible") as HTMLElement | null;
+    const items = menu ? [...menu.querySelectorAll('[role="menuitem"]')] : [];
+    return { id: active.getAttribute("data-id"), index: items.indexOf(active), count: items.length };
+  });
+  assert.deepEqual(
+    lastFocused,
+    { id: "copy", index: 1, count: 2 },
+    "the menu opened by ArrowUp focuses its last item"
+  );
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(
+    () =>
+      !document.querySelector(".mtrl-menu--visible") &&
+      document.activeElement === (window as unknown as SplitWindow).split.trailingElement,
+    null,
+    { timeout: 5_000, polling: 10 }
+  );
 
   // A pointer click counts (detail 1), so it stays a pointer open: the menu
   // keeps the surface focus it had before this check existed, and the first

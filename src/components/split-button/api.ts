@@ -33,6 +33,8 @@ export const withAPI =
 
     let expanded = false;
     let destroyed = false;
+    // Set while ArrowUp waits for the menu to show, cleared by destroy()
+    let focusLastTimer: ReturnType<typeof setTimeout> | null = null;
 
     const emit = (type: SplitButtonEventType, extra: Partial<SplitButtonEvent> = {}): void => {
       component.emit?.(type, {
@@ -142,6 +144,8 @@ export const withAPI =
 
       destroy(): void {
         destroyed = true;
+        if (focusLastTimer !== null) clearTimeout(focusLastTimer);
+        focusLastTimer = null;
         trailing.element.removeEventListener("keydown", handleTrailingKeydown);
         menu?.destroy?.();
         leading.destroy();
@@ -170,13 +174,36 @@ export const withAPI =
       setExpanded(!expanded, event, interactionOf(event));
     });
 
-    // ArrowDown on a closed trailing button opens the menu on its first item,
-    // which is what the menu's own opener does with it (menu/features/
-    // opener.ts). Enter and Space arrive as the click above.
+    // ArrowDown and ArrowUp on a closed trailing button open the menu on its
+    // first and last item, which is what the menu's own opener does with them
+    // (menu/features/opener.ts). Enter and Space arrive as the click above.
+    const focusLastItem = (): void => {
+      // A menu closed again before its chunk arrived has no last item to
+      // focus, and an item of a closed menu would take focus nowhere.
+      if (!expanded || !menu?.isOpen()) return;
+      const surface = menu.element;
+      const items = surface.querySelectorAll<HTMLElement>(
+        `.${prefix}-menu__item:not(.${prefix}-menu__item--disabled)`,
+      );
+      items[items.length - 1]?.focus();
+    };
     const handleTrailingKeydown = (event: KeyboardEvent): void => {
-      if (event.key !== "ArrowDown" && event.key !== "Down") return;
+      const openFirst = event.key === "ArrowDown" || event.key === "Down";
+      const openLast = event.key === "ArrowUp" || event.key === "Up";
+      if (!openFirst && !openLast) return;
       event.preventDefault();
-      if (!expanded) setExpanded(true, event, "keyboard");
+      if (expanded) return;
+      setExpanded(true, event, "keyboard");
+      if (!openLast) return;
+      // The menu's own initial focus lands on the first item 100 ms after it
+      // shows. Focusing the last before that timer runs leaves focus where it
+      // is: the menu keeps focus that is already inside it.
+      menu?.whenReady?.(() => {
+        focusLastTimer = setTimeout(() => {
+          focusLastTimer = null;
+          focusLastItem();
+        }, 100);
+      });
     };
     trailing.element.addEventListener("keydown", handleTrailingKeydown);
 
