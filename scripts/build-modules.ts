@@ -97,12 +97,13 @@ export function stripRuntimeComments(filename: string, text: string): string {
 }
 
 /**
- * Ship the declarations with their JSDoc, and nothing else: a typed consumer
- * gets the deprecation notes and the hover documentation for every option, and
- * the line comments and plain block comments that only served the source go.
- * A JSDoc block reaches the declaration it documents, whole, because its
- * `@deprecated` tag names the replacement and its prose is what an editor
- * shows on hover.
+ * Ship a declaration's `@deprecated` note, and no other prose. The note is the
+ * one comment a typed consumer must see: it names the replacement and the
+ * removal, and TypeScript's deprecation suggestions (6385/6387) are read from
+ * it. Keep that JSDoc block whole, on the declaration it documents; the other
+ * comments (prose-only JSDoc, line and block comments, licence banners) only
+ * served the source. Keeping every JSDoc block was measured at +150,392 bytes
+ * on the packed tarball, over the package's ceiling, so the notes ship alone.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -265,9 +266,9 @@ function keepComment(comment: string): boolean {
   return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
 }
 
-/** A comment a shipped declaration keeps: the JSDoc block, whole, and no other. */
+/** A comment a shipped declaration keeps: a JSDoc block that carries `@deprecated`, whole, and no other. */
 function keepDeclarationComment(comment: string): boolean {
-  return /^\/\*\*(?!\/)/.test(comment);
+  return /^\/\*\*(?!\/)/.test(comment) && /@deprecated\b/.test(comment);
 }
 
 /** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */

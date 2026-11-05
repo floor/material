@@ -6,10 +6,9 @@
  * the sources.
  *
  * A typed consumer gets TypeScript's deprecation suggestion diagnostics for a
- * deprecated export or member it imports or reads (codes 6385 and 6387), and an
- * editor shows the JSDoc of a documented option on hover. Both are read from
- * the shipped `.d.ts`: the build keeps those comments (scripts/build-modules.ts)
- * precisely so they reach this consumer.
+ * deprecated export or member it imports or reads (codes 6385 and 6387). That is
+ * read from the shipped `.d.ts`: the build keeps each `@deprecated` JSDoc block
+ * (scripts/build-modules.ts) precisely so it reaches this consumer.
  *
  * The deprecated names below are the FAB's physical-position aliases, the
  * deprecations the package ships. The adapter entries are read for a deprecated
@@ -49,8 +48,6 @@ interface Consumer {
   source: string;
   /** The deprecated names its use of the packed package must report. */
   deprecated: string[];
-  /** A documented option: the text to hover, and what the JSDoc must say. */
-  hover?: { at: string; says: string };
 }
 
 const consumers: Consumer[] = [
@@ -65,7 +62,6 @@ const built = createFab({ icon: "<svg/>", ariaLabel: "Add", type: "button" });
 export { built };
 `,
     deprecated: ["setPosition", "getPosition"],
-    hover: { at: `type: "button"`, says: "Button type attribute" },
   },
   {
     file: "component-consumer.ts",
@@ -180,14 +176,6 @@ try {
         failures.push(`${consumer.file}: ${expected} is not reported as deprecated from the packed declarations`);
       }
     }
-    if (consumer.hover) {
-      const index = consumer.source.indexOf(consumer.hover.at);
-      const quick = service.getQuickInfoAtPosition(file, index);
-      const documentation = quick ? ts.displayPartsToString(quick.documentation) : "";
-      if (!documentation.includes(consumer.hover.says)) {
-        failures.push(`${consumer.file}: hovering ${consumer.hover.at} shows no JSDoc (${JSON.stringify(documentation.slice(0, 120))})`);
-      }
-    }
   }
 } finally {
   await fixture?.cleanup();
@@ -200,9 +188,8 @@ if (failures.length) {
   process.exit(1);
 }
 const deprecatedCount = consumers.reduce((count, consumer) => count + consumer.deprecated.length, 0);
-const hovered = consumers.filter(consumer => consumer.hover).length;
 console.log(
   `${manifest.name}: ${consumers.length} consumers read the packed declarations, ` +
-  `${deprecatedCount} deprecated names reported, ${hovered} documented option hovered` +
+  `${deprecatedCount} deprecated names reported` +
   `${consumers.length > 3 ? `, including ${consumers[3]!.file}` : ""}.`,
 );
