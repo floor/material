@@ -335,6 +335,21 @@
       "string"
     ]
   },
+  "CarouselSlide.decoding": {
+    "kind": "union",
+    "members": [
+      "\"async\"",
+      "\"auto\"",
+      "\"sync\""
+    ]
+  },
+  "CarouselSlide.loading": {
+    "kind": "union",
+    "members": [
+      "\"eager\"",
+      "\"lazy\""
+    ]
+  },
   "CarouselVariant": {
     "kind": "union",
     "members": [
