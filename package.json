@@ -459,6 +459,7 @@
   },
   "files": [
     "dist",
+    "NOTICE",
     "src/styles",
     "!dist/package.json",
     "!src/styles/abstract/_config.scss",
@@ -483,6 +484,7 @@
     "ts:check": "tsc --noEmit --skipLibCheck",
     "size": "bun run scripts/size.ts",
     "size:check": "bun run scripts/check-package-size.ts",
+    "notice:check": "bun run scripts/check-third-party-notice.ts",
     "readme:check": "bun run scripts/check-readme.ts",
     "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",

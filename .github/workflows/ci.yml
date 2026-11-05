@@ -153,6 +153,8 @@ jobs:
         run: bun run styles-package:check
       - name: README examples, specifiers, sizes and links against the packed package
         run: bun run readme:check
+      - name: The third-party notice is packed, and names the glyphs it covers
+        run: bun run notice:check
       - name: Documented imports, in every doc and JSDoc example, against the packed package
         run: bun run docs-imports:check
       - name: Per-component gzip budgets
