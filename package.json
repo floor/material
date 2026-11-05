@@ -427,6 +427,18 @@
       "types": "./dist/core/utils/index.d.ts",
       "import": "./dist/core/utils/index.js"
     },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    },
+    "./theme/variants": {
+      "types": "./dist/theme/variants.d.ts",
+      "import": "./dist/theme/variants.js"
+    },
+    "./theme/image": {
+      "types": "./dist/theme/image.d.ts",
+      "import": "./dist/theme/image.js"
+    },
     "./styles/*": {
       "types": "./dist/styles/*.d.ts",
       "import": "./dist/styles/*.js"
@@ -495,6 +507,7 @@
     "base-lite:check": "bun run scripts/check-base-lite.ts",
     "component-sheets:check": "bun run scripts/check-component-sheets.ts",
     "theme-root-scope:check": "bun run scripts/check-theme-root-scope.ts",
+    "theme-runtime:check": "bun run scripts/check-theme-runtime.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
     "component-exports:update": "bun run scripts/component-exports.ts --update",

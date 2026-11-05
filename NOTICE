@@ -20,6 +20,13 @@ stylesheet. In the repository they are declared in:
 - src/components/toolbar/config.ts
 - src/styles/components/_menu.scss
 
+Runtime colour (material/theme)
+
+The files under src/theme/vendor are a copy of material-color-utilities
+(https://github.com/material-foundation/material-color-utilities),
+Copyright 2021 Google LLC, licensed under the Apache License, Version 2.0.
+Each copied file keeps its original copyright and licence header.
+
 The full licence text follows.
 
 

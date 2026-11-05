@@ -6,11 +6,15 @@
 @use "base-theme" as *;
 
 @include create-theme("expressive") {
-    // Success, warning and info, as every theme has them; the scheme's own
-    // roles, error family included, follow. The scheme always sets the error
-    // family, so status-colors-* would only emit defaults the declarations
-    // below shadow.
-    @include status-roles-light();
+    // Success, warning and info, harmonised to this theme's primary and
+    // resolved at its contrast level; the scheme's own roles, error family
+    // included, follow.
+    --#{$prefix}-sys-color-success: #006b54;
+    --#{$prefix}-sys-color-on-success: #ffffff;
+    --#{$prefix}-sys-color-warning: #895100;
+    --#{$prefix}-sys-color-on-warning: #ffffff;
+    --#{$prefix}-sys-color-info: #00658f;
+    --#{$prefix}-sys-color-on-info: #ffffff;
     --#{$prefix}-sys-color-error: #ba1a1a;
     --#{$prefix}-sys-color-on-error: #ffffff;
     --#{$prefix}-sys-color-error-container: #ffdad6;
@@ -59,7 +63,12 @@
     --#{$prefix}-sys-color-inverse-primary: #79d7c0;
 
     &[data-theme-mode="dark"] {
-        @include status-roles-dark();
+        --#{$prefix}-sys-color-success: #79d8b9;
+        --#{$prefix}-sys-color-on-success: #00382b;
+        --#{$prefix}-sys-color-warning: #ffb86b;
+        --#{$prefix}-sys-color-on-warning: #492900;
+        --#{$prefix}-sys-color-info: #88cefe;
+        --#{$prefix}-sys-color-on-info: #00344c;
         --#{$prefix}-sys-color-error: #ffb4ab;
         --#{$prefix}-sys-color-on-error: #690005;
         --#{$prefix}-sys-color-error-container: #93000a;
@@ -113,6 +122,9 @@
 @include create-theme-contrast("expressive", (
     medium: (
         light: (
+            success: #003e30,
+            warning: #512e00,
+            info: #003a55,
             error: #740006,
             error-container: #cf2c27,
             on-error-container: #ffffff,
@@ -147,6 +159,12 @@
             outline-variant: #746979,
         ),
         dark: (
+            success: #8feece,
+            on-success: #002c21,
+            warning: #ffd5ac,
+            on-warning: #3a1f00,
+            info: #bae1ff,
+            on-info: #00293d,
             error: #ffd2cc,
             on-error: #540003,
             error-container: #ff5449,
@@ -185,6 +203,9 @@
     ),
     high: (
         light: (
+            success: #003327,
+            warning: #432500,
+            info: #003046,
             error: #600004,
             error-container: #98000a,
             on-error-container: #ffffff,
@@ -221,6 +242,12 @@
             inverse-on-surface: #ffffff,
         ),
         dark: (
+            success: #b5ffe4,
+            on-success: #000000,
+            warning: #ffedde,
+            on-warning: #000000,
+            info: #e3f2ff,
+            on-info: #000000,
             error: #ffece9,
             on-error: #000000,
             error-container: #ffaea4,
