@@ -155,6 +155,33 @@ Colour that adapts at runtime.
   [adjusting existing colours](https://m3.material.io/styles/color/advanced/adjust-existing-colors),
   [how the system works](https://m3.material.io/styles/color/system/how-the-system-works).
 
+### Fixed
+
+- **The packed declarations ship their `@deprecated` notes (#306).**
+  `printDeclarationModule` blanked every comment range, so `@deprecated`
+  never reached `dist/*.d.ts`: a typed consumer of the packed package got no
+  deprecation diagnostic from TypeScript (6385/6387), and an editor had
+  nothing to show for any option. The printer now keeps a JSDoc block that
+  carries `@deprecated`, whole and on the declaration it documents, and still
+  strips prose-only JSDoc, line comments, plain block comments and licence
+  banners. `declaration-docs:check`, a new CI step, reads the packed package
+  through its own `exports` as a typed consumer: root `material` must report
+  6385/6387 for `fab.setPosition` and `fab.getPosition`,
+  `material/components/fab` must report `setPosition` deprecated,
+  `material/elements` must report `FabSpec["attributes"].position` deprecated,
+  and a generated `material/react` adapter consumer must compile the entry and
+  report the first deprecated value export it finds; no adapter value export
+  is deprecated today, so on this head the adapter case is the compile. Each
+  consumer must also compile with no semantic diagnostics. Against the
+  declarations main shipped, all four names fail.
+
+  **Size:** at its merge `1bd75ec8` (push run 42034676271, package job
+  127270194588) the tarball packs 829,198 / 4,694,532 / 1,626: +224 packed
+  and +769 unpacked against #275's `1ce5ff6d` (828,974 / 4,693,763 / 1,626),
+  90,802 bytes under the 920,000 ceiling.
+  Keeping every JSDoc block was measured on CI at 972,818 packed / 5,180,608
+  unpacked, over both ceilings, so the prose does not ship.
+
 ### Internal
 
 - **Licence banners survive the build, and the build refuses a module that
