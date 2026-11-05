@@ -534,3 +534,170 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
   }
   console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
 }
+
+/**
+ * Keyboard-focused menu items draw the M3 3dp inward secondary focus indicator
+ * (`outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px`)
+ * on both baseline and vertical menus across light, dark and forced-colors
+ * modes, while pointer opening leaves both the menu surface and its items
+ * without an outline.
+ */
+export async function checkMenuItemFocusRing(page: Page): Promise<void> {
+  const variants = ["baseline", "vertical"] as const;
+  const modes = [
+    { name: "light", themeMode: "light", forcedColors: "none" as const },
+    { name: "dark", themeMode: "dark", forcedColors: "none" as const },
+    { name: "forced-colors", themeMode: "light", forcedColors: "active" as const },
+  ] as const;
+
+  const secondaryByMode: Record<string, string> = {};
+
+  try {
+    for (const mode of modes) {
+      await page.emulateMedia({ reducedMotion: "reduce", forcedColors: mode.forcedColors });
+      for (const variant of variants) {
+        const label = `${variant} (${mode.name})`;
+        await page.evaluate(({ variant, themeMode }) => {
+          const state = window as unknown as MenuWindow;
+          state.menu?.destroy();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", themeMode);
+          const opener = document.createElement("button");
+          opener.id = "menu-opener";
+          opener.textContent = "Actions";
+          opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+          document.body.append(opener);
+          state.menu = state.createMenu({
+            opener,
+            variant,
+            items: [
+              { id: "one", text: "Cut" },
+              { id: "two", text: "Copy" },
+              { id: "three", text: "Paste" },
+            ],
+          });
+          state.menu.setSelected("two");
+          opener.focus();
+        }, { variant, themeMode: mode.themeMode });
+
+        await page.keyboard.press("ArrowDown");
+        await page.waitForFunction(() =>
+          (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible") &&
+          document.activeElement?.getAttribute("data-id") === "one",
+        );
+
+        const firstStep = await page.evaluate(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const first = menu.querySelector<HTMLElement>('[data-id="one"]')!;
+          const second = menu.querySelector<HTMLElement>('[data-id="two"]')!;
+          const firstStyle = getComputedStyle(first);
+          const secondStyle = getComputedStyle(second);
+          const probe = document.createElement("span");
+          probe.style.color = "var(--mtrl-sys-color-secondary)";
+          document.body.append(probe);
+          const secondary = getComputedStyle(probe).color;
+          probe.remove();
+          return {
+            secondary,
+            first: {
+              focusVisible: first.matches(":focus-visible"),
+              outlineStyle: firstStyle.outlineStyle,
+              outlineWidth: firstStyle.outlineWidth,
+              outlineOffset: firstStyle.outlineOffset,
+              outlineColor: firstStyle.outlineColor,
+            },
+            second: {
+              focusVisible: second.matches(":focus-visible"),
+              outlineStyle: secondStyle.outlineStyle,
+            },
+          };
+        });
+
+        assert.equal(firstStep.first.focusVisible, true, `${label}: first item must match :focus-visible on keyboard open`);
+        assert.equal(firstStep.first.outlineStyle, "solid", `${label}: first item outline-style must be solid`);
+        assert.equal(firstStep.first.outlineWidth, "3px", `${label}: first item outline-width must be 3px`);
+        assert.equal(firstStep.first.outlineOffset, "-3px", `${label}: first item outline-offset must be -3px`);
+        assert.equal(firstStep.second.focusVisible, false, `${label}: unfocused second item must not match :focus-visible`);
+        assert.equal(firstStep.second.outlineStyle, "none", `${label}: unfocused second item must have outline-style none`);
+
+        if (mode.forcedColors === "none") {
+          assert.equal(firstStep.first.outlineColor, firstStep.secondary, `${label}: outline-color must equal resolved --mtrl-sys-color-secondary`);
+          secondaryByMode[mode.name] = firstStep.first.outlineColor;
+        } else {
+          const [, , , alpha] = parseColour(firstStep.first.outlineColor);
+          assert.equal(alpha, 1, `${label}: forced-colors outline-color must be opaque (${firstStep.first.outlineColor})`);
+        }
+
+        await page.keyboard.press("ArrowDown");
+        await page.waitForFunction(() => document.activeElement?.getAttribute("data-id") === "two");
+
+        const secondStep = await page.evaluate(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const first = menu.querySelector<HTMLElement>('[data-id="one"]')!;
+          const second = menu.querySelector<HTMLElement>('[data-id="two"]')!;
+          const firstStyle = getComputedStyle(first);
+          const secondStyle = getComputedStyle(second);
+          return {
+            first: {
+              focusVisible: first.matches(":focus-visible"),
+              outlineStyle: firstStyle.outlineStyle,
+            },
+            second: {
+              focusVisible: second.matches(":focus-visible"),
+              outlineStyle: secondStyle.outlineStyle,
+              outlineWidth: secondStyle.outlineWidth,
+              outlineOffset: secondStyle.outlineOffset,
+            },
+          };
+        });
+
+        assert.equal(secondStep.first.focusVisible, false, `${label}: previous item must leave :focus-visible after ArrowDown`);
+        assert.equal(secondStep.first.outlineStyle, "none", `${label}: previous item must return to outline-style none`);
+        assert.equal(secondStep.second.focusVisible, true, `${label}: selected item must match :focus-visible after ArrowDown`);
+        assert.equal(secondStep.second.outlineStyle, "solid", `${label}: selected item outline-style must be solid`);
+        assert.equal(secondStep.second.outlineWidth, "3px", `${label}: selected item outline-width must be 3px`);
+        assert.equal(secondStep.second.outlineOffset, "-3px", `${label}: selected item outline-offset must be -3px`);
+
+        await page.keyboard.press("Escape");
+        await page.waitForFunction(() =>
+          !(window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"),
+        );
+
+        // Pointer open: focus lands on the menu surface with no outline on the surface or any item.
+        await page.click("#menu-opener");
+        await page.waitForFunction(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          return menu.classList.contains("mtrl-menu--visible") && document.activeElement === menu;
+        });
+
+        const pointerOpened = await page.evaluate(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const items = Array.from(menu.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+          return {
+            menuOutlineStyle: getComputedStyle(menu).outlineStyle,
+            anyItemFocusVisible: items.some((item) => item.matches(":focus-visible")),
+            itemOutlines: items.map((item) => getComputedStyle(item).outlineStyle),
+          };
+        });
+
+        assert.equal(pointerOpened.menuOutlineStyle, "none", `${label}: pointer-focused menu surface must have outline-style none`);
+        assert.equal(pointerOpened.anyItemFocusVisible, false, `${label}: pointer open must not leave any item matching :focus-visible`);
+        assert.deepEqual(pointerOpened.itemOutlines, ["none", "none", "none"], `${label}: pointer open must leave all items at outline-style none`);
+      }
+    }
+
+    assert.notEqual(
+      secondaryByMode.light,
+      secondaryByMode.dark,
+      "light and dark modes must resolve distinct --mtrl-sys-color-secondary focus ring colours",
+    );
+  } finally {
+    await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "none" });
+    await page.evaluate(() => {
+      (window as unknown as MenuWindow).menu?.destroy();
+      document.body.replaceChildren();
+      document.documentElement.removeAttribute("data-theme-mode");
+    });
+  }
+  console.log("Passed packed menu item focus ring: 3dp inward secondary focus ring on keyboard-focused baseline and vertical items across light, dark and forced-colors modes; no outline on pointer open.");
+}

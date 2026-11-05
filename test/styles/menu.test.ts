@@ -72,6 +72,13 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__item:active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
   });
 
+  test('keyboard focus draws a 3dp inward secondary focus ring on the item, not a broken rule on the menu', () => {
+    expect(value('.mtrl-menu__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu__item:focus-visible', 'outline-offset')).toBe('-3px');
+    expect(value('.mtrl-menu', 'outline')).toBe('none');
+    expect(rules('.mtrl-menu:focus-visible')).toEqual([]);
+  });
+
   test('a disabled item is dimmed but still reachable', () => {
     expect(value('.mtrl-menu__item--disabled', 'color')).toBe('color-mix(in srgb, var(--mtrl-sys-color-on-surface) 38%, transparent)');
     // it can be focused and read; it just does nothing, so no pointer block

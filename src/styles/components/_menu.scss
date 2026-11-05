@@ -36,6 +36,7 @@ $component: "#{$prefix}-menu";
     color: t.color("on-surface");
     @include m.elevation(2);
     overflow: hidden;
+    outline: none;
 
     // Initial state - hidden with proper transform origin
     display: flex;
@@ -147,6 +148,14 @@ $component: "#{$prefix}-menu";
         // reads as a highlight nobody asked for.
         &:focus {
             outline: none;
+        }
+
+        // md.comp.focus-ring: 3dp in secondary, drawn inward because an item
+        // fills the list's width inside a scroll container that would clip an
+        // outward ring.
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
         }
 
         &:focus-visible,
@@ -345,9 +354,6 @@ $component: "#{$prefix}-menu";
         margin: 8px 0;
         background-color: t.color("outline-variant");
     }
-
-    // Accessibility
-    @include m.focus-ring(".#{$component}__item:focus-visible");
 
     // Reduced motion preference support
     @include m.reduced-motion {

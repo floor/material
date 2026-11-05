@@ -282,9 +282,13 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard-focused menu items draw the 3dp inward secondary focus ring on
+    // `.mtrl-menu__item:focus-visible`, replacing the broken
+    // `m.focus-ring(".mtrl-menu__item:focus-visible")` call on `.mtrl-menu`
+    // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5d5779ab376b97542073a9b43a7fc59128bba4ed6ab792c20bd2aabb90170801");
-    expect(css.length).toBe(542183);
+      .toBe("4902c6fa5feff2734606d3ba896ff90d3778fdb9e8196c9a792fd43ac11febc5");
+    expect(css.length).toBe(542132);
   });
 
   test("today's sheets still resolve to the fixture", () => {
