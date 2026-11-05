@@ -291,12 +291,10 @@ function compactDeclarationComment(comment: string): string {
     else prose.push(line);
   }
   const summary = prose.filter(line => line !== "");
-  // The first sentence, wherever its full stop is on that line: a summary line
-  // can run on into the next sentence, and only the first sentence is the
-  // summary. The cut stays on the line -- joining wrapped lines back would
-  // ship more text than the line ever did, which is the opposite of a cut.
-  const line = summary[0] ?? "";
-  const first = /^(.*?[.!?])(?:\s|$)/.exec(line)?.[1] ?? line;
+  // The first sentence, wherever it ends: a summary line can run on into the
+  // next sentence and wrap before a full stop, and only its first sentence is
+  // the summary. With no full stop anywhere the first line is all there is.
+  const first = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1] ?? summary[0] ?? "";
   const kept: string[] = first ? [first] : [];
   for (const tag of tags) {
     if (tag.name === "param") {
