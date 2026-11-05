@@ -1738,6 +1738,13 @@
       "E"
     ]
   },
+  "SpecVersion": {
+    "kind": "union",
+    "members": [
+      "\"2021\"",
+      "\"2025\""
+    ]
+  },
   "SplitButtonElementComponent": {
     "kind": "extends",
     "bases": [
