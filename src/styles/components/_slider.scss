@@ -370,13 +370,5 @@ $component: '#{base.$prefix}-slider';
       }
     }
   }
-
-  // Discrete slider with steps
-  &--discrete {
-    .#{$component}__tick {
-      width: 4px;
-      height: 4px;
-    }
-  }
   
 }

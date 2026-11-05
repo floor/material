@@ -76,9 +76,7 @@ $component: "#{$prefix}-menu";
     }
 
     // Position variations with appropriate transform origins
-    &--position-top,
-    &--position-top-start,
-    &--position-top-end {
+    &--position-top {
         transform-origin: bottom center;
     }
 
@@ -692,11 +690,7 @@ $component: "#{$prefix}-menu";
     // --position-top is its own class. A suffix on the --rtl compound would
     // compile to menu--rtl--position-top, which nothing carries.
     [dir='rtl'] &--position-top,
-    [dir='rtl'] &--position-top-start,
-    [dir='rtl'] &--position-top-end,
-    &.#{$component}--rtl.#{$component}--position-top,
-    &.#{$component}--rtl.#{$component}--position-top-start,
-    &.#{$component}--rtl.#{$component}--position-top-end {
+    &.#{$component}--rtl.#{$component}--position-top {
         transform-origin: bottom right;
     }
 

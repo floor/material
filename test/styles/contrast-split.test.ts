@@ -269,9 +269,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The 14 dead selector groups verified to have no producer in src/ are
+    // removed from the dialog, menu, select, slider, tabs and timepicker
+    // component sheets (styles/components/_dialog.scss, _menu.scss,
+    // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4f28ef2b4035cc9b100e4b44b911bdae49bc16a77dad5b53b2c8fba17aadac28");
-    expect(css.length).toBe(536620);
+      .toBe("1cf8a2ef78dd0b32495f185e55f1ffc260dd8f001efb5bea3b3c57459b36dcb2");
+    expect(css.length).toBe(530877);
   });
 
   test("today's sheets still resolve to the fixture", () => {
