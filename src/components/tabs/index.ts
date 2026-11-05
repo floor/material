@@ -1,6 +1,6 @@
 // src/components/tabs/index.ts
 import createTabs from "./tabs";
-import { setupResponsiveBehavior } from "./responsive";
+import { setupResponsiveBehavior } from "./responsive-legacy";
 import { tabIdFor, tabPanelIdFor } from "./utils";
 
 // Export constants
@@ -34,7 +34,7 @@ export type {
 export { setupResponsiveBehavior };
 // Public: a page that writes its own panels names them with the derived ids
 export { tabIdFor, tabPanelIdFor };
-export type { ResponsiveConfig } from "./responsive";
+export type { ResponsiveConfig } from "./responsive-legacy";
 // Public: TabsComponent.getIndicator returns it
 export type { TabIndicator } from "./indicator";
 

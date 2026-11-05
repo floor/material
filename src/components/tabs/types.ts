@@ -1,7 +1,6 @@
 // src/components/tabs/types.ts
 import type { BadgeComponent } from '../badge';
 import type { ButtonComponent } from '../button/types';
-import type { ResponsiveConfig } from './responsive';
 import type { ForwardedEventPayload } from '../../core/dom';
 
 /**
@@ -228,15 +227,14 @@ export interface TabsConfig {
   autoActivate?: boolean;
 
   /**
-   * Responsive behavior for narrow screens, with the configuration
-   * `setupResponsiveBehavior` takes: below the small breakpoint (600 by
-   * default) a tab built with an icon and a label takes `smallScreen.layout`
-   * (`'icon-only'` by default), and the group carries its `--responsive-small`
-   * class while it does. The behaviour is loaded only when a group sets this
-   * option, so a consumer that never sets it does not carry the code; it is
-   * applied when it loads, just after creation.
+   * A behaviour to apply to the group while it is created, e.g.
+   * `tabsResponsive({ smallScreen: { layout: 'icon-only' } })` from
+   * `material/components/tabs/responsive`. That module is a plugin the app
+   * imports itself, so a consumer that never passes it carries none of its
+   * code; createTabs calls it synchronously, so the first paint already
+   * carries its layout.
    */
-  responsive?: ResponsiveConfig;
+  responsive?: (tabs: TabsComponent) => void;
 
   /**
    * Tabs variant (primary or secondary)
