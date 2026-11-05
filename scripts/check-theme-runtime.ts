@@ -119,6 +119,16 @@ try {
 
     runtime.applyScheme(fromImage, scoped);
 
+    // The scheme lands as a custom-property change, and the buttons animate
+    // their colours (100ms background-color, 250ms color): force the style
+    // recalc that starts those transitions, then wait for them to finish, so
+    // the reads below see the settled colours rather than the frame the change
+    // began in.
+    for (const id of ["inside-filled", "inside-text", "outside-filled", "outside-text"]) {
+      getComputedStyle(document.getElementById(id)!).backgroundColor;
+    }
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+
     const after = {
       rootPrimary: getComputedStyle(root).getPropertyValue("--mtrl-sys-color-primary").trim(),
       outsideFilled: getComputedStyle(document.getElementById("outside-filled")!).backgroundColor,
