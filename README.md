@@ -622,3 +622,5 @@ Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+Third-party notices: the package ships Material Symbols and Material Icons glyphs, copyright Google LLC, under the Apache License 2.0; [NOTICE](NOTICE) includes the licence text and lists the files that declare them.
