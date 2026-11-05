@@ -266,14 +266,21 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // The card's loading, expandable and swipeable rules and their spinner
+    // keyframes are gone: the module that made their markup stopped shipping
+    // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The 14 dead selector groups verified to have no producer in src/ are
+    // removed from the dialog, menu, select, slider, tabs and timepicker
+    // component sheets (styles/components/_dialog.scss, _menu.scss,
+    // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
     // The slider's track carries no corner and clips nothing: each piece of track
     // takes its own outer corner where it reaches an end of the slider and the
     // 2dp inside corner at a handle gap, both written by the controller, and the
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7854c5273686e4c0a41daf5627700c46815f8841c31781e7a5163ef6f3863b30");
-    expect(css.length).toBe(538088);
+      .toBe("173219d4cdd993648703fa2e298f50a3c5a33b93801584e79211a4256f3efe6f");
+    expect(css.length).toBe(530861);
   });
 
   test("today's sheets still resolve to the fixture", () => {
