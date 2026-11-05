@@ -71,6 +71,12 @@ const wrapped = `/**
  * @param {number} bare
  */
 export declare function open(count: number, bare: number): void;
+
+/**
+ * Wrapped prose with no full stop
+ * until the second line.
+ */
+export declare function wrappedSummary(): void;
 `;
 
 test("a summary is cut at its first full stop even when the line does not end on one", () => {
@@ -78,6 +84,10 @@ test("a summary is cut at its first full stop even when the line does not end on
   expect(output).toMatch(/\/\*\*\n \* Opens the menu\.\n \* @param count\n \*\/\s*export declare function open\(count: number, bare: number\): void;/);
   expect(output).not.toContain("The rest of this sentence");
   expect(output).not.toContain("a second line with no full stop");
+  // The cut stays on the first line: joining the wrapped lines back would
+  // ship more text than the line ever carried.
+  expect(output).toContain("/** Wrapped prose with no full stop */");
+  expect(output).not.toContain("until the second line");
 });
 
 test("a @param no source line described does not ship", () => {
