@@ -584,17 +584,17 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     // 1. Icons: 12dp in from the edge ("Left/right padding with icons 12dp"),
     // then 16dp to what follows ("Padding between icons and text 16dp",
     // m3.material.io text fields, measurements). With the 24dp icon that is
-    // 52dp in, as Compose's 48dp icon box plus 4dp is. Compact has no M3
-    // measure: its 20dp icon box keeps the 12dp and the 16dp.
+    // 52dp in, as Compose's 48dp icon box plus 4dp is. Compact keeps the 24dp
+    // box: density never moves icons, so its content starts there too.
     const beside = (icon: LayoutBox | null, edge: "start" | "end"): number => (icon ? icon[edge] + icon.width + 16 : 16);
     const content = { start: beside(row.leading, "start"), end: beside(row.trailing, "end") };
     if (row.leading) {
       expect(row.leading.start === 12, `${name}: the leading icon is 12dp in (${row.leading.start})`);
-      if (name.includes("default")) expect(content.start === 52, `${name}: a 24dp icon puts the content 52dp in (${content.start})`);
+      expect(content.start === 52, `${name}: a 24dp icon puts the content 52dp in (${content.start})`);
     }
     if (row.trailing) {
       expect(row.trailing.end === 12, `${name}: the trailing icon is 12dp in (${row.trailing.end})`);
-      if (name.includes("default")) expect(content.end === 52, `${name}: a 24dp icon ends the content 52dp in (${content.end})`);
+      expect(content.end === 52, `${name}: a 24dp icon ends the content 52dp in (${content.end})`);
     }
     // 2. The content: a prefix, the text, a suffix. An affix starts where the
     // content does (TextFieldPadding 16dp, or after the icon) and is 2dp from
@@ -627,12 +627,15 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     // floated label `endY = -(it.height / 2)`, 16dp all round without a label).
     // Compact has no M3 measure: it keeps the two rules that are not numbers,
     // the outlined label centred on the edge and an unlabelled line centred.
+    // It keeps Body Large too (density never moves type), so that line is
+    // 24dp where the old compact's was 20dp: centred in the 40dp box it
+    // starts 8dp down, not 10.
     const standard = name.includes("default");
     if (!name.includes("multiline")) {
       const filled = !outlined;
       if (standard && filled && row.label && floated) expect(row.textTop === 24, `${name}: under the label, the text starts 24dp down (${row.textTop})`);
       if (standard && outlined) expect(row.textTop === 16, `${name}: the text starts 16dp down (${row.textTop})`);
-      if (!row.label) expect(row.textTop === (standard ? 16 : 10), `${name}: without a label the text is centred, ${standard ? 16 : 10}dp down (${row.textTop})`);
+      if (!row.label) expect(row.textTop === (standard ? 16 : 8), `${name}: without a label the text is centred, ${standard ? 16 : 8}dp down (${row.textTop})`);
     }
     if (row.label && floated) {
       const centre = round((row.label.top + row.label.bottom) / 2);
@@ -664,8 +667,8 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
         // Compact has no M3 measure: the first line is the single-line field's, to the pixel
         expect(Math.abs(row.textTop - single.textTop) <= 0.5, `${name}: the first line is where the single-line field's text is (${row.textTop} against ${single.textTop})`);
       } else {
-        // Without a label, where one 20px line is centred in the 40px box
-        expect(row.textTop === 10, `${name}: the first line starts 10px down (${row.textTop})`);
+        // Without a label, where the Body Large line is centred in the 40px box
+        expect(row.textTop === 8, `${name}: the first line starts 8px down (${row.textTop})`);
       }
       if (labelled) {
         expect(row.label!.top === single.label!.top, `${name}: the label is where the single-line field's is (${row.label!.top} against ${single.label!.top})`);
