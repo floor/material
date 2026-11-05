@@ -12,8 +12,7 @@ import {
   BUTTON_GROUP_DENSITY,
   BUTTON_GROUP_SIZE_TOKENS,
   BUTTON_GROUP_CONNECTED_GAP,
-  BUTTON_GROUP_CONNECTED_PRESSED_CORNER,
-  BUTTON_GROUP_DENSITY_STEP
+  BUTTON_GROUP_CONNECTED_PRESSED_CORNER
 } from './constants';
 
 /**
@@ -108,8 +107,10 @@ const DENSITY_STEPS: Record<ButtonGroupDensity, number> = {
 
 /**
  * Size, kind and density tokens as custom properties on the container
- * (Material 3 button group specs). Density lowers the container height by
- * 4dp per step; the buttons follow the container height.
+ * (Material 3 button group specs). The height is the size's base; the shared
+ * density scale lowers it 4dp a step in the stylesheet, which also derives the
+ * outer radius at half the scaled height. A group at the default density sets
+ * no property, so it follows a denser container around it.
  */
 export const getSizeStyles = (
   prefix: string,
@@ -119,16 +120,19 @@ export const getSizeStyles = (
 ): Record<string, string> => {
   const tokens = BUTTON_GROUP_SIZE_TOKENS[size || BUTTON_GROUP_DEFAULTS.SIZE] || BUTTON_GROUP_SIZE_TOKENS.s;
   const gap = kind === 'connected' ? BUTTON_GROUP_CONNECTED_GAP : tokens.standardGap;
-  const height = tokens.height - BUTTON_GROUP_DENSITY_STEP * (DENSITY_STEPS[density] ?? 0);
-  return {
-    [`--${prefix}-button-group-height`]: `${height}px`,
+  const steps = DENSITY_STEPS[density] ?? 0;
+  const styles: Record<string, string> = {
+    [`--${prefix}-button-group-height`]: `${tokens.height}px`,
     [`--${prefix}-button-group-icon`]: `${tokens.icon}px`,
     [`--${prefix}-button-group-gap`]: `${gap}px`,
     // Corners on the shape scale read its tokens, as the stylesheet does
     [`--${prefix}-button-group-inner-corner`]: cornerToken(tokens.connectedStep, tokens.connectedCorner, prefix),
-    [`--${prefix}-button-group-pressed-corner`]: cornerToken("extra-small", BUTTON_GROUP_CONNECTED_PRESSED_CORNER, prefix),
-    [`--${prefix}-button-group-radius`]: `${height / 2}px`
+    [`--${prefix}-button-group-pressed-corner`]: cornerToken("extra-small", BUTTON_GROUP_CONNECTED_PRESSED_CORNER, prefix)
   };
+  if (steps > 0) {
+    styles[`--${prefix}-density`] = `${-steps}`;
+  }
+  return styles;
 };
 
 /**

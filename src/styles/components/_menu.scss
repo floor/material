@@ -23,6 +23,9 @@ $component: "#{$prefix}-menu";
 }
 
 .#{$component} {
+    // A menu is a focused task: the density scale stops at its surface, so a
+    // page-wide value cannot shrink its items or anything inside it.
+    --#{base.$prefix}-density: 0;
     // Base styles
     @include m.typography("body-medium");
     @include m.shape("extra-small");

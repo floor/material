@@ -1,5 +1,6 @@
 @use 'sass:list';
 @use 'sass:map';
+@use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
 @use 'config' as c;
 
@@ -16,7 +17,10 @@ $icon-first: ':has(> [icon]:empty:first-child)';
 @mixin item($size, $font: true, $letter: true, $weight: true) {
   $t: map.get($sizes, $size);
   $type: map.get(v.$typescale, list.nth($t, 4));
-  height: list.nth($t, 1);
+  // As components/_button-group.scss: 4dp a step, floored at 32dp. Reading
+  // the property keeps a denser container's items the right height before
+  // and after upgrade; the density attributes below are the option's own.
+  height: f.density(list.nth($t, 1), 32px);
   padding: 0 list.nth($t, 3);
   @if $font {
     font-size: map.get($type, 'font-size');
@@ -37,6 +41,9 @@ $icon-first: ':has(> [icon]:empty:first-child)';
     height: 32px;
     margin-inline-end: -12px;
     align-self: flex-start;
+    // Half the step the items take, from whatever container sets the
+    // property; the density attributes below write their step out.
+    margin-block-start: max(-4px, 2px * var(--mtrl-density, 0));
   }
 
   &#{$icon-first} {
@@ -48,8 +55,12 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   &[size='xs'] { gap: 18px; }
   &:is([size='m'], [size='l'], [size='xl']) { gap: 8px; }
 
+  // As components/_button-group.scss: a step is 4dp off the container
+  // height, floored at the 32dp visible target. The alias attributes keep
+  // the pre-upgrade layer from declaring the property the rollback would
+  // leave behind, so each step is written out; the floor is the sheet's.
   @each $density, $step in $densities {
-    &[density='#{$density}'] > * { height: 40px - $step; }
+    &[density='#{$density}'] > * { height: max(32px, 40px - $step); }
   }
 
   @each $size in ('xs', 'm', 'l', 'xl') {
@@ -63,11 +74,13 @@ $icon-first: ':has(> [icon]:empty:first-child)';
       }
 
       @each $density, $step in $densities {
-        &[density='#{$density}'] > * { height: list.nth($t, 1) - $step; }
+        &[density='#{$density}'] > * { height: max(32px, list.nth($t, 1) - $step); }
       }
 
       &::before {
         height: list.nth($t, 1) * 0.5 + list.nth($t, 5) * 0.5;
+        // As the base's, floored where this size's height stops.
+        margin-block-start: max(#{16px - list.nth($t, 1) * 0.5}, 2px * var(--mtrl-density, 0));
         @if $size == 'xs' { margin-inline-end: -1 * list.nth($t, 2); }
       }
     }
@@ -76,8 +89,20 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   &:is([size='m'], [size='l'], [size='xl'])::before { margin-inline-end: -8px; }
   &:is([size='l'], [size='xl']) > * { letter-spacing: 0; font-weight: 400; }
 
+  // The shim tracks the centre the items actually moved: half the height
+  // reduction, which stops where the height's 32dp floor does.
   @each $density, $step in $densities {
-    &[density='#{$density}']::before { margin-block-start: $step * -0.5; }
+    &[density='#{$density}']::before { margin-block-start: min($step, 40px - 32px) * -0.5; }
+  }
+
+  @each $size in ('xs', 'm', 'l', 'xl') {
+    $t: map.get($sizes, $size);
+
+    @each $density, $step in $densities {
+      &[size='#{$size}'][density='#{$density}']::before {
+        margin-block-start: min($step, list.nth($t, 1) - 32px) * -0.5;
+      }
+    }
   }
 }
 

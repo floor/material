@@ -245,14 +245,16 @@ $component: '#{base.$prefix}-toolbar';
 // and keeps the standalone morphs.
 .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round,
 slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)) {
-  --#{base.$prefix}-icon-button-shape-selected: 20px;
-  --#{base.$prefix}-icon-button-shape-pressed: 20px;
+  // The resting radius is half the item's height, so it follows the density
+  // scale exactly as the icon button's own round radius does.
+  --#{base.$prefix}-icon-button-shape-selected: #{f.density(20px, 16px, 2px)};
+  --#{base.$prefix}-icon-button-shape-pressed: #{f.density(20px, 16px, 2px)};
 }
 
 @each $size, $radius in ("xs": 16px, "m": 28px, "l": 48px, "xl": 68px) {
   .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round.#{base.$prefix}-icon-button--#{$size},
   slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)[size=#{$size}]) {
-    --#{base.$prefix}-icon-button-shape-selected: #{$radius};
-    --#{base.$prefix}-icon-button-shape-pressed: #{$radius};
+    --#{base.$prefix}-icon-button-shape-selected: #{f.density($radius, 16px, 2px)};
+    --#{base.$prefix}-icon-button-shape-pressed: #{f.density($radius, 16px, 2px)};
   }
 }

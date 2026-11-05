@@ -21,6 +21,8 @@ $component: "#{base.$prefix}-side-sheet";
 // direction rather than needing a second configuration for right-to-left.
 // -----------------------------------------------------------------------------
 .#{$component} {
+    // A sheet is a task context: the density scale stops at its surface.
+    --#{base.$prefix}-density: 0;
     position: fixed;
     inset: 0;
     z-index: v.z-index("modal");

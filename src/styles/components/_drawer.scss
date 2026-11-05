@@ -308,9 +308,11 @@ $default-width: 360px;
         align-items: center;
         position: relative;
         width: calc(100% - 24px);
-        min-height: 56px;
+        // Density takes 4dp a step off the pill, down to the 36dp floor that
+        // is also the dense option's height.
+        min-height: f.density(56px, 36px);
         flex-shrink: 0;
-        height: 56px;
+        height: f.density(56px, 36px);
         margin: 0 12px;
         padding: 0 24px 0 16px;
         gap: 12px;
@@ -322,8 +324,10 @@ $default-width: 360px;
         text-decoration: none;
         box-sizing: border-box;
         outline: none;
-        // Clip the indicator, the state layer and the ripple to the pill
-        overflow: hidden;
+        // The indicator, the state layer and the ripple each clip themselves
+        // to the pill (border-radius: inherit), and the 48dp touch target has
+        // to reach outside it, so the item does not clip.
+        overflow: visible;
         isolation: isolate;
         -webkit-tap-highlight-color: transparent;
         @include m.typography("label-large");
@@ -369,6 +373,19 @@ $default-width: 360px;
             z-index: 1;
             transition: opacity v.motion("spring-default-effects-duration")
                 v.motion("spring-default-effects-easing");
+        }
+
+        // A 48dp tall touch target. At density the pill can be as short as
+        // 36dp; the hit area then reaches above and below it, while the pill's
+        // painted width and height stay as the density sets them.
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 48px;
+            transform: translateY(-50%);
         }
 
         // Press ripple, between the indicator and the content
@@ -528,58 +545,15 @@ $default-width: 360px;
     }
 
     // ========================================================================
-    // DENSE VARIANT — compact items for admin UIs
+    // DENSE VARIANT — the density scale's last step
     // ========================================================================
+    // The option is now an alias: it sets the shared property, so items land
+    // on the same 36dp floor a denser container gives them. The type, icon,
+    // badge and divider overrides it used to carry are gone — density never
+    // moves type or icons — and the sheet's own padding stays at 12px 0.
 
     &--dense {
-        .#{$component}__sheet {
-            padding: 8px 0;
-        }
-
-        .#{$component}__headline {
-            @include m.typography("label-large");
-            padding: 10px 20px 0;
-            margin-bottom: 2px;
-        }
-
-        .#{$component}__item {
-            min-height: 36px;
-            height: 36px;
-            margin: 0 8px;
-            padding: 0 16px 0 12px;
-            width: calc(100% - 16px);
-            gap: 8px;
-            border-radius: v.shape('full');
-            @include m.typography("body-medium");
-
-            .#{$component}__active-indicator {
-                border-radius: v.shape('full');
-            }
-        }
-
-        .#{$component}__item-icon {
-            width: 20px;
-            height: 20px;
-
-            svg {
-                width: 20px;
-                height: 20px;
-            }
-        }
-
-        .#{$component}__item-badge {
-            @include m.typography("label-medium");
-        }
-
-        .#{$component}__divider {
-            width: calc(100% - 40px);
-            margin: 4px 20px;
-        }
-
-        .#{$component}__section-label {
-            @include m.typography("label-large");
-            padding: 10px 20px 2px;
-        }
+        --#{base.$prefix}-density: -5;
     }
 
     // ========================================================================
@@ -588,10 +562,6 @@ $default-width: 360px;
 
     @include m.rtl-selector('.#{$component}__item') {
         padding: 0 16px 0 24px;
-    }
-
-    @include m.rtl-selector('.#{$component}--dense .#{$component}__item') {
-        padding: 0 12px 0 16px;
     }
 
     // ========================================================================

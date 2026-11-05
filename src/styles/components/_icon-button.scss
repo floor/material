@@ -141,9 +141,10 @@ $widths: (
     overflow: visible;
     flex-shrink: 0;
 
-    // Default size (s - 40px)
-    width: get-size("s", container);
-    height: get-size("s", container);
+    // Default size (s - 40px); density moves both axes 4dp a step and stops
+    // at the 32dp visible target
+    width: f.density(get-size("s", container), 32px);
+    height: f.density(get-size("s", container), 32px);
 
     // Default shape: round, with the real radius of half the container
     // height. A 9999px full shape paints the same at rest, but border-radius
@@ -151,8 +152,10 @@ $widths: (
     // 8dp pressed shape stays above half the height for almost the whole
     // transition and then snaps square. Half the height interpolates, so the
     // press reads as a morph. On narrow widths the browser scales the radius
-    // down to half the smaller side, as it did for 9999px.
-    border-radius: var(--#{base.$prefix}-button-shape, get-size("s", round-radius));
+    // down to half the smaller side, as it did for 9999px. Density moves the
+    // radius half as far as the height (2dp a step), so it stays half the
+    // container; both floor together (16dp, 32dp).
+    border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("s", round-radius), 16px, 2px)});
 
     // Smooth transitions for shape morphing
     transition:
@@ -230,8 +233,8 @@ $widths: (
     // Size variants
     // ---------------------------------------------------------------------------
     &--xs {
-        width: get-size("xs", container);
-        height: get-size("xs", container);
+        width: f.density(get-size("xs", container), 32px);
+        height: f.density(get-size("xs", container), 32px);
 
         .#{base.$prefix}-icon,
         .#{$component}__icon {
@@ -240,9 +243,13 @@ $widths: (
         }
     }
 
-    // Keep a minimum 48px touch target for both smaller container sizes.
-    &--xs::after,
-    &--s::after {
+    // Every size keeps a 48px touch target on both axes: the hit area reaches
+    // above, below and beside the container. A container already 48px or wider
+    // covers the overlay, so it only grows the target of the xs and s sizes —
+    // and of any container a density has taken under 48px. A button group
+    // narrows the overlay to the button's own width (see _button-group.scss),
+    // because a connected group's neighbours sit 2px away.
+    &::after {
         content: "";
         position: absolute;
         width: 48px;
@@ -253,8 +260,8 @@ $widths: (
     }
 
     &--m {
-        width: get-size("m", container);
-        height: get-size("m", container);
+        width: f.density(get-size("m", container), 32px);
+        height: f.density(get-size("m", container), 32px);
 
         .#{base.$prefix}-icon,
         .#{$component}__icon {
@@ -264,8 +271,8 @@ $widths: (
     }
 
     &--l {
-        width: get-size("l", container);
-        height: get-size("l", container);
+        width: f.density(get-size("l", container), 32px);
+        height: f.density(get-size("l", container), 32px);
 
         .#{base.$prefix}-icon,
         .#{$component}__icon {
@@ -275,8 +282,8 @@ $widths: (
     }
 
     &--xl {
-        width: get-size("xl", container);
-        height: get-size("xl", container);
+        width: f.density(get-size("xl", container), 32px);
+        height: f.density(get-size("xl", container), 32px);
 
         .#{base.$prefix}-icon,
         .#{$component}__icon {
@@ -291,22 +298,22 @@ $widths: (
 
     // Round is the default: half the container height per size
     &--round {
-        border-radius: var(--#{base.$prefix}-button-shape, get-size("s", round-radius));
+        border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("s", round-radius), 16px, 2px)});
 
         &.#{$component}--xs {
-            border-radius: var(--#{base.$prefix}-button-shape, get-size("xs", round-radius));
+            border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("xs", round-radius), 16px, 2px)});
         }
 
         &.#{$component}--m {
-            border-radius: var(--#{base.$prefix}-button-shape, get-size("m", round-radius));
+            border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("m", round-radius), 16px, 2px)});
         }
 
         &.#{$component}--l {
-            border-radius: var(--#{base.$prefix}-button-shape, get-size("l", round-radius));
+            border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("l", round-radius), 16px, 2px)});
         }
 
         &.#{$component}--xl {
-            border-radius: var(--#{base.$prefix}-button-shape, get-size("xl", round-radius));
+            border-radius: var(--#{base.$prefix}-button-shape, #{f.density(get-size("xl", round-radius), 16px, 2px)});
         }
     }
 
@@ -395,43 +402,45 @@ $widths: (
     // ---------------------------------------------------------------------------
     // Width variants
     // ---------------------------------------------------------------------------
+    // A width already under the 32dp target at density 0 (the narrow xs
+    // button, 28dp) keeps its width: the target never widens a container.
     &--narrow {
-        width: get-width("s", narrow);
+        width: f.density-visible(get-width("s", narrow), 32px);
 
         &.#{$component}--xs {
-            width: get-width("xs", narrow);
+            width: f.density-visible(get-width("xs", narrow), 32px);
         }
 
         &.#{$component}--m {
-            width: get-width("m", narrow);
+            width: f.density-visible(get-width("m", narrow), 32px);
         }
 
         &.#{$component}--l {
-            width: get-width("l", narrow);
+            width: f.density-visible(get-width("l", narrow), 32px);
         }
 
         &.#{$component}--xl {
-            width: get-width("xl", narrow);
+            width: f.density-visible(get-width("xl", narrow), 32px);
         }
     }
 
     &--wide {
-        width: get-width("s", wide);
+        width: f.density-visible(get-width("s", wide), 32px);
 
         &.#{$component}--xs {
-            width: get-width("xs", wide);
+            width: f.density-visible(get-width("xs", wide), 32px);
         }
 
         &.#{$component}--m {
-            width: get-width("m", wide);
+            width: f.density-visible(get-width("m", wide), 32px);
         }
 
         &.#{$component}--l {
-            width: get-width("l", wide);
+            width: f.density-visible(get-width("l", wide), 32px);
         }
 
         &.#{$component}--xl {
-            width: get-width("xl", wide);
+            width: f.density-visible(get-width("xl", wide), 32px);
         }
     }
 
@@ -554,22 +563,22 @@ $widths: (
 
         // Square buttons become round when selected, with the real radius
         &.#{$component}--square:not(:active) {
-            border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("s", round-radius));
+            border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(get-size("s", round-radius), 16px, 2px)});
 
             &.#{$component}--xs {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("xs", round-radius));
+                border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(get-size("xs", round-radius), 16px, 2px)});
             }
 
             &.#{$component}--m {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("m", round-radius));
+                border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(get-size("m", round-radius), 16px, 2px)});
             }
 
             &.#{$component}--l {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("l", round-radius));
+                border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(get-size("l", round-radius), 16px, 2px)});
             }
 
             &.#{$component}--xl {
-                border-radius: var(--#{base.$prefix}-button-shape-selected, get-size("xl", round-radius));
+                border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(get-size("xl", round-radius), 16px, 2px)});
             }
         }
     }

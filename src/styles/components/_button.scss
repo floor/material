@@ -63,10 +63,14 @@ $content-color: (
   justify-content: center;
   gap: v.button('icon-gap-s');
   min-width: v.button('min-width');
-  height: v.button('height-s');
+  // Density moves the container 4dp a step and stops at the 32dp visible
+  // target the xs size already has (see f.density, abstract/_functions.scss).
+  height: f.density(v.button('height-s'), 32px);
   padding: 0 v.button('padding-s');
   border: none;
-  border-radius: var(--#{base.$prefix}-button-shape, v.button('shape-round-s'));
+  // Half the height, and density moves the radius half as far as the height
+  // (see the size rule below).
+  border-radius: var(--#{base.$prefix}-button-shape, #{f.density(v.button('shape-round-s'), 16px, 2px)});
   background-color: transparent;
   color: inherit;
   font: inherit;
@@ -186,7 +190,7 @@ $content-color: (
   // ---------------------------------------------------------------------------
   @each $size in $sizes {
     &--#{$size} {
-      height: v.button('height-#{$size}');
+      height: f.density(v.button('height-#{$size}'), 32px);
       padding: 0 v.button('padding-#{$size}');
       gap: v.button('icon-gap-#{$size}');
       @include m.typography(map.get($label-typescale, $size));
@@ -199,8 +203,10 @@ $content-color: (
       }
 
       // Round shape at rest: half the height, so the pressed shape is a
-      // morph rather than a snap. See shape-round-* in $button.
-      border-radius: var(--#{base.$prefix}-button-shape, v.button('shape-round-#{$size}'));
+      // morph rather than a snap. Density moves the radius half as far as the
+      // height (2dp a step), which keeps it exactly half; it floors at 16dp
+      // with the height's 32dp. See shape-round-* in $button.
+      border-radius: var(--#{base.$prefix}-button-shape, #{f.density(v.button('shape-round-#{$size}'), 16px, 2px)});
 
       // Square shape at rest
       &.#{$component}--square {
@@ -227,19 +233,18 @@ $content-color: (
     }
   }
 
-  // The xs and s sizes keep a 48dp touch target (m3.material.io button specs,
-  // target areas): the hit area extends above and below the container.
-  &--xs,
-  &--s {
-    &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
-      height: v.button('touch-target');
-      transform: translateY(-50%);
-    }
+  // Every size keeps a 48dp touch target (m3.material.io button specs, target
+  // areas): the hit area extends above and below the container. A container
+  // already 48dp or taller covers the overlay, so it only grows the target of
+  // the xs and s sizes — and of any button a density has taken under 48dp.
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: v.button('touch-target');
+    transform: translateY(-50%);
   }
 
   // ---------------------------------------------------------------------------
@@ -425,7 +430,7 @@ $content-color: (
 
       @each $size in $sizes {
         &.#{$component}--square.#{$component}--#{$size} {
-          border-radius: var(--#{base.$prefix}-button-shape-selected, v.button('shape-round-#{$size}'));
+          border-radius: var(--#{base.$prefix}-button-shape-selected, #{f.density(v.button('shape-round-#{$size}'), 16px, 2px)});
         }
       }
 
@@ -459,8 +464,8 @@ $content-color: (
     border-radius: 50%;
     padding: 8px;
     min-width: unset;
-    width: v.button('height-s') !important;
-    height: v.button('height-s');
+    width: f.density(v.button('height-s'), 32px) !important;
+    height: f.density(v.button('height-s'), 32px);
 
     &:active,
     &.#{$component}--active {
@@ -477,8 +482,8 @@ $content-color: (
 
     @each $size in $sizes {
       &.#{$component}--#{$size} {
-        width: v.button('height-#{$size}');
-        height: v.button('height-#{$size}');
+        width: f.density(v.button('height-#{$size}'), 32px);
+        height: f.density(v.button('height-#{$size}'), 32px);
         padding: 0;
       }
     }

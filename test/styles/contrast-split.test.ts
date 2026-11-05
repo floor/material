@@ -266,9 +266,13 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // Every length the density scale moves reads one registered integer
+    // property through `max(floor, base + step * var(--mtrl-density, 0))`, and
+    // the compact text field, its select and the dense drawer are aliases for
+    // a step (styles/abstract/_functions.scss, styles/base/_tokens.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1514d0f92dba071138f28de3ae6f485ede7dd17f587bc341fe6590cd8e06be1a");
-    expect(css.length).toBe(538104);
+      .toBe("d104b15253693239e0d6a90da13fc2c030721bba7cdc0b1486254e298ec02053");
+    expect(css.length).toBe(538165);
   });
 
   test("today's sheets still resolve to the fixture", () => {

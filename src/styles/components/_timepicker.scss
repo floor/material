@@ -9,6 +9,8 @@
 $component: '#{base.$prefix}-time-picker';
 
 .#{$component} {
+  // A picker is a task context: the density scale stops at its surface.
+  --#{base.$prefix}-density: 0;
   // Base styles
   position: relative;
   display: inline-block;
