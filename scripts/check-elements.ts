@@ -30,6 +30,7 @@ import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkCardActions } from "./check-card-actions-browser";
+import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -6879,6 +6880,9 @@ try {
     assert.deepEqual(recreated, { rebuilt: true, values: ["b"] });
     check("list: selection recreates the list and keeps a dirty selection");
   }
+
+  // ---------------------------------------------------------------- shape audit corners
+  await checkShapeCorners(page, check);
 
   // ---------------------------------------------------------------- card
   await checkCardActions(page, check);
