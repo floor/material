@@ -237,48 +237,12 @@ dialog.#{$component} {
     }
 }
 
-// Dialog icon (optional, MD3 spec)
-// Centered above headline, 24dp, secondary color
-.#{$component}__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 24px 0 24px;
-    color: t.color("secondary");
-
-    svg,
-    .#{$component}__icon-content {
-        width: 24px;
-        height: 24px;
-    }
-
-    // When icon is present, header should be centered
-    & + .#{$component}__header {
-        .#{$component}__header-content {
-            text-align: center;
-        }
-
-        .#{$component}__header-title {
-            text-align: center;
-        }
-
-        .#{$component}__header-subtitle {
-            text-align: center;
-        }
-    }
-}
-
 // Dialog header
 .#{$component}__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     padding: 24px 24px 16px 24px;
-
-    // When following an icon, reduce top padding
-    .#{$component}__icon + & {
-        padding-top: 16px;
-    }
 
     &-content {
         flex: 1;
@@ -380,24 +344,12 @@ dialog.#{$component} {
     // Allow dropdowns/select menus to overflow the dialog
     overflow: visible;
 
-    // Scrollable content variant (opt-in)
-    &--scrollable {
-        overflow-y: auto;
-        max-height: 60vh;
-        @include m.scrollbar;
-    }
-
     p {
         margin: 0 0 16px 0;
 
         &:last-child {
             margin-bottom: 0;
         }
-    }
-
-    // When content needs emphasis, use on-surface
-    &--emphasis {
-        color: t.color("on-surface");
     }
 
     &:last-child {
@@ -547,14 +499,6 @@ dialog.#{$component} {
     .#{$component}__overlay {
         padding: 16px;
         align-items: flex-end;
-
-        &.#{$component}--fullscreen {
-            padding: 0;
-        }
-    }
-
-    .#{$component}__content--scrollable {
-        max-height: 50vh;
     }
 
     // Adjust animations for mobile - slide up from bottom
