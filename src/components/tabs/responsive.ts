@@ -58,6 +58,10 @@ const naturalLayout = (tab: TabComponent): Layout =>
  * Every update reads the group's tabs and each tab's content as they are then,
  * so tabs added later and labels or icons changed later follow the layout; it
  * held a snapshot taken at setup and restored layouts from it.
+ *
+ * @deprecated Pass the `responsive` option to `createTabs` instead: it takes
+ * this configuration and applies the same behaviour. This function keeps
+ * working in 3.x and is removed in 4.0.
  * @param tabs - The tabs component to enhance
  * @param config - Responsive configuration
  */

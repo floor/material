@@ -1,7 +1,9 @@
 // test/components/tabs/responsive.test.ts
 //
-// setupResponsiveBehavior is an enhancer: createTabs does not call it. Two
-// groups are mounted because the observer watches document.body and the layout
+// `setupResponsiveBehavior` is still an enhancer, and the `responsive` option
+// on createTabs applies the same behaviour through it, loaded on demand. The
+// option is compared with the function here, at a small and a large width.
+// Two groups are mounted because the observer watches document.body and the layout
 // switch reads window.innerWidth — both are document-wide.
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
@@ -119,6 +121,25 @@ const byValue = (tabs: TabsComponent, value: string): TabComponent => {
   const tab = tabs.getTabs().find((entry) => entry.getValue() === value);
   if (!tab) throw new Error(`missing tab ${value}`);
   return tab;
+};
+
+/** What a group carries: the small-screen mark, and each tab's layout. */
+const stateOf = (tabs: TabsComponent): { small: boolean; layouts: string[][] } => ({
+  small: tabs.element.classList.contains(smallClass(tabs)),
+  layouts: tabs.getTabs().map((tab) => layoutOf(tab)),
+});
+
+/**
+ * Waits for a group created with the `responsive` option to receive its
+ * layout. The option loads the behaviour on demand, so it applies a few tasks
+ * after creation; the deadline keeps a broken option a failure, not a hang.
+ */
+const applied = async (tabs: TabsComponent): Promise<void> => {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    if (tabs.element.classList.contains(smallClass(tabs))) return;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error('the responsive option did not apply the small layout within 1s');
 };
 
 beforeEach(() => {
@@ -281,5 +302,55 @@ describe('setupResponsiveBehavior', () => {
 
     expect(second.element.classList.contains(smallClass(second))).toBe(true);
     expect(layoutOf(byValue(second, 'flights'))).toEqual(['icon-only']);
+  });
+});
+
+describe('the responsive option', () => {
+  test('at a small width it lays the group out as setupResponsiveBehavior does, and at a large width it restores it the same way', async () => {
+    setWidth(400);
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: {} });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction);
+    await applied(viaOption);
+
+    expect(stateOf(viaOption)).toEqual({ small: true, layouts: [['icon-only'], ['icon-only']] });
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+
+    setWidth(1280);
+    notifyResize();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(stateOf(viaOption)).toEqual({ small: false, layouts: [['icon-and-text'], ['icon-and-text']] });
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+  });
+
+  test('it takes the same smallScreen and breakpoints configuration as the function', async () => {
+    setWidth(700);
+    const config: ResponsiveConfig = { smallScreen: { layout: 'text-only' }, breakpoints: { small: 800 } };
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: config });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction, config);
+    await applied(viaOption);
+
+    expect(stateOf(viaOption)).toEqual({ small: true, layouts: [['text-only'], ['text-only']] });
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+  });
+
+  test('a tab added after creation follows the option as it follows the function', async () => {
+    setWidth(400);
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: {} });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction);
+    await applied(viaOption);
+
+    const added = { text: 'Explore', value: 'explore', icon: ICON };
+    viaOption.addTab(added);
+    viaFunction.addTab(added);
+
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+    expect(layoutOf(byValue(viaOption, 'explore'))).toEqual(['icon-only']);
   });
 });

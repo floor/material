@@ -79,6 +79,15 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
       };
     }
     
+    // The responsive behaviour is loaded only for a group that asks for it, so
+    // a consumer that never sets the option does not carry its code.
+    const responsive = config.responsive;
+    if (responsive) {
+      void import('./responsive').then(({ setupResponsiveBehavior }) =>
+        setupResponsiveBehavior(component, responsive)
+      );
+    }
+
     return component;
   } catch (error) {
     console.error('Tabs creation error:', error);

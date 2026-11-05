@@ -3015,7 +3015,7 @@
     {
       "name": "setupResponsiveBehavior",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TAB_CLASSES",

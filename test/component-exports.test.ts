@@ -57,7 +57,7 @@ describe("the component subpaths' exports", () => {
     }
   });
 
-  test("3.0.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
+  test("the constants 0.10.0 deprecated are gone, and only the announced tabs helper is deprecated", () => {
     const gone = ["checkbox:CHECKBOX_VARIANTS", "radios:RADIO_VARIANTS", "radios:RADIO_LABEL_POSITIONS", "radios:RADIO_SIZES",
       "radios:RADIO_CLASSES", "timepicker:TIMEPICKER_DIAL", "timepicker:TIMEPICKER_Z_INDEX", "timepicker:TIMEPICKER_CLASSES"];
     const present = gone.flatMap((entry) => {
@@ -65,7 +65,10 @@ describe("the component subpaths' exports", () => {
       return [component!, `${component}/constants`].filter((key) => now[key]?.some((e) => e.name === name)).map((key) => `${key}:${name}`);
     });
     expect(present).toEqual([]);
-    expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
+    // One deprecation is live in 3.x: the documented tabs helper, which the
+    // `responsive` option on createTabs replaces and 4.0 removes. Any other
+    // deprecated export is a regression.
+    expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual(["tabs:setupResponsiveBehavior"]);
   });
 
   test("every component's variant type is exported from its subpath and from the root, as a public variant option's type", () => {
@@ -87,13 +90,16 @@ describe("the component subpaths' exports", () => {
     expect(now["button/constants"]?.map((e) => e.name)).toContain("BUTTON_VARIANTS");
   });
 
-  test("the types public members are typed with, and the documented tabs helper, stay public", () => {
+  test("the types public members are typed with stay public, and the documented tabs helper stays exported as deprecated", () => {
     const status = (component: string, name: string) => now[component]?.find((e) => e.name === name)?.status;
     expect([
       status("carousel", "SlidesAPI"), status("icon-button", "IconAPI"), status("icon-button", "ToggleManager"),
-      status("tabs", "IndicatorConfig"), status("tabs", "setupResponsiveBehavior"),
+      status("tabs", "IndicatorConfig"),
       status("tabs", "ResponsiveConfig"), status("tabs", "TabIndicator"), status("datepicker", "CalendarAPI"),
-    ]).toEqual(["public", "public", "public", "public", "public", "public", "public", "public"]);
+    ]).toEqual(["public", "public", "public", "public", "public", "public", "public"]);
+    // The helper an md3.io page still calls keeps working in 3.x; the
+    // `responsive` option on createTabs replaces it, and it goes in 4.0.
+    expect(status("tabs", "setupResponsiveBehavior")).toBe("deprecated");
   });
 
   test("a chip's set-only options are not on the public ChipConfig", async () => {
