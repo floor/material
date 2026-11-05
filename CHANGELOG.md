@@ -228,6 +228,21 @@ Colour that adapts at runtime.
   the normalized theme Sass under `src/styles/themes` +13,587. The compressed
   deltas are not the sum of their parts, so each row is the measured tree.
 
+- **The size cost of the release.**
+  On the release head `e8d635c3` (run 42036075729, package job 127274843027)
+  the packed tarball measures 829,198 B compressed, 4,694,532 B unpacked and
+  1,626 files, identical to the base `1bd75ec8` (run 42034676271, package
+  job 127270194588). `all-js` (412,575 / 127,178 / 105,515), `base-css`
+  (43,122 / 3,018 / 2,301), `button-initial` (22,463 / 7,563 / 6,778) and
+  the SSR entry (308,739 / 112,609 / 91,640) are identical too. The rows that
+  move are compressed-only: `full-css` brotli 41,899 → 41,925 (+26) at the
+  same raw and gzip; `base-lite-css` gzip 1,649 → 1,650 (+1); `button-css`
+  brotli 3,995 → 4,001 (+6); `select-css` brotli 6,589 → 6,595 (+6);
+  `slider-css` brotli 3,689 → 3,684 (−5); `navigation-rail-css` brotli
+  4,035 → 4,032 (−3). The cause is the version stamp in every shipped
+  licence banner changing one digit (`material v3.7.3` → `material v3.8.0`)
+  at identical length; every budget row stays green and no ceiling moved.
+
 ## [3.7.3] - 2026-11-05
 
 Lighter, correct component styles.
