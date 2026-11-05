@@ -600,32 +600,11 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
         });
         return extendSpecVersion(super.primary(), '2025', color2025);
     }
-    primaryDim() {
-        return DynamicColor.fromPalette({
-            name: 'primary_dim',
-            palette: (s) => s.primaryPalette,
-            tone: (s) => {
-                if (s.variant === Variant.NEUTRAL) {
-                    return 85;
-                }
-                else if (s.variant === Variant.TONAL_SPOT) {
-                    return tMaxC(s.primaryPalette, 0, 90);
-                }
-                else {
-                    return tMaxC(s.primaryPalette);
-                }
-            },
-            isBackground: true,
-            background: (s) => this.surfaceContainerHigh(),
-            contrastCurve: (s) => getCurve(4.5),
-            toneDeltaPair: (s) => new ToneDeltaPair(this.primaryDim(), this.primary(), 5, 'darker', true, 'farther'),
-        });
-    }
     onPrimary() {
         const color2025 = DynamicColor.fromPalette({
             name: 'on_primary',
             palette: (s) => s.primaryPalette,
-            background: (s) => s.platform === 'phone' ? this.primary() : this.primaryDim(),
+            background: (s) => this.primary(),
             contrastCurve: (s) => s.platform === 'phone' ? getCurve(6) : getCurve(7),
         });
         return extendSpecVersion(super.onPrimary(), '2025', color2025);
@@ -656,9 +635,6 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
             },
             isBackground: true,
             background: (s) => s.platform === 'phone' ? this.highestSurface(s) : undefined,
-            toneDeltaPair: (s) => s.platform === 'phone' ?
-                undefined :
-                new ToneDeltaPair(this.primaryContainer(), this.primaryDim(), 10, 'darker', true, 'farther'),
             contrastCurve: (s) => s.platform === 'phone' && s.contrastLevel > 0 ?
                 getCurve(1.5) :
                 undefined,
@@ -718,29 +694,11 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
         });
         return extendSpecVersion(super.secondary(), '2025', color2025);
     }
-    secondaryDim() {
-        return DynamicColor.fromPalette({
-            name: 'secondary_dim',
-            palette: (s) => s.secondaryPalette,
-            tone: (s) => {
-                if (s.variant === Variant.NEUTRAL) {
-                    return 85;
-                }
-                else {
-                    return tMaxC(s.secondaryPalette, 0, 90);
-                }
-            },
-            isBackground: true,
-            background: (s) => this.surfaceContainerHigh(),
-            contrastCurve: (s) => getCurve(4.5),
-            toneDeltaPair: (s) => new ToneDeltaPair(this.secondaryDim(), this.secondary(), 5, 'darker', true, 'farther'),
-        });
-    }
     onSecondary() {
         const color2025 = DynamicColor.fromPalette({
             name: 'on_secondary',
             palette: (s) => s.secondaryPalette,
-            background: (s) => s.platform === 'phone' ? this.secondary() : this.secondaryDim(),
+            background: (s) => this.secondary(),
             contrastCurve: (s) => s.platform === 'phone' ? getCurve(6) : getCurve(7),
         });
         return extendSpecVersion(super.onSecondary(), '2025', color2025);
@@ -766,9 +724,6 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
             },
             isBackground: true,
             background: (s) => s.platform === 'phone' ? this.highestSurface(s) : undefined,
-            toneDeltaPair: (s) => s.platform === 'watch' ?
-                new ToneDeltaPair(this.secondaryContainer(), this.secondaryDim(), 10, 'darker', true, 'farther') :
-                undefined,
             contrastCurve: (s) => s.platform === 'phone' && s.contrastLevel > 0 ?
                 getCurve(1.5) :
                 undefined,
@@ -815,29 +770,11 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
         });
         return extendSpecVersion(super.tertiary(), '2025', color2025);
     }
-    tertiaryDim() {
-        return DynamicColor.fromPalette({
-            name: 'tertiary_dim',
-            palette: (s) => s.tertiaryPalette,
-            tone: (s) => {
-                if (s.variant === Variant.TONAL_SPOT) {
-                    return tMaxC(s.tertiaryPalette, 0, 90);
-                }
-                else {
-                    return tMaxC(s.tertiaryPalette);
-                }
-            },
-            isBackground: true,
-            background: (s) => this.surfaceContainerHigh(),
-            contrastCurve: (s) => getCurve(4.5),
-            toneDeltaPair: (s) => new ToneDeltaPair(this.tertiaryDim(), this.tertiary(), 5, 'darker', true, 'farther'),
-        });
-    }
     onTertiary() {
         const color2025 = DynamicColor.fromPalette({
             name: 'on_tertiary',
             palette: (s) => s.tertiaryPalette,
-            background: (s) => s.platform === 'phone' ? this.tertiary() : this.tertiaryDim(),
+            background: (s) => this.tertiary(),
             contrastCurve: (s) => s.platform === 'phone' ? getCurve(6) : getCurve(7),
         });
         return extendSpecVersion(super.onTertiary(), '2025', color2025);
@@ -871,9 +808,6 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
             },
             isBackground: true,
             background: (s) => s.platform === 'phone' ? this.highestSurface(s) : undefined,
-            toneDeltaPair: (s) => s.platform === 'watch' ?
-                new ToneDeltaPair(this.tertiaryContainer(), this.tertiaryDim(), 10, 'darker', true, 'farther') :
-                undefined,
             contrastCurve: (s) => s.platform === 'phone' && s.contrastLevel > 0 ?
                 getCurve(1.5) :
                 undefined,
@@ -915,22 +849,11 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
         });
         return extendSpecVersion(super.error(), '2025', color2025);
     }
-    errorDim() {
-        return DynamicColor.fromPalette({
-            name: 'error_dim',
-            palette: (s) => s.errorPalette,
-            tone: (s) => tMinC(s.errorPalette),
-            isBackground: true,
-            background: (s) => this.surfaceContainerHigh(),
-            contrastCurve: (s) => getCurve(4.5),
-            toneDeltaPair: (s) => new ToneDeltaPair(this.errorDim(), this.error(), 5, 'darker', true, 'farther'),
-        });
-    }
     onError() {
         const color2025 = DynamicColor.fromPalette({
             name: 'on_error',
             palette: (s) => s.errorPalette,
-            background: (s) => s.platform === 'phone' ? this.error() : this.errorDim(),
+            background: (s) => this.error(),
             contrastCurve: (s) => s.platform === 'phone' ? getCurve(6) : getCurve(7),
         });
         return extendSpecVersion(super.onError(), '2025', color2025);
@@ -950,9 +873,6 @@ export class ColorSpecDelegateImpl2025 extends ColorSpecDelegateImpl2021 {
             },
             isBackground: true,
             background: (s) => s.platform === 'phone' ? this.highestSurface(s) : undefined,
-            toneDeltaPair: (s) => s.platform === 'watch' ?
-                new ToneDeltaPair(this.errorContainer(), this.errorDim(), 10, 'darker', true, 'farther') :
-                undefined,
             contrastCurve: (s) => s.platform === 'phone' && s.contrastLevel > 0 ?
                 getCurve(1.5) :
                 undefined,
