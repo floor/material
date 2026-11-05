@@ -81,6 +81,37 @@ import {
  * content.textContent = 'Added programmatically';
  * card.addContent(content);
  * card.makeDraggable();
+ *
+ * // Loading card composition (createCard + createProgress)
+ * const progress = createProgress({ variant: 'linear', indeterminate: true, ariaLabel: 'Loading article' });
+ * const loadingBody = createCardContent({ children: [progress.element] });
+ * const loadingCard = createCard({
+ *   variant: 'outlined',
+ *   header: { title: 'Daily briefing', subtitle: 'Fetching latest updates' },
+ *   aria: { busy: 'true' },
+ * });
+ * loadingCard.addContent(loadingBody);
+ *
+ * // Expandable card composition (createCard + createIconButton({ toggle: true }))
+ * const details = createCardContent({ text: 'Expanded details section.' });
+ * details.id = 'trip-card-details';
+ * details.hidden = true;
+ * const expandToggle = createIconButton({
+ *   toggle: true,
+ *   icon: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>',
+ *   selectedIcon: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>',
+ *   ariaLabel: 'Show trip details',
+ * });
+ * expandToggle.element.setAttribute('aria-expanded', 'false');
+ * expandToggle.element.setAttribute('aria-controls', details.id);
+ * expandToggle.on('change', ({ selected }) => {
+ *   details.hidden = !selected;
+ *   expandToggle.element.setAttribute('aria-expanded', String(selected));
+ *   expandToggle.element.setAttribute('aria-label', selected ? 'Hide trip details' : 'Show trip details');
+ * });
+ * const expandableCard = createCard({ variant: 'elevated', content: { text: 'Summary' } });
+ * expandableCard.setHeader(createCardHeader({ title: 'Trip summary', action: expandToggle.element }));
+ * expandableCard.addContent(details);
  * ```
  */
 const createCard = (config: CardConfig = {}): CardComponent => {
