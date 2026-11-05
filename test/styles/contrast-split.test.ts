@@ -266,9 +266,12 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // The card's loading, expandable and swipeable rules and their spinner
+    // keyframes are gone: the module that made their markup stopped shipping
+    // in 3.3.3, and no source emits it (styles/components/_card.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1514d0f92dba071138f28de3ae6f485ede7dd17f587bc341fe6590cd8e06be1a");
-    expect(css.length).toBe(538104);
+      .toBe("4f28ef2b4035cc9b100e4b44b911bdae49bc16a77dad5b53b2c8fba17aadac28");
+    expect(css.length).toBe(536620);
   });
 
   test("today's sheets still resolve to the fixture", () => {
