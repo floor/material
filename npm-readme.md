@@ -124,3 +124,5 @@ Versions of `material` up to 1.0.4 are an earlier, separate library (GPL-3), sti
 ## License
 
 MIT, see [LICENSE](https://github.com/floor/material/blob/main/LICENSE).
+
+Third-party notices: the package ships Material Symbols and Material Icons glyphs, copyright Google LLC, under the Apache License 2.0; [NOTICE](https://github.com/floor/material/blob/main/NOTICE) includes the licence text and lists the files that declare them.
