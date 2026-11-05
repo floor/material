@@ -56,62 +56,6 @@ export interface KnownFocusGap {
  */
 export const KNOWN_GAPS: readonly KnownFocusGap[] = [
   {
-    id: "G2",
-    component: "NavigationDrawer",
-    part: "button.mtrl-drawer__item (unselected)",
-    target: "drawer-item",
-    modes: ["light", "dark"],
-  },
-  {
-    id: "G2",
-    component: "NavigationDrawer",
-    part: "button.mtrl-drawer__item--active",
-    target: "drawer-item-active",
-    modes: ["light", "dark", "forced-colors"],
-  },
-  {
-    id: "G3",
-    component: "Slider",
-    part: "div.mtrl-slider__handle",
-    target: "slider-handle",
-    modes: ["light", "dark", "forced-colors"],
-  },
-  {
-    id: "G4",
-    component: "Search",
-    part: "input.mtrl-search__input (collapsed bar)",
-    target: "search-input",
-    modes: ["light", "dark", "forced-colors"],
-  },
-  {
-    id: "G5",
-    component: "TextField",
-    part: "input.mtrl-text-field__input (.mtrl-text-field--filled)",
-    target: "text-field-filled",
-    modes: ["forced-colors"],
-  },
-  {
-    id: "G5",
-    component: "Select",
-    part: "input.mtrl-text-field__input (.mtrl-select .mtrl-text-field--filled)",
-    target: "select-filled",
-    modes: ["forced-colors"],
-  },
-  {
-    id: "G6",
-    component: "NavigationBar",
-    part: "button.mtrl-navigation-bar__item--active",
-    target: "navigation-bar-item-active",
-    modes: ["forced-colors"],
-  },
-  {
-    id: "G6",
-    component: "NavigationRail",
-    part: "button.mtrl-navigation-rail__item--active",
-    target: "navigation-rail-item-active",
-    modes: ["forced-colors"],
-  },
-  {
     id: "G7",
     component: "Carousel",
     part: "a.mtrl-carousel__button",
@@ -276,14 +220,15 @@ const excludedGapIds = new Set(
   sampleGapsArg ? sampleGapsArg.slice("--without-gaps=".length).split(",").map(s => s.trim()) : []
 );
 
+const srcMainScssPath = resolve("src/styles/main.scss");
 const distStylesPath = resolve("dist/styles.css");
-const cssText = existsSync(distStylesPath)
-  ? await Bun.file(distStylesPath).text()
-  : sass.compile(resolve("src/styles/main.scss"), {
+const cssText = existsSync(srcMainScssPath)
+  ? sass.compile(srcMainScssPath, {
       loadPaths: [resolve("src/styles")],
       style: "expanded",
       logger: sass.Logger.silent,
-    }).css;
+    }).css
+  : await Bun.file(distStylesPath).text();
 
 const bundle = await Bun.build({
   entrypoints: [resolve("src/index.ts")],
@@ -1590,6 +1535,240 @@ try {
       recordFailure(spec.target, "reduced-motion", rm.reason);
     }
   }
+
+  // 4. Verify G2-G6 extended variants, forced-colors resting/focused invariants, and RTL
+  await page.emulateMedia({ forcedColors: "none", colorScheme: "light", reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "baseline";
+    document.documentElement.dataset.themeMode = "light";
+  });
+
+  // G4 invariant: focusing leading icon button in collapsed search bar must NOT ring .mtrl-search__container
+  await evaluateKeyboardFocusOnTarget(page, "search-leading-icon", "light");
+  const searchBtnContainerOutline = await page.evaluate(() => {
+    const btn = document.querySelector<HTMLElement>('[data-focus-target="search-leading-icon"]')!;
+    const container = btn.closest<HTMLElement>(".mtrl-search__container")!;
+    return {
+      btnOutlineStyle: getComputedStyle(btn).outlineStyle,
+      containerOutlineStyle: getComputedStyle(container).outlineStyle,
+    };
+  });
+  assert.equal(searchBtnContainerOutline.btnOutlineStyle, "solid", "G4: search leading icon button must show its own focus ring");
+  assert.equal(searchBtnContainerOutline.containerOutlineStyle, "none", "G4: focusing search icon button must not trigger .mtrl-search__container focus ring");
+
+  // G2/G3/G4/G5/G6 extended variants (dense drawer, range/vertical/colour sliders, error filled text-field, RTL)
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      mtrl: Record<string, (...args: unknown[]) => unknown>;
+      __focusCheck: { checkTargetClipAndOcclusion: (id: string) => { clipped: boolean; clipReason: string } };
+    };
+    const m = w.mtrl;
+    const stage = document.getElementById("demo-stage")!;
+    const box = document.createElement("div");
+    box.id = "g2-g6-extra-box";
+    box.className = "demo-box";
+    stage.append(box);
+
+    // G2 dense drawer + unselected item
+    const denseDrawer = m.createDrawer({
+      variant: "standard",
+      open: true,
+      items: [
+        { id: "inbox", label: "Inbox", active: true },
+        { id: "sent", label: "Sent" },
+      ],
+    }) as { element: HTMLElement };
+    denseDrawer.element.classList.add("mtrl-drawer--dense");
+    denseDrawer.element.style.position = "relative";
+    box.append(denseDrawer.element);
+    const denseItems = denseDrawer.element.querySelectorAll<HTMLElement>(".mtrl-drawer__item");
+    denseItems[0]?.setAttribute("data-focus-target", "drawer-dense-active");
+    denseItems[1]?.setAttribute("data-focus-target", "drawer-dense-unselected");
+
+    // G3 range slider, vertical slider, and secondary/tertiary/error colour sliders
+    const rangeSlider = m.createSlider({
+      min: 0,
+      max: 100,
+      value: 25,
+      secondValue: 75,
+      range: true,
+      ariaLabel: "Price",
+    }) as { element: HTMLElement };
+    box.append(rangeSlider.element);
+    const rangeHandles = rangeSlider.element.querySelectorAll<HTMLElement>(".mtrl-slider__handle");
+    rangeHandles[0]?.setAttribute("data-focus-target", "slider-range-min");
+    rangeHandles[1]?.setAttribute("data-focus-target", "slider-range-max");
+
+    const vertWrap = document.createElement("div");
+    vertWrap.style.height = "200px";
+    box.append(vertWrap);
+    const vertSlider = m.createSlider({
+      min: 0,
+      max: 100,
+      value: 40,
+      vertical: true,
+      ariaLabel: "Bass",
+    }) as { element: HTMLElement };
+    vertWrap.append(vertSlider.element);
+    vertSlider.element.querySelector(".mtrl-slider__handle")?.setAttribute("data-focus-target", "slider-vertical");
+
+    for (const color of ["secondary", "tertiary", "error"] as const) {
+      const colSlider = m.createSlider({
+        min: 0,
+        max: 100,
+        value: 50,
+        color,
+        ariaLabel: color,
+      }) as { element: HTMLElement };
+      box.append(colSlider.element);
+      colSlider.element.querySelector(".mtrl-slider__handle")?.setAttribute("data-focus-target", `slider-color-${color}`);
+    }
+
+    // G5 filled error text-field
+    const tfError = m.createTextField({
+      variant: "filled",
+      label: "Email",
+      error: true,
+      supportingText: "Invalid",
+    }) as { element: HTMLElement };
+    box.append(tfError.element);
+    tfError.element.querySelector("input.mtrl-text-field__input")?.setAttribute("data-focus-target", "text-field-filled-error");
+
+    // G6 unselected navigation-bar & navigation-rail items
+    const navBarUnselected = document.querySelectorAll<HTMLElement>(".mtrl-navigation-bar__item:not(.mtrl-navigation-bar__item--active)")[0];
+    navBarUnselected?.setAttribute("data-focus-target", "nav-bar-unselected");
+    const navRailUnselected = document.querySelectorAll<HTMLElement>(".mtrl-navigation-rail__item:not(.mtrl-navigation-rail__item--active)")[0];
+    navRailUnselected?.setAttribute("data-focus-target", "nav-rail-unselected");
+  });
+
+  const extraTargets = [
+    "drawer-dense-active",
+    "drawer-dense-unselected",
+    "slider-range-min",
+    "slider-range-max",
+    "slider-vertical",
+    "slider-color-secondary",
+    "slider-color-tertiary",
+    "slider-color-error",
+    "text-field-filled-error",
+    "nav-bar-unselected",
+    "nav-rail-unselected",
+  ];
+  for (const mode of ["light", "dark", "forced-colors"] as const) {
+    if (mode === "forced-colors") {
+      await page.emulateMedia({ forcedColors: "active", colorScheme: "dark", reducedMotion: "no-preference" });
+    } else {
+      await page.emulateMedia({ forcedColors: "none", colorScheme: mode, reducedMotion: "no-preference" });
+    }
+    await page.evaluate((m) => {
+      document.documentElement.dataset.theme = "baseline";
+      document.documentElement.dataset.themeMode = m === "forced-colors" ? "dark" : m;
+    }, mode);
+    for (const tId of extraTargets) {
+      const ev = await evaluateKeyboardFocusOnTarget(page, tId, mode);
+      assert(ev.visible, `Extra G2-G6 target ${tId} [${mode}] failed visibility: ${ev.reason}`);
+      if (mode === "light") {
+        assert(!ev.clipped, `Extra G2-G6 target ${tId} clipped: ${ev.clipReason}`);
+      }
+    }
+    if (mode === "forced-colors") {
+      const restingHandleBorder = await page.evaluate(() => {
+        const h = document.querySelector<HTMLElement>('[data-focus-target="slider-handle"]')!;
+        const cs = getComputedStyle(h, "::before");
+        return { style: cs.borderTopStyle, width: cs.borderTopWidth, boxSizing: cs.boxSizing };
+      });
+      assert.equal(restingHandleBorder.style, "solid", "G3 forced-colors: resting handle::before must have solid ButtonText border");
+      assert.equal(restingHandleBorder.width, "1px", "G3 forced-colors: resting handle::before must have 1px ButtonText border");
+      assert.equal(restingHandleBorder.boxSizing, "border-box", "G3 forced-colors: resting handle::before must use border-box");
+    }
+  }
+
+  // RTL checks for G2, G3, G4, G5, G6
+  await page.emulateMedia({ forcedColors: "none", colorScheme: "light", reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "baseline";
+    document.documentElement.dataset.themeMode = "light";
+    const w = window as unknown as { mtrl: Record<string, (...args: unknown[]) => unknown> };
+    const m = w.mtrl;
+    const rtlBox = document.createElement("div");
+    rtlBox.id = "g2-g6-rtl-box";
+    rtlBox.dir = "rtl";
+    rtlBox.className = "demo-box";
+    document.getElementById("demo-stage")!.append(rtlBox);
+
+    const rtlDrawer = m.createDrawer({
+      variant: "standard",
+      open: true,
+      items: [{ id: "inbox", label: "Inbox", active: true }],
+    }) as { element: HTMLElement };
+    rtlDrawer.element.style.position = "relative";
+    rtlBox.append(rtlDrawer.element);
+    rtlDrawer.element.querySelector(".mtrl-drawer__item")?.setAttribute("data-focus-target", "rtl-drawer-item");
+
+    const rtlSlider = m.createSlider({ min: 0, max: 100, value: 50, ariaLabel: "RTL Volume" }) as { element: HTMLElement };
+    rtlBox.append(rtlSlider.element);
+    rtlSlider.element.querySelector(".mtrl-slider__handle")?.setAttribute("data-focus-target", "rtl-slider-handle");
+
+    const rtlSearch = m.createSearch({ placeholder: "RTL Search", expandOnFocus: false }) as { element: HTMLElement };
+    rtlBox.append(rtlSearch.element);
+    rtlSearch.element.querySelector("input.mtrl-search__input")?.setAttribute("data-focus-target", "rtl-search-input");
+
+    const rtlTf = m.createTextField({ variant: "filled", label: "RTL Email" }) as { element: HTMLElement };
+    rtlBox.append(rtlTf.element);
+    rtlTf.element.querySelector("input.mtrl-text-field__input")?.setAttribute("data-focus-target", "rtl-tf-filled");
+
+    const rtlNavBar = m.createNavigationBar({
+      items: [
+        { id: "home", label: "Home", icon: "<svg viewBox='0 0 24 24'><path d='M12 4v16'/></svg>", active: true },
+        { id: "files", label: "Files", icon: "<svg viewBox='0 0 24 24'><path d='M4 12h16'/></svg>" },
+      ],
+    }) as { element: HTMLElement };
+    rtlNavBar.element.style.position = "relative";
+    rtlBox.append(rtlNavBar.element);
+    rtlNavBar.element.querySelector(".mtrl-navigation-bar__item--active")?.setAttribute("data-focus-target", "rtl-nav-bar-active");
+
+    const rtlNavRail = m.createNavigationRail({
+      items: [
+        { id: "home", label: "Home", icon: "<svg viewBox='0 0 24 24'><path d='M12 4v16'/></svg>", active: true },
+        { id: "files", label: "Files", icon: "<svg viewBox='0 0 24 24'><path d='M4 12h16'/></svg>" },
+      ],
+    }) as { element: HTMLElement };
+    rtlNavRail.element.style.position = "relative";
+    rtlBox.append(rtlNavRail.element);
+    rtlNavRail.element.querySelector(".mtrl-navigation-rail__item--active")?.setAttribute("data-focus-target", "rtl-nav-rail-active");
+  });
+
+  for (const rtlTarget of [
+    "rtl-drawer-item",
+    "rtl-slider-handle",
+    "rtl-search-input",
+    "rtl-tf-filled",
+    "rtl-nav-bar-active",
+    "rtl-nav-rail-active",
+  ]) {
+    const ev = await evaluateKeyboardFocusOnTarget(page, rtlTarget, "light");
+    assert(ev.visible, `RTL target ${rtlTarget} failed visibility: ${ev.reason}`);
+    assert(!ev.clipped, `RTL target ${rtlTarget} clipped: ${ev.clipReason}`);
+  }
+
+  // Verify RTL slider ArrowLeft increments (50 -> 51) and ArrowRight decrements (51 -> 50)
+  await evaluateKeyboardFocusOnTarget(page, "rtl-slider-handle", "light");
+  await page.keyboard.press("ArrowLeft");
+  const rtlSliderAfterLeft = await page.evaluate(() =>
+    document.querySelector('[data-focus-target="rtl-slider-handle"]')?.getAttribute("aria-valuenow")
+  );
+  assert.equal(rtlSliderAfterLeft, "51", "G3 RTL: ArrowLeft must increment slider value from 50 to 51");
+  await page.keyboard.press("ArrowRight");
+  const rtlSliderAfterRight = await page.evaluate(() =>
+    document.querySelector('[data-focus-target="rtl-slider-handle"]')?.getAttribute("aria-valuenow")
+  );
+  assert.equal(rtlSliderAfterRight, "50", "G3 RTL: ArrowRight must decrement slider value from 51 to 50");
+
+  // Clean up temporary G2-G6 extra boxes
+  await page.evaluate(() => {
+    document.getElementById("g2-g6-extra-box")?.remove();
+    document.getElementById("g2-g6-rtl-box")?.remove();
+  });
 
   assert.deepEqual(pageErrors, [], `Uncaught page errors during keyboard focus check: ${pageErrors.join("; ")}`);
 

@@ -221,6 +221,11 @@ $component: '#{base.$prefix}-slider';
     &--focused::before {
       width: 2px;
     }
+
+    &:focus-visible::before {
+      outline: 2px solid t.color('secondary');
+      outline-offset: 2px;
+    }
     
     // Hover state
     &:hover::before {
@@ -371,6 +376,18 @@ $component: '#{base.$prefix}-slider';
         opacity: 0.38;
         background-color: t.color('on-surface');
       }
+    }
+  }
+
+  @include m.high-contrast {
+    &__handle::before {
+      border: 1px solid ButtonText;
+      box-sizing: border-box;
+    }
+
+    &__handle:focus-visible::before {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
     }
   }
   
