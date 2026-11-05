@@ -106,7 +106,7 @@ export interface ListSlot {
    * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    * An avatar string is not a person's name or an image URL. An `image` is a URL.
    */
-  content: string | HTMLElement | { element: HTMLElement };
+  content: string | HTMLElement;
 }
 
 export interface ListItem {
