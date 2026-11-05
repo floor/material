@@ -37,30 +37,24 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     const slot = row.element.querySelector<HTMLElement>(`.${component.getClass("list__trailing")}[data-list-control]`);
     return slot?.querySelector<HTMLElement>(checkableControl) ?? undefined;
   };
-  const controlChecked = (control: HTMLElement): boolean =>
-    typeof (control as HTMLInputElement).checked === "boolean"
+  /** M3: the selected state applies to the entire list item, so the row follows its control. */
+  const follow = (row: ListRow) => {
+    const control = controlFor(row);
+    if (!control) return;
+    const checked = typeof (control as HTMLInputElement).checked === "boolean"
       ? (control as HTMLInputElement).checked
       : control.getAttribute("aria-checked") === "true";
-  /** M3: the selected state applies to the entire list item, so the row follows its control. */
-  const syncControls = () => {
-    let moved = false;
-    for (const row of rows()) {
-      const control = controlFor(row);
-      if (!control) continue;
-      const checked = controlChecked(control);
-      if (checked === selected.has(row.id)) continue;
-      if (checked && !config.multiSelect) selected.clear();
-      if (checked) selected.add(row.id); else selected.delete(row.id);
-      moved = true;
-    }
-    if (moved) apply();
+    if (checked === selected.has(row.id)) return;
+    if (checked && !config.multiSelect) selected.clear();
+    if (checked) selected.add(row.id); else selected.delete(row.id);
+    apply();
   };
   const activate = (event: MouseEvent) => {
     if (!config.trackSelection || resources.destroyed || event.defaultPrevented) return;
     const row = ownedRow(event);
     if (!row || row.item.disabled || !(event.target instanceof Element)) return;
     const control = event.target.closest('button, input, select, textarea, a, [contenteditable="true"], [data-list-control]');
-    if (control && control !== row.action) { syncControls(); return; }
+    if (control && control !== row.action) { follow(row); return; }
     const payload = {
       // `value`: the row's id, as the <m-list> element's `activate` carries it.
       item: row.item, value: row.id, element: row.element, originalEvent: event,
@@ -74,7 +68,7 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     if (trailing) {
       // The control is the row's action: a click on the row's text reaches it.
       trailing.click();
-      syncControls();
+      follow(row);
       return;
     }
     const wasSelected = selected.has(row.id);
