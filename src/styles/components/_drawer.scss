@@ -324,9 +324,11 @@ $default-width: 360px;
         text-decoration: none;
         box-sizing: border-box;
         outline: none;
-        // The indicator, the state layer and the ripple each clip themselves
-        // to the pill (border-radius: inherit), and the 48dp touch target has
-        // to reach outside it, so the item does not clip.
+        // The item does not clip: the 48dp touch target has to reach above and
+        // below a pill density can take to 36dp. The pill and the state layer
+        // are clipped by the indicator instead, with the same pair of
+        // coincident rounded masks the item's overflow used to draw, so the
+        // active pill keeps its exact antialiasing at every density.
         overflow: visible;
         isolation: isolate;
         -webkit-tap-highlight-color: transparent;
@@ -347,32 +349,44 @@ $default-width: 360px;
             position: absolute;
             inset: 0;
             border-radius: inherit;
-            background-color: t.color("secondary-container");
-            opacity: 0;
-            transform: scaleX(0.32);
-            transform-origin: center;
+            // The pill is painted by ::before and clipped here, exactly as the
+            // item's overflow: hidden clipped it on main; the state layer is
+            // ::after, so it shares the same clip and does not scale with the
+            // pill.
+            overflow: hidden;
             pointer-events: none;
             z-index: 0;
-            transition:
-                transform v.motion("spring-default-spatial-duration")
-                    v.motion("spring-default-spatial-easing"),
-                opacity v.motion("spring-default-spatial-duration")
-                    v.motion("spring-default-effects-easing");
-        }
 
-        // State layer for hover, focus and press, drawn above the indicator
-        // in the item's current content colour
-        &::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background-color: currentColor;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1;
-            transition: opacity v.motion("spring-default-effects-duration")
-                v.motion("spring-default-effects-easing");
+            // The pill itself: a secondary container that scales in from the
+            // middle of the item.
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background-color: t.color("secondary-container");
+                opacity: 0;
+                transform: scaleX(0.32);
+                transform-origin: center;
+                transition:
+                    transform v.motion("spring-default-spatial-duration")
+                        v.motion("spring-default-spatial-easing"),
+                    opacity v.motion("spring-default-spatial-duration")
+                        v.motion("spring-default-effects-easing");
+            }
+
+            // State layer for hover, focus and press, drawn above the pill in
+            // the item's current content colour.
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background-color: currentColor;
+                opacity: 0;
+                transition: opacity v.motion("spring-default-effects-duration")
+                    v.motion("spring-default-effects-easing");
+            }
         }
 
         // A 48dp tall touch target. At density the pill can be as short as
@@ -400,7 +414,7 @@ $default-width: 360px;
         &:hover:not([disabled]) {
             color: t.color("on-surface");
 
-            &::before {
+            .#{$component}__active-indicator::after {
                 opacity: v.state("hover-state-layer-opacity");
             }
         }
@@ -408,7 +422,7 @@ $default-width: 360px;
         &:focus-visible {
             color: t.color("on-surface");
 
-            &::before {
+            .#{$component}__active-indicator::after {
                 opacity: v.state("focus-state-layer-opacity");
             }
         }
@@ -417,7 +431,8 @@ $default-width: 360px;
             color: t.color("on-surface");
 
             // A rippled item leaves the press to its ripple.
-            &:not(:has(> .#{base.$prefix}-ripple))::before {
+            &:not(:has(> .#{base.$prefix}-ripple))
+                .#{$component}__active-indicator::after {
                 opacity: v.state("pressed-state-layer-opacity");
             }
         }
@@ -434,7 +449,7 @@ $default-width: 360px;
         }
 
         &--active {
-            .#{$component}__active-indicator {
+            .#{$component}__active-indicator::before {
                 opacity: 1;
                 transform: scaleX(1);
                 transition:
