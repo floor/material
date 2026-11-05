@@ -131,11 +131,17 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   // against 9,700; measured +1% (9,974) rounded to the next 50 is 10,000.
   // The same module costs the packed button 8,595-8,597 across two local runs
   // against 8,550; measured +1% (8,683) rounded to the next 50 is 8,700.
-  for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", CONSUMER_INITIAL_GZIP.addClass, "material/core/dom"], ["text-field", "createTextField", CONSUMER_INITIAL_GZIP["text-field"], "material"], ["button", "createButton", CONSUMER_INITIAL_GZIP.button, "material"],
+  for (const [name, code, budget] of [
+    ["addClass", "export { addClass } from 'material/core/dom';", CONSUMER_INITIAL_GZIP.addClass],
+    ["text-field", "export { createTextField } from 'material';", CONSUMER_INITIAL_GZIP["text-field"]],
+    ["button", "export { createButton } from 'material';", CONSUMER_INITIAL_GZIP.button],
+    // Runtime colour: the scheme alone, and the scheme with the image path a
+    // page also asks for when its source colour comes from an image.
+    ["theme", "export { createScheme, applyScheme } from 'material/theme';", CONSUMER_INITIAL_GZIP.theme],
+    ["theme-image", "export { createScheme, applyScheme } from 'material/theme';\nexport { sourceColorFromImage } from 'material/theme/image';", CONSUMER_INITIAL_GZIP["theme-image"]],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
-    await writeFile(entry, `export { ${symbol} } from '${from}';`);
+    await writeFile(entry, code);
     const result = await build({
       root: directory, configFile: false, envFile: false, logLevel: "error",
       build: { write: false, minify: true, lib: { entry, formats: ["es"] } },
