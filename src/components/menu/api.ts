@@ -14,7 +14,11 @@ import type { EventCallback } from "../../core/state/emitter";
  */
 export interface ApiOptions {
   menu: {
-    open: (event?: Event, interactionType?: "mouse" | "keyboard") => void;
+    open: (
+      event?: Event,
+      interactionType?: "mouse" | "keyboard",
+      initialFocus?: "first" | "last",
+    ) => void;
     close: (
       event?: Event,
       restoreFocus?: boolean,
@@ -79,14 +83,15 @@ const withAPI =
        * Opens the menu
        * @param event - Optional event that triggered the open
        * @param interactionType - The type of interaction that triggered the open ('mouse' or 'keyboard')
+       * @param initialFocus - Which item a keyboard open focuses ('first' or 'last'); the first by default
        * @returns Menu component for chaining
        */
-      open(event?: Event, interactionType?: "mouse" | "keyboard") {
+      open(event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last") {
         // Left undefined on purpose: the controller reads the event to tell a
         // key from a pointer, which decides where focus lands. Defaulting to
         // "mouse" here made that check dead and every open a pointer open.
 
-        menu.open(event, interactionType);
+        menu.open(event, interactionType, initialFocus);
         return this;
       },
 

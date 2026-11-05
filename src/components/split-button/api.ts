@@ -33,8 +33,6 @@ export const withAPI =
 
     let expanded = false;
     let destroyed = false;
-    // Set while ArrowUp waits for the menu to show, cleared by destroy()
-    let focusLastTimer: ReturnType<typeof setTimeout> | null = null;
 
     const emit = (type: SplitButtonEventType, extra: Partial<SplitButtonEvent> = {}): void => {
       component.emit?.(type, {
@@ -49,6 +47,7 @@ export const withAPI =
       next: boolean,
       originalEvent: Event | null = null,
       interactionType?: "keyboard" | "mouse",
+      initialFocus?: "first" | "last",
     ): void => {
       if (expanded === next) return;
       expanded = next;
@@ -56,9 +55,9 @@ export const withAPI =
       trailing.element.setAttribute("aria-expanded", String(expanded));
 
       if (menu) {
-        // The interaction type decides where the menu puts focus: the first
-        // item for a key, the surface for the pointer.
-        if (expanded) menu.open(originalEvent ?? undefined, interactionType);
+        // The interaction type decides where the menu puts focus: an item for
+        // a key, the surface for the pointer; the intent says which item.
+        if (expanded) menu.open(originalEvent ?? undefined, interactionType, initialFocus);
         else menu.close(originalEvent ?? undefined);
       }
 
@@ -144,8 +143,6 @@ export const withAPI =
 
       destroy(): void {
         destroyed = true;
-        if (focusLastTimer !== null) clearTimeout(focusLastTimer);
-        focusLastTimer = null;
         trailing.element.removeEventListener("keydown", handleTrailingKeydown);
         menu?.destroy?.();
         leading.destroy();
@@ -177,33 +174,15 @@ export const withAPI =
     // ArrowDown and ArrowUp on a closed trailing button open the menu on its
     // first and last item, which is what the menu's own opener does with them
     // (menu/features/opener.ts). Enter and Space arrive as the click above.
-    const focusLastItem = (): void => {
-      // A menu closed again before its chunk arrived has no last item to
-      // focus, and an item of a closed menu would take focus nowhere.
-      if (!expanded || !menu?.isOpen()) return;
-      const surface = menu.element;
-      const items = surface.querySelectorAll<HTMLElement>(
-        `.${prefix}-menu__item:not(.${prefix}-menu__item--disabled)`,
-      );
-      items[items.length - 1]?.focus();
-    };
+    // The intent travels with the open, so the menu's initial focus picks the
+    // item itself: no timer here can race the menu's own.
     const handleTrailingKeydown = (event: KeyboardEvent): void => {
       const openFirst = event.key === "ArrowDown" || event.key === "Down";
       const openLast = event.key === "ArrowUp" || event.key === "Up";
       if (!openFirst && !openLast) return;
       event.preventDefault();
       if (expanded) return;
-      setExpanded(true, event, "keyboard");
-      if (!openLast) return;
-      // The menu's own initial focus lands on the first item 100 ms after it
-      // shows. Focusing the last before that timer runs leaves focus where it
-      // is: the menu keeps focus that is already inside it.
-      menu?.whenReady?.(() => {
-        focusLastTimer = setTimeout(() => {
-          focusLastTimer = null;
-          focusLastItem();
-        }, 100);
-      });
+      setExpanded(true, event, "keyboard", openLast ? "last" : "first");
     };
     trailing.element.addEventListener("keydown", handleTrailingKeydown);
 

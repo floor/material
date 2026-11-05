@@ -405,11 +405,13 @@ export interface MenuComponent {
    * that one.
    * @param event - Optional event that triggered the open
    * @param interactionType - The type of interaction that triggered the open ('mouse' or 'keyboard')
+   * @param initialFocus - Which item a keyboard open focuses ('first' or 'last'); the first by default
    * @returns The menu component for chaining
    */
   open: (
     event?: Event,
     interactionType?: "mouse" | "keyboard",
+    initialFocus?: "first" | "last",
   ) => MenuComponent;
 
   /**
@@ -601,7 +603,11 @@ export interface KeyboardActions {
 }
 
 export interface MenuControllerApi {
-  open: (event?: Event, interactionType?: "mouse" | "keyboard") => void;
+  open: (
+    event?: Event,
+    interactionType?: "mouse" | "keyboard",
+    initialFocus?: "first" | "last",
+  ) => void;
   close: (
     event?: Event,
     restoreFocus?: boolean,
@@ -703,7 +709,8 @@ export interface MenuFeatureHost {
     ) => void;
     handleInitialFocus: (
       menuElement: HTMLElement,
-      interactionType: "keyboard" | "mouse"
+      interactionType: "keyboard" | "mouse",
+      initialFocus?: "first" | "last"
     ) => void;
     // Read by the opener feature, so a menu has one Tab tracker rather than
     // two: the same key press decides focus for both.

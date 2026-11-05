@@ -30,7 +30,7 @@ export interface OnDemandMenu {
   preload(): void;
   /** Runs once the real menu exists, after an open that waited for it. */
   whenReady(callback: () => void): void;
-  open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu;
+  open(event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last"): OnDemandMenu;
   close(event?: Event, restoreFocus?: boolean, skipAnimation?: boolean): OnDemandMenu;
   isOpen(): boolean;
   setItems(items: MenuContent[]): OnDemandMenu;
@@ -56,7 +56,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
   let destroyed = false;
   // Whether the menu is to be open; the chunk may not have arrived yet
   let opened = false;
-  let asked: [Event | undefined, "mouse" | "keyboard" | undefined] = [undefined, undefined];
+  let asked: [Event | undefined, "mouse" | "keyboard" | undefined, "first" | "last" | undefined] = [undefined, undefined, undefined];
   let current = items;
   let selected: string | null | undefined;
   let position: MenuPosition = settings.position ?? "bottom-end";
@@ -93,7 +93,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
     // one when the surface arrives.
     if (selected !== undefined) created.setSelected(selected);
     if (position !== settings.position) created.setPosition(position);
-    if (opened) created.open(asked[0], asked[1]);
+    if (opened) created.open(asked[0], asked[1], asked[2]);
     for (const [event, set] of listeners) for (const listener of set) created.on(event, listener);
     listeners.clear();
     const waiting = ready;
@@ -122,9 +122,9 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
       return menu?.element ?? placeholder;
     },
 
-    open(event?: Event, interactionType?: "mouse" | "keyboard"): OnDemandMenu {
+    open(event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last"): OnDemandMenu {
       if (menu) {
-        menu.open(event, interactionType);
+        menu.open(event, interactionType, initialFocus);
         return api;
       }
       if (!opened) {
@@ -132,7 +132,7 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
         if (!settings.listbox) openerElement?.setAttribute("aria-expanded", "true");
         notify("open", { menu: api, originalEvent: event });
       }
-      asked = [event, interactionType];
+      asked = [event, interactionType, initialFocus];
       load();
       return api;
     },

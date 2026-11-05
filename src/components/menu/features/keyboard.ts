@@ -130,15 +130,26 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
   const handleInitialFocus = (
     menuElement: HTMLElement,
     interactionType: "keyboard" | "mouse",
+    initialFocus: "first" | "last" = "first",
   ): void => {
     // Reset typeahead when menu opens
     resetTypeahead();
 
     const items = menuItems(menuElement);
 
-    // ArrowUp on the opener sets the last item to 0, so clear first.
+    // ArrowUp on an opener asks for the last item. It is the last item focus
+    // can reach, so a disabled one is skipped, as the opener's own ArrowUp
+    // case does; when every item is disabled the last still takes focus,
+    // because the menu leaves focus nowhere otherwise.
+    const target = initialFocus === "last"
+      ? [...items].reverse().find(
+          (item) => !item.classList.contains(component.getClass("menu__item--disabled")),
+        ) ?? items[items.length - 1]
+      : items[0];
+
+    // Set one tab stop: the item focus is about to land on
     items.forEach((item) => item.setAttribute("tabindex", "-1"));
-    items[0]?.setAttribute("tabindex", "0");
+    target?.setAttribute("tabindex", "0");
 
     // An arrow may have moved focus before the opening timer ran. The menu
     // contains itself, so the root is not an item. Submenus live beside the
@@ -147,11 +158,11 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     if (focused !== menuElement && menuElement.contains(focused) ||
       focused?.closest(`.${component.getClass("menu--submenu")}`)?.getAttribute("data-owner") === menuElement.id) return;
 
-    // Opened with a key: focus the first item, which is what the spec asks
-    // for and what a person navigating by key expects to see marked
+    // Opened with a key: focus an item, which is what the spec asks for and
+    // what a person navigating by key expects to see marked
     // (m3.material.io menu accessibility, "Initial focus").
     if (interactionType === "keyboard" && items.length > 0) {
-      items[0].focus();
+      target.focus();
       return;
     }
 
