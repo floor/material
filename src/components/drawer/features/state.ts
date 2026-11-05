@@ -31,14 +31,10 @@ interface ModalState {
   priority: string;
 }
 const modals = new WeakMap<Document, ModalState>();
-// Roots shown with showModal(): the browser makes everything outside the
-// topmost of them inert, across shadow roots, which the walk below cannot.
-const layered = new WeakSet<Element>();
 function updateBackground(doc: Document, state: ModalState): void {
-  state.inerted.forEach(element => element.removeAttribute("inert"));
-  state.inerted = [];
+  state.inerted.splice(0).forEach(element => element.removeAttribute("inert"));
   const topmost = state.roots.at(-1);
-  let branch: Element | undefined = topmost && !layered.has(topmost) ? topmost : undefined;
+  let branch: Element | undefined = topmost && topmost.localName !== "dialog" ? topmost : undefined;
   while (branch?.parentElement) {
     for (const sibling of branch.parentElement.children) {
       if (sibling !== branch && !sibling.hasAttribute("inert")) {
@@ -79,7 +75,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   const doc = root.ownerDocument;
   const isModal = config.variant === "modal";
   const top = config.layer === "top";
-  if (top) layered.add(root);
   const dismissible = config.dismissible !== false;
   let isOpen = config.open === true;
   let destroyed = false;
@@ -109,18 +104,11 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   };
   const isTopModal = () => modals.get(doc)?.roots.at(-1) === root;
   function handleKeydown(event: KeyboardEvent): void {
-    if (!isOpen || !isTopModal() || event.defaultPrevented) return;
-    if (event.key === "Tab") {
-      const items = focusable();
-      const first = items[0], last = items.at(-1);
-      const active = activeElementOf(root);
-      if (!first) { event.preventDefault(); root.focus(); }
-      else if (event.shiftKey && (active === first || active === root || !root.contains(active))) {
-        event.preventDefault(); last!.focus();
-      } else if (!event.shiftKey && (active === last || active === root || !root.contains(active))) {
-        event.preventDefault(); first.focus();
-      }
-    }
+    if (!isOpen || !isTopModal() || event.defaultPrevented || event.key !== "Tab") return;
+    const items = focusable();
+    const first = items[0], last = items.at(-1), active = activeElementOf(root), out = active === root || !root.contains(active);
+    const target = !first ? root : event.shiftKey ? (active === first || out) && last : (active === last || out) && first;
+    if (target) { event.preventDefault(); target.focus(); }
   }
   // The event's target is retargeted to the shadow host when focus moves
   // inside a shadow root: where focus went is read from the drawer's own root.
