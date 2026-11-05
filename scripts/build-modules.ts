@@ -97,13 +97,10 @@ export function stripRuntimeComments(filename: string, text: string): string {
 }
 
 /**
- * Ship a declaration's `@deprecated` note, and no other prose. The note is the
- * one comment a typed consumer must see: it names the replacement and the
- * removal, and TypeScript's deprecation suggestions (6385/6387) are read from
- * it. Keep that JSDoc block whole, on the declaration it documents; the other
- * comments (prose-only JSDoc, line and block comments, licence banners) only
- * served the source. Keeping every JSDoc block was measured at +150,392 bytes
- * on the packed tarball, over the package's ceiling, so the notes ship alone.
+ * Measurement variant (throwaway branch, never merged): a declaration keeps its
+ * JSDoc's first sentence, its `@param` names, its `@default` and its
+ * `@deprecated` note whole; `@example` blocks and the rest of the prose go.
+ * Every non-JSDoc comment goes, as shipped.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -118,8 +115,13 @@ export function printDeclarationModule(filename: string, text: string): string {
   }
   visit(file);
   for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
-    if (keepDeclarationComment(text.slice(start, end))) continue;
-    text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
+    const comment = text.slice(start, end);
+    if (/^\/\*\*(?!\/)/.test(comment)) {
+      const compact = compactDeclarationComment(comment);
+      if (compact !== comment) text = text.slice(0, start) + compact + text.slice(end);
+      continue;
+    }
+    text = text.slice(0, start) + comment.replace(/[^\r\n]/g, " ") + text.slice(end);
   }
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
 }
@@ -266,9 +268,42 @@ function keepComment(comment: string): boolean {
   return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
 }
 
-/** A comment a shipped declaration keeps: a JSDoc block that carries `@deprecated`, whole, and no other. */
-function keepDeclarationComment(comment: string): boolean {
-  return /^\/\*\*(?!\/)/.test(comment) && /@deprecated\b/.test(comment);
+/**
+ * A declaration's JSDoc, cut to what the measurement ships: the first summary
+ * sentence, `@param` names without their descriptions, `@default`, and the whole
+ * `@deprecated` note. `@example` and the remaining prose are dropped.
+ */
+export function compactDeclarationComment(comment: string): string {
+  const body = comment.replace(/^\/\*\*/, "").replace(/\*\/\s*$/, "");
+  const lines = body.split(/\r?\n/).map(line => line.replace(/^\s*\*\s?/, "").trim());
+  const prose: string[] = [];
+  const tags: { name: string; lines: string[] }[] = [];
+  for (const line of lines) {
+    const tag = /^@(\w+)\b/.exec(line);
+    if (tag) tags.push({ name: tag[1]!, lines: [line] });
+    else if (tags.length) tags[tags.length - 1]!.lines.push(line);
+    else prose.push(line);
+  }
+  const summary = prose.filter(line => line !== "");
+  let first = summary[0] ?? "";
+  if (/[.!?]$/.test(first)) {
+    const sentence = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1];
+    if (sentence) first = sentence;
+  }
+  const kept: string[] = first ? [first] : [];
+  for (const tag of tags) {
+    if (tag.name === "param") {
+      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.\-]+)/.exec(tag.lines[0]!);
+      if (match) kept.push(`@param ${match[1]}`);
+    } else if (tag.name === "default") {
+      kept.push(tag.lines[0]!);
+    } else if (tag.name === "deprecated") {
+      kept.push(...tag.lines.filter(line => line !== ""));
+    }
+  }
+  if (kept.length === 0) return "";
+  if (kept.length === 1) return `/** ${kept[0]} */`;
+  return `/**\n${kept.map(line => ` * ${line}`).join("\n")}\n */`;
 }
 
 /** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */
