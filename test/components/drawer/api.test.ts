@@ -266,6 +266,27 @@ describe('drawer active destination', () => {
   test('no destination is active without an active item', () => {
     expect(make({ items: [{ id: 'a', label: 'A' }] }).getActive()).toBeNull();
   });
+
+  test('the active destination shows its active icon and the others their icon, and moving the selection swaps both', () => {
+    const icon = (drawer: { element: HTMLElement }, id: string) =>
+      item(drawer, id).querySelector('.mtrl-drawer__item-icon')?.innerHTML;
+    const drawer = make({
+      items: [
+        { id: 'a', label: 'A', icon: '<svg data-icon="a"></svg>', activeIcon: '<svg data-active="a"></svg>', active: true },
+        { id: 'b', label: 'B', icon: '<svg data-icon="b"></svg>', activeIcon: '<svg data-active="b"></svg>' },
+        { id: 'c', label: 'C', icon: '<svg data-icon="c"></svg>' },
+      ],
+    });
+    expect([icon(drawer, 'a'), icon(drawer, 'b'), icon(drawer, 'c')]).toEqual([
+      '<svg data-active="a"></svg>', '<svg data-icon="b"></svg>', '<svg data-icon="c"></svg>',
+    ]);
+    expect(drawer.setActive('b')).toBe(drawer);
+    expect([icon(drawer, 'a'), icon(drawer, 'b'), icon(drawer, 'c')]).toEqual([
+      '<svg data-icon="a"></svg>', '<svg data-active="b"></svg>', '<svg data-icon="c"></svg>',
+    ]);
+    drawer.setActive('');
+    expect([icon(drawer, 'a'), icon(drawer, 'b')]).toEqual(['<svg data-icon="a"></svg>', '<svg data-icon="b"></svg>']);
+  });
 });
 
 describe('drawer selection', () => {
