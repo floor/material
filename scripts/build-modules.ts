@@ -97,10 +97,15 @@ export function stripRuntimeComments(filename: string, text: string): string {
 }
 
 /**
- * Measurement variant (throwaway branch, never merged): a declaration keeps its
- * JSDoc's first sentence, its `@param` names, its `@default` and its
- * `@deprecated` note whole; `@example` blocks and the rest of the prose go.
- * Every non-JSDoc comment goes, as shipped.
+ * Ship a declaration's hover documentation, cut to what a typed consumer reads,
+ * and no other prose. A declaration keeps its JSDoc block's first summary
+ * sentence, its `@param` names without their descriptions, its `@default`, and
+ * any `@deprecated` note whole — the note is what an editor names the
+ * replacement from, and what TypeScript's deprecation suggestions (6385/6387)
+ * are read from. `@example` blocks and the remaining prose stay in the source:
+ * keeping every JSDoc block whole was measured at +150,392 bytes on the packed
+ * tarball, over the package's ceiling; this cut was measured at +56,126.
+ * Every non-JSDoc comment goes, as before.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -269,11 +274,11 @@ function keepComment(comment: string): boolean {
 }
 
 /**
- * A declaration's JSDoc, cut to what the measurement ships: the first summary
- * sentence, `@param` names without their descriptions, `@default`, and the whole
- * `@deprecated` note. `@example` and the remaining prose are dropped.
+ * A declaration's JSDoc, cut to what the package ships: the first summary
+ * sentence, `@param` names without their types and descriptions, `@default`, and
+ * the whole `@deprecated` note. `@example` and the remaining prose are dropped.
  */
-export function compactDeclarationComment(comment: string): string {
+function compactDeclarationComment(comment: string): string {
   const body = comment.replace(/^\/\*\*/, "").replace(/\*\/\s*$/, "");
   const lines = body.split(/\r?\n/).map(line => line.replace(/^\s*\*\s?/, "").trim());
   const prose: string[] = [];
@@ -293,7 +298,7 @@ export function compactDeclarationComment(comment: string): string {
   const kept: string[] = first ? [first] : [];
   for (const tag of tags) {
     if (tag.name === "param") {
-      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.\-]+)/.exec(tag.lines[0]!);
+      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.-]+)/.exec(tag.lines[0]!);
       if (match) kept.push(`@param ${match[1]}`);
     } else if (tag.name === "default") {
       kept.push(tag.lines[0]!);

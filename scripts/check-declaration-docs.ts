@@ -48,6 +48,8 @@ interface Consumer {
   source: string;
   /** The deprecated names its use of the packed package must report. */
   deprecated: string[];
+  /** A documented name the consumer reads, and the documentation an editor shows for it. */
+  hover?: { name: string; at: string; documentation: string };
 }
 
 const consumers: Consumer[] = [
@@ -62,6 +64,7 @@ const built = createFab({ icon: "<svg/>", ariaLabel: "Add", type: "button" });
 export { built };
 `,
     deprecated: ["setPosition", "getPosition"],
+    hover: { name: "type", at: 'type: "button"', documentation: "Button type attribute" },
   },
   {
     file: "component-consumer.ts",
@@ -174,6 +177,17 @@ try {
     for (const expected of consumer.deprecated) {
       if (!names.includes(expected)) {
         failures.push(`${consumer.file}: ${expected} is not reported as deprecated from the packed declarations`);
+      }
+    }
+    // What the editor shows for a documented option, read from the same
+    // declarations: the build ships the JSDoc's first sentence, so a hover on
+    // the option is not empty.
+    if (consumer.hover) {
+      const at = consumer.source.indexOf(consumer.hover.at);
+      const documentation = (at === -1 ? undefined : service.getQuickInfoAtPosition(file, at))
+        ?.documentation?.map(part => part.text).join("") ?? "";
+      if (!documentation.includes(consumer.hover.documentation)) {
+        failures.push(`${consumer.file}: ${consumer.hover.name} shows no "${consumer.hover.documentation}" documentation from the packed declarations`);
       }
     }
   }
