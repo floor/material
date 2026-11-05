@@ -597,7 +597,9 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
       if (!menu || menu.style.top === "") return false;
       const style = getComputedStyle(menu);
       const rect = menu.getBoundingClientRect();
+      const focusSettled = menu.getAttribute("role") !== "menu" || document.activeElement === menu;
       return (
+        focusSettled &&
         style.visibility === "visible" &&
         Number(style.opacity) === 1 &&
         (style.transform === "none" || style.transform === "matrix(1, 0, 0, 1, 0, 0)") &&
@@ -608,6 +610,7 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
     });
     const settled = await page.evaluate(() => {
       const menu = document.querySelector<HTMLElement>(".mtrl-menu.mtrl-menu--visible")!;
+      if (document.activeElement === menu) menu.blur();
       const rect = menu.getBoundingClientRect();
       return { width: rect.width, height: rect.height, opacity: getComputedStyle(menu).opacity };
     });
@@ -646,8 +649,9 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
             ],
           });
           state.menu.setSelected("copy");
-          state.menu.open();
         }, { mode, baseline });
+        await page.click("#cmp-menu-opener");
+        await page.mouse.move(0, 0);
         await waitForSettledMenu(`menu-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `menu-${stage}-${mode}.png`) });
 
@@ -675,8 +679,9 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
           });
           state.selectCmp = select;
           document.body.append(select.element);
-          select.open();
         }, { mode, baseline });
+        await page.click(".mtrl-select");
+        await page.mouse.move(0, 0);
         await waitForSettledMenu(`select-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `select-${stage}-${mode}.png`) });
 
@@ -703,8 +708,9 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
           });
           state.splitCmp = split;
           document.body.append(split.element);
-          split.expand();
         }, { mode, baseline });
+        await page.click(".mtrl-split-button__trailing");
+        await page.mouse.move(0, 0);
         await waitForSettledMenu(`split-button-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `split-button-${stage}-${mode}.png`) });
       }
