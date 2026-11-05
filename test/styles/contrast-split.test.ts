@@ -272,9 +272,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The toolbar's collapsed state is the docked bar at the 48dp target area,
     // and its icon+label button shows the icon alone at the target size
     // (styles/components/_toolbar.scss, styles/components/_button.scss).
+    // The 14 dead selector groups verified to have no producer in src/ are
+    // removed from the dialog, menu, select, slider, tabs and timepicker
+    // component sheets (styles/components/_dialog.scss, _menu.scss,
+    // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("a59e56407cf093574fddee2c61a8f456401a5b02f6374f10818ed0db4c67b7d0");
-    expect(css.length).toBe(537614);
+      .toBe("b4f169c22c89b6df11ae60649cd32fefee3f6cc6e3f6efc8928358735d556c62");
+    expect(css.length).toBe(531871);
   });
 
   test("today's sheets still resolve to the fixture", () => {
