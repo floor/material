@@ -17,6 +17,266 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.7.3] - 2026-11-05
+
+Lighter, correct component styles.
+
+### Changed
+
+- **The packed Sass sources are normalized at publish time (#300).**
+  The `.scss` files the package ships now leave the tarball without the
+  silent (`//`) comments and indentation that never reach a consumer's CSS.
+  Loud comments, strings, `url()` data and custom-property values stay byte
+  for byte, and the compiled CSS is byte-identical for all 11 public Sass
+  entries: the package job compiles each entry from the packed tarball and
+  from the checkout and compares the two on every pull request. A generated
+  theme's origin header — the line md3.io reads from the installed package —
+  is the one silent comment kept, and all 14 themes keep theirs.
+
+  **Size:** at its merge (`f3cc6037`, push run 42017705644, package job
+  127212732299), against #298's merge as the previous main push (`91c4627f`,
+  run 42008536693, package job 127181840071): the packed tarball 857,184 →
+  777,599 bytes compressed (−79,585, about 79.6 kB) and 4,776,811 →
+  4,475,560 unpacked (−301,251), 1,581 files, unchanged. Every size row is
+  untouched — `all-js` 412,575 / 127,178 / 105,515, `full-css` 620,654 /
+  57,596 / 41,451, `select-css` 83,848 / 7,930 / 6,554 and `slider-css`
+  53,073 / 4,743 / 3,644, with the SSR, slider and base rows as they were.
+  No budget or ceiling moved, and no `SIZES.md`, `README.md` or
+  `npm-readme.md` row moves.
+
+### Removed
+
+- **The card's dead loading, expandable and swipeable styles (#278).**
+  The card's loading, expandable and swipeable members were removed from the
+  factory in 3.0.0, and the module that produced their markup stopped
+  shipping in 3.3.3. The stylesheets went on styling that markup anyway, in
+  all three sheets a consumer can load. Removed: `.mtrl-card__loading-overlay`,
+  `.mtrl-card__loading-spinner`, `.mtrl-card__expandable-content`,
+  `.mtrl-card__expand-button` (base, `::before` and
+  `[aria-expanded="true"]::before`), `.mtrl-card--swipeable`,
+  `.mtrl-card__swipe-left-action`, `.mtrl-card__swipe-right-action` and
+  `.mtrl-card--state-loading` — eight classes — with `@keyframes card-spinner`.
+  `.mtrl-card--dragging` stays: the draggable path in
+  `src/components/card/config.ts` adds and removes it.
+
+  One source fed all three files: `dist/styles.css` compiles `main`, and
+  `dist/styles/card.css` and `dist/elements/css/card.css` both compile
+  `components/card`, the card element's `styles: ["card"]`. Nothing the
+  package ships applies these names any more — the two constants that
+  remain, `LOADING` and `EXPANDED`, are reserved names nothing reads — and a
+  new test, `test/styles/dead-card-css.test.ts`, compiles the source behind
+  each of the three sheets and asserts none of the nine tokens appears. It
+  fails on the pre-release base `d78de9e4` and passes on the merged pull
+  requests.
+
+  There is no visual change. In an independent browser check across five
+  documented card configurations in light and dark, the computed geometry
+  and colours of every node matched, and the full-page screenshots were
+  byte-identical: SHA-256
+  `58702928c9b4a08ab75b62ede088703684a60aa92452c58784d74f1bbaae803a`
+  (light) and
+  `967ad11d2f4eead6d4968b59d8f380ce9bf0dd6d0790d728c196fd68c3eedf93`
+  (dark).
+
+  **Size:** at its merge (`71824018`, push run 42000192075, package job
+  127153577689), against the previous main push (`9ecfc6e6`, run 41998230130,
+  package job 127146939974): the `full-css` row 628,436 → 627,009 raw
+  (−1,427), 58,667 → 58,292 gzip (−375) and 42,173 → 41,911 brotli (−262);
+  the packed tarball 862,631 → 861,193 bytes compressed (−1,438), 4,828,612 →
+  4,820,848 unpacked (−7,764), 1,582 files, unchanged. Per built file, from
+  the two CI dists at gzip level 9 and not additive: each of
+  `dist/styles.css`, `dist/styles/card.css` and `dist/elements/css/card.css`
+  loses exactly 1,484 raw bytes; gzipped, 57,007 → 56,636 (−371), 2,189 →
+  1,844 (−345) and 1,925 → 1,577 (−348). No budget or ceiling moved, no
+  `SIZES.md` row changes, and the full-stylesheet row in `README.md` and
+  `npm-readme.md` moves from 58.7 to 58.3 kB.
+
+- **The dialog, menu, select, slider, tabs and timepicker dead styles (#280).**
+  Fourteen selector groups with no producer in `src/` are removed from six
+  component sheets: the dialog's icon and icon-content rules and their
+  header sibling, its `content--scrollable` and `content--emphasis`
+  modifiers and its fullscreen overlay arm; the menu's
+  `--position-top-start` / `--position-top-end` arms (the live
+  `--position-top` stays); the select's `--open` descendant text-field
+  rules, `--disabled`, `--error` trailing icon and `--small` / `--large`
+  arms; the slider's singular `__tick`; the tabs' class-based
+  `--hover` / `--focus` / `--pressed` button arms, `__scroll-indicator`
+  and `__scroll-button`; and the timepicker's `__sr-only`.
+
+  There is no visual change. In an independent browser check across 110
+  cases — the six components in their documented configurations, light and
+  dark, including hover, keyboard focus and pressed states driven by real
+  pointer and keyboard input — every computed geometry, colour and
+  full-page screenshot hash matched. A new test,
+  `test/styles/dead-component-css.test.ts`, compiles the source behind the
+  full sheet and both per-component sheets and asserts none of the removed
+  selectors appears; it fails on the pre-release base `d78de9e4` and passes
+  on the merged pull requests.
+
+  **Size:** at its merge (`ddaa7c2b`, push run 42002927172, package job
+  127162755350), against #278's merge as the previous main push (`71824018`,
+  run 42000192075, package job 127153577689): the `full-css` row 627,009 →
+  620,670 raw (−6,339), 58,292 → 57,596 gzip (−696) and 41,911 → 41,467
+  brotli (−444); `select-css` 8,083 → 7,930 gzip (−153) and `slider-css`
+  4,757 → 4,744 gzip (−13); the packed tarball 861,193 → 857,928 bytes
+  compressed (−3,265), 4,820,848 → 4,791,723 unpacked (−29,125), 1,582
+  files, unchanged. No budget or ceiling moved, no `SIZES.md` row changes,
+  and the full-stylesheet row in `README.md` and `npm-readme.md` moves from
+  58.3 to 57.6 kB.
+
+### Fixed
+
+- **The slider on large sizes (#281).**
+  On large sliders a piece of track could vanish near the extremes: on a
+  320px track an XL slider at 10% drew no active piece and at 90% no trailing
+  one. The bar's outer ends were clipped square instead of carrying the
+  track's rounded end, and the stop dot's centre sat one corner radius in
+  from the end — 8 / 8 / 12 / 16 / 28px by size — instead of 6dp.
+
+  The cause was the track itself: one rounded box with `overflow: hidden`
+  that clipped its children, while each piece of track inside it was a square
+  rectangle carrying only the 2dp inside corner at a handle gap. A piece
+  shorter than the corner radius was dropped rather than rounded, because a
+  clipped sliver would have shown. Now the track neither rounds nor clips:
+  each piece carries its own corners — the outer corner where it reaches an
+  end of the slider, written through the shape token
+  (`--mtrl-sys-shape-corner-small` through `-extra-large`, by size) so a
+  theme's corner scale reaches it, and the 2dp inside corner at a gap — with
+  the pair turning with the axis, so a mirrored or vertical slider puts the
+  outer end on its own side. A short piece keeps its end and its radii scale
+  to fit. The stop dot's centre is 6dp from the end of the track at every
+  size. A discrete slider (`ticks`) still ends its track on its first and
+  last tick: a piece that would only fill the inset before or after an end
+  tick is dropped, so the end tick is the track's visual end.
+
+  `scripts/check-slider.ts`, the Chromium check, reads the L (corner 16) and
+  XL (corner 28) sliders' piece boxes and computed radii at 0, 5, 10, 50, 90,
+  95 and 100 percent of a 320px track, and every value 0–100 of an XL slider:
+  the active piece starts at the track's start and measures the value less
+  the 8px gap, the trailing piece runs from one gap past the handle to the
+  track's end, the stop's centre is 314px — 6px from the end — at every value
+  below 100%, and the pieces' corners are the size's outer corner and 2px at
+  the gaps. Vertical and RTL sliders turn the corner pair with the axis; a
+  discrete slider at min and at max, all five sizes, LTR and RTL, light and
+  dark, keeps the end tick as the track's end.
+  `test/components/slider/slider.test.ts` follows: the stop's inline position
+  (`calc(100% - 8px)`, was `calc(100% - 10px)`), the short piece (now kept,
+  was "is not drawn") and the per-size corners as shape tokens. Both fail on
+  main `d78de9e4` — the browser check with `standard end stop: 312 where M3
+  puts 314`, the unit tests with six assertions — and pass on the branch,
+  14/14 jobs.
+
+  **Size:** at its merge (`81b3234a`, push run 42007247411, package job
+  127177390402), against #280's merge as the previous main push (`ddaa7c2b`,
+  run 42002927172, package job 127162755350): the slider entry 34,967 →
+  35,210 raw, 12,165 → 12,248 gzip (+83) and 11,018 → 11,098 brotli (+80);
+  `all-js` 412,325 → 412,575 raw, 127,086 → 127,178 gzip (+92) and 105,325 →
+  105,515 brotli (+190); `slider-css` 53,089 → 53,073 raw (−16), 4,744 →
+  4,743 gzip (−1) and 3,650 → 3,644 brotli (−6); the `full-css` row 620,670 →
+  620,654 raw (−16), its gzip unchanged at 57,596 and its brotli 41,467 →
+  41,451; the packed tarball 857,928 → 858,218 bytes compressed (+290),
+  4,791,723 → 4,792,400 unpacked (+677), 1,582 files, unchanged. In
+  `SIZES.md` the slider row moves from 33.7 KB minified and 11.8 KB gzip to
+  33.9 and 11.9 (+8.8 KB over core, unchanged), and the all row from 390.7 /
+  122.5 / +119.5 to 391.0 / 122.6 / +119.6, deferred +2.1 unchanged; the
+  all-js row in `README.md` and `npm-readme.md` moves from 127.1 to 127.2
+  kB. No budget or ceiling moved.
+
+- **The nested `dist/package.json` is no longer packed (#298).**
+  The build writes `dist/package.json` — a 15,615-byte export map — so that
+  its module and declaration prunes can read the relocated export map in
+  place, but nothing resolves it: it is not an export target and has no
+  runtime role, since `dist` inherits the root `type` and `sideEffects`. It
+  shipped in the tarball anyway, one file no runtime reads. The manifest's
+  `files` now excludes it (`"!dist/package.json"`), and the build still
+  writes it for its own prunes. The package job asserts the packed list
+  carries no nested manifest, so dropping the exclusion fails the size check
+  with the tarball CI would publish, and a new test,
+  `test/build/packed-manifest.test.ts`, pins both halves — the build's output
+  and its absence from `files`.
+
+  **Size:** at its merge (`91c4627f`, push run 42008536693, package job
+  127181840071), against #281's merge as the previous main push (`81b3234a`,
+  run 42007247411, package job 127177390402): the packed tarball 858,218 →
+  857,184 bytes compressed (−1,034), 4,792,400 → 4,776,811 unpacked
+  (−15,589 — the dropped manifest (15,615 B) less the 26 B `files` entry that
+  excludes it), 1,582 → 1,581 files. The bundle
+  rows are untouched: `all-js` 412,575 raw / 127,178 gzip / 105,515 brotli
+  and `full-css` 620,654 / 57,596 / 41,451, as are the SSR rows (inline
+  253,639 / 5,325 / 2,906, link 42,991 / 1,046 / 675) and the SSR entry
+  (308,739 / 112,609). No budget or ceiling moved, no `SIZES.md` row
+  changes, and no `README.md` or `npm-readme.md` row moves.
+
+## [3.7.2] - 2026-11-05
+
+Component sheets stand alone.
+
+### Fixed
+
+- **The factory stylesheets no longer need the base reset (#266).**
+  With `material/styles/base-lite` — or any page that does not load
+  `material/styles/base` — five component families lost the geometry the
+  reset gives them: the text field's root and input (and the select, which
+  reuses the input) stood 88px tall instead of 56; the small top app bar
+  measured 632px inside a 600px box; the bottom app bar 104px instead of
+  80; the checkbox 56px instead of 48; the radio label 56px instead of 48;
+  and the date picker's month and year buttons carried the user agent's
+  `1px 6px` padding instead of none.
+
+  Each sheet now declares the one declaration the reset supplied:
+  `box-sizing: border-box` on the text-field input, on the top app bar's
+  root and its medium and large rows, on the bottom app bar's root, on the
+  checkbox's root and on the radios label; and `padding: 0` on the date
+  picker's month and year buttons. There is no visual change with the full
+  base: the reset already applies those values to every element and every
+  button, so the rules restate the values in force, and the browser
+  screenshots are byte-identical.
+
+  A new browser check, `component-sheets:check` in the `browser (styles)`
+  group, loads the built `dist/styles/base-lite.css`, the ripple utilities
+  and the seven component sheets into one Chromium page with no reset,
+  mounts the built factories, and asserts that geometry; it also asserts
+  that the page's body computes `content-box`, so a reset leaking into the
+  page fails the check rather than hiding the defect. Every sheet must
+  exist in `dist/`, which is the build's own evidence that the sheet is
+  standalone. The check lives in `scripts/`, which `package.json`'s
+  `files` does not ship, so it adds nothing to the package.
+
+  **Size:** on main at `0caeeb6b` (the release base, push run 41944355130,
+  package job 126973103232), the packed tarball measures 862,631 bytes
+  compressed, 4,828,612 unpacked, 1,582 files (3.7.1: 862,354 / 4,827,107
+  / 1,582 — +277 compressed, +1,505 unpacked, same file count). The
+  growth is the six added declarations alone, which the package carries
+  twice: in the shipped Sass sources under `src/styles` and in the
+  compiled CSS under `dist`. The full stylesheet moves 628,272 → 628,436
+  raw (+164, exactly the six added declarations; `select.css` itself does
+  not change) and 58,669 → 58,667 gzip (−2, a cross-chunk dictionary
+  shift), 42,116 → 42,172 brotli (+56). The `select-css` entry carries the
+  text-field input's 22 bytes: 85,081 → 85,103 raw, 8,080 → 8,083 gzip,
+  6,678 → 6,675 brotli. Every other packed row is byte-identical,
+  including all-js, the SSR entry, base-css and base-lite-css; no budget
+  or ceiling moved, every per-component budget check passes, and no
+  `SIZES.md` or README size row changes.
+
+### Internal
+
+- **The size cost of the standalone sheets.**
+  Against 3.7.1's own package job (all-js 412,325 raw / 127,086 gzip /
+  105,325 brotli; base-css 40,809 / 2,939 / 2,244; base-lite-css 12,999 /
+  1,644 / 1,305; full-css 628,272 / 58,669 / 42,116; select-css 85,081 /
+  8,080 / 6,678; tarball 862,354 bytes compressed / 4,827,107 unpacked /
+  1,582 files), main at `0caeeb6b` measures full-css 628,436 / 58,667 /
+  42,172, select-css 85,103 / 8,083 / 6,675, tarball 862,631 / 4,828,612 /
+  1,582, and every other row unchanged. The 164 raw bytes are the six
+  added declarations; the two gzip figures move by −2 and +3 through
+  cross-chunk dictionary sharing rather than the rules themselves, and
+  the brotli figures by +56 and −3. Measured on main at `0caeeb6b`, the
+  release base's push run 41944355130, package job 126973103232; the
+  release PR itself changes only the CHANGELOG and the version field. No
+  ceiling moved, every per-component budget check passed (all: 125,455
+  gzip against 127,200; list: 6,838 against 7,014), and no `SIZES.md` or
+  README size row changed.
+
 ## [3.7.1] - 2026-11-05
 
 Lighter modals.
@@ -6017,7 +6277,9 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.7.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.7.3...HEAD
+[3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
+[3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2
 [3.7.1]: https://github.com/floor/material/compare/v3.7.0...v3.7.1
 [3.7.0]: https://github.com/floor/material/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/floor/material/compare/v3.5.4...v3.6.0
