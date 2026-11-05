@@ -60,8 +60,8 @@ Colour that adapts at runtime.
   the Sass theme: no style reads them.
 
   The colour science is ported from Google's material-color-utilities 0.4.0
-  (Apache-2.0): 34 files under `src/theme/vendor`, with a root `NOTICE`
-  carrying the copyright and the full licence added to the package's `files`.
+  (Apache-2.0): 34 files under `src/theme/vendor`, with their copyright and the
+  full licence added to the root `NOTICE` #303 already ships (+417 B).
   No dependency is added. The scheme classes themselves are not exported: their
   constructor takes a fourth argument, the colour-spec version, which no option
   here selects, so the 2025 spec branch leaves the shipped graph entirely.
@@ -72,9 +72,10 @@ Colour that adapts at runtime.
   factory returns a scheme pinned to the 2021 spec.
 
   The default path pays nothing: the root entry does not import the subpath, so
-  `dist/index.js` is byte-identical to main at `1cd4f82e`
-  (sha256 `878b39f7972b33456a9a143f4fcb3c4273f5d8fa714928d4e500c8f9be5a21c2`,
-  re-hashed from the branch's CI dist artifact) and the `all-js`,
+  `dist/index.js` is byte-identical to 3.7.3 at `33b4bbea` and to every main
+  commit since — `697ec507`, `81467ef2` and `1ce5ff6d` all hash
+  `878b39f7972b33456a9a143f4fcb3c4273f5d8fa714928d4e500c8f9be5a21c2` in
+  their CI dist artifacts — and the `all-js`,
   `button-initial` and component rows are unchanged. The subpath adds no
   stylesheet: a scheme is written into the token properties the sheet already
   reads.
@@ -131,20 +132,23 @@ Colour that adapts at runtime.
   }
   ```
 
-  **Size:** at its head (`035157ca`, run 41967896196, package job
-  127049264291), against #274's head (`bc2280b2`, run 41966704145, package
-  job 127045589460): the `full-css` row 628,436 → 644,489 raw (+16,053),
-  58,667 → 59,819 gzip (+1,152) and 42,173 → 42,569 brotli (+396); `base-css`
+  **Size:** on its push run (`1ce5ff6d`, run 42030849095, package job
+  127257100164), against #274's push run (`81467ef2`, run 42023890411, package
+  job 127233550950): the `full-css` row 620,654 → 636,707 raw (+16,053),
+  57,596 → 58,745 gzip (+1,149) and 41,460 → 41,899 brotli (+439); `base-css`
   40,809 → 43,122 raw, 2,939 → 3,018 gzip; `button-css` 56,592 → 58,905 raw,
-  5,137 → 5,221 gzip; `select-css` 85,103 → 87,416 raw, 8,083 → 8,168 gzip;
-  `slider-css` 53,152 → 55,465 raw, 4,757 → 4,841 gzip; `navigation-rail-css`
+  5,137 → 5,221 gzip; `select-css` 83,848 → 86,161 raw, 7,930 → 8,016 gzip;
+  `slider-css` 53,073 → 55,386 raw, 4,743 → 4,828 gzip; `navigation-rail-css`
   55,067 → 57,380 raw, 5,123 → 5,205 gzip; `base-lite-css` 12,999 → 13,008
   raw, 1,644 → 1,649 gzip. `all-js`, the SSR rows and every component entry
   row are unchanged. In `README.md` and `npm-readme.md` the base row moves
   from 2.9 to 3.0 kB, base and button from 5.1 to 5.2, and the full
-  stylesheet from 58.7 to 59.8. No stylesheet or consumer budget moved; the
-  only ceiling that changed is the owner's tarball raise in the status note
-  above.
+  stylesheet from 57.6 to 58.7.
+
+  `TARBALL_BYTES` moves from 865,000 to 920,000 by owner decision on
+  2026-11-05, set when #275's branch packed 913,528 B and before #300
+  normalized the packed Sass; `1ce5ff6d` now packs 828,974 B. No stylesheet
+  or consumer budget moved.
 
   Material sources (read 2026-11-05):
   [defining new colours](https://m3.material.io/styles/color/advanced/define-new-colors),
@@ -172,29 +176,30 @@ Colour that adapts at runtime.
   `dist` is unchanged by that commit.
 
 - **The size cost of runtime colour.**
-  New consumer rows, `consumer:check` initial gzip: `theme` 17,265 B (budget
-  17,450, ceiling 20,500) and `theme-image` 20,817 B (budget 21,050, ceiling
-  24,000) at #275's head `035157ca` (run 41967896196, components-b job
-  127049263990); #274 alone at `bc2280b2` measured 17,037 and 20,593 (run
-  41966704145, components-b job 127045589459). Each budget is its measurement
+  New consumer rows, `consumer:check` initial gzip: `theme` 17,266 B (budget
+  17,450, ceiling 20,500) and `theme-image` 20,821 B (budget 21,050, ceiling
+  24,000) at #275's merge `1ce5ff6d` (push run 42030849095, components-b job
+  127257100434); #274's merge `81467ef2` measured 17,037 and 20,593 (push run
+  42023890411, components-b job 127233551233). Each budget is its measurement
   plus max(1%, 100 B), rounded up to the next 50.
 
-  Tarball, CI packer (Node 22.23.3 / npm 10.9.9): #274's head packs 907,017 B
-  compressed, 4,999,476 B unpacked, 1,627 files (run 41966704145, package job
-  127045589460) — +44,663 / +172,369 / +45 against main at `1cd4f82e`
-  (862,354 / 4,827,107 / 1,582; run 41939743447, package job 126957651455),
-  and +44,386 / +170,864 / +45 against main at `0caeeb6b`, which carries the
-  standalone-sheet change (862,631 / 4,828,612 / 1,582; run 41944355130,
-  package job 126973103232). #275's head packs 913,528 / 5,049,341 / 1,627
-  (run 41967896196, package job 127049264291) — +6,511 compressed and +49,865
-  unpacked against #274's head, same file count.
+  Tarball, CI packer (Node 22.23.3 / npm 10.9.9), each a push run: 3.7.3 at
+  `33b4bbea` packs 777,600 B compressed, 4,475,560 B unpacked, 1,581 files
+  (run 42019967423, package job 127220397593); #303 at `697ec507` packs
+  781,664 / 4,487,507 / 1,582 (run 42021222008, package job 127224500961) —
+  +4,064 / +11,947 / +1, the `NOTICE`; #274 at `81467ef2` packs 822,426 /
+  4,647,253 / 1,626 (run 42023890411, package job 127233550950) — +40,762 /
+  +159,746 / +44 against #303; #275 at `1ce5ff6d` packs 828,974 / 4,693,763 /
+  1,626 (run 42030849095, package job 127257100164) — +6,548 / +46,510 / 0
+  against #274.
 
-  The unpacked attribution is byte-exact: #274's 45 new files are 44
-  `dist/theme` modules plus the `NOTICE`; #275 adds no file, and its +49,865
-  unpacked bytes are the status rules' output — `dist/styles.css` +16,053,
-  the theme sheets under `dist/themes` +32,208 and `dist/theme` +1,604. The
-  compressed deltas are not the sum of their parts, so each row is the
-  measured tree.
+  The unpacked deltas are byte-exact: #274 adds 44 files, all `dist/theme`
+  modules, and appends 417 B to the `NOTICE` and 116 B to `package.json`.
+  #275 adds no file; its +46,510 unpacked bytes are the status rules' output —
+  `dist/styles.css` +11,322, `dist/styles/contrast.css` +1,224,
+  `dist/styles/base.css` +612, `dist/themes` +18,666, `dist/theme` +1,099 and
+  the normalized theme Sass under `src/styles/themes` +13,587. The compressed
+  deltas are not the sum of their parts, so each row is the measured tree.
 
 ## [3.7.3] - 2026-11-05
 
