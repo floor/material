@@ -269,9 +269,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The toolbar's collapsed state is the docked bar at the 48dp target area,
+    // and its icon+label button shows the icon alone at the target size
+    // (styles/components/_toolbar.scss, styles/components/_button.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4f28ef2b4035cc9b100e4b44b911bdae49bc16a77dad5b53b2c8fba17aadac28");
-    expect(css.length).toBe(536620);
+      .toBe("a59e56407cf093574fddee2c61a8f456401a5b02f6374f10818ed0db4c67b7d0");
+    expect(css.length).toBe(537614);
   });
 
   test("today's sheets still resolve to the fixture", () => {

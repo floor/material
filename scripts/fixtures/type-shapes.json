@@ -2175,6 +2175,7 @@
   "ToolbarScrollBehavior": {
     "kind": "union",
     "members": [
+      "\"collapse\"",
       "\"exit\"",
       "\"none\""
     ]

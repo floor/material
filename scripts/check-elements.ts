@@ -22,6 +22,7 @@ import { checkTextFieldWarning } from "./check-text-field-warning";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
+import { checkToolbarCollapse } from "./check-toolbar-collapse-browser";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
@@ -5475,6 +5476,8 @@ try {
   }
 
   await checkToolbarItemShape(page, check);
+
+  await checkToolbarCollapse(page, check);
 
   await checkTabBadge(page, check);
 
