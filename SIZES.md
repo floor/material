@@ -53,6 +53,6 @@ these rows drift from a fresh measurement.
 | timepicker | 31.4 KB | 10.9 KB | +7.9 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
-| toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 391.0 KB | 122.6 KB | +119.6 KB | +2.1 KB |
+| toolbar | 33.3 KB | 11.1 KB | +8.1 KB | +6.9 KB |
+| all | 391.3 KB | 122.7 KB | +119.7 KB | +2.1 KB |
 <!-- /size-table -->
