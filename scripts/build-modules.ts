@@ -97,9 +97,13 @@ export function stripRuntimeComments(filename: string, text: string): string {
 }
 
 /**
- * Drop declaration prose: signatures, not documentation, are the shipped
- * contract. The published API docs build from src (typedoc reads
- * `./src/index.ts`), and editors still resolve the same types.
+ * Ship a declaration's `@deprecated` note, and no other prose. The note is the
+ * one comment a typed consumer must see: it names the replacement and the
+ * removal, and TypeScript's deprecation suggestions (6385/6387) are read from
+ * it. Keep that JSDoc block whole, on the declaration it documents; the other
+ * comments (prose-only JSDoc, line and block comments, licence banners) only
+ * served the source. Keeping every JSDoc block was measured at +150,392 bytes
+ * on the packed tarball, over the package's ceiling, so the notes ship alone.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -114,6 +118,7 @@ export function printDeclarationModule(filename: string, text: string): string {
   }
   visit(file);
   for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
+    if (keepDeclarationComment(text.slice(start, end))) continue;
     text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
   }
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
@@ -259,6 +264,11 @@ export async function buildSSR(outdir: string) {
 /** A comment the shipped file keeps: a pure annotation, a licence banner or an @license/@preserve block. */
 function keepComment(comment: string): boolean {
   return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
+}
+
+/** A comment a shipped declaration keeps: a JSDoc block that carries `@deprecated`, whole, and no other. */
+function keepDeclarationComment(comment: string): boolean {
+  return /^\/\*\*(?!\/)/.test(comment) && /@deprecated\b/.test(comment);
 }
 
 /** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */
