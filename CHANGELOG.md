@@ -17,6 +17,76 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.7.2] - 2026-11-05
+
+Component sheets stand alone.
+
+### Fixed
+
+- **The factory stylesheets no longer need the base reset (#266).**
+  With `material/styles/base-lite` — or any page that does not load
+  `material/styles/base` — five component families lost the geometry the
+  reset gives them: the text field's root and input (and the select, which
+  reuses the input) stood 88px tall instead of 56; the small top app bar
+  measured 632px inside a 600px box; the bottom app bar 104px instead of
+  80; the checkbox 56px instead of 48; the radio label 56px instead of 48;
+  and the date picker's month and year buttons carried the user agent's
+  `1px 6px` padding instead of none.
+
+  Each sheet now declares the one declaration the reset supplied:
+  `box-sizing: border-box` on the text-field input, on the top app bar's
+  root and its medium and large rows, on the bottom app bar's root, on the
+  checkbox's root and on the radios label; and `padding: 0` on the date
+  picker's month and year buttons. There is no visual change with the full
+  base: the reset already applies those values to every element and every
+  button, so the rules restate the values in force, and the browser
+  screenshots are byte-identical.
+
+  A new browser check, `component-sheets:check` in the `browser (styles)`
+  group, loads the built `dist/styles/base-lite.css`, the ripple utilities
+  and the seven component sheets into one Chromium page with no reset,
+  mounts the built factories, and asserts that geometry; it also asserts
+  that the page's body computes `content-box`, so a reset leaking into the
+  page fails the check rather than hiding the defect. Every sheet must
+  exist in `dist/`, which is the build's own evidence that the sheet is
+  standalone. The check lives in `scripts/`, which `package.json`'s
+  `files` does not ship, so it adds nothing to the package.
+
+  **Size:** on main at `0caeeb6b` (the release base, push run 41944355130,
+  package job 126973103232), the packed tarball measures 862,631 bytes
+  compressed, 4,828,612 unpacked, 1,582 files (3.7.1: 862,354 / 4,827,107
+  / 1,582 — +277 compressed, +1,505 unpacked, same file count). The
+  growth is the six added declarations alone, which the package carries
+  twice: in the shipped Sass sources under `src/styles` and in the
+  compiled CSS under `dist`. The full stylesheet moves 628,272 → 628,436
+  raw (+164, exactly the six added declarations; `select.css` itself does
+  not change) and 58,669 → 58,667 gzip (−2, a cross-chunk dictionary
+  shift), 42,116 → 42,172 brotli (+56). The `select-css` entry carries the
+  text-field input's 22 bytes: 85,081 → 85,103 raw, 8,080 → 8,083 gzip,
+  6,678 → 6,675 brotli. Every other packed row is byte-identical,
+  including all-js, the SSR entry, base-css and base-lite-css; no budget
+  or ceiling moved, every per-component budget check passes, and no
+  `SIZES.md` or README size row changes.
+
+### Internal
+
+- **The size cost of the standalone sheets.**
+  Against 3.7.1's own package job (all-js 412,325 raw / 127,086 gzip /
+  105,325 brotli; base-css 40,809 / 2,939 / 2,244; base-lite-css 12,999 /
+  1,644 / 1,305; full-css 628,272 / 58,669 / 42,116; select-css 85,081 /
+  8,080 / 6,678; tarball 862,354 bytes compressed / 4,827,107 unpacked /
+  1,582 files), main at `0caeeb6b` measures full-css 628,436 / 58,667 /
+  42,172, select-css 85,103 / 8,083 / 6,675, tarball 862,631 / 4,828,612 /
+  1,582, and every other row unchanged. The 164 raw bytes are the six
+  added declarations; the two gzip figures move by −2 and +3 through
+  cross-chunk dictionary sharing rather than the rules themselves, and
+  the brotli figures by +56 and −3. Measured on main at `0caeeb6b`, the
+  release base's push run 41944355130, package job 126973103232; the
+  release PR itself changes only the CHANGELOG and the version field. No
+  ceiling moved, every per-component budget check passed (all: 125,455
+  gzip against 127,200; list: 6,838 against 7,014), and no `SIZES.md` or
+  README size row changed.
+
 ## [3.7.1] - 2026-11-05
 
 Lighter modals.
@@ -6017,7 +6087,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.7.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.7.2...HEAD
+[3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2
 [3.7.1]: https://github.com/floor/material/compare/v3.7.0...v3.7.1
 [3.7.0]: https://github.com/floor/material/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/floor/material/compare/v3.5.4...v3.6.0
