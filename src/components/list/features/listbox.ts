@@ -45,7 +45,7 @@ interface ListboxHost {
 
 /** What an `option` may not contain: its children are presentational. */
 const INTERACTIVE =
-  'button, input, select, textarea, a[href], [role="button"], [role="switch"], [role="checkbox"], [data-list-control], [tabindex]:not([tabindex="-1"])';
+  'button,input,select,textarea,a[href],[role=button],[role=switch],[role=checkbox],[data-list-control],[tabindex]:not([tabindex="-1"])';
 
 /**
  * Turns a created list into a single-select listbox (`role="listbox"` with
@@ -77,13 +77,10 @@ export const withSingleSelectListbox = (
   const list = host.list;
   const getClass = host.getClass;
   if (!list || !getClass) {
-    throw new Error("[mtrl:list] single-select listbox mode needs a created list");
+    throw new Error("[mtrl:list] needs a created list");
   }
-  if (host.config?.multiSelect) {
-    throw new Error("[mtrl:list] single-select listbox mode cannot be combined with multiSelect");
-  }
-  if (host.config?.trackSelection === false) {
-    throw new Error("[mtrl:list] single-select listbox mode needs trackSelection, which is off");
+  if (host.config?.multiSelect || host.config?.trackSelection === false) {
+    throw new Error("[mtrl:list] needs multiSelect off and trackSelection on");
   }
   const resources = getCleanup(host);
   const indicator = options.indicator === "trailing" ? "trailing" : "leading";
@@ -95,7 +92,6 @@ export const withSingleSelectListbox = (
   let activeId: string | undefined;
   let focusWithin = false;
   let restore = false;
-
 
   const rows = () => list.getRows();
   const enabled = () => rows().filter((row) => !row.item.disabled);
@@ -111,27 +107,27 @@ export const withSingleSelectListbox = (
   const label = (row: ListRow<ListItem>): string =>
     (row.element.querySelector(`.${headlineName}`)?.textContent ?? itemLabel(row.item)).trim().toLowerCase();
 
-  /** Makes `row` the roving tab stop and moves focus to it. */
-  const focusRow = (row: ListRow<ListItem>) => {
-    for (const other of rows()) other.element.tabIndex = other === row ? 0 : -1;
-    activeId = row.id;
-    row.element.focus();
-  };
-
-  /** At rest the selected option holds the stop; with none, the first enabled one. */
-  const roving = () => {
-    const all = enabled();
-    const stop = all.find((row) => isSelected(row.id)) ?? all[0];
-    for (const row of rows()) row.element.tabIndex = row === stop ? 0 : -1;
-  };
+  /** Moves focus to the row; the focusin handler moves the roving tab stop. */
+  const focusRow = (row: ListRow<ListItem>) => row.element.focus();
 
   const sync = () => {
-    for (const row of rows()) row.element.setAttribute("aria-selected", String(isSelected(row.id)));
-    roving();
+    // At rest the selected option holds the stop; with none, the first enabled one.
+    const all = enabled();
+    const stop = all.find((row) => isSelected(row.id)) ?? all[0];
+    for (const row of rows()) {
+      row.element.setAttribute("aria-selected", String(isSelected(row.id)));
+      row.element.tabIndex = row === stop ? 0 : -1;
+    }
   };
 
-  /** Fires the cancellable `select` for an option, then selects it unless prevented. */
-  const activate = (row: ListRow<ListItem>, originalEvent: Event) => {
+  /** A press on an option: focus it, then select it unless disabled, selected or cancelled. */
+  const press = (row: ListRow<ListItem>, originalEvent: Event) => {
+    if (row.item.disabled) {
+      originalEvent.preventDefault();
+      return;
+    }
+    focusRow(row);
+    if (isSelected(row.id)) return;
     const payload: SelectEvent<ListItem> = {
       item: row.item,
       value: row.id,
@@ -178,13 +174,7 @@ export const withSingleSelectListbox = (
     if (!row) return;
     // The enhancer owns every press in a row: the list's own action never sees it.
     event.stopPropagation();
-    if (row.item.disabled) {
-      event.preventDefault();
-      return;
-    }
-    focusRow(row);
-    if (isSelected(row.id)) return;
-    activate(row, event);
+    press(row, event);
   };
 
   const onKeydown = (event: KeyboardEvent) => {
@@ -198,33 +188,20 @@ export const withSingleSelectListbox = (
       event.stopPropagation();
       focusRow(all[index]);
     };
-    switch (event.key) {
-      case "ArrowDown":
-      case "ArrowRight":
-        go(current < 0 ? 0 : (current + 1) % all.length);
-        return;
-      case "ArrowUp":
-      case "ArrowLeft":
-        go(current < 0 ? all.length - 1 : (current - 1 + all.length) % all.length);
-        return;
-      case "Home":
-        go(0);
-        return;
-      case "End":
-        go(all.length - 1);
-        return;
-      case "Enter":
-        event.preventDefault();
-        event.stopPropagation();
-        if (!isSelected(row.id)) activate(row, event);
-        return;
-      case " ":
-        // A space continues an open type-ahead buffer; on its own it activates.
-        if (buffer) break;
-        event.preventDefault();
-        event.stopPropagation();
-        if (!isSelected(row.id)) activate(row, event);
-        return;
+    const step = ({ ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 } as Record<string, number | undefined>)[
+      event.key
+    ];
+    if (step !== undefined) {
+      return go(current < 0 ? (step > 0 ? 0 : all.length - 1) : (current + step + all.length) % all.length);
+    }
+    if (event.key === "Home") return go(0);
+    if (event.key === "End") return go(all.length - 1);
+    // A space continues an open type-ahead buffer; on its own it activates.
+    if (event.key === "Enter" || (event.key === " " && !buffer)) {
+      event.preventDefault();
+      event.stopPropagation();
+      press(row, event);
+      return;
     }
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
@@ -245,7 +222,7 @@ export const withSingleSelectListbox = (
     const next = event.relatedTarget;
     if (next instanceof Node && component.element.contains(next)) return;
     focusWithin = false;
-    roving();
+    sync();
     // A focused option pulled out by a re-render reports its removal here; the
     // transform that follows puts focus back on the option with the same id.
     if (event.target instanceof Node && !component.element.contains(event.target)) restore = true;
@@ -256,28 +233,23 @@ export const withSingleSelectListbox = (
     component.element.setAttribute("role", "listbox");
     for (const row of rows()) {
       const { element, item } = row;
-      if (
-        (item.leading && (item.leading.type === "control" || item.leading.type === "custom")) ||
-        (item.trailing && (item.trailing.type === "control" || item.trailing.type === "custom"))
-      ) {
+      if ([item.leading, item.trailing].some((slot) => slot && (slot.type === "control" || slot.type === "custom"))) {
         throw new Error(
-          "[mtrl:list] single-select listbox options cannot contain secondary controls or custom interactive slots",
+          "[mtrl:list] options cannot contain secondary controls",
         );
       }
-      if ((indicator === "leading" && item.leading) || (indicator === "trailing" && item.trailing)) {
-        throw new Error(
-          `[mtrl:list] a ${indicator} slot needs the radio indicator on the other side: pass indicator: "${
-            indicator === "leading" ? "trailing" : "leading"
-          }"`,
-        );
+      if (item[indicator]) {
+        throw new Error(`[mtrl:list] indicator "${indicator}" collides with the ${indicator} slot`);
       }
       // The row's action button is what named the row; the option takes its name.
       const action = row.action;
       const labelledby = action?.getAttribute("aria-labelledby") ?? element.querySelector<HTMLElement>(`.${headlineName}`)?.id;
       const describedby = action?.getAttribute("aria-describedby");
       const name = action?.getAttribute("aria-label") ?? itemLabel(item);
-      if (labelledby) element.setAttribute("aria-labelledby", labelledby);
-      else element.setAttribute("aria-label", name || element.textContent || "Option");
+      element.setAttribute(
+        labelledby ? "aria-labelledby" : "aria-label",
+        labelledby ?? (name || element.textContent || "Option"),
+      );
       if (describedby) element.setAttribute("aria-describedby", describedby);
       element.setAttribute("role", "option");
       if (!element.querySelector(`.${radio}`)) {
@@ -290,7 +262,7 @@ export const withSingleSelectListbox = (
       action?.remove();
       if (row.action === action) row.action = undefined;
       if (element.querySelector(INTERACTIVE)) {
-        throw new Error("[mtrl:list] single-select listbox options cannot contain interactive descendants");
+        throw new Error("[mtrl:list] options cannot contain interactive descendants");
       }
     }
     sync();
@@ -325,9 +297,7 @@ export const withSingleSelectListbox = (
       sync();
       return api;
     },
-    destroy: () => component.destroy(),
   };
-
 
   component.element.addEventListener("click", onClick, true);
   component.element.addEventListener("keydown", onKeydown);
