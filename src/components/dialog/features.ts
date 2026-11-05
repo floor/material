@@ -434,8 +434,6 @@ export const withVisibility =
   // key press handled there, for the topmost one, and never the key press
   // that opened the dialog.
   let escape: ModalEscape | undefined;
-  // True while the dialog sends a key press on as a `cancel` of its own
-  let asking = false;
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -484,10 +482,33 @@ export const withVisibility =
     }
   };
 
+  const emit = (type: string): void => {
+    component.emit?.(type, { dialog: getComponent() });
+  };
+
+  const ask = (type: string): boolean => {
+    const e = {
+      dialog: getComponent(),
+      defaultPrevented: false,
+      preventDefault: () => {
+        e.defaultPrevented = true;
+      },
+    };
+    component.emit?.(type, e);
+    return e.defaultPrevented;
+  };
+
+  const stopOpen = (): void => {
+    opened = false;
+    clearTimeout(showTimer);
+    clearTimeout(afterOpenTimer);
+    afterOpenWaiting = false;
+    cancelFocusFrame();
+  };
+
   const emitAfterOpen = (): void => {
     afterOpenWaiting = false;
-    if (!opened || typeof component.emit !== "function") return;
-    component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
+    if (opened) emit(DIALOG_EVENTS.AFTER_OPEN);
   };
 
   // The open duration has run: the event follows the initial focus when that
@@ -512,12 +533,12 @@ export const withVisibility =
     // showModal() has made the rest of the page inert already
     const parent = top ? null : component.overlay.parentElement;
     if (parent) {
-      (Array.from(parent.children) as HTMLElement[]).forEach((sibling) => {
-        if (sibling === component.overlay) return;
-        if (sibling.hasAttribute("inert")) return;
-        sibling.setAttribute("inert", "");
-        inerted.push(sibling);
-      });
+      for (const sibling of parent.children) {
+        if (sibling !== component.overlay && !sibling.hasAttribute("inert")) {
+          sibling.setAttribute("inert", "");
+          inerted.push(sibling as HTMLElement);
+        }
+      }
     }
     const body = component.element.ownerDocument.body;
     if (body && scrollLock === null) {
@@ -527,8 +548,7 @@ export const withVisibility =
   };
 
   const releaseBackground = (): void => {
-    inerted.forEach((el) => el.removeAttribute("inert"));
-    inerted.length = 0;
+    inerted.splice(0).forEach((el) => el.removeAttribute("inert"));
     const body = component.element.ownerDocument.body;
     if (body && scrollLock !== null) {
       body.style.overflow = scrollLock;
@@ -595,34 +615,26 @@ export const withVisibility =
    */
   const focusWhenVisible = (target: HTMLElement): void => {
     const view = target.ownerDocument.defaultView;
-    if (!view || typeof view.requestAnimationFrame !== "function") {
-      target.focus();
-      focusPending = false;
-      if (afterOpenWaiting) emitAfterOpen();
-      return;
-    }
     // The newest request names the target: the one still waiting stands down
     cancelFocusFrame();
     const request = focusRequest;
     const settle = (): void => {
       focusFrame = undefined;
       if (request !== focusRequest) return;
-      if (!opened || !target.isConnected) {
-        // Nothing will take the focus: the wait is over, and `afteropen`
-        // follows the opening's own timer
-        focusPending = false;
-        if (afterOpenWaiting) emitAfterOpen();
+      const alive = opened && target.isConnected;
+      if (
+        alive &&
+        typeof view?.requestAnimationFrame === "function" &&
+        view.getComputedStyle(target).visibility === "hidden"
+      ) {
+        focusPending = true;
+        focusFrame = view.requestAnimationFrame(settle);
+        focusView = view;
         return;
       }
-      if (view.getComputedStyle(target).visibility !== "hidden") {
-        target.focus();
-        focusPending = false;
-        if (afterOpenWaiting) emitAfterOpen();
-        return;
-      }
-      focusPending = true;
-      focusFrame = view.requestAnimationFrame(settle);
-      focusView = view;
+      if (alive) target.focus();
+      focusPending = false;
+      if (afterOpenWaiting) emitAfterOpen();
     };
     settle();
   };
@@ -666,25 +678,19 @@ export const withVisibility =
     // top-layer dialog no `cancel` and never forces one closed. closeOnEscape:
     // false still takes the key: it is the topmost modal's.
     escape?.stop();
-    escape = onModalEscape(component.element, () => {
-      // In the top layer the key press asks as the browser's `cancel` did, on
-      // the <dialog>: what listens for it there (<m-dialog>, which asks its
-      // host first) still hears every Escape, and can still refuse it
-      if (top) {
-        asking = true;
-        component.element.dispatchEvent(new Event("cancel", { cancelable: true }));
-        asking = false;
-      } else if (component.config.closeOnEscape !== false) visibility.close();
-    });
-    // What is not a key press (a back gesture) asks through `cancel` too
-    if (top) component.element.addEventListener("cancel", handleCancel);
+    escape = onModalEscape(
+      component.element,
+      () => {
+        if (component.config.closeOnEscape !== false) visibility.close();
+      },
+      top && (() => component.element.dispatchEvent(new Event("cancel", { cancelable: true }))),
+    );
   };
 
   const cleanupEvents = () => {
     scrim.removeEventListener("mousedown", handleOverlayMouseDown);
     document.removeEventListener("mouseup", handleOverlayMouseUp);
     escape?.stop();
-    component.element.removeEventListener("cancel", handleCancel);
   };
 
   /**
@@ -712,18 +718,6 @@ export const withVisibility =
     mouseDownOnOverlay = false;
   }
 
-  // The dialog stays open unless the dialog decides: a close request goes
-  // through close(), so the close event comes once and beforeclose can keep it
-  // open. A `cancel` from the browser in the task the dialog opened in is the
-  // opening key's, when the page stopped that key press before it reached the
-  // window: it is a new event, which only the task can tell.
-  function handleCancel(e: Event) {
-    e.preventDefault();
-    if ((asking || !escape?.opening) && component.config.closeOnEscape !== false && visibility.isOpen()) {
-      visibility.close();
-    }
-  }
-
   /** Shows the <dialog> modal; without a document to show it in, just open */
   const showModal = (): void => {
     if (!component.element.isConnected) {
@@ -734,15 +728,15 @@ export const withVisibility =
     }
   };
 
+  const dialogVisibleClass = `${component.getClass("dialog")}--visible`;
+  const overlayVisibleClass = `${component.getClass("dialog__overlay")}--visible`;
+
   // Setup initial state
   scopeScrim();
   if (isOpen) {
     if (top) showModal();
-    addClass(
-      component.overlay,
-      `${component.getClass("dialog__overlay")}--visible`,
-    );
-    addClass(component.element, `${component.getClass("dialog")}--visible`);
+    addClass(component.overlay, overlayVisibleClass);
+    addClass(component.element, dialogVisibleClass);
 
     // Setup focus trap and events
     trapFocus();
@@ -758,21 +752,8 @@ export const withVisibility =
       // Store the currently focused element
       previouslyFocusedElement = deepActiveElement() as HTMLElement;
 
-      // Trigger before open event
-      const beforeOpenEvent = {
-        dialog: getComponent(),
-        defaultPrevented: false,
-        preventDefault: () => {
-          beforeOpenEvent.defaultPrevented = true;
-        },
-      };
-
-      if (typeof component.emit === "function") {
-        component.emit(DIALOG_EVENTS.BEFORE_OPEN, beforeOpenEvent);
-      }
-
-      // If event was prevented, don't open
-      if (beforeOpenEvent.defaultPrevented) return;
+      // Trigger before open event; if prevented, don't open
+      if (ask(DIALOG_EVENTS.BEFORE_OPEN)) return;
 
       // Open from here on. A close still on its way out is abandoned: the
       // dialog stays in the document, and that close has no `afterclose`.
@@ -786,10 +767,10 @@ export const withVisibility =
       if (top) {
         showModal();
         void component.element.offsetWidth;
-        addClass(component.element, `${component.getClass("dialog")}--visible`);
+        addClass(component.element, dialogVisibleClass);
         trapFocus();
         setupEvents();
-        component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
+        emit(DIALOG_EVENTS.OPEN);
         // An `open` listener may have closed it again
         if (!opened) return;
         afterOpenTimer = setTimeout(afterOpenDue, openDuration);
@@ -816,9 +797,7 @@ export const withVisibility =
       // The dialog is open: say so before returning. A listener runs before
       // the surface is visible and before focus is in; `afteropen` is the
       // event for those.
-      if (typeof component.emit === "function") {
-        component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
-      }
+      emit(DIALOG_EVENTS.OPEN);
       // An `open` listener may have closed it again: nothing left to show
       if (!opened) return;
 
@@ -826,11 +805,8 @@ export const withVisibility =
       // inserted and made visible in the same task has no state to animate
       // from, so the scrim appeared at once while it faded on the way out
       showTimer = setTimeout(() => {
-        addClass(
-          component.overlay,
-          `${component.getClass("dialog__overlay")}--visible`,
-        );
-        addClass(component.element, `${component.getClass("dialog")}--visible`);
+        addClass(component.overlay, overlayVisibleClass);
+        addClass(component.element, dialogVisibleClass);
 
         // Focus moves in once the surface is visible
         trapFocus();
@@ -846,43 +822,16 @@ export const withVisibility =
       // A closed dialog stays as it is, and emits nothing
       if (!opened) return;
 
-      // Trigger before close event
-      const beforeCloseEvent = {
-        dialog: getComponent(),
-        defaultPrevented: false,
-        preventDefault: () => {
-          beforeCloseEvent.defaultPrevented = true;
-        },
-      };
-
-      if (!forced && typeof component.emit === "function") {
-        component.emit(DIALOG_EVENTS.BEFORE_CLOSE, beforeCloseEvent);
-      }
-
-      // If event was prevented, don't close
-      if (beforeCloseEvent.defaultPrevented) {
-        return;
-      }
+      // Trigger before close event; if prevented, don't close
+      if (!forced && ask(DIALOG_EVENTS.BEFORE_CLOSE)) return;
 
       // Closed from here on. An open that had not shown the surface yet never
-      // does, and has no `afteropen`.
-      opened = false;
-      clearTimeout(showTimer);
-      clearTimeout(afterOpenTimer);
-      afterOpenWaiting = false;
-      // A focus still waiting for its target is this opening's, and it ends here
-      cancelFocusFrame();
+      // does, and has no `afteropen`. A focus still waiting for its target is
+      // this opening's, and it ends here.
+      stopOpen();
 
-      // Get class names
-      const dialogVisibleClass = `${component.getClass("dialog")}--visible`;
-      const overlayVisibleClass = `${component.getClass(
-        "dialog__overlay",
-      )}--visible`;
-
-      // Remove dialog visible class
+      // Remove visible classes
       removeClass(component.element, dialogVisibleClass);
-
-      // Remove overlay visible class
       removeClass(component.overlay, overlayVisibleClass);
 
       // Out of the top layer first: the page is inert until then, and focus
@@ -895,9 +844,7 @@ export const withVisibility =
       cleanupEvents();
 
       // Trigger close events
-      if (typeof component.emit === "function") {
-        component.emit(DIALOG_EVENTS.CLOSE, { dialog: getComponent() });
-      }
+      emit(DIALOG_EVENTS.CLOSE);
       // A `close` listener may have opened it again: it stays in the document
       if (opened) return;
 
@@ -909,21 +856,12 @@ export const withVisibility =
         }
         // The overlay no longer needs the container to be a containing block
         unscopeScrim();
-
-        if (typeof component.emit === "function") {
-          component.emit(DIALOG_EVENTS.AFTER_CLOSE, { dialog: getComponent() });
-        }
+        emit(DIALOG_EVENTS.AFTER_CLOSE);
       }, closeDuration);
     },
 
-    toggle(open?: boolean) {
-      if (open === undefined) {
-        this.isOpen() ? this.close() : this.open();
-      } else if (open) {
-        this.open();
-      } else {
-        this.close();
-      }
+    toggle(open = !opened) {
+      open ? this.open() : this.close();
     },
 
     isOpen() {
@@ -932,12 +870,8 @@ export const withVisibility =
 
     /** For destroy(): closed, with nothing left to run */
     cancel() {
-      opened = false;
-      clearTimeout(showTimer);
-      clearTimeout(afterOpenTimer);
+      stopOpen();
       clearTimeout(afterCloseTimer);
-      afterOpenWaiting = false;
-      cancelFocusFrame();
       cleanupEvents();
       // Destroyed rather than closed: no afterclose is coming to restore it
       unscopeScrim();
