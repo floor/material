@@ -278,9 +278,13 @@ describe("explicit contrast levels are opt-in", () => {
     // 2dp inside corner at a handle gap, both written by the controller, and the
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
+    // The three status seeds (success, warning, info) are harmonised to each
+    // theme's primary colour and emitted at standard, medium and high contrast
+    // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
+    // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("173219d4cdd993648703fa2e298f50a3c5a33b93801584e79211a4256f3efe6f");
-    expect(css.length).toBe(530861);
+      .toBe("5d5779ab376b97542073a9b43a7fc59128bba4ed6ab792c20bd2aabb90170801");
+    expect(css.length).toBe(542183);
   });
 
   test("today's sheets still resolve to the fixture", () => {

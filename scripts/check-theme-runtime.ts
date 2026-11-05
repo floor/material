@@ -195,7 +195,7 @@ try {
   // every role of it reached the section.
   const missing = Object.entries(measured.expected).filter(([property, value]) => measured.insideRoles[property] !== value);
   assert.deepEqual(missing, [], `roles the section did not carry from the image-derived scheme`);
-  assert.equal(Object.keys(measured.expected).length, 34, `the scheme writes 34 roles, wrote ${Object.keys(measured.expected).length}`);
+  assert.equal(Object.keys(measured.expected).length, 40, `the scheme writes 40 roles, wrote ${Object.keys(measured.expected).length}`);
   checks += 2;
   assert.notEqual(
     measured.insideRoles["--mtrl-sys-color-primary"],
@@ -226,7 +226,7 @@ try {
 
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
   console.log(
-    `Passed ${checks} runtime-colour checks: an image's source colour, its scheme on one section's 34 roles, ` +
+    `Passed ${checks} runtime-colour checks: an image's source colour, its scheme on one section's 40 roles, ` +
       `the components inside repainted and the ones outside unchanged.`
   );
 } finally {
