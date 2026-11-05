@@ -1693,6 +1693,13 @@
       "\"timeout\""
     ]
   },
+  "SnackbarConfig.focusShortcut": {
+    "kind": "union",
+    "members": [
+      "false",
+      "string"
+    ]
+  },
   "SnackbarDuration": {
     "kind": "union",
     "members": [

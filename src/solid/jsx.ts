@@ -97,6 +97,7 @@ declare module "solid-js" {
       "select": ElementEvents<import("../elements/menu").MenuSpec>["select"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["select"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["select"] | ElementEvents<import("../elements/search").SearchSpec>["select"];
       "show": ElementEvents<import("../elements/toolbar").ToolbarSpec>["show"];
       "hide": ElementEvents<import("../elements/toolbar").ToolbarSpec>["hide"];
+      "focus": ElementEvents<import("../elements/snackbar").SnackbarSpec>["focus"];
       "cancel": ElementEvents<import("../elements/dialog").DialogSpec>["cancel"];
       "confirm": ElementEvents<import("../elements/timepicker").TimepickerSpec>["confirm"];
     }
