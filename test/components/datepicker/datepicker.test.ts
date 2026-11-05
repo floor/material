@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createDatePicker from "../../../src/components/datepicker";
 import type { DatePickerComponent, DatePickerConfig } from "../../../src/components/datepicker";
+import { datepickerElement } from "../../../src/elements/datepicker";
 
 let dom: JSDOM;
 let pickers: DatePickerComponent[];
@@ -247,5 +248,126 @@ describe("Material date picker", () => {
     const picker = mount({ variant: 'modal' }); let opens = 0; picker.on('open', () => opens++); picker.open();
     const trigger = query<HTMLButtonElement>(picker, '[data-action="open"]'); picker.lifecycle.destroy(); picker.destroy(); trigger.click(); picker.open();
     expect(opens).toBe(1); expect(picker.element.isConnected).toBe(false); expect(document.body.style.overflow).toBe('');
+  });
+  test("locale drives month/weekday names, first weekday, default dateFormat, and <m-datepicker locale> while keeping en-US default", () => {
+    const def = mount({ value: "2026-09-15" });
+    const en = mount({ value: "2026-09-15", locale: "en-US" });
+    const fr = mount({ value: "2026-09-15", locale: "fr-FR" });
+
+    expect(def.getFormattedValue()).toBe("09/15/2026");
+    expect(en.getFormattedValue()).toBe("09/15/2026");
+    expect(fr.getFormattedValue()).toBe("15/09/2026");
+    expect(def.input.placeholder).toBe("MM/DD/YYYY");
+    expect(fr.input.placeholder).toBe("DD/MM/YYYY");
+    expect(query(fr, ".mtrl-datepicker__help").textContent).toBe("DD/MM/YYYY");
+
+    def.open(); en.open(); fr.open();
+    expect(query(def, '[data-action="month"]').textContent).toBe("September");
+    expect(query(en, '[data-action="month"]').textContent).toBe("September");
+    expect(query(fr, '[data-action="month"]').textContent?.toLowerCase()).toBe("septembre");
+    expect(query(fr, '[role="grid"]:not([aria-hidden])').getAttribute("aria-label")?.toLowerCase()).toBe("septembre 2026");
+
+    const weekdays = (p: DatePickerComponent) =>
+      Array.from(p.element.querySelectorAll('[role="grid"]:not([aria-hidden]) .mtrl-datepicker__weekday')).map((el) => ({
+        narrow: el.textContent,
+        long: el.getAttribute("aria-label")?.toLowerCase(),
+      }));
+    expect(weekdays(def)).toEqual(weekdays(en));
+    expect(weekdays(en)[0]).toEqual({ narrow: "S", long: "sunday" });
+    expect(weekdays(fr)[0]).toEqual({ narrow: "L", long: "lundi" });
+    expect(weekdays(fr)[6]).toEqual({ narrow: "D", long: "dimanche" });
+
+    const gridDates = (p: DatePickerComponent) =>
+      Array.from(p.element.querySelectorAll<HTMLElement>("[data-date]")).map((el) => el.dataset.date);
+    expect(gridDates(def)[0]).toBe("2026-08-30");
+    expect(gridDates(en)[0]).toBe("2026-08-30");
+    expect(gridDates(fr)[0]).toBe("2026-08-31");
+
+    en.open();
+    key(day(en, "2026-09-16"), "Home");
+    expect((document.activeElement as HTMLElement)?.dataset.date).toBe("2026-09-13");
+    key(day(en, "2026-09-16"), "End");
+    expect((document.activeElement as HTMLElement)?.dataset.date).toBe("2026-09-19");
+
+    fr.open();
+    key(day(fr, "2026-09-16"), "Home");
+    expect((document.activeElement as HTMLElement)?.dataset.date).toBe("2026-09-14");
+    key(day(fr, "2026-09-16"), "End");
+    expect((document.activeElement as HTMLElement)?.dataset.date).toBe("2026-09-20");
+
+    fr.input.value = "21/09/2026";
+    key(fr.input, "Enter");
+    expect((fr.getValue() as Date).getDate()).toBe(21);
+    expect(fr.getFormattedValue()).toBe("21/09/2026");
+
+    const frCustom = mount({ value: "2026-09-15", locale: "fr-FR", dateFormat: "YYYY-MM-DD" });
+    expect(frCustom.getFormattedValue()).toBe("2026-09-15");
+    frCustom.open();
+    expect(query(frCustom, '[data-action="month"]').textContent?.toLowerCase()).toBe("septembre");
+    expect(gridDates(frCustom)[0]).toBe("2026-08-31");
+
+    const proto = Intl.Locale.prototype as unknown as Record<string, unknown>;
+    const origGetWeekInfo = Object.getOwnPropertyDescriptor(proto, "getWeekInfo");
+    const origWeekInfo = Object.getOwnPropertyDescriptor(proto, "weekInfo");
+    try {
+      delete proto.getWeekInfo;
+      delete proto.weekInfo;
+      const frFallback = mount({ value: "2026-09-15", locale: "fr-FR" });
+      const gbFallback = mount({ value: "2026-09-15", locale: "en-GB" });
+      const cnFallback = mount({ value: "2026-09-15", locale: "zh-CN" });
+      const arFallback = mount({ value: "2026-09-15", locale: "ar-EG" });
+      const heFallback = mount({ value: "2026-09-15", locale: "he-IL" });
+      frFallback.open(); gbFallback.open(); cnFallback.open(); arFallback.open(); heFallback.open();
+      expect(gridDates(frFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(gbFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(cnFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(arFallback)[0]).toBe("2026-08-29");
+      expect(gridDates(heFallback)[0]).toBe("2026-08-30");
+    } finally {
+      if (origGetWeekInfo) Object.defineProperty(proto, "getWeekInfo", origGetWeekInfo);
+      if (origWeekInfo) Object.defineProperty(proto, "weekInfo", origWeekInfo);
+    }
+
+    for (const bad of ["en_US", "not a locale", "invalid"]) {
+      const fallback = mount({ value: "2026-09-15", locale: bad });
+      expect(fallback.getFormattedValue()).toBe("09/15/2026");
+      expect(fallback.input.placeholder).toBe("MM/DD/YYYY");
+      fallback.open();
+      expect(query(fallback, '[data-action="month"]').textContent).toBe("September");
+      expect(gridDates(fallback)[0]).toBe("2026-08-30");
+    }
+
+    const ar = mount({ value: "2026-09-15", locale: "ar-EG" });
+    expect(ar.input.placeholder).toBe("DD/MM/YYYY");
+    expect(ar.getFormattedValue()).toBe("15/09/2026");
+    ar.open();
+    expect(gridDates(ar)[0]).toBe("2026-08-29");
+    ar.input.value = "22/11/2026";
+    key(ar.input, "Enter");
+    expect(ar.getFormattedValue()).toBe("22/11/2026");
+    expect((ar.getValue() as Date).getMonth()).toBe(10);
+    expect((ar.getValue() as Date).getDate()).toBe(22);
+
+    const th = mount({ value: "2026-09-15", locale: "th-TH" });
+    expect(th.input.placeholder).toBe("DD/MM/YYYY");
+    expect(th.getFormattedValue()).toBe("15/09/2026");
+    th.open();
+    expect(day(th, "2026-09-15").getAttribute("aria-label")).toContain("2026");
+    expect(day(th, "2026-09-15").getAttribute("aria-label")).not.toContain("2569");
+    expect(query(th, '.mtrl-datepicker__sr-only[aria-live="polite"]').textContent).toContain("2026");
+    expect(query(th, '.mtrl-datepicker__sr-only[aria-live="polite"]').textContent).not.toContain("2569");
+
+    const fa = mount({ value: "2026-09-15", locale: "fa-IR" });
+    fa.open();
+    const expectedFaSep = new Intl.DateTimeFormat("fa-IR", { month: "long", calendar: "gregory", numberingSystem: "latn" }).format(new Date(2026, 8, 1));
+    expect(query(fa, '[data-action="month"]').textContent).toBe(expectedFaSep);
+    expect(query(fa, '[role="grid"]:not([aria-hidden])').getAttribute("aria-label")).toBe(`${expectedFaSep} 2026`);
+    fa.calendar.showMonthView();
+    const expectedFaMonthsShort = Array.from({ length: 12 }, (_, m) =>
+      new Intl.DateTimeFormat("fa-IR", { month: "short", calendar: "gregory", numberingSystem: "latn" }).format(new Date(2026, m, 1))
+    );
+    expect(Array.from(fa.element.querySelectorAll("[data-month]")).map((el) => el.textContent)).toEqual(expectedFaMonthsShort);
+
+    expect(datepickerElement.spec.attributes.locale).toEqual({ type: "string", config: "locale" });
   });
 });

@@ -1,12 +1,14 @@
 import { DATEPICKER_ICONS } from "./constants";
 import { setHTML } from "../../core/dom/html";
 import { createElement } from "../../core/dom/create";
-import { MONTH_NAMES, MONTH_NAMES_SHORT, type DatePickerState } from "./types";
-import { formatDate, generateCalendarDates, isSameDay, parseDate } from "./utils";
+import type { DatePickerState } from "./types";
+import { dtf, formatDate, generateCalendarDates, getMonthNames, getWeekdayNames, isSameDay, parseDate } from "./utils";
 
 /** Rendering is passive: one delegated listener owns each picker, including rerenders. */
 export function renderCalendar(state: DatePickerState): HTMLElement {
   const cls = (name: string) => `${state.prefix}-datepicker__${name}`;
+  const monthsLong = getMonthNames(state.locale, "long");
+  const weekdayNames = getWeekdayNames(state.locale);
   const make = (tag: string, name: string, text?: string, attributes?: Record<string, string | boolean>) =>
     createElement({ tag, className: cls(name), text, attributes });
   const button = (name: string, text: string, action: string, label = text) => {
@@ -21,12 +23,12 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
    * weekday row is for assistive tech (one visible row heads the list).
    */
   const monthGrid = (year: number, month: number, current: boolean, list = false): HTMLElement => {
-    const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${MONTH_NAMES[month]} ${year}`, "aria-describedby": `${state.id}-keyboard` });
+    const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${monthsLong[month]} ${year}`, "aria-describedby": `${state.id}-keyboard` });
     const weekdays = make("div", "weekdays", undefined, { role: "row" });
     if (list) weekdays.classList.add(cls("sr-only"));
-    for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0], { role: "columnheader", "aria-label": name }));
+    for (const { narrow, long } of weekdayNames) weekdays.append(make("span", "weekday", narrow, { role: "columnheader", "aria-label": long }));
     grid.append(weekdays);
-    const dates = generateCalendarDates(year, month, state.selectedDate, state.rangeEndDate, state.minDate, state.maxDate);
+    const dates = generateCalendarDates(year, month, state.selectedDate, state.rangeEndDate, state.minDate, state.maxDate, state.firstDayOfWeek);
     const focus = dates.find(item => isSameDay(item.date, state.focusedDate) && state.isAllowed(item.date)) ?? dates.find(item => item.isCurrentMonth && state.isAllowed(item.date));
     for (let week = 0; week < 6; week++) {
       const row = make("div", "week", undefined, { role: "row" });
@@ -42,7 +44,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
         if (item.isCurrentMonth && state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
         const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
         const day = make("button", "day", String(item.day), {
-          type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+          type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": dtf(state.locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(item.date),
           "aria-pressed": String(selected), disabled: !state.isAllowed(item.date), tabindex: current && item === focus ? "0" : "-1",
         });
         if (!state.isAllowed(item.date)) day.classList.add(cls("day--disabled"));
@@ -75,8 +77,8 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     // The full-screen headline drops the year, as m3's does ("Aug 17 – Aug 23"), to fit
     // one line of Title Large.
     const pattern = fullscreen ? "MMM D" : "MMM D, YYYY";
-    const headline = state.selectedDate ? formatDate(state.selectedDate, pattern) : state.selectionMode === "range" ? "Select range" : "Select date";
-    header.append(make("div", "headline", state.selectionMode === "range" && state.rangeEndDate ? `${headline} – ${formatDate(state.rangeEndDate, pattern)}` : headline));
+    const headline = state.selectedDate ? formatDate(state.selectedDate, pattern, state.locale) : state.selectionMode === "range" ? "Select range" : "Select date";
+    header.append(make("div", "headline", state.selectionMode === "range" && state.rangeEndDate ? `${headline} – ${formatDate(state.rangeEndDate, pattern, state.locale)}` : headline));
     header.append(button("mode-toggle", state.inputMode ? "▦" : "✎", "toggle-mode", state.inputMode ? "Switch to calendar" : "Switch to date input"));
     content.append(header);
   }
@@ -87,7 +89,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       const id = `${state.id}-${endpoint}`;
       wrapper.append(make("label", "label", state.selectionMode === "range" ? (endpoint === "start" ? "Start date" : "End date") : "Date", { for: id }));
       const input = make("input", "input", undefined, { id, type: "text", autocomplete: "off", placeholder: state.dateFormat, "data-entry": endpoint, "aria-describedby": `${id}-help ${id}-error` }) as HTMLInputElement;
-      input.value = formatDate(endpoint === "start" ? state.selectedDate : state.rangeEndDate, state.dateFormat);
+      input.value = formatDate(endpoint === "start" ? state.selectedDate : state.rangeEndDate, state.dateFormat, state.locale);
       wrapper.append(input, make("div", "help", state.dateFormat, { id: `${id}-help` }), make("div", "error", "", { id: `${id}-error`, "aria-live": "polite" }));
       fields.append(wrapper);
     }
@@ -98,21 +100,21 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     // of state.listStart/listLength are rendered; the picker extends them as the list
     // scrolls.
     const weekdays = make("div", "weekdays", undefined, { "aria-hidden": "true" });
-    for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0]));
+    for (const { narrow } of weekdayNames) weekdays.append(make("span", "weekday", narrow));
     const list = make("div", "list");
     const start = state.listStart ?? new Date(state.currentYear, state.currentMonth, 1);
     for (let index = 0; index < (state.listLength ?? 1); index++) {
       const first = new Date(start.getFullYear(), start.getMonth() + index, 1);
       const section = make("section", "month-section", undefined, { "data-month-key": `${first.getFullYear()}-${first.getMonth()}` });
-      section.append(make("div", "subhead", `${MONTH_NAMES[first.getMonth()]} ${first.getFullYear()}`, { "aria-hidden": "true" }));
+      section.append(make("div", "subhead", `${monthsLong[first.getMonth()]} ${first.getFullYear()}`, { "aria-hidden": "true" }));
       section.append(monthGrid(first.getFullYear(), first.getMonth(), first.getFullYear() === state.focusedDate.getFullYear() && first.getMonth() === state.focusedDate.getMonth(), true));
       list.append(section);
     }
-    content.append(weekdays, list, make("div", "sr-only", "Use arrow keys for days, Home and End for the week, Page Up and Page Down for months, with Shift for years.", { id: `${state.id}-keyboard` }));
+    content.append(weekdays, list);
   } else {
     const header = make("div", "header");
     const nav = make("div", "navigation");
-    nav.append(button("month-selector", MONTH_NAMES[state.currentMonth], "month", "Select month"), button("year-selector", String(state.currentYear), "year", "Select year"));
+    nav.append(button("month-selector", monthsLong[state.currentMonth], "month", "Select month"), button("year-selector", String(state.currentYear), "year", "Select year"));
     header.append(nav);
     // The year list scrolls, so it has no arrows to page it.
     if (state.currentView !== "year") {
@@ -140,19 +142,22 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       content.append(track);
     } else {
       const months = state.currentView === "month";
+      const monthsShort = months ? getMonthNames(state.locale, "short") : [];
       const grid = make("div", months ? "months" : "years", undefined, { role: "group", "aria-label": months ? "Choose month" : "Choose year" });
       // Every year from minDate to maxDate, or Compose's default 1900-2100, in a list
       // that scrolls vertically (m3.material.io: "To navigate across years, scroll
       // vertically"); it was ±10 years paged by the arrows.
-      const first = state.minDate?.getFullYear() ?? 1900, last = state.maxDate?.getFullYear() ?? 2100;
-      for (const value of months ? Array.from({ length: 12 }, (_, i) => i) : Array.from({ length: last - first + 1 }, (_, i) => first + i)) {
+      const [first, last] = months ? [0, 11] : [state.minDate?.getFullYear() ?? 1900, state.maxDate?.getFullYear() ?? 2100];
+      for (let value = first; value <= last; value++) {
         const selected = value === (months ? state.currentMonth : state.currentYear);
-        grid.append(make("button", months ? "month" : "year", months ? MONTH_NAMES_SHORT[value] : String(value), {
+        grid.append(make("button", months ? "month" : "year", months ? monthsShort[value] : String(value), {
           type: "button", [months ? "data-month" : "data-year"]: String(value), "aria-pressed": String(selected), tabindex: selected ? "0" : "-1",
         }));
       }
       content.append(grid);
     }
+  }
+  if (!state.inputMode) {
     content.append(make("div", "sr-only", "Use arrow keys for days, Home and End for the week, Page Up and Page Down for months, with Shift for years.", { id: `${state.id}-keyboard` }));
   }
   if (modal && !fullscreen) {

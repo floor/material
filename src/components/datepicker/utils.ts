@@ -1,11 +1,45 @@
 // src/components/datepicker/utils.ts
-import { CalendarDate, MONTH_NAMES, MONTH_NAMES_SHORT } from './types';
+import type { CalendarDate } from './types';
 
-/**
- * Parses a date from various input types
- * @param date - Date string, Date object, or null
- * @returns Valid Date object or null if invalid
- */
+export const DEFAULT_LOCALE = 'en-US';
+export const dtf = (locale: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(locale, { calendar: 'gregory', numberingSystem: 'latn', ...opts });
+
+export const resolveLocale = (locale?: string): string => {
+  try {
+    return (locale && Intl.DateTimeFormat.supportedLocalesOf(locale)[0]) || DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+};
+
+export const getFirstDayOfWeek = (locale = DEFAULT_LOCALE): number => {
+  const loc = new Intl.Locale(locale) as Intl.Locale & { getWeekInfo?: () => { firstDay?: number }; weekInfo?: { firstDay?: number } };
+  const first = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay, r = loc.maximize().region ?? '';
+  return first ? first % 7 : /^(EG|IR|AF|SY)$/.test(r) ? 6 : /^(US|CA|MX|JP|KR|TW|HK|BR|PT|IL|SA|TH|PH|IN|ZA)$/.test(r) ? 0 : 1;
+};
+
+export const getLocaleDateFormat = (locale = DEFAULT_LOCALE): string =>
+  dtf(locale, { year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(new Date(3333, 10, 22))
+    .replace('3333', 'YYYY')
+    .replace('11', 'MM')
+    .replace('22', 'DD')
+    .replace(/[\u200e\u200f]|[^MDY]+$/g, '');
+
+export const getMonthNames = (locale = DEFAULT_LOCALE, month: 'long' | 'short' = 'long'): string[] => {
+  const f = dtf(locale, { month });
+  return Array.from({ length: 12 }, (_, m) => f.format(new Date(2026, m, 1)));
+};
+
+export const getWeekdayNames = (locale = DEFAULT_LOCALE): { narrow: string; long: string }[] => {
+  const n = dtf(locale, { weekday: 'narrow' }), l = dtf(locale, { weekday: 'long' }), first = getFirstDayOfWeek(locale);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2026, 0, 4 + ((first + i) % 7));
+    return { narrow: n.format(d), long: l.format(d) };
+  });
+};
+
 export const parseDate = (date: Date | string | null): Date | null => {
   if (!date) return null;
   if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) return parseInputDate(date, 'YYYY-MM-DD');
@@ -15,15 +49,17 @@ export const parseDate = (date: Date | string | null): Date | null => {
   return result;
 };
 
+const TOKEN_RE = /(YYYY|MMMM|MMM|YY|MM|DD|M|D)/g;
+
 /** Strict inverse of formatDate: never let Date roll February 30 into March. */
-export const parseInputDate = (text: string, format: string): Date | null => {
+export const parseInputDate = (text: string, format: string, locale = DEFAULT_LOCALE): Date | null => {
   const tokens: string[] = [];
   const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = format.split(/(YYYY|MMMM|MMM|YY|MM|DD|M|D)/).map(part => {
-    if (!/^(YYYY|MMMM|MMM|YY|MM|DD|M|D)$/.test(part)) return escape(part);
+  const months = (s: 'long' | 'short') => getMonthNames(locale, s);
+  const pattern = format.split(TOKEN_RE).map((part, i) => {
+    if (!(i & 1)) return escape(part);
     tokens.push(part);
-    if (part === 'MMMM') return '(' + MONTH_NAMES.join('|') + ')';
-    if (part === 'MMM') return '(' + MONTH_NAMES_SHORT.join('|') + ')';
+    if (part === 'MMMM' || part === 'MMM') return '(' + months(part === 'MMMM' ? 'long' : 'short').map(escape).join('|') + ')';
     return part === 'YYYY' ? '(\\d{4})' : part === 'YY' ? '(\\d{2})' : '(\\d{1,2})';
   }).join('');
   const match = new RegExp('^' + pattern + '$', 'i').exec(text.trim());
@@ -33,7 +69,7 @@ export const parseInputDate = (text: string, format: string): Date | null => {
     const value = match[index + 1];
     if (token === 'YYYY') year = Number(value);
     else if (token === 'YY') year = 2000 + Number(value);
-    else if (token === 'MMMM' || token === 'MMM') month = (token === 'MMMM' ? MONTH_NAMES : MONTH_NAMES_SHORT).findIndex(name => name.toLowerCase() === value.toLowerCase()) + 1;
+    else if (token === 'MMMM' || token === 'MMM') month = months(token === 'MMMM' ? 'long' : 'short').findIndex(name => name.toLowerCase() === value.toLowerCase()) + 1;
     else if (token.startsWith('M')) month = Number(value);
     else day = Number(value);
   });
@@ -41,214 +77,63 @@ export const parseInputDate = (text: string, format: string): Date | null => {
   return year >= 1 && result.getFullYear() === year && result.getMonth() === month - 1 && result.getDate() === day ? result : null;
 };
 
-/**
- * Formats a date according to the specified format using a parser-based approach
- * This avoids string replacement issues by building the output string from scratch
- * 
- * @param date - Date to format
- * @param format - Format string (MM/DD/YYYY, etc.)
- * @returns Formatted date string
- */
-export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY'): string => {
-  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-    return '';
-  }
-  
-  let result = '';
-  let i = 0;
-  
-  while (i < format.length) {
-    // Check for month name patterns
-    if (format.substring(i, i+4) === 'MMMM') {
-      // Full month name
-      result += MONTH_NAMES[date.getMonth()];
-      i += 4;
-    } 
-    else if (format.substring(i, i+3) === 'MMM') {
-      // Abbreviated month name
-      result += MONTH_NAMES_SHORT[date.getMonth()];
-      i += 3;
-    }
-    else if (format.substring(i, i+2) === 'MM') {
-      // Two-digit month
-      result += (date.getMonth() + 1).toString().padStart(2, '0');
-      i += 2;
-    }
-    else if (format.substring(i, i+1) === 'M') {
-      // Single-digit month
-      result += (date.getMonth() + 1);
-      i += 1;
-    }
-    else if (format.substring(i, i+4) === 'YYYY') {
-      // 4-digit year
-      result += date.getFullYear();
-      i += 4;
-    }
-    else if (format.substring(i, i+2) === 'YY') {
-      // 2-digit year
-      result += date.getFullYear().toString().slice(-2);
-      i += 2;
-    }
-    else if (format.substring(i, i+2) === 'DD') {
-      // Two-digit day
-      result += date.getDate().toString().padStart(2, '0');
-      i += 2;
-    }
-    else if (format.substring(i, i+1) === 'D') {
-      // Single-digit day
-      result += date.getDate();
-      i += 1;
-    }
-    else {
-      // Any other character is copied as-is
-      result += format[i];
-      i += 1;
-    }
-  }
-  
-  return result;
-};
-
-/**
- * Gets the days in a month
- * @param year - Year
- * @param month - Month (0-11)
- * @returns Number of days in the month
- */
-export const getDaysInMonth = (year: number, month: number): number => {
-  return new Date(year, month + 1, 0).getDate();
-};
-
-/**
- * Gets the first day of the month
- * @param year - Year
- * @param month - Month (0-11)
- * @returns Day of the week (0-6, where 0 is Sunday)
- */
-export const getFirstDayOfMonth = (year: number, month: number): number => {
-  return new Date(year, month, 1).getDay();
-};
-
-/**
- * Checks if two dates are the same day
- * @param date1 - First date
- * @param date2 - Second date
- * @returns True if same day, false otherwise
- */
-export const isSameDay = (date1: Date, date2: Date): boolean => {
-  return (
-    date1.getDate() === date2.getDate() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getFullYear() === date2.getFullYear()
+export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY', locale = DEFAULT_LOCALE): string => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+  const m = date.getMonth() + 1, d = date.getDate(), y = date.getFullYear(), pad = (n: number) => String(n).padStart(2, '0');
+  return format.replace(TOKEN_RE, token =>
+    token === 'MMMM' ? dtf(locale, { month: 'long' }).format(date) :
+    token === 'MMM' ? dtf(locale, { month: 'short' }).format(date) :
+    token === 'MM' ? pad(m) :
+    token === 'M' ? String(m) :
+    token === 'YYYY' ? String(y) :
+    token === 'YY' ? String(y).slice(-2) :
+    token === 'DD' ? pad(d) :
+    String(d)
   );
 };
 
-/**
- * Checks if a date is between two other dates (inclusive)
- * @param date - Date to check
- * @param startDate - Start date
- * @param endDate - End date
- * @returns True if date is between start and end, false otherwise
- */
-export const isDateInRange = (date: Date, startDate: Date, endDate: Date): boolean => {
-  const timestamp = date.getTime();
-  return timestamp >= startDate.getTime() && timestamp <= endDate.getTime();
-};
+export const getDaysInMonth = (year: number, month: number): number => new Date(year, month + 1, 0).getDate();
 
-/**
- * Generates calendar dates for a month
- * @param year - Year
- * @param month - Month (0-11)
- * @param selectedDate - Currently selected date
- * @param rangeEndDate - End date if range selection
- * @param minDate - Minimum selectable date
- * @param maxDate - Maximum selectable date
- * @returns Array of calendar dates
- */
+export const getFirstDayOfMonth = (year: number, month: number): number => new Date(year, month, 1).getDay();
+
+export const isSameDay = (date1: Date, date2: Date): boolean =>
+  date1.getDate() === date2.getDate() &&
+  date1.getMonth() === date2.getMonth() &&
+  date1.getFullYear() === date2.getFullYear();
+
+export const isDateInRange = (date: Date, startDate: Date, endDate: Date): boolean =>
+  date >= startDate && date <= endDate;
+
 export const generateCalendarDates = (
   year: number,
   month: number,
   selectedDate: Date | null = null,
   rangeEndDate: Date | null = null,
   minDate: Date | null = null,
-  maxDate: Date | null = null
+  maxDate: Date | null = null,
+  firstDayOfWeek: number = 0
 ): CalendarDate[] => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  // A bare `(minDate && …) || (maxDate && …)` yields null when both bounds are
-  // absent, so isDisabled was declared boolean while carrying null. Falsy
-  // either way, but a consumer testing `=== false` would have been wrong.
-  const outOfRange = (date: Date): boolean =>
-    Boolean((minDate && date < minDate) || (maxDate && date > maxDate));
-
-  const result: CalendarDate[] = [];
-  
-  // Calculate days needed from previous month
-  const firstDay = getFirstDayOfMonth(year, month);
-  const daysInPrevMonth = getDaysInMonth(year, month - 1);
-  
-  // Add days from previous month
-  for (let i = firstDay - 1; i >= 0; i--) {
-    const date = new Date(year, month - 1, daysInPrevMonth - i);
-    const isDisabled = outOfRange(date);
-    
-    result.push({
-      date,
-      day: date.getDate(),
-      isCurrentMonth: false,
-      isToday: isSameDay(date, today),
-      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      isDisabled
-    });
-  }
-  
-  // Add days from current month
-  const daysInMonth = getDaysInMonth(year, month);
-  for (let i = 1; i <= daysInMonth; i++) {
-    const date = new Date(year, month, i);
-    const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-    const isDisabled = outOfRange(date);
-    
+  const firstDay = (getFirstDayOfMonth(year, month) - firstDayOfWeek + 7) % 7;
+  return Array.from({ length: 42 }, (_, i) => {
+    const date = new Date(year, month, 1 - firstDay + i);
+    const isCurrentMonth = date.getMonth() === month;
     const calendarDate: CalendarDate = {
       date,
-      day: i,
-      isCurrentMonth: true,
-      isToday: isSameDay(date, today),
-      isSelected,
-      isDisabled
-    };
-    
-    // Handle range selection
-    if (selectedDate && rangeEndDate) {
-      calendarDate.isRangeStart = isSameDay(date, selectedDate);
-      calendarDate.isRangeEnd = isSameDay(date, rangeEndDate);
-      calendarDate.isRangeMiddle = isDateInRange(date, selectedDate, rangeEndDate) && 
-        !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
-    }
-    
-    result.push(calendarDate);
-  }
-  
-  // Add days from next month to complete the calendar grid (6 rows × 7 columns)
-  const totalDaysNeeded = 42; // 6 rows × 7 columns
-  const remainingDays = totalDaysNeeded - result.length;
-  
-  for (let i = 1; i <= remainingDays; i++) {
-    const date = new Date(year, month + 1, i);
-    const isDisabled = outOfRange(date);
-    
-    result.push({
-      date,
-      day: i,
-      isCurrentMonth: false,
+      day: date.getDate(),
+      isCurrentMonth,
       isToday: isSameDay(date, today),
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      isDisabled
-    });
-  }
-  
-  return result;
+      isDisabled: Boolean((minDate && date < minDate) || (maxDate && date > maxDate)),
+    };
+    if (isCurrentMonth && selectedDate && rangeEndDate) {
+      calendarDate.isRangeStart = isSameDay(date, selectedDate);
+      calendarDate.isRangeEnd = isSameDay(date, rangeEndDate);
+      calendarDate.isRangeMiddle = isDateInRange(date, selectedDate, rangeEndDate) && !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
+    }
+    return calendarDate;
+  });
 };
 
 /**
