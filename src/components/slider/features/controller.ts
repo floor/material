@@ -69,12 +69,10 @@ const getHandleHeight = (size?: SliderSize): number => {
  * XS / S / M / L / XL (m3.material.io slider specs, Track shape). A numeric
  * size takes the radius of the named size it falls in.
  *
- * On a discrete slider it is also the inset of every value position. The handle
- * and the stops sit that far in from each end of the track.
+ * It is the corner a piece of track carries where it reaches an end of the
+ * slider. On a discrete slider it is also the inset of every value position: the
+ * handle and the stops sit that far in from each end of the track.
  */
-/** The steps of the track's corner radii (Compose SliderTokens: small to extra-large). */
-const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
-
 const getExternalTrackRadius = (size?: SliderSize): number => {
   const trackHeight = getTrackHeight(size);
   if (trackHeight <= SLIDER_SIZES.S) return 8;
@@ -82,6 +80,9 @@ const getExternalTrackRadius = (size?: SliderSize): number => {
   if (trackHeight <= SLIDER_SIZES.L) return 16;
   return 28;
 };
+
+/** The steps of the track's corner radii (M3 shape scale: 8 / 12 / 16 / 28). */
+const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
 
 /**
  * Where a value sits along a track `width` wide, from its fraction of the range,
@@ -127,6 +128,17 @@ const alongCss = (a: Along, unit = "%"): string => {
 };
 
 const INSET_ICON_PADDING = 10;
+
+/** TrackInsideCornerSize: the 2dp corner a piece of track keeps at a handle gap. */
+const INSIDE_CORNER = 2;
+
+/**
+ * The stop indicator: 4dp across, its centre 6dp from the end of the track at
+ * every size (m3.material.io/components/sliders/specs, Track — the diagram's 4
+ * is the dot's diameter and its 6 the inset to the dot's centre).
+ */
+const STOP_INDICATOR_INSET = 6;
+const STOP_INDICATOR_RADIUS = 2;
 
 /** The handle's width: 4dp, halved while it is pressed or focused (PressedHandleWidth, FocusHandleWidth). */
 const HANDLE_WIDTH = 4;
@@ -226,9 +238,9 @@ export const withTracks =
     if (destroyed) return;
     if (next) state = { ...next };
     axis = getAxis(config, isRtl(component.element));
-    // Only the decisions that depend on the real length (a sliver shorter than the
-    // corner, an icon that fits) read it. 0, on a server, keeps the calc: the
-    // sign of those decisions is known without a width except at a short end.
+    // Only the decisions that depend on the real length (an icon that fits) read
+    // it. 0, on a server, keeps the calc: its sign is known without a width
+    // except at a short end.
     const width = lengthOf(container.getBoundingClientRect(), axis) || 0;
     const corner = getExternalTrackRadius(size);
     const inset = config.ticks ? corner : 0;
@@ -247,6 +259,23 @@ export const withTracks =
       px((narrowed(which) ? NARROW_HANDLE_WIDTH : HANDLE_WIDTH) / 2 + SLIDER_MEASUREMENTS.HANDLE_GAP);
     const firstGap = gapOf("first");
     const secondGap = gapOf("second");
+    // The corner each end of a piece carries: the outer radius where the piece
+    // reaches an end of the track, the inside corner at a gap. The outer corner
+    // reads the shape token with its px fallback, so a theme's corners reach these
+    // inline styles. border-radius's order is top-left, top-right, bottom-right,
+    // bottom-left, so the pair turns with the axis: a mirrored or vertical slider
+    // puts the outer end elsewhere.
+    const radiusOf = (start: Along, end: Along): string => {
+      const outer = cornerToken(TRACK_STEPS[corner]!, corner, PREFIX), inside = `${INSIDE_CORNER}px`;
+      const atStart = cmp(start, A0) === 0 ? outer : inside;
+      const atEnd = cmp(end, A1) === 0 ? outer : inside;
+      return {
+        left: `${atStart} ${atEnd} ${atEnd} ${atStart}`,
+        right: `${atEnd} ${atStart} ${atStart} ${atEnd}`,
+        top: `${atStart} ${atStart} ${atEnd} ${atEnd}`,
+        bottom: `${atEnd} ${atEnd} ${atStart} ${atStart}`,
+      }[axis.start];
+    };
     const first = atValue(state.value);
     const second = atValue(state.secondValue ?? state.max);
     let parts: [Along, Along, boolean][];
@@ -274,31 +303,38 @@ export const withTracks =
       activeStart = A0; activeEnd = first;
       parts = [[A0, A0, false], [A0, sub(first, firstGap), true], [add(first, firstGap), A1, false]];
     }
-    // A piece of track that meets an end of the slider is drawn only while it is
-    // longer than the corner radius (drawTrack's activeTrackThreshold and inactive
-    // thresholds): below that its rounded end would paint as a sliver. With no
-    // width, only a length that is short at every width collapses.
+    // A standard slider has no inactive piece at the start of the track.
     const standard = !config.centered && !(config.range && state.secondValue !== null);
-    const short = (len: Along): boolean =>
-      width > 0 ? len.f * width + len.p <= corner : len.f < 0 || (len.f === 0 && len.p <= corner);
-    parts.forEach((part, index) => {
-      const meetsEnd = index !== 1 || standard;
-      if (meetsEnd && short(sub(part[1], part[0]))) part[1] = part[0];
-    });
+    // A discrete slider's pieces stop at the end ticks. Compose's drawTrack keeps
+    // its corner threshold for the ends whenever the slider has tick fractions,
+    // even where short pieces are otherwise kept: a piece that would only fill the
+    // inset before the first tick or after the last one is dropped, so the end tick
+    // is the track's visual end (Slider.kt drawTrack,
+    // `tickFractions.isNotEmpty()`). A continuous track has no ticks to stop at:
+    // its end pieces keep their ends, and a piece shorter than the corner radius
+    // has its radii scaled to fit (as Skia's RoundRect does), so no end has to be
+    // dropped to avoid a sliver.
+    if (config.ticks) {
+      parts.forEach((part) => {
+        if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
+        else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
+      });
+    }
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);
       const drawn = (width > 0 ? len.f * width + len.p < 0 : len.f < 0 || (len.f === 0 && len.p < 0)) ? A0 : len;
       at(segment, alongCss(start));
       segment.style[axis.size] = alongCss(drawn);
+      segment.style.borderRadius = radiusOf(start, end);
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
     // A stop indicator ends each inactive piece that is drawn. With ticks the ends are
-    // ticks already. The end stop sits one corner in, which is `100%` minus that.
+    // ticks already. Its start is the inset less its radius: 4dp in from the track's end.
     dots[0].hidden = !!config.ticks || standard || cmp(parts[0][1], parts[0][0]) <= 0;
     dots[1].hidden = !!config.ticks || cmp(parts[2][1], parts[2][0]) <= 0;
-    at(dots[0], alongCss(px(corner - 2)));
-    at(dots[1], alongCss(ap(1, -(corner + 2))));
+    at(dots[0], alongCss(px(STOP_INDICATOR_INSET - STOP_INDICATOR_RADIUS)));
+    at(dots[1], alongCss(ap(1, -(STOP_INDICATOR_INSET + STOP_INDICATOR_RADIUS))));
     placeInsetIcon(parts, width);
     const discrete = !!config.ticks && state.step > 0 && state.max > state.min;
     ticks.forEach(tick => { tick.hidden = !discrete; });
@@ -388,8 +424,6 @@ export const withTracks =
     // Sizes are thicknesses: across the axis. A vertical slider's length is its CSS height.
     container.style[axis.cross] = `${Math.max(handleHeight, SLIDER_MEASUREMENTS.MIN_HEIGHT)}px`;
     track.style[axis.cross] = `${getTrackHeight(size)}px`;
-    // The track's corner step (small to extra-large), read through its token
-    track.style.borderRadius = cornerToken(TRACK_STEPS[getExternalTrackRadius(size)]!, getExternalTrackRadius(size), PREFIX);
     for (const handle of [component.handle, component.secondHandle]) {
       if (handle) handle.style[axis.cross] = `${handleHeight}px`;
     }

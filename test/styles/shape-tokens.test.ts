@@ -15,7 +15,7 @@ const LITERAL: Record<string, Record<string, string>> = {
   'navigation-rail': {},
   drawer: {},
   carousel: {},
-  dialog: { '4px': 'the scrollable content\'s scrollbar thumb, not a component shape' },
+  dialog: {},
   search: { '56px': 'the bar\'s CornerFull as half its 56px height, under min() with the full token' },
   checkbox: { '2px': 'CheckboxTokens.ContainerShape, 2dp: outside the shape scale' },
   slider: {

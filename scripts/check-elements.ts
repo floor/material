@@ -9510,13 +9510,32 @@ try {
     // A menu opened with a key puts focus on its first item on a timer, about 120ms
     // after the key. A fixed wait is not that moment: on a runner whose main thread
     // paused for a third of a second, the keys below got there first, were handled
-    // with no item focused, and focus ended one item short.
-    const focusOn = async (label: string): Promise<void> => {
-      for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
+    // with no item focused, and focus ended one item short. A single wait measured
+    // from the key is not that moment either: a renderer paused past its deadline
+    // leaves the menu still opening when the page resumes, and a wait that gives up
+    // silently hands the assertion the frame before the menu's own timer moves
+    // focus. A key-opened step waits for the menu to be open with the item
+    // focusable, then for focus to move; each wait has its own deadline and a
+    // failure that says what was found.
+    // An item the menu focuses is programmatically focusable: the menu gives
+    // every item a tabindex, -1 included. A tabindex of 0 is not the signal --
+    // the initial-focus pass sets every item back to -1 while focus stays on the
+    // last one, so requiring it would wait on a race the menu itself resolves.
+    const focusableItem = (label: string): Promise<boolean> =>
+      page.evaluate((label) => {
+        const root = (document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot;
+        const item = [...root.querySelectorAll<HTMLElement>("[data-id]")].find((el) => (el.textContent ?? "").trim() === label);
+        return !!item && item.hasAttribute("tabindex") && item.checkVisibility?.() !== false;
+      }, label);
+    const focusedByKey = async (step: string, label: string): Promise<void> => {
+      await eventually(step, `the open menu's "${label}" to be focusable`,
+        async () => (await menuState()).open && await focusableItem(label),
+        async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
+      await focusIs(step, label);
     };
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await focusOn("Copy");
+    await focusedByKey("menu, opened with Enter", "Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await closed("menu, Escape, opened with Enter");
@@ -9532,7 +9551,7 @@ try {
     // focus is still on the last item once every opening timer has run.
     await page.focus("#mb");
     await page.keyboard.press("ArrowUp");
-    await focusOn("PasteCtrl+V");
+    await focusedByKey("menu, opened with ArrowUp", "PasteCtrl+V");
     await settle();
     assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
     await page.keyboard.press("Escape");
@@ -9580,7 +9599,7 @@ try {
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await focusOn("Copy");
+    await focusedByKey("menu, opened with Enter after the submenu", "Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");

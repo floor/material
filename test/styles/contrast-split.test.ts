@@ -274,9 +274,21 @@ describe("explicit contrast levels are opt-in", () => {
     // by the active indicator's `::before` and `::after`, which the
     // reduced-motion switch also reaches, so the item keeps its 48dp touch
     // target unclipped (styles/components/_drawer.scss).
+    // The card's loading, expandable and swipeable rules and their spinner
+    // keyframes are gone: the module that made their markup stopped shipping
+    // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The 14 dead selector groups verified to have no producer in src/ are
+    // removed from the dialog, menu, select, slider, tabs and timepicker
+    // component sheets (styles/components/_dialog.scss, _menu.scss,
+    // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
+    // The slider's track carries no corner and clips nothing: each piece of track
+    // takes its own outer corner where it reaches an end of the slider and the
+    // 2dp inside corner at a handle gap, both written by the controller, and the
+    // stop indicator's centre sits 6dp from the track's end at every size
+    // (styles/components/_slider.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("bf96b1d0c7b1400bf8b2e6cfd6fce38659b4f33af3e3d0eed6151c1260754d8d");
-    expect(css.length).toBe(538511);
+      .toBe("5ca8794dd93a95449f4ea8aca8ee9b56309efbf1a0292d66403e3245486807d2");
+    expect(css.length).toBe(531268);
   });
 
   test("today's sheets still resolve to the fixture", () => {
