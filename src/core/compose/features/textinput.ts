@@ -164,7 +164,7 @@ export const withTextInput =
       disabled: config.disabled,
       // Documented on TextFieldConfig and never applied, so a readonly field stayed editable.
       readonly: config.readonly,
-      maxLength: config.maxLength,
+      maxlength: config.maxLength,
       pattern: config.pattern,
       autocomplete: config.autocomplete,
       inputmode: config.inputMode,
@@ -175,25 +175,14 @@ export const withTextInput =
       "aria-label": config.ariaLabel,
     };
 
-    // Only set type attribute for input elements, not for textarea
-    if (!isMultiline) {
-      attributes.type = config.type || "text";
-    } else {
-      // For textarea, add a data attribute to identify it as multiline
-      attributes["data-type"] = "multiline";
-    }
+    // An input takes the type; a textarea is identified by a data attribute.
+    if (isMultiline) attributes["data-type"] = "multiline";
+    else attributes.type = config.type || "text";
 
-    Object.entries(attributes).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        if (typeof value === "boolean") {
-          if (value) {
-            input.setAttribute(key, "");
-          }
-        } else {
-          input.setAttribute(key, String(value));
-        }
-      }
-    });
+    for (const [key, value] of Object.entries(attributes)) {
+      if (value === false || value === null || value === undefined) continue;
+      input.setAttribute(key, value === true ? "" : String(value));
+    }
 
     // While the textarea is still clean, this sets the live value too, so a
     // reset restores the configured text. An input's value attribute did that.
