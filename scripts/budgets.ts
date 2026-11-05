@@ -66,10 +66,9 @@ export const CONSUMER_INITIAL_GZIP = {
   addClass: 750,
   "text-field": 10_000,
   button: 8_700,
-  // Runtime colour, 3.8.0. The ceilings: 20,500 B for the scheme, 24,000 B with
-  // the image path. Each row moves to its measured value plus max(1%, 100 B),
-  // rounded up to the next 50, once the first CI run has measured it; neither
-  // may pass its ceiling.
-  theme: 20_500,
-  "theme-image": 24_000,
+  // Runtime colour, 3.8.0. Both rows are the first CI measurement plus
+  // max(1%, 100 B), rounded up to the next 50; the ceilings, 20,500 B for the
+  // scheme and 24,000 B with the image path, stay above them.
+  theme: 17_250,
+  "theme-image": 20_800,
 } as const;
