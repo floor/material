@@ -275,8 +275,9 @@ function keepComment(comment: string): boolean {
 
 /**
  * A declaration's JSDoc, cut to what the package ships: the first summary
- * sentence, `@param` names without their types and descriptions, `@default`, and
- * the whole `@deprecated` note. `@example` and the remaining prose are dropped.
+ * sentence, described `@param` names without their types and descriptions,
+ * `@default`, and the whole `@deprecated` note. `@example`, the remaining prose
+ * and a `@param` no source line described are dropped.
  */
 function compactDeclarationComment(comment: string): string {
   const body = comment.replace(/^\/\*\*/, "").replace(/\*\/\s*$/, "");
@@ -290,16 +291,18 @@ function compactDeclarationComment(comment: string): string {
     else prose.push(line);
   }
   const summary = prose.filter(line => line !== "");
-  let first = summary[0] ?? "";
-  if (/[.!?]$/.test(first)) {
-    const sentence = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1];
-    if (sentence) first = sentence;
-  }
+  // The first sentence, wherever it ends: a summary line can run on into the
+  // next sentence and wrap before a full stop, and only its first sentence is
+  // the summary. With no full stop anywhere the first line is all there is.
+  const first = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1] ?? summary[0] ?? "";
   const kept: string[] = first ? [first] : [];
   for (const tag of tags) {
     if (tag.name === "param") {
-      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.-]+)/.exec(tag.lines[0]!);
-      if (match) kept.push(`@param ${match[1]}`);
+      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.-]+)(.*)$/.exec(tag.lines[0]!);
+      // A bare `@param name` describes nothing, and the name is already on the
+      // signature the hover shows: it ships only when some line described it.
+      const described = match !== null && [match[2] ?? "", ...tag.lines.slice(1)].some(line => line.trim() !== "");
+      if (match && described) kept.push(`@param ${match[1]}`);
     } else if (tag.name === "default") {
       kept.push(tag.lines[0]!);
     } else if (tag.name === "deprecated") {

@@ -62,6 +62,32 @@ test("a @deprecated note stays whole, on the declaration it documents", () => {
   expect(output.match(/@deprecated/g)).toHaveLength(2);
 });
 
+// The first sentence ends at its full stop, not at the end of the line: a
+// summary line can carry a second sentence and wrap without a full stop.
+const wrapped = `/**
+ * Opens the menu. The rest of this sentence wraps onto
+ * a second line with no full stop anywhere in the
+ * @param {number} count How many.
+ * @param {number} bare
+ */
+export declare function open(count: number, bare: number): void;
+`;
+
+test("a summary is cut at its first full stop even when the line does not end on one", () => {
+  const output = printDeclarationModule("wrapped.d.ts", wrapped);
+  expect(output).toMatch(/\/\*\*\n \* Opens the menu\.\n \* @param count\n \*\/\s*export declare function open\(count: number, bare: number\): void;/);
+  expect(output).not.toContain("The rest of this sentence");
+  expect(output).not.toContain("a second line with no full stop");
+});
+
+test("a @param no source line described does not ship", () => {
+  const output = printDeclarationModule("wrapped.d.ts", wrapped);
+  // The name is on the signature already; without a description the tag says
+  // nothing the hover would read.
+  expect(output).not.toContain("@param bare");
+  expect(output).toContain("@param count");
+});
+
 test("every non-JSDoc comment goes, and an untagged JSDoc keeps its one line", () => {
   const output = printDeclarationModule("fixture.d.ts", text);
   for (const prose of ["A line comment.", "A plain block comment.", "A trailing line comment.", "Not a JSDoc block."]) {
