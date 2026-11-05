@@ -573,13 +573,20 @@ describe('the expressive vertical menu', () => {
     expect(parent.classList.contains('mtrl-menu--active')).toBe(false);
     expect(parent.classList.contains('mtrl-menu--inactive')).toBe(false);
 
+    parent.getBoundingClientRect = () =>
+      ({ top: 80, bottom: 180, left: 40, right: 200, width: 160, height: 100, x: 40, y: 80, toJSON: () => ({}) }) as DOMRect;
+    menuItems(menu)[0]!.getBoundingClientRect = () =>
+      ({ top: 84, bottom: 128, left: 44, right: 196, width: 152, height: 44, x: 44, y: 84, toJSON: () => ({}) }) as DOMRect;
+
     menuItems(menu)[0]!.click();
     await after(400);
-    const submenu = document.querySelector('.mtrl-menu--submenu');
+    const submenu = document.querySelector<HTMLElement>('.mtrl-menu--submenu');
     expect(submenu).not.toBeNull();
     // the submenu looks like its parent
     expect(submenu!.classList.contains('mtrl-menu--vertical')).toBe(true);
     expect(submenu!.classList.contains('mtrl-menu--vibrant')).toBe(true);
+    // and opens flush with the parent menu surface (200px), not the 4dp-inset item (196px)
+    expect(submenu!.style.left).toBe('200px');
     // and the shape says which one is live
     expect(submenu!.classList.contains('mtrl-menu--active')).toBe(true);
     expect(parent.classList.contains('mtrl-menu--inactive')).toBe(true);

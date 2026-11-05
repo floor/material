@@ -72,9 +72,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { createSplitButton 
 // The tooltip, for the top-layer tooltip and snackbar checks: the factory
 // rendering <m-tooltip> is compared with.
 import createTooltip from "../../dist/components/tooltip/index.js";
-import { setComponentDefaults } from "../../dist/index.js";
-Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip, setComponentDefaults });
-(window as unknown as { setComponentDefaults: typeof setComponentDefaults }).setComponentDefaults = setComponentDefaults;
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip });
 // The date and time pickers, for the parity checks of <m-datepicker> and <m-timepicker>.
 import createDatePicker from "../../dist/components/datepicker/index.js";
 import createTimePicker from "../../dist/components/timepicker/index.js";
@@ -85,6 +83,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { createDatePicker, 
 // for the <m-button> change bridge, which fires for a toggle button.
 import { setComponentDefaults, clearGlobalDefaults } from "../../dist/core/config/global.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { setComponentDefaults, clearGlobalDefaults });
+(window as unknown as { setComponentDefaults: typeof setComponentDefaults }).setComponentDefaults = setComponentDefaults;
 
 // The navigation bar factory, for the parity check of <m-navigation-bar>.
 import createNavigationBar from "../../dist/components/navigation-bar/index.js";

@@ -591,6 +591,31 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
  * dark mode so the CI artifact records the visual transition side by side.
  */
 export async function captureMenuDefaultComparisons(page: Page, artifacts: string): Promise<void> {
+  const waitForSettledMenu = async (label: string): Promise<void> => {
+    await page.waitForFunction(() => {
+      const menu = document.querySelector<HTMLElement>(".mtrl-menu.mtrl-menu--visible");
+      if (!menu || menu.style.top === "") return false;
+      const style = getComputedStyle(menu);
+      const rect = menu.getBoundingClientRect();
+      return (
+        style.visibility === "visible" &&
+        Number(style.opacity) === 1 &&
+        (style.transform === "none" || style.transform === "matrix(1, 0, 0, 1, 0, 0)") &&
+        rect.width > 80 &&
+        rect.height > 60 &&
+        menu.getAnimations({ subtree: true }).length === 0
+      );
+    });
+    const settled = await page.evaluate(() => {
+      const menu = document.querySelector<HTMLElement>(".mtrl-menu.mtrl-menu--visible")!;
+      const rect = menu.getBoundingClientRect();
+      return { width: rect.width, height: rect.height, opacity: getComputedStyle(menu).opacity };
+    });
+    assert.ok(
+      settled.width > 80 && settled.height > 60 && settled.opacity === "1",
+      `${label}: menu surface not settled (${JSON.stringify(settled)})`,
+    );
+  };
   try {
     for (const mode of ["light", "dark"] as const) {
       for (const stage of ["before", "after"] as const) {
@@ -612,7 +637,6 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
           document.body.append(opener);
           state.menu = state.createMenu({
             opener,
-            visible: true,
             items: [
               { id: "cut", text: "Cut", shortcut: "⌘X" },
               { id: "copy", text: "Copy", shortcut: "⌘C" },
@@ -622,9 +646,9 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
             ],
           });
           state.menu.setSelected("copy");
-          document.body.append(state.menu.element);
+          state.menu.open();
         }, { mode, baseline });
-        await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+        await waitForSettledMenu(`menu-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `menu-${stage}-${mode}.png`) });
 
         // 2. Select menu
@@ -653,7 +677,7 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
           document.body.append(select.element);
           select.open();
         }, { mode, baseline });
-        await page.waitForFunction(() => Boolean(document.querySelector(".mtrl-menu--visible")));
+        await waitForSettledMenu(`select-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `select-${stage}-${mode}.png`) });
 
         // 3. Split button menu
@@ -681,7 +705,7 @@ export async function captureMenuDefaultComparisons(page: Page, artifacts: strin
           document.body.append(split.element);
           split.expand();
         }, { mode, baseline });
-        await page.waitForFunction(() => Boolean(document.querySelector(".mtrl-menu--visible")));
+        await waitForSettledMenu(`split-button-${stage}-${mode}`);
         await page.screenshot({ path: join(artifacts, `split-button-${stage}-${mode}.png`) });
       }
     }
