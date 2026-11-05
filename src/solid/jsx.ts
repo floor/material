@@ -34,6 +34,7 @@ declare module "solid-js" {
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;
       "m-drawer": Tag<import("../elements/drawer").DrawerSpec, import("../elements/drawer").DrawerElement>;
       "m-top-app-bar": Tag<import("../elements/top-app-bar").TopAppBarSpec, import("../elements/top-app-bar").TopAppBarElement>;
+      /** @deprecated Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use Toolbar with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar. */
       "m-bottom-app-bar": Tag<import("../elements/bottom-app-bar").BottomAppBarSpec, import("../elements/bottom-app-bar").BottomAppBarElement>;
       "m-button-group": Tag<import("../elements/button-group").ButtonGroupSpec, import("../elements/button-group").ButtonGroupElement>;
       "m-chips": Tag<import("../elements/chips").ChipsSpec, import("../elements/chips").ChipsElement>;
