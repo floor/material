@@ -1,6 +1,7 @@
 // src/components/menu/api.ts
 
 import { MenuComponent, MenuContent, MenuPosition } from "./types";
+import { OPEN_WITH_INITIAL_FOCUS, type InitialFocusOpen } from "./inner";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -76,23 +77,30 @@ const withAPI =
   ({ menu, opener, events, lifecycle }: ApiOptions) =>
   (component: ComponentWithElements): MenuComponent => {
     // Create the enhanced component
-    const menuComponent: MenuComponent = {
+    const menuComponent: MenuComponent & InitialFocusOpen = {
       element: component.element,
 
       /**
        * Opens the menu
        * @param event - Optional event that triggered the open
        * @param interactionType - The type of interaction that triggered the open ('mouse' or 'keyboard')
-       * @param initialFocus - Which item a keyboard open focuses ('first' or 'last'); the first by default
        * @returns Menu component for chaining
        */
-      open(event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last") {
+      open(event?: Event, interactionType?: "mouse" | "keyboard") {
         // Left undefined on purpose: the controller reads the event to tell a
         // key from a pointer, which decides where focus lands. Defaulting to
         // "mouse" here made that check dead and every open a pointer open.
 
-        menu.open(event, interactionType, initialFocus);
+        menu.open(event, interactionType);
         return this;
+      },
+
+      // The intent rides this symbol rather than a third argument on the
+      // public open: an added public option would be a minor, and this ships
+      // in a patch. The controller and the on-demand stand-in are internal,
+      // so the intent keeps its parameter all the way there.
+      [OPEN_WITH_INITIAL_FOCUS](event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last") {
+        menu.open(event, interactionType, initialFocus);
       },
 
       /**

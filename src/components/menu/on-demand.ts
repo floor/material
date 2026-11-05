@@ -14,6 +14,7 @@
 // skipped for a listbox, whose combobox carries it.
 
 import type { EventCallback } from "../../core/state/emitter";
+import { openWithInitialFocus } from "./inner";
 import type { MenuComponent, MenuConfig, MenuContent, MenuEvents, MenuPosition } from "./types";
 
 /** createMenu's configuration, except the items, which setItems may replace. */
@@ -93,7 +94,13 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
     // one when the surface arrives.
     if (selected !== undefined) created.setSelected(selected);
     if (position !== settings.position) created.setPosition(position);
-    if (opened) created.open(asked[0], asked[1], asked[2]);
+    if (opened) {
+      const [event, interactionType, initialFocus] = asked;
+      // The intent is the owner's, not the public open's: it goes through the
+      // menu's symbol, and a plain open stays a plain open
+      if (initialFocus) openWithInitialFocus(created, event, interactionType, initialFocus);
+      else created.open(event, interactionType);
+    }
     for (const [event, set] of listeners) for (const listener of set) created.on(event, listener);
     listeners.clear();
     const waiting = ready;
@@ -124,7 +131,9 @@ export const createOnDemandMenu = (settings: MenuSettings, items: MenuContent[])
 
     open(event?: Event, interactionType?: "mouse" | "keyboard", initialFocus?: "first" | "last"): OnDemandMenu {
       if (menu) {
-        menu.open(event, interactionType, initialFocus);
+        // The stand-in's own open is internal; the menu's public one is not
+        if (initialFocus) openWithInitialFocus(menu, event, interactionType, initialFocus);
+        else menu.open(event, interactionType);
         return api;
       }
       if (!opened) {

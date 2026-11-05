@@ -405,13 +405,11 @@ export interface MenuComponent {
    * that one.
    * @param event - Optional event that triggered the open
    * @param interactionType - The type of interaction that triggered the open ('mouse' or 'keyboard')
-   * @param initialFocus - Which item a keyboard open focuses ('first' or 'last'); the first by default
    * @returns The menu component for chaining
    */
   open: (
     event?: Event,
     interactionType?: "mouse" | "keyboard",
-    initialFocus?: "first" | "last",
   ) => MenuComponent;
 
   /**
