@@ -29,9 +29,10 @@ const nameOf = (file: string) => file.slice(file.lastIndexOf("/") + 1).replace(/
 const READS = /f\.density(?:-visible|-offset)?\(|var\(--mtrl-density/g;
 const reads = (text: string) => text.match(READS) ?? [];
 
-// The components the design lets densify. Everything else — menus, dialogs,
-// snackbars, pickers, tooltips, cards, FABs and sheets — is fixed, and the
-// exhaustive scan below keeps a new sheet from joining this list by accident.
+// The components the design lets densify. Everything else holds its geometry:
+// menus, dialogs, snackbars, pickers and sheets pin the property at 0 on their
+// own root, while tooltips, cards and FABs never read it. The exhaustive scan
+// below keeps a new sheet from joining this list by accident.
 const DENSIFYING: Record<string, string[]> = {
   components: ["button", "button-group", "drawer", "icon-button", "list", "text-field", "toolbar"],
   elements: ["button", "button-group", "drawer", "field", "icon-button", "list", "text-field"],

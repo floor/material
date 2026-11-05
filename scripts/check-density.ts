@@ -310,8 +310,9 @@ try {
       sugar5: box(sugar5.element).height,
     };
 
-    // The surfaces that never densify: a page-wide value reaches their root,
-    // which pins the scale at 0 for everything inside.
+    // The pinned surfaces: a page-wide value reaches their root, which sets
+    // the scale back to 0 for everything inside. (Cards, tooltips and FABs
+    // hold their geometry because they never read the property.)
     const excludedMeasure = async (): Promise<Excluded> => {
       const opener = document.createElement("button");
       opener.textContent = "Open";
