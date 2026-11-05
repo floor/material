@@ -666,7 +666,10 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
           !(window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"),
         );
 
-        // Pointer open: focus lands on the menu surface with no outline on the surface or any item.
+        // Pointer open: clear keyboard :focus-visible left on the opener by Escape,
+        // then click so focus lands on the menu surface with :focus-visible false
+        // and no outline on the surface or any item.
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
         await page.click("#menu-opener");
         await page.waitForFunction(() => {
           const menu = (window as unknown as MenuWindow).menu.element;
@@ -809,6 +812,7 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
           return !menu || !menu.classList.contains("mtrl-menu--visible");
         });
 
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
         await page.click("#split-trailing");
         await page.waitForFunction(() => {
           const menu = document.querySelector<HTMLElement>(".mtrl-menu");
