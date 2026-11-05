@@ -24,6 +24,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { deprecationOf } from "./export-deprecation";
 import { createPackageFixture } from "./package-fixture";
+import { assertImportableDeclarationDocs } from "./strip-internal-declaration-docs";
 
 const ROOT = join(import.meta.dir, "..");
 const manifest = await Bun.file(join(ROOT, "package.json")).json() as { name: string };
@@ -183,6 +184,9 @@ try {
       }
     }
   }
+
+  const importableDocFailures = await assertImportableDeclarationDocs(packageRoot, join(ROOT, "src"));
+  failures.push(...importableDocFailures);
 } finally {
   await fixture?.cleanup();
   if (!fixture) await rm(directory, { recursive: true, force: true });
