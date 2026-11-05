@@ -17,6 +17,111 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.7.1] - 2026-11-05
+
+Lighter modals.
+
+### Changed
+
+- **The modal components ship less code (#267, #268).**
+  The shared modal layer and the focus helpers behind dialogs, sheets,
+  drawers and pickers are slimmed, and the `<dialog>` `cancel` handling is
+  centralized in one place, with no public API change and no event payload
+  or DOM contract change.
+
+  #267 removes `onModalEscape`'s dependence on `eventsFrom`: a per-`Window`
+  capture-listener reference count and the opening-event clock recorded on
+  the Escape stack entry replace it, so `dialog`, `bottom-sheet`,
+  `side-sheet`, `drawer`, `timepicker` and `search` tree-shake
+  `eventsFrom` out of their bundles completely, while `menu` still
+  tree-shakes `onModalEscape`. The `layer.ts` state — hidden elements,
+  opening order and the per-window count — becomes one `WeakMap`, and the
+  top-layer, inert, Escape and tab-wrap helpers are compacted;
+  `activeElementOf` is untouched, so non-modal components do not move. The
+  seven modal components drop their duplicate `cancel` listener and their
+  `handleCancel` / `onCancel` / `asking` boilerplate, and the capture-phase
+  `cancel` listener on `<m-dialog>` and `<m-drawer>` still runs first and
+  can refuse closure with `preventDefault()` and
+  `stopImmediatePropagation()`.
+
+  #268 removes the glue the components kept beside that layer: `dialog`
+  routes `beforeopen` / `beforeclose`, open/close/afteropen/afterclose and
+  its timer and focus-frame teardown through shared `emit` / `ask` /
+  `stopOpen` helpers; `bottom-sheet` and `side-sheet` unify their
+  trap/stack and scrim/backdrop handlers; `drawer` derives its layered
+  state from the top-layer element instead of a per-module `WeakSet`;
+  `datepicker` folds its Escape and `eventsFrom` references into one; and
+  `timepicker` folds its click-outside handler into the dialog listener.
+
+  **Behaviour:** No behaviour change from 3.7.0. The centralized cancel
+  keeps the event cancelable and emits it only for the top-layer dialog
+  and drawer, as before — not for every modal — and `datepicker`,
+  `timepicker`, `search`, `bottom-sheet` and `side-sheet` still close from
+  the Escape callback, so a capture listener cannot newly refuse Escape on
+  them. The shared glue keeps an already-open non-top sheet from trapping
+  at construction, and keeps the top-layer Tab listener across close and
+  reopen. Both review fixes restore 3.7.0 behaviour that intermediate
+  heads had changed; those heads never shipped.
+
+  **Size:** The whole root bundle drops 342 bytes gzip — `all-js` 127,428
+  → 127,086 (raw 414,644 → 412,325) — and the packed tarball drops 449
+  bytes (862,803 → 862,354). Every component row that moves is smaller, in
+  gzip bytes: dialog 12,598 → 12,440; bottom-sheet 7,361 → 7,185;
+  side-sheet 6,839 → 6,653; drawer 8,481 → 8,365; datepicker 13,041 →
+  12,995; timepicker 11,256 → 11,159; search 11,134 → 11,041; menu 12,697
+  → 12,660; fab-menu 8,369 → 8,366; snackbar 12,236 → 12,223; tooltip
+  6,165 → 6,149; list 6,839 → 6,838. No deferred row grows: fab-menu
+  10,666 → 10,636; menu 2,122 → 2,119; select 10,650 → 10,623;
+  split-button 17,245 → 17,210. Every budget check passes and no ceiling
+  moved.
+
+### Internal
+
+- **The size cost of the modal diet.**
+  Against 3.7.0's published package job (main `9a98d851`, push run
+  41802819451, package job 126482889118): the packed rows, raw / gzip /
+  brotli, are `all-js` 414,644 / 127,428 / 105,827 against 412,325 /
+  127,086 / 105,325 (−2,319 / −342 / −502); the full stylesheet 628,272 /
+  58,669 / 42,181, the inline SSR page 253,639 / 5,325 / 2,906 and the SSR
+  entry 308,739 / 112,609 / 91,640 are byte-identical; `base-lite-css` is
+  12,999 / 1,644 / 1,306 against its 1,750-byte budget; and the packed
+  tarball is 862,354 bytes compressed / 4,827,107 unpacked in 1,582 files
+  against 862,803 / 4,830,984 in the same number of files — 449 bytes
+  smaller packed and 3,877 unpacked. The one brotli-only move is
+  `navigation-rail` 6,407 → 6,419 (+12) with raw and gzip equal; as the
+  ES2022 release reported, gzip is the gate and it passes.
+
+  The size table's rows move with the code (minified / gzip / vs core, as
+  `SIZES.md` prints them): dialog 38.7 KB / 12.3 KB / +9.3 KB against 37.5
+  / 12.1 / +9.1; bottom-sheet 19.9 / 7.2 / +4.1 against 19.2 / 7.0 /
+  +4.0; side-sheet 18.3 / 6.7 / +3.6 against 17.6 / 6.5 / +3.5; drawer
+  23.4 / 8.3 / +5.2 against 22.9 / 8.2 / +5.1; datepicker 37.2 / 12.7 /
+  +9.7 against 37.1 / 12.7 / +9.7; timepicker 31.6 / 11.0 / +8.0 against
+  31.4 / 10.9 / +7.9; search 32.4 / 10.9 / +7.8 against 32.0 / 10.8 /
+  +7.7; menu 38.6 / 12.4 / +9.4 against 38.4 / 12.4 / +9.3; and the `all`
+  row 393.0 / 122.9 / +119.8 against 390.7 / 122.5 / +119.5, its +2.1 KB
+  deferred figure unchanged. The exact gzip behind the table, from the
+  budget lines: dialog 12,598 → 12,440; bottom-sheet 7,361 → 7,185;
+  side-sheet 6,839 → 6,653; drawer 8,481 → 8,365; datepicker 13,041 →
+  12,995; timepicker 11,256 → 11,159; search 11,134 → 11,041; menu 12,697
+  → 12,660; fab-menu 8,369 → 8,366; snackbar 12,236 → 12,223; tooltip
+  6,165 → 6,149; list 6,839 → 6,838; and no deferred row grows (fab-menu
+  10,666 → 10,636; menu 2,122 → 2,119; select 10,650 → 10,623;
+  split-button 17,245 → 17,210). The budget's `all` scenario is 125,800 →
+  125,455 bytes gzip against its unchanged 127,200-byte budget.
+
+  The 40 `adapters:size` element pages (brotli) are 907 bytes smaller in
+  all: 14 rows down, 23 identical, and three up by cross-chunk dictionary
+  drift (slider +22, navigation-bar +4, list +3); every import stays
+  within the check's 1,700-byte brotli ceiling over its element.
+
+  Measured on main at `1cd4f82e`, push run 41939743447, package job
+  126957651455; this release changes only the CHANGELOG and the version
+  field. `SIZES.md` already carries the merged tree's rows, measured at
+  `af69fe66`, and no README size row moves: the README prints `all-js` at
+  127.1 kB, which is the 127,086 the package job measured. No ceiling
+  moved, and every budget check passed.
+
 ## [3.7.0] - 2026-11-04
 
 ES2022 browser JS.
@@ -5912,7 +6017,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.7.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.7.1...HEAD
+[3.7.1]: https://github.com/floor/material/compare/v3.7.0...v3.7.1
 [3.7.0]: https://github.com/floor/material/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/floor/material/compare/v3.5.4...v3.6.0
 [3.5.4]: https://github.com/floor/material/compare/v3.5.3...v3.5.4
