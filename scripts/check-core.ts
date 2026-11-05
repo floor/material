@@ -25,7 +25,7 @@ import { checkDialogAriaHiddenFocus, checkDialogFocusReach, checkDialogMount } f
 import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
-import { checkMenu, checkMenuDisabledColors, checkMenuHiddenItems, checkMenuSubmenuSetItems, checkMenuVerticalSelectedCheck } from "./check-menu-browser";
+import { checkMenu, checkMenuDisabledColors, checkMenuHiddenItems, checkMenuSubmenuSetItems, checkMenuVerticalSelectedCheck, captureMenuDefaultComparisons } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
 import { checkSelectMenu, checkSelectWidth, checkSelectHiddenOptions } from "./check-select-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -45,7 +45,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextField, createRadios } from 'material'; window.inputs = { createCheckbox, createSwitch, createTextField, createRadios };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'material'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'material'; window.createSearch = createSearch;`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'material'; window.createSelect = createSelect;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect, setComponentDefaults } from 'material'; window.createSelect = createSelect; window.setComponentDefaults = setComponentDefaults;`);
   // createMenu for the menu checks, and the openers for it: one import, two windows
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
@@ -146,6 +146,7 @@ try {
   await checkSelectMenu(page, "factory-top");
   await checkSelectWidth(page, "factory");
   await checkSelectHiddenOptions(page);
+  await captureMenuDefaultComparisons(page, artifacts);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.

@@ -278,9 +278,13 @@ describe("explicit contrast levels are opt-in", () => {
     // 2dp inside corner at a handle gap, both written by the controller, and the
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
+    // The menu's root sets `box-sizing: border-box`, a vertical submenu item keeps
+    // 48px inline-end padding, and the dense, reduced-motion and high-contrast
+    // rules sit after the vertical variant so they win at equal specificity
+    // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("173219d4cdd993648703fa2e298f50a3c5a33b93801584e79211a4256f3efe6f");
-    expect(css.length).toBe(530861);
+      .toBe("db8aee6e2c240f2ab2024849a4496f6d05bb6205f820fc55b97948fac2923957");
+    expect(css.length).toBe(531142);
   });
 
   test("today's sheets still resolve to the fixture", () => {

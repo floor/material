@@ -72,7 +72,9 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { createSplitButton 
 // The tooltip, for the top-layer tooltip and snackbar checks: the factory
 // rendering <m-tooltip> is compared with.
 import createTooltip from "../../dist/components/tooltip/index.js";
-Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip });
+import { setComponentDefaults } from "../../dist/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip, setComponentDefaults });
+(window as unknown as { setComponentDefaults: typeof setComponentDefaults }).setComponentDefaults = setComponentDefaults;
 // The date and time pickers, for the parity checks of <m-datepicker> and <m-timepicker>.
 import createDatePicker from "../../dist/components/datepicker/index.js";
 import createTimePicker from "../../dist/components/timepicker/index.js";

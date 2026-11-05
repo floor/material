@@ -21,13 +21,15 @@ import type { Page } from "playwright";
 
 type SelectWindow = Window & {
   createSelect: (config: Record<string, unknown>) => { element: HTMLElement; open: () => unknown; close: () => unknown; destroy: () => void };
+  setComponentDefaults?: (component: "menu", config: Record<string, unknown>) => void;
 };
 type Row = {
   name: string;
+  baseline: boolean;
   field: number;
   menu: { width: number; start: number; end: number };
   mark: { end: number; overlap: number } | null;
-  selected: { background: string; color: string };
+  selected: { background: string; color: string; borderRadius: string };
   roles: { background: string; color: string };
 };
 
@@ -44,38 +46,54 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
     };
     const round = (value: number) => Math.round(value * 100) / 100;
     const rows: Row[] = [];
-    for (const dir of ["ltr", "rtl"]) for (const width of [100, 200, 280, 400]) {
+    const cases: Array<{ dir: "ltr" | "rtl"; width: number; baseline: boolean }> = [
+      ...(["ltr", "rtl"] as const).flatMap((dir) => [100, 200, 280, 400].map((width) => ({ dir, width, baseline: false }))),
+      ...(["ltr", "rtl"] as const).map((dir) => ({ dir, width: 280, baseline: true })),
+    ];
+    for (const { dir, width, baseline } of cases) {
       const cell = document.createElement("div");
       cell.dir = dir;
       cell.style.cssText = "position:absolute;top:24px;left:24px;right:24px";
       document.body.append(cell);
       let select: { open: () => unknown; close: () => unknown; destroy?: () => void };
       let scope: ParentNode;
-      if (api === "element") {
-        const host = document.createElement("m-select");
-        host.setAttribute("label", "Pet");
-        host.setAttribute("value", "cat");
-        host.style.width = `${width}px`;
-        for (const option of options) {
-          const declared = document.createElement("m-select-option");
-          declared.setAttribute("value", option.id);
-          declared.setAttribute("label", option.text);
-          host.append(declared);
+      const win = window as unknown as SelectWindow;
+      if (baseline && api === "element") win.setComponentDefaults?.("menu", { variant: "baseline" });
+      try {
+        if (api === "element") {
+          const host = document.createElement("m-select");
+          host.setAttribute("label", "Pet");
+          host.setAttribute("value", "cat");
+          host.style.width = `${width}px`;
+          for (const option of options) {
+            const declared = document.createElement("m-select-option");
+            declared.setAttribute("value", option.id);
+            declared.setAttribute("label", option.text);
+            host.append(declared);
+          }
+          cell.append(host);
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          select = (host as unknown as { component: typeof select }).component;
+          scope = host.shadowRoot as ShadowRoot;
+        } else {
+          const made = win.createSelect({
+            label: "Pet",
+            value: "cat",
+            options,
+            ...(api === "factory-top" ? { layer: "top" } : {}),
+            ...(baseline ? { menu: { variant: "baseline" } } : {}),
+          });
+          made.element.style.width = `${width}px`;
+          cell.append(made.element);
+          select = made;
+          scope = cell;
         }
-        cell.append(host);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        select = (host as unknown as { component: typeof select }).component;
-        scope = host.shadowRoot as ShadowRoot;
-      } else {
-        const made = (window as unknown as SelectWindow).createSelect({ label: "Pet", value: "cat", options, ...(api === "factory-top" ? { layer: "top" } : {}) });
-        made.element.style.width = `${width}px`;
-        cell.append(made.element);
-        select = made;
-        scope = cell;
+        select.open();
+        // Past the menu's opening transition
+        await new Promise((resolve) => setTimeout(resolve, 450));
+      } finally {
+        if (baseline && api === "element") win.setComponentDefaults?.("menu", {});
       }
-      select.open();
-      // Past the menu's opening transition
-      await new Promise((resolve) => setTimeout(resolve, 450));
       const rtl = dir === "rtl";
       const field = (scope.querySelector(".mtrl-text-field__field") as HTMLElement).getBoundingClientRect();
       const menu = (scope.querySelector(".mtrl-select__menu") as HTMLElement).getBoundingClientRect();
@@ -90,12 +108,15 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);
       const right = left + parseFloat(after.width);
       rows.push({
-        name: `${dir}, ${width}px`,
+        name: `${dir}, ${width}px${baseline ? " (baseline)" : ""}`,
+        baseline,
         field: round(field.width),
         menu: { width: round(menu.width), start: round(rtl ? field.right - menu.right : menu.left - field.left), end: round(rtl ? menu.left - field.left : field.right - menu.right) },
         mark: after.content === "none" ? null : { end: round(rtl ? left - box.left : box.right - right), overlap: round(Math.max(0, Math.min(text.right, right) - Math.max(text.left, left))) },
-        selected: { background: style.backgroundColor, color: style.color },
-        roles: { background: role("secondary-container"), color: role("on-secondary-container") },
+        selected: { background: style.backgroundColor, color: style.color, borderRadius: style.borderRadius },
+        roles: baseline
+          ? { background: role("secondary-container"), color: role("on-secondary-container") }
+          : { background: role("tertiary-container"), color: role("on-tertiary-container") },
       });
       select.close();
       await new Promise((resolve) => setTimeout(resolve, 350));
@@ -105,7 +126,7 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
     return rows;
   }, api) as Row[];
 
-  assert.equal(rows.length, 8);
+  assert.equal(rows.length, 10);
   // Every failure is reported, not only the first
   const failures: string[] = [];
   const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
@@ -118,16 +139,23 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       expect(row.menu.start === 0, `${row.name}: the menu starts at the field's start edge (${row.menu.start})`);
       expect(row.menu.end === 0, `${row.name}: the menu ends at the field's end edge (${row.menu.end})`);
     }
-    expect(row.mark !== null, `${row.name}: the selected option has a mark`);
-    if (row.mark) {
-      expect(row.mark.end === 12, `${row.name}: the mark is 12px from the item's end (${row.mark.end})`);
-      expect(row.mark.overlap === 0, `${row.name}: the mark is clear of the option's text (${row.mark.overlap}px over it)`);
+    if (row.baseline) {
+      expect(row.mark !== null, `${row.name}: the baseline selected option has a mark`);
+      if (row.mark) {
+        expect(row.mark.end === 12, `${row.name}: the mark is 12px from the item's end (${row.mark.end})`);
+        expect(row.mark.overlap === 0, `${row.name}: the mark is clear of the option's text (${row.mark.overlap}px over it)`);
+      }
+      expect(row.selected.background === row.roles.background, `${row.name}: the baseline selected option is on secondary-container (${row.selected.background})`);
+      expect(row.selected.color === row.roles.color, `${row.name}: the baseline selected option's text is on-secondary-container (${row.selected.color})`);
+    } else {
+      expect(row.mark === null, `${row.name}: the vertical selected option suppresses the trailing mark`);
+      expect(row.selected.borderRadius === "12px", `${row.name}: the vertical selected option rounds to 12px (${row.selected.borderRadius})`);
+      expect(row.selected.background === row.roles.background, `${row.name}: the vertical selected option is on tertiary-container (${row.selected.background})`);
+      expect(row.selected.color === row.roles.color, `${row.name}: the vertical selected option's text is on-tertiary-container (${row.selected.color})`);
     }
-    expect(row.selected.background === row.roles.background, `${row.name}: the selected option is on secondary-container (${row.selected.background})`);
-    expect(row.selected.color === row.roles.color, `${row.name}: the selected option's text is on-secondary-container (${row.selected.color})`);
   }
   assert.deepEqual(failures, [], `${failures.length} of the select menu assertions failed`);
-  console.log(`Passed select menu (${api}): 8 selects, 100 to 400px wide, left to right and right to left — the menu as wide as its field, the selected mark at the item's end, the selected option on secondary-container.`);
+  console.log(`Passed select menu (${api}): 8 default vertical selects (100 to 400px, tertiary-container, 12px radius, no trailing mark) and 2 baseline selects (secondary-container, 12px trailing mark), left to right and right to left.`);
 }
 
 /**

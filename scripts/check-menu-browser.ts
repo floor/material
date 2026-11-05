@@ -1,6 +1,7 @@
 // scripts/check-menu-browser.ts
 /** Synchronous content keeps menu opening, positioning and focus intact. */
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import type { Page } from "playwright";
 import type createMenu from "../src/components/menu";
 
@@ -132,7 +133,7 @@ export async function checkMenuDisabledColors(page: Page): Promise<void> {
         });
         state.menu = state.createMenu({
           opener, visible: true,
-          ...(layout.vertical ? { variant: "vertical" as const } : {}),
+          ...(layout.vertical ? {} : { variant: "baseline" as const }),
           ...(layout.vibrant ? { color: "vibrant" as const } : {}),
           items: [
             { id: "disabled", disabled: true, ...content("Unavailable") },
@@ -481,7 +482,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
         opener.textContent = "Diet";
         opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
         document.body.append(opener);
-        state.menu = state.createMenu({ opener, visible: true, variant: "vertical", items: [
+        state.menu = state.createMenu({ opener, visible: true, items: [
           { id: "vegan", text: "Vegan" },
           { id: "long", text: longText },
           { id: "offline", text: "Offline mode" },
@@ -496,7 +497,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.equal(vertical.overlap, 0, `${dir}: the selected item's trailing check (${JSON.stringify(vertical.content)}, ${vertical.width}px wide, ${vertical.trailingEdge}px from the end) overlaps its label by ${vertical.overlap}px`);
       assert.equal(vertical.painted, false, `${dir}: a vertical menu's selected item still paints a trailing check`);
 
-      // The horizontal menu keeps its own mark, and its 40px end padding keeps it clear.
+      // The horizontal (baseline) menu keeps its own mark, and its 40px end padding keeps it clear.
       await page.evaluate(({ dir, longText }) => {
         const state = window as unknown as MenuWindow;
         state.menu.destroy();
@@ -507,7 +508,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
         opener.textContent = "Diet";
         opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
         document.body.append(opener);
-        state.menu = state.createMenu({ opener, visible: true, width: "220px", items: [
+        state.menu = state.createMenu({ opener, visible: true, variant: "baseline", width: "220px", items: [
           { id: "vegan", text: "Vegan" },
           { id: "long", text: longText },
           { id: "offline", text: "Offline mode" },
@@ -525,6 +526,55 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
       assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
     }
+
+    // Forced-colors mode on the default vertical menu: the high-contrast rule
+    // sits after the vertical selected rule, so the selected item keeps Highlight.
+    await page.emulateMedia({ forcedColors: "active" });
+    try {
+      await page.evaluate(() => {
+        const state = window as unknown as MenuWindow;
+        state.menu?.destroy();
+        document.body.replaceChildren();
+        document.documentElement.dir = "ltr";
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+        ] });
+        state.menu.setSelected("vegan");
+        document.body.append(state.menu.element);
+      });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      const forced = await page.evaluate(() => {
+        const menu = (window as unknown as MenuWindow).menu.element;
+        const selected = menu.querySelector<HTMLElement>('[data-id="vegan"]')!;
+        const submenuItem = menu.querySelector<HTMLElement>('[data-id="share"]')!;
+        const probe = document.createElement("span");
+        probe.style.backgroundColor = "Highlight";
+        probe.style.color = "HighlightText";
+        document.body.append(probe);
+        const expectedBg = getComputedStyle(probe).backgroundColor;
+        const expectedColor = getComputedStyle(probe).color;
+        probe.remove();
+        const chevron = getComputedStyle(submenuItem, "::after");
+        return {
+          bg: getComputedStyle(selected).backgroundColor,
+          color: getComputedStyle(selected).color,
+          expectedBg,
+          expectedColor,
+          chevronPainted: chevron.content !== "none" && chevron.content !== "normal",
+        };
+      });
+      assert.equal(forced.bg, forced.expectedBg, `forced-colors: vertical selected item background is ${forced.bg}, not Highlight (${forced.expectedBg})`);
+      assert.equal(forced.color, forced.expectedColor, `forced-colors: vertical selected item color is ${forced.color}, not HighlightText (${forced.expectedColor})`);
+      assert.equal(forced.chevronPainted, true, "vertical submenu item keeps its trailing chevron");
+    } finally {
+      await page.emulateMedia({ forcedColors: "none" });
+    }
   } finally {
     await page.evaluate(() => {
       (window as unknown as MenuWindow).menu?.destroy();
@@ -533,4 +583,122 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
     });
   }
   console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
+}
+
+/**
+ * Capture before (`variant: "baseline"`) and after (default `variant: "vertical"`)
+ * comparison screenshots for `menu`, `select`, and `split-button` in light and
+ * dark mode so the CI artifact records the visual transition side by side.
+ */
+export async function captureMenuDefaultComparisons(page: Page, artifacts: string): Promise<void> {
+  try {
+    for (const mode of ["light", "dark"] as const) {
+      for (const stage of ["before", "after"] as const) {
+        const baseline = stage === "before";
+        // 1. Standalone menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.menu?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const opener = document.createElement("button");
+          opener.id = "cmp-menu-opener";
+          opener.textContent = "Edit";
+          opener.style.cssText = "position:absolute;left:24px;top:24px;width:96px;height:36px";
+          document.body.append(opener);
+          state.menu = state.createMenu({
+            opener,
+            visible: true,
+            items: [
+              { id: "cut", text: "Cut", shortcut: "⌘X" },
+              { id: "copy", text: "Copy", shortcut: "⌘C" },
+              { id: "paste", text: "Paste", shortcut: "⌘V", disabled: true },
+              { type: "divider" },
+              { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+            ],
+          });
+          state.menu.setSelected("copy");
+          document.body.append(state.menu.element);
+        }, { mode, baseline });
+        await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+        await page.screenshot({ path: join(artifacts, `menu-${stage}-${mode}.png`) });
+
+        // 2. Select menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            createSelect: (cfg: Record<string, unknown>) => { element: HTMLElement; open: () => void; destroy: () => void };
+            selectCmp?: { destroy: () => void };
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.menu?.destroy?.();
+          state.selectCmp?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const select = state.createSelect({
+            label: "Size",
+            value: "m",
+            options: [
+              { id: "s", text: "Small" },
+              { id: "m", text: "Medium" },
+              { id: "l", text: "Large" },
+            ],
+          });
+          state.selectCmp = select;
+          document.body.append(select.element);
+          select.open();
+        }, { mode, baseline });
+        await page.waitForFunction(() => Boolean(document.querySelector(".mtrl-menu--visible")));
+        await page.screenshot({ path: join(artifacts, `select-${stage}-${mode}.png`) });
+
+        // 3. Split button menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            selectCmp?: { destroy: () => void };
+            splitCmp?: { destroy: () => void };
+            openers: { createSplitButton: (cfg: Record<string, unknown>) => { element: HTMLElement; expand: () => void; destroy: () => void } };
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.selectCmp?.destroy?.();
+          state.splitCmp?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const split = state.openers.createSplitButton({
+            text: "Send",
+            items: [
+              { id: "schedule", text: "Schedule send" },
+              { id: "draft", text: "Save draft" },
+            ],
+          });
+          state.splitCmp = split;
+          document.body.append(split.element);
+          split.expand();
+        }, { mode, baseline });
+        await page.waitForFunction(() => Boolean(document.querySelector(".mtrl-menu--visible")));
+        await page.screenshot({ path: join(artifacts, `split-button-${stage}-${mode}.png`) });
+      }
+    }
+  } finally {
+    await page.evaluate(() => {
+      const state = window as unknown as MenuWindow & {
+        selectCmp?: { destroy: () => void };
+        splitCmp?: { destroy: () => void };
+        setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+      };
+      state.menu?.destroy?.();
+      state.selectCmp?.destroy?.();
+      state.splitCmp?.destroy?.();
+      state.setComponentDefaults("menu", {});
+      document.documentElement.removeAttribute("data-theme-mode");
+      document.body.style.cssText = "";
+      document.body.replaceChildren();
+    });
+  }
 }
