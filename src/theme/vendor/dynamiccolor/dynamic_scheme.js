@@ -19,8 +19,9 @@ import { Hct } from '../hct/hct.js';
 import { TonalPalette } from '../palettes/tonal_palette.js';
 import { TemperatureCache } from '../temperature/temperature_cache.js';
 import * as math from '../utils/math_utils.js';
-import { MaterialDynamicColors } from './material_dynamic_colors.js';
+import { ColorSpecDelegateImpl2021 } from './color_spec_2021.js';
 import { Variant } from './variant.js';
+const colors = new ColorSpecDelegateImpl2021();
 /**
  * Constructed by a set of values representing the current UI state (such as
  * whether or not its dark theme, what the theme style is, etc.), and
@@ -66,7 +67,6 @@ export class DynamicScheme {
             getSpec()
                 .getErrorPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel) ??
             TonalPalette.fromHueAndChroma(25.0, 84.0);
-        this.colors = new MaterialDynamicColors();
     }
     toString() {
         return `Scheme: ` +
@@ -138,6 +138,7 @@ export class DynamicScheme {
         }
         return math.sanitizeDegreesDouble(sourceColorHct.hue + rotation);
     }
+    /** @return {number} */
     getArgb(dynamicColor) {
         return dynamicColor.getArgb(this);
     }
@@ -146,202 +147,202 @@ export class DynamicScheme {
     }
     // Palette key colors
     get primaryPaletteKeyColor() {
-        return this.getArgb(this.colors.primaryPaletteKeyColor());
+        return this.getArgb(colors.primaryPaletteKeyColor());
     }
     get secondaryPaletteKeyColor() {
-        return this.getArgb(this.colors.secondaryPaletteKeyColor());
+        return this.getArgb(colors.secondaryPaletteKeyColor());
     }
     get tertiaryPaletteKeyColor() {
-        return this.getArgb(this.colors.tertiaryPaletteKeyColor());
+        return this.getArgb(colors.tertiaryPaletteKeyColor());
     }
     get neutralPaletteKeyColor() {
-        return this.getArgb(this.colors.neutralPaletteKeyColor());
+        return this.getArgb(colors.neutralPaletteKeyColor());
     }
     get neutralVariantPaletteKeyColor() {
-        return this.getArgb(this.colors.neutralVariantPaletteKeyColor());
+        return this.getArgb(colors.neutralVariantPaletteKeyColor());
     }
     get errorPaletteKeyColor() {
-        return this.getArgb(this.colors.errorPaletteKeyColor());
+        return this.getArgb(colors.errorPaletteKeyColor());
     }
     // Surface colors
     get background() {
-        return this.getArgb(this.colors.background());
+        return this.getArgb(colors.background());
     }
     get onBackground() {
-        return this.getArgb(this.colors.onBackground());
+        return this.getArgb(colors.onBackground());
     }
     get surface() {
-        return this.getArgb(this.colors.surface());
+        return this.getArgb(colors.surface());
     }
     get surfaceDim() {
-        return this.getArgb(this.colors.surfaceDim());
+        return this.getArgb(colors.surfaceDim());
     }
     get surfaceBright() {
-        return this.getArgb(this.colors.surfaceBright());
+        return this.getArgb(colors.surfaceBright());
     }
     get surfaceContainerLowest() {
-        return this.getArgb(this.colors.surfaceContainerLowest());
+        return this.getArgb(colors.surfaceContainerLowest());
     }
     get surfaceContainerLow() {
-        return this.getArgb(this.colors.surfaceContainerLow());
+        return this.getArgb(colors.surfaceContainerLow());
     }
     get surfaceContainer() {
-        return this.getArgb(this.colors.surfaceContainer());
+        return this.getArgb(colors.surfaceContainer());
     }
     get surfaceContainerHigh() {
-        return this.getArgb(this.colors.surfaceContainerHigh());
+        return this.getArgb(colors.surfaceContainerHigh());
     }
     get surfaceContainerHighest() {
-        return this.getArgb(this.colors.surfaceContainerHighest());
+        return this.getArgb(colors.surfaceContainerHighest());
     }
     get onSurface() {
-        return this.getArgb(this.colors.onSurface());
+        return this.getArgb(colors.onSurface());
     }
     get surfaceVariant() {
-        return this.getArgb(this.colors.surfaceVariant());
+        return this.getArgb(colors.surfaceVariant());
     }
     get onSurfaceVariant() {
-        return this.getArgb(this.colors.onSurfaceVariant());
+        return this.getArgb(colors.onSurfaceVariant());
     }
     get inverseSurface() {
-        return this.getArgb(this.colors.inverseSurface());
+        return this.getArgb(colors.inverseSurface());
     }
     get inverseOnSurface() {
-        return this.getArgb(this.colors.inverseOnSurface());
+        return this.getArgb(colors.inverseOnSurface());
     }
     get outline() {
-        return this.getArgb(this.colors.outline());
+        return this.getArgb(colors.outline());
     }
     get outlineVariant() {
-        return this.getArgb(this.colors.outlineVariant());
+        return this.getArgb(colors.outlineVariant());
     }
     get shadow() {
-        return this.getArgb(this.colors.shadow());
+        return this.getArgb(colors.shadow());
     }
     get scrim() {
-        return this.getArgb(this.colors.scrim());
+        return this.getArgb(colors.scrim());
     }
     get surfaceTint() {
-        return this.getArgb(this.colors.surfaceTint());
+        return this.getArgb(colors.surfaceTint());
     }
     // Primary colors
     get primary() {
-        return this.getArgb(this.colors.primary());
+        return this.getArgb(colors.primary());
     }
     get primaryDim() {
-        const primaryDim = this.colors.primaryDim();
+        const primaryDim = colors.primaryDim();
         if (primaryDim === undefined) {
             throw new Error('`primaryDim` color is undefined prior to 2025 spec.');
         }
         return this.getArgb(primaryDim);
     }
     get onPrimary() {
-        return this.getArgb(this.colors.onPrimary());
+        return this.getArgb(colors.onPrimary());
     }
     get primaryContainer() {
-        return this.getArgb(this.colors.primaryContainer());
+        return this.getArgb(colors.primaryContainer());
     }
     get onPrimaryContainer() {
-        return this.getArgb(this.colors.onPrimaryContainer());
+        return this.getArgb(colors.onPrimaryContainer());
     }
     get primaryFixed() {
-        return this.getArgb(this.colors.primaryFixed());
+        return this.getArgb(colors.primaryFixed());
     }
     get primaryFixedDim() {
-        return this.getArgb(this.colors.primaryFixedDim());
+        return this.getArgb(colors.primaryFixedDim());
     }
     get onPrimaryFixed() {
-        return this.getArgb(this.colors.onPrimaryFixed());
+        return this.getArgb(colors.onPrimaryFixed());
     }
     get onPrimaryFixedVariant() {
-        return this.getArgb(this.colors.onPrimaryFixedVariant());
+        return this.getArgb(colors.onPrimaryFixedVariant());
     }
     get inversePrimary() {
-        return this.getArgb(this.colors.inversePrimary());
+        return this.getArgb(colors.inversePrimary());
     }
     // Secondary colors
     get secondary() {
-        return this.getArgb(this.colors.secondary());
+        return this.getArgb(colors.secondary());
     }
     get secondaryDim() {
-        const secondaryDim = this.colors.secondaryDim();
+        const secondaryDim = colors.secondaryDim();
         if (secondaryDim === undefined) {
             throw new Error('`secondaryDim` color is undefined prior to 2025 spec.');
         }
         return this.getArgb(secondaryDim);
     }
     get onSecondary() {
-        return this.getArgb(this.colors.onSecondary());
+        return this.getArgb(colors.onSecondary());
     }
     get secondaryContainer() {
-        return this.getArgb(this.colors.secondaryContainer());
+        return this.getArgb(colors.secondaryContainer());
     }
     get onSecondaryContainer() {
-        return this.getArgb(this.colors.onSecondaryContainer());
+        return this.getArgb(colors.onSecondaryContainer());
     }
     get secondaryFixed() {
-        return this.getArgb(this.colors.secondaryFixed());
+        return this.getArgb(colors.secondaryFixed());
     }
     get secondaryFixedDim() {
-        return this.getArgb(this.colors.secondaryFixedDim());
+        return this.getArgb(colors.secondaryFixedDim());
     }
     get onSecondaryFixed() {
-        return this.getArgb(this.colors.onSecondaryFixed());
+        return this.getArgb(colors.onSecondaryFixed());
     }
     get onSecondaryFixedVariant() {
-        return this.getArgb(this.colors.onSecondaryFixedVariant());
+        return this.getArgb(colors.onSecondaryFixedVariant());
     }
     // Tertiary colors
     get tertiary() {
-        return this.getArgb(this.colors.tertiary());
+        return this.getArgb(colors.tertiary());
     }
     get tertiaryDim() {
-        const tertiaryDim = this.colors.tertiaryDim();
+        const tertiaryDim = colors.tertiaryDim();
         if (tertiaryDim === undefined) {
             throw new Error('`tertiaryDim` color is undefined prior to 2025 spec.');
         }
         return this.getArgb(tertiaryDim);
     }
     get onTertiary() {
-        return this.getArgb(this.colors.onTertiary());
+        return this.getArgb(colors.onTertiary());
     }
     get tertiaryContainer() {
-        return this.getArgb(this.colors.tertiaryContainer());
+        return this.getArgb(colors.tertiaryContainer());
     }
     get onTertiaryContainer() {
-        return this.getArgb(this.colors.onTertiaryContainer());
+        return this.getArgb(colors.onTertiaryContainer());
     }
     get tertiaryFixed() {
-        return this.getArgb(this.colors.tertiaryFixed());
+        return this.getArgb(colors.tertiaryFixed());
     }
     get tertiaryFixedDim() {
-        return this.getArgb(this.colors.tertiaryFixedDim());
+        return this.getArgb(colors.tertiaryFixedDim());
     }
     get onTertiaryFixed() {
-        return this.getArgb(this.colors.onTertiaryFixed());
+        return this.getArgb(colors.onTertiaryFixed());
     }
     get onTertiaryFixedVariant() {
-        return this.getArgb(this.colors.onTertiaryFixedVariant());
+        return this.getArgb(colors.onTertiaryFixedVariant());
     }
     // Error colors
     get error() {
-        return this.getArgb(this.colors.error());
+        return this.getArgb(colors.error());
     }
     get errorDim() {
-        const errorDim = this.colors.errorDim();
+        const errorDim = colors.errorDim();
         if (errorDim === undefined) {
             throw new Error('`errorDim` color is undefined prior to 2025 spec.');
         }
         return this.getArgb(errorDim);
     }
     get onError() {
-        return this.getArgb(this.colors.onError());
+        return this.getArgb(colors.onError());
     }
     get errorContainer() {
-        return this.getArgb(this.colors.errorContainer());
+        return this.getArgb(colors.errorContainer());
     }
     get onErrorContainer() {
-        return this.getArgb(this.colors.onErrorContainer());
+        return this.getArgb(colors.onErrorContainer());
     }
 }
 DynamicScheme.DEFAULT_SPEC_VERSION = '2021';

@@ -30,18 +30,13 @@
  * @module theme
  */
 
+import { ColorSpecDelegateImpl2021 } from "./vendor/dynamiccolor/color_spec_2021";
+import type { DynamicColor } from "./vendor/dynamiccolor/dynamic_color";
 import { DynamicScheme } from "./vendor/dynamiccolor/dynamic_scheme";
-import { MaterialDynamicColors } from "./vendor/dynamiccolor/material_dynamic_colors";
+import { Variant } from "./vendor/dynamiccolor/variant";
 import { Hct } from "./vendor/hct/hct";
-import { SchemeContent } from "./vendor/scheme/scheme_content";
-import { SchemeExpressive } from "./vendor/scheme/scheme_expressive";
-import { SchemeFidelity } from "./vendor/scheme/scheme_fidelity";
-import { SchemeMonochrome } from "./vendor/scheme/scheme_monochrome";
-import { SchemeNeutral } from "./vendor/scheme/scheme_neutral";
-import { SchemeTonalSpot } from "./vendor/scheme/scheme_tonal_spot";
-import { SchemeVibrant } from "./vendor/scheme/scheme_vibrant";
+import { TonalPalette } from "./vendor/palettes/tonal_palette";
 import { argbFromHex, hexFromArgb } from "./vendor/utils/string_utils";
-import { camel, SCHEME_ROLES } from "./roles";
 
 export { Hct };
 export type { DynamicScheme };
@@ -49,20 +44,87 @@ export type { DynamicScheme };
 /** A scheme factory: the source colour, whether it is dark, and the contrast level. */
 export type SchemeFactory = (source: Hct, dark: boolean, contrastLevel: number) => DynamicScheme;
 
+const scheme = (variant: number): SchemeFactory => (sourceColorHct, isDark, contrastLevel) =>
+  new DynamicScheme({ sourceColorHct, variant, isDark, contrastLevel });
+
 /** The tonal-spot variant, Material's default theme. */
-export const tonalSpot: SchemeFactory = (source, dark, contrast) => new SchemeTonalSpot(source, dark, contrast);
+export const tonalSpot: SchemeFactory = scheme(Variant.TONAL_SPOT);
 /** The vibrant variant. */
-export const vibrant: SchemeFactory = (source, dark, contrast) => new SchemeVibrant(source, dark, contrast);
+export const vibrant: SchemeFactory = scheme(Variant.VIBRANT);
 /** The expressive variant. */
-export const expressive: SchemeFactory = (source, dark, contrast) => new SchemeExpressive(source, dark, contrast);
+export const expressive: SchemeFactory = scheme(Variant.EXPRESSIVE);
 /** The fidelity variant. */
-export const fidelity: SchemeFactory = (source, dark, contrast) => new SchemeFidelity(source, dark, contrast);
+export const fidelity: SchemeFactory = scheme(Variant.FIDELITY);
 /** The content variant. */
-export const content: SchemeFactory = (source, dark, contrast) => new SchemeContent(source, dark, contrast);
+export const content: SchemeFactory = scheme(Variant.CONTENT);
 /** The neutral variant. */
-export const neutral: SchemeFactory = (source, dark, contrast) => new SchemeNeutral(source, dark, contrast);
+export const neutral: SchemeFactory = scheme(Variant.NEUTRAL);
 /** The monochrome variant. */
-export const monochrome: SchemeFactory = (source, dark, contrast) => new SchemeMonochrome(source, dark, contrast);
+export const monochrome: SchemeFactory = scheme(Variant.MONOCHROME);
+
+const SCHEME_ROLES = [
+  "primary",
+  "on-primary",
+  "primary-container",
+  "on-primary-container",
+  "secondary",
+  "on-secondary",
+  "secondary-container",
+  "on-secondary-container",
+  "tertiary",
+  "on-tertiary",
+  "tertiary-container",
+  "on-tertiary-container",
+  "error",
+  "on-error",
+  "error-container",
+  "on-error-container",
+  "surface",
+  "surface-dim",
+  "surface-bright",
+  "surface-container-lowest",
+  "surface-container-low",
+  "surface-container",
+  "surface-container-high",
+  "surface-container-highest",
+  "surface-variant",
+  "on-surface",
+  "on-surface-variant",
+  "outline",
+  "outline-variant",
+  "shadow",
+  "scrim",
+  "inverse-surface",
+  "inverse-on-surface",
+  "inverse-primary",
+  "success",
+  "on-success",
+  "warning",
+  "on-warning",
+  "info",
+  "on-info",
+] as const;
+
+const camel = (role: string): string => role.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
+
+const proto = ColorSpecDelegateImpl2021.prototype as unknown as Record<string, () => DynamicColor>;
+SCHEME_ROLES.slice(34).forEach((k, i) => {
+  const f = Hct.fromInt([0x7b5a, 0xdd6d06, 0x61a4][i >> 1]!);
+  proto[camel(k)] = () =>
+    ({
+      getArgb: (s: DynamicScheme) =>
+        proto[i & 1 ? "onError" : "error"]!().getArgb({
+          __proto__: s,
+          errorPalette: TonalPalette.fromInt(
+            Hct.from(
+              f.hue + Math.max(-15, Math.min(15, (((s.variant && Hct.fromInt(s.primaryPalette.tone(40)).hue) - f.hue + 540) % 360 - 180) * 0.5)),
+              f.chroma,
+              f.tone,
+            ).toInt(),
+          ),
+        } as unknown as DynamicScheme),
+    }) as DynamicColor;
+});
 
 /** The mode of the generated scheme: a light or a dark one. */
 export type SchemeMode = "light" | "dark";
@@ -117,9 +179,8 @@ export interface ApplyOptions {
  */
 export function applyScheme(scheme: DynamicScheme, target: Element = document.documentElement, options: ApplyOptions = {}): void {
   const { prefix = "mtrl" } = options;
-  const colors = new MaterialDynamicColors() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
   const { style } = target as HTMLElement;
   for (const role of SCHEME_ROLES) {
-    style.setProperty(`--${prefix}-sys-color-${role}`, hexFromArgb(colors[camel(role)]().getArgb(scheme)));
+    style.setProperty(`--${prefix}-sys-color-${role}`, hexFromArgb(proto[camel(role)]!().getArgb(scheme)));
   }
 }
