@@ -2,7 +2,8 @@
 import type { CalendarDate } from './types';
 
 export const DEFAULT_LOCALE = 'en-US';
-const dtf = (locale: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, opts);
+export const dtf = (locale: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(locale, { calendar: 'gregory', numberingSystem: 'latn', ...opts });
 
 export const resolveLocale = (locale?: string): string => {
   try {
@@ -15,11 +16,11 @@ export const resolveLocale = (locale?: string): string => {
 export const getFirstDayOfWeek = (locale = DEFAULT_LOCALE): number => {
   const loc = new Intl.Locale(locale) as Intl.Locale & { getWeekInfo?: () => { firstDay?: number }; weekInfo?: { firstDay?: number } };
   const first = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay, r = loc.maximize().region ?? '';
-  return first ? first % 7 : /^(EG|IR|AF|SY)$/.test(r) ? 6 : /^(US|CA|MX|JP|KR|CN|TW|HK|BR|PT|IL|SA|TH|PH|IN|ZA)$/.test(r) ? 0 : 1;
+  return first ? first % 7 : /^(EG|IR|AF|SY)$/.test(r) ? 6 : /^(US|CA|MX|JP|KR|TW|HK|BR|PT|IL|SA|TH|PH|IN|ZA)$/.test(r) ? 0 : 1;
 };
 
 export const getLocaleDateFormat = (locale = DEFAULT_LOCALE): string =>
-  dtf(locale, { year: 'numeric', month: '2-digit', day: '2-digit', calendar: 'gregory', numberingSystem: 'latn' })
+  dtf(locale, { year: 'numeric', month: '2-digit', day: '2-digit' })
     .format(new Date(3333, 10, 22))
     .replace('3333', 'YYYY')
     .replace('11', 'MM')

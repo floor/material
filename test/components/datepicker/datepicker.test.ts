@@ -314,11 +314,13 @@ describe("Material date picker", () => {
       delete proto.weekInfo;
       const frFallback = mount({ value: "2026-09-15", locale: "fr-FR" });
       const gbFallback = mount({ value: "2026-09-15", locale: "en-GB" });
+      const cnFallback = mount({ value: "2026-09-15", locale: "zh-CN" });
       const arFallback = mount({ value: "2026-09-15", locale: "ar-EG" });
       const heFallback = mount({ value: "2026-09-15", locale: "he-IL" });
-      frFallback.open(); gbFallback.open(); arFallback.open(); heFallback.open();
+      frFallback.open(); gbFallback.open(); cnFallback.open(); arFallback.open(); heFallback.open();
       expect(gridDates(frFallback)[0]).toBe("2026-08-31");
       expect(gridDates(gbFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(cnFallback)[0]).toBe("2026-08-31");
       expect(gridDates(arFallback)[0]).toBe("2026-08-29");
       expect(gridDates(heFallback)[0]).toBe("2026-08-30");
     } finally {
@@ -349,6 +351,22 @@ describe("Material date picker", () => {
     const th = mount({ value: "2026-09-15", locale: "th-TH" });
     expect(th.input.placeholder).toBe("DD/MM/YYYY");
     expect(th.getFormattedValue()).toBe("15/09/2026");
+    th.open();
+    expect(day(th, "2026-09-15").getAttribute("aria-label")).toContain("2026");
+    expect(day(th, "2026-09-15").getAttribute("aria-label")).not.toContain("2569");
+    expect(query(th, '.mtrl-datepicker__sr-only[aria-live="polite"]').textContent).toContain("2026");
+    expect(query(th, '.mtrl-datepicker__sr-only[aria-live="polite"]').textContent).not.toContain("2569");
+
+    const fa = mount({ value: "2026-09-15", locale: "fa-IR" });
+    fa.open();
+    const expectedFaSep = new Intl.DateTimeFormat("fa-IR", { month: "long", calendar: "gregory", numberingSystem: "latn" }).format(new Date(2026, 8, 1));
+    expect(query(fa, '[data-action="month"]').textContent).toBe(expectedFaSep);
+    expect(query(fa, '[role="grid"]:not([aria-hidden])').getAttribute("aria-label")).toBe(`${expectedFaSep} 2026`);
+    fa.calendar.showMonthView();
+    const expectedFaMonthsShort = Array.from({ length: 12 }, (_, m) =>
+      new Intl.DateTimeFormat("fa-IR", { month: "short", calendar: "gregory", numberingSystem: "latn" }).format(new Date(2026, m, 1))
+    );
+    expect(Array.from(fa.element.querySelectorAll("[data-month]")).map((el) => el.textContent)).toEqual(expectedFaMonthsShort);
 
     expect(datepickerElement.spec.attributes.locale).toEqual({ type: "string", config: "locale" });
   });

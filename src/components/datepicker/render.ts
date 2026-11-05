@@ -2,7 +2,7 @@ import { DATEPICKER_ICONS } from "./constants";
 import { setHTML } from "../../core/dom/html";
 import { createElement } from "../../core/dom/create";
 import type { DatePickerState } from "./types";
-import { formatDate, generateCalendarDates, getMonthNames, getWeekdayNames, isSameDay, parseDate } from "./utils";
+import { dtf, formatDate, generateCalendarDates, getMonthNames, getWeekdayNames, isSameDay, parseDate } from "./utils";
 
 /** Rendering is passive: one delegated listener owns each picker, including rerenders. */
 export function renderCalendar(state: DatePickerState): HTMLElement {
@@ -44,7 +44,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
         if (item.isCurrentMonth && state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
         const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
         const day = make("button", "day", String(item.day), {
-          type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString(state.locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+          type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": dtf(state.locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(item.date),
           "aria-pressed": String(selected), disabled: !state.isAllowed(item.date), tabindex: current && item === focus ? "0" : "-1",
         });
         if (!state.isAllowed(item.date)) day.classList.add(cls("day--disabled"));

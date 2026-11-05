@@ -10,7 +10,7 @@ import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
 import { withAPI } from "./api";
 import { renderCalendar } from "./render";
-import { addDays, addMonths, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./utils";
+import { addDays, addMonths, dtf, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./utils";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
@@ -161,7 +161,7 @@ const createDatePicker = <M extends string = "single">(
     if (current && kept) current.scrollTop = kept.top + (shiftBy === null ? 0 : current.scrollHeight - kept.height);
     shiftBy = null;
     centre();
-    announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString(state.locale, { month: "long", year: "numeric" });
+    announcement.textContent = dtf(state.locale, { month: "long", year: "numeric" }).format(new Date(state.currentYear, state.currentMonth, 1));
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
     else if (focus) focusCurrent();
   };
