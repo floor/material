@@ -8,7 +8,7 @@ import type createMenu from "../src/components/menu";
  * Chromium prints a plain colour as rgb() and a color-mix result as
  * color(srgb r g b / a); one parser for both, in channels the assertions read.
  */
-function parseColour(text: string): [number, number, number, number] {
+export function parseColour(text: string): [number, number, number, number] {
   const rgb = /^rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(text);
   if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), rgb[4] === undefined ? 1 : Number(rgb[4])];
   const srgb = /^color\(srgb ([\d.e+-]+) ([\d.e+-]+) ([\d.e+-]+)(?: \/ ([\d.]+))?\)$/.exec(text);

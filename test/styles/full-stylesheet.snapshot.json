@@ -1222,6 +1222,7 @@
     ".mtrl-menu__item--disabled",
     ".mtrl-menu__item--disabled .mtrl-menu__item-icon,.mtrl-menu__item--disabled .mtrl-menu__item-supporting,.mtrl-menu__item--disabled .mtrl-menu__item-shortcut",
     ".mtrl-menu__item--disabled:hover::before,.mtrl-menu__item--disabled:active::before",
+    ".mtrl-menu__item--keyboard-active",
     ".mtrl-menu__item--selected",
     ".mtrl-menu__item--selected .mtrl-menu__item-icon,.mtrl-menu__item--selected .mtrl-menu__item-shortcut",
     ".mtrl-menu__item--selected.mtrl-menu__item--disabled",
