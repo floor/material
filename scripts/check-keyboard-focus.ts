@@ -87,7 +87,7 @@ export const KNOWN_GAPS: readonly KnownFocusGap[] = [
     id: "G5",
     component: "TextField",
     part: "input.mtrl-text-field__input (.mtrl-text-field--filled)",
-    target: "textfield-filled",
+    target: "text-field-filled",
     modes: ["forced-colors"],
   },
   {
@@ -233,9 +233,9 @@ const TARGET_SPECS: readonly TargetSpec[] = [
   { target: "radio", component: "Radio", part: "input.mtrl-radios__input" },
   { target: "switch", component: "Switch", part: "input.mtrl-switch__input" },
   { target: "slider-handle", component: "Slider", part: "div.mtrl-slider__handle" },
-  { target: "textfield-filled", component: "TextField", part: "input.mtrl-text-field__input (.mtrl-text-field--filled)", allowsPointerIndicator: true },
-  { target: "textfield-trailing-button", component: "TextField", part: "button.mtrl-text-field__trailing-icon--button" },
-  { target: "textfield-outlined", component: "TextField", part: "input.mtrl-text-field__input (.mtrl-text-field--outlined)", allowsPointerIndicator: true },
+  { target: "text-field-filled", component: "TextField", part: "input.mtrl-text-field__input (.mtrl-text-field--filled)", allowsPointerIndicator: true },
+  { target: "text-field-trailing-button", component: "TextField", part: "button.mtrl-text-field__trailing-icon--button" },
+  { target: "text-field-outlined", component: "TextField", part: "input.mtrl-text-field__input (.mtrl-text-field--outlined)", allowsPointerIndicator: true },
   { target: "select-filled", component: "Select", part: "input.mtrl-text-field__input (.mtrl-select .mtrl-text-field--filled)", allowsPointerIndicator: true },
   { target: "select-outlined", component: "Select", part: "input.mtrl-text-field__input (.mtrl-select .mtrl-text-field--outlined)", allowsPointerIndicator: true },
   { target: "tabs-tab", component: "Tabs", part: "button.mtrl-tab" },
@@ -497,15 +497,15 @@ async function mountAllDemos(page: Page): Promise<void> {
       trailingIconLabel: "Clear",
     }) as { element: HTMLElement };
     addBox().append(tfFilled.element);
-    mark(tfFilled.element.querySelector("input.mtrl-text-field__input"), "textfield-filled");
-    mark(tfFilled.element.querySelector("button.mtrl-text-field__trailing-icon--button"), "textfield-trailing-button");
+    mark(tfFilled.element.querySelector("input.mtrl-text-field__input"), "text-field-filled");
+    mark(tfFilled.element.querySelector("button.mtrl-text-field__trailing-icon--button"), "text-field-trailing-button");
 
     const tfOutlined = m.createTextField({
       label: "Outlined field",
       variant: "outlined",
     }) as { element: HTMLElement };
     addBox().append(tfOutlined.element);
-    mark(tfOutlined.element.querySelector("input.mtrl-text-field__input"), "textfield-outlined");
+    mark(tfOutlined.element.querySelector("input.mtrl-text-field__input"), "text-field-outlined");
 
     const selFilled = m.createSelect({
       label: "Filled select",
@@ -1011,13 +1011,13 @@ async function installBrowserHelpers(page: Page): Promise<void> {
       if (textField) {
         const field = textField.querySelector(".mtrl-text-field__field");
         if (field) {
-          list.push({ key: "textfield-field::before", node: field, pseudo: "::before" });
+          list.push({ key: "text-field-field::before", node: field, pseudo: "::before" });
         }
         const outlineStart = textField.querySelector(
           ".mtrl-text-field__outline-leading, .mtrl-text-field__outline-start"
         );
         if (outlineStart) {
-          list.push({ key: "textfield-outline-start", node: outlineStart });
+          list.push({ key: "text-field-outline-start", node: outlineStart });
         }
       }
       const searchContainer = el.closest(".mtrl-search__container");
@@ -1230,7 +1230,7 @@ async function installBrowserHelpers(page: Page): Promise<void> {
         }
 
         // 3. Check filled TextField / Select active indicator bar (.mtrl-text-field__field::before)
-        if (item.key === "textfield-field::before") {
+        if (item.key === "text-field-field::before") {
           const barThickness = Math.max(after.height, after.borderTopWidth, after.borderBottomWidth);
           const barChanged =
             after.opacity > 0 &&
