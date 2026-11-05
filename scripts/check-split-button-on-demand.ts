@@ -318,6 +318,38 @@ try {
   await keyboardOpen("Space");
   await keyboardOpen("ArrowDown");
 
+  // A pointer click counts (detail 1), so it stays a pointer open: the menu
+  // keeps the surface focus it had before this check existed, and the first
+  // arrow reaches the first item.
+  const trailing = await page.evaluate(() => {
+    const rect = (window as unknown as SplitWindow).split.trailingElement.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  });
+  await page.mouse.click(trailing.x, trailing.y);
+  await page.waitForFunction(
+    () => {
+      const menu = document.querySelector(".mtrl-menu--visible");
+      return !!menu && document.activeElement === menu;
+    },
+    null,
+    { timeout: 5_000, polling: 10 }
+  );
+  await page.keyboard.press("ArrowDown");
+  const afterPointerArrow = await page.evaluate(() => ({
+    id: (document.activeElement as HTMLElement | null)?.getAttribute("data-id"),
+  }));
+  assert.deepEqual(
+    afterPointerArrow,
+    { id: "draft" },
+    "a pointer open leaves focus on the menu surface, and the first arrow reaches the first item"
+  );
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(
+    () => !document.querySelector(".mtrl-menu--visible"),
+    null,
+    { timeout: 5_000, polling: 10 }
+  );
+
   await page.evaluate(() => (window as unknown as SplitWindow).split.destroy());
   console.log("Split button menu-on-demand check passed.");
 } finally {
