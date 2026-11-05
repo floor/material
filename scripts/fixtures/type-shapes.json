@@ -1238,7 +1238,8 @@
     "kind": "union",
     "members": [
       "HTMLElement",
-      "string"
+      "string",
+      "{ element: HTMLElement }"
     ]
   },
   "ListSlot.type": {
