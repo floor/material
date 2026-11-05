@@ -34,6 +34,16 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // The build writes dist/package.json so its module and declaration prunes
+  // read the export map in place. It is not an export target and has no
+  // runtime role (`dist` inherits the root `type` and `sideEffects`), so the
+  // manifest's `files` excludes it from the tarball. This asserts the real
+  // packed list: dropping the exclusion, or writing the file elsewhere, fails
+  // here with the tarball CI would publish.
+  assert(
+    !pack.files.some((file: { path: string }) => file.path === "dist/package.json"),
+    "The build's nested manifest is packed; it has no export or runtime role",
+  );
   // Which README and manifest ship. The fixture packs what publish.yml's step
   // makes of the tree, so these hold for a release: npm's page shows the short
   // README, the repository's long one stays on GitHub, and the manifest carries
