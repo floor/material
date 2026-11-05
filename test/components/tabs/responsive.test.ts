@@ -338,6 +338,18 @@ describe('the responsive option', () => {
     expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
   });
 
+  test('a group destroyed before the behaviour loads is left alone: no observer, no layout', async () => {
+    setWidth(400);
+    const tabs = createTabs({ tabs: TABS_WITH_ICONS, responsive: {} });
+    document.body.append(tabs.element);
+    tabs.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(resizeObservers.length).toBe(0);
+    expect(tabs.element.classList.contains(smallClass(tabs))).toBe(false);
+  });
+
   test('a tab added after creation follows the option as it follows the function', async () => {
     setWidth(400);
     const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: {} });

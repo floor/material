@@ -80,12 +80,20 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
     }
     
     // The responsive behaviour is loaded only for a group that asks for it, so
-    // a consumer that never sets the option does not carry its code.
+    // a consumer that never sets the option does not carry its code. A group
+    // destroyed before the module arrives is left alone: setting the behaviour
+    // up then would observe the body with nothing left to disconnect it.
     const responsive = config.responsive;
     if (responsive) {
-      void import('./responsive').then(({ setupResponsiveBehavior }) =>
-        setupResponsiveBehavior(component, responsive)
-      );
+      const destroy = component.destroy;
+      let destroyed = false;
+      component.destroy = () => {
+        destroyed = true;
+        destroy();
+      };
+      void import('./responsive').then(({ setupResponsiveBehavior }) => {
+        if (!destroyed) setupResponsiveBehavior(component, responsive);
+      });
     }
 
     return component;
