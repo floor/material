@@ -11,9 +11,9 @@
  * (scripts/build-modules.ts) precisely so it reaches this consumer.
  *
  * The deprecated names below are the FAB's physical-position aliases, the
- * deprecations the package ships. The adapter entries are read for a deprecated
- * value export and checked when one exists: an adapter that gains one is covered
- * without changing this file.
+ * deprecations the package ships. A generated consumer reads an adapter entry
+ * (React first): it must compile, and a deprecated value export it finds must
+ * report, so an adapter that gains one is covered without changing this file.
  *
  *   bun run declaration-docs:check
  *   bun run scripts/check-declaration-docs.ts --dist ./dist
@@ -106,9 +106,11 @@ try {
     await symlink(resolve(ROOT, "node_modules", name), join(directory, "node_modules", name), "dir").catch(() => {});
   }
 
-  // Each adapter entry as a consumer sees it. Its exports are read from the
-  // packed declarations: the first deprecated value export is checked through
-  // an import, exactly as a consumer would write it.
+  // Each adapter entry as a consumer sees it: its exports are read from the
+  // packed declarations, and the first entry that exports a value is imported
+  // and compiled like any other consumer. When one of its value exports is
+  // deprecated, the import must report that too; no adapter entry has one
+  // today, so on this package the case is the compile alone.
   const probes = adapters.map((_, index) => `adapter-${index}.ts`);
   for (const [index, adapter] of adapters.entries()) {
     await writeFile(join(directory, probes[index]!), `export * from "${manifest.name}/${adapter}";\n`);
@@ -120,20 +122,24 @@ try {
     if (!source) continue;
     const moduleSymbol = probeChecker.getSymbolAtLocation(source);
     if (!moduleSymbol) continue;
-    let found: { name: string } | undefined;
+    let firstValue: string | undefined;
+    let deprecatedValue: string | undefined;
     for (const exported of probeChecker.getExportsOfModule(moduleSymbol)) {
       const target = exported.flags & ts.SymbolFlags.Alias ? probeChecker.getAliasedSymbol(exported) : exported;
       if (!(target.flags & ts.SymbolFlags.Value)) continue;
-      if (!deprecationOf(probeChecker, exported)) continue;
-      found = { name: exported.getName() };
-      break;
+      const name = exported.getName();
+      firstValue ??= name;
+      if (deprecationOf(probeChecker, exported)) {
+        deprecatedValue = name;
+        break;
+      }
     }
-    if (!found) continue;
-    const file = `adapter-${adapter}-consumer.ts`;
+    if (!firstValue) continue;
+    const name = deprecatedValue ?? firstValue;
     consumers.push({
-      file,
-      source: `import { ${found.name} } from "${manifest.name}/${adapter}";\nconst value = ${found.name};\nexport { value };\n`,
-      deprecated: [found.name],
+      file: `adapter-${adapter}-consumer.ts`,
+      source: `import { ${name} } from "${manifest.name}/${adapter}";\nconst value = ${name};\nexport { value };\n`,
+      deprecated: deprecatedValue ? [name] : [],
     });
     break;
   }
