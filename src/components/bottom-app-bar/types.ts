@@ -94,8 +94,8 @@ export interface BottomAppBarConfig {
 
   /**
    * Component name for class generation
-   * @deprecated Use the toolbar's componentName option; the docked toolbar's
-   * classes are its own.
+   * @deprecated Never took effect: the component name is fixed per component.
+   * The docked toolbar's name is fixed too.
    */
   componentName?: string;
 }
