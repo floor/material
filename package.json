@@ -32,6 +32,7 @@
     "**/*.scss",
     "**/styles/*.js",
     "**/elements/css/*.js",
+    "**/theme/spec2025.js",
     "**/ssr/index.js",
     "**/ssr/react.js",
     "**/ssr/svelte.js",
@@ -438,6 +439,10 @@
     "./theme/image": {
       "types": "./dist/theme/image.d.ts",
       "import": "./dist/theme/image.js"
+    },
+    "./theme/2025": {
+      "types": "./dist/theme/2025.d.ts",
+      "import": "./dist/theme/2025.js"
     },
     "./styles/*": {
       "types": "./dist/styles/*.d.ts",
