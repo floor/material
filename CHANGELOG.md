@@ -17,6 +17,232 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-11-06
+
+Colour that adapts at runtime.
+
+### Added
+
+- **The package ships its third-party NOTICE (#303).**
+  The tarball carries a `NOTICE` at its root: the SVG path data for the Material
+  Symbols and Material Icons glyphs the JavaScript and one stylesheet embed,
+  Copyright Google LLC, under the Apache License, Version 2.0, with the full
+  licence text and the files that declare them. `package.json`'s `files` packs
+  it, and `bun run notice:check` fails a pull request whose tarball lacks it or
+  does not name the glyphs. #274's colour-utilities section is added to the
+  same file.
+
+- **Runtime colour from a seed or an image (#274).**
+  Three new subpaths, none on the root entry. `material/theme` carries
+  `createScheme(seed, { variant, mode, contrast })`, returning a Material
+  dynamic scheme; `applyScheme(scheme, target, { prefix })`, writing its role
+  colours to `--<prefix>-sys-color-*`; and one factory per variant —
+  `tonalSpot`, `vibrant`, `expressive`, `fidelity`, `content`, `neutral` and
+  `monochrome` — each `(source, dark, contrast) => scheme`. `material/theme/variants`
+  carries `createSchemeByName(seed, { variant, mode, contrast })` for a page
+  that switches variants at runtime, with all seven factories.
+  `material/theme/image` carries `sourceColorFromImage(image)`, the quantizer
+  and scorer that find an image's source colour. The seed may be a hex string,
+  an ARGB integer or an `Hct`; the defaults are tonal spot — Material's default
+  theme — light and standard contrast. A page passes the factory it builds
+  with, and the factories a page does not import tree-shake away. Everything a
+  caller types against is exported: `Hct` and the `DynamicScheme` type,
+  `SchemeFactory`, `SchemeMode`, `SchemeOptions` and `ApplyOptions` beside
+  `createScheme` and `applyScheme` on `material/theme`, and `ThemeVariant` and
+  `NamedSchemeOptions` beside `createSchemeByName` on
+  `material/theme/variants`.
+
+  `applyScheme` writes the 34 roles the stylesheet reads, with the prefix the
+  stylesheet was compiled with (`mtrl` by default), so a runtime scheme and a
+  Sass theme set the same custom properties; applying it to a section or any
+  other element scopes the scheme to that subtree, the "specified area" M3
+  describes for a content-based source. The twelve `*-fixed*` roles stay with
+  the Sass theme: no style reads them.
+
+  The colour science is ported from Google's material-color-utilities 0.4.0
+  (Apache-2.0): 34 files under `src/theme/vendor`, with their copyright and the
+  full licence added to the root `NOTICE` #303 already ships (+417 B).
+  No dependency is added. The scheme classes themselves are not exported: their
+  constructor takes a fourth argument, the colour-spec version, which no option
+  here selects, so the 2025 spec branch leaves the shipped graph entirely.
+  Parity stays at 0 differences: `test/theme/scheme.test.ts` compares every role
+  across 210 combinations — three seeds × seven variants × light and dark ×
+  contrast `-1, -0.5, 0, 0.5, 1` — against the pinned material-color-utilities
+  0.4.0 values and against the name-based lookup, and asserts that every
+  factory returns a scheme pinned to the 2021 spec.
+
+  The default path pays nothing: the root entry does not import the subpath, so
+  `dist/index.js` is byte-identical to 3.7.3 at `33b4bbea` and to every main
+  commit since — `697ec507`, `81467ef2` and `1ce5ff6d` all hash
+  `878b39f7972b33456a9a143f4fcb3c4273f5d8fa714928d4e500c8f9be5a21c2` in
+  their CI dist artifacts — and the `all-js`,
+  `button-initial` and component rows are unchanged. The subpath adds no
+  stylesheet: a scheme is written into the token properties the sheet already
+  reads.
+
+  `theme-runtime:check`, a new browser check in the styles group, decodes a
+  canvas image, makes a scheme from its source colour and applies it to one
+  section of a two-section page: the filled and text buttons inside the section
+  draw the new primary, the ones outside keep the page's, the document root
+  keeps its own tokens, and the section's 34 roles read back equal to the same
+  seed taken through the hex entry. The check waits for the transitions the
+  scheme starts rather than sleeping, and races them with a 2s deadline that
+  fails with a named message.
+
+  Material sources (read 2026-11-05):
+  [choosing a source](https://m3.material.io/styles/color/dynamic/choosing-a-source),
+  [content-based source](https://m3.material.io/styles/color/dynamic/content-based-source),
+  [choosing a colour scheme](https://m3.material.io/styles/color/choosing-a-scheme).
+
+### Changed
+
+- **Status colours harmonise with each theme and reach 7:1 at high contrast
+  (#275).**
+  The three semantic status seeds — `success` `#007B5A`, `warning` `#DD6D06`,
+  `info` `#0061A4` — are blended toward each theme's primary colour, capped at
+  15° in HCT hue, and the `X` and `on-X` tonal pairs are resolved with
+  Material 3's custom-colour contrast curves: `ContrastCurve(3, 4.5, 7, 7)`
+  against `highestSurface` for `X`, and `ContrastCurve(4.5, 7, 11, 21)` for
+  `on-X` against `X`. The build emits the six roles — `success`, `on-success`,
+  `warning`, `on-warning`, `info`, `on-info` — across all 20 themes, in light
+  and dark and at standard (`0`), medium (`0.5`) and high (`1`) contrast; the
+  runtime scheme gains the same six roles, 40 in all.
+
+  All 360 status contrast pairs reach at least 4.5:1 at standard and medium
+  contrast and at least 7:1 at high contrast (`[data-contrast="high"]` and
+  `@media (prefers-contrast: more)`); `warning` stays inside the 36.5–66.4°
+  orange HCT hue band in every light theme at every contrast level and in
+  every dark theme at standard contrast (the high-contrast theme's own dark
+  scheme excepted); and resolving the status roles leaves `error`, `on-error`,
+  `error-container` and `on-error-container` identical to a fresh scheme's
+  output across all 210 parity combinations and across sequential scheme
+  evaluations.
+
+  Under the `baseline` light theme the values change: `success` from
+  `rgb(0, 108, 78)` to `rgb(0, 107, 94)`, `warning` from `rgb(151, 72, 0)` to
+  `rgb(167, 58, 16)`, and `info` from `rgb(0, 97, 164)` to `rgb(55, 91, 169)`.
+  To keep the previous un-harmonised `baseline` light colours, override the
+  tokens on `:root`:
+
+  ```css
+  :root {
+    --mtrl-sys-color-success: rgb(0, 108, 78);
+    --mtrl-sys-color-warning: rgb(151, 72, 0);
+    --mtrl-sys-color-info: rgb(0, 97, 164);
+  }
+  ```
+
+  **Size:** on its push run (`1ce5ff6d`, run 42030849095, package job
+  127257100164), against #274's push run (`81467ef2`, run 42023890411, package
+  job 127233550950): the `full-css` row 620,654 → 636,707 raw (+16,053),
+  57,596 → 58,745 gzip (+1,149) and 41,460 → 41,899 brotli (+439); `base-css`
+  40,809 → 43,122 raw, 2,939 → 3,018 gzip; `button-css` 56,592 → 58,905 raw,
+  5,137 → 5,221 gzip; `select-css` 83,848 → 86,161 raw, 7,930 → 8,016 gzip;
+  `slider-css` 53,073 → 55,386 raw, 4,743 → 4,828 gzip; `navigation-rail-css`
+  55,067 → 57,380 raw, 5,123 → 5,205 gzip; `base-lite-css` 12,999 → 13,008
+  raw, 1,644 → 1,649 gzip. `all-js`, the SSR rows and every component entry
+  row are unchanged. In `README.md` and `npm-readme.md` the base row moves
+  from 2.9 to 3.0 kB, base and button from 5.1 to 5.2, and the full
+  stylesheet from 57.6 to 58.7.
+
+  `TARBALL_BYTES` moves from 865,000 to 920,000 by owner decision on
+  2026-11-05, set when #275's branch packed 913,528 B and before #300
+  normalized the packed Sass; `1ce5ff6d` now packs 828,974 B. No stylesheet
+  or consumer budget moved.
+
+  Material sources (read 2026-11-05):
+  [defining new colours](https://m3.material.io/styles/color/advanced/define-new-colors),
+  [adjusting existing colours](https://m3.material.io/styles/color/advanced/adjust-existing-colors),
+  [how the system works](https://m3.material.io/styles/color/system/how-the-system-works).
+
+### Fixed
+
+- **The packed declarations ship their `@deprecated` notes (#306).**
+  `printDeclarationModule` blanked every comment range, so `@deprecated`
+  never reached `dist/*.d.ts`: a typed consumer of the packed package got no
+  deprecation diagnostic from TypeScript (6385/6387), and an editor had
+  nothing to show for any option. The printer now keeps a JSDoc block that
+  carries `@deprecated`, whole and on the declaration it documents, and still
+  strips prose-only JSDoc, line comments, plain block comments and licence
+  banners. `declaration-docs:check`, a new CI step, reads the packed package
+  through its own `exports` as a typed consumer: root `material` must report
+  6385/6387 for `fab.setPosition` and `fab.getPosition`,
+  `material/components/fab` must report `setPosition` deprecated,
+  `material/elements` must report `FabSpec["attributes"].position` deprecated,
+  and a generated `material/react` adapter consumer must compile the entry and
+  report the first deprecated value export it finds; no adapter value export
+  is deprecated today, so on this head the adapter case is the compile. Each
+  consumer must also compile with no semantic diagnostics. Against the
+  declarations main shipped, all four names fail.
+
+  **Size:** at its merge `1bd75ec8` (push run 42034676271, package job
+  127270194588) the tarball packs 829,198 / 4,694,532 / 1,626: +224 packed
+  and +769 unpacked against #275's `1ce5ff6d` (828,974 / 4,693,763 / 1,626),
+  90,802 bytes under the 920,000 ceiling.
+  Keeping every JSDoc block was measured on CI at 972,818 packed / 5,180,608
+  unpacked, over both ceilings, so the prose does not ship.
+
+### Internal
+
+- **Licence banners survive the build, and the build refuses a module that
+  lost one (#274).**
+  Every shipped theme `.js` keeps its Apache-2.0 banner. The banner loss was
+  measured on the size probes: `stripRuntimeComments` routed only modules
+  containing `__PURE__` through the banner-keeping printer, and the ported
+  files have `__PURE__` nowhere, so 27 of them reached `dist` without the
+  banner. Now a module carrying a kept comment (`/*!`, `@license`,
+  `@preserve`, a pure annotation) takes the banner-keeping printer, and a
+  module carrying none takes the same comment-free printer as before, byte for
+  byte. A build guard fails the build, naming the file and the comment, when a
+  kept comment the source has is missing from the stripped output. The
+  red-on-main test `test/build/licence-banners.test.ts` fails against main's
+  `scripts/build-modules.ts` — 5 tests, the first on
+  `src/theme/vendor/dislike/dislike_analyzer.js keeps its licence banner`,
+  with the banner absent from the output — and passes on the branch. No kept
+  comment outside the ported theme files exists in `src`, so the rest of
+  `dist` is unchanged by that commit.
+
+- **The size cost of runtime colour.**
+  New consumer rows, `consumer:check` initial gzip: `theme` 17,266 B (budget
+  17,450, ceiling 20,500) and `theme-image` 20,821 B (budget 21,050, ceiling
+  24,000) at #275's merge `1ce5ff6d` (push run 42030849095, components-b job
+  127257100434); #274's merge `81467ef2` measured 17,037 and 20,593 (push run
+  42023890411, components-b job 127233551233). Each budget is its measurement
+  plus max(1%, 100 B), rounded up to the next 50.
+
+  Tarball, CI packer (Node 22.23.3 / npm 10.9.9), each a push run: 3.7.3 at
+  `33b4bbea` packs 777,600 B compressed, 4,475,560 B unpacked, 1,581 files
+  (run 42019967423, package job 127220397593); #303 at `697ec507` packs
+  781,664 / 4,487,507 / 1,582 (run 42021222008, package job 127224500961) —
+  +4,064 / +11,947 / +1, the `NOTICE`; #274 at `81467ef2` packs 822,426 /
+  4,647,253 / 1,626 (run 42023890411, package job 127233550950) — +40,762 /
+  +159,746 / +44 against #303; #275 at `1ce5ff6d` packs 828,974 / 4,693,763 /
+  1,626 (run 42030849095, package job 127257100164) — +6,548 / +46,510 / 0
+  against #274.
+
+  The unpacked deltas are byte-exact: #274 adds 44 files, all `dist/theme`
+  modules, and appends 417 B to the `NOTICE` and 116 B to `package.json`.
+  #275 adds no file; its +46,510 unpacked bytes are the status rules' output —
+  `dist/styles.css` +11,322, `dist/styles/contrast.css` +1,224,
+  `dist/styles/base.css` +612, `dist/themes` +18,666, `dist/theme` +1,099 and
+  the normalized theme Sass under `src/styles/themes` +13,587. The compressed
+  deltas are not the sum of their parts, so each row is the measured tree.
+
+- **The size cost of the release.**
+  On the release head `e8d635c3` (run 42036075729, package job 127274843027)
+  the packed tarball measures 829,198 B compressed, 4,694,532 B unpacked and
+  1,626 files, identical to the base `1bd75ec8` (run 42034676271, package
+  job 127270194588). `all-js` (412,575 / 127,178 / 105,515), `base-css`
+  (43,122 / 3,018 / 2,301), `button-initial` (22,463 / 7,563 / 6,778) and
+  the SSR entry (308,739 / 112,609 / 91,640) are identical too. The rows that
+  move are compressed-only: `full-css` brotli 41,899 → 41,925 (+26) at the
+  same raw and gzip; `base-lite-css` gzip 1,649 → 1,650 (+1); `button-css`
+  brotli 3,995 → 4,001 (+6); `select-css` brotli 6,589 → 6,595 (+6);
+  `slider-css` brotli 3,689 → 3,684 (−5); `navigation-rail-css` brotli
+  4,035 → 4,032 (−3). The cause is the version stamp in every shipped
+  licence banner changing one digit (`material v3.7.3` → `material v3.8.0`)
+  at identical length; every budget row stays green and no ceiling moved.
+
 ## [3.7.3] - 2026-11-05
 
 Lighter, correct component styles.
@@ -6277,7 +6503,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.7.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.8.0...HEAD
+[3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
 [3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
 [3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2
 [3.7.1]: https://github.com/floor/material/compare/v3.7.0...v3.7.1
