@@ -126,6 +126,10 @@ describe("explicit contrast levels are opt-in", () => {
     // segmented rows read six list custom properties that the list does not
     // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
+    // A single-select listbox option carries a 20px radio ring in its leading
+    // or trailing slot and fills it when selected; the option itself takes the
+    // row's state layer and a pointer cursor, and a focused option rounds a
+    // segmented row like the row action did (styles/components/_list.scss).
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
@@ -267,8 +271,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1514d0f92dba071138f28de3ae6f485ede7dd17f587bc341fe6590cd8e06be1a");
-    expect(css.length).toBe(538104);
+      .toBe("9997ef8fe9b682c0f2f7163df046a531a82b904819f844ccf44be382ffa56838");
+    expect(css.length).toBe(539982);
   });
 
   test("today's sheets still resolve to the fixture", () => {
