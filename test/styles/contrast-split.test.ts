@@ -282,9 +282,15 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard focus indicators are drawn on the navigation drawer item, the
+    // slider handle bar, the collapsed search bar container, the filled text
+    // field active underline in forced-colors, and the active navigation bar
+    // and navigation rail indicator pills in forced-colors
+    // (styles/components/_drawer.scss, _slider.scss, _search.scss,
+    // _text-field.scss, _navigation-bar.scss, _navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5d5779ab376b97542073a9b43a7fc59128bba4ed6ab792c20bd2aabb90170801");
-    expect(css.length).toBe(542183);
+      .toBe("c21210a00481791682c72ed6d02307ffc4d8f1a4691b310a1889902a286569ba");
+    expect(css.length).toBe(543620);
   });
 
   test("today's sheets still resolve to the fixture", () => {
