@@ -4,19 +4,27 @@ import type { CalendarDate } from './types';
 export const DEFAULT_LOCALE = 'en-US';
 const dtf = (locale: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, opts);
 
+export const resolveLocale = (locale?: string): string => {
+  try {
+    return (locale && Intl.DateTimeFormat.supportedLocalesOf(locale)[0]) || DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+};
+
 export const getFirstDayOfWeek = (locale = DEFAULT_LOCALE): number => {
   const loc = new Intl.Locale(locale) as Intl.Locale & { getWeekInfo?: () => { firstDay?: number }; weekInfo?: { firstDay?: number } };
-  const first = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay;
-  return first ? first % 7 : /^ar(?!-SA)/i.test(locale) ? 6 : /^(en(-US|-CA)?|ja|ko|zh|pt-BR)\b/i.test(locale) ? 0 : 1;
+  const first = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay, r = loc.maximize().region ?? '';
+  return first ? first % 7 : /^(EG|IR|AF|SY)$/.test(r) ? 6 : /^(US|CA|MX|JP|KR|CN|TW|HK|BR|PT|IL|SA|TH|PH|IN|ZA)$/.test(r) ? 0 : 1;
 };
 
 export const getLocaleDateFormat = (locale = DEFAULT_LOCALE): string =>
-  dtf(locale, { year: 'numeric', month: '2-digit', day: '2-digit' })
+  dtf(locale, { year: 'numeric', month: '2-digit', day: '2-digit', calendar: 'gregory', numberingSystem: 'latn' })
     .format(new Date(3333, 10, 22))
-    .replace(/[\u200e\u200f]/g, '')
     .replace('3333', 'YYYY')
     .replace('11', 'MM')
-    .replace('22', 'DD');
+    .replace('22', 'DD')
+    .replace(/[\u200e\u200f]|[^MDY]+$/g, '');
 
 export const getMonthNames = (locale = DEFAULT_LOCALE, month: 'long' | 'short' = 'long'): string[] => {
   const f = dtf(locale, { month });
@@ -40,18 +48,17 @@ export const parseDate = (date: Date | string | null): Date | null => {
   return result;
 };
 
+const TOKEN_RE = /(YYYY|MMMM|MMM|YY|MM|DD|M|D)/g;
+
 /** Strict inverse of formatDate: never let Date roll February 30 into March. */
 export const parseInputDate = (text: string, format: string, locale = DEFAULT_LOCALE): Date | null => {
   const tokens: string[] = [];
   const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const needsMonths = format.includes('MMM');
-  const monthsLong = needsMonths ? getMonthNames(locale, 'long') : [];
-  const monthsShort = needsMonths ? getMonthNames(locale, 'short') : [];
-  const pattern = format.split(/(YYYY|MMMM|MMM|YY|MM|DD|M|D)/).map(part => {
-    if (!/^(YYYY|MMMM|MMM|YY|MM|DD|M|D)$/.test(part)) return escape(part);
+  const months = (s: 'long' | 'short') => getMonthNames(locale, s);
+  const pattern = format.split(TOKEN_RE).map((part, i) => {
+    if (!(i & 1)) return escape(part);
     tokens.push(part);
-    if (part === 'MMMM') return '(' + monthsLong.map(escape).join('|') + ')';
-    if (part === 'MMM') return '(' + monthsShort.map(escape).join('|') + ')';
+    if (part === 'MMMM' || part === 'MMM') return '(' + months(part === 'MMMM' ? 'long' : 'short').map(escape).join('|') + ')';
     return part === 'YYYY' ? '(\\d{4})' : part === 'YY' ? '(\\d{2})' : '(\\d{1,2})';
   }).join('');
   const match = new RegExp('^' + pattern + '$', 'i').exec(text.trim());
@@ -61,7 +68,7 @@ export const parseInputDate = (text: string, format: string, locale = DEFAULT_LO
     const value = match[index + 1];
     if (token === 'YYYY') year = Number(value);
     else if (token === 'YY') year = 2000 + Number(value);
-    else if (token === 'MMMM' || token === 'MMM') month = (token === 'MMMM' ? monthsLong : monthsShort).findIndex(name => name.toLowerCase() === value.toLowerCase()) + 1;
+    else if (token === 'MMMM' || token === 'MMM') month = months(token === 'MMMM' ? 'long' : 'short').findIndex(name => name.toLowerCase() === value.toLowerCase()) + 1;
     else if (token.startsWith('M')) month = Number(value);
     else day = Number(value);
   });
@@ -71,17 +78,15 @@ export const parseInputDate = (text: string, format: string, locale = DEFAULT_LO
 
 export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY', locale = DEFAULT_LOCALE): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const y = date.getFullYear();
-  return format.replace(/YYYY|MMMM|MMM|YY|MM|DD|M|D/g, token =>
+  const m = date.getMonth() + 1, d = date.getDate(), y = date.getFullYear(), pad = (n: number) => String(n).padStart(2, '0');
+  return format.replace(TOKEN_RE, token =>
     token === 'MMMM' ? dtf(locale, { month: 'long' }).format(date) :
     token === 'MMM' ? dtf(locale, { month: 'short' }).format(date) :
-    token === 'MM' ? String(m).padStart(2, '0') :
+    token === 'MM' ? pad(m) :
     token === 'M' ? String(m) :
     token === 'YYYY' ? String(y) :
     token === 'YY' ? String(y).slice(-2) :
-    token === 'DD' ? String(d).padStart(2, '0') :
+    token === 'DD' ? pad(d) :
     String(d)
   );
 };
@@ -95,10 +100,8 @@ export const isSameDay = (date1: Date, date2: Date): boolean =>
   date1.getMonth() === date2.getMonth() &&
   date1.getFullYear() === date2.getFullYear();
 
-export const isDateInRange = (date: Date, startDate: Date, endDate: Date): boolean => {
-  const timestamp = date.getTime();
-  return timestamp >= startDate.getTime() && timestamp <= endDate.getTime();
-};
+export const isDateInRange = (date: Date, startDate: Date, endDate: Date): boolean =>
+  date >= startDate && date <= endDate;
 
 export const generateCalendarDates = (
   year: number,
@@ -112,10 +115,9 @@ export const generateCalendarDates = (
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const firstDay = (getFirstDayOfMonth(year, month) - firstDayOfWeek + 7) % 7;
-  const targetMonth = new Date(year, month, 1).getMonth();
   return Array.from({ length: 42 }, (_, i) => {
     const date = new Date(year, month, 1 - firstDay + i);
-    const isCurrentMonth = date.getMonth() === targetMonth;
+    const isCurrentMonth = date.getMonth() === month;
     const calendarDate: CalendarDate = {
       date,
       day: date.getDate(),

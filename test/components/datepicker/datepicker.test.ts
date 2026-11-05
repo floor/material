@@ -313,12 +313,42 @@ describe("Material date picker", () => {
       delete proto.getWeekInfo;
       delete proto.weekInfo;
       const frFallback = mount({ value: "2026-09-15", locale: "fr-FR" });
-      frFallback.open();
+      const gbFallback = mount({ value: "2026-09-15", locale: "en-GB" });
+      const arFallback = mount({ value: "2026-09-15", locale: "ar-EG" });
+      const heFallback = mount({ value: "2026-09-15", locale: "he-IL" });
+      frFallback.open(); gbFallback.open(); arFallback.open(); heFallback.open();
       expect(gridDates(frFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(gbFallback)[0]).toBe("2026-08-31");
+      expect(gridDates(arFallback)[0]).toBe("2026-08-29");
+      expect(gridDates(heFallback)[0]).toBe("2026-08-30");
     } finally {
       if (origGetWeekInfo) Object.defineProperty(proto, "getWeekInfo", origGetWeekInfo);
       if (origWeekInfo) Object.defineProperty(proto, "weekInfo", origWeekInfo);
     }
+
+    for (const bad of ["en_US", "not a locale", "invalid"]) {
+      const fallback = mount({ value: "2026-09-15", locale: bad });
+      expect(fallback.getFormattedValue()).toBe("09/15/2026");
+      expect(fallback.input.placeholder).toBe("MM/DD/YYYY");
+      fallback.open();
+      expect(query(fallback, '[data-action="month"]').textContent).toBe("September");
+      expect(gridDates(fallback)[0]).toBe("2026-08-30");
+    }
+
+    const ar = mount({ value: "2026-09-15", locale: "ar-EG" });
+    expect(ar.input.placeholder).toBe("DD/MM/YYYY");
+    expect(ar.getFormattedValue()).toBe("15/09/2026");
+    ar.open();
+    expect(gridDates(ar)[0]).toBe("2026-08-29");
+    ar.input.value = "22/11/2026";
+    key(ar.input, "Enter");
+    expect(ar.getFormattedValue()).toBe("22/11/2026");
+    expect((ar.getValue() as Date).getMonth()).toBe(10);
+    expect((ar.getValue() as Date).getDate()).toBe(22);
+
+    const th = mount({ value: "2026-09-15", locale: "th-TH" });
+    expect(th.input.placeholder).toBe("DD/MM/YYYY");
+    expect(th.getFormattedValue()).toBe("15/09/2026");
 
     expect(datepickerElement.spec.attributes.locale).toEqual({ type: "string", config: "locale" });
   });

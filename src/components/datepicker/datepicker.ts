@@ -10,7 +10,7 @@ import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
 import { withAPI } from "./api";
 import { renderCalendar } from "./render";
-import { addDays, addMonths, DEFAULT_LOCALE, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
+import { addDays, addMonths, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./utils";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
@@ -39,7 +39,7 @@ const createDatePicker = <M extends string = "single">(
   const id = `${PREFIX}-datepicker-${++nextId}`;
   const cls = (name: string) => base.getClass(`datepicker__${name}`);
   const today = parseDate(new Date())!;
-  const locale = settings.locale || DEFAULT_LOCALE;
+  const locale = resolveLocale(settings.locale);
   const state: DatePickerState = {
     id, prefix: PREFIX, label: settings.label || "Select date", selectedDate: null, rangeEndDate: null,
     // The full-screen list has no month or year views.
@@ -435,6 +435,10 @@ const createDatePicker = <M extends string = "single">(
   };
   const showView = (v: DatePickerView) => () => { state.currentView = v; state.inputMode = false; render(); };
   const nav = (fn: () => void) => () => { navigationRequested = !opened; fn(); render(); };
+  const setBound = (key: "minDate" | "maxDate") => (value: Date | string) => {
+    const date = parseDate(value); if (date && !destroyed) { state[key] = date; render(); if (state.inputMode) validateEntries(); } return api;
+  };
+  const stepMonth = (d: number) => nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), d)));
   const api = withAPI({
     element: base.element, input, getClass: base.getClass,
     disabled: { enable: () => setDisabled(false), disable: () => setDisabled(true), isDisabled: () => base.disabled.isDisabled() }, lifecycle: { destroy }, destroy,
@@ -446,12 +450,12 @@ const createDatePicker = <M extends string = "single">(
     setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
     clear() { clearValue(false); return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
-    setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
-    setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
+    setMinDate: setBound("minDate"),
+    setMaxDate: setBound("maxDate"),
     calendar: {
       goToDate(value) { const date = parseDate(value); if (date) nav(() => setDisplayDate(date))(); },
-      nextMonth: nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1))),
-      prevMonth: nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1))),
+      nextMonth: stepMonth(1),
+      prevMonth: stepMonth(-1),
       nextYear: nav(() => state.currentYear++), prevYear: nav(() => state.currentYear--),
       showDayView: showView("day"), showMonthView: showView("month"), showYearView: showView("year"),
       getCurrentView: () => state.currentView,
