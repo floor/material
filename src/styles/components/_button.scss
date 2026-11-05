@@ -509,17 +509,27 @@ $content-color: (
 // A toolbar element mirrors its collapsed class onto the <m-toolbar> host: no
 // descendant selector of the toolbar's sheet reaches a slotted item across
 // the shadow boundary, so the button's own shadow sheet reads the host's
-// class through :host-context. :is() carries both arms in one rule — it is
-// forgiving, so an engine without :host-context ignores that arm and keeps
-// the class one.
+// class through :host-context. The two arms are separate rules, so an engine
+// without :host-context drops that rule alone and keeps the class one, and
+// the SSR style pruner (src/ssr/prune-styles.ts) can drop each one from a
+// rendered root whose markup carries no matching class.
 // -----------------------------------------------------------------------------
-$collapsed: ':is(.#{base.$prefix}-toolbar--collapsed, :host-context(.#{base.$prefix}-toolbar--collapsed))';
+$collapsed: '.#{base.$prefix}-toolbar--collapsed';
 
 #{$collapsed} .#{$component}--icon {
   min-width: v.button('touch-target');
   padding-inline: v.button('padding-icon');
 }
 
+:host-context(#{$collapsed}) .#{$component}--icon {
+  min-width: v.button('touch-target');
+  padding-inline: v.button('padding-icon');
+}
+
 #{$collapsed} .#{$component}--icon .#{$component}__text {
+  @include m.visually-hidden;
+}
+
+:host-context(#{$collapsed}) .#{$component}--icon .#{$component}__text {
   @include m.visually-hidden;
 }

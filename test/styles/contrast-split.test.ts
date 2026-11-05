@@ -270,15 +270,17 @@ describe("explicit contrast levels are opt-in", () => {
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
     // The toolbar's collapsed state is the docked bar at the 48dp target area,
-    // and its icon+label button shows the icon alone at the target size
+    // and its icon+label button shows the icon alone at the target size, in two
+    // rules (the toolbar's class and :host-context) so SSR's style pruner can
+    // drop each from a root that cannot match it
     // (styles/components/_toolbar.scss, styles/components/_button.scss).
     // The 14 dead selector groups verified to have no producer in src/ are
     // removed from the dialog, menu, select, slider, tabs and timepicker
     // component sheets (styles/components/_dialog.scss, _menu.scss,
     // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("b4f169c22c89b6df11ae60649cd32fefee3f6cc6e3f6efc8928358735d556c62");
-    expect(css.length).toBe(531871);
+      .toBe("c544dd5af9a562bc1097eb905b026fdce4f6cb31b06962530591b2375b2ced13");
+    expect(css.length).toBe(532080);
   });
 
   test("today's sheets still resolve to the fixture", () => {
