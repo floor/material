@@ -12,6 +12,12 @@
  * is clicked, isExpanded(), aria-expanded and the expand/change events are
  * there, while the menu's surface is not: the stand-in answers them and the
  * menu opens when its chunk arrives.
+ *
+ * Its keyboard contract is the menu's own opener's: Enter, Space and ArrowDown
+ * on the trailing button open the menu with its first item focused, while a
+ * pointer open leaves focus on the menu surface. A click a key produces is a
+ * MouseEvent with no pointer count, and the menu decides where focus lands
+ * from the interaction type it is opened with.
  */
 import assert from "node:assert/strict";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -243,6 +249,74 @@ try {
     after.includes(`/${menuChunk}`),
     `the menu's chunk ${menuChunk} was never fetched (fetched: ${after.join(", ")})`
   );
+
+  // The keyboard contract. Focus must land on the menu's first item, as a
+  // standalone menu's does for Enter on its opener (menu/features/opener.ts):
+  // the click a key produces is a MouseEvent, so the split button has to say
+  // that a key produced it. A pointer open still focuses the menu surface.
+  const fresh = await page.evaluate(() => {
+    const state = window as unknown as SplitWindow;
+    state.split.destroy();
+    document.body.replaceChildren();
+    const split = state.createSplitButton({
+      text: "Save",
+      items: [
+        { id: "draft", text: "Save as draft" },
+        { id: "copy", text: "Save a copy" },
+      ],
+    });
+    state.split = split;
+    split.element.style.cssText = "position:absolute;left:0;top:0";
+    document.body.append(split.element);
+    // Leave the page at its first Tab stop, whatever had focus before.
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body) active.blur();
+    return { expanded: split.isExpanded() };
+  });
+  assert.deepEqual(fresh, { expanded: false }, "a fresh split button starts collapsed");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  const onTrailing = await page.evaluate(
+    () => document.activeElement === (window as unknown as SplitWindow).split.trailingElement
+  );
+  assert(onTrailing, "two Tab presses reach the trailing button");
+
+  const keyboardOpen = async (key: string): Promise<void> => {
+    await page.keyboard.press(key);
+    await page.waitForFunction(
+      () => document.activeElement?.getAttribute("role") === "menuitem",
+      null,
+      { timeout: 5_000, polling: 10 }
+    );
+    const focused = await page.evaluate(() => {
+      const active = document.activeElement as HTMLElement;
+      const menu = document.querySelector(".mtrl-menu--visible") as HTMLElement | null;
+      const items = menu ? [...menu.querySelectorAll('[role="menuitem"]')] : [];
+      return {
+        id: active.getAttribute("data-id"),
+        index: items.indexOf(active),
+        surfaceFocused: active === menu,
+      };
+    });
+    assert.deepEqual(
+      focused,
+      { id: "draft", index: 0, surfaceFocused: false },
+      `the menu opened by ${key} focuses its first item, not its surface`
+    );
+    // Escape restores focus to the button the menu opened from, ready for the
+    // next key.
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(
+      () =>
+        !document.querySelector(".mtrl-menu--visible") &&
+        document.activeElement === (window as unknown as SplitWindow).split.trailingElement,
+      null,
+      { timeout: 5_000, polling: 10 }
+    );
+  };
+  await keyboardOpen("Enter");
+  await keyboardOpen("Space");
+  await keyboardOpen("ArrowDown");
 
   await page.evaluate(() => (window as unknown as SplitWindow).split.destroy());
   console.log("Split button menu-on-demand check passed.");
