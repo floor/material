@@ -270,9 +270,13 @@ describe("explicit contrast levels are opt-in", () => {
     // property through `max(floor, base + step * var(--mtrl-density, 0))`, and
     // the compact text field, its select and the dense drawer are aliases for
     // a step (styles/abstract/_functions.scss, styles/base/_tokens.scss).
+    // The drawer's active pill and hover/focus/pressed state layer are painted
+    // by the active indicator's `::before` and `::after`, which the
+    // reduced-motion switch also reaches, so the item keeps its 48dp touch
+    // target unclipped (styles/components/_drawer.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("d104b15253693239e0d6a90da13fc2c030721bba7cdc0b1486254e298ec02053");
-    expect(css.length).toBe(538165);
+      .toBe("bf96b1d0c7b1400bf8b2e6cfd6fce38659b4f33af3e3d0eed6151c1260754d8d");
+    expect(css.length).toBe(538511);
   });
 
   test("today's sheets still resolve to the fixture", () => {

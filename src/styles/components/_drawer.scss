@@ -601,7 +601,11 @@ $default-width: 360px;
 
         &__item,
         &__item::before,
-        &__active-indicator {
+        &__active-indicator,
+        // The pill and state layer rules are two classes deep, so their switch
+        // has to match that specificity to win over the transitions above.
+        &__item &__active-indicator::before,
+        &__item &__active-indicator::after {
             transition: none;
         }
     }
