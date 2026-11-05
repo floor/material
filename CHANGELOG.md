@@ -17,9 +17,32 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.7.3] - 2026-11-06
+## [3.7.3] - 2026-11-05
 
 Lighter, correct component styles.
+
+### Changed
+
+- **The packed Sass sources are normalized at publish time (#300).**
+  The `.scss` files the package ships now leave the tarball without the
+  silent (`//`) comments and indentation that never reach a consumer's CSS.
+  Loud comments, strings, `url()` data and custom-property values stay byte
+  for byte, and the compiled CSS is byte-identical for all 11 public Sass
+  entries: the package job compiles each entry from the packed tarball and
+  from the checkout and compares the two on every pull request. A generated
+  theme's origin header — the line md3.io reads from the installed package —
+  is the one silent comment kept, and all 14 themes keep theirs.
+
+  **Size:** at its merge (`f3cc6037`, push run 42017705644, package job
+  127212732299), against #298's merge as the previous main push (`91c4627f`,
+  run 42008536693, package job 127181840071): the packed tarball 857,184 →
+  777,599 bytes compressed (−79,585, about 79.6 kB) and 4,776,811 →
+  4,475,560 unpacked (−301,251), 1,581 files, unchanged. Every size row is
+  untouched — `all-js` 412,575 / 127,178 / 105,515, `full-css` 620,654 /
+  57,596 / 41,451, `select-css` 83,848 / 7,930 / 6,554 and `slider-css`
+  53,073 / 4,743 / 3,644, with the SSR, slider and base rows as they were.
+  No budget or ceiling moved, and no `SIZES.md`, `README.md` or
+  `npm-readme.md` row moves.
 
 ### Removed
 
@@ -43,7 +66,8 @@ Lighter, correct component styles.
   remain, `LOADING` and `EXPANDED`, are reserved names nothing reads — and a
   new test, `test/styles/dead-card-css.test.ts`, compiles the source behind
   each of the three sheets and asserts none of the nine tokens appears. It
-  fails on main and passes here.
+  fails on the pre-release base `d78de9e4` and passes on the merged pull
+  requests.
 
   There is no visual change. In an independent browser check across five
   documented card configurations in light and dark, the computed geometry
@@ -86,7 +110,8 @@ Lighter, correct component styles.
   full-page screenshot hash matched. A new test,
   `test/styles/dead-component-css.test.ts`, compiles the source behind the
   full sheet and both per-component sheets and asserts none of the removed
-  selectors appears; it fails on main and passes here.
+  selectors appears; it fails on the pre-release base `d78de9e4` and passes
+  on the merged pull requests.
 
   **Size:** at its merge (`ddaa7c2b`, push run 42002927172, package job
   127162755350), against #278's merge as the previous main push (`71824018`,
@@ -174,7 +199,8 @@ Lighter, correct component styles.
   127181840071), against #281's merge as the previous main push (`81b3234a`,
   run 42007247411, package job 127177390402): the packed tarball 858,218 →
   857,184 bytes compressed (−1,034), 4,792,400 → 4,776,811 unpacked
-  (−15,589 — the dropped manifest itself), 1,582 → 1,581 files. The bundle
+  (−15,589 — the dropped manifest (15,615 B) less the 26 B `files` entry that
+  excludes it), 1,582 → 1,581 files. The bundle
   rows are untouched: `all-js` 412,575 raw / 127,178 gzip / 105,515 brotli
   and `full-css` 620,654 / 57,596 / 41,451, as are the SSR rows (inline
   253,639 / 5,325 / 2,906, link 42,991 / 1,046 / 675) and the SSR entry
