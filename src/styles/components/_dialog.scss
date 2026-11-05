@@ -60,6 +60,9 @@ $component: "#{base.$prefix}-dialog";
 // height from its top, the motion the menu opens with.
 
 .#{$component} {
+    // A dialog is a task context: the density scale stops at its surface, so
+    // a page-wide value cannot shrink its actions or anything inside it.
+    --#{base.$prefix}-density: 0;
     position: relative;
     background-color: t.color("surface-container-high");
     color: t.color("on-surface");

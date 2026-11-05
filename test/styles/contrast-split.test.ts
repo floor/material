@@ -266,6 +266,14 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // Every length the density scale moves reads one registered integer
+    // property through `max(floor, base + step * var(--mtrl-density, 0))`, and
+    // the compact text field, its select and the dense drawer are aliases for
+    // a step (styles/abstract/_functions.scss, styles/base/_tokens.scss).
+    // The drawer's active pill and hover/focus/pressed state layer are painted
+    // by the active indicator's `::before` and `::after`, which the
+    // reduced-motion switch also reaches, so the item keeps its 48dp touch
+    // target unclipped (styles/components/_drawer.scss).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -279,8 +287,8 @@ describe("explicit contrast levels are opt-in", () => {
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("173219d4cdd993648703fa2e298f50a3c5a33b93801584e79211a4256f3efe6f");
-    expect(css.length).toBe(530861);
+      .toBe("5ca8794dd93a95449f4ea8aca8ee9b56309efbf1a0292d66403e3245486807d2");
+    expect(css.length).toBe(531268);
   });
 
   test("today's sheets still resolve to the fixture", () => {

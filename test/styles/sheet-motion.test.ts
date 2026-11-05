@@ -128,6 +128,11 @@ describe('drawer', () => {
     for (const selector of ['.mtrl-drawer--open .mtrl-drawer__sheet', '.mtrl-drawer--open .mtrl-drawer__scrim--visible', '.mtrl-drawer--standard.mtrl-drawer--open']) {
       expect(block).toMatch(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{]*\\{\\s*transition: none;`));
     }
+    // The pill and the state layer own the item's transitions, so the switch
+    // has to reach their pseudo-elements, not only the indicator element.
+    for (const selector of ['.mtrl-drawer__active-indicator::before', '.mtrl-drawer__active-indicator::after']) {
+      expect(block).toMatch(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{]*\\{\\s*transition: none;`));
+    }
   });
 });
 

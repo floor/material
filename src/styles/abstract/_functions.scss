@@ -3,6 +3,7 @@
 @use 'sass:math';
 @use 'sass:color';
 @use 'sass:string';
+@use 'base' as base;
 @use 'variables' as v;
 
 // Get nested map value
@@ -133,4 +134,47 @@
 // Value constraint utility
 @function constrain($min, $value, $max) {
   @return max($min, min($value, $max));
+}
+
+// -----------------------------------------------------------------------------
+// Density
+// -----------------------------------------------------------------------------
+// One inherited integer custom property, --<prefix>-density, 0 down to -5, set
+// on any container (base/_tokens.scss registers it and emits the
+// .<prefix>-density--N sugar). A component reads it through these functions,
+// which keep the base exactly at 0: a sheet that carries a density expression
+// renders as it did before until a container sets the property.
+//
+// `$step` is how far one step moves the value, `$floor` the value density never
+// passes. A 40dp button that loses 4dp a step and stops at the 32dp visible
+// target is `f.density(40px, 32px)`; a label that floats 12dp at rest and
+// 4dp at the floor is `f.density-offset(12px, 4px, 2px)`.
+@function density($base, $floor: null, $step: 4px) {
+  $value: '#{$base} + #{$step} * var(--#{base.$prefix}-density, 0)';
+  @if $floor == null {
+    @return string.unquote('calc(#{$value})');
+  }
+  @return string.unquote('max(#{$floor}, #{$value})');
+}
+
+// Density for a container already under the target at 0: the narrow xs icon
+// button is 28dp, and a plain 32dp floor would widen it at density 0. The
+// floor is the base itself when the base is the smaller of the two, so only a
+// base above the target shrinks, and only as far as the larger of the two.
+@function density-visible($base, $floor: 32px, $step: 4px) {
+  @return string.unquote('max(min(#{$base}, #{$floor}), #{$base} + #{$step} * var(--#{base.$prefix}-density, 0))');
+}
+
+// A length that density moves toward zero, for a transform whose value is
+// subtracted from an anchored position (a floated label, before its own
+// -37.5%): the expression negates the value, so it grows less negative as
+// density rises and stops at `$floor`. It is an expression for a calc(), not
+// a complete value:
+// `translateY(calc(#{f.density-offset(28px, 20px, 2px)} - 37.5%))`.
+@function density-offset($base, $floor: null, $step: 2px) {
+  $value: '#{$base} + #{$step} * var(--#{base.$prefix}-density, 0)';
+  @if $floor == null {
+    @return string.unquote('-1 * (#{$value})');
+  }
+  @return string.unquote('-1 * max(#{$floor}, #{$value})');
 }

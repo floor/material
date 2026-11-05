@@ -124,8 +124,11 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       withLifecycle()
     )(baseConfig);
 
-    // Material 3 size, kind and density tokens (height, gap, corners)
+    // Material 3 size, kind and density tokens (height, gap, corners). The
+    // density property is cleared first: a group returned to the default must
+    // inherit a container's density again rather than keep the old value.
     const applySizeStyles = (density: ButtonGroupDensity) => {
+      component.element.style.removeProperty(`--${baseConfig.prefix}-density`);
       Object.entries(getSizeStyles(baseConfig.prefix, baseConfig.size, kind, density)).forEach(([prop, value]) => {
         component.element.style.setProperty(prop, value);
       });

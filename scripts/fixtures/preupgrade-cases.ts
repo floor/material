@@ -466,8 +466,9 @@ const buttonGroupItems = (button: ButtonGroupButton): string =>
   ).join("");
 
 // As BUTTON_GROUP_SIZE_TOKENS and DENSITY_STEPS in components/button-group:
-// the container height, 4px less per density step. Every row must hold it on
-// both sides of the upgrade, whatever the page's typography.
+// the container height, 4px less per density step, floored at the 32px
+// visible target (styles/components/_button-group.scss). Every row must hold
+// it on both sides of the upgrade, whatever the page's typography.
 const buttonGroupHeights: Record<ButtonGroupSize, number> = {
   xs: 32, s: 40, m: 56, l: 96, xl: 136,
 };
@@ -493,7 +494,7 @@ const buttonGroupMatrixRow = (
     style: `direction:${dir};${typography === "default" ? "" : `font-size:${fontSize}px;line-height:${lineHeight}`}`,
     width: 850,
     strictBox: true,
-    hostHeight: buttonGroupHeights[size] - buttonGroupDensitySteps[density],
+    hostHeight: Math.max(32, buttonGroupHeights[size] - buttonGroupDensitySteps[density]),
     // The group upgrades synchronously, as the six host rows do.
     settleMs: 100,
   };

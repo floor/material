@@ -1,6 +1,7 @@
 // src/styles/elements/_list.scss
 // <m-list> before upgrade: a row per <m-list-item>, which is drawn on upgrade.
 @use '../abstract/base' as base;
+@use '../abstract/functions' as f;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 @use '../abstract/variables' as v;
@@ -20,12 +21,14 @@
 
 @include c.declarations('list') {
   display: block;
-  height: 56px;
+  // As components/_list.scss: 4dp a step off the row, floored at 36dp, so a
+  // page that sets the shared property does not shift at upgrade.
+  height: f.density(56px, 36px);
   overflow: hidden;
 
   &[supporting-text],
   &[overline] {
-    height: 72px;
+    height: f.density(72px, 36px);
   }
 
   &[kind='divider'] {

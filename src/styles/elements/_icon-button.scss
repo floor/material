@@ -2,6 +2,7 @@
 // <m-icon-button> before upgrade: the container, round, at its size and width.
 @use 'sass:list';
 @use 'sass:map';
+@use '../abstract/functions' as f;
 @use '../abstract/theme' as t;
 @use 'config' as c;
 
@@ -17,9 +18,17 @@ $sizes: (
 
 @mixin size($size, $width) {
   $values: map.get($sizes, $size);
-  height: list.nth($values, 1);
-  width: list.nth($values, map.get(('narrow': 2, 'default': 3, 'wide': 4), $width));
-  border-radius: list.nth($values, 1) * 0.5;
+  // As components/_icon-button.scss: both axes take 4dp a step down to the
+  // 32dp visible target. A width already under it at density 0 (the narrow
+  // sizes) only shrinks, so the floor is the smaller of base and target.
+  height: f.density(list.nth($values, 1), 32px);
+  @if $width == 'default' {
+    width: f.density(list.nth($values, 3), 32px);
+  } @else {
+    width: f.density-visible(list.nth($values, map.get(('narrow': 2, 'wide': 4), $width)), 32px);
+  }
+  // Round: half the container height, and half as far a step.
+  border-radius: f.density(list.nth($values, 1) * 0.5, 16px, 2px);
 }
 
 @include c.host('icon-button') {

@@ -65,7 +65,12 @@ $shape: '--#{base.$prefix}-button-shape';
   // beside the small inner corners a 9999px corner would scale them down.
   --#{base.$prefix}-button-group-inner-corner: #{v.shape('small')};
   --#{base.$prefix}-button-group-pressed-corner: #{v.shape('extra-small')};
-  --#{base.$prefix}-button-group-radius: 20px;
+  // Density scales the height from the base the component sets: 4dp a step,
+  // floored at the 32dp visible target (f.density). The outer radius follows
+  // at exactly half the scaled height. Both are derived here, so a group whose
+  // own density option is default still follows a denser container.
+  --#{base.$prefix}-button-group-height-scale: #{f.density(var(--#{base.$prefix}-button-group-height), 32px)};
+  --#{base.$prefix}-button-group-radius: calc(var(--#{base.$prefix}-button-group-height-scale) / 2);
 
   &--vertical {
     flex-direction: column;
@@ -76,7 +81,7 @@ $shape: '--#{base.$prefix}-button-shape';
   > .#{$icon-button} {
     margin: 0;
     flex-shrink: 0;
-    height: var(--#{base.$prefix}-button-group-height);
+    height: var(--#{base.$prefix}-button-group-height-scale);
     // Size and shape changes ride the fast spatial spring, colours the
     // default effects spring (ButtonGroup and ToggleButton animation specs)
     transition: group-button-transition('spring-fast-spatial');
@@ -97,7 +102,13 @@ $shape: '--#{base.$prefix}-button-shape';
 
   // Density lowers the height; a round icon button keeps its aspect
   > .#{$icon-button} {
-    width: var(--#{base.$prefix}-button-group-height);
+    width: var(--#{base.$prefix}-button-group-height-scale);
+    // The icon button's 48px target reaches sideways by default; in a group
+    // the neighbours sit 2px away, so it keeps the visible width and only
+    // reaches above and below (m3.material.io button group specs).
+    &::after {
+      width: 100%;
+    }
   }
 
   &--equal-width {
@@ -176,8 +187,8 @@ $shape: '--#{base.$prefix}-button-shape';
   &--labels-selected {
     > .#{$button} {
       gap: 0;
-      min-width: var(--#{base.$prefix}-button-group-height);
-      padding: 0 calc((var(--#{base.$prefix}-button-group-height) - var(--#{base.$prefix}-button-group-icon)) / 2);
+      min-width: var(--#{base.$prefix}-button-group-height-scale);
+      padding: 0 calc((var(--#{base.$prefix}-button-group-height-scale) - var(--#{base.$prefix}-button-group-icon)) / 2);
 
       .#{$button}__text {
         display: inline-block;

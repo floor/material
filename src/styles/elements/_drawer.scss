@@ -2,6 +2,7 @@
 // <m-drawer> before upgrade: the sheet's height, with a place per
 // <m-drawer-item>, which is drawn on upgrade. Closed, the upgraded drawer
 // keeps that height with nothing in it; open, its sheet is painted.
+@use '../abstract/functions' as f;
 @use '../abstract/theme' as t;
 @use 'config' as c;
 
@@ -18,6 +19,8 @@
 
 @include c.declarations('drawer') {
   display: block;
-  height: 56px;
+  // As components/_drawer.scss: 4dp a step, floored at the 36dp item the
+  // dense option has always used.
+  height: f.density(56px, 36px);
   overflow: hidden;
 }
