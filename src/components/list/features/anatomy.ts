@@ -7,7 +7,7 @@ export const isDataItem = (item: ListItem): boolean => !item.kind || item.kind =
 export const itemId = (item: ListItem, index: number): string => String(item.id ?? index);
 
 /** A checkable control: what a trailing slot hands the row's selection to. */
-export const checkableControl = 'input[type="checkbox"], input[type="radio"], [role="switch"], [role="checkbox"], [role="radio"]';
+export const checkableControl = 'input[type=checkbox],input[type=radio],[role=switch],[role=checkbox],[role=radio]';
 
 /** A slot's content: the passed node, or a component's own element. */
 const slotContent = (value: ListSlot): string | HTMLElement => {
@@ -16,13 +16,13 @@ const slotContent = (value: ListSlot): string | HTMLElement => {
 };
 
 /** The control a slot content holds: itself when checkable, else the first checkable inside it. */
-const controlIn = (element: HTMLElement): HTMLElement | undefined =>
+export const controlIn = (element: HTMLElement): HTMLElement | undefined =>
   element.matches(checkableControl) ? element : element.querySelector<HTMLElement>(checkableControl) ?? undefined;
 
 /** Whether the app already named the control, so the row's name must not replace it. */
 const hasName = (control: HTMLElement): boolean =>
   control.hasAttribute("aria-label") || control.hasAttribute("aria-labelledby") ||
-  control.hasAttribute("title") || ((control as HTMLInputElement).labels?.length ?? 0) > 0 ||
+  control.hasAttribute("title") || !!(control as HTMLInputElement).labels?.length ||
   (control.textContent ?? "").trim() !== "";
 
 /** Standard Compose ListItem anatomy; all interactive slots stay outside the action. */
@@ -53,7 +53,7 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
     if (value.type === "control") {
       // A control with no name of its own borrows the row's, as the row's own
       // action button does; a name the app gave always wins.
-      const control = controlIn(typeof content === "string" ? (el.firstElementChild as HTMLElement | null) ?? el : content);
+      const control = controlIn((el.firstElementChild as HTMLElement | null) ?? el);
       if (control && !hasName(control)) {
         control.setAttribute("aria-labelledby", headline.id);
         if (supporting && !control.hasAttribute("aria-describedby")) control.setAttribute("aria-describedby", supporting.id);

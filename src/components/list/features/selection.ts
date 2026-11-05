@@ -1,6 +1,6 @@
 import { LIST_EVENTS } from "../constants";
 import { getCleanup } from "../../../core/compose/cleanup";
-import { checkableControl } from "./anatomy";
+import { controlIn } from "./anatomy";
 import type { ListConfig, ListFeatureHost, ListItem, ListSelection, ListRow } from "../types";
 
 export const withSelection = (config: ListConfig<ListItem>) =>
@@ -35,15 +35,13 @@ export const withSelection = (config: ListConfig<ListItem>) =>
   /** A row's trailing checkable control, when it has one: the row's action too. */
   const controlFor = (row: ListRow): HTMLElement | undefined => {
     const slot = row.element.querySelector<HTMLElement>(`.${component.getClass("list__trailing")}[data-list-control]`);
-    return slot?.querySelector<HTMLElement>(checkableControl) ?? undefined;
+    return slot ? controlIn(slot) : undefined;
   };
   /** M3: the selected state applies to the entire list item, so the row follows its control. */
   const follow = (row: ListRow) => {
     const control = controlFor(row);
     if (!control) return;
-    const checked = typeof (control as HTMLInputElement).checked === "boolean"
-      ? (control as HTMLInputElement).checked
-      : control.getAttribute("aria-checked") === "true";
+    const checked = control.matches(":checked") || control.getAttribute("aria-checked") === "true";
     if (checked === selected.has(row.id)) return;
     if (checked && !config.multiSelect) selected.clear();
     if (checked) selected.add(row.id); else selected.delete(row.id);
