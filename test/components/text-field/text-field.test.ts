@@ -39,6 +39,7 @@ g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createTextField, { type TextFieldValuePayload, type TextFieldFocusPayload } from '../../../src/components/text-field';
+import { textFieldElement } from '../../../src/elements/text-field';
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
@@ -198,6 +199,25 @@ describe('text-field', () => {
     expect(field.getAttribute('autocomplete')).toBe('email');
     field.removeAttribute('autocomplete');
     expect(field.input.hasAttribute('autocomplete')).toBe(false);
+  });
+
+  test('inputMode and enterKeyHint reach the input from config, and the element attributes move it', () => {
+    const created = mount({ label: 'Phone', type: 'tel', inputMode: 'tel', enterKeyHint: 'next' });
+    expect(created.input.getAttribute('inputmode')).toBe('tel');
+    expect(created.input.getAttribute('enterkeyhint')).toBe('next');
+
+    // <m-text-field>'s attribute callbacks, applied to a field created without
+    // them: the host attribute writes the native one on the input, and a
+    // removal removes it.
+    const field = mount({ label: 'Phone' });
+    const update = (name: 'inputmode' | 'enterkeyhint'): ((c: never, v: unknown) => void) =>
+      (textFieldElement.spec.attributes as unknown as Record<string, { update: (c: never, v: unknown) => void }>)[name].update;
+    update('inputmode')(field as never, 'decimal');
+    update('enterkeyhint')(field as never, 'go');
+    expect(field.input.getAttribute('inputmode')).toBe('decimal');
+    expect(field.input.getAttribute('enterkeyhint')).toBe('go');
+    update('inputmode')(field as never, null);
+    expect(field.input.hasAttribute('inputmode')).toBe(false);
   });
 
   test('supporting text from config, set later, and removed', () => {

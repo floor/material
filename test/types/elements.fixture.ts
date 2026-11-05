@@ -51,6 +51,9 @@ button.disabled = "yes";
 type TextFieldProps = ElementProps<TextFieldSpec>;
 assert<Equals<TextFieldProps["value"], string | undefined>>();
 assert<Equals<TextFieldProps["maxlength"], number | undefined>>();
+// The virtual keyboard hints: the native attribute spellings, typed as strings.
+assert<Equals<TextFieldProps["inputmode"], string | undefined>>();
+assert<Equals<TextFieldProps["enterkeyhint"], string | undefined>>();
 assert<Equals<keyof ElementEvents<TextFieldSpec>, "input" | "change" | "trailing">>();
 assert<Equals<ElementEvents<TextFieldSpec>["input"], CustomEvent<{ value: string }>>>();
 declare const field: TextFieldElement;

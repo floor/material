@@ -48,6 +48,16 @@ export interface TextInputConfig {
   autocomplete?: string;
 
   /**
+   * Virtual keyboard to show for the input (`inputmode`)
+   */
+  inputMode?: string;
+
+  /**
+   * The virtual keyboard's Enter key label (`enterkeyhint`)
+   */
+  enterKeyHint?: string;
+
+  /**
    * Initial input value
    */
   value?: string;
@@ -157,6 +167,8 @@ export const withTextInput =
       maxLength: config.maxLength,
       pattern: config.pattern,
       autocomplete: config.autocomplete,
+      inputmode: config.inputMode,
+      enterkeyhint: config.enterKeyHint,
       // A textarea ignores a value attribute. Its default value is its text.
       value: isMultiline ? undefined : config.value || "",
       placeholder: config.placeholder || " ", // Always set placeholder (space if empty) for CSS detection
