@@ -24,7 +24,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_550,
   form: 20_400,
-  "all-js": 128_550,
+  "all-js": 130_050,
   "base-css": 3_050,
   "base-lite-css": 1_750,
   "button-css": 5_300,

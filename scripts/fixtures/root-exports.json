@@ -840,6 +840,11 @@
     "status": "public"
   },
   {
+    "name": "SingleSelectListboxOptions",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "SliderComponent",
     "kind": "type",
     "status": "public"
@@ -1012,6 +1017,11 @@
   {
     "name": "TrustedHTMLLike",
     "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "withSingleSelectListbox",
+    "kind": "value",
     "status": "public"
   }
 ]

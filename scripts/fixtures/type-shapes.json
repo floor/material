@@ -1617,6 +1617,13 @@
       "\"standard\""
     ]
   },
+  "SingleSelectListboxOptions.indicator": {
+    "kind": "union",
+    "members": [
+      "\"leading\"",
+      "\"trailing\""
+    ]
+  },
   "SliderConfig": {
     "kind": "extends",
     "bases": [
