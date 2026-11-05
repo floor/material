@@ -30,7 +30,7 @@ these rows drift from a fresh measurement.
 | datepicker | 37.1 KB | 12.7 KB | +9.7 KB |  |
 | dialog | 37.5 KB | 12.1 KB | +9.1 KB | +6.9 KB |
 | divider | 9.7 KB | 3.7 KB | +0.7 KB |  |
-| drawer | 22.9 KB | 8.2 KB | +5.1 KB |  |
+| drawer | 23.1 KB | 8.2 KB | +5.2 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
 | fab-menu | 22.1 KB | 8.2 KB | +5.1 KB | +10.4 KB |
 | extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 390.7 KB | 122.5 KB | +119.5 KB | +2.1 KB |
+| all | 391.0 KB | 122.6 KB | +119.5 KB | +2.1 KB |
 <!-- /size-table -->
