@@ -1212,6 +1212,7 @@
     ".mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__group>ul",
     ".mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__list",
     ".mtrl-menu--visible",
+    ".mtrl-menu:focus-visible",
     ".mtrl-menu[popover]",
     ".mtrl-menu__divider",
     ".mtrl-menu__group",

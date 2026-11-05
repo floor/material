@@ -36,7 +36,6 @@ $component: "#{$prefix}-menu";
     color: t.color("on-surface");
     @include m.elevation(2);
     overflow: hidden;
-    outline: none;
 
     // Initial state - hidden with proper transform origin
     display: flex;
@@ -353,6 +352,14 @@ $component: "#{$prefix}-menu";
         flex-shrink: 0;
         margin: 8px 0;
         background-color: t.color("outline-variant");
+    }
+
+    // Accessibility: when a keyboard open lands on the menu surface itself
+    // (an empty menu, or one whose items are all hidden), the surface holds
+    // :focus-visible and draws the 3dp inward secondary focus ring.
+    &:focus-visible {
+        outline: 3px solid t.color("secondary");
+        outline-offset: -3px;
     }
 
     // Reduced motion preference support
