@@ -3015,7 +3015,7 @@
     {
       "name": "setupResponsiveBehavior",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TAB_CLASSES",
@@ -3157,6 +3157,23 @@
     {
       "name": "TABS_EVENTS",
       "kind": "value",
+      "status": "public"
+    }
+  ],
+  "tabs/responsive": [
+    {
+      "name": "ResponsiveConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "tabsResponsive",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TabsResponsive",
+      "kind": "type",
       "status": "public"
     }
   ],

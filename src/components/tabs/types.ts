@@ -227,6 +227,16 @@ export interface TabsConfig {
   autoActivate?: boolean;
 
   /**
+   * A behaviour to apply to the group while it is created, e.g.
+   * `tabsResponsive({ smallScreen: { layout: 'icon-only' } })` from
+   * `material/components/tabs/responsive`. That module is a plugin the app
+   * imports itself, so a consumer that never passes it carries none of its
+   * code; createTabs calls it synchronously, so the first paint already
+   * carries its layout.
+   */
+  responsive?: (tabs: TabsComponent) => void;
+
+  /**
    * Tabs variant (primary or secondary)
    * @default 'primary'
    */

@@ -1,7 +1,11 @@
 // test/components/tabs/responsive.test.ts
 //
-// setupResponsiveBehavior is an enhancer: createTabs does not call it. Two
-// groups are mounted because the observer watches document.body and the layout
+// `setupResponsiveBehavior` is still an enhancer, and `tabsResponsive` builds
+// the `responsive` option createTabs applies through it, synchronously while
+// the group is created. The option is compared with the function here, at a
+// small and a large width, and the first assertions run before any await so a
+// frame showing the built layout would fail them.
+// Two groups are mounted because the observer watches document.body and the layout
 // switch reads window.innerWidth — both are document-wide.
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
@@ -69,8 +73,9 @@ g.ResizeObserver = TestResizeObserver as unknown as typeof ResizeObserver;
 win.ResizeObserver = g.ResizeObserver;
 
 import createTabs from '../../../src/components/tabs';
-import { setupResponsiveBehavior } from '../../../src/components/tabs/responsive';
-import type { ResponsiveConfig } from '../../../src/components/tabs/responsive';
+import { setupResponsiveBehavior } from '../../../src/components/tabs/responsive-legacy';
+import type { ResponsiveConfig } from '../../../src/components/tabs/responsive-legacy';
+import { tabsResponsive } from '../../../src/components/tabs/responsive';
 import type { TabsComponent, TabComponent } from '../../../src/components/tabs/types';
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M12 2L2 22h20z"/></svg>';
@@ -120,6 +125,12 @@ const byValue = (tabs: TabsComponent, value: string): TabComponent => {
   if (!tab) throw new Error(`missing tab ${value}`);
   return tab;
 };
+
+/** What a group carries: the small-screen mark, and each tab's layout. */
+const stateOf = (tabs: TabsComponent): { small: boolean; layouts: string[][] } => ({
+  small: tabs.element.classList.contains(smallClass(tabs)),
+  layouts: tabs.getTabs().map((tab) => layoutOf(tab)),
+});
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -281,5 +292,74 @@ describe('setupResponsiveBehavior', () => {
 
     expect(second.element.classList.contains(smallClass(second))).toBe(true);
     expect(layoutOf(byValue(second, 'flights'))).toEqual(['icon-only']);
+  });
+});
+
+describe('the responsive option', () => {
+  // No await before the first assertions: the option is applied while
+  // createTabs builds the group, so a frame showing the built layout fails here.
+  test('applies while the group is created, before anything can paint', () => {
+    setWidth(400);
+    const tabs = createTabs({ tabs: TABS_WITH_ICONS, responsive: tabsResponsive({}) });
+
+    expect(stateOf(tabs)).toEqual({ small: true, layouts: [['icon-only'], ['icon-only']] });
+  });
+
+  test('at a small width it lays the group out as setupResponsiveBehavior does, and at a large width it restores it the same way', () => {
+    setWidth(400);
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: tabsResponsive({}) });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction);
+
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+    expect(stateOf(viaOption)).toEqual({ small: true, layouts: [['icon-only'], ['icon-only']] });
+
+    setWidth(1280);
+    notifyResize();
+
+    expect(stateOf(viaOption)).toEqual({ small: false, layouts: [['icon-and-text'], ['icon-and-text']] });
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+  });
+
+  test('it takes the same smallScreen and breakpoints configuration as the function', () => {
+    setWidth(700);
+    const config: ResponsiveConfig = { smallScreen: { layout: 'text-only' }, breakpoints: { small: 800 } };
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: tabsResponsive(config) });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction, config);
+
+    expect(stateOf(viaOption)).toEqual({ small: true, layouts: [['text-only'], ['text-only']] });
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+  });
+
+  test('a tab added after creation follows the option as it follows the function', () => {
+    setWidth(400);
+    const viaOption = createTabs({ tabs: TABS_WITH_ICONS, responsive: tabsResponsive({}) });
+    const viaFunction = createTabs({ tabs: TABS_WITH_ICONS });
+    document.body.append(viaOption.element, viaFunction.element);
+    setupResponsiveBehavior(viaFunction);
+
+    const added = { text: 'Explore', value: 'explore', icon: ICON };
+    viaOption.addTab(added);
+    viaFunction.addTab(added);
+
+    expect(stateOf(viaOption)).toEqual(stateOf(viaFunction));
+    expect(layoutOf(byValue(viaOption, 'explore'))).toEqual(['icon-only']);
+  });
+
+  test('on a server render, with no ResizeObserver to install, it leaves the group as built', () => {
+    setWidth(400);
+    const saved = g.ResizeObserver;
+    delete (g as { ResizeObserver?: unknown }).ResizeObserver;
+    try {
+      const tabs = createTabs({ tabs: TABS_WITH_ICONS, responsive: tabsResponsive({}) });
+
+      expect(resizeObservers.length).toBe(0);
+      expect(tabs.element.classList.contains(smallClass(tabs))).toBe(false);
+    } finally {
+      g.ResizeObserver = saved;
+    }
   });
 });
