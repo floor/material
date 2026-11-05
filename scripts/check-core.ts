@@ -27,7 +27,7 @@ import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkMenu, checkMenuDisabledColors, checkMenuHiddenItems, checkMenuSubmenuSetItems, checkMenuVerticalSelectedCheck } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
-import { checkSelectMenu, checkSelectWidth, checkSelectHiddenOptions } from "./check-select-browser";
+import { checkSelectMenu, checkSelectWidth, checkSelectHiddenOptions, checkSelectActiveOptionFocusRing } from "./check-select-browser";
 import { createPackageFixture } from "./package-fixture";
 
 type CoreWindow = Window & {
@@ -146,6 +146,7 @@ try {
   await checkSelectMenu(page, "factory-top");
   await checkSelectWidth(page, "factory");
   await checkSelectHiddenOptions(page);
+  await checkSelectActiveOptionFocusRing(page);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.
