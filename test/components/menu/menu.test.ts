@@ -453,6 +453,20 @@ describe('the expressive vertical menu', () => {
   });
 });
 
+describe('the deprecated dense option', () => {
+  test('still renders the dense variant, and only when asked', async () => {
+    const dense = createMenu({ opener, items, dense: true });
+    await opened(dense);
+    expect(dense.element.classList.contains('mtrl-menu--dense')).toBe(true);
+    dense.close();
+    await after(450);
+
+    const plain = createMenu({ opener, items });
+    await opened(plain);
+    expect(plain.element.classList.contains('mtrl-menu--dense')).toBe(false);
+  });
+});
+
 describe('submenu keyboard navigation', () => {
   const nested = [
     { id: 'exec', text: 'Executive' },
