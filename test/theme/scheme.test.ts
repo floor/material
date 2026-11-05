@@ -15,16 +15,10 @@ import {
   type SchemeFactory,
 } from "../../src/theme";
 import { createSchemeByName, type ThemeVariant } from "../../src/theme/variants";
-import { SCHEME_ROLES } from "../../src/theme/roles";
-import { MaterialDynamicColors } from "../../src/theme/vendor/dynamiccolor/material_dynamic_colors";
+import { ColorSpecDelegateImpl2021 } from "../../src/theme/vendor/dynamiccolor/color_spec_2021";
+import { DynamicScheme as VendorDynamicScheme } from "../../src/theme/vendor/dynamiccolor/dynamic_scheme";
+import { Variant } from "../../src/theme/vendor/dynamiccolor/variant";
 import { argbFromHex, hexFromArgb } from "../../src/theme/vendor/utils/string_utils";
-import { SchemeContent } from "../../src/theme/vendor/scheme/scheme_content";
-import { SchemeExpressive } from "../../src/theme/vendor/scheme/scheme_expressive";
-import { SchemeFidelity } from "../../src/theme/vendor/scheme/scheme_fidelity";
-import { SchemeMonochrome } from "../../src/theme/vendor/scheme/scheme_monochrome";
-import { SchemeNeutral } from "../../src/theme/vendor/scheme/scheme_neutral";
-import { SchemeTonalSpot } from "../../src/theme/vendor/scheme/scheme_tonal_spot";
-import { SchemeVibrant } from "../../src/theme/vendor/scheme/scheme_vibrant";
 
 /** A target that records the custom properties written to it, without a DOM. */
 function target(): { element: Element; properties: Map<string, string> } {
@@ -35,11 +29,24 @@ function target(): { element: Element; properties: Map<string, string> } {
 
 const camel = (role: string): string => role.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
 
+const SCHEME_ROLES = [
+  "primary", "on-primary", "primary-container", "on-primary-container",
+  "secondary", "on-secondary", "secondary-container", "on-secondary-container",
+  "tertiary", "on-tertiary", "tertiary-container", "on-tertiary-container",
+  "error", "on-error", "error-container", "on-error-container",
+  "surface", "surface-dim", "surface-bright", "surface-container-lowest",
+  "surface-container-low", "surface-container", "surface-container-high",
+  "surface-container-highest", "surface-variant", "on-surface",
+  "on-surface-variant", "outline", "outline-variant", "shadow",
+  "scrim", "inverse-surface", "inverse-on-surface", "inverse-primary",
+  "success", "on-success", "warning", "on-warning", "info", "on-info",
+] as const;
+
 /** The scheme's role colours, read the way applyScheme writes them. */
 function rolesOf(scheme: DynamicScheme, prefix = "mtrl"): Record<string, string> {
   const { element, properties } = target();
   applyScheme(scheme, element, { prefix });
-  const colors = new MaterialDynamicColors() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
+  const colors = new ColorSpecDelegateImpl2021() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
   const roles: Record<string, string> = {};
   for (const role of SCHEME_ROLES) {
     expect(properties.get(`--${prefix}-sys-color-${role}`)).toBe(hexFromArgb(colors[camel(role)]().getArgb(scheme)));
@@ -58,15 +65,15 @@ const VARIANTS: Record<ThemeVariant, SchemeFactory> = {
   monochrome,
 };
 
-/** The reference: the ported scheme classes, called directly. */
-const SCHEME_CLASSES: Record<ThemeVariant, new (source: Hct, dark: boolean, contrast: number, specVersion?: string) => DynamicScheme> = {
-  "tonal-spot": SchemeTonalSpot,
-  vibrant: SchemeVibrant,
-  expressive: SchemeExpressive,
-  fidelity: SchemeFidelity,
-  content: SchemeContent,
-  neutral: SchemeNeutral,
-  monochrome: SchemeMonochrome,
+/** The reference: DynamicScheme constructed directly with each Variant enum value. */
+const SCHEME_VARIANTS: Record<ThemeVariant, (source: Hct, dark: boolean, contrast: number) => DynamicScheme> = {
+  "tonal-spot": (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.TONAL_SPOT, isDark, contrastLevel }),
+  vibrant: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.VIBRANT, isDark, contrastLevel }),
+  expressive: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.EXPRESSIVE, isDark, contrastLevel }),
+  fidelity: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.FIDELITY, isDark, contrastLevel }),
+  content: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.CONTENT, isDark, contrastLevel }),
+  neutral: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.NEUTRAL, isDark, contrastLevel }),
+  monochrome: (sourceColorHct, isDark, contrastLevel) => new VendorDynamicScheme({ sourceColorHct, variant: Variant.MONOCHROME, isDark, contrastLevel }),
 };
 
 test("every variant, mode and contrast level matches the reference constructor call", () => {
@@ -75,10 +82,10 @@ test("every variant, mode and contrast level matches the reference constructor c
   let compared = 0;
   for (const seed of seeds) {
     const source = Hct.fromInt(argbFromHex(seed));
-    for (const [name, Scheme] of Object.entries(SCHEME_CLASSES)) {
+    for (const [name, buildScheme] of Object.entries(SCHEME_VARIANTS)) {
       for (const mode of ["light", "dark"] as const) {
         for (const contrast of contrasts) {
-          const expected = new Scheme(source, mode === "dark", contrast);
+          const expected = buildScheme(source, mode === "dark", contrast);
           const named = rolesOf(createSchemeByName(seed, { variant: name as ThemeVariant, mode, contrast }));
           const direct = rolesOf(createScheme(seed, { variant: VARIANTS[name as ThemeVariant], mode, contrast }));
           expect(named, `${seed} ${name} ${mode} ${contrast}`).toEqual(rolesOf(expected));
@@ -111,7 +118,7 @@ test("the seed may be a hex string, an ARGB integer or an Hct", () => {
 });
 
 test("the defaults are Material's: tonal spot, light, standard contrast", () => {
-  expect(rolesOf(createScheme("#6750a4"))).toEqual(rolesOf(new SchemeTonalSpot(Hct.fromInt(0xff6750a4), false, 0)));
+  expect(rolesOf(createScheme("#6750a4"))).toEqual(rolesOf(SCHEME_VARIANTS["tonal-spot"](Hct.fromInt(0xff6750a4), false, 0)));
   expect(rolesOf(createSchemeByName("#6750a4"))).toEqual(rolesOf(createScheme("#6750a4")));
 });
 
@@ -197,13 +204,13 @@ test("runtime status roles reach 4.5:1 at standard/medium and 7:1 at high while 
 test("status role resolution leaves error, on-error, error-container and on-error-container untouched across all parity seeds, variants and contrasts", () => {
   const seeds = ["#6750a4", "#b3261e", "#00696d"];
   const contrasts = [-1, -0.5, 0, 0.5, 1];
-  const colors = new MaterialDynamicColors();
+  const colors = new ColorSpecDelegateImpl2021();
   for (const seed of seeds) {
     const source = Hct.fromInt(argbFromHex(seed));
-    for (const [name, Scheme] of Object.entries(SCHEME_CLASSES)) {
+    for (const [name, buildScheme] of Object.entries(SCHEME_VARIANTS)) {
       for (const mode of ["light", "dark"] as const) {
         for (const contrast of contrasts) {
-          const fresh = new Scheme(source, mode === "dark", contrast);
+          const fresh = buildScheme(source, mode === "dark", contrast);
           const expectedError = {
             error: hexFromArgb(colors.error().getArgb(fresh)),
             "on-error": hexFromArgb(colors.onError().getArgb(fresh)),

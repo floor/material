@@ -174,10 +174,9 @@ export const createElementConfig = (
     name: config.name,
     title: config.title,
     tabIndex: config.tabIndex,
-    style:
-      options.style || config.style
-        ? { ...options.style, ...config.style }
-        : undefined,
+    style: (options.style || config.style
+      ? { ...options.style, ...config.style }
+      : undefined) as Partial<CSSStyleDeclaration> | undefined,
     // Data attributes
     data: config.data,
     // ARIA attributes

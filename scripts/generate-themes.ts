@@ -37,7 +37,15 @@ import {
 import { readFileSync, readdirSync } from "node:fs";
 import { compileString, Logger } from "sass";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
-import { STATUS_ROLES, statusRolesArgb } from "../src/theme/roles";
+import "../src/theme";
+import { ColorSpecDelegateImpl2021 } from "../src/theme/vendor/dynamiccolor/color_spec_2021";
+
+export const STATUS_ROLES = ["success", "on-success", "warning", "on-warning", "info", "on-info"] as const;
+const statusProto = ColorSpecDelegateImpl2021.prototype as unknown as Record<string, () => { getArgb(scheme: unknown): number }>;
+export function statusRolesArgb(scheme: DynamicScheme, primaryArgb?: number): Record<(typeof STATUS_ROLES)[number], number> {
+  const s = primaryArgb !== undefined ? { __proto__: scheme, primaryPalette: { tone: () => primaryArgb } } : scheme;
+  return Object.fromEntries(STATUS_ROLES.map((r) => [r, statusProto[camel(r)]!().getArgb(s)])) as Record<(typeof STATUS_ROLES)[number], number>;
+}
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
 export const BASELINE_SEED = "#6750A4";
