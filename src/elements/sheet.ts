@@ -58,14 +58,19 @@ export const syncSheet = (host: HTMLElement, component: SheetComponent, parts: S
   if (title) title.style.display = named ? "" : "none";
   if (header) header.style.display = Array.from(header.children).some((child) => (child as HTMLElement).style.display !== "none") ? "" : "none";
   if (!container) return;
-  const label = host.getAttribute("aria-label");
-  if (label !== null) {
-    container.setAttribute("aria-label", label);
-    container.removeAttribute("aria-labelledby");
-  } else {
+  const surface = component.element.localName === "dialog" ? component.element : container;
+  if (surface !== container) {
     container.removeAttribute("aria-label");
-    if (named && title) container.setAttribute("aria-labelledby", title.id);
-    else container.removeAttribute("aria-labelledby");
+    container.removeAttribute("aria-labelledby");
+  }
+  const label = host.getAttribute("aria-label") ?? (named ? null : host.getAttribute("title"));
+  if (label !== null) {
+    surface.setAttribute("aria-label", label);
+    surface.removeAttribute("aria-labelledby");
+  } else {
+    surface.removeAttribute("aria-label");
+    if (named && title) surface.setAttribute("aria-labelledby", title.id);
+    else surface.removeAttribute("aria-labelledby");
   }
 };
 
@@ -93,11 +98,17 @@ export const sheetSetup = (
   const sync = (): void => syncSheet(host, component, parts);
   const slot = component.element.querySelector('slot[name="headline"]');
   slot?.addEventListener("slotchange", sync);
+  const titleObserver =
+    typeof MutationObserver === "function"
+      ? new MutationObserver(sync)
+      : null;
+  titleObserver?.observe(host, { attributes: true, attributeFilter: ["title"] });
   sync();
   const unlisten = listen(() => void host.toggleAttribute("open", component.isOpen()));
   if (host.hasAttribute("open")) open();
   return () => {
     slot?.removeEventListener("slotchange", sync);
+    titleObserver?.disconnect();
     unlisten();
   };
 };
