@@ -60,10 +60,10 @@ export const createBaseConfig = (
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: TextFieldConfig) =>
-  createElementConfig(controlLabelConfig(config), {
+  controlLabelConfig(createElementConfig(config, {
     tag: "div",
     className: config.class,
-  });
+  }), config.controlLabelOnly);
 
 /**
  * Creates API configuration for the TextField component

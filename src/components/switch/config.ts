@@ -32,11 +32,11 @@ export const createBaseConfig = (config: SwitchConfig = {}): SwitchConfig =>
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: SwitchConfig) =>
-  createElementConfig(controlLabelConfig(config), {
+  controlLabelConfig(createElementConfig(config, {
     tag: "div",
     className: config.class,
     interactive: true,
-  });
+  }), config.controlLabelOnly);
 
 /**
  * Creates API configuration for the Switch component

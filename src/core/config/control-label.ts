@@ -1,3 +1,5 @@
-/** Only the four form factories opt in; default config and DOM stay unchanged. */
-export const controlLabelConfig = <T extends { ariaLabel?: string; controlLabelOnly?: boolean }>(config: T) =>
-  config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config;
+/** Only new wrapper configs change; the input's config and default DOM stay intact. */
+export function controlLabelConfig<T extends { ariaLabel?: string }>(wrapper: T, controlOnly?: boolean): T {
+  if (controlOnly) wrapper.ariaLabel = undefined;
+  return wrapper;
+}

@@ -30,11 +30,11 @@ export const createBaseConfig = (config: CheckboxConfig = {}): CheckboxConfig =>
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: CheckboxConfig) =>
-  createElementConfig(controlLabelConfig(config), {
+  controlLabelConfig(createElementConfig(config, {
     tag: "div",
     className: config.class,
     interactive: true,
-  });
+  }), config.controlLabelOnly);
 
 const SVG = "http://www.w3.org/2000/svg";
 const checkIcons = new WeakMap<Document, DocumentFragment>();

@@ -90,7 +90,7 @@ export const getElementConfig = (config: SliderConfig) => {
     attributes["aria-disabled"] = "true";
   }
 
-  return createElementConfig(controlLabelConfig(config), {
+  return controlLabelConfig(createElementConfig(config, {
     tag: "div",
     attributes,
     className: classes,
@@ -105,6 +105,6 @@ export const getElementConfig = (config: SliderConfig) => {
       mouseup: true,
     },
     interactive: true,
-  });
+  }), config.controlLabelOnly);
 };
 
