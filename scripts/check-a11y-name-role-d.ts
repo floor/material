@@ -72,9 +72,9 @@ try {
   for (const spec of cases) {
     try {
       await page.goto(`http://127.0.0.1:${server.port}`);
-      await page.waitForFunction(() => (window as PickerWindow).ready);
+      await page.waitForFunction(() => (window as unknown as PickerWindow).ready);
       await page.evaluate(spec => {
-        const w = window as PickerWindow, stage = document.getElementById("stage")!;
+        const w = window as unknown as PickerWindow, stage = document.getElementById("stage")!;
         if (spec.html) { stage.innerHTML = spec.html; w.host = document.getElementById("target") as PickerHost; w.host.show(); w.picker = w.host.component; }
         else { w.picker = w.m[spec.kind === "date" ? "createDatePicker" : "createTimePicker"](spec.config); stage.append(w.picker.element); w.picker.open(); }
       }, spec);
@@ -84,7 +84,7 @@ try {
       });
       await settle();
       const retention = await page.evaluate(spec => {
-        const w = window as PickerWindow, root = w.host?.shadowRoot ?? w.picker.element;
+        const w = window as unknown as PickerWindow, root = w.host?.shadowRoot ?? w.picker.element;
         const dialog = root.querySelector("dialog")!, active = w.host?.shadowRoot?.activeElement ?? document.activeElement;
         w.before = { dialog, active, value: w.picker.getValue() };
         if (spec.action === "title") w.picker.setTitle(spec.next ?? "");
@@ -99,7 +99,7 @@ try {
       const exposed = nodes.filter(n => !n.ignored);
       assert.deepEqual(exposed.filter(n => n.role?.value === "dialog").map(n => n.name?.value), [spec.name], "one correctly named dialog");
       const dom = await page.evaluate(spec => {
-        const w = window as PickerWindow, root = w.host?.shadowRoot ?? w.picker.element, dialog = root.querySelector("dialog")!;
+        const w = window as unknown as PickerWindow, root = w.host?.shadowRoot ?? w.picker.element, dialog = root.querySelector("dialog")!;
         const ids = (dialog.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean);
         return {
           validRefs: ids.every((id: string) => root.querySelector("#" + CSS.escape(id))?.textContent?.trim()),
