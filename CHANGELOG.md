@@ -17,6 +17,59 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.8.2] - 2026-11-08
+
+Keyboard focus visible everywhere.
+
+### Fixed
+
+- **Keyboard focus on drawer, slider, search and field controls (#316).**
+  Drawer items, slider handle bars and collapsed search inputs now draw visible
+  keyboard focus indicators. Filled text fields and selects retain their active
+  underline in forced colours, and navigation bars, rails and drawers distinguish
+  focused destinations from the active selection in forced colours.
+
+- **Focus contrast, clipping and stacking across component surfaces (#318).**
+  Carousel links draw a contrasting halo behind their focus ring over imagery,
+  and their rings follow horizontal and vertical keyline clips. Icon buttons
+  use the secondary focus colour; focused buttons, icon buttons and navigation
+  items paint above adjacent controls. FAB-menu and time-picker selectors use
+  inset rings. Scrollable chips reserve room for their rings, including at
+  fractional scroll positions, and keyboard scrolling keeps focused chips in
+  view in both left-to-right and right-to-left layouts.
+
+- **Pointer focus and reduced motion (#318).**
+  Dialog close-button state layers follow keyboard-visible focus instead of
+  remaining after pointer focus. Reduced-motion rules stop transitioning
+  outline colour in document styles and element shadow roots.
+
+### Internal
+
+- **Permanent browser checks for keyboard focus (#315, #318).**
+  CI checks 53 focusable targets across 20 component families in light, dark
+  and forced colours, plus pointer focus and reduced motion. It detects
+  insufficient indicator contrast, clipping and sibling occlusion; all known
+  focus-gap exceptions are removed. Additional checks cover 240 focus
+  measurements across factories and custom elements in left-to-right and
+  right-to-left layouts.
+
+- **Release size.**
+  The release build at `f772c833`
+  ([CI run 42406404092, package job 128505132816](https://github.com/floor/material/actions/runs/42406404092/job/128505132816))
+  packs **898,258 B compressed / 4,949,301 B unpacked / 1,626 files**.
+  Against v3.8.1 at `a0dd84f3`
+  ([CI run 42402063046, package job 128491957329](https://github.com/floor/material/actions/runs/42402063046/job/128491957329)),
+  that is **+676 B packed / +3,425 B unpacked**, with the file count unchanged.
+  It leaves **21,742 B** under the 920,000 B packed ceiling and **169,699 B**
+  under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,840 / 127,312 / 105,645 B** raw/gzip/brotli
+  (**+56 / +16 / −51 B**), and the full stylesheet is
+  **637,752 / 58,879 / 41,971 B** (**+895 / +132 / +99 B**).
+  These measurements include the runtime focus fixes and the 3.8.2 version
+  banner. The README rows remain 127.3 kB for all-js and 58.9 kB for full CSS,
+  and SIZES.md matches.
+
 ## [3.8.1] - 2026-11-08
 
 Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
@@ -6564,7 +6617,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.8.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.8.2...HEAD
+[3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
 [3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
 [3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
 [3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
