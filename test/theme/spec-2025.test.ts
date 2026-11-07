@@ -4,7 +4,7 @@ import { join } from "node:path";
 import * as base from "../../src/theme";
 import * as spec2025 from "../../src/theme/2025";
 import { Hct, type DynamicScheme, type SchemeFactory } from "../../src/theme";
-import { SCHEME_ROLES, STATUS_ROLES } from "../../src/theme/roles";
+import { STATUS_ROLES } from "../../scripts/generate-themes";
 import { MaterialDynamicColors } from "../../src/theme/vendor/dynamiccolor/material_dynamic_colors";
 import { argbFromHex, hexFromArgb } from "../../src/theme/vendor/utils/string_utils";
 import type { ThemeVariant } from "../../src/theme/variants";
@@ -35,10 +35,55 @@ function target(): { element: Element; properties: Map<string, string> } {
 
 const camel = (role: string): string => role.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
 
+// The runtime list is private after #313; rolesOf checks this copy against its output.
+const SCHEME_ROLES = [
+  "primary",
+  "on-primary",
+  "primary-container",
+  "on-primary-container",
+  "secondary",
+  "on-secondary",
+  "secondary-container",
+  "on-secondary-container",
+  "tertiary",
+  "on-tertiary",
+  "tertiary-container",
+  "on-tertiary-container",
+  "error",
+  "on-error",
+  "error-container",
+  "on-error-container",
+  "surface",
+  "surface-dim",
+  "surface-bright",
+  "surface-container-lowest",
+  "surface-container-low",
+  "surface-container",
+  "surface-container-high",
+  "surface-container-highest",
+  "surface-variant",
+  "on-surface",
+  "on-surface-variant",
+  "outline",
+  "outline-variant",
+  "shadow",
+  "scrim",
+  "inverse-surface",
+  "inverse-on-surface",
+  "inverse-primary",
+  "success",
+  "on-success",
+  "warning",
+  "on-warning",
+  "info",
+  "on-info",
+] as const;
+
 /** The scheme's role colours, read the way applyScheme writes them. */
 function rolesOf(scheme: DynamicScheme, prefix = "mtrl"): Record<string, string> {
   const { element, properties } = target();
   base.applyScheme(scheme, element, { prefix });
+  expect([...properties.keys()]).toEqual(SCHEME_ROLES.map((role) => `--${prefix}-sys-color-${role}`));
   const colors = new MaterialDynamicColors() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
   const roles: Record<string, string> = {};
   for (const role of SCHEME_ROLES) {
