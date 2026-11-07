@@ -282,9 +282,11 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Focus rings now retain contrast, scroll/clip clearance and sibling stacking;
+    // pointer focus and reduced motion use their intended state rules.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5d5779ab376b97542073a9b43a7fc59128bba4ed6ab792c20bd2aabb90170801");
-    expect(css.length).toBe(542183);
+      .toBe("6585af5875a0ddd20aec11bd0fef6ddc752bb467cfb15fa4db46ae9e17d2827b");
+    expect(css.length).toBe(542616);
   });
 
   test("today's sheets still resolve to the fixture", () => {
