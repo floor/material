@@ -43,7 +43,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
                 toolbar: () => m.createToolbar({ color: "vibrant", items: [{ icon, ariaLabel: "Edit" }] }),
                 timepicker: () => m.createTimePicker({ value: "10:30", showSeconds: true }),
                 "fab-menu": () => m.createFabMenu({ presentation: "list", icon, ariaLabel: "Actions", items: ["First", "Middle", "Last"].map(text => ({ id: text, text, icon })) }),
-                chips: () => m.createChips({ scrollable: true, chips: ["First", "Middle", "Last"].map(text => ({ text, value: text })) }),
+                chips: () => m.createChips({ scrollable: true, chips: ["First", "Middle", "Last"].map(label => ({ label, value: label })) }),
                 "split-button": () => m.createSplitButton({ text: "Send", items: [{ id: "later", text: "Later" }] }),
                 "button-group": () => m.createButtonGroup({ kind: "connected", buttons: [{ text: "Day", value: "day" }, { text: "Week", value: "week" }] }),
                 "navigation-bar": () => m.createNavigationBar({ itemLayout: "horizontal", items: [{ id: "one", label: "Destinations", icon }, { id: "two", label: "Notifications", icon }] }),
@@ -53,6 +53,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               };
               const c = factories[kind]();
               stage.append(c.element);
+              if (kind === "fab-menu") c.element.style.cssText = "position:relative;margin-top:240px;margin-inline-start:200px";
               root = c.element;
               w.focusCleanup = () => c.destroy();
               if ("open" in c && typeof c.open === "function") c.open();
@@ -73,6 +74,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               };
               stage.innerHTML = markup[kind];
               const host = stage.firstElementChild as HTMLElement & { show?: () => void };
+              if (kind === "fab-menu") host.shadowRoot!.querySelector<HTMLElement>(".mtrl-fab-menu")!.style.cssText = "position:relative;margin-top:240px;margin-inline-start:200px";
               if (["timepicker", "fab-menu", "snackbar", "dialog"].includes(kind)) host.show!();
               root = kind === "toolbar" ? host.querySelector("m-icon-button")!.shadowRoot! : host.shadowRoot!;
               w.focusCleanup = () => stage.replaceChildren();
@@ -96,25 +98,44 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
             if (kind === "carousel") w.focusTargets = w.focusTargets.slice(0, 3);
             for (const el of w.focusTargets) el.addEventListener("click", e => { e.preventDefault(); e.stopImmediatePropagation(); }, true);
           }, { mode, dir, flavor, kind });
-          await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+          await page.evaluate(async () => {
+            await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+            await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
+          });
           const count = await page.evaluate(() => (window as unknown as FocusWindow).focusTargets.length);
           assert(count > 0, `${label}: mounted targets`);
           for (let i = 0; i < count; i++) {
-            await page.evaluate(i => {
+            await page.evaluate(({ i, kind }) => {
               const el = (window as unknown as FocusWindow).focusTargets[i]!;
+              if (kind === "fab-menu") {
+                el.closest(".mtrl-fab-menu")!.querySelector<HTMLElement>(".mtrl-fab-menu__fab")!.focus();
+                return;
+              }
               el.tabIndex = 0;
               const pred = document.createElement("button");
               pred.id = "focus-predecessor";
               pred.style.cssText = "position:fixed;width:1px;height:1px;opacity:0";
-              el.before(pred);
+              (kind === "toolbar" ? el.closest(".mtrl-toolbar") ?? el : el).before(pred);
               pred.focus();
-            }, i);
+            }, { i, kind });
             await page.keyboard.press("Tab");
+            if (kind === "fab-menu") for (let step = 0; step < i; step++) await page.keyboard.press("ArrowDown");
             const measure = await page.evaluate(async ({ i, kind }) => {
               const el = (window as unknown as FocusWindow).focusTargets[i]!;
               document.querySelector("#focus-predecessor")?.remove();
               (el.getRootNode() as Document | ShadowRoot).querySelector("#focus-predecessor")?.remove();
               await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {})));
+              // Native focus scrolling may be smooth through the component stylesheet.
+              await new Promise<void>(resolve => {
+                let previous = el.getBoundingClientRect(); let stable = 0; let frames = 0;
+                const sample = () => {
+                  const current = el.getBoundingClientRect();
+                  stable = Math.abs(current.left - previous.left) < .1 && Math.abs(current.top - previous.top) < .1 ? stable + 1 : 0;
+                  previous = current;
+                  if (stable >= 3 || ++frames >= 60) resolve(); else requestAnimationFrame(sample);
+                };
+                requestAnimationFrame(sample);
+              });
               if (kind === "carousel") {
                 const scroller = el.closest(".mtrl-carousel")!.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
                 scroller.scrollLeft = 0;
@@ -136,7 +157,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               const box = pseudo ? { top: rect.top + n(ring.top), right: rect.right - n(ring.right), bottom: rect.bottom - n(ring.bottom), left: rect.left + n(ring.left) }
                 : { top: rect.top - width - offset, right: rect.right + width + offset, bottom: rect.bottom + width + offset, left: rect.left - width - offset };
               const clipping: string[] = [];
-              let anc: Element | null = ringElement.parentElement;
+              let anc: Element | null = ringElement.parentElement ?? ((ringElement.getRootNode() as ShadowRoot).host ?? null);
               while (anc && anc !== document.documentElement) {
                 const a = getComputedStyle(anc); const r = anc.getBoundingClientRect();
                 if (a.overflowY !== "visible" && (box.top < r.top - .5 || box.bottom > r.bottom + .5)) clipping.push(`${anc.className}: block`);
