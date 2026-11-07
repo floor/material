@@ -1,3 +1,4 @@
+import { controlLabelConfig } from "../../core/config/control-label";
 // src/components/checkbox/config.ts
 import {
   createComponentConfig,
@@ -29,7 +30,7 @@ export const createBaseConfig = (config: CheckboxConfig = {}): CheckboxConfig =>
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: CheckboxConfig) =>
-  createElementConfig(config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config, {
+  createElementConfig(controlLabelConfig(config), {
     tag: "div",
     className: config.class,
     interactive: true,

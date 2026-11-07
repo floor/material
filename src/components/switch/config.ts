@@ -1,3 +1,4 @@
+import { controlLabelConfig } from "../../core/config/control-label";
 // src/components/switch/config.ts
 import {
   createComponentConfig,
@@ -31,7 +32,7 @@ export const createBaseConfig = (config: SwitchConfig = {}): SwitchConfig =>
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: SwitchConfig) =>
-  createElementConfig(config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config, {
+  createElementConfig(controlLabelConfig(config), {
     tag: "div",
     className: config.class,
     interactive: true,

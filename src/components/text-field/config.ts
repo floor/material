@@ -1,3 +1,4 @@
+import { controlLabelConfig } from "../../core/config/control-label";
 // src/components/text-field/config.ts
 import {
   createComponentConfig,
@@ -59,7 +60,7 @@ export const createBaseConfig = (
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: TextFieldConfig) =>
-  createElementConfig(config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config, {
+  createElementConfig(controlLabelConfig(config), {
     tag: "div",
     className: config.class,
   });
