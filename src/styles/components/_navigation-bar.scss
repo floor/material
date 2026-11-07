@@ -135,7 +135,7 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
     -webkit-tap-highlight-color: transparent;
 
     &[aria-disabled='true'] { opacity: 0.38; cursor: default; }
-    &:focus-visible { outline: none; }
+    &:focus-visible { outline: none; z-index: 1; }
   }
 
   &__content {

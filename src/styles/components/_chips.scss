@@ -293,10 +293,12 @@ $container: "#{base.$prefix}-chips";
         .#{$container}__container {
             flex-wrap: nowrap;
             overflow-x: auto;
-            overflow-y: visible; // Don't clip chips vertically
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            padding-bottom: v.spacing("2");
+            // Reserve the 5px outward focus ring inside the scrollport.
+            padding: 5px 5px v.spacing("2");
+            margin: -5px -5px 0;
 
             // Enhanced scrollable behavior
             position: relative;

@@ -268,6 +268,7 @@ export const withScroll = (config: CarouselConfig) =>
         el.style.visibility = "";
         el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${start * sign}px, 0, 0)`;
         el.style.clipPath = inset > 0 ? (vertical ? `inset(${inset}px 0 round ${corner})` : `inset(0 ${inset}px round ${corner})`) : "";
+        el.style.setProperty(`--${config.prefix}-carousel-inset`, inset > 0 ? (vertical ? `${inset}px 0` : `0 ${inset}px`) : "0px");
         el.style.setProperty(`--${config.prefix}-carousel-fade`, fade.toFixed(3));
       }
 
