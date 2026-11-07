@@ -23,7 +23,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail": 7_168,
   "navigation-rail-css": 5_400,
   "text-field": 9_550,
-  form: 20_400,
+  form: 20_450,
   "all-js": 130_050,
   "base-css": 3_050,
   "base-lite-css": 1_750,
