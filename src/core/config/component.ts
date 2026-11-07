@@ -2,7 +2,7 @@
 import { PREFIX } from "../config";
 import { getComponentDefaults, type ComponentConfigMap } from "./global";
 import type { EventCondition } from "../dom/create";
-type StyleDeclaration = Partial<CSSStyleDeclaration>;
+type StyleDeclaration = { -readonly [K in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[K] };
 
 /**
  * Base component configuration interface

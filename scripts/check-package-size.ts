@@ -405,14 +405,17 @@ try {
     navigation.on('select', event => event.originalEvent.preventDefault());
     import button from 'material/components/button';
     import { BUTTON_VARIANTS } from 'material/components/button/constants';
+    import { createElementConfig } from 'material/core';
     import { addClass } from 'material/core/dom';
     const config: ButtonConfig = { text: 'Save', variant: BUTTON_VARIANTS.FILLED };
     const a: ReturnType<typeof createButton> = button(config);
     addClass(a.element, 'ready');
+    const elementConfig = createElementConfig({ style: { color: 'red' } }, { tag: 'div' });
+    elementConfig.style!.length = 0;
     const scheme: DynamicScheme = createScheme('#6750a4', { variant: tonalSpot });
     const primaryArgb: number = scheme.primary;
     const existingPublicMember = scheme.colors;
-    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb, existingPublicMember];
+    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb, existingPublicMember, elementConfig];
   `);
   await run(["node", resolve("node_modules/typescript/bin/tsc"), typeFixture,
     "--noEmit", "--strict", "--module", "NodeNext", "--moduleResolution", "NodeNext",
