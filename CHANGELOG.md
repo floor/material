@@ -17,6 +17,39 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-11-08
+
+Lists you can build with.
+
+### Added
+
+- **Single-select listboxes (#279).**
+  `withSingleSelectListbox` enhances a created list with `listbox` and `option`
+  roles, `aria-selected`, and visual-only radio indicators, leading by default
+  or trailing on request. Import it from `material/components/list` or `material`;
+  use `initialSelection` to choose the starting option.
+
+  One tab stop enters on the selected enabled option, or the first enabled
+  option. Arrow keys, Home, End and type-ahead move focus without changing
+  selection, skipping disabled rows; arrow navigation wraps, and type-ahead
+  uses a 500 ms buffer with repeated-letter cycling. Enter, click, or Space
+  when no type-ahead buffer is active selects an option. Pressing the selected
+  option again keeps it selected and emits no new `select` event. Selection
+  remains cancellable, and the existing programmatic selection methods remain
+  available, including clearing selection.
+
+  Keep `trackSelection` enabled and `multiSelect` disabled. The enhancer
+  refuses control and custom slots, interactive descendants from `renderItem`,
+  and an indicator side already occupied by a slot.
+
+### Internal
+
+- **Listbox delivery and budget (#279).**
+  The enhancer's JavaScript is omitted when it is not imported. Its radio
+  styles ship in the list and full stylesheets. The owner-approved all-JS
+  gzip ceiling rises from 128,550 to 130,050 B; the default list budget stays
+  at 7,014 B.
+
 ## [3.8.2] - 2026-11-08
 
 Keyboard focus visible everywhere.
@@ -6617,7 +6650,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.8.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
 [3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
 [3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
 [3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
