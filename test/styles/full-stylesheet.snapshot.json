@@ -1243,6 +1243,7 @@
     ".mtrl-menu__item-text",
     ".mtrl-menu__item:active:not(:has(>.mtrl-ripple))::before",
     ".mtrl-menu__item:focus",
+    ".mtrl-menu__item:focus-visible",
     ".mtrl-menu__item:focus-visible::before,.mtrl-menu__item--active::before",
     ".mtrl-menu__item:hover::before",
     ".mtrl-menu__list",
