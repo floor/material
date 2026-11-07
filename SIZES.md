@@ -25,7 +25,7 @@ these rows drift from a fresh measurement.
 | button-group | 36.6 KB | 11.8 KB | +8.7 KB | +6.9 KB |
 | card | 19.5 KB | 6.6 KB | +3.6 KB | +9.7 KB |
 | carousel | 30.3 KB | 11.2 KB | +8.1 KB |  |
-| checkbox | 16.3 KB | 5.6 KB | +2.6 KB |  |
+| checkbox | 16.4 KB | 5.7 KB | +2.6 KB |  |
 | chips | 27.9 KB | 9.1 KB | +6.1 KB |  |
 | datepicker | 37.3 KB | 12.8 KB | +9.7 KB |  |
 | dialog | 37.5 KB | 12.1 KB | +9.1 KB | +6.9 KB |
@@ -44,15 +44,15 @@ these rows drift from a fresh measurement.
 | split-button | 27.5 KB | 9.5 KB | +6.4 KB | +16.9 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.2 KB | 10.8 KB | +7.8 KB |  |
-| select | 41.8 KB | 13.1 KB | +10.1 KB | +10.4 KB |
-| slider | 33.9 KB | 11.9 KB | +8.8 KB |  |
+| select | 41.8 KB | 13.2 KB | +10.1 KB | +10.4 KB |
+| slider | 34.0 KB | 11.9 KB | +8.9 KB |  |
 | snackbar | 36.1 KB | 11.9 KB | +8.9 KB | +6.9 KB |
-| switch | 18.6 KB | 6.2 KB | +3.1 KB |  |
+| switch | 18.7 KB | 6.2 KB | +3.2 KB |  |
 | tabs | 41.8 KB | 13.4 KB | +10.3 KB | +6.9 KB |
-| text-field | 28.8 KB | 8.8 KB | +5.8 KB |  |
+| text-field | 28.9 KB | 8.9 KB | +5.8 KB |  |
 | timepicker | 31.7 KB | 11.0 KB | +7.9 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 392.5 KB | 123.1 KB | +120.1 KB | +2.1 KB |
+| all | 392.7 KB | 123.2 KB | +120.1 KB | +2.1 KB |
 <!-- /size-table -->
