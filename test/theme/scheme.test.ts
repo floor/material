@@ -15,8 +15,8 @@ import {
   type SchemeFactory,
 } from "../../src/theme";
 import { createSchemeByName, type ThemeVariant } from "../../src/theme/variants";
-import { ColorSpecDelegateImpl2021 } from "../../src/theme/vendor/dynamiccolor/color_spec_2021";
 import { DynamicScheme as VendorDynamicScheme } from "../../src/theme/vendor/dynamiccolor/dynamic_scheme";
+import { MaterialDynamicColors } from "../../src/theme/vendor/dynamiccolor/material_dynamic_colors";
 import { Variant } from "../../src/theme/vendor/dynamiccolor/variant";
 import { argbFromHex, hexFromArgb } from "../../src/theme/vendor/utils/string_utils";
 
@@ -46,7 +46,7 @@ const SCHEME_ROLES = [
 function rolesOf(scheme: DynamicScheme, prefix = "mtrl"): Record<string, string> {
   const { element, properties } = target();
   applyScheme(scheme, element, { prefix });
-  const colors = new ColorSpecDelegateImpl2021() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
+  const colors = new MaterialDynamicColors() as unknown as Record<string, () => { getArgb(scheme: DynamicScheme): number }>;
   const roles: Record<string, string> = {};
   for (const role of SCHEME_ROLES) {
     expect(properties.get(`--${prefix}-sys-color-${role}`)).toBe(hexFromArgb(colors[camel(role)]().getArgb(scheme)));
@@ -204,7 +204,8 @@ test("runtime status roles reach 4.5:1 at standard/medium and 7:1 at high while 
 test("status role resolution leaves error, on-error, error-container and on-error-container untouched across all parity seeds, variants and contrasts", () => {
   const seeds = ["#6750a4", "#b3261e", "#00696d"];
   const contrasts = [-1, -0.5, 0, 0.5, 1];
-  const colors = new ColorSpecDelegateImpl2021();
+  const colors = new MaterialDynamicColors();
+  expect(createScheme("#6750a4").colors).toBeInstanceOf(MaterialDynamicColors);
   for (const seed of seeds) {
     const source = Hct.fromInt(argbFromHex(seed));
     for (const [name, buildScheme] of Object.entries(SCHEME_VARIANTS)) {

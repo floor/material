@@ -411,7 +411,8 @@ try {
     addClass(a.element, 'ready');
     const scheme: DynamicScheme = createScheme('#6750a4', { variant: tonalSpot });
     const primaryArgb: number = scheme.primary;
-    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb];
+    const existingPublicMember = scheme.colors;
+    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb, existingPublicMember];
   `);
   await run(["node", resolve("node_modules/typescript/bin/tsc"), typeFixture,
     "--noEmit", "--strict", "--module", "NodeNext", "--moduleResolution", "NodeNext",

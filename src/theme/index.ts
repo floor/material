@@ -30,9 +30,9 @@
  * @module theme
  */
 
-import { ColorSpecDelegateImpl2021 } from "./vendor/dynamiccolor/color_spec_2021";
 import type { DynamicColor } from "./vendor/dynamiccolor/dynamic_color";
 import { DynamicScheme } from "./vendor/dynamiccolor/dynamic_scheme";
+import { MaterialDynamicColors } from "./vendor/dynamiccolor/material_dynamic_colors";
 import { Variant } from "./vendor/dynamiccolor/variant";
 import { Hct } from "./vendor/hct/hct";
 import { TonalPalette } from "./vendor/palettes/tonal_palette";
@@ -107,7 +107,7 @@ const SCHEME_ROLES = [
 
 const camel = (role: string): string => role.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
 
-const proto = ColorSpecDelegateImpl2021.prototype as unknown as Record<string, () => DynamicColor>;
+const proto = MaterialDynamicColors.prototype as unknown as Record<string, () => DynamicColor>;
 SCHEME_ROLES.slice(34).forEach((k, i) => {
   const f = Hct.fromInt([0x7b5a, 0xdd6d06, 0x61a4][i >> 1]!);
   proto[camel(k)] = () =>
