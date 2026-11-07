@@ -195,6 +195,7 @@ $component: '#{base.$prefix}-slider';
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+      pointer-events: none;
       
       .#{$component}--secondary & {
         background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
@@ -207,11 +208,6 @@ $component: '#{base.$prefix}-slider';
       .#{$component}--error & {
         background-color: t.color('error');
       }
-    }
-
-    // Disabled pointer events on the pseudo-element
-    &::before {
-      pointer-events: none;
     }
     
     // PressedHandleWidth and FocusHandleWidth: 2dp, half the resting 4dp.
@@ -225,45 +221,6 @@ $component: '#{base.$prefix}-slider';
     &:focus-visible::before {
       outline: 2px solid t.color('secondary');
       outline-offset: 2px;
-    }
-    
-    // Hover state
-    &:hover::before {
-      background-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
-      
-      .#{$component}--secondary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
-      }
-      
-      .#{$component}--tertiary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('tertiary')});
-      }
-      
-      .#{$component}--error & {
-        background-color: t.color('error');
-      }
-      
-      .#{$component}--disabled & {
-        background-color: t.color('on-surface');
-        opacity: 0.38;
-      }
-    }
-    
-    // Active state
-    &:active::before {
-      background-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
-      
-      .#{$component}--secondary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
-      }
-      
-      .#{$component}--tertiary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('tertiary')});
-      }
-      
-      .#{$component}--error & {
-        background-color: t.color('error');
-      }
     }
   }
 

@@ -289,8 +289,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_drawer.scss, _slider.scss, _search.scss,
     // _text-field.scss, _navigation-bar.scss, _navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c21210a00481791682c72ed6d02307ffc4d8f1a4691b310a1889902a286569ba");
-    expect(css.length).toBe(543620);
+      .toBe("b715231fb900fe74a4798787b7f37207889d1278fb3867af46ef6444b1e38120");
+    expect(css.length).toBe(542519);
   });
 
   test("today's sheets still resolve to the fixture", () => {
