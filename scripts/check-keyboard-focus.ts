@@ -1174,30 +1174,48 @@ async function installBrowserHelpers(page: Page): Promise<void> {
           }
         }
 
-        // 3. Check box-shadow change (inset or outer shadow >= 3:1 against adjacent surface)
+        // 3. Check box-shadow change across all shadow layers (requiring a newly added or changed
+        // layer with non-zero painted geometry >= 1px and >= 3:1 contrast against adjacent surface)
         if (after.boxShadow !== "none" && after.boxShadow !== before.boxShadow) {
-          const shadowColorMatch = /rgba?\([^)]+\)/.exec(after.boxShadow);
-          if (shadowColorMatch) {
+          const splitLayers = (val: string): string[] =>
+            !val || val === "none"
+              ? []
+              : val
+                  .split(/,(?![^(]*\))/)
+                  .map(s => s.trim())
+                  .filter(Boolean);
+          const beforeLayers = new Set(splitLayers(before.boxShadow));
+          for (const layer of splitLayers(after.boxShadow)) {
+            if (beforeLayers.has(layer)) continue;
+            const shadowColorMatch = /rgba?\([^)]+\)/.exec(layer);
+            if (!shadowColorMatch) continue;
             const rawFg = parseColor(shadowColorMatch[0]);
-            const isInset = /\binset\b/.test(after.boxShadow);
-            const lengths = after.boxShadow
-              .replace(/rgba?\([^)]+\)/g, "")
-              .match(/-?[\d.]+px/g)
-              ?.map(v => parseFloat(v)) ?? [];
-            const spread = lengths[3] ?? lengths[2] ?? 0;
-            const isInnerShadow = isInset || spread < 0;
-            const surface = resolveSurfaceColor(item.node, isInnerShadow);
+            if (rawFg[3] <= 0) continue;
+            const isInset = /\binset\b/.test(layer);
+            const lengths =
+              layer
+                .replace(/rgba?\([^)]+\)/g, "")
+                .match(/-?[\d.]+px/g)
+                ?.map(v => parseFloat(v)) ?? [];
+            const offsetX = lengths[0] ?? 0;
+            const offsetY = lengths[1] ?? 0;
+            const blur = lengths[2] ?? 0;
+            const spread = lengths[3] ?? 0;
+            const paintedExtent =
+              spread + blur + Math.max(Math.abs(offsetX), Math.abs(offsetY));
+            if (paintedExtent < 1) continue;
+            const surface = resolveSurfaceColor(item.node, isInset);
             const fg = blend(rawFg, surface);
             const ratio = contrastRatio(fg, surface);
-            if (!isInnerShadow && spread > 0) {
+            if (!isInset && spread > 0) {
               activeRingNode = item.node;
               activeOutward = Math.max(activeOutward, spread);
-            } else if (isInnerShadow && Math.abs(spread) > 0) {
+            } else if (isInset && spread > 0) {
               activeRingNode = item.node;
-              activeInsetOffset = Math.max(activeInsetOffset, Math.abs(spread));
+              activeInsetOffset = Math.max(activeInsetOffset, spread);
             }
             if (mode === "forced-colors") {
-              if (rawFg[3] > 0 && ratio >= 3.0) {
+              if (ratio >= 3.0) {
                 visible = true;
                 bestContrast = Math.max(bestContrast, ratio);
                 reason = `box-shadow ${shadowColorMatch[0]} (${item.key})`;
@@ -1769,6 +1787,63 @@ try {
     document.getElementById("g2-g6-extra-box")?.remove();
     document.getElementById("g2-g6-rtl-box")?.remove();
   });
+
+  // 3b. Verify box-shadow layer & geometry scoring on synthetic controls
+  await page.emulateMedia({ forcedColors: "none", colorScheme: "light", reducedMotion: "no-preference" });
+  const shadowFixtures: ReadonlyArray<{
+    name: string;
+    bg: string;
+    rest: string;
+    focus: string;
+    expectedVisible: boolean;
+  }> = [
+    { name: "zero-area", bg: "rgb(255, 255, 255)", rest: "none", focus: "0 0 0 0 rgb(0, 0, 0)", expectedVisible: false },
+    {
+      name: "unchanged-outer-plus-invisible-layer",
+      bg: "rgb(255, 255, 255)",
+      rest: "0 0 0 3px rgb(0, 0, 0)",
+      focus: "0 0 0 3px rgb(0, 0, 0), 0 0 0 0 rgb(0, 0, 0)",
+      expectedVisible: false,
+    },
+    { name: "negative-spread-outer", bg: "rgb(255, 255, 255)", rest: "none", focus: "0 0 0 -2px rgb(0, 0, 0)", expectedVisible: false },
+    { name: "visible-outer", bg: "rgb(255, 255, 255)", rest: "none", focus: "0 0 0 3px rgb(0, 0, 0)", expectedVisible: true },
+    {
+      name: "transparent-first-visible-second",
+      bg: "rgb(255, 255, 255)",
+      rest: "none",
+      focus: "0 0 0 0 transparent, 0 0 0 3px rgb(0, 0, 0)",
+      expectedVisible: true,
+    },
+    { name: "visible-inset", bg: "rgb(0, 0, 0)", rest: "none", focus: "inset 0 0 0 3px rgb(255, 255, 255)", expectedVisible: true },
+  ];
+  for (const fx of shadowFixtures) {
+    const res = await page.evaluate((f) => {
+      const w = window as unknown as {
+        __captureIndicators: (id: string) => Record<string, unknown>;
+        __evaluateFocusedTarget: (id: string, before: Record<string, unknown>, mode: "light") => { visible: boolean; reason: string };
+      };
+      const host = document.createElement("div");
+      host.style.cssText = "background:rgb(255, 255, 255);padding:24px;";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("data-focus-target", `__shadow-probe-${f.name}`);
+      btn.style.cssText = `appearance:none;border:0;outline:none;width:120px;height:40px;background:${f.bg};box-shadow:${f.rest};`;
+      host.append(btn);
+      document.body.append(host);
+      btn.blur();
+      const before = w.__captureIndicators(`__shadow-probe-${f.name}`);
+      btn.style.boxShadow = f.focus;
+      btn.focus();
+      const after = w.__evaluateFocusedTarget(`__shadow-probe-${f.name}`, before, "light");
+      host.remove();
+      return after;
+    }, fx);
+    assert.equal(
+      res.visible,
+      fx.expectedVisible,
+      `Box-shadow fixture "${fx.name}" (${fx.rest} -> ${fx.focus}) expected visible=${fx.expectedVisible}, got visible=${res.visible} (${res.reason})`
+    );
+  }
 
   assert.deepEqual(pageErrors, [], `Uncaught page errors during keyboard focus check: ${pageErrors.join("; ")}`);
 
