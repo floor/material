@@ -286,24 +286,14 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
-    // Keyboard-focused menu items and the menu surface itself (when an empty
-    // menu is opened by keyboard) draw the 3dp inward secondary focus ring on
-    // `.mtrl-menu__item:focus-visible` and `.mtrl-menu:focus-visible`,
-    // replacing the broken `m.focus-ring(".mtrl-menu__item:focus-visible")`
-    // call on `.mtrl-menu` (styles/components/_menu.scss).
-    // The select's keyboard-reached option draws the 3dp inward secondary
-    // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
-    // the marker the select writes when a key, not the pointer, reaches the
-    // active option (styles/components/_menu.scss).
-    // Keyboard focus indicators are drawn on the navigation drawer item, the
-    // slider handle bar, the collapsed search bar container, the filled text
-    // field active underline in forced-colors, and the active navigation bar
-    // and navigation rail indicator pills in forced-colors
-    // (styles/components/_drawer.scss, _slider.scss, _search.scss,
-    // _text-field.scss, _navigation-bar.scss, _navigation-rail.scss).
+    // Keyboard-focused menu items, select keyboard-active options and the menu
+    // surface draw an inward ring. Drawer, slider, search, text-field and active
+    // navigation indicators retain the focus fixes on main. Other focus rings
+    // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
+    // and reduced motion use their intended state rules.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("9d781f68a86257a75140c9da9a7405adfafb906ee85c5dbe9f9d5847730dc719");
-    expect(css.length).toBe(544532);
+      .toBe("b2db285bf82c3e7ec5473e915534019754f21cc9743fa916754d99c1eb2ad257");
+    expect(css.length).toBe(544956);
   });
 
   test("today's sheets still resolve to the fixture", () => {

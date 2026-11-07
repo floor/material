@@ -214,7 +214,7 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
 const BASE_HOST_DISPLAY = ":host{display:inline-block}";
 const BASE_HOST_ALWAYS =
   ":host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
-  "@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility!important;scroll-behavior:auto!important}}";
+  "@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,border-color,box-shadow,visibility!important;scroll-behavior:auto!important}}";
 export const BASE_HOST_STYLES = BASE_HOST_DISPLAY + BASE_HOST_ALWAYS;
 
 /**
