@@ -17,7 +17,7 @@
  *   4. Under prefers-reduced-motion: reduce, focus ring outline-color must not
  *      transition from currentColor over a non-zero duration.
  *
- * Carries an explicit KNOWN_GAPS ratchet (G2..G15). Any unlisted failure fails
+ * Carries an explicit KNOWN_GAPS ratchet (G2..G6). Any unlisted failure fails
  * the check, and any listed gap that starts passing without being removed from
  * KNOWN_GAPS also fails the check so every fix must delete its row.
  */
@@ -50,7 +50,7 @@ export interface KnownFocusGap {
 }
 
 /**
- * Explicit ratchet of known keyboard-focus gaps on main (G2..G15).
+ * Explicit ratchet of known keyboard-focus gaps (G2..G6).
  * When a gap is fixed, its row MUST be deleted from this table; the check fails
  * if any listed (target, mode) passes while still present in KNOWN_GAPS.
  */
@@ -110,97 +110,6 @@ export const KNOWN_GAPS: readonly KnownFocusGap[] = [
     part: "button.mtrl-navigation-rail__item--active",
     target: "navigation-rail-item-active",
     modes: ["forced-colors"],
-  },
-  {
-    id: "G7",
-    component: "Carousel",
-    part: "a.mtrl-carousel__button",
-    target: "carousel-cta-button",
-    modes: ["dark"],
-  },
-  {
-    id: "G8",
-    component: "Toolbar",
-    part: ".mtrl-toolbar--vibrant button.mtrl-icon-button",
-    target: "toolbar-vibrant-icon-button",
-    modes: ["dark"],
-  },
-  {
-    id: "G9",
-    component: "TimePicker",
-    part: "button.mtrl-time-picker__hours (dial mode)",
-    target: "timepicker-hours",
-    modes: ["clip"],
-  },
-  {
-    id: "G9",
-    component: "TimePicker",
-    part: "button.mtrl-time-picker__minutes (dial mode)",
-    target: "timepicker-minutes",
-    modes: ["clip"],
-  },
-  {
-    id: "G10",
-    component: "FABMenu",
-    part: "button.mtrl-fab-menu__item (list presentation)",
-    target: "fab-menu-item",
-    modes: ["clip"],
-  },
-  {
-    id: "G11",
-    component: "Chips",
-    part: ".mtrl-chips--scrollable .mtrl-chip[role='gridcell']",
-    target: "chips-scrollable",
-    modes: ["clip"],
-  },
-  {
-    id: "G12",
-    component: "SplitButton",
-    part: "button.mtrl-split-button__leading",
-    target: "split-button-leading",
-    modes: ["occlusion"],
-  },
-  {
-    id: "G12",
-    component: "ButtonGroup",
-    part: ".mtrl-button-group--connected button.mtrl-button-group__button",
-    target: "button-group-connected",
-    modes: ["occlusion"],
-  },
-  {
-    id: "G12",
-    component: "NavigationBar",
-    part: ".mtrl-navigation-bar--horizontal button.mtrl-navigation-bar__item",
-    target: "navigation-bar-horizontal-item",
-    modes: ["occlusion"],
-  },
-  {
-    id: "G12",
-    component: "Snackbar",
-    part: "button.mtrl-snackbar__action",
-    target: "snackbar-action",
-    modes: ["occlusion"],
-  },
-  {
-    id: "G13",
-    component: "Carousel",
-    part: ".mtrl-carousel__item (compacted slide with clip-path inset)",
-    target: "carousel-slide-compacted",
-    modes: ["clip"],
-  },
-  {
-    id: "G14",
-    component: "Dialog",
-    part: "button.mtrl-dialog__header-close",
-    target: "dialog-close",
-    modes: ["pointer"],
-  },
-  {
-    id: "G15",
-    component: "Button",
-    part: "button.mtrl-button (@media prefers-reduced-motion: reduce)",
-    target: "button-filled",
-    modes: ["reduced-motion"],
   },
 ];
 
