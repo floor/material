@@ -157,6 +157,8 @@ jobs:
         run: bun run notice:check
       - name: Documented imports, in every doc and JSDoc example, against the packed package
         run: bun run docs-imports:check
+      - name: Packed declarations carry their deprecation notes and hover documentation
+        run: bun run declaration-docs:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element

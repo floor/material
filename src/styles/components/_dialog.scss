@@ -283,12 +283,12 @@ dialog.#{$component} {
 
         &:focus {
             outline: none;
-            background-color: t.alpha("on-surface", v.state("focus-state-layer-opacity"));
         }
 
         &:focus-visible {
             outline: 2px solid t.color("primary");
             outline-offset: 2px;
+            background-color: t.alpha("on-surface", v.state("focus-state-layer-opacity"));
         }
 
         &:active {

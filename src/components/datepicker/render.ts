@@ -36,14 +36,14 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
         // Compose, which leaves those cells empty), so it never runs into them.
         const inRange = item.isCurrentMonth && !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
         if (list && !item.isCurrentMonth) { row.append(make("div", "cell", undefined, { role: "gridcell" })); continue; }
-        const cell = make("div", "cell", undefined, { role: "gridcell", "aria-selected": String(selected || inRange) });
+        const cell = make("div", "cell");
         if (inRange) cell.classList.add(cls("cell--range"));
         if (item.isCurrentMonth && state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
         if (item.isCurrentMonth && state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
         const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
         const day = make("button", "day", String(item.day), {
           type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
-          "aria-pressed": String(selected), disabled: !state.isAllowed(item.date), tabindex: current && item === focus ? "0" : "-1",
+          role: "gridcell", "aria-selected": String(selected || inRange), disabled: !state.isAllowed(item.date), tabindex: current && item === focus ? "0" : "-1",
         });
         if (!state.isAllowed(item.date)) day.classList.add(cls("day--disabled"));
         if (item.isToday) { day.classList.add(cls("day--today")); day.setAttribute("aria-current", "date"); }

@@ -11,7 +11,7 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
+  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
   "adapters:size",
   // the browser checks
   "elements:check:a", "elements:check:b", "shadow-styles:check",
@@ -87,6 +87,11 @@ describe("CI (.github/workflows/ci.yml)", () => {
 
   test("runs only scripts that package.json defines", () => {
     expect(ran.filter(command => command !== "bun test" && !(command in scripts))).toEqual([]);
+  });
+
+  test("runs the keyboard-focus browser check inside core:check", () => {
+    expect(scripts["keyboard-focus:check"]).toBe("bun run scripts/check-keyboard-focus.ts");
+    expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
   });
 
   // A command that may be skipped, or may fail without failing its job, still
