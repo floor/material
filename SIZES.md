@@ -24,7 +24,7 @@ these rows drift from a fresh measurement.
 | button | 21.9 KB | 7.4 KB | +4.4 KB | +6.9 KB |
 | button-group | 36.6 KB | 11.8 KB | +8.7 KB | +6.9 KB |
 | card | 19.5 KB | 6.6 KB | +3.6 KB | +9.7 KB |
-| carousel | 30.2 KB | 11.2 KB | +8.1 KB |  |
+| carousel | 30.3 KB | 11.2 KB | +8.1 KB |  |
 | checkbox | 16.3 KB | 5.6 KB | +2.6 KB |  |
 | chips | 27.9 KB | 9.1 KB | +6.1 KB |  |
 | datepicker | 37.1 KB | 12.7 KB | +9.7 KB |  |
@@ -36,15 +36,15 @@ these rows drift from a fresh measurement.
 | extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
 | icon-button | 18.7 KB | 6.3 KB | +3.3 KB |  |
 | list | 19.0 KB | 6.7 KB | +3.6 KB |  |
-| menu | 38.4 KB | 12.4 KB | +9.3 KB | +2.1 KB |
+| menu | 38.2 KB | 12.4 KB | +9.3 KB | +2.1 KB |
 | navigation-bar | 16.1 KB | 6.0 KB | +2.9 KB |  |
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
 | loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.2 KB | 9.4 KB | +6.3 KB | +16.8 KB |
+| split-button | 27.5 KB | 9.5 KB | +6.4 KB | +16.8 KB |
 | radios | 15.0 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.0 KB | 10.8 KB | +7.7 KB |  |
-| select | 41.7 KB | 13.1 KB | +10.1 KB | +10.4 KB |
+| select | 41.8 KB | 13.1 KB | +10.1 KB | +10.4 KB |
 | slider | 33.9 KB | 11.9 KB | +8.8 KB |  |
 | snackbar | 36.1 KB | 11.9 KB | +8.9 KB | +6.9 KB |
 | switch | 18.6 KB | 6.2 KB | +3.1 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.0 KB | 11.0 KB | +8.0 KB | +6.9 KB |
-| all | 391.0 KB | 122.6 KB | +119.6 KB | +2.1 KB |
+| all | 391.3 KB | 122.8 KB | +119.7 KB | +2.1 KB |
 <!-- /size-table -->

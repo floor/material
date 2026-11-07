@@ -4,7 +4,7 @@ import { join } from "node:path";
 import * as base from "../../src/theme";
 import * as spec2025 from "../../src/theme/2025";
 import { Hct, type DynamicScheme, type SchemeFactory } from "../../src/theme";
-import { SCHEME_ROLES } from "../../src/theme/roles";
+import { SCHEME_ROLES, STATUS_ROLES } from "../../src/theme/roles";
 import { MaterialDynamicColors } from "../../src/theme/vendor/dynamiccolor/material_dynamic_colors";
 import { argbFromHex, hexFromArgb } from "../../src/theme/vendor/utils/string_utils";
 import type { ThemeVariant } from "../../src/theme/variants";
@@ -74,8 +74,9 @@ const SEEDS = ["#6750a4", "#a86c00"] as const;
 const MODES = ["light", "dark"] as const;
 const CONTRASTS = [-1, 0, 0.5, 1] as const;
 
-test("the fixture is the 34 applied roles and the 64-scheme grid", () => {
-  expect(fixture.roles).toEqual([...SCHEME_ROLES]);
+test("the frozen fixture covers 34 reference roles alongside six runtime status roles", () => {
+  expect(fixture.roles).toHaveLength(34);
+  expect([...SCHEME_ROLES]).toEqual([...fixture.roles, ...STATUS_ROLES]);
   expect(fixture.schemes).toHaveLength(64);
   expect(fixture.schemes.reduce((total, row) => total + row.values.length, 0)).toBe(2176);
 });
@@ -88,7 +89,11 @@ test("every 2025 scheme matches the pre-cut port, value for value", () => {
     const source = Hct.fromInt(argbFromHex(row.seed));
     const scheme = factory(source, row.mode === "dark", row.contrast, "2025");
     const expected = Object.fromEntries(fixture.roles.map((role, index) => [role, row.values[index]]));
-    expect(rolesOf(scheme), `${row.variant} ${row.seed} ${row.mode} ${row.contrast}`).toEqual(expected);
+    const applied = rolesOf(scheme);
+    // The pre-cut oracle predates the six status roles on main. Keep every
+    // original reference value; rolesOf also checks all 40 applied roles.
+    const referenceRoles = Object.fromEntries(fixture.roles.map((role) => [role, applied[role]]));
+    expect(referenceRoles, `${row.variant} ${row.seed} ${row.mode} ${row.contrast}`).toEqual(expected);
     compared += row.values.length;
   }
   expect(compared).toBe(2176);
@@ -157,4 +162,30 @@ test("the pinned examples from the design note", () => {
   const standard = rolesOf(base.createScheme("#6750a4"));
   expect(standard.primary).toBe("#65558f");
   expect(standard["on-surface"]).toBe("#1d1b20");
+});
+
+
+const luminance = (hex: string): number => {
+  const [r, g, b] = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+};
+
+test("2025 requests retain the runtime status-role contrast floors", () => {
+  for (const seed of SEEDS) {
+    const source = Hct.fromInt(argbFromHex(seed));
+    for (const [name, factory] of Object.entries(SPEC_FACTORIES)) {
+      for (const mode of MODES) {
+        for (const contrast of [0, 0.5, 1]) {
+          const roles = rolesOf(factory(source, mode === "dark", contrast, "2025"));
+          for (const status of ["success", "warning", "info"] as const) {
+            const [hi, lo] = [luminance(roles[status]!), luminance(roles[`on-${status}`]!)].sort((a, b) => b - a);
+            expect((hi! + 0.05) / (lo! + 0.05), `${name} ${seed} ${mode} ${contrast} ${status}`)
+              .toBeGreaterThanOrEqual(contrast === 1 ? 7 : 4.5);
+          }
+        }
+      }
+    }
+  }
 });

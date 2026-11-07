@@ -390,6 +390,9 @@ $default-width: 360px;
 
         &:focus-visible {
             color: t.color("on-surface");
+            outline: 3px solid t.color("secondary");
+            outline-offset: 2px;
+            z-index: 1;
 
             &::before {
                 opacity: v.state("focus-state-layer-opacity");
@@ -633,14 +636,14 @@ $default-width: 360px;
         &__item {
             &--active {
                 .#{$component}__active-indicator {
-                    outline: 2px solid currentColor;
+                    outline: 2px solid Highlight;
                     outline-offset: -2px;
                 }
             }
 
             &:focus-visible {
-                outline: 2px solid currentColor;
-                outline-offset: -2px;
+                outline: 3px solid CanvasText;
+                outline-offset: 2px;
             }
         }
 

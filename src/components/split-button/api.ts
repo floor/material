@@ -43,14 +43,20 @@ export const withAPI =
       });
     };
 
-    const setExpanded = (next: boolean, originalEvent: Event | null = null): void => {
+    const setExpanded = (
+      next: boolean,
+      originalEvent: Event | null = null,
+      interactionType?: "keyboard" | "mouse",
+    ): void => {
       if (expanded === next) return;
       expanded = next;
       element.classList.toggle(expandedClass, expanded);
       trailing.element.setAttribute("aria-expanded", String(expanded));
 
       if (menu) {
-        if (expanded) menu.open(originalEvent ?? undefined);
+        // The interaction type decides where the menu puts focus: the first
+        // item for a key, the surface for the pointer.
+        if (expanded) menu.open(originalEvent ?? undefined, interactionType);
         else menu.close(originalEvent ?? undefined);
       }
 
@@ -136,6 +142,7 @@ export const withAPI =
 
       destroy(): void {
         destroyed = true;
+        trailing.element.removeEventListener("keydown", handleTrailingKeydown);
         menu?.destroy?.();
         leading.destroy();
         trailing.destroy();
@@ -151,10 +158,29 @@ export const withAPI =
       emit(SPLIT_BUTTON_EVENTS.CLICK, { originalEvent: event });
     });
 
-    // The trailing button opens and closes what it opens
+    // The trailing button opens and closes what it opens. A click a key
+    // produces is a MouseEvent too, but it carries no pointer count: Enter,
+    // Space and a programmatic activation leave detail at 0, a pointer click
+    // counts the clicks. The menu focuses its first item only for a keyboard
+    // open, so it has to hear which one this was.
+    const interactionOf = (event: Event | null): "keyboard" | "mouse" =>
+      event instanceof MouseEvent && event.detail === 0 ? "keyboard" : "mouse";
+
     trailing.on("click", ({ originalEvent: event }) => {
-      setExpanded(!expanded, event);
+      setExpanded(!expanded, event, interactionOf(event));
     });
+
+    // ArrowDown and ArrowUp on a closed trailing button open the menu on its
+    // first and last item, which is what the menu's own opener does with them
+    // (menu/features/opener.ts). The opening event carries which one: the
+    // menu's initial focus reads ArrowUp and takes the last item, so no timer
+    // here can race the menu's own. Enter and Space arrive as the click above.
+    const handleTrailingKeydown = (event: KeyboardEvent): void => {
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      event.preventDefault();
+      if (!expanded) setExpanded(true, event, "keyboard");
+    };
+    trailing.element.addEventListener("keydown", handleTrailingKeydown);
 
     // A menu closed from the outside, by Escape or a click elsewhere, has to
     // bring the button's state back with it
