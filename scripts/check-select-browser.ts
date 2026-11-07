@@ -101,7 +101,11 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       }
       const rtl = dir === "rtl";
       const field = (scope.querySelector(".mtrl-text-field__field") as HTMLElement).getBoundingClientRect();
-      const menu = (scope.querySelector(".mtrl-select__menu") as HTMLElement).getBoundingClientRect();
+      const menuElement = scope.querySelector(".mtrl-select__menu") as HTMLElement;
+      // These assertions measure settled geometry and colours. A busy CI frame
+      // can leave the selected corner transition just short of its final 12px.
+      menuElement.getAnimations({ subtree: true }).forEach((animation) => animation.finish());
+      const menu = menuElement.getBoundingClientRect();
       const item = scope.querySelector(".mtrl-menu__item--selected") as HTMLElement;
       const box = item.getBoundingClientRect();
       const style = getComputedStyle(item);
