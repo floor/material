@@ -17,6 +17,28 @@ type TimeField = HTMLInputElement | HTMLButtonElement;
 let fieldIds = 0;
 
 import { setHTML } from "../../core/dom/html";
+/** Keep the heading and dialog name in sync without replacing focused controls. */
+export const nameTimePicker = (container: HTMLElement, config: ResolvedTimePickerConfig): void => {
+  let title = container.querySelector<HTMLElement>(`.${config.prefix}-time-picker__title`);
+  if (config.title) {
+    if (!title) {
+      title = container.ownerDocument.createElement("div");
+      title.className = `${config.prefix}-time-picker__title`;
+      title.id = config.titleId ?? `${config.prefix}-time-picker__title`;
+      container.prepend(title);
+    }
+    title.textContent = config.title;
+  } else title?.remove();
+  const explicit = config.ariaLabel?.trim();
+  if (!explicit && config.title?.trim() && title) {
+    container.removeAttribute("aria-label");
+    container.setAttribute("aria-labelledby", title.id);
+  } else {
+    container.removeAttribute("aria-labelledby");
+    container.setAttribute("aria-label", explicit || "Select time");
+  }
+};
+
 /**
  * Renders the time picker dialog
  * @param {HTMLElement} container - Dialog container element
@@ -33,14 +55,7 @@ export const renderTimePicker = (
   // Clear container content
   container.replaceChildren();
 
-  // Create title if provided
-  if (config.title) {
-    const title = document.createElement("div");
-    title.className = `${config.prefix}-time-picker__title`;
-    title.textContent = config.title;
-    title.id = config.titleId ?? `${config.prefix}-time-picker__title`;
-    container.appendChild(title);
-  }
+  nameTimePicker(container, config);
 
   // Create content container
   const content = document.createElement("div");
