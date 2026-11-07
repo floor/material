@@ -68,6 +68,7 @@ interface BottomSheetElementConfig extends BottomSheetConfig {
 
 const create = (config: BottomSheetElementConfig): BottomSheetElementComponent => {
   const { host, headline, modal, noDragHandle, noCloseOnScrimClick, noCloseOnEscape, ...rest } = config;
+  const isModal = modal || host.getAttribute("variant") === "modal";
   const content = document.createElement("slot");
   const sheet = createBottomSheet({
     ...rest,
@@ -77,8 +78,8 @@ const create = (config: BottomSheetElementConfig): BottomSheetElementComponent =
     dragHandle: !noDragHandle,
     closeOnScrimClick: !noCloseOnScrimClick,
     closeOnEscape: !noCloseOnEscape,
-    variant: modal ? "modal" : "standard",
-    layer: modal ? "top" : undefined,
+    variant: isModal ? "modal" : "standard",
+    layer: isModal ? "top" : undefined,
   });
   headlineSlot(sheet, PARTS, headline);
 

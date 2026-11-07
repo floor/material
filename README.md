@@ -159,6 +159,17 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
+### Factory control labels
+
+Checkbox, Switch, TextField and Slider factories accept `controlLabelOnly: true`
+to put `ariaLabel` only on the real input or slider handle. The option defaults
+to false; omitted/false output is unchanged.
+
+Opting in omits the generated wrapper's `aria-label`, changing its serialized
+HTML and wrapper `[aria-label]` selectors. The control keeps its name, focus
+and form behavior. Authored custom-element host labels remain unchanged, so
+duplicate host names remain a known limitation.
+
 ## Styles
 
 The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
@@ -580,7 +591,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 128.9 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 129.1 kB |
 | `material/styles/base` | 3.0 kB |
 | `material/styles/base-lite` | 1.6 kB |
 | `material/styles/base` and `material/styles/button` | 5.3 kB |

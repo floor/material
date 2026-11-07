@@ -48,22 +48,22 @@ export class DynamicScheme {
         this.specVersion = DynamicScheme.maybeFallbackSpecVersion(args.specVersion ?? '2021', this.variant);
         this.sourceColorHct = args.sourceColorHct;
         this.primaryPalette = args.primaryPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getPrimaryPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel);
         this.secondaryPalette = args.secondaryPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getSecondaryPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel);
         this.tertiaryPalette = args.tertiaryPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getTertiaryPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel);
         this.neutralPalette = args.neutralPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getNeutralPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel);
         this.neutralVariantPalette = args.neutralVariantPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getNeutralVariantPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel);
         this.errorPalette = args.errorPalette ??
-            getSpec()
+            getSpec(this.specVersion)
                 .getErrorPalette(this.variant, args.sourceColorHct, this.isDark, this.platform, this.contrastLevel) ??
             TonalPalette.fromHueAndChroma(25.0, 84.0);
         this.colors = new MaterialDynamicColors();
@@ -349,7 +349,7 @@ DynamicScheme.DEFAULT_PLATFORM = 'phone';
 /**
  * A delegate for the palettes of a DynamicScheme in the 2021 spec.
  */
-class DynamicSchemePalettesDelegateImpl2021 {
+export class DynamicSchemePalettesDelegateImpl2021 {
     //////////////////////////////////////////////////////////////////
     // Scheme Palettes                                              //
     //////////////////////////////////////////////////////////////////
@@ -475,11 +475,16 @@ class DynamicSchemePalettesDelegateImpl2021 {
     }
 }
 const spec2021 = new DynamicSchemePalettesDelegateImpl2021();
+let spec2025;
+/** Registers the 2025 palette delegate; without one, every version is 2021. */
+export function registerPaletteSpec(delegate) {
+    spec2025 = delegate;
+}
 /**
- * Returns the DynamicSchemePalettesDelegate. The public API fixes the colour spec at 2021, so
- * this is the only delegate and the 2025 one is not shipped.
+ * Returns the DynamicSchemePalettesDelegate for the given spec version. A
+ * version no module registered falls back to 2021.
  */
-function getSpec() {
-    return spec2021;
+function getSpec(specVersion) {
+    return specVersion === '2025' && spec2025 ? spec2025 : spec2021;
 }
 //# sourceMappingURL=dynamic_scheme.js.map

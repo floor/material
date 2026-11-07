@@ -33,6 +33,8 @@ const scenarios = [
   { name: "dialog", component: "dialog" },
   { name: "snackbar", component: "snackbar" },
 ];
+/** The 2025 role table's own error text; only `material/theme/2025` reaches it. */
+const SPEC_2025_MARKER = "Attempting to extend color";
 try {
   // The types-only JSX entries resolve from the installed package, through its
   // exports: a.tsx per framework opts in and uses a bare tag.
@@ -139,6 +141,9 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
     // page also asks for when its source colour comes from an image.
     ["theme", "export { createScheme, applyScheme } from 'material/theme';", CONSUMER_INITIAL_GZIP.theme],
     ["theme-image", "export { createScheme, applyScheme } from 'material/theme';\nexport { sourceColorFromImage } from 'material/theme/image';", CONSUMER_INITIAL_GZIP["theme-image"]],
+    // The opt-in 2025 colour spec: the same scheme, from its own entry.
+    ["theme-2025", "export { createScheme, applyScheme } from 'material/theme/2025';", CONSUMER_INITIAL_GZIP["theme-2025"]],
+    ["theme-2025-image", "export { createScheme, applyScheme } from 'material/theme/2025';\nexport { sourceColorFromImage } from 'material/theme/image';", CONSUMER_INITIAL_GZIP["theme-2025-image"]],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, code);
@@ -165,6 +170,13 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
       if (initial.has(chunk.fileName)) sizes[name].initialGzip += size;
     }
     assert(sizes[name].initialGzip < budget, `${name} Vite initial gzip exceeds ${budget}: ${sizes[name].initialGzip}`);
+    // The plain entry must not ship the 2025 spec, and the 2025 entry must: a
+    // tree-shaking regression and a broken registration read the same in the
+    // size row otherwise. The marker is spec_extensions.js's own error text,
+    // which only the 2025 role table reaches.
+    const chunkText = chunks.map(chunk => chunk.code).join("\n");
+    if (name === "theme") assert(!chunkText.includes(SPEC_2025_MARKER), "the plain theme entry ships the 2025 colour spec");
+    if (name === "theme-2025") assert(chunkText.includes(SPEC_2025_MARKER), "the 2025 theme entry does not ship the 2025 colour spec");
     if (name === "button") assert(chunks.some(chunk => !initial.has(chunk.fileName)), "Vite did not split lazy progress");
   }
   console.log("Vite packed-consumer sizes:");
