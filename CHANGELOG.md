@@ -17,6 +17,111 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-11-08
+
+Lists you can build with.
+
+### Added
+
+- **Single-select listboxes (#279).**
+  `withSingleSelectListbox` enhances a created list with `listbox` and `option`
+  roles, `aria-selected`, and visual-only radio indicators, leading by default
+  or trailing on request. Import it from `material/components/list` or `material`;
+  use `initialSelection` to choose the starting option.
+
+  One tab stop enters on the selected enabled option, or the first enabled
+  option. Arrow keys, Home, End and type-ahead move focus without changing
+  selection, skipping disabled rows; arrow navigation wraps, and type-ahead
+  uses a 500 ms buffer with repeated-letter cycling. Enter, click, or Space
+  when no type-ahead buffer is active selects an option. Pressing the selected
+  option again keeps it selected and emits no new `select` event. Selection
+  remains cancellable, and the existing programmatic selection methods remain
+  available, including clearing selection.
+
+  Keep `trackSelection` enabled and `multiSelect` disabled. The enhancer
+  refuses control and custom slots, interactive descendants from `renderItem`,
+  and an indicator side already occupied by a slot.
+
+### Internal
+
+- **Listbox delivery (#279).**
+  The enhancer's JavaScript is omitted when it is not imported. Its radio
+  styles ship in the list and full stylesheets.
+
+- **Release size.**
+  The release build at `1d531074`
+  ([CI run 42409979312, package job 128516050243](https://github.com/floor/material/actions/runs/42409979312/job/128516050243))
+  packs **901,553 B compressed / 4,966,183 B unpacked / 1,628 files**.
+  Against the approved 3.8.2 release at `02fbdd21`
+  ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
+  that is **+3,295 B packed / +16,882 B unpacked / +2 files**.
+  It leaves **18,447 B** under the 920,000 B packed ceiling and **152,817 B**
+  under the 5,119,000 B unpacked ceiling; neither ceiling changes.
+  The all-JS gzip ceiling rises from 128,550 to 130,050 B under the
+  owner decision 2026-11-05, applied in #279; the default list budget stays
+  at 7,014 B.
+
+  `all-js` is **416,969 / 128,630 / 106,603 B** raw/gzip/brotli
+  (**+4,129 / +1,318 / +958 B**), and the full stylesheet is
+  **639,570 / 59,034 / 42,153 B** (**+1,818 / +155 / +182 B**).
+  These measurements include the listbox feature and the 3.9.0 version banner.
+  The default list JavaScript measures **6,837 B gzip**, within its unchanged
+  7,014 B budget. Both README rows match **128.6 kB all-js / 59.0 kB full CSS**,
+  and SIZES.md matches.
+
+## [3.8.2] - 2026-11-08
+
+Keyboard focus visible everywhere.
+
+### Fixed
+
+- **Keyboard focus on drawer, slider, search and field controls (#316).**
+  Drawer items, slider handle bars and collapsed search inputs now draw visible
+  keyboard focus indicators. Filled text fields and selects retain their active
+  underline in forced colours, and navigation bars, rails and drawers distinguish
+  focused destinations from the active selection in forced colours.
+
+- **Focus contrast, clipping and stacking across component surfaces (#318).**
+  Carousel links draw a contrasting halo behind their focus ring over imagery,
+  and their rings follow horizontal and vertical keyline clips. Icon buttons
+  use the secondary focus colour; focused buttons, icon buttons and navigation
+  items paint above adjacent controls. FAB-menu and time-picker selectors use
+  inset rings. Scrollable chips reserve room for their rings, including at
+  fractional scroll positions, and keyboard scrolling keeps focused chips in
+  view in both left-to-right and right-to-left layouts.
+
+- **Pointer focus and reduced motion (#318).**
+  Dialog close-button state layers follow keyboard-visible focus instead of
+  remaining after pointer focus. Reduced-motion rules stop transitioning
+  outline colour in document styles and element shadow roots.
+
+### Internal
+
+- **Permanent browser checks for keyboard focus (#315, #318).**
+  CI checks 53 focusable targets across 20 component families in light, dark
+  and forced colours, plus pointer focus and reduced motion. It detects
+  insufficient indicator contrast, clipping and sibling occlusion; all known
+  focus-gap exceptions are removed. Additional checks cover 240 focus
+  measurements across factories and custom elements in left-to-right and
+  right-to-left layouts.
+
+- **Release size.**
+  The release build at `f772c833`
+  ([CI run 42406404092, package job 128505132816](https://github.com/floor/material/actions/runs/42406404092/job/128505132816))
+  packs **898,258 B compressed / 4,949,301 B unpacked / 1,626 files**.
+  Against v3.8.1 at `a0dd84f3`
+  ([CI run 42402063046, package job 128491957329](https://github.com/floor/material/actions/runs/42402063046/job/128491957329)),
+  that is **+676 B packed / +3,425 B unpacked**, with the file count unchanged.
+  It leaves **21,742 B** under the 920,000 B packed ceiling and **169,699 B**
+  under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,840 / 127,312 / 105,645 B** raw/gzip/brotli
+  (**+56 / +16 / −51 B**), and the full stylesheet is
+  **637,752 / 58,879 / 41,971 B** (**+895 / +132 / +99 B**).
+  These measurements include the runtime focus fixes and the 3.8.2 version
+  banner. The README rows remain 127.3 kB for all-js and 58.9 kB for full CSS,
+  and SIZES.md matches.
+
 ## [3.8.1] - 2026-11-08
 
 Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
@@ -6564,7 +6669,9 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.8.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
+[3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
 [3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
 [3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
 [3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
