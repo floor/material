@@ -283,12 +283,13 @@ describe("explicit contrast levels are opt-in", () => {
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
     // Keyboard-focused menu items, select keyboard-active options and the menu
-    // surface draw an inward ring. Other focus rings retain contrast, scroll/clip
-    // clearance and sibling stacking; pointer focus and reduced motion use their
-    // intended state rules.
+    // surface draw an inward ring. Drawer, slider, search, text-field and active
+    // navigation indicators retain the focus fixes on main. Other focus rings
+    // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
+    // and reduced motion use their intended state rules.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("199ff4944101abd8eacf125563c202509202a57601a12a5ef1932d3ceac8948c");
-    expect(css.length).toBe(542742);
+      .toBe("cce5d40bf72404536e0f2cb6e1b4664e105ffc59295051adc7cbe5882f612edf");
+    expect(css.length).toBe(543078);
   });
 
   test("today's sheets still resolve to the fixture", () => {
