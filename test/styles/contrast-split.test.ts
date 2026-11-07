@@ -282,13 +282,18 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard-focused menu items and the menu surface itself (when an empty
+    // menu is opened by keyboard) draw the 3dp inward secondary focus ring on
+    // `.mtrl-menu__item:focus-visible` and `.mtrl-menu:focus-visible`,
+    // replacing the broken `m.focus-ring(".mtrl-menu__item:focus-visible")`
+    // call on `.mtrl-menu` (styles/components/_menu.scss).
     // The select's keyboard-reached option draws the 3dp inward secondary
     // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
     // the marker the select writes when a key, not the pointer, reaches the
     // active option (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("492e2f956f6ee8c547696534f8472dcb69a0c35ae78d7bf25b9134161b3638f4");
-    expect(css.length).toBe(542287);
+      .toBe("a94c860e89316592102a2be8fed78cd39e6aca51753423dedeb0d0b3f54e69c7");
+    expect(css.length).toBe(542318);
   });
 
   test("today's sheets still resolve to the fixture", () => {

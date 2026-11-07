@@ -2,8 +2,10 @@
 //
 // The menu stylesheet against the M3 tokens (Compose MenuTokens.kt) and the
 // baseline measurements on m3.material.io/components/menus/specs.
+import { readdirSync } from 'node:fs';
 import { describe, test, expect, beforeAll } from 'bun:test';
-import { compileString } from 'sass';
+import { compileString, Logger } from 'sass';
+import { baseStyles, componentStyles, standaloneThemes, themeStyles } from '../../scripts/style-manifest';
 import { corner } from '../utils/corner';
 
 let css = '';
@@ -78,6 +80,42 @@ describe('menu stylesheet', () => {
     // reached and the sheet draws md.comp.focus-ring there.
     expect(value('.mtrl-menu__item--keyboard-active', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
     expect(value('.mtrl-menu__item--keyboard-active', 'outline-offset')).toBe('-3px');
+  });
+
+  test('keyboard focus draws a 3dp inward secondary focus ring on the item and the surface, with no unconditional outline: none on the menu', () => {
+    expect(value('.mtrl-menu__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu__item:focus-visible', 'outline-offset')).toBe('-3px');
+    expect(value('.mtrl-menu:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu:focus-visible', 'outline-offset')).toBe('-3px');
+    expect(value('.mtrl-menu', 'outline')).toBeUndefined();
+  });
+
+  test('no compiled stylesheet passes a quoted string as a colour in outline, color, background, border, box-shadow, fill, or stroke', () => {
+    const elements = readdirSync('src/styles/elements')
+      .map((file) => /^_(.+)\.scss$/.exec(file)?.[1])
+      .filter((name): name is string => !!name && !['config', 'index'].includes(name));
+    const entries: Array<[string, string]> = [
+      ['main', `@use "main";`],
+      ['base', baseStyles.map((source, index) => `@use "${source}" as b${index};`).join('\n')],
+      ...Object.entries(componentStyles).map(([key, entry]): [string, string] => [`component:${key}`, `@use "${entry.source}";`]),
+      ...elements.map((name): [string, string] => [`element:${name}`, `@use "elements/${name}";`]),
+      ...themeStyles.map((theme): [string, string] => [`theme:${theme}`, `@use "themes/${theme}";`]),
+      ...standaloneThemes.map((theme): [string, string] => [`standalone-theme:${theme}`, `@use "themes/${theme}";`]),
+    ];
+    const propRe = /(?:^|[;{\n])\s*((?:outline|color|background|border|box-shadow|fill|stroke)[a-z-]*)\s*:\s*([^;{}]+)/gi;
+    const hits: string[] = [];
+    for (const [name, source] of entries) {
+      const sheet = compileString(source, { loadPaths: ['src/styles'], style: 'expanded', logger: Logger.silent }).css;
+      for (const match of sheet.matchAll(propRe)) {
+        const prop = match[1];
+        const raw = match[2].trim();
+        const withoutUrls = raw.replace(/url\((?:"[^"]*"|'[^']*'|[^)]*)\)/gi, '');
+        if (/["']/.test(withoutUrls)) {
+          hits.push(`${name} -> ${prop}: ${raw}`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
   });
 
   test('a disabled item is dimmed but still reachable', () => {
