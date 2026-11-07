@@ -8,6 +8,7 @@
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-button';
+$collapsed: '.#{base.$prefix}-toolbar--collapsed';
 
 // =============================================================================
 // BUTTON COMPONENT STYLES
@@ -180,6 +181,17 @@ $content-color: (
 
   &__text {
     @include m.truncate;
+
+    // Keep collapsed label rules beside the label styles. Separate arms keep
+    // the class rule working in engines without :host-context, and let the
+    // SSR pruner drop either arm independently. The label remains the name.
+    :host-context(#{$collapsed}) .#{$component}--icon & {
+      @include m.visually-hidden;
+    }
+
+    #{$collapsed} .#{$component}--icon & {
+      @include m.visually-hidden;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -515,8 +527,6 @@ $content-color: (
 // the SSR style pruner (src/ssr/prune-styles.ts) can drop each one from a
 // rendered root whose markup carries no matching class.
 // -----------------------------------------------------------------------------
-$collapsed: '.#{base.$prefix}-toolbar--collapsed';
-
 #{$collapsed} .#{$component}--icon {
   min-width: v.button('touch-target');
   padding-inline: v.button('padding-icon');
@@ -525,12 +535,4 @@ $collapsed: '.#{base.$prefix}-toolbar--collapsed';
 :host-context(#{$collapsed}) .#{$component}--icon {
   min-width: v.button('touch-target');
   padding-inline: v.button('padding-icon');
-}
-
-#{$collapsed} .#{$component}--icon .#{$component}__text {
-  @include m.visually-hidden;
-}
-
-:host-context(#{$collapsed}) .#{$component}--icon .#{$component}__text {
-  @include m.visually-hidden;
 }
