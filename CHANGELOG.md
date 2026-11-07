@@ -50,6 +50,24 @@ Lists you can build with.
   gzip ceiling rises from 128,550 to 130,050 B; the default list budget stays
   at 7,014 B.
 
+- **Release size.**
+  The release build at `1d531074`
+  ([CI run 42409979312, package job 128516050243](https://github.com/floor/material/actions/runs/42409979312/job/128516050243))
+  packs **901,553 B compressed / 4,966,183 B unpacked / 1,628 files**.
+  Against the approved 3.8.2 release at `02fbdd21`
+  ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
+  that is **+3,295 B packed / +16,882 B unpacked / +2 files**.
+  It leaves **18,447 B** under the 920,000 B packed ceiling and **152,817 B**
+  under the 5,119,000 B unpacked ceiling; neither ceiling changes.
+
+  `all-js` is **416,969 / 128,630 / 106,603 B** raw/gzip/brotli
+  (**+4,129 / +1,318 / +958 B**), and the full stylesheet is
+  **639,570 / 59,034 / 42,153 B** (**+1,818 / +155 / +182 B**).
+  These measurements include the listbox feature and the 3.9.0 version banner.
+  The default list JavaScript measures **6,837 B gzip**, within its unchanged
+  7,014 B budget. Both README rows match **128.6 kB all-js / 59.0 kB full CSS**,
+  and SIZES.md matches.
+
 ## [3.8.2] - 2026-11-08
 
 Keyboard focus visible everywhere.
