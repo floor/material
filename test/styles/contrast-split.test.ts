@@ -291,10 +291,10 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    // Seed from main; refresh both fields only from the combined CI measurement.
+    // Combined CI 42420200880, unit job 128546761427.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b2db285bf82c3e7ec5473e915534019754f21cc9743fa916754d99c1eb2ad257",
-      length: 544956,
+      sha256: "b618ba664f4ed7613cb0f67f741c6d57a96370a30c2720dfc11389bcce3a2b58",
+      length: 545237,
     });
   });
 
