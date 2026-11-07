@@ -192,6 +192,7 @@ const timepickerSpec = {
     step: { type: "number", config: "step" },
     "show-seconds": { type: "boolean", config: "showSeconds" },
     label: { type: "string", config: "title", update: (c, v) => void c.picker.setTitle(v === null ? "" : String(v)) },
+    "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.picker.setAriaLabel(v === null ? "" : String(v)) },
     required: {
       type: "boolean",
       config: "required",
