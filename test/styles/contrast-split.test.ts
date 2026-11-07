@@ -282,18 +282,14 @@ describe("explicit contrast levels are opt-in", () => {
     // theme's primary colour and emitted at standard, medium and high contrast
     // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
     // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
-    // Keyboard-focused menu items and the menu surface itself (when an empty
-    // menu is opened by keyboard) draw the 3dp inward secondary focus ring on
-    // `.mtrl-menu__item:focus-visible` and `.mtrl-menu:focus-visible`,
-    // replacing the broken `m.focus-ring(".mtrl-menu__item:focus-visible")`
-    // call on `.mtrl-menu` (styles/components/_menu.scss).
-    // The select's keyboard-reached option draws the 3dp inward secondary
-    // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
-    // the marker the select writes when a key, not the pointer, reaches the
-    // active option (styles/components/_menu.scss).
+    // Keyboard-focused menu items, select keyboard-active options and the menu
+    // surface draw an inward ring. Drawer, slider, search, text-field and active
+    // navigation indicators retain the focus fixes on main. Other focus rings
+    // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
+    // and reduced motion use their intended state rules.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("a94c860e89316592102a2be8fed78cd39e6aca51753423dedeb0d0b3f54e69c7");
-    expect(css.length).toBe(542318);
+      .toBe("cce5d40bf72404536e0f2cb6e1b4664e105ffc59295051adc7cbe5882f612edf");
+    expect(css.length).toBe(543078);
   });
 
   test("today's sheets still resolve to the fixture", () => {

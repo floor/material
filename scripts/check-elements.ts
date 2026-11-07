@@ -29,6 +29,7 @@ import { checkFabPlacement } from "./check-fab-placement-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
+import { checkFocusVisibility } from "./check-focus-visibility";
 import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -183,6 +184,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
   if (selected("a")) {
+  await checkFocusVisibility(page);
   await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
@@ -10394,7 +10396,7 @@ try {
       })
     );
     await page.emulateMedia({ reducedMotion: null });
-    const fades = "opacity, color, background-color, border-color, outline-color, box-shadow, visibility";
+    const fades = "opacity, color, background-color, border-color, box-shadow, visibility";
     assert.deepEqual(read, [fades, fades], "under reduced motion a shadow root's transitions are limited to the fades");
     check("reduced motion: inside <m-button> and <m-button-group>, transitions are limited to the fades");
   }
