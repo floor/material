@@ -162,6 +162,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         );
         registerTab(this.element, baseConfig.groupId ?? "", safeValue);
         syncTabControls(this.element);
+        announceBadge();
 
         return this;
       },
@@ -219,6 +220,12 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         return button.getText();
       },
 
+      setAriaLabel(label) {
+        baseConfig.ariaLabel = label;
+        announceBadge();
+        return this;
+      },
+
       setIcon(icon) {
         button.setIcon(icon);
         this.updateLayoutStyle();
@@ -241,6 +248,9 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
           };
 
           this.badge = createBadge(badgeConfig);
+          // Its information is included in the tab's name, like a navigation
+          // destination badge; it is not a second live status inside the tab.
+          this.badge.element.setAttribute("aria-hidden", "true");
         } else {
           this.badge.setContent(content);
           // setContent settles a large badge's visibility from its label; the
@@ -346,19 +356,19 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
     // have their number read." The badge element is a role="status" live
     // region, and Chromium leaves live-region text out of an ancestor's
     // computed name — a badged tab measured as "Trips" alone — so the tab
-    // names itself from the parts that make it. A dot contributes its accessible
+    // names itself from the parts that make it and hides the nested status from
+    // the accessibility tree. A dot contributes its accessible
     // label rather than rendered text. A hidden or empty counting badge adds
     // nothing: without one, an `ariaLabel` config keeps its attribute and a
     // plain tab keeps its content-derived name.
     const announceBadge = (): void => {
       const count = tab.badge?.isVisible()
         ? tab.badge.element.getAttribute("aria-label") || tab.badge.getContent() : "";
-      const label = baseConfig.ariaLabel || button.getText();
+      const text = button.getText();
+      const label = baseConfig.ariaLabel || text || button.getValue();
       const name = [label, count].filter(Boolean).join(", ");
-      if (name !== label) {
+      if (name !== text || baseConfig.ariaLabel) {
         tab.element.setAttribute("aria-label", name);
-      } else if (baseConfig.ariaLabel) {
-        tab.element.setAttribute("aria-label", baseConfig.ariaLabel);
       } else {
         tab.element.removeAttribute("aria-label");
       }
@@ -371,6 +381,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
 
     // Initialize layout style based on content
     tab.updateLayoutStyle();
+    announceBadge();
 
     return tab;
   } catch (error) {

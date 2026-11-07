@@ -40,6 +40,7 @@ export const getTabsElementConfig = (config: TabsConfig) => {
     attributes: {
       role: "tablist",
       "aria-orientation": "horizontal",
+      "aria-label": config.ariaLabel,
     },
     // Filtered, because `class` is optional: an absent one used to arrive here
     // as undefined and was only dropped further down, inside withElement. With
