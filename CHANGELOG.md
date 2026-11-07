@@ -44,11 +44,9 @@ Lists you can build with.
 
 ### Internal
 
-- **Listbox delivery and budget (#279).**
+- **Listbox delivery (#279).**
   The enhancer's JavaScript is omitted when it is not imported. Its radio
-  styles ship in the list and full stylesheets. The owner-approved all-JS
-  gzip ceiling rises from 128,550 to 130,050 B; the default list budget stays
-  at 7,014 B.
+  styles ship in the list and full stylesheets.
 
 - **Release size.**
   The release build at `1d531074`
@@ -59,6 +57,9 @@ Lists you can build with.
   that is **+3,295 B packed / +16,882 B unpacked / +2 files**.
   It leaves **18,447 B** under the 920,000 B packed ceiling and **152,817 B**
   under the 5,119,000 B unpacked ceiling; neither ceiling changes.
+  The all-JS gzip ceiling rises from 128,550 to 130,050 B under the
+  owner decision 2026-11-05, applied in #279; the default list budget stays
+  at 7,014 B.
 
   `all-js` is **416,969 / 128,630 / 106,603 B** raw/gzip/brotli
   (**+4,129 / +1,318 / +958 B**), and the full stylesheet is
