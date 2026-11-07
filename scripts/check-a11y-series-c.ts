@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 import * as sass from "sass";
+import { componentStyles, resolveStyleDependencies } from "./style-manifest";
 
 interface RawAXValue {
   value?: unknown;
@@ -39,18 +40,35 @@ interface AXSummary {
   props: Record<string, unknown>;
 }
 
-const repoRoot = resolve(import.meta.dir, "..");
-const cssResult = sass.compile(resolve(repoRoot, "src/styles/main.scss"), {
-  loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
-  silenceDeprecations: ["mixed-decls"],
-});
+const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
+const compile = (source: string): string =>
+  sass.compileString(`@use "${source}";`, {
+    loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
+    style: "compressed",
+    logger: sass.Logger.silent,
+  }).css;
+
+const mainCss = compile("main");
+const styleNames = resolveStyleDependencies([
+  "menu",
+  "search",
+  "bottom-sheet",
+  "side-sheet",
+]);
+const registry: Record<string, string> = {
+  ripple: compile("utilities/ripple"),
+  ...Object.fromEntries(
+    styleNames.map((name) => [name, compile(componentStyles[name]!.source)])
+  ),
+};
 
 const entrySource = `
 import * as mtrl from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
-import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
-registerStyles(${JSON.stringify(cssResult.css)});
+import { defineAll, hasStyles, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
+registerStyles(${JSON.stringify(registry)});
 defineAll();
 window.mtrl = mtrl;
+window.hasStyles = hasStyles;
 `;
 
 const bundleBuild = await Bun.build({
@@ -82,10 +100,32 @@ try {
   });
   const page = await context.newPage();
   await page.setContent(
-    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"></head><body><main id="stage"></main></body></html>`
+    `<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body><main id="stage"></main></body></html>`
   );
-  await page.addStyleTag({ content: cssResult.css });
+  await page.addStyleTag({ content: mainCss });
   await page.addScriptTag({ content: bundleJs });
+
+  // Verify real shadow styles were registered by component name (not character index)
+  const styleRegistration = await page.evaluate(() => {
+    const w = window as unknown as { hasStyles: (name: string) => boolean };
+    return {
+      ripple: w.hasStyles("ripple"),
+      menu: w.hasStyles("menu"),
+      search: w.hasStyles("search"),
+      bottomSheet: w.hasStyles("bottom-sheet"),
+      sideSheet: w.hasStyles("side-sheet"),
+      characterIndexZero: w.hasStyles("0"),
+    };
+  });
+  assert.deepEqual(styleRegistration, {
+    ripple: true,
+    menu: true,
+    search: true,
+    bottomSheet: true,
+    sideSheet: true,
+    characterIndexZero: false,
+  });
+
   const cdp = await context.newCDPSession(page);
   await cdp.send("Accessibility.enable");
 
@@ -168,7 +208,7 @@ try {
   );
 
   // <m-menu> custom element
-  const mMenuSelectionAttrs = await page.evaluate(async () => {
+  const mMenuProbe = await page.evaluate(async () => {
     const w = window as unknown as { __activeMenu?: { destroy: () => void } };
     w.__activeMenu?.destroy();
     document.querySelectorAll(".mtrl-menu").forEach((el) => el.remove());
@@ -182,11 +222,18 @@ try {
     `;
     await new Promise((r) => setTimeout(r, 150));
     const host = stage.querySelector("m-menu")!;
-    return Array.from(
-      host.shadowRoot!.querySelectorAll('[role="menuitem"]')
-    ).map((el) => el.getAttribute("aria-selected"));
+    return {
+      adoptedSheets: host.shadowRoot!.adoptedStyleSheets.length,
+      selectionAttrs: Array.from(
+        host.shadowRoot!.querySelectorAll('[role="menuitem"]')
+      ).map((el) => el.getAttribute("aria-selected")),
+    };
   });
-  assert.deepEqual(mMenuSelectionAttrs, [null, null]);
+  assert(
+    mMenuProbe.adoptedSheets >= 2,
+    `Expected <m-menu> shadow root to adopt registered stylesheets, got ${mMenuProbe.adoptedSheets}`
+  );
+  assert.deepEqual(mMenuProbe.selectionAttrs, [null, null]);
   const mMenuAX = await readAXByRole("menu");
   assert(
     mMenuAX.length >= 1 && mMenuAX.every((m) => m.name === "File menu"),
@@ -194,11 +241,16 @@ try {
   );
 
   // ── A10: Search & <m-search> fullscreen dialog ───────────────────────
-  await page.evaluate(async () => {
+  const searchSheets = await page.evaluate(async () => {
     const stage = document.getElementById("stage")!;
     stage.innerHTML = `<m-search view-mode="fullscreen" open placeholder="Search docs"></m-search>`;
     await new Promise((r) => setTimeout(r, 150));
+    return stage.querySelector("m-search")!.shadowRoot!.adoptedStyleSheets.length;
   });
+  assert(
+    searchSheets >= 2,
+    `Expected <m-search> shadow root to adopt registered stylesheets, got ${searchSheets}`
+  );
   const searchDialogAX = await readAXByRole("dialog");
   assert.equal(searchDialogAX.length, 1);
   assert.equal(searchDialogAX[0]!.name, "Search docs");
@@ -378,14 +430,22 @@ try {
   }
 
   // Standard sheets expose named region / complementary landmarks
-  await page.evaluate(async () => {
+  const sheetSheets = await page.evaluate(async () => {
     const stage = document.getElementById("stage")!;
     stage.innerHTML = `
       <m-bottom-sheet variant="standard" aria-label="Music player" open><p>Now playing</p></m-bottom-sheet>
       <m-side-sheet variant="standard" title="Inspector" open><p>Properties</p></m-side-sheet>
     `;
     await new Promise((r) => setTimeout(r, 100));
+    return {
+      bottomSheet: stage.querySelector("m-bottom-sheet")!.shadowRoot!.adoptedStyleSheets.length,
+      sideSheet: stage.querySelector("m-side-sheet")!.shadowRoot!.adoptedStyleSheets.length,
+    };
   });
+  assert(
+    sheetSheets.bottomSheet >= 2 && sheetSheets.sideSheet >= 2,
+    `Expected sheet shadow roots to adopt registered stylesheets, got ${JSON.stringify(sheetSheets)}`
+  );
   const regions = await readAXByRole("region");
   const complementaries = await readAXByRole("complementary");
   assert(
