@@ -169,6 +169,10 @@ const setupCombobox = (
   const input = textField.input as HTMLInputElement;
   const field = textField.element;
   const activeClass = `${prefix}-menu__item--active`;
+  // The active option reached by a key, which draws the focus ring: focus
+  // stays in the input, so :focus-visible cannot mark it, and a pointer
+  // opening or a hover must not draw one.
+  const keyboardClass = `${prefix}-menu__item--keyboard-active`;
   const TYPEAHEAD_DELAY = 500;
   const PAGE = 10;
 
@@ -177,6 +181,7 @@ const setupCombobox = (
   input.setAttribute("aria-expanded", "false");
 
   let active: HTMLElement | null = null;
+  let keyboard = false;
   let pending: "selected" | "first" | "last" = "selected";
   let buffer = "";
   let bufferTimer: ReturnType<typeof setTimeout> | null = null;
@@ -200,7 +205,10 @@ const setupCombobox = (
 
   const setActive = (element: HTMLElement | null): void => {
     active = element;
-    options().forEach((option) => option.classList.toggle(activeClass, option === element));
+    options().forEach((option) => {
+      option.classList.toggle(activeClass, option === element);
+      option.classList.toggle(keyboardClass, option === element && keyboard);
+    });
     if (element) {
       input.setAttribute("aria-activedescendant", element.id);
       element.scrollIntoView?.({ block: "nearest" });
@@ -299,6 +307,9 @@ const setupCombobox = (
 
   input.addEventListener("keydown", (e: KeyboardEvent) => {
     if (input.disabled) return;
+    // A key is the keyboard: whatever it does below, an option it marks is
+    // keyboard-reached, and the pointer paths below clear this again.
+    keyboard = true;
     const isOpen = menu.isOpen();
     const list = enabled();
     const index = active ? list.indexOf(active) : -1;
@@ -390,6 +401,8 @@ const setupCombobox = (
   // A press anywhere on the field, its label or icon included, puts focus on
   // the combobox, as a native select does
   field.addEventListener("mousedown", (e: MouseEvent) => {
+    // A press is the pointer: the option it opens on draws no ring
+    keyboard = false;
     if (input.disabled || menu.element.contains(e.target as Node) || e.target === input) return;
     e.preventDefault();
     input.focus();
@@ -398,6 +411,7 @@ const setupCombobox = (
   // A press on the field opens or closes the listbox; a press inside the
   // listbox is the option's own
   field.addEventListener("click", (e: MouseEvent) => {
+    keyboard = false;
     if (input.disabled || menu.element.contains(e.target as Node)) return;
     if (menu.isOpen()) close(e);
     else open("selected", e);

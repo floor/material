@@ -8,7 +8,7 @@ import type createMenu from "../src/components/menu";
  * Chromium prints a plain colour as rgb() and a color-mix result as
  * color(srgb r g b / a); one parser for both, in channels the assertions read.
  */
-function parseColour(text: string): [number, number, number, number] {
+export function parseColour(text: string): [number, number, number, number] {
   const rgb = /^rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(text);
   if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), rgb[4] === undefined ? 1 : Number(rgb[4])];
   const srgb = /^color\(srgb ([\d.e+-]+) ([\d.e+-]+) ([\d.e+-]+)(?: \/ ([\d.]+))?\)$/.exec(text);
@@ -740,7 +740,7 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
       }
 
       // Split button keyboard open (Enter on trailing button) across LTR and RTL:
-      // focus lands on the menu surface with :focus-visible true and draws the
+      // focus lands on the first item with :focus-visible true and draws the
       // 3dp inward ring; pointer open stays ringless.
       for (const dir of ["ltr", "rtl"] as const) {
         const splitLabel = `split-button (${mode.name}, ${dir})`;
@@ -773,13 +773,15 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
         await page.keyboard.press("Enter");
         await page.waitForFunction(() => {
           const menu = document.querySelector<HTMLElement>(".mtrl-menu");
-          return !!menu && menu.classList.contains("mtrl-menu--visible") && document.activeElement === menu;
+          const first = menu?.querySelector<HTMLElement>('[data-id="a"]');
+          return !!menu && menu.classList.contains("mtrl-menu--visible") && !!first && document.activeElement === first;
         });
 
         const splitKeyboard = await page.evaluate(() => {
           document.getAnimations().forEach((animation) => animation.finish());
           const menu = document.querySelector<HTMLElement>(".mtrl-menu")!;
-          const style = getComputedStyle(menu);
+          const first = menu.querySelector<HTMLElement>('[data-id="a"]')!;
+          const style = getComputedStyle(first);
           const probe = document.createElement("span");
           probe.style.color = "var(--mtrl-sys-color-secondary)";
           document.body.append(probe);
@@ -787,23 +789,29 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
           probe.remove();
           return {
             secondary,
-            focusVisible: menu.matches(":focus-visible"),
+            firstFocused: document.activeElement === first,
+            focusVisible: first.matches(":focus-visible"),
             outlineStyle: style.outlineStyle,
             outlineWidth: style.outlineWidth,
             outlineOffset: style.outlineOffset,
             outlineColor: style.outlineColor,
+            menuFocusVisible: menu.matches(":focus-visible"),
+            menuOutlineStyle: getComputedStyle(menu).outlineStyle,
           };
         });
 
-        assert.equal(splitKeyboard.focusVisible, true, `${splitLabel}: keyboard-opened split menu surface must match :focus-visible`);
-        assert.equal(splitKeyboard.outlineStyle, "solid", `${splitLabel}: surface outline-style must be solid`);
-        assert.equal(splitKeyboard.outlineWidth, "3px", `${splitLabel}: surface outline-width must be 3px`);
-        assert.equal(splitKeyboard.outlineOffset, "-3px", `${splitLabel}: surface outline-offset must be -3px`);
+        assert.equal(splitKeyboard.firstFocused, true, `${splitLabel}: Enter must focus the first menu item`);
+        assert.equal(splitKeyboard.focusVisible, true, `${splitLabel}: keyboard-opened first item must match :focus-visible`);
+        assert.equal(splitKeyboard.outlineStyle, "solid", `${splitLabel}: first item outline-style must be solid`);
+        assert.equal(splitKeyboard.outlineWidth, "3px", `${splitLabel}: first item outline-width must be 3px`);
+        assert.equal(splitKeyboard.outlineOffset, "-3px", `${splitLabel}: first item outline-offset must be -3px`);
+        assert.equal(splitKeyboard.menuFocusVisible, false, `${splitLabel}: menu surface must not match :focus-visible when the first item is focused`);
+        assert.equal(splitKeyboard.menuOutlineStyle, "none", `${splitLabel}: menu surface must not show a focus outline when the first item is focused`);
         if (mode.forcedColors === "none") {
-          assert.equal(splitKeyboard.outlineColor, splitKeyboard.secondary, `${splitLabel}: surface outline-color must equal resolved --mtrl-sys-color-secondary`);
+          assert.equal(splitKeyboard.outlineColor, splitKeyboard.secondary, `${splitLabel}: first item outline-color must equal resolved --mtrl-sys-color-secondary`);
         } else {
           const [, , , alpha] = parseColour(splitKeyboard.outlineColor);
-          assert.ok(alpha > 0, `${splitLabel}: forced-colors surface outline-color must be non-transparent (${splitKeyboard.outlineColor})`);
+          assert.ok(alpha > 0, `${splitLabel}: forced-colors first item outline-color must be non-transparent (${splitKeyboard.outlineColor})`);
         }
 
         await page.keyboard.press("Escape");
@@ -858,5 +866,5 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
       document.documentElement.removeAttribute("data-theme-mode");
     });
   }
-  console.log("Passed packed menu item and surface focus ring: 3dp inward secondary focus ring on keyboard-focused baseline and vertical items, empty menu surfaces, and split-button menu surfaces (LTR and RTL) across light, dark and forced-colors modes; no outline on pointer open.");
+  console.log("Passed packed menu item and surface focus ring: 3dp inward secondary focus ring on keyboard-focused baseline and vertical items, empty menu surfaces, and split-button first items (LTR and RTL) across light, dark and forced-colors modes; no outline on pointer open.");
 }
