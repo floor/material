@@ -162,6 +162,17 @@ $component: "#{$prefix}-menu";
             @include m.state-layer(t.color("on-surface"), "focus");
         }
 
+        // The select's active option is where the keyboard is, but focus
+        // stays in its combobox input, so :focus-visible never matches it.
+        // The select marks the option a key reached, and only then: a pointer
+        // opening or a hover draws no ring. md.comp.focus-ring: 3dp in
+        // secondary, drawn inward because an item fills the list's width
+        // inside a scroll container that would clip an outward ring.
+        &--keyboard-active {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
+        }
+
         &:active {
             @include m.state-layer(t.color("on-surface"), "pressed");
         }

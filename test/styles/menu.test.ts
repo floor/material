@@ -74,6 +74,14 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__item:active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
   });
 
+  test('the select\'s keyboard-reached option draws the 3dp inward secondary ring', () => {
+    // The active option of a listbox keeps focus on its combobox, so
+    // :focus-visible never matches it; the select marks the option a key
+    // reached and the sheet draws md.comp.focus-ring there.
+    expect(value('.mtrl-menu__item--keyboard-active', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu__item--keyboard-active', 'outline-offset')).toBe('-3px');
+  });
+
   test('keyboard focus draws a 3dp inward secondary focus ring on the item and the surface, with no unconditional outline: none on the menu', () => {
     expect(value('.mtrl-menu__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
     expect(value('.mtrl-menu__item:focus-visible', 'outline-offset')).toBe('-3px');
