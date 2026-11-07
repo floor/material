@@ -1,4 +1,3 @@
-import { controlLabelConfig } from "../../core/config/control-label";
 // src/components/text-field/config.ts
 import {
   createComponentConfig,
@@ -59,11 +58,14 @@ export const createBaseConfig = (
  * @param {TextFieldConfig} config - TextField configuration
  * @returns {Object} Element configuration object for withElement
  */
-export const getElementConfig = (config: TextFieldConfig) =>
-  controlLabelConfig(createElementConfig(config, {
+export const getElementConfig = (config: TextFieldConfig) => {
+  const wrapper = createElementConfig(config, {
     tag: "div",
     className: config.class,
-  }), config.controlLabelOnly);
+  });
+  if (config.controlLabelOnly) wrapper.ariaLabel = undefined;
+  return wrapper;
+};
 
 /**
  * Creates API configuration for the TextField component
