@@ -1812,6 +1812,16 @@
       "name": "SelectEvent",
       "kind": "type",
       "status": "public"
+    },
+    {
+      "name": "SingleSelectListboxOptions",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "withSingleSelectListbox",
+      "kind": "value",
+      "status": "public"
     }
   ],
   "list/constants": [
