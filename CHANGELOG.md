@@ -53,6 +53,23 @@ Keyboard focus visible everywhere.
   measurements across factories and custom elements in left-to-right and
   right-to-left layouts.
 
+- **Release size.**
+  The release build at `f772c833`
+  ([CI run 42406404092, package job 128505132816](https://github.com/floor/material/actions/runs/42406404092/job/128505132816))
+  packs **898,258 B compressed / 4,949,301 B unpacked / 1,626 files**.
+  Against v3.8.1 at `a0dd84f3`
+  ([CI run 42402063046, package job 128491957329](https://github.com/floor/material/actions/runs/42402063046/job/128491957329)),
+  that is **+676 B packed / +3,425 B unpacked**, with the file count unchanged.
+  It leaves **21,742 B** under the 920,000 B packed ceiling and **169,699 B**
+  under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,840 / 127,312 / 105,645 B** raw/gzip/brotli
+  (**+56 / +16 / −51 B**), and the full stylesheet is
+  **637,752 / 58,879 / 41,971 B** (**+895 / +132 / +99 B**).
+  These measurements include the runtime focus fixes and the 3.8.2 version
+  banner. The README rows remain 127.3 kB for all-js and 58.9 kB for full CSS,
+  and SIZES.md matches.
+
 ## [3.8.1] - 2026-11-08
 
 Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
