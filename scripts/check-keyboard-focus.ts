@@ -1240,14 +1240,14 @@ async function installBrowserHelpers(page: Page): Promise<void> {
               .match(/-?[\d.]+px/g)
               ?.map(v => parseFloat(v)) ?? [];
             const spread = lengths[3] ?? lengths[2] ?? 0;
-            const useOuterSurface = !isInset && spread >= 0;
-            const surface = resolveSurfaceColor(item.node, useOuterSurface);
+            const isInnerShadow = isInset || spread < 0;
+            const surface = resolveSurfaceColor(item.node, isInnerShadow);
             const fg = blend(rawFg, surface);
             const ratio = contrastRatio(fg, surface);
-            if (useOuterSurface && spread > 0) {
+            if (!isInnerShadow && spread > 0) {
               activeRingNode = item.node;
               activeOutward = Math.max(activeOutward, spread);
-            } else if (isInset && Math.abs(spread) > 0) {
+            } else if (isInnerShadow && Math.abs(spread) > 0) {
               activeRingNode = item.node;
               activeInsetOffset = Math.max(activeInsetOffset, Math.abs(spread));
             }
