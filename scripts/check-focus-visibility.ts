@@ -16,6 +16,7 @@ type Case = typeof cases[number];
 export async function checkFocusVisibility(page: Page): Promise<void> {
   const failures: string[] = [];
   let checks = 0;
+  let compactedChecks = 0;
   for (const mode of ["light", "dark", "forced-colors"] as const) {
     await page.emulateMedia({ colorScheme: mode === "light" ? "light" : "dark", forcedColors: mode === "forced-colors" ? "active" : "none", reducedMotion: "no-preference" });
     for (const dir of ["ltr", "rtl"] as const) {
@@ -114,21 +115,28 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               document.querySelector("#focus-predecessor")?.remove();
               (el.getRootNode() as Document | ShadowRoot).querySelector("#focus-predecessor")?.remove();
               await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {})));
+              if (kind === "carousel") {
+                const scroller = el.closest(".mtrl-carousel")!.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+                scroller.scrollLeft = 0;
+                scroller.dispatchEvent(new Event("scroll"));
+                await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+              }
               const cs = getComputedStyle(el);
+              const ringElement = kind === "navigation-bar" ? el.querySelector<HTMLElement>(".mtrl-navigation-bar__indicator")! : el;
               const after = getComputedStyle(el, "::after");
               const before = getComputedStyle(el, "::before");
               const slide = kind === "carousel" && el.classList.contains("mtrl-carousel__item");
               const cell = kind === "chips";
               const pseudo = slide && after.content !== "none" ? after : cell ? before : null;
-              const ring = pseudo ?? cs;
+              const ring = pseudo ?? getComputedStyle(ringElement);
               const width = parseFloat(pseudo ? ring.borderTopWidth : ring.outlineWidth);
               const offset = pseudo ? 0 : parseFloat(ring.outlineOffset);
-              const rect = el.getBoundingClientRect();
+              const rect = ringElement.getBoundingClientRect();
               const n = (v: string) => parseFloat(v) || 0;
               const box = pseudo ? { top: rect.top + n(ring.top), right: rect.right - n(ring.right), bottom: rect.bottom - n(ring.bottom), left: rect.left + n(ring.left) }
                 : { top: rect.top - width - offset, right: rect.right + width + offset, bottom: rect.bottom + width + offset, left: rect.left - width - offset };
               const clipping: string[] = [];
-              let anc: Element | null = el.parentElement;
+              let anc: Element | null = ringElement.parentElement;
               while (anc && anc !== document.documentElement) {
                 const a = getComputedStyle(anc); const r = anc.getBoundingClientRect();
                 if (a.overflowY !== "visible" && (box.top < r.top - .5 || box.bottom > r.bottom + .5)) clipping.push(`${anc.className}: block`);
@@ -155,7 +163,8 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
             if (kind !== "carousel" || !measure.clipPath || measure.clipPath === "none") {
               if (measure.clipping.length) problems.push(`clipped ${measure.clipping.join(", ")}`);
             } else if (measure.clipping.some(s => s.startsWith("self:"))) problems.push(`clipped ${measure.clipping.join(", ")}`);
-            if (["split-button", "button-group", "snackbar"].includes(kind) && measure.occluded) problems.push("sibling paints over ring");
+            if (kind === "carousel" && /inset\(/.test(measure.clipPath)) compactedChecks++;
+            if (["split-button", "button-group", "navigation-bar", "snackbar"].includes(kind) && measure.occluded) problems.push("sibling paints over ring");
             if (kind === "toolbar" && mode !== "forced-colors") {
               const background = mode === "light" ? "rgb(234, 221, 255)" : "rgb(79, 55, 139)";
               if (contrast(measure.color, background) < 3) problems.push(`contrast ${contrast(measure.color, background).toFixed(2)}:1`);
@@ -208,6 +217,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
   });
   await page.emulateMedia({ colorScheme: "light", forcedColors: "none", reducedMotion: "no-preference" });
   for (const failure of failures) console.error(failure);
+  assert(compactedChecks > 0, "The carousel checks must exercise a compacted slide with a real clip path");
   assert.deepEqual(failures, [], `Focus visibility: ${failures.length} failures across ${checks} keyboard measurements`);
   console.log(`Passed focus visibility: ${checks} keyboard measurements, factory and custom elements, LTR/RTL, light/dark/forced colors, pointer and reduced motion.`);
 }
