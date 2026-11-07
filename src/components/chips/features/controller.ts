@@ -178,8 +178,9 @@ export const withController =
       const chipElement = component.chipInstances[index].element;
       const container = component.chipContainer || component.element;
 
-      // Calculate scroll position to center the chip. No `behavior`: the
-      // stylesheet scrolls a scrollable set smoothly, and the reduced-motion
+      // Centre from viewport geometry and the current scroll position. RTL
+      // scrollLeft is negative; let the browser clamp either end of its range.
+      // No `behavior`: the stylesheet scrolls a scrollable set smoothly, and the reduced-motion
       // reset turns that off; an explicit "smooth" would override it.
       const containerRect = container.getBoundingClientRect();
       const chipRect = chipElement.getBoundingClientRect();
@@ -189,24 +190,22 @@ export const withController =
       if (isVertical) {
         // For vertical scroll
         const scrollTop =
-          chipElement.offsetTop -
-          container.offsetTop -
+          container.scrollTop + chipRect.top - containerRect.top -
           containerRect.height / 2 +
           chipRect.height / 2;
 
         container.scrollTo({
-          top: Math.max(0, scrollTop),
+          top: scrollTop,
         });
       } else {
         // For horizontal scroll
         const scrollLeft =
-          chipElement.offsetLeft -
-          container.offsetLeft -
+          container.scrollLeft + chipRect.left - containerRect.left -
           containerRect.width / 2 +
           chipRect.width / 2;
 
         container.scrollTo({
-          left: Math.max(0, scrollLeft),
+          left: scrollLeft,
         });
       }
     }
