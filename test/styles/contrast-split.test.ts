@@ -295,9 +295,15 @@ describe("explicit contrast levels are opt-in", () => {
     // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
     // the marker the select writes when a key, not the pointer, reaches the
     // active option (styles/components/_menu.scss).
+    // Keyboard focus indicators are drawn on the navigation drawer item, the
+    // slider handle bar, the collapsed search bar container, the filled text
+    // field active underline in forced-colors, and the active navigation bar
+    // and navigation rail indicator pills in forced-colors
+    // (styles/components/_drawer.scss, _slider.scss, _search.scss,
+    // _text-field.scss, _navigation-bar.scss, _navigation-rail.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1ba930c10cb19f44baebee33a74239ead7d99a139ec2f3c9ffface8f8ee2e2a5");
-    expect(css.length).toBe(544196);
+      .toBe("9d781f68a86257a75140c9da9a7405adfafb906ee85c5dbe9f9d5847730dc719");
+    expect(css.length).toBe(544532);
   });
 
   test("today's sheets still resolve to the fixture", () => {
