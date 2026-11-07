@@ -17,6 +17,15 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Added
+
+- Optional `controlLabelOnly: true` for the Checkbox, Switch, TextField and Slider
+  factories keeps `ariaLabel` on the real control and omits the generated
+  wrapper's `aria-label`. The option is off by default; existing generated HTML
+  is unchanged unless enabled. Opting in changes wrapper serialization and
+  `[aria-label]` selectors. Authored custom-element host labels are unchanged;
+  duplicate host names remain open.
+
 ## [3.9.0] - 2026-11-08
 
 Lists you can build with.

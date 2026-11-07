@@ -89,7 +89,7 @@ export const getElementConfig = (config: SliderConfig) => {
     attributes["aria-disabled"] = "true";
   }
 
-  return createElementConfig(config, {
+  return createElementConfig(config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config, {
     tag: "div",
     attributes,
     className: classes,

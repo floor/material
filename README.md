@@ -159,6 +159,16 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
+### Factory control labels
+
+`createCheckbox`, `createSwitch`, `createTextField` and `createSlider` accept
+`controlLabelOnly: true` to put `ariaLabel` only on the real input or slider
+handle. It defaults to `false`: omitted/false output is unchanged. Opting in
+omits the generated wrapper's `aria-label`, changing its serialized HTML and
+wrapper `[aria-label]` selectors while retaining the control's name, focus and
+form behavior. This factory option does not suppress an authored custom-element
+host label; duplicate host names remain a known limitation.
+
 ## Styles
 
 The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:

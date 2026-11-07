@@ -29,7 +29,7 @@ export const createBaseConfig = (config: CheckboxConfig = {}): CheckboxConfig =>
  * @returns {Object} Element configuration object for withElement
  */
 export const getElementConfig = (config: CheckboxConfig) =>
-  createElementConfig(config, {
+  createElementConfig(config.controlLabelOnly === true ? { ...config, ariaLabel: undefined } : config, {
     tag: "div",
     className: config.class,
     interactive: true,
