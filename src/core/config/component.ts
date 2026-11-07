@@ -2,6 +2,7 @@
 import { PREFIX } from "../config";
 import { getComponentDefaults, type ComponentConfigMap } from "./global";
 import type { EventCondition } from "../dom/create";
+type StyleDeclaration = { -readonly [K in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[K] };
 
 /**
  * Base component configuration interface
@@ -176,7 +177,7 @@ export const createElementConfig = (
     tabIndex: config.tabIndex,
     style:
       options.style || config.style
-        ? { ...options.style, ...config.style }
+        ? { ...options.style, ...config.style } as StyleDeclaration
         : undefined,
     // Data attributes
     data: config.data,

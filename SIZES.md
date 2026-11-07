@@ -22,7 +22,7 @@ these rows drift from a fresh measurement.
 | bottom-sheet | 19.4 KB | 7.1 KB | +4.0 KB |  |
 | side-sheet | 17.8 KB | 6.5 KB | +3.5 KB |  |
 | button | 21.9 KB | 7.4 KB | +4.4 KB | +6.9 KB |
-| button-group | 36.6 KB | 11.8 KB | +8.7 KB | +6.9 KB |
+| button-group | 36.6 KB | 11.8 KB | +8.8 KB | +6.9 KB |
 | card | 19.5 KB | 6.6 KB | +3.6 KB | +9.7 KB |
 | carousel | 30.3 KB | 11.2 KB | +8.1 KB |  |
 | checkbox | 16.4 KB | 5.7 KB | +2.6 KB |  |
@@ -41,7 +41,7 @@ these rows drift from a fresh measurement.
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
 | loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.5 KB | 9.5 KB | +6.4 KB | +16.9 KB |
+| split-button | 27.5 KB | 9.5 KB | +6.5 KB | +16.9 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.2 KB | 10.8 KB | +7.8 KB |  |
 | select | 41.8 KB | 13.2 KB | +10.1 KB | +10.4 KB |
