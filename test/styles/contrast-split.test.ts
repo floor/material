@@ -287,9 +287,13 @@ describe("explicit contrast levels are opt-in", () => {
     // `.mtrl-menu__item:focus-visible` and `.mtrl-menu:focus-visible`,
     // replacing the broken `m.focus-ring(".mtrl-menu__item:focus-visible")`
     // call on `.mtrl-menu` (styles/components/_menu.scss).
+    // The select's keyboard-reached option draws the 3dp inward secondary
+    // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
+    // the marker the select writes when a key, not the pointer, reaches the
+    // active option (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("78f203b3d2df7694aac1a0cf3df367d0e7a4b91361660052f48fa48a6e907925");
-    expect(css.length).toBe(542214);
+      .toBe("a94c860e89316592102a2be8fed78cd39e6aca51753423dedeb0d0b3f54e69c7");
+    expect(css.length).toBe(542318);
   });
 
   test("today's sheets still resolve to the fixture", () => {
