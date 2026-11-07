@@ -98,6 +98,7 @@ $content-color: (
   &:focus-visible {
     outline: 3px solid t.color('secondary');
     outline-offset: 2px;
+    z-index: 1;
   }
 
   // Disabled: container on-surface 10%, label and icon on-surface-variant 38%

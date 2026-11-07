@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.7.2",
+  "version": "3.9.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -427,6 +427,18 @@
       "types": "./dist/core/utils/index.d.ts",
       "import": "./dist/core/utils/index.js"
     },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    },
+    "./theme/variants": {
+      "types": "./dist/theme/variants.d.ts",
+      "import": "./dist/theme/variants.js"
+    },
+    "./theme/image": {
+      "types": "./dist/theme/image.d.ts",
+      "import": "./dist/theme/image.js"
+    },
     "./styles/*": {
       "types": "./dist/styles/*.d.ts",
       "import": "./dist/styles/*.js"
@@ -459,6 +471,7 @@
   },
   "files": [
     "dist",
+    "NOTICE",
     "src/styles",
     "!dist/package.json",
     "!src/styles/abstract/_config.scss",
@@ -483,16 +496,19 @@
     "ts:check": "tsc --noEmit --skipLibCheck",
     "size": "bun run scripts/size.ts",
     "size:check": "bun run scripts/check-package-size.ts",
+    "notice:check": "bun run scripts/check-third-party-notice.ts",
     "readme:check": "bun run scripts/check-readme.ts",
     "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
+    "declaration-docs:check": "bun run scripts/check-declaration-docs.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
     "base-lite:check": "bun run scripts/check-base-lite.ts",
     "component-sheets:check": "bun run scripts/check-component-sheets.ts",
     "theme-root-scope:check": "bun run scripts/check-theme-root-scope.ts",
+    "theme-runtime:check": "bun run scripts/check-theme-runtime.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
     "component-exports:update": "bun run scripts/component-exports.ts --update",
@@ -503,7 +519,7 @@
     "consumer:check": "bun run scripts/check-consumer.ts",
     "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "ssr-comments:check": "bun run scripts/check-ssr-comments.ts",
-    "tabs:check": "bun run scripts/check-tabs.ts",
+    "tabs:check": "bun run scripts/check-tabs.ts && bun run scripts/check-a11y-name-role-b.ts",
     "slider:check": "bun run scripts/check-slider.ts",
     "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
@@ -518,7 +534,8 @@
     "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts",
     "dialog-reduced-motion:check": "bun run scripts/check-dialog-reduced-motion.ts",
     "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
-    "core:check": "bun run scripts/check-core.ts",
+    "keyboard-focus:check": "bun run scripts/check-keyboard-focus.ts",
+    "core:check": "bun run scripts/check-core.ts && bun run scripts/check-keyboard-focus.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",
     "ssr:check:a": "bun run scripts/check-ssr.ts a",

@@ -126,6 +126,10 @@ describe("explicit contrast levels are opt-in", () => {
     // segmented rows read six list custom properties that the list does not
     // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
+    // A single-select listbox option carries a 20px radio ring in its leading
+    // or trailing slot and fills it when selected; the option itself takes the
+    // row's state layer and a pointer cursor, and a focused option rounds a
+    // segmented row like the row action did (styles/components/_list.scss).
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
@@ -283,9 +287,19 @@ describe("explicit contrast levels are opt-in", () => {
     // 2dp inside corner at a handle gap, both written by the controller, and the
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
-    expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("31445ec937cfe4f1c9c4199c09014a4aa9cdf02ff9ee975ab7227aba15cfe85c");
-    expect(css.length).toBe(532064);
+    // The three status seeds (success, warning, info) are harmonised to each
+    // theme's primary colour and emitted at standard, medium and high contrast
+    // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
+    // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard-focused menu items, select keyboard-active options and the menu
+    // surface draw an inward ring. Drawer, slider, search, text-field and active
+    // navigation indicators retain the focus fixes on main. Other focus rings
+    // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
+    // and reduced motion use their intended state rules.
+    expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
+      sha256: "b2db285bf82c3e7ec5473e915534019754f21cc9743fa916754d99c1eb2ad257",
+      length: 544956,
+    });
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -1467,6 +1467,13 @@
       "BaseComponent"
     ]
   },
+  "SchemeMode": {
+    "kind": "union",
+    "members": [
+      "\"dark\"",
+      "\"light\""
+    ]
+  },
   "SearchConfig.suggestions": {
     "kind": "union",
     "members": [
@@ -1615,6 +1622,13 @@
     "members": [
       "\"modal\"",
       "\"standard\""
+    ]
+  },
+  "SingleSelectListboxOptions.indicator": {
+    "kind": "union",
+    "members": [
+      "\"leading\"",
+      "\"trailing\""
     ]
   },
   "SliderConfig": {
@@ -1988,6 +2002,18 @@
       "\"tertiary-container\"",
       "\"tertiary-fixed\"",
       "\"tertiary-fixed-dim\""
+    ]
+  },
+  "ThemeVariant": {
+    "kind": "union",
+    "members": [
+      "\"content\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"tonal-spot\"",
+      "\"vibrant\""
     ]
   },
   "ThrottleComponent": {

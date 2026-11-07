@@ -24,7 +24,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_550,
   form: 20_400,
-  "all-js": 128_550,
+  "all-js": 130_050,
   "base-css": 3_050,
   "base-lite-css": 1_750,
   "button-css": 5_300,
@@ -49,10 +49,10 @@ export const SSR_PAGE = {
 export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, solid: 600 } as const;
 
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
-// The readable, comment-stripped dist: the package job measures 863,703 B packed
-// where the base packed 882,799. The ceiling carries 1,297 B over the
-// measurement, as 883,000 carried 1,432 B over 881,568 when it was set: 865,000.
-export const TARBALL_BYTES = 865_000;
+// The readable, comment-stripped dist: at the 865,000 ceiling the package job
+// measured 863,703 B packed (1,297 B spare) where the base packed 882,799, as
+// 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
+export const TARBALL_BYTES = 920_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts.
@@ -66,4 +66,9 @@ export const CONSUMER_INITIAL_GZIP = {
   addClass: 750,
   "text-field": 10_000,
   button: 8_700,
+  // Runtime colour, 3.8.0. Both rows are the first CI measurement plus
+  // max(1%, 100 B), rounded up to the next 50; the ceilings, 20,500 B for the
+  // scheme and 24,000 B with the image path, stay above them.
+  theme: 17_450,
+  "theme-image": 21_050,
 } as const;

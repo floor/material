@@ -300,10 +300,13 @@ const withOpener =
       case " ": // Space
       case "ArrowDown":
       case "Down":
+      case "ArrowUp":
+      case "Up":
         // Prevent default browser behavior
         e.preventDefault();
 
-        // Open menu if closed, with keyboard interaction type
+        // Open menu if closed, with keyboard interaction type. Which item
+        // takes focus follows the opening event: ArrowUp takes the last.
         if (!isOpen) {
           component.menu.open(e, "keyboard");
         }
@@ -314,33 +317,6 @@ const withOpener =
         if (isOpen) {
           e.preventDefault();
           component.menu.close(e);
-        }
-        break;
-
-      case "ArrowUp":
-      case "Up":
-        e.preventDefault();
-
-        // Special case: open menu with focus on last item
-        if (!isOpen) {
-          component.menu.open(e, "keyboard");
-
-          // Wait for menu to open and grab the last item
-          tasks.setTimeout(() => {
-            const items = component.element.querySelectorAll(
-              `.${component.getClass("menu__item")}:not(.${component.getClass("menu__item--disabled")})`,
-            ) as NodeListOf<HTMLElement>;
-
-            if (items.length > 0) {
-              // Reset tabindex for all items
-              items.forEach((item) => item.setAttribute("tabindex", "-1"));
-
-              // Set the last item as active
-              const lastItem = items[items.length - 1];
-              lastItem.setAttribute("tabindex", "0");
-              lastItem.focus();
-            }
-          }, 100);
         }
         break;
     }
