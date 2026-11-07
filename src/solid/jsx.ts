@@ -11,6 +11,9 @@ import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+type Spec = import("../elements/button").ButtonSpec | import("../elements/switch").SwitchSpec | import("../elements/tabs").TabsSpec | import("../elements/progress").ProgressSpec | import("../elements/loading-indicator").LoadingIndicatorSpec | import("../elements/badge").BadgeSpec | import("../elements/divider").DividerSpec | import("../elements/icon-button").IconButtonSpec | import("../elements/fab").FabSpec | import("../elements/extended-fab").ExtendedFabSpec | import("../elements/checkbox").CheckboxSpec | import("../elements/slider").SliderSpec | import("../elements/text-field").TextFieldSpec | import("../elements/radios").RadiosSpec | import("../elements/navigation-bar").NavigationBarSpec | import("../elements/navigation-rail").NavigationRailSpec | import("../elements/drawer").DrawerSpec | import("../elements/top-app-bar").TopAppBarSpec | import("../elements/bottom-app-bar").BottomAppBarSpec | import("../elements/button-group").ButtonGroupSpec | import("../elements/chips").ChipsSpec | import("../elements/list").ListSpec | import("../elements/card").CardSpec | import("../elements/carousel").CarouselSpec | import("../elements/menu").MenuSpec | import("../elements/fab-menu").FabMenuSpec | import("../elements/select").SelectSpec | import("../elements/split-button").SplitButtonSpec | import("../elements/tooltip").TooltipSpec | import("../elements/toolbar").ToolbarSpec | import("../elements/snackbar").SnackbarSpec | import("../elements/dialog").DialogSpec | import("../elements/bottom-sheet").BottomSheetSpec | import("../elements/side-sheet").SideSheetSpec | import("../elements/datepicker").DatepickerSpec | import("../elements/timepicker").TimepickerSpec | import("../elements/search").SearchSpec;
+type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
+type Ev<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it
@@ -69,36 +72,36 @@ declare module "solid-js" {
     }
     /** `prop:checked`, `prop:value`: the elements' live properties. */
     interface ExplicitProperties {
-      "selected": NonNullable<ElementProperties<import("../elements/button").ButtonSpec>["selected"]> | NonNullable<ElementProperties<import("../elements/icon-button").IconButtonSpec>["selected"]>;
-      "checked": NonNullable<ElementProperties<import("../elements/switch").SwitchSpec>["checked"]> | NonNullable<ElementProperties<import("../elements/checkbox").CheckboxSpec>["checked"]>;
-      "value": NonNullable<ElementProperties<import("../elements/tabs").TabsSpec>["value"]> | NonNullable<ElementProperties<import("../elements/progress").ProgressSpec>["value"]> | NonNullable<ElementProperties<import("../elements/slider").SliderSpec>["value"]> | NonNullable<ElementProperties<import("../elements/text-field").TextFieldSpec>["value"]> | NonNullable<ElementProperties<import("../elements/radios").RadiosSpec>["value"]> | NonNullable<ElementProperties<import("../elements/navigation-bar").NavigationBarSpec>["value"]> | NonNullable<ElementProperties<import("../elements/navigation-rail").NavigationRailSpec>["value"]> | NonNullable<ElementProperties<import("../elements/drawer").DrawerSpec>["value"]> | NonNullable<ElementProperties<import("../elements/button-group").ButtonGroupSpec>["value"]> | NonNullable<ElementProperties<import("../elements/chips").ChipsSpec>["value"]> | NonNullable<ElementProperties<import("../elements/list").ListSpec>["value"]> | NonNullable<ElementProperties<import("../elements/select").SelectSpec>["value"]> | NonNullable<ElementProperties<import("../elements/datepicker").DatepickerSpec>["value"]> | NonNullable<ElementProperties<import("../elements/timepicker").TimepickerSpec>["value"]> | NonNullable<ElementProperties<import("../elements/search").SearchSpec>["value"]>;
-      "indeterminate": NonNullable<ElementProperties<import("../elements/progress").ProgressSpec>["indeterminate"]> | NonNullable<ElementProperties<import("../elements/checkbox").CheckboxSpec>["indeterminate"]>;
-      "visible": NonNullable<ElementProperties<import("../elements/badge").BadgeSpec>["visible"]>;
-      "secondValue": NonNullable<ElementProperties<import("../elements/slider").SliderSpec>["secondValue"]>;
-      "values": NonNullable<ElementProperties<import("../elements/list").ListSpec>["values"]>;
-      "index": NonNullable<ElementProperties<import("../elements/carousel").CarouselSpec>["index"]>;
-      "anchor": NonNullable<ElementProperties<import("../elements/menu").MenuSpec>["anchor"]>;
-      "target": NonNullable<ElementProperties<import("../elements/tooltip").TooltipSpec>["target"]>;
-      "open": NonNullable<ElementProperties<import("../elements/snackbar").SnackbarSpec>["open"]>;
+      "selected": Prop<"selected">;
+      "checked": Prop<"checked">;
+      "value": Prop<"value">;
+      "indeterminate": Prop<"indeterminate">;
+      "visible": Prop<"visible">;
+      "secondValue": Prop<"secondValue">;
+      "values": Prop<"values">;
+      "index": Prop<"index">;
+      "anchor": Prop<"anchor">;
+      "target": Prop<"target">;
+      "open": Prop<"open">;
     }
     /** `on:change` and the other element events. */
     interface CustomEvents {
-      "change": ElementEvents<import("../elements/button").ButtonSpec>["change"] | ElementEvents<import("../elements/switch").SwitchSpec>["change"] | ElementEvents<import("../elements/tabs").TabsSpec>["change"] | ElementEvents<import("../elements/icon-button").IconButtonSpec>["change"] | ElementEvents<import("../elements/checkbox").CheckboxSpec>["change"] | ElementEvents<import("../elements/slider").SliderSpec>["change"] | ElementEvents<import("../elements/text-field").TextFieldSpec>["change"] | ElementEvents<import("../elements/radios").RadiosSpec>["change"] | ElementEvents<import("../elements/navigation-bar").NavigationBarSpec>["change"] | ElementEvents<import("../elements/navigation-rail").NavigationRailSpec>["change"] | ElementEvents<import("../elements/drawer").DrawerSpec>["change"] | ElementEvents<import("../elements/button-group").ButtonGroupSpec>["change"] | ElementEvents<import("../elements/chips").ChipsSpec>["change"] | ElementEvents<import("../elements/list").ListSpec>["change"] | ElementEvents<import("../elements/carousel").CarouselSpec>["change"] | ElementEvents<import("../elements/select").SelectSpec>["change"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["change"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["change"] | ElementEvents<import("../elements/search").SearchSpec>["change"];
-      "collapse": ElementEvents<import("../elements/extended-fab").ExtendedFabSpec>["collapse"] | ElementEvents<import("../elements/navigation-rail").NavigationRailSpec>["collapse"] | ElementEvents<import("../elements/toolbar").ToolbarSpec>["collapse"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["collapse"];
-      "expand": ElementEvents<import("../elements/extended-fab").ExtendedFabSpec>["expand"] | ElementEvents<import("../elements/navigation-rail").NavigationRailSpec>["expand"] | ElementEvents<import("../elements/toolbar").ToolbarSpec>["expand"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["expand"];
-      "input": ElementEvents<import("../elements/slider").SliderSpec>["input"] | ElementEvents<import("../elements/text-field").TextFieldSpec>["input"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["input"] | ElementEvents<import("../elements/search").SearchSpec>["input"];
-      "trailing": ElementEvents<import("../elements/text-field").TextFieldSpec>["trailing"];
-      "visibility": ElementEvents<import("../elements/navigation-bar").NavigationBarSpec>["visibility"];
-      "open": ElementEvents<import("../elements/drawer").DrawerSpec>["open"] | ElementEvents<import("../elements/menu").MenuSpec>["open"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["open"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["open"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["open"] | ElementEvents<import("../elements/dialog").DialogSpec>["open"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["open"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["open"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["open"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["open"] | ElementEvents<import("../elements/search").SearchSpec>["open"];
-      "close": ElementEvents<import("../elements/drawer").DrawerSpec>["close"] | ElementEvents<import("../elements/menu").MenuSpec>["close"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["close"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["close"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["close"] | ElementEvents<import("../elements/dialog").DialogSpec>["close"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["close"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["close"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["close"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["close"] | ElementEvents<import("../elements/search").SearchSpec>["close"];
-      "action": ElementEvents<import("../elements/button-group").ButtonGroupSpec>["action"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["action"] | ElementEvents<import("../elements/search").SearchSpec>["action"];
-      "remove": ElementEvents<import("../elements/chips").ChipsSpec>["remove"];
-      "activate": ElementEvents<import("../elements/list").ListSpec>["activate"];
-      "select": ElementEvents<import("../elements/menu").MenuSpec>["select"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["select"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["select"] | ElementEvents<import("../elements/search").SearchSpec>["select"];
-      "show": ElementEvents<import("../elements/toolbar").ToolbarSpec>["show"];
-      "hide": ElementEvents<import("../elements/toolbar").ToolbarSpec>["hide"];
-      "cancel": ElementEvents<import("../elements/dialog").DialogSpec>["cancel"];
-      "confirm": ElementEvents<import("../elements/timepicker").TimepickerSpec>["confirm"];
+      "change": Ev<"change">;
+      "collapse": Ev<"collapse">;
+      "expand": Ev<"expand">;
+      "input": Ev<"input">;
+      "trailing": Ev<"trailing">;
+      "visibility": Ev<"visibility">;
+      "open": Ev<"open">;
+      "close": Ev<"close">;
+      "action": Ev<"action">;
+      "remove": Ev<"remove">;
+      "activate": Ev<"activate">;
+      "select": Ev<"select">;
+      "show": Ev<"show">;
+      "hide": Ev<"hide">;
+      "cancel": Ev<"cancel">;
+      "confirm": Ev<"confirm">;
     }
   }
 }
