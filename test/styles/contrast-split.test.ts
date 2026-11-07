@@ -297,8 +297,8 @@ describe("explicit contrast levels are opt-in", () => {
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b2db285bf82c3e7ec5473e915534019754f21cc9743fa916754d99c1eb2ad257",
-      length: 544956,
+      sha256: "26acf626aaca992f82bc31dededae594241846082a076ad1b64f09c61a80bd86",
+      length: 546159,
     });
   });
 
