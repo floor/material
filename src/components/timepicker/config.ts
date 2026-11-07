@@ -63,7 +63,7 @@ const inDialog = (event: Event, prefix: string): boolean =>
 export const getContainerConfig = (config: ResolvedTimePickerConfig) => {
   // `title` is the headline: passed on, it became the native tooltip over
   // the whole surface. The headline names it through aria-labelledby.
-  return createElementConfig({ ...config, title: undefined }, {
+  return createElementConfig({ ...config, title: undefined, ariaLabel: undefined }, {
     tag: "div",
     // The dialog semantics are the native <dialog>'s, not this host's.
     className: [
