@@ -51,6 +51,8 @@ document.body.append(name.element, save.element);
 
 Every component comes three ways: a factory, a custom element and a framework component. Each has a page with a playground on [md3.io/components](https://md3.io/components/).
 
+Known accessibility limitation: labels on some custom-element hosts and on Checkbox, Switch, TextField and Slider factory wrappers may expose duplicate accessible names; 3.x retains authored attributes and existing default markup.
+
 ## Web components
 
 A page imports the base stylesheet and the elements' CSS once, then registers the elements with `defineAll()`. After that `<m-button>` and the rest are HTML, in plain pages, server templates and any framework.

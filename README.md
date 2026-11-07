@@ -159,6 +159,8 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
+Known accessibility limitation: labels on some custom-element hosts and on Checkbox, Switch, TextField and Slider factory wrappers may expose duplicate accessible names; 3.x retains authored attributes and existing default markup.
+
 ## Styles
 
 The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
