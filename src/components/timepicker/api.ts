@@ -11,7 +11,7 @@ import {
 } from './types';
 import { TIMEPICKER_EVENTS as EVENTS } from './constants';
 import { formatFormValue } from './utils';
-import { renderTimePicker } from './render';
+import { nameTimePicker, renderTimePicker } from './render';
 import type { TimePickerEvents, TimeFormat, TimePickerType, TimePickerOrientation } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
@@ -319,18 +319,17 @@ export const createTimePickerAPI = (
     setTitle(title: string) {
       config.title = title;
       
-      // Update title element if it exists
-      const titleElement = dialogElement.querySelector(part('title'));
-      if (titleElement) {
-        titleElement.textContent = title;
-      } else {
-        // Re-render to add title
-        render();
-      }
+      nameTimePicker(dialogElement, config);
       
       return this;
     },
     
+    setAriaLabel(label: string) {
+      config.ariaLabel = label;
+      nameTimePicker(dialogElement, config);
+      return this;
+    },
+
     getTitle() {
       return config.title || '';
     },

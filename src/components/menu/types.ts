@@ -312,6 +312,11 @@ export interface MenuConfig {
   class?: string;
 
   /**
+   * Accessible label for assistive technology on the menu surface and list
+   */
+  ariaLabel?: string;
+
+  /**
    * Component prefix for CSS class names
    * @default 'mtrl'
    */
