@@ -57,6 +57,27 @@ Hover docs in your editor, and keyboard focus fixes for menus, split buttons and
   `aria-activedescendant`, while withholding the keyboard outline until
   keyboard interaction.
 
+### Internal
+
+- **Release size.**
+  The release build at `dac29446`
+  ([CI run 42400952354, package job 128488628262](https://github.com/floor/material/actions/runs/42400952354/job/128488628262))
+  packs **897,582 B compressed / 4,945,876 B unpacked / 1,626 files**.
+  Against v3.8.0 at `39e2becb`
+  ([CI run 42040150024, package job 127289094084](https://github.com/floor/material/actions/runs/42040150024/job/127289094084)),
+  that is **+68,384 B packed / +251,344 B unpacked**, with the file count
+  unchanged. It leaves **22,418 B** under the 920,000 B packed ceiling and
+  **173,124 B** under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,784 / 127,296 / 105,696 B** raw/gzip/brotli
+  (**+209 / +118 / +181 B**), and the full stylesheet is
+  **636,857 / 58,747 / 41,872 B** (**+150 / +2 / −53 B**). The declaration
+  documentation itself adds no runtime JS or CSS; the keyboard fixes move
+  those rows, and compressed sizes include the 3.8.1 version banner.
+  The README rows remain 127.3 kB for all-js and 58.7 kB for full CSS.
+  The select and split-button component rows measure 13,447 / 13,516 B and
+  9,704 / 9,728 B gzip against their unchanged budgets, and SIZES.md matches.
+
 ## [3.8.0] - 2026-11-06
 
 Colour that adapts at runtime.
