@@ -76,7 +76,7 @@ const CONTRASTS = [-1, 0, 0.5, 1] as const;
 
 test("the frozen fixture covers 34 reference roles alongside six runtime status roles", () => {
   expect(fixture.roles).toHaveLength(34);
-  expect([...SCHEME_ROLES]).toEqual([...fixture.roles, ...STATUS_ROLES]);
+  expect([...fixture.roles, ...STATUS_ROLES]).toEqual([...SCHEME_ROLES]);
   expect(fixture.schemes).toHaveLength(64);
   expect(fixture.schemes.reduce((total, row) => total + row.values.length, 0)).toBe(2176);
 });
