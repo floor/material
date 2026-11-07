@@ -489,7 +489,6 @@ try {
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
     // Typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
     // Merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
-    // Slider handle focus ring and forced-colors border/outline: 4,895. 4,895 + 100 = 4,995, rounded up to 5,000.
     { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: PACKAGE_GZIP["slider-css"] },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
