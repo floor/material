@@ -19,13 +19,7 @@
 import { registerSpec2025 } from "./vendor/dynamiccolor/spec_2025";
 import { DynamicScheme } from "./vendor/dynamiccolor/dynamic_scheme";
 import { Hct } from "./vendor/hct/hct";
-import { SchemeContent } from "./vendor/scheme/scheme_content";
-import { SchemeExpressive } from "./vendor/scheme/scheme_expressive";
-import { SchemeFidelity } from "./vendor/scheme/scheme_fidelity";
-import { SchemeMonochrome } from "./vendor/scheme/scheme_monochrome";
-import { SchemeNeutral } from "./vendor/scheme/scheme_neutral";
-import { SchemeTonalSpot } from "./vendor/scheme/scheme_tonal_spot";
-import { SchemeVibrant } from "./vendor/scheme/scheme_vibrant";
+import { Variant } from "./vendor/dynamiccolor/variant";
 import { argbFromHex } from "./vendor/utils/string_utils";
 import type { ThemeVariant } from "./variants";
 
@@ -44,20 +38,23 @@ export type SpecVersion = "2021" | "2025";
  */
 export type Spec2025Factory = (source: Hct, dark: boolean, contrastLevel: number, spec?: SpecVersion) => DynamicScheme;
 
+const scheme = (variant: number): Spec2025Factory => (sourceColorHct, isDark, contrastLevel, specVersion = "2021") =>
+  new DynamicScheme({ sourceColorHct, variant, isDark, contrastLevel, specVersion });
+
 /** The tonal-spot variant, Material's default theme. */
-export const tonalSpot: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeTonalSpot(source, dark, contrast, spec);
+export const tonalSpot: Spec2025Factory = scheme(Variant.TONAL_SPOT);
 /** The vibrant variant. */
-export const vibrant: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeVibrant(source, dark, contrast, spec);
+export const vibrant: Spec2025Factory = scheme(Variant.VIBRANT);
 /** The expressive variant. */
-export const expressive: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeExpressive(source, dark, contrast, spec);
+export const expressive: Spec2025Factory = scheme(Variant.EXPRESSIVE);
 /** The fidelity variant; `"2025"` falls back to `"2021"`. */
-export const fidelity: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeFidelity(source, dark, contrast, spec);
+export const fidelity: Spec2025Factory = scheme(Variant.FIDELITY);
 /** The content variant; `"2025"` falls back to `"2021"`. */
-export const content: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeContent(source, dark, contrast, spec);
+export const content: Spec2025Factory = scheme(Variant.CONTENT);
 /** The neutral variant. */
-export const neutral: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeNeutral(source, dark, contrast, spec);
+export const neutral: Spec2025Factory = scheme(Variant.NEUTRAL);
 /** The monochrome variant; `"2025"` falls back to `"2021"`. */
-export const monochrome: Spec2025Factory = (source, dark, contrast, spec = "2021") => new SchemeMonochrome(source, dark, contrast, spec);
+export const monochrome: Spec2025Factory = scheme(Variant.MONOCHROME);
 
 /** The mode of the generated scheme: a light or a dark one. */
 export type SchemeMode = "light" | "dark";
