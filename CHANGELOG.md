@@ -17,6 +17,46 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.8.1] - 2026-11-08
+
+Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
+
+### Changed
+
+- **Compact hover documentation in the shipped declarations (#308).**
+  Declaration comments keep the first summary sentence across wrapped lines
+  (or the first line when there is no sentence terminator), parameter names
+  whose source tags included descriptions, the first `@default` line and the
+  complete `@deprecated` note. Bare parameter tags, `@returns`, `@internal`,
+  examples and the remaining prose are omitted. The declaration documentation
+  itself adds no runtime JavaScript or CSS.
+
+### Fixed
+
+- **Visible keyboard focus in menus (#310).**
+  Keyboard-focused menu items and empty menu surfaces now show a 3px inward
+  secondary-colour outline, including in forced colours. Pointer opening
+  remains ringless. The previous surface rule passed a selector string as the
+  focus-ring mixin's colour argument, producing an invalid outline; menu items
+  had no matching outline rule.
+
+- **Keyboard opening of split-button menus (#311).**
+  Enter, Space and ArrowDown open on the first non-hidden item, including when
+  that item is disabled. ArrowUp opens on the last non-disabled item, falling
+  back to the last item if all are disabled. This works with an already-loaded
+  menu and an asynchronously loaded menu. The standalone menu opener uses the
+  same ArrowUp focus path, replacing its separate timer. Pointer opening keeps
+  focus on the menu surface, and `MenuComponent.open(event?, interactionType?)`
+  keeps its existing public signature.
+
+- **Visible active-option focus in selects (#312).**
+  Keyboard opening and option navigation show a 3px inward secondary-colour
+  outline on `.mtrl-menu__item--keyboard-active`. DOM focus stays on the
+  `.mtrl-text-field__input` combobox and its existing field indicator is
+  preserved. Pointer opening retains the selected option's active state and
+  `aria-activedescendant`, while withholding the keyboard outline until
+  keyboard interaction.
+
 ## [3.8.0] - 2026-11-06
 
 Colour that adapts at runtime.
@@ -6503,7 +6543,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.8.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.8.1...HEAD
+[3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
 [3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
 [3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
 [3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2
