@@ -31,7 +31,7 @@ try {
   page.on("pageerror", error => console.error(error));
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as { ready: boolean }).ready);
-  await checkFocusVisibility(page);
+  await checkFocusVisibility(page, process.env.FOCUS_CASES?.split(","));
 } finally {
   await browser.close(); server.stop(true);
 }

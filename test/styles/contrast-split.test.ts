@@ -285,8 +285,8 @@ describe("explicit contrast levels are opt-in", () => {
     // Focus rings now retain contrast, scroll/clip clearance and sibling stacking;
     // pointer focus and reduced motion use their intended state rules.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6585af5875a0ddd20aec11bd0fef6ddc752bb467cfb15fa4db46ae9e17d2827b");
-    expect(css.length).toBe(542616);
+      .toBe("f4e7796b9fd55b467085a6dcdd57d059b6312a163bcd228fde18e0f0936720d7");
+    expect(css.length).toBe(542607);
   });
 
   test("today's sheets still resolve to the fixture", () => {

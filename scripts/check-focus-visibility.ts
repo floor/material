@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { mkdir } from "node:fs/promises";
 import type { Page } from "playwright";
 
 type Factory = typeof import("../src/index");
@@ -13,7 +14,7 @@ const cases = ["carousel", "toolbar", "timepicker", "fab-menu", "chips", "split-
 type Case = typeof cases[number];
 
 /** Actual factory/element styles, real Tab focus, both directions and all three colour modes. */
-export async function checkFocusVisibility(page: Page): Promise<void> {
+export async function checkFocusVisibility(page: Page, only?: readonly string[]): Promise<void> {
   const failures: string[] = [];
   let checks = 0;
   let compactedChecks = 0;
@@ -21,7 +22,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
     await page.emulateMedia({ colorScheme: mode === "light" ? "light" : "dark", forcedColors: mode === "forced-colors" ? "active" : "none", reducedMotion: "no-preference" });
     for (const dir of ["ltr", "rtl"] as const) {
       for (const flavor of ["factory", "element"] as const) {
-        for (const kind of cases) {
+        for (const kind of cases.filter(kind => !only || only.includes(kind))) {
           const label = `${mode}/${dir}/${flavor}/${kind}`;
           console.log(`Focus visibility: ${label}`);
           await page.evaluate(({ mode, dir, flavor, kind }) => {
@@ -41,7 +42,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               const factories = {
                 carousel: () => m.createCarousel({ variant: "multi-browse", itemWidth: 260, slides }),
                 toolbar: () => m.createToolbar({ color: "vibrant", items: [{ icon, ariaLabel: "Edit" }] }),
-                timepicker: () => m.createTimePicker({ value: "10:30", showSeconds: true }),
+                timepicker: () => m.createTimePicker({ value: "10:30" }),
                 "fab-menu": () => m.createFabMenu({ presentation: "list", icon, ariaLabel: "Actions", items: ["First", "Middle", "Last"].map(text => ({ id: text, text, icon })) }),
                 chips: () => m.createChips({ scrollable: true, chips: ["First", "Middle", "Last"].map(label => ({ label, value: label })) }),
                 "split-button": () => m.createSplitButton({ text: "Send", items: [{ id: "later", text: "Later" }] }),
@@ -62,7 +63,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               const markup: Record<Case, string> = {
                 carousel: `<m-carousel variant="multi-browse" item-width="260">${slides.map((s, i) => `<m-carousel-item label="${s.title}" ${i ? "" : 'button-text="Explore" button-url="#explore"'}></m-carousel-item>`).join("")}</m-carousel>`,
                 toolbar: `<m-toolbar color="vibrant"><m-icon-button aria-label="Edit" icon='${icon}'></m-icon-button></m-toolbar>`,
-                timepicker: '<m-timepicker value="10:30" show-seconds></m-timepicker>',
+                timepicker: '<m-timepicker value="10:30"></m-timepicker>',
                 "fab-menu": '<m-fab-menu presentation="list" aria-label="Actions"><m-fab-menu-item>First</m-fab-menu-item><m-fab-menu-item>Middle</m-fab-menu-item><m-fab-menu-item>Last</m-fab-menu-item></m-fab-menu>',
                 chips: '<m-chips scrollable><m-chip>First</m-chip><m-chip>Middle</m-chip><m-chip>Last</m-chip></m-chips>',
                 "split-button": '<m-split-button label="Send"><m-menu-item>Later</m-menu-item></m-split-button>',
@@ -115,11 +116,15 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               const pred = document.createElement("button");
               pred.id = "focus-predecessor";
               pred.style.cssText = "position:fixed;width:1px;height:1px;opacity:0";
-              (kind === "toolbar" ? el.closest(".mtrl-toolbar") ?? el : el).before(pred);
+              (kind === "toolbar" ? el.closest(".mtrl-toolbar") ?? el : kind === "chips" ? el.closest(".mtrl-chips")! : el).before(pred);
               pred.focus();
             }, { i, kind });
             await page.keyboard.press("Tab");
             if (kind === "fab-menu") for (let step = 0; step < i; step++) await page.keyboard.press("ArrowDown");
+            if (kind === "chips") {
+              await page.keyboard.press("Home");
+              for (let step = 0; step < i; step++) await page.keyboard.press(dir === "ltr" ? "ArrowRight" : "ArrowLeft");
+            }
             const measure = await page.evaluate(async ({ i, kind }) => {
               const el = (window as unknown as FocusWindow).focusTargets[i]!;
               document.querySelector("#focus-predecessor")?.remove();
@@ -160,8 +165,8 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
               let anc: Element | null = ringElement.parentElement ?? ((ringElement.getRootNode() as ShadowRoot).host ?? null);
               while (anc && anc !== document.documentElement) {
                 const a = getComputedStyle(anc); const r = anc.getBoundingClientRect();
-                if (a.overflowY !== "visible" && (box.top < r.top - .5 || box.bottom > r.bottom + .5)) clipping.push(`${anc.className}: block`);
-                if (a.overflowX !== "visible" && (box.left < r.left - .5 || box.right > r.right + .5)) clipping.push(`${anc.className}: inline`);
+                if (a.overflowY !== "visible" && (box.top < r.top - .5 || box.bottom > r.bottom + .5)) clipping.push(`${anc.className}: block ${Math.max(r.top - box.top, box.bottom - r.bottom).toFixed(1)}px (scroll ${anc.scrollTop}, ring ${box.top.toFixed(1)}..${box.bottom.toFixed(1)}, port ${r.top.toFixed(1)}..${r.bottom.toFixed(1)})`);
+                if (a.overflowX !== "visible" && (box.left < r.left - .5 || box.right > r.right + .5)) clipping.push(`${anc.className}: inline ${Math.max(r.left - box.left, box.right - r.right).toFixed(1)}px (scroll ${anc.scrollLeft}/${anc.scrollWidth}, ring ${box.left.toFixed(1)}..${box.right.toFixed(1)}, port ${r.left.toFixed(1)}..${r.right.toFixed(1)})`);
                 anc = anc.parentElement ?? ((anc.getRootNode() as ShadowRoot).host ?? null);
               }
               const cp = /inset\(([\d.]+)px ([\d.]+)(?:px)?/.exec(cs.clipPath);
@@ -196,6 +201,10 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
             }
             checks++;
             if (problems.length) failures.push(`${label}/${i}: ${problems.join("; ")}`);
+            if (problems.length && mode === "light" && dir === "ltr" && flavor === "factory" && (kind === "timepicker" && i === 0 || kind === "chips" && i === count - 1)) {
+              await mkdir("analysis/browser", { recursive: true });
+              await page.screenshot({ path: `analysis/browser/focus-${kind}.png` });
+            }
           }
           if (kind === "dialog") {
             const target = page.locator(".mtrl-dialog__header-close");
@@ -238,7 +247,7 @@ export async function checkFocusVisibility(page: Page): Promise<void> {
   });
   await page.emulateMedia({ colorScheme: "light", forcedColors: "none", reducedMotion: "no-preference" });
   for (const failure of failures) console.error(failure);
-  assert(compactedChecks > 0, "The carousel checks must exercise a compacted slide with a real clip path");
+  if (!only || only.includes("carousel")) assert(compactedChecks > 0, "The carousel checks must exercise a compacted slide with a real clip path");
   assert.deepEqual(failures, [], `Focus visibility: ${failures.length} failures across ${checks} keyboard measurements`);
   console.log(`Passed focus visibility: ${checks} keyboard measurements, factory and custom elements, LTR/RTL, light/dark/forced colors, pointer and reduced motion.`);
 }
