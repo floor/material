@@ -270,9 +270,34 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // The card's loading, expandable and swipeable rules and their spinner
+    // keyframes are gone: the module that made their markup stopped shipping
+    // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The 14 dead selector groups verified to have no producer in src/ are
+    // removed from the dialog, menu, select, slider, tabs and timepicker
+    // component sheets (styles/components/_dialog.scss, _menu.scss,
+    // _select.scss, _slider.scss, _tabs.scss, _timepicker.scss).
+    // The slider's track carries no corner and clips nothing: each piece of track
+    // takes its own outer corner where it reaches an end of the slider and the
+    // 2dp inside corner at a handle gap, both written by the controller, and the
+    // stop indicator's centre sits 6dp from the track's end at every size
+    // (styles/components/_slider.scss).
+    // The three status seeds (success, warning, info) are harmonised to each
+    // theme's primary colour and emitted at standard, medium and high contrast
+    // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
+    // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard-focused menu items and the menu surface itself (when an empty
+    // menu is opened by keyboard) draw the 3dp inward secondary focus ring on
+    // `.mtrl-menu__item:focus-visible` and `.mtrl-menu:focus-visible`,
+    // replacing the broken `m.focus-ring(".mtrl-menu__item:focus-visible")`
+    // call on `.mtrl-menu` (styles/components/_menu.scss).
+    // The select's keyboard-reached option draws the 3dp inward secondary
+    // focus ring (md.comp.focus-ring) on `.mtrl-menu__item--keyboard-active`,
+    // the marker the select writes when a key, not the pointer, reaches the
+    // active option (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("9997ef8fe9b682c0f2f7163df046a531a82b904819f844ccf44be382ffa56838");
-    expect(css.length).toBe(539982);
+      .toBe("1ba930c10cb19f44baebee33a74239ead7d99a139ec2f3c9ffface8f8ee2e2a5");
+    expect(css.length).toBe(544196);
   });
 
   test("today's sheets still resolve to the fixture", () => {

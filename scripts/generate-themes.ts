@@ -37,6 +37,7 @@ import {
 import { readFileSync, readdirSync } from "node:fs";
 import { compileString, Logger } from "sass";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
+import { STATUS_ROLES, statusRolesArgb } from "../src/theme/roles";
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
 export const BASELINE_SEED = "#6750A4";
@@ -53,6 +54,12 @@ export interface ThemeSpec {
   variant: VariantName;
   /** M3 contrast level: 0 standard, 0.5 medium, 1 high */
   contrast?: number;
+  /**
+   * The theme's light primary colour when hand-authored, used as the
+   * harmonisation target for status seeds so they harmonise toward the
+   * displayed primary.
+   */
+  primary?: string;
   /**
    * A custom secondary colour, for a two-colour theme: its hue and chroma
    * become the secondary palette, so the pairing survives with M3's tones
@@ -112,9 +119,13 @@ const camel = (role: string): string => role.replace(/-([a-z])/g, (_, c: string)
 export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
   const source = Hct.fromInt(argbFromHex(spec.seed));
   const contrast = spec.contrast ?? 0;
-  if (!spec.secondary && !spec.tertiary) return new SCHEMES[spec.variant](source, isDark, contrast);
+  const attachPrimary = (scheme: DynamicScheme): DynamicScheme => {
+    if (spec.primary) (scheme as DynamicScheme & { primaryArgb?: number }).primaryArgb = argbFromHex(spec.primary);
+    return scheme;
+  };
+  if (!spec.secondary && !spec.tertiary) return attachPrimary(new SCHEMES[spec.variant](source, isDark, contrast));
   const base = new SCHEMES[spec.variant](source, isDark, contrast);
-  return new DynamicScheme({
+  return attachPrimary(new DynamicScheme({
     sourceColorHct: source,
     variant: VARIANT_ENUM[spec.variant],
     contrastLevel: contrast,
@@ -125,16 +136,24 @@ export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
     neutralPalette: base.neutralPalette,
     neutralVariantPalette: base.neutralVariantPalette,
     errorPalette: base.errorPalette,
-  });
+  }));
 };
 
-/** A scheme's colours by role, as hex */
-export const rolesOf = (scheme: DynamicScheme): Record<string, string> =>
-  Object.fromEntries(THEME_ROLES.map((role) => {
-    const argb = (scheme as unknown as Record<string, number>)[camel(role)];
-    if (typeof argb !== "number") throw new Error(`material-color-utilities has no ${camel(role)}`);
-    return [role, hexFromArgb(argb)];
-  }));
+/** A scheme's colours by role, as hex (46 M3 scheme roles plus 6 harmonised status roles). */
+export const rolesOf = (scheme: DynamicScheme): Record<string, string> => {
+  const status = statusRolesArgb(
+    scheme as unknown as Parameters<typeof statusRolesArgb>[0],
+    (scheme as DynamicScheme & { primaryArgb?: number }).primaryArgb,
+  );
+  return {
+    ...Object.fromEntries(STATUS_ROLES.map((role) => [role, hexFromArgb(status[role])])),
+    ...Object.fromEntries(THEME_ROLES.map((role) => {
+      const argb = (scheme as unknown as Record<string, number>)[camel(role)];
+      if (typeof argb !== "number") throw new Error(`material-color-utilities has no ${camel(role)}`);
+      return [role, hexFromArgb(argb)];
+    })),
+  };
+};
 
 const declarations = (tokens: Record<string, string>, indent: string): string =>
   Object.entries(tokens).map(([name, value]) => `${indent}${name}: ${value};`).join("\n");
@@ -143,6 +162,19 @@ const CONTRAST_START = "// contrast roles: generated, do not edit";
 const CONTRAST_HEADER = "// Medium/high contrast: ";
 
 type ModeTokens = { light: Record<string, string>; dark: Record<string, string> };
+
+/** A theme's 6 harmonised status tokens and 46 M3 scheme tokens, light and dark. */
+export const tokensFor = (spec: ThemeSpec): ModeTokens => {
+  const lightRoles = rolesOf(schemeFor(spec, false));
+  const darkRoles = rolesOf(schemeFor(spec, true));
+  const m3 = schemeToTokens({ light: lightRoles, dark: darkRoles }, { prefix: "#{$prefix}" });
+  const status = (roles: Record<string, string>) =>
+    Object.fromEntries(STATUS_ROLES.map((role) => [`--#{$prefix}-sys-color-${role}`, roles[role]]));
+  return {
+    light: { ...status(lightRoles), ...m3.light },
+    dark: { ...status(darkRoles), ...m3.dark },
+  };
+};
 
 /** Read the actual kept standard, including mixins and light values reused in dark. */
 export const standardTokens = (name: string, source: string): ModeTokens => {
@@ -166,13 +198,8 @@ export const standardTokens = (name: string, source: string): ModeTokens => {
 };
 
 /** Only differences from this mode's standard; equal medium/high values share a rule. */
-export const renderContrast = (spec: ThemeSpec, standard: ModeTokens = schemeToTokens({
-  light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)),
-}, { prefix: "#{$prefix}" })): string => {
-  const levels = [0.5, 1].map(contrast => schemeToTokens({
-    light: rolesOf(schemeFor({ ...spec, contrast }, false)),
-    dark: rolesOf(schemeFor({ ...spec, contrast }, true)),
-  }, { prefix: "#{$prefix}" }));
+export const renderContrast = (spec: ThemeSpec, standard: ModeTokens = tokensFor(spec)): string => {
+  const levels = [0.5, 1].map(contrast => tokensFor({ ...spec, contrast }));
   const maps = levels.map(tokens => Object.fromEntries((["light", "dark"] as const).map(mode => [mode,
     Object.fromEntries(Object.entries(tokens[mode]).filter(([token, value]) => {
       if (!standard[mode][token]) throw new Error(`${spec.name} ${mode}: missing standard ${token}`);
@@ -197,10 +224,7 @@ ${modeMap(tokens.dark)}
 
 /** One generated theme's standard, medium and high SCSS. */
 export const renderTheme = (spec: ThemeSpec): string => {
-  const tokens = schemeToTokens(
-    { light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)) },
-    { prefix: "#{$prefix}" },
-  );
+  const tokens = tokensFor(spec);
   const origin = [
     `seed ${spec.seed}`,
     `variant ${TITLE[spec.variant]}`,
@@ -216,15 +240,12 @@ export const renderTheme = (spec: ThemeSpec): string => {
 @use "base-theme" as *;
 
 @include create-theme("${spec.name}") {
-    // Success, warning and info, as every theme has them; the scheme's own
-    // roles, error family included, follow. The scheme always sets the error
-    // family, so status-colors-* would only emit defaults the declarations
-    // below shadow.
-    @include status-roles-light();
+    // Success, warning and info, harmonised to this theme's primary and
+    // resolved at its contrast level; the scheme's own roles, error family
+    // included, follow.
 ${declarations(tokens.light, "    ")}
 
     &[data-theme-mode="dark"] {
-        @include status-roles-dark();
 ${declarations(tokens.dark, "        ")}
     }
 }
@@ -281,9 +302,38 @@ const withSurfaceVariant = (block: string, hex: string, tone: number): string =>
   return `${block.slice(0, at)}${anchor[1]}${line}\n${block.slice(at)}`;
 };
 
-/** A kept theme with its generated roles written from its own colours: the fixed roles and surface-variant */
+/** Updates status-colors-light / status-colors-dark in a kept theme with its harmonised status colours. */
+const withStatusColors = (source: string): string => {
+  const split = source.indexOf('&[data-theme-mode="dark"]');
+  const lightBlock = source.slice(0, split);
+  const key = (role: string): string => {
+    const match = lightBlock.match(new RegExp(`--#\\{\\$prefix\\}-sys-color-${role}:\\s*(#[0-9a-fA-F]{6})`));
+    if (!match) throw new Error(`kept theme has no light ${role}`);
+    return match[1].toLowerCase();
+  };
+  const comments = source.match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)?.join("\n") ?? "";
+  const seed = comments.match(/\bseed color\s+(#[a-f\d]{6})\b/i)?.[1] ?? key("primary");
+  const spec: ThemeSpec = {
+    name: "",
+    description: "",
+    seed,
+    primary: key("primary"),
+    secondary: key("secondary"),
+    tertiary: key("tertiary"),
+    variant: "tonal-spot",
+  };
+  const lightRoles = rolesOf(schemeFor(spec, false));
+  const darkRoles = rolesOf(schemeFor(spec, true));
+  const lightCall = `@include status-colors-light($success: ${lightRoles.success}, $warning: ${lightRoles.warning}, $info: ${lightRoles.info});`;
+  const darkCall = `@include status-colors-dark($success: ${darkRoles.success}, $on-success: ${darkRoles["on-success"]}, $warning: ${darkRoles.warning}, $on-warning: ${darkRoles["on-warning"]}, $info: ${darkRoles.info}, $on-info: ${darkRoles["on-info"]});`;
+  return source
+    .replace(/@include status-colors-light\([^)]*\);/, lightCall)
+    .replace(/@include status-colors-dark\([^)]*\);/, darkCall);
+};
+
+/** A kept theme with its generated roles written from its own colours: the fixed roles, surface-variant and harmonised status roles */
 export const renderKept = (source: string): string => {
-  const withFixed = renderFixed(source);
+  const withFixed = withStatusColors(renderFixed(source));
   const split = withFixed.indexOf('&[data-theme-mode="dark"]');
   const onSurfaceVariant = withFixed.slice(0, split).match(/--#\{\$prefix\}-sys-color-on-surface-variant:\s*(#[0-9a-fA-F]{6})/);
   if (!onSurfaceVariant) throw new Error("kept theme has no light on-surface-variant");
@@ -334,7 +384,7 @@ export const handThemeSpec = (name: string, source: string, standard = standardT
   };
   const comments = source.split(CONTRAST_START)[0].match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)?.join("\n") ?? "";
   const seed = comments.match(/\bseed color\s+(#[a-f\d]{6})\b/i)?.[1] ?? key("primary");
-  return { name, description: "", seed, secondary: key("secondary"), tertiary: key("tertiary"), variant: "tonal-spot" };
+  return { name, description: "", seed, primary: key("primary"), secondary: key("secondary"), tertiary: key("tertiary"), variant: "tonal-spot" };
 };
 
 /** Keep the entire standard source intact; replace only generated contrast blocks. */

@@ -47,12 +47,10 @@ describe('dialog stylesheet', () => {
     expect(value('.mtrl-dialog__footer', 'gap')).toBe('8px');
   });
 
-  test('the headline, the supporting text and the icon take their roles', () => {
+  test('the headline and the supporting text take their roles', () => {
     expect(value('.mtrl-dialog__header-title', 'color')).toBe('var(--mtrl-sys-color-on-surface)');
     expect(value('.mtrl-dialog__header-title', 'font-size')).toBe('24px');
     expect(value('.mtrl-dialog__content', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
-    expect(value('.mtrl-dialog__icon', 'color')).toBe('var(--mtrl-sys-color-secondary)');
-    expect(value('.mtrl-dialog__icon svg, .mtrl-dialog__icon .mtrl-dialog__icon-content', 'width')).toBe('24px');
   });
 
   test('a full-screen dialog has a 56dp header and action bar and no corner', () => {

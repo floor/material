@@ -52,7 +52,7 @@ const MIGRATED: Record<string, string[]> = {
   // produces it. Pinned here because that is easy to "fix" into
   // `__thumb__icon` by someone tidying the child too.
   switch: ["container", "content", "input", "track", "thumb", "thumb-icon", "helper"],
-  tabs: ["divider", "indicator", "scroll", "scroll-indicator", "scroll-button"],
+  tabs: ["divider", "indicator", "scroll"],
 };
 
 const defines = (css: string, className: string): boolean =>

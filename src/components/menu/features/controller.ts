@@ -502,6 +502,7 @@ const withController =
         component.keyboard?.handleInitialFocus(
           component.element,
           interactionType,
+          event,
         );
       }, 100);
 
