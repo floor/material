@@ -42,7 +42,6 @@ const createTimePicker = (
     // stays in the API and is the same element.
     baseConfig.titleId = `${baseConfig.prefix}-time-picker-${++pickers}__title`;
     const dialogElement = document.createElement("dialog");
-    dialogElement.setAttribute("aria-labelledby", baseConfig.titleId);
     dialogElement.className = [
       `${baseConfig.prefix}-time-picker__dialog`,
       `${baseConfig.prefix}-time-picker__dialog--${baseConfig.type}`,

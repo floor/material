@@ -84,6 +84,13 @@ describe('split button', () => {
     expect(createSplitButton({ text: 'x', items }).trailingElement.getAttribute('aria-haspopup')).toBe('menu');
   });
 
+  test('an omitted groupLabel does not take the leading button name', () => {
+    const split = createSplitButton({ text: 'Send', ariaLabel: 'Send email' });
+    expect(split.element.getAttribute('role')).toBe('group');
+    expect(split.element.getAttribute('aria-label')).toBeNull();
+    expect(split.leadingElement.getAttribute('aria-label')).toBe('Send email');
+  });
+
   test('both halves take the same variant and size, defaulting to filled and small', () => {
     const split = createSplitButton({ text: 'Save' });
     expect(split.element.classList.contains('mtrl-split-button--filled')).toBe(true);

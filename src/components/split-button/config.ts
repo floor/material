@@ -32,6 +32,8 @@ export const createBaseConfig = (config: SplitButtonConfig = {}): SplitButtonCon
 /**
  * Element configuration. The two buttons are a group, so a screen reader
  * announces them together and the group can carry a name of its own.
+ * `groupLabel` is that name. `ariaLabel` names the leading button and is
+ * not copied onto the group.
  * @param {SplitButtonConfig} config - Configuration
  * @returns {Object} Element configuration for withElement
  */
@@ -39,7 +41,7 @@ export const getElementConfig = (config: SplitButtonConfig) => {
   const attributes: Record<string, string> = { role: "group" };
   if (config.groupLabel) attributes["aria-label"] = config.groupLabel;
 
-  return createElementConfig(config as BaseComponentConfig, {
+  return createElementConfig({ ...(config as BaseComponentConfig), ariaLabel: undefined }, {
     tag: "div",
     attributes,
   });
