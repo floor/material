@@ -305,3 +305,150 @@ describe('snackbar', () => {
     expect([onPage('second'), onPage('third'), third.state]).toEqual([false, true, 'visible']);
   });
 });
+
+// M3 snackbar accessibility: "On web, a shortcut should exist for users to
+// move focus to snackbars" that carry an action. F8 by default: a bare
+// function key never types a character, so it is safe while the user is in a
+// field, where an actionable snackbar usually appears.
+describe('snackbar focus shortcut', () => {
+  const keydown = (init: KeyboardEventInit) => {
+    const event = new dom.window.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+    document.dispatchEvent(event);
+    return event;
+  };
+  const f8 = (extra: KeyboardEventInit = {}) => keydown({ key: 'F8', code: 'F8', ...extra });
+  const focused = () => document.activeElement;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<button id="trigger">trigger</button><input id="field">';
+    (document.getElementById('trigger') as HTMLButtonElement).focus();
+  });
+
+  test('F8 focuses the action, announces it in aria-keyshortcuts, and emits focus', () => {
+    const events: SnackbarEvent[] = [];
+    const snackbar = createSnackbar({ message: 'Archived', action: 'Undo', onFocus: (event) => events.push(event) });
+    snackbar.show();
+    const action = snackbar.actionButton!;
+    expect(action.getAttribute('aria-keyshortcuts')).toBe('F8');
+    // Opening does not steal focus (M3: snackbars shouldn't)
+    expect(focused()!.id).toBe('trigger');
+
+    const event = f8();
+    expect(event.defaultPrevented).toBe(true);
+    expect(focused()).toBe(action);
+    expect(events.length).toBe(1);
+    expect(events[0].snackbar).toBe(snackbar);
+    expect(events[0].originalEvent).toBe(event);
+  });
+
+  test('F8 with any other modifier held is not the shortcut', () => {
+    const snackbar = createSnackbar({ message: 'Archived', action: 'Undo' });
+    snackbar.show();
+    const action = snackbar.actionButton!;
+    for (const extra of [{ ctrlKey: true, altKey: true }, { shiftKey: true }, { altKey: true }, { metaKey: true }, { ctrlKey: true }]) {
+      const event = f8(extra);
+      expect(focused()).not.toBe(action);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(focused()!.id).toBe('trigger');
+  });
+
+  test('a custom key name is stamped as given and matches only that key', () => {
+    const snackbar = createSnackbar({ message: 'Saved', action: 'Undo', focusShortcut: 'F6' });
+    snackbar.show();
+    const action = snackbar.actionButton!;
+    expect(action.getAttribute('aria-keyshortcuts')).toBe('F6');
+    expect(f8().defaultPrevented).toBe(false);
+    expect(focused()).not.toBe(action);
+    const event = keydown({ key: 'F6', code: 'F6' });
+    expect(event.defaultPrevented).toBe(true);
+    expect(focused()).toBe(action);
+
+    // A single character would be a shortcut WCAG 2.1.4 applies to: refused
+    const letters = createSnackbar({ message: 'Saved', action: 'Undo', focusShortcut: 'm' });
+    letters.show();
+    expect(letters.actionButton!.hasAttribute('aria-keyshortcuts')).toBe(false);
+    expect(keydown({ key: 'm', code: 'KeyM' }).defaultPrevented).toBe(false);
+    expect(focused()).toBe(action);
+  });
+
+  test('focusShortcut false leaves the action without aria-keyshortcuts and listens to nothing', () => {
+    const snackbar = createSnackbar({ message: 'Saved', action: 'Undo', focusShortcut: false });
+    snackbar.show();
+    expect(snackbar.actionButton!.hasAttribute('aria-keyshortcuts')).toBe(false);
+    expect(f8().defaultPrevented).toBe(false);
+    expect(focused()!.id).toBe('trigger');
+  });
+
+  test('it is inert without an action, when not on screen, and when focus is already inside', () => {
+    // No action: nothing to focus, and nothing stamped
+    const plain = createSnackbar({ message: 'Saved', dismissible: true });
+    plain.show();
+    expect(plain.closeButton!.hasAttribute('aria-keyshortcuts')).toBe(false);
+    expect(f8().defaultPrevented).toBe(false);
+    plain.hide();
+
+    // Before show, and after hide: no listener either side of the turn
+    const bar = createSnackbar({ message: 'Archived', action: 'Undo', duration: 0 });
+    expect(f8().defaultPrevented).toBe(false);
+    bar.show();
+    bar.hide();
+    expect(f8().defaultPrevented).toBe(false);
+
+    // Already on the action: no second focus event, no second preventDefault
+    bar.show();
+    bar.actionButton!.focus();
+    const events: SnackbarEvent[] = [];
+    bar.on('focus', (event) => events.push(event));
+    const event = f8();
+    expect(event.defaultPrevented).toBe(false);
+    expect(events).toEqual([]);
+    expect(focused()).toBe(bar.actionButton!);
+
+    // Destroyed while visible: the listener is gone too
+    bar.destroy();
+    expect(f8().defaultPrevented).toBe(false);
+  });
+
+  test('focus returns to where it was when the key was pressed, not where it was at open', () => {
+    const snackbar = createSnackbar({ message: 'Deleted', action: 'Undo' });
+    snackbar.show();
+    const field = document.getElementById('field') as HTMLInputElement;
+    field.focus();
+    f8();
+    expect(focused()).toBe(snackbar.actionButton!);
+    const escape = new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    snackbar.element.dispatchEvent(escape);
+    expect(snackbar.isOpen()).toBe(false);
+    expect(focused()).toBe(field);
+  });
+
+  test('each actionable snackbar gets the key at its turn, one at a time', async () => {
+    const first = createSnackbar({ message: 'Undo 1', action: 'Undo 1', duration: 0 });
+    const second = createSnackbar({ message: 'Undo 2', action: 'Undo 2', duration: 0 });
+    first.show();
+    second.show();
+    f8();
+    expect(focused()).toBe(first.actionButton!);
+    expect(second.state).toBe('queued');
+
+    first.hide();
+    await after(250);
+    expect(second.isOpen()).toBe(true);
+    f8();
+    expect(focused()).toBe(second.actionButton!);
+  });
+
+  test('a focused snackbar does not auto-dismiss; losing focus resumes the countdown', async () => {
+    const snackbar = createSnackbar({ message: 'Deleted', action: 'Undo', duration: 150 });
+    snackbar.show();
+    f8();
+    expect(focused()).toBe(snackbar.actionButton!);
+    await after(300);
+    expect(snackbar.isOpen()).toBe(true);
+
+    (document.getElementById('trigger') as HTMLButtonElement).focus();
+    await after(300);
+    expect(snackbar.isOpen()).toBe(false);
+  });
+});

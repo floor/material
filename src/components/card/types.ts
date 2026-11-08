@@ -75,7 +75,10 @@ export interface CardConfig {
   fullWidth?: boolean;
   /**
    * A card that acts on activation: a button (role, tab stop, Enter and
-   * Space click it) with the ripple
+   * Space click it) with the ripple. Material recommends a non-clickable
+   * container when the card holds buttons or links. Supported content setters
+   * warn in development when these patterns are combined; behavior is unchanged.
+   * @see https://m3.material.io/components/cards/accessibility
    */
   clickable?: boolean;
   /** Whether the card is draggable */

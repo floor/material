@@ -73,6 +73,41 @@ describe('carousel', () => {
     expect(carousel.element.querySelectorAll('.mtrl-carousel__item')[3]!.innerHTML).toBe('<p>Custom</p>');
   });
 
+  test('slide image attributes: size and decoding from the slide, loading from the position', () => {
+    const carousel = createCarousel({
+      slides: [
+        { image: 'a.jpg', width: 640, height: 360, decoding: 'async' },
+        { image: 'b.jpg' },
+        { image: 'c.jpg', loading: 'eager' },
+      ],
+    });
+    const images = carousel.element.querySelectorAll('img');
+    // The opening slide paints with the page; the others wait until they scroll in.
+    expect(images[0]!.getAttribute('loading')).toBe('eager');
+    expect(images[1]!.getAttribute('loading')).toBe('lazy');
+    // An explicit value wins over the position default.
+    expect(images[2]!.getAttribute('loading')).toBe('eager');
+    // The intrinsic size and the decoding hint are the slide's own, and only when given.
+    expect(images[0]!.getAttribute('width')).toBe('640');
+    expect(images[0]!.getAttribute('height')).toBe('360');
+    expect(images[0]!.getAttribute('decoding')).toBe('async');
+    expect(images[1]!.hasAttribute('width')).toBe(false);
+    expect(images[1]!.hasAttribute('height')).toBe(false);
+    expect(images[1]!.hasAttribute('decoding')).toBe(false);
+  });
+
+  test('the eager first slide follows the order when a slide is inserted or removed at the front', () => {
+    const carousel = createCarousel({ slides: [{ image: 'a.jpg' }, { image: 'b.jpg' }] });
+    carousel.slides.addSlide({ image: 'z.jpg' }, 0);
+    let images = carousel.element.querySelectorAll('img');
+    expect(images[0]!.getAttribute('loading')).toBe('eager');
+    expect(images[1]!.getAttribute('loading')).toBe('lazy');
+    carousel.slides.removeSlide(0);
+    images = carousel.element.querySelectorAll('img');
+    expect(images[0]!.getAttribute('loading')).toBe('eager');
+    expect(images[1]!.getAttribute('loading')).toBe('lazy');
+  });
+
   test('layout defaults per variant: full-screen is vertical with no padding, uncontained does not snap', () => {
     const full = createCarousel({ variant: 'full-screen', slides });
     expect(full.element.classList.contains('mtrl-carousel--vertical')).toBe(true);
