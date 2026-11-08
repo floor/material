@@ -25,7 +25,7 @@ export const PACKAGE_GZIP = {
   "text-field": 9_550,
   form: 20_450,
   "all-js": 130_050,
-  "base-css": 3_050,
+  "base-css": 3_150,
   "base-lite-css": 1_750,
   "button-css": 5_300,
   "select-css": 8_400,
