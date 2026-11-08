@@ -3,7 +3,7 @@
 // The M3 Expressive toolbar in a JSDOM document: its variants and
 // their settled options, the toolbar role and its one tab stop, the items it
 // creates or takes, the FAB outside the tab stop, the injected overflow menu,
-// leaving the screen on scroll, and cleanup.
+// leaving the screen on scroll, shrinking in place on scroll, and cleanup.
 import { describe, test, expect, afterEach } from "bun:test";
 import { JSDOM } from "jsdom";
 
@@ -387,6 +387,81 @@ describe("toolbar visibility", () => {
   });
 });
 
+describe("toolbar collapse", () => {
+  const scroller = () => {
+    const el = document.createElement("div");
+    document.body.appendChild(el);
+    return el;
+  };
+  const scrollTo = (el: HTMLElement, y: number) => {
+    el.scrollTop = y;
+    el.dispatchEvent(new dom.window.Event("scroll"));
+  };
+
+  test("collapse: a docked toolbar shrinks after the threshold, restores at the top", () => {
+    const el = scroller();
+    const t = make({ scrollBehavior: "collapse", scrollTarget: el });
+    scrollTo(el, 39);
+    expect(has(t, "collapsed")).toBe(false);
+    scrollTo(el, 45);
+    expect(has(t, "collapsed")).toBe(true);
+    scrollTo(el, 200);
+    expect(has(t, "collapsed")).toBe(true);
+    // Back past the threshold from the last turn: the bar restores.
+    scrollTo(el, 120);
+    expect(has(t, "collapsed")).toBe(false);
+    scrollTo(el, 160);
+    expect(has(t, "collapsed")).toBe(true);
+    // At the top, whatever the anchor, the bar is expanded.
+    scrollTo(el, 0);
+    expect(has(t, "collapsed")).toBe(false);
+  });
+
+  test("collapse is not exit: the toolbar stays on screen, focusable and named", () => {
+    const el = scroller();
+    const t = make({ items: icons("A", "B"), scrollBehavior: "collapse", scrollTarget: el });
+    scrollTo(el, 500);
+    expect(has(t, "collapsed")).toBe(true);
+    expect(t.isVisible()).toBe(true);
+    expect(has(t, "hidden")).toBe(false);
+    expect(t.element.hasAttribute("inert")).toBe(false);
+    expect(t.bar.getAttribute("role")).toBe("toolbar");
+    expect(t.getItems().map((item) => item.getAttribute("aria-label"))).toEqual(["A", "B"]);
+  });
+
+  test("collapse and expand fire once per change, never on a no-op scroll", () => {
+    const el = scroller();
+    const t = make({ scrollBehavior: "collapse", scrollTarget: el });
+    const seen: string[] = [];
+    t.on("collapse", () => seen.push("collapse"));
+    t.on("expand", () => seen.push("expand"));
+    scrollTo(el, 45);
+    scrollTo(el, 46);
+    scrollTo(el, 49);
+    expect(seen).toEqual(["collapse"]);
+    scrollTo(el, 0);
+    scrollTo(el, 0);
+    expect(seen).toEqual(["collapse", "expand"]);
+  });
+
+  test("a floating toolbar ignores collapse: no class, no listener, no events", () => {
+    const el = scroller();
+    const t = make({
+      variant: "floating",
+      placement: "bottom",
+      scrollBehavior: "collapse",
+      scrollTarget: el,
+    });
+    const seen: string[] = [];
+    t.on("collapse", () => seen.push("collapse"));
+    t.on("expand", () => seen.push("expand"));
+    scrollTo(el, 500);
+    scrollTo(el, 0);
+    expect(has(t, "collapsed")).toBe(false);
+    expect(seen).toEqual([]);
+  });
+});
+
 describe("toolbar cleanup", () => {
   test("destroy removes the element, the scroll listener and the items it created", () => {
     const el = document.createElement("div");
@@ -403,6 +478,18 @@ describe("toolbar cleanup", () => {
     expect(t.isVisible()).toBe(true);
     expect(created.isConnected).toBe(false);
     expect(own.isConnected).toBe(false);
+  });
+
+  test("destroy removes the collapse listener", () => {
+    const el = document.createElement("div");
+    document.body.appendChild(el);
+    const t = make({ scrollBehavior: "collapse", scrollTarget: el });
+    t.destroy();
+    toolbar = null;
+    el.scrollTop = 500;
+    el.dispatchEvent(new dom.window.Event("scroll"));
+    // A live listener would still flip the class, whatever the emitter does.
+    expect(has(t, "collapsed")).toBe(false);
   });
 
   test("the chain returns the toolbar", () => {
