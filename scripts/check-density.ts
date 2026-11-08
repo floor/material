@@ -93,7 +93,7 @@ type Result = {
     drawerDense: number;
   };
   robustness: { absent: number; invalid: number; localOverride: number; sugar3: number; sugar5: number };
-  excluded: { baseline: Excluded; dense: Excluded };
+  excluded: { baseline: Excluded; dense: Excluded; verticalBaseline: Excluded; verticalDense: Excluded };
   touch: {
     button: { height: number; top: boolean; bottom: boolean };
     icon: { width: number; height: number; corners: boolean };
@@ -313,11 +313,11 @@ try {
     // The pinned surfaces: a page-wide value reaches their root, which sets
     // the scale back to 0 for everything inside. (Cards, tooltips and FABs
     // hold their geometry because they never read the property.)
-    const excludedMeasure = async (): Promise<Excluded> => {
+    const excludedMeasure = async (baseline = true): Promise<Excluded> => {
       const opener = document.createElement("button");
       opener.textContent = "Open";
       document.body.append(opener);
-      const menu = w.createMenu({ opener, visible: true, items: [{ id: "a", text: "Alpha" }] });
+      const menu = w.createMenu({ opener, visible: true, ...(baseline ? { variant: "baseline" as const } : {}), items: [{ id: "a", text: "Alpha" }] });
       document.body.append(menu.element);
       const dialog = w.createDialog({ title: "Title", animationDuration: 0, buttons: [{ text: "OK" }] });
       document.body.append(dialog.element);
@@ -342,6 +342,11 @@ try {
     clear();
     document.documentElement.style.setProperty("--mtrl-density", "-3");
     const denseExcluded = await excludedMeasure();
+    clear();
+    const verticalBaseline = await excludedMeasure(false);
+    clear();
+    document.documentElement.style.setProperty("--mtrl-density", "-3");
+    const verticalDense = await excludedMeasure(false);
     clear();
 
     // Touch targets, at a step that takes each control under 48px.
@@ -437,7 +442,7 @@ try {
     };
     const touchResult = await touch();
 
-    return { steps, aliases, robustness, excluded: { baseline: baselineExcluded, dense: denseExcluded }, touch: touchResult };
+    return { steps, aliases, robustness, excluded: { baseline: baselineExcluded, dense: denseExcluded, verticalBaseline, verticalDense }, touch: touchResult };
   }, ICON);
 
   const failures: string[] = [];
@@ -512,6 +517,8 @@ try {
   // page around them is.
   expect(result.excluded.baseline, { menuItem: 48, dialogAction: 40, snackbarAction: 40, dayCell: 48 }, "excluded surfaces at density 0");
   expect(result.excluded.dense, result.excluded.baseline, "excluded surfaces under a page-wide -3");
+  expect(result.excluded.verticalBaseline, { menuItem: 44, dialogAction: 40, snackbarAction: 40, dayCell: 48 }, "default vertical menu and excluded surfaces at density 0");
+  expect(result.excluded.verticalDense, result.excluded.verticalBaseline, "default vertical menu and excluded surfaces under a page-wide -3");
 
   // Every control taken under 48px keeps a 48px tall target (an icon button
   // both ways), and a connected group never borrows its neighbour's.
