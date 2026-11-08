@@ -611,7 +611,7 @@ try {
     assert.equal(outputs.length, 1, `${fixture.name}: expected one ${css ? "CSS" : "JS"} output`);
     const bytes = new Uint8Array(await outputs[0].arrayBuffer());
     sizes[fixture.name] = measure(bytes);
-    if (sizes[fixture.name].gzip > fixture.gzip) overBudget.push(`${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
+    if (!(sizes[fixture.name].gzip <= fixture.gzip)) overBudget.push(`${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
     if (css) {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
