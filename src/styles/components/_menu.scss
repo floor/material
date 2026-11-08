@@ -36,6 +36,7 @@ $component: "#{$prefix}-menu";
     color: t.color("on-surface");
     @include m.elevation(2);
     overflow: hidden;
+    box-sizing: border-box;
 
     // Initial state - hidden with proper transform origin
     display: flex;
@@ -373,56 +374,6 @@ $component: "#{$prefix}-menu";
         outline-offset: -3px;
     }
 
-    // Reduced motion preference support
-    @include m.reduced-motion {
-        transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
-
-        &,
-        &--visible {
-            transform: none;
-        }
-    }
-
-    // High contrast mode
-    @include m.high-contrast {
-        border: 1px solid CurrentColor;
-
-        .#{$component}__divider {
-            background-color: CurrentColor;
-        }
-
-        .#{$component}__item--disabled {
-            opacity: 1;
-            color: GrayText;
-        }
-    }
-
-    // Dense variant — compact items for toolbars and dense UIs
-    &--dense {
-        padding: 4px 0;
-
-        .#{$component}__item {
-            @include m.typography("body-medium");
-            min-height: 32px;
-            padding: 4px 12px;
-            padding-right: 32px;
-
-            &--submenu {
-                padding-right: 36px;
-            }
-
-            &-icon svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        .#{$component}__divider {
-            margin: 4px 0;
-        }
-    }
-
-    // RTL Support
     // -------------------------------------------------------------------------
     // The M3 expressive vertical menu (Compose SegmentedMenuTokens and
     // StandardMenuTokens / VibrantMenuTokens). A 16dp container holding 44dp
@@ -488,6 +439,10 @@ $component: "#{$prefix}-menu";
                     v.motion("spring-fast-spatial-easing"),
                 background-color v.motion("duration-short2")
                     v.motion("easing-standard");
+
+            &--submenu {
+                padding-inline-end: 48px;
+            }
 
             // The shape is the state: 4dp at rest, 12dp once it is touched
             &:hover,
@@ -707,6 +662,69 @@ $component: "#{$prefix}-menu";
         }
     }
 
+    // Dense variant — compact items for toolbars and dense UIs
+    &--dense {
+        padding: 4px 0;
+
+        .#{$component}__item {
+            @include m.typography("body-medium");
+            min-height: 32px;
+            padding: 4px 12px;
+            padding-right: 32px;
+
+            &--submenu {
+                padding-right: 36px;
+            }
+
+            &-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .#{$component}__divider {
+            margin: 4px 0;
+        }
+    }
+
+    // Reduced motion preference support
+    @include m.reduced-motion {
+        transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
+
+        &,
+        &--visible {
+            transform: none;
+        }
+
+        .#{$component}__item {
+            transition: none;
+        }
+    }
+
+    // High contrast mode
+    @include m.high-contrast {
+        border: 1px solid CurrentColor;
+
+        .#{$component}__group {
+            border: 1px solid CurrentColor;
+        }
+
+        .#{$component}__divider {
+            background-color: CurrentColor;
+        }
+
+        .#{$component}__item--selected {
+            background-color: Highlight;
+            color: HighlightText;
+        }
+
+        .#{$component}__item--disabled {
+            opacity: 1;
+            color: GrayText;
+        }
+    }
+
+    // RTL Support
     @include mirrored {
         transform-origin: top right;
     }

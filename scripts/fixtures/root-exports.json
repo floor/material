@@ -22,12 +22,14 @@
   {
     "name": "BottomAppBarComponent",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "BottomAppBarConfig",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "BottomSheetComponent",
@@ -217,7 +219,8 @@
   {
     "name": "createBottomAppBar",
     "kind": "value",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "createBottomSheet",
