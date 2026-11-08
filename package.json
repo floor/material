@@ -304,6 +304,10 @@
       "types": "./dist/components/tabs/constants.d.ts",
       "import": "./dist/components/tabs/constants.js"
     },
+    "./components/tabs/responsive": {
+      "types": "./dist/components/tabs/responsive.d.ts",
+      "import": "./dist/components/tabs/responsive.js"
+    },
     "./components/text-field": {
       "types": "./dist/components/text-field/index.d.ts",
       "import": "./dist/components/text-field/index.js"

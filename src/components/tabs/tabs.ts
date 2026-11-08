@@ -79,6 +79,11 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
       };
     }
     
+    // A behaviour the consumer imported and passed in, e.g. tabsResponsive():
+    // it runs while the group is built, so the first paint already carries its
+    // layout, and a consumer that never passes one carries none of its code.
+    config.responsive?.(component);
+
     return component;
   } catch (error) {
     console.error('Tabs creation error:', error);
