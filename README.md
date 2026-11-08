@@ -565,6 +565,7 @@ On a declaration child:
 - `trailing-icon` on `<m-chip>`
 - `avatar` on `<m-chip>` — input chips only, and it takes precedence over `icon`; not a person's name or an image URL
 - `icon` on `<m-drawer-item>`
+- `selected-icon` on `<m-drawer-item>` — while that destination is active
 - `leading-icon` on `<m-list-item>`
 - `leading-avatar` on `<m-list-item>` — not a person's name or an image URL
 - `trailing-icon` on `<m-list-item>`
