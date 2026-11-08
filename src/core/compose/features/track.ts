@@ -75,6 +75,9 @@ export const withTrack = <T extends TrackConfig>(config: T) =>
     if (config.icon !== 'none') {
       const icon = document.createElement('span');
       icon.className = `${config.prefix}-${config.componentName}__thumb-icon`;
+      // The switch name is the label or aria-label on the input. The thumb
+      // graphic is decorative, so the svg is not an unnamed image.
+      icon.setAttribute('aria-hidden', 'true');
       setHTML(icon, config.icon || DEFAULT_ICON);
       thumb.appendChild(icon);
     }
@@ -82,6 +85,7 @@ export const withTrack = <T extends TrackConfig>(config: T) =>
     if (config.unselectedIcon) {
       const icon = document.createElement('span');
       icon.className = `${config.prefix}-${config.componentName}__thumb-icon ${config.prefix}-${config.componentName}__thumb-icon--unselected`;
+      icon.setAttribute('aria-hidden', 'true');
       setHTML(icon, config.unselectedIcon);
       thumb.appendChild(icon);
       component.element.classList.add(`${config.prefix}-${config.componentName}--icons`);

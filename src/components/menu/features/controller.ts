@@ -171,6 +171,9 @@ const withController =
     if (item.icon) {
       const iconElement = document.createElement("span");
       iconElement.className = `${component.getClass("menu__item-icon")}`;
+      // The item's name is its text. The icon is decorative beside that text.
+      // An item with no text keeps the icon, so the svg can still name it.
+      if (item.text.trim()) iconElement.setAttribute("aria-hidden", "true");
       setHTML(iconElement, item.icon);
       contentContainer.appendChild(iconElement);
     }

@@ -8,6 +8,19 @@ import { PREFIX } from "../../../core/config";
 import { processClassNames, type BaseComponentConfig } from "../../../core/config/component";
 
 /**
+ * Puts icon markup inside a control that already has its own accessible name.
+ * The span is ours: the author's svg string is not given new attributes.
+ * aria-hidden hides that svg from the accessibility tree
+ * (https://w3c.github.io/aria/#aria-hidden).
+ */
+export const paintNamedIcon = (host: HTMLElement, html: string): void => {
+  const wrap = document.createElement("span");
+  wrap.setAttribute("aria-hidden", "true");
+  setHTML(wrap, html);
+  host.replaceChildren(wrap);
+};
+
+/**
  * Creates the search component DOM structure following MD3 specifications
  *
  * Structure:
@@ -126,13 +139,13 @@ export const withStructure =
     tag: "button",
     className: getClass(SEARCH_CLASSES.LEADING_ICON),
     container,
-    html: leadingIconHtml,
     attributes: {
       type: "button",
       tabindex: isDisabled ? "-1" : "0",
       "aria-label": isViewState ? "Go back" : "Search",
     },
   });
+  paintNamedIcon(leadingIcon, leadingIconHtml);
 
   // Create input wrapper
   const inputWrapper = createElement({
@@ -195,13 +208,13 @@ export const withStructure =
       tag: "button",
       className: clearButtonClasses.join(" "),
       container,
-      html: SEARCH_ICONS.CLEAR,
       attributes: {
         type: "button",
         tabindex: isDisabled || !value ? "-1" : "0",
         "aria-label": "Clear search",
       },
     });
+    paintNamedIcon(clearButton, SEARCH_ICONS.CLEAR);
   }
 
   // Trailing icon buttons and the avatar. onClick was never wired,
@@ -225,9 +238,12 @@ export const withStructure =
     const element = createElement({
       tag: button ? "button" : "div",
       className: getClass(avatar ? SEARCH_CLASSES.AVATAR : SEARCH_CLASSES.TRAILING_ICON),
-      html: item.content,
       attributes,
     });
+    // A named button or image keeps that name. The graphic inside is decorative.
+    // An unnamed trailing item is already aria-hidden on the element itself.
+    if (button || item.ariaLabel) paintNamedIcon(element, item.content);
+    else setHTML(element, item.content);
     if (item.onClick) element.addEventListener("click", item.onClick);
     return element;
   };
@@ -248,7 +264,7 @@ export const withStructure =
   // The bar's leading icon; the open view shows the back arrow meanwhile.
   const setLeadingIcon = (html: string): void => {
     config.leadingIcon = html;
-    if (!component.element.classList.contains(getClass(SEARCH_CLASSES.STATE_VIEW))) setHTML(leadingIcon, html);
+    if (!component.element.classList.contains(getClass(SEARCH_CLASSES.STATE_VIEW))) paintNamedIcon(leadingIcon, html);
   };
 
   // Create divider and content area (for view state or when suggestions are provided)

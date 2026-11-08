@@ -11,6 +11,7 @@ import {
   withText
 } from '../../core/compose/features';
 import { withAPI } from './api';
+import { syncDecorativeIcon } from '../../core/compose/features/icon';
 import { ExtendedFabConfig, ExtendedFabComponent } from './types';
 import { createBaseConfig, getElementConfig, getApiConfig } from './config';
 
@@ -145,6 +146,10 @@ const createExtendedFab = (config: ExtendedFabConfig = {}): ExtendedFabComponent
       comp => withAPI(getApiConfig(comp))(comp)
     )(fabConfig);
     
+    // The label is inserted after the icon, and the ripple after both. Hide
+    // the icon only when the label or an accessible name remains.
+    syncDecorativeIcon(extendedFab.element);
+
     // Set up scroll collapse after component is created
     setupScrollCollapse(extendedFab);
     

@@ -111,12 +111,16 @@ export const withSuggestions =
       },
     });
 
-    // Add icon if present
+    // The option's name is its text. The icon beside that text is decorative.
+    // An option with no text keeps the icon, so the svg can still name it.
+    // The author's svg string is not rewritten.
+    const iconAttributes = suggestion.text.trim() ? { "aria-hidden": "true" } : undefined;
     if (suggestion.icon) {
       createElement({
         tag: "span",
         className: getClass(SEARCH_CLASSES.SUGGESTION_ICON),
         container: item,
+        attributes: iconAttributes,
         html: suggestion.icon,
       });
     } else {
@@ -125,6 +129,7 @@ export const withSuggestions =
         tag: "span",
         className: getClass(SEARCH_CLASSES.SUGGESTION_ICON),
         container: item,
+        attributes: iconAttributes,
         html: SEARCH_ICONS.HISTORY,
       });
     }

@@ -1,6 +1,7 @@
 // src/core/compose/features/text.ts
 
 import { BaseComponent, ElementComponent } from '../component';
+import { syncDecorativeIcon } from './icon';
 
 /**
  * Text manager interface
@@ -110,6 +111,8 @@ const createText = (element: HTMLElement, config: TextConfig = {}): TextManager 
         if (typeof text === "string") textElement.textContent = text;
         else textElement.replaceChildren(text);
       }
+      // An emptied label is no longer a name, so a titled icon can name the control again.
+      syncDecorativeIcon(element);
       return this;
     },
 
