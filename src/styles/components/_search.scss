@@ -280,6 +280,19 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     background-color: color-mix(in srgb, #{t.color("on-surface")} 8%, #{t.color("surface-container-high")});
 }
 
+.#{$component}--bar.#{$component}--focused:not(.#{$component}--disabled) .#{$component}__container {
+    background-color: color-mix(in srgb, #{t.color("on-surface")} 10%, #{t.color("surface-container-high")});
+    outline: 3px solid t.color("secondary");
+    outline-offset: 2px;
+}
+
+@include m.high-contrast {
+    .#{$component}--bar.#{$component}--focused:not(.#{$component}--disabled) .#{$component}__container {
+        outline: 3px solid Highlight;
+        outline-offset: 2px;
+    }
+}
+
 // ============================================================================
 // Icon buttons: leading, clear, trailing
 // ============================================================================

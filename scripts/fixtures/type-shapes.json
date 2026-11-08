@@ -1624,6 +1624,13 @@
       "\"standard\""
     ]
   },
+  "SingleSelectListboxOptions.indicator": {
+    "kind": "union",
+    "members": [
+      "\"leading\"",
+      "\"trailing\""
+    ]
+  },
   "SliderConfig": {
     "kind": "extends",
     "bases": [
@@ -1736,6 +1743,13 @@
     "members": [
       "((element: E) => void)",
       "E"
+    ]
+  },
+  "SpecVersion": {
+    "kind": "union",
+    "members": [
+      "\"2021\"",
+      "\"2025\""
     ]
   },
   "SplitButtonElementComponent": {
@@ -2194,6 +2208,7 @@
   "ToolbarScrollBehavior": {
     "kind": "union",
     "members": [
+      "\"collapse\"",
       "\"exit\"",
       "\"none\""
     ]

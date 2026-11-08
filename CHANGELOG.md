@@ -17,6 +17,330 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-11-08
+
+Lists, accessible names and a smaller package.
+
+### Added
+
+- **Single-select listboxes (#279).**
+  `withSingleSelectListbox` enhances a created list with `listbox` and `option`
+  roles, `aria-selected`, and visual-only radio indicators, leading by default
+  or trailing on request. Import it from `material/components/list` or `material`;
+  use `initialSelection` to choose the starting option.
+
+  One tab stop enters on the selected enabled option, or the first enabled
+  option. Arrow keys, Home, End and type-ahead move focus without changing
+  selection, skipping disabled rows; arrow navigation wraps, and type-ahead
+  uses a 500 ms buffer with repeated-letter cycling. Enter, click, or Space
+  when no type-ahead buffer is active selects an option. Pressing the selected
+  option again keeps it selected and emits no new `select` event. Selection
+  remains cancellable, and the existing programmatic selection methods remain
+  available, including clearing selection.
+
+  Keep `trackSelection` enabled and `multiSelect` disabled. The enhancer
+  refuses control and custom slots, interactive descendants from `renderItem`,
+  and an indicator side already occupied by a slot.
+
+- **The 2025 colour specification, by opt-in (#297).**
+  `material/theme/2025` provides the theme API with `spec: "2021" | "2025"`
+  on scheme creation and its variant factories. The default remains `"2021"`;
+  request `spec: "2025"` for tonal spot, vibrant, expressive or neutral.
+  Fidelity, content and monochrome fall back to `"2021"`. Pages importing
+  only `material/theme` omit the 2025 implementation.
+
+- **Docked toolbars collapse on scroll (#301).**
+  `scrollBehavior: "collapse"`, or `scroll-behavior="collapse"` on
+  `<m-toolbar>`, shrinks a docked toolbar toward its 48dp minimum target area
+  on forward scroll and expands it on reverse scroll or at the top. Taller
+  items keep their required height. Icon-and-label items hide their labels
+  visually while retaining their accessible names; label-only items keep
+  their labels. Items remain visible and focusable. `collapse` and `expand`
+  events fire on state changes. Floating toolbars are unaffected.
+
+- **Control-only labels for factory inputs (#326).**
+  `controlLabelOnly: true` on Checkbox, Switch, TextField and Slider factories
+  keeps `ariaLabel` on the real input or slider handles and omits the generated
+  wrapper's `aria-label`. The option is off by default: omitted or false
+  preserves the existing generated HTML byte for byte. Opting in changes
+  wrapper serialization and wrapper `[aria-label]` selectors. This is a
+  factory option, with no new custom-element attribute or automatic host-label
+  suppression; author host labels and native DOM methods remain untouched.
+
+### Changed
+
+- **Expressive vertical menus are the default (#305).**
+  Standalone menus, submenus and menus opened by selects, split buttons,
+  FAB menus and toolbar overflow use `variant: "vertical"`, with standard
+  colour, 44dp rows and a 16dp outer corner. Selected items use a rounded
+  tertiary-container fill without a trailing check mark. Pass
+  `variant: "baseline"` per menu to retain the previous layout, or call
+  `setComponentDefaults("menu", { variant: "baseline" })` once at application
+  startup (once at server boot). Submenus align with their parent surface;
+  explicit widths, density, forced colours and reduced motion retain their
+  intended layout and overrides.
+
+- **Loading and expandable card recipes (#299).**
+  Documented, browser-tested compositions use `createCard` with
+  `createProgress` for loading and a standard `createIconButton` for disclosure.
+  Loading sets `aria-busy` until content settles; disclosure uses a constant
+  accessible name, `aria-expanded`, `aria-controls` and the content's `hidden`
+  state. These recipes add no card options or dedicated styles.
+
+### Deprecated
+
+- **Bottom app bar (#304).**
+  The factory, custom element, types, constants and adapters are deprecated
+  in favour of `createToolbar({ variant: "docked", placement: "bottom" })`
+  or the equivalent `<m-toolbar>`. The existing component remains available
+  throughout 3.x. Migration is documented with its differences: the toolbar
+  uses a roving tab stop, renamed shadow parts and different scroll/reservation
+  defaults. A centred FAB, adding a FAB after creation, a custom transition
+  duration and a custom tag have no direct toolbar equivalent yet.
+
+### Fixed
+
+- **Tablist, tab and button-group names (#321).**
+  Factory tablists accept `ariaLabel`, and `<m-tabs aria-label>` names the
+  inner tablist and updates it in place. `<m-tab aria-label>` names its
+  rendered tab; `Tab.setAriaLabel()` updates that name without replacing the
+  tab or losing focus and selection. Otherwise unnamed tabs use their value
+  as a fallback. Badge counts remain in the tab's name without exposing a
+  separate nested status; standalone badges keep their existing semantics.
+  Icon-only factory button-group entries missing a label at runtime also use
+  their value. The TypeScript requirement for explicit group-entry labels
+  remains; descriptive labels are still preferable to value fallbacks.
+
+- **Split-button groups, switches and required radio groups (#323).**
+  A split button without `groupLabel` keeps `ariaLabel` on its leading button
+  without repeating that name on the surrounding group. Explicit group labels
+  are retained. `<m-switch aria-label>` forwards its name to the inner switch.
+  The additive factory `RadiosConfig.required` sets the group's
+  `aria-required="true"` and native required flags; custom-element required
+  changes synchronize both, including removal and re-addition.
+
+- **Date- and time-picker dialog names and date selection (#324).**
+  Picker dialogs use an explicit `ariaLabel`, otherwise their visible heading
+  or label, otherwise “Select time” or “Select date”. Both custom elements
+  forward `aria-label` and update the inner dialog in place. Factory
+  `setAriaLabel()` methods support the same updates, and time-picker title
+  changes keep the heading and naming references synchronized. Date-picker
+  days expose one named gridcell with selection state instead of a gridcell
+  containing a second named, pressed button. Focus and values are retained.
+
+- **Menu, fullscreen search and sheet names (#322).**
+  Menu lists receive their container's `aria-label` or `aria-labelledby`, and
+  open submenus are named from their parent item's text. Fullscreen search
+  exposes a named dialog from creation, using its configured accessible label
+  or placeholder, and updates that name when the placeholder or element label
+  changes. Bottom and side sheets accept `ariaLabel` and name their semantic
+  surface. Modal sheets in the top layer expose one named native dialog
+  instead of nested dialog roles. Their custom elements also accept
+  `variant="modal"` alongside boolean `modal`, and use the host's `title` as
+  a fallback when no headline or accessible label is supplied.
+
+### Internal
+
+- **Date-picker DOM compatibility (#324).**
+  The interactive day remains a native `<button>` with its existing classes
+  and `data-date`, but now carries `role="gridcell"` and `aria-selected`.
+  The outer `.mtrl-datepicker__cell` is presentational; selection state is on
+  the day gridcell, and day buttons no longer carry `aria-pressed`.
+  Month/year buttons retain `aria-pressed`. Day and range styling classes
+  remain; this picker fix changes no stylesheet. Code inspecting selection
+  attributes should read the day gridcell.
+
+- **Menu selection attributes (#322).**
+  Unselected `role="menuitem"` items omit `aria-selected="false"`.
+  Explicitly selected items retain `aria-selected="true"`, and listbox
+  `role="option"` items retain both true and false states. Menu styling
+  classes remain.
+
+- **Sheet dialog attributes (#322).**
+  For top-layer modal sheets, the accessible name belongs to the outer native
+  `<dialog>`; duplicate `role="dialog"` and `aria-modal="true"` attributes
+  are removed from the inner container. Its node, classes and focus target
+  remain. Default-layer modal containers retain their explicit dialog role
+  and modality attributes. Author attributes on custom-element hosts remain.
+
+- **Smaller published package: shared styles and declarations (#313).**
+  Generated element CSS and pre-upgrade strings are colocated in a shared
+  module while per-component entries retain tree-shaking. Wildcard style
+  exports share empty declaration targets. Unexported theme pass-through
+  wrappers are removed while preserving `scheme.colors`, public import paths,
+  compact hover documentation and the writable
+  `createElementConfig().style` return type.
+
+- **Listbox delivery and approved budgets (#279, #326).**
+  Unused listbox JavaScript is omitted; its radio styles ship in the list and
+  full stylesheets. The owner approved the all-JS gzip ceiling of
+  **130,050 B** on **2026-11-05**, applied in **#279**, and the form gzip
+  ceiling of **20,450 B** on **2026-11-07**, applied in **#326**.
+
+- **Release size against 3.8.2.**
+  This release PR at `ddd7d14d`
+  ([CI run 42455193839, package job 128652773678](https://github.com/floor/material/actions/runs/42455193839/job/128652773678))
+  packs **888,118 B compressed / 4,989,708 B unpacked / 1,549 files**.
+  Against published 3.8.2 at `02fbdd21`
+  ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
+  that is **−10,140 B packed / +40,407 B unpacked / −77 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **31,882 B**
+  under the 920,000 B packed ceiling and **129,292 B** under the 5,119,000 B
+  unpacked ceiling; neither ceiling changes.
+
+  | Payload (B, raw / gzip / Brotli) | 3.8.2 | 3.9.0 | Change |
+  | --- | --- | --- | --- |
+  | All JS | 412,840 / 127,312 / 105,645 | 418,953 / 129,264 / 107,214 | +6,113 / +1,952 / +1,569 |
+  | Full stylesheet | 637,752 / 58,879 / 41,971 | 640,972 / 59,172 / 42,192 | +3,220 / +293 / +221 |
+  | Button stylesheet | 58,901 / 5,220 / 4,022 | 59,523 / 5,300 / 4,082 | +622 / +80 / +60 |
+  | Form fixture | 65,250 / 20,387 / 18,174 | 65,398 / 20,431 / 18,243 | +148 / +44 / +69 |
+
+  All-JS gzip leaves **786 B** under its approved 130,050 B ceiling; form
+  gzip leaves **19 B** under 20,450 B. Full CSS leaves **4,578 B** under
+  63,750 B. Button CSS is exactly **5,300 B**, with **0 B** spare; its ceiling
+  does not rise.
+
+  Component payloads below are gzip bytes. Deferred bytes are loaded on
+  interaction, in addition to the initial graph.
+
+  | Component payload | 3.8.2 | 3.9.0 | Change | Ceiling | Spare |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | menu | 12,659 | 12,767 | +108 | 13,056 | 289 |
+  | menu deferred | 2,121 | 2,143 | +22 | 2,252 | 109 |
+  | fab-menu | 8,368 | 8,368 | +0 | 8,550 | 182 |
+  | fab-menu deferred | 10,647 | 10,766 | +119 | 10,854 | 88 |
+  | split-button | 9,704 | 9,716 | +12 | 9,728 | 12 |
+  | split-button deferred | 17,208 | 17,355 | +147 | 17,459 | 104 |
+  | select | 13,447 | 13,469 | +22 | 13,516 | 47 |
+  | select deferred | 10,618 | 10,733 | +115 | 10,752 | 19 |
+  | toolbar | 11,284 | 11,346 | +62 | 11,468 | 122 |
+  | all | 125,676 | 126,287 | +611 | 127,200 | 913 |
+
+  All package and component ceilings pass. The 2025 theme opt-in retains its
+  separate measured budget rows; default theme-entry ceilings are unchanged.
+  No additional budget increase is introduced by this release.
+
+- **Still OPEN: duplicate host names and default wrapper names.**
+  Names exposed on both a custom-element host and its inner control remain
+  open. Generated factory wrappers retain their existing labels by default;
+  `controlLabelOnly` addresses wrapper duplication only when explicitly
+  enabled on the four supported factories. It does not suppress author host
+  attributes or resolve custom-element host duplication.
+
+## [3.8.2] - 2026-11-08
+
+Keyboard focus visible everywhere.
+
+### Fixed
+
+- **Keyboard focus on drawer, slider, search and field controls (#316).**
+  Drawer items, slider handle bars and collapsed search inputs now draw visible
+  keyboard focus indicators. Filled text fields and selects retain their active
+  underline in forced colours, and navigation bars, rails and drawers distinguish
+  focused destinations from the active selection in forced colours.
+
+- **Focus contrast, clipping and stacking across component surfaces (#318).**
+  Carousel links draw a contrasting halo behind their focus ring over imagery,
+  and their rings follow horizontal and vertical keyline clips. Icon buttons
+  use the secondary focus colour; focused buttons, icon buttons and navigation
+  items paint above adjacent controls. FAB-menu and time-picker selectors use
+  inset rings. Scrollable chips reserve room for their rings, including at
+  fractional scroll positions, and keyboard scrolling keeps focused chips in
+  view in both left-to-right and right-to-left layouts.
+
+- **Pointer focus and reduced motion (#318).**
+  Dialog close-button state layers follow keyboard-visible focus instead of
+  remaining after pointer focus. Reduced-motion rules stop transitioning
+  outline colour in document styles and element shadow roots.
+
+### Internal
+
+- **Permanent browser checks for keyboard focus (#315, #318).**
+  CI checks 53 focusable targets across 20 component families in light, dark
+  and forced colours, plus pointer focus and reduced motion. It detects
+  insufficient indicator contrast, clipping and sibling occlusion; all known
+  focus-gap exceptions are removed. Additional checks cover 240 focus
+  measurements across factories and custom elements in left-to-right and
+  right-to-left layouts.
+
+- **Release size.**
+  The release build at `f772c833`
+  ([CI run 42406404092, package job 128505132816](https://github.com/floor/material/actions/runs/42406404092/job/128505132816))
+  packs **898,258 B compressed / 4,949,301 B unpacked / 1,626 files**.
+  Against v3.8.1 at `a0dd84f3`
+  ([CI run 42402063046, package job 128491957329](https://github.com/floor/material/actions/runs/42402063046/job/128491957329)),
+  that is **+676 B packed / +3,425 B unpacked**, with the file count unchanged.
+  It leaves **21,742 B** under the 920,000 B packed ceiling and **169,699 B**
+  under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,840 / 127,312 / 105,645 B** raw/gzip/brotli
+  (**+56 / +16 / −51 B**), and the full stylesheet is
+  **637,752 / 58,879 / 41,971 B** (**+895 / +132 / +99 B**).
+  These measurements include the runtime focus fixes and the 3.8.2 version
+  banner. The README rows remain 127.3 kB for all-js and 58.9 kB for full CSS,
+  and SIZES.md matches.
+
+## [3.8.1] - 2026-11-08
+
+Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
+
+### Changed
+
+- **Compact hover documentation in the shipped declarations (#308).**
+  Declaration comments keep the first summary sentence across wrapped lines
+  (or the first line when there is no sentence terminator), parameter names
+  whose source tags included descriptions, the first `@default` line and the
+  complete `@deprecated` note. Bare parameter tags, `@returns`, `@internal`,
+  examples and the remaining prose are omitted. The declaration documentation
+  itself adds no runtime JavaScript or CSS.
+
+### Fixed
+
+- **Visible keyboard focus in menus (#310).**
+  Keyboard-focused menu items and empty menu surfaces now show a 3px inward
+  secondary-colour outline, including in forced colours. Pointer opening
+  remains ringless. The previous surface rule passed a selector string as the
+  focus-ring mixin's colour argument, producing an invalid outline; menu items
+  had no matching outline rule.
+
+- **Keyboard opening of split-button menus (#311).**
+  Enter, Space and ArrowDown open on the first non-hidden item, including when
+  that item is disabled. ArrowUp opens on the last non-disabled item, falling
+  back to the last item if all are disabled. This works with an already-loaded
+  menu and an asynchronously loaded menu. The standalone menu opener uses the
+  same ArrowUp focus path, replacing its separate timer. Pointer opening keeps
+  focus on the menu surface, and `MenuComponent.open(event?, interactionType?)`
+  keeps its existing public signature.
+
+- **Visible active-option focus in selects (#312).**
+  Keyboard opening and option navigation show a 3px inward secondary-colour
+  outline on `.mtrl-menu__item--keyboard-active`. DOM focus stays on the
+  `.mtrl-text-field__input` combobox and its existing field indicator is
+  preserved. Pointer opening retains the selected option's active state and
+  `aria-activedescendant`, while withholding the keyboard outline until
+  keyboard interaction.
+
+### Internal
+
+- **Release size.**
+  The release build at `dac29446`
+  ([CI run 42400952354, package job 128488628262](https://github.com/floor/material/actions/runs/42400952354/job/128488628262))
+  packs **897,582 B compressed / 4,945,876 B unpacked / 1,626 files**.
+  Against v3.8.0 at `39e2becb`
+  ([CI run 42040150024, package job 127289094084](https://github.com/floor/material/actions/runs/42040150024/job/127289094084)),
+  that is **+68,384 B packed / +251,344 B unpacked**, with the file count
+  unchanged. It leaves **22,418 B** under the 920,000 B packed ceiling and
+  **173,124 B** under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,784 / 127,296 / 105,696 B** raw/gzip/brotli
+  (**+209 / +118 / +181 B**), and the full stylesheet is
+  **636,857 / 58,747 / 41,872 B** (**+150 / +2 / −53 B**). The declaration
+  documentation itself adds no runtime JS or CSS; the keyboard fixes move
+  those rows, and compressed sizes include the 3.8.1 version banner.
+  The README rows remain 127.3 kB for all-js and 58.7 kB for full CSS.
+  The select and split-button component rows measure 13,447 / 13,516 B and
+  9,704 / 9,728 B gzip against their unchanged budgets, and SIZES.md matches.
+
 ## [3.8.0] - 2026-11-06
 
 Colour that adapts at runtime.
@@ -6503,7 +6827,10 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.8.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
+[3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
+[3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
 [3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
 [3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
 [3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2

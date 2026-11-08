@@ -6,14 +6,18 @@
  * the sources.
  *
  * A typed consumer gets TypeScript's deprecation suggestion diagnostics for a
- * deprecated export or member it imports or reads (codes 6385 and 6387). That is
- * read from the shipped `.d.ts`: the build keeps each `@deprecated` JSDoc block
- * (scripts/build-modules.ts) precisely so it reaches this consumer.
+ * deprecated export or member it imports or reads (codes 6385 and 6387), and an
+ * editor shows the hover documentation of a documented option. Both are read
+ * from the shipped `.d.ts`: the build keeps each declaration's first JSDoc
+ * sentence, its `@param` names, its `@default` and its whole `@deprecated` note
+ * (scripts/build-modules.ts) precisely so they reach this consumer.
  *
  * The deprecated names below are the FAB's physical-position aliases, the
- * deprecations the package ships. A generated consumer reads an adapter entry
- * (React first): it must compile, and a deprecated value export it finds must
- * report, so an adapter that gains one is covered without changing this file.
+ * deprecations the package ships; the hover text is the FAB's `type` option, a
+ * documented option a consumer passes. A generated consumer reads an adapter
+ * entry (React first): it must compile, and a deprecated value export it finds
+ * must report, so an adapter that gains one is covered without changing this
+ * file.
  *
  *   bun run declaration-docs:check
  *   bun run scripts/check-declaration-docs.ts --dist ./dist
@@ -49,6 +53,8 @@ interface Consumer {
   source: string;
   /** The deprecated names its use of the packed package must report. */
   deprecated: string[];
+  /** A documented name the consumer reads, and the documentation an editor shows for it. */
+  hover?: { name: string; at: string; documentation: string };
 }
 
 const consumers: Consumer[] = [
@@ -63,6 +69,7 @@ const built = createFab({ icon: "<svg/>", ariaLabel: "Add", type: "button" });
 export { built };
 `,
     deprecated: ["setPosition", "getPosition"],
+    hover: { name: "type", at: 'type: "button"', documentation: "Button type attribute" },
   },
   {
     file: "component-consumer.ts",
@@ -183,6 +190,17 @@ try {
         failures.push(`${consumer.file}: ${expected} is not reported as deprecated from the packed declarations`);
       }
     }
+    // What the editor shows for a documented option, read from the same
+    // declarations: the build ships the JSDoc's first sentence, so a hover on
+    // the option is not empty.
+    if (consumer.hover) {
+      const at = consumer.source.indexOf(consumer.hover.at);
+      const documentation = (at === -1 ? undefined : service.getQuickInfoAtPosition(file, at))
+        ?.documentation?.map(part => part.text).join("") ?? "";
+      if (!documentation.includes(consumer.hover.documentation)) {
+        failures.push(`${consumer.file}: ${consumer.hover.name} shows no "${consumer.hover.documentation}" documentation from the packed declarations`);
+      }
+    }
   }
 
   const importableDocFailures = await assertImportableDeclarationDocs(packageRoot, join(ROOT, "src"));
@@ -198,8 +216,9 @@ if (failures.length) {
   process.exit(1);
 }
 const deprecatedCount = consumers.reduce((count, consumer) => count + consumer.deprecated.length, 0);
+const hoverCount = consumers.filter(consumer => consumer.hover).length;
 console.log(
   `${manifest.name}: ${consumers.length} consumers read the packed declarations, ` +
-  `${deprecatedCount} deprecated names reported` +
+  `${deprecatedCount} deprecated names reported, ${hoverCount} hover ${hoverCount === 1 ? "text" : "texts"} read` +
   `${consumers.length > 3 ? `, including ${consumers[3]!.file}` : ""}.`,
 );

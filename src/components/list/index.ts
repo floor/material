@@ -5,6 +5,10 @@
 // Export main component factory
 export { default, default as createList } from "./list";
 
+// Export the opt-in single-select listbox enhancer
+export { default as withSingleSelectListbox } from "./features/listbox";
+export type { SingleSelectListboxOptions } from "./features/listbox";
+
 // Export constants
 export {
   LIST_DEFAULTS,

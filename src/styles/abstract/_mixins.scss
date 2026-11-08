@@ -373,7 +373,7 @@ $sheet-overshoot-guard: 32px;
     *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-property: opacity, color, background-color, border-color, outline-color, box-shadow, visibility !important;
+      transition-property: opacity, color, background-color, border-color, box-shadow, visibility !important;
       scroll-behavior: auto !important;
     }
   }

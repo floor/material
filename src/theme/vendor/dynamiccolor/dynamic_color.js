@@ -147,7 +147,7 @@ export class DynamicColor {
         if (cachedAnswer != null) {
             return cachedAnswer;
         }
-        const answer = getSpec().getHct(scheme, this);
+        const answer = getSpec(scheme.specVersion).getHct(scheme, this);
         if (this.hctCache.size > 4) {
             this.hctCache.clear();
         }
@@ -163,7 +163,7 @@ export class DynamicColor {
      *     contrast level is.
      */
     getTone(scheme) {
-        return getSpec().getTone(scheme, this);
+        return getSpec(scheme.specVersion).getTone(scheme, this);
     }
     /**
      * Given a background tone, finds a foreground tone, while ensuring they reach
@@ -238,7 +238,7 @@ export class DynamicColor {
 /**
  * A delegate for the color calculation of a DynamicScheme in the 2021 spec.
  */
-class ColorCalculationDelegateImpl2021 {
+export class ColorCalculationDelegateImpl2021 {
     getHct(scheme, color) {
         const tone = color.getTone(scheme);
         const palette = color.palette(scheme);
@@ -408,11 +408,16 @@ class ColorCalculationDelegateImpl2021 {
     }
 }
 const spec2021 = new ColorCalculationDelegateImpl2021();
+let spec2025;
+/** Registers the 2025 colour-calculation delegate; without one, every version is 2021. */
+export function registerCalculationSpec(delegate) {
+    spec2025 = delegate;
+}
 /**
- * Returns the ColorCalculationDelegate. The public API fixes the colour spec at 2021, so
- * this is the only delegate and the 2025 one is not shipped.
+ * Returns the ColorCalculationDelegate for the given spec version. A version
+ * no module registered falls back to 2021.
  */
-function getSpec() {
-    return spec2021;
+function getSpec(specVersion) {
+    return specVersion === '2025' && spec2025 ? spec2025 : spec2021;
 }
 //# sourceMappingURL=dynamic_color.js.map
