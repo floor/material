@@ -62,39 +62,39 @@
     {
       "name": "BottomAppBarComponent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "BottomAppBarConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "createBottomAppBar",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "default",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     }
   ],
   "bottom-app-bar/constants": [
     {
       "name": "BOTTOM_APP_BAR_CLASSES",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DEFAULT_TRANSITION_DURATION",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "FAB_POSITIONS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     }
   ],
   "bottom-sheet": [
@@ -1811,6 +1811,16 @@
     {
       "name": "SelectEvent",
       "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SingleSelectListboxOptions",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "withSingleSelectListbox",
+      "kind": "value",
       "status": "public"
     }
   ],

@@ -1,6 +1,7 @@
 // scripts/check-menu-browser.ts
 /** Synchronous content keeps menu opening, positioning and focus intact. */
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import type { Page } from "playwright";
 import type createMenu from "../src/components/menu";
 
@@ -8,7 +9,7 @@ import type createMenu from "../src/components/menu";
  * Chromium prints a plain colour as rgb() and a color-mix result as
  * color(srgb r g b / a); one parser for both, in channels the assertions read.
  */
-function parseColour(text: string): [number, number, number, number] {
+export function parseColour(text: string): [number, number, number, number] {
   const rgb = /^rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(text);
   if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), rgb[4] === undefined ? 1 : Number(rgb[4])];
   const srgb = /^color\(srgb ([\d.e+-]+) ([\d.e+-]+) ([\d.e+-]+)(?: \/ ([\d.]+))?\)$/.exec(text);
@@ -132,7 +133,7 @@ export async function checkMenuDisabledColors(page: Page): Promise<void> {
         });
         state.menu = state.createMenu({
           opener, visible: true,
-          ...(layout.vertical ? { variant: "vertical" as const } : {}),
+          ...(layout.vertical ? {} : { variant: "baseline" as const }),
           ...(layout.vibrant ? { color: "vibrant" as const } : {}),
           items: [
             { id: "disabled", disabled: true, ...content("Unavailable") },
@@ -481,7 +482,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
         opener.textContent = "Diet";
         opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
         document.body.append(opener);
-        state.menu = state.createMenu({ opener, visible: true, variant: "vertical", items: [
+        state.menu = state.createMenu({ opener, visible: true, items: [
           { id: "vegan", text: "Vegan" },
           { id: "long", text: longText },
           { id: "offline", text: "Offline mode" },
@@ -496,7 +497,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.equal(vertical.overlap, 0, `${dir}: the selected item's trailing check (${JSON.stringify(vertical.content)}, ${vertical.width}px wide, ${vertical.trailingEdge}px from the end) overlaps its label by ${vertical.overlap}px`);
       assert.equal(vertical.painted, false, `${dir}: a vertical menu's selected item still paints a trailing check`);
 
-      // The horizontal menu keeps its own mark, and its 40px end padding keeps it clear.
+      // The horizontal (baseline) menu keeps its own mark, and its 40px end padding keeps it clear.
       await page.evaluate(({ dir, longText }) => {
         const state = window as unknown as MenuWindow;
         state.menu.destroy();
@@ -507,7 +508,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
         opener.textContent = "Diet";
         opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
         document.body.append(opener);
-        state.menu = state.createMenu({ opener, visible: true, width: "220px", items: [
+        state.menu = state.createMenu({ opener, visible: true, variant: "baseline", width: "220px", items: [
           { id: "vegan", text: "Vegan" },
           { id: "long", text: longText },
           { id: "offline", text: "Offline mode" },
@@ -525,6 +526,55 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
       assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
     }
+
+    // Forced-colors mode on the default vertical menu: the high-contrast rule
+    // sits after the vertical selected rule, so the selected item keeps Highlight.
+    await page.emulateMedia({ forcedColors: "active" });
+    try {
+      await page.evaluate(() => {
+        const state = window as unknown as MenuWindow;
+        state.menu?.destroy();
+        document.body.replaceChildren();
+        document.documentElement.dir = "ltr";
+        const opener = document.createElement("button");
+        opener.id = "menu-opener";
+        opener.textContent = "Diet";
+        opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+        document.body.append(opener);
+        state.menu = state.createMenu({ opener, visible: true, items: [
+          { id: "vegan", text: "Vegan" },
+          { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+        ] });
+        state.menu.setSelected("vegan");
+        document.body.append(state.menu.element);
+      });
+      await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
+      const forced = await page.evaluate(() => {
+        const menu = (window as unknown as MenuWindow).menu.element;
+        const selected = menu.querySelector<HTMLElement>('[data-id="vegan"]')!;
+        const submenuItem = menu.querySelector<HTMLElement>('[data-id="share"]')!;
+        const probe = document.createElement("span");
+        probe.style.backgroundColor = "Highlight";
+        probe.style.color = "HighlightText";
+        document.body.append(probe);
+        const expectedBg = getComputedStyle(probe).backgroundColor;
+        const expectedColor = getComputedStyle(probe).color;
+        probe.remove();
+        const chevron = getComputedStyle(submenuItem, "::after");
+        return {
+          bg: getComputedStyle(selected).backgroundColor,
+          color: getComputedStyle(selected).color,
+          expectedBg,
+          expectedColor,
+          chevronPainted: chevron.content !== "none" && chevron.content !== "normal",
+        };
+      });
+      assert.equal(forced.bg, forced.expectedBg, `forced-colors: vertical selected item background is ${forced.bg}, not Highlight (${forced.expectedBg})`);
+      assert.equal(forced.color, forced.expectedColor, `forced-colors: vertical selected item color is ${forced.color}, not HighlightText (${forced.expectedColor})`);
+      assert.equal(forced.chevronPainted, true, "vertical submenu item keeps its trailing chevron");
+    } finally {
+      await page.emulateMedia({ forcedColors: "none" });
+    }
   } finally {
     await page.evaluate(() => {
       (window as unknown as MenuWindow).menu?.destroy();
@@ -533,4 +583,486 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
     });
   }
   console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
+}
+
+/**
+ * Capture before (`variant: "baseline"`) and after (default `variant: "vertical"`)
+ * comparison screenshots for `menu`, `select`, and `split-button` in light and
+ * dark mode so the CI artifact records the visual transition side by side.
+ */
+export async function captureMenuDefaultComparisons(page: Page, artifacts: string): Promise<void> {
+  const waitForSettledMenu = async (label: string): Promise<void> => {
+    await page.waitForFunction(() => {
+      const menu = document.querySelector<HTMLElement>(".mtrl-menu.mtrl-menu--visible");
+      if (!menu || menu.style.top === "") return false;
+      const style = getComputedStyle(menu);
+      const rect = menu.getBoundingClientRect();
+      const focusSettled = menu.getAttribute("role") !== "menu" || document.activeElement === menu;
+      return (
+        focusSettled &&
+        style.visibility === "visible" &&
+        Number(style.opacity) === 1 &&
+        (style.transform === "none" || style.transform === "matrix(1, 0, 0, 1, 0, 0)") &&
+        rect.width > 80 &&
+        rect.height > 60 &&
+        menu.getAnimations({ subtree: true }).length === 0
+      );
+    });
+    const settled = await page.evaluate(() => {
+      const menu = document.querySelector<HTMLElement>(".mtrl-menu.mtrl-menu--visible")!;
+      if (document.activeElement === menu) menu.blur();
+      const rect = menu.getBoundingClientRect();
+      return { width: rect.width, height: rect.height, opacity: getComputedStyle(menu).opacity };
+    });
+    assert.ok(
+      settled.width > 80 && settled.height > 60 && settled.opacity === "1",
+      `${label}: menu surface not settled (${JSON.stringify(settled)})`,
+    );
+  };
+  try {
+    for (const mode of ["light", "dark"] as const) {
+      for (const stage of ["before", "after"] as const) {
+        const baseline = stage === "before";
+        // 1. Standalone menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.menu?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const opener = document.createElement("button");
+          opener.id = "cmp-menu-opener";
+          opener.textContent = "Edit";
+          opener.style.cssText = "position:absolute;left:24px;top:24px;width:96px;height:36px";
+          document.body.append(opener);
+          state.menu = state.createMenu({
+            opener,
+            items: [
+              { id: "cut", text: "Cut", shortcut: "⌘X" },
+              { id: "copy", text: "Copy", shortcut: "⌘C" },
+              { id: "paste", text: "Paste", shortcut: "⌘V", disabled: true },
+              { type: "divider" },
+              { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+            ],
+          });
+          state.menu.setSelected("copy");
+        }, { mode, baseline });
+        await page.click("#cmp-menu-opener");
+        await page.mouse.move(0, 0);
+        await waitForSettledMenu(`menu-${stage}-${mode}`);
+        await page.screenshot({ path: join(artifacts, `menu-${stage}-${mode}.png`) });
+
+        // 2. Select menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            createSelect: (cfg: Record<string, unknown>) => { element: HTMLElement; open: () => void; destroy: () => void };
+            selectCmp?: { destroy: () => void };
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.menu?.destroy?.();
+          state.selectCmp?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const select = state.createSelect({
+            label: "Size",
+            value: "m",
+            options: [
+              { id: "s", text: "Small" },
+              { id: "m", text: "Medium" },
+              { id: "l", text: "Large" },
+            ],
+          });
+          state.selectCmp = select;
+          document.body.append(select.element);
+        }, { mode, baseline });
+        await page.click(".mtrl-select");
+        await page.mouse.move(0, 0);
+        await waitForSettledMenu(`select-${stage}-${mode}`);
+        await page.screenshot({ path: join(artifacts, `select-${stage}-${mode}.png`) });
+
+        // 3. Split button menu
+        await page.evaluate(({ mode, baseline }) => {
+          const state = window as unknown as MenuWindow & {
+            selectCmp?: { destroy: () => void };
+            splitCmp?: { destroy: () => void };
+            openers: { createSplitButton: (cfg: Record<string, unknown>) => { element: HTMLElement; expand: () => void; destroy: () => void } };
+            setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+          };
+          state.selectCmp?.destroy?.();
+          state.splitCmp?.destroy?.();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", mode);
+          document.body.style.cssText = "margin:0;padding:24px;background:var(--mtrl-sys-color-surface);min-height:260px";
+          state.setComponentDefaults("menu", baseline ? { variant: "baseline" } : {});
+          const split = state.openers.createSplitButton({
+            text: "Send",
+            items: [
+              { id: "schedule", text: "Schedule send" },
+              { id: "draft", text: "Save draft" },
+            ],
+          });
+          state.splitCmp = split;
+          document.body.append(split.element);
+        }, { mode, baseline });
+        await page.click(".mtrl-split-button__trailing");
+        await page.mouse.move(0, 0);
+        await waitForSettledMenu(`split-button-${stage}-${mode}`);
+        await page.screenshot({ path: join(artifacts, `split-button-${stage}-${mode}.png`) });
+      }
+    }
+  } finally {
+    await page.evaluate(() => {
+      const state = window as unknown as MenuWindow & {
+        selectCmp?: { destroy: () => void };
+        splitCmp?: { destroy: () => void };
+        setComponentDefaults: (name: string, cfg: Record<string, unknown>) => void;
+      };
+      state.menu?.destroy?.();
+      state.selectCmp?.destroy?.();
+      state.splitCmp?.destroy?.();
+      state.setComponentDefaults("menu", {});
+      document.documentElement.removeAttribute("data-theme-mode");
+      document.body.style.cssText = "";
+      document.body.replaceChildren();
+    });
+  }
+}
+
+/**
+ * Keyboard-focused menu items and an empty menu surface opened by keyboard
+ * draw the M3 3dp inward secondary focus indicator
+ * (`outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px`)
+ * on both baseline and vertical menus across light, dark and forced-colors
+ * modes, while pointer opening leaves both the menu surface and its items
+ * without an outline.
+ */
+export async function checkMenuItemFocusRing(page: Page): Promise<void> {
+  const variants = ["baseline", "vertical"] as const;
+  const modes = [
+    { name: "light", themeMode: "light", forcedColors: "none" as const },
+    { name: "dark", themeMode: "dark", forcedColors: "none" as const },
+    { name: "forced-colors", themeMode: "light", forcedColors: "active" as const },
+  ] as const;
+
+  const secondaryByMode: Record<string, string> = {};
+
+  try {
+    for (const mode of modes) {
+      await page.emulateMedia({ reducedMotion: "reduce", forcedColors: mode.forcedColors });
+      for (const variant of variants) {
+        const label = `${variant} (${mode.name})`;
+        await page.evaluate(({ variant, themeMode }) => {
+          const state = window as unknown as MenuWindow;
+          state.menu?.destroy();
+          document.body.replaceChildren();
+          document.documentElement.setAttribute("data-theme-mode", themeMode);
+          const opener = document.createElement("button");
+          opener.id = "menu-opener";
+          opener.textContent = "Actions";
+          opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+          document.body.append(opener);
+          state.menu = state.createMenu({
+            opener,
+            variant,
+            items: [
+              { id: "one", text: "Cut" },
+              { id: "two", text: "Copy" },
+              { id: "three", text: "Paste" },
+            ],
+          });
+          state.menu.setSelected("two");
+          opener.focus();
+        }, { variant, themeMode: mode.themeMode });
+
+        await page.keyboard.press("ArrowDown");
+        await page.waitForFunction(() =>
+          (window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible") &&
+          document.activeElement?.getAttribute("data-id") === "one",
+        );
+
+        const firstStep = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const first = menu.querySelector<HTMLElement>('[data-id="one"]')!;
+          const second = menu.querySelector<HTMLElement>('[data-id="two"]')!;
+          const firstStyle = getComputedStyle(first);
+          const secondStyle = getComputedStyle(second);
+          const probe = document.createElement("span");
+          probe.style.color = "var(--mtrl-sys-color-secondary)";
+          document.body.append(probe);
+          const secondary = getComputedStyle(probe).color;
+          probe.remove();
+          return {
+            secondary,
+            first: {
+              focusVisible: first.matches(":focus-visible"),
+              outlineStyle: firstStyle.outlineStyle,
+              outlineWidth: firstStyle.outlineWidth,
+              outlineOffset: firstStyle.outlineOffset,
+              outlineColor: firstStyle.outlineColor,
+            },
+            second: {
+              focusVisible: second.matches(":focus-visible"),
+              outlineStyle: secondStyle.outlineStyle,
+            },
+          };
+        });
+
+        assert.equal(firstStep.first.focusVisible, true, `${label}: first item must match :focus-visible on keyboard open`);
+        assert.equal(firstStep.first.outlineStyle, "solid", `${label}: first item outline-style must be solid`);
+        assert.equal(firstStep.first.outlineWidth, "3px", `${label}: first item outline-width must be 3px`);
+        assert.equal(firstStep.first.outlineOffset, "-3px", `${label}: first item outline-offset must be -3px`);
+        assert.equal(firstStep.second.focusVisible, false, `${label}: unfocused second item must not match :focus-visible`);
+        assert.equal(firstStep.second.outlineStyle, "none", `${label}: unfocused second item must have outline-style none`);
+
+        if (mode.forcedColors === "none") {
+          assert.equal(firstStep.first.outlineColor, firstStep.secondary, `${label}: outline-color must equal resolved --mtrl-sys-color-secondary`);
+          secondaryByMode[mode.name] = firstStep.first.outlineColor;
+        } else {
+          const [, , , alpha] = parseColour(firstStep.first.outlineColor);
+          assert.ok(alpha > 0, `${label}: forced-colors outline-color must be non-transparent (${firstStep.first.outlineColor})`);
+        }
+
+        await page.keyboard.press("ArrowDown");
+        await page.waitForFunction(() => document.activeElement?.getAttribute("data-id") === "two");
+
+        const secondStep = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const first = menu.querySelector<HTMLElement>('[data-id="one"]')!;
+          const second = menu.querySelector<HTMLElement>('[data-id="two"]')!;
+          const firstStyle = getComputedStyle(first);
+          const secondStyle = getComputedStyle(second);
+          return {
+            first: {
+              focusVisible: first.matches(":focus-visible"),
+              outlineStyle: firstStyle.outlineStyle,
+            },
+            second: {
+              focusVisible: second.matches(":focus-visible"),
+              outlineStyle: secondStyle.outlineStyle,
+              outlineWidth: secondStyle.outlineWidth,
+              outlineOffset: secondStyle.outlineOffset,
+            },
+          };
+        });
+
+        assert.equal(secondStep.first.focusVisible, false, `${label}: previous item must leave :focus-visible after ArrowDown`);
+        assert.equal(secondStep.first.outlineStyle, "none", `${label}: previous item must return to outline-style none`);
+        assert.equal(secondStep.second.focusVisible, true, `${label}: selected item must match :focus-visible after ArrowDown`);
+        assert.equal(secondStep.second.outlineStyle, "solid", `${label}: selected item outline-style must be solid`);
+        assert.equal(secondStep.second.outlineWidth, "3px", `${label}: selected item outline-width must be 3px`);
+        assert.equal(secondStep.second.outlineOffset, "-3px", `${label}: selected item outline-offset must be -3px`);
+
+        await page.keyboard.press("Escape");
+        await page.waitForFunction(() =>
+          !(window as unknown as MenuWindow).menu.element.classList.contains("mtrl-menu--visible"),
+        );
+
+        // Pointer open: clear keyboard :focus-visible left on the opener by Escape,
+        // then click so focus lands on the menu surface with :focus-visible false
+        // and no outline on the surface or any item.
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+        await page.click("#menu-opener");
+        await page.waitForFunction(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          return menu.classList.contains("mtrl-menu--visible") && document.activeElement === menu;
+        });
+
+        const pointerOpened = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const items = Array.from(menu.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+          return {
+            menuFocusVisible: menu.matches(":focus-visible"),
+            menuOutlineStyle: getComputedStyle(menu).outlineStyle,
+            anyItemFocusVisible: items.some((item) => item.matches(":focus-visible")),
+            itemOutlines: items.map((item) => getComputedStyle(item).outlineStyle),
+          };
+        });
+
+        assert.equal(pointerOpened.menuFocusVisible, false, `${label}: pointer-focused menu surface must not match :focus-visible`);
+        assert.equal(pointerOpened.menuOutlineStyle, "none", `${label}: pointer-focused menu surface must have outline-style none`);
+        assert.equal(pointerOpened.anyItemFocusVisible, false, `${label}: pointer open must not leave any item matching :focus-visible`);
+        assert.deepEqual(pointerOpened.itemOutlines, ["none", "none", "none"], `${label}: pointer open must leave all items at outline-style none`);
+
+        // Empty menu opened by keyboard: focus falls through to the menu surface
+        // itself, which matches :focus-visible and draws the 3dp inward ring.
+        await page.evaluate(({ variant }) => {
+          const state = window as unknown as MenuWindow;
+          state.menu?.destroy();
+          document.body.replaceChildren();
+          const opener = document.createElement("button");
+          opener.id = "menu-opener";
+          opener.textContent = "Empty";
+          opener.style.cssText = "position:absolute;left:40px;top:40px;width:120px;height:40px";
+          document.body.append(opener);
+          state.menu = state.createMenu({ opener, variant, items: [] });
+          opener.focus();
+        }, { variant });
+
+        await page.keyboard.press("ArrowDown");
+        await page.waitForFunction(() => {
+          const menu = (window as unknown as MenuWindow).menu.element;
+          return menu.classList.contains("mtrl-menu--visible") && document.activeElement === menu;
+        });
+
+        const emptyKeyboardOpened = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = (window as unknown as MenuWindow).menu.element;
+          const style = getComputedStyle(menu);
+          return {
+            focusVisible: menu.matches(":focus-visible"),
+            outlineStyle: style.outlineStyle,
+            outlineWidth: style.outlineWidth,
+            outlineOffset: style.outlineOffset,
+            outlineColor: style.outlineColor,
+          };
+        });
+
+        assert.equal(emptyKeyboardOpened.focusVisible, true, `${label} empty menu: keyboard-focused surface must match :focus-visible`);
+        assert.equal(emptyKeyboardOpened.outlineStyle, "solid", `${label} empty menu: surface outline-style must be solid`);
+        assert.equal(emptyKeyboardOpened.outlineWidth, "3px", `${label} empty menu: surface outline-width must be 3px`);
+        assert.equal(emptyKeyboardOpened.outlineOffset, "-3px", `${label} empty menu: surface outline-offset must be -3px`);
+        if (mode.forcedColors === "none") {
+          assert.equal(emptyKeyboardOpened.outlineColor, firstStep.secondary, `${label} empty menu: surface outline-color must equal resolved --mtrl-sys-color-secondary`);
+        } else {
+          const [, , , alpha] = parseColour(emptyKeyboardOpened.outlineColor);
+          assert.ok(alpha > 0, `${label} empty menu: forced-colors surface outline-color must be non-transparent (${emptyKeyboardOpened.outlineColor})`);
+        }
+      }
+
+      // Split button keyboard open (Enter on trailing button) across LTR and RTL:
+      // focus lands on the first item with :focus-visible true and draws the
+      // 3dp inward ring; pointer open stays ringless.
+      for (const dir of ["ltr", "rtl"] as const) {
+        const splitLabel = `split-button (${mode.name}, ${dir})`;
+        await page.evaluate(({ dir }) => {
+          type SplitInstance = { element: HTMLElement; trailingElement: HTMLElement; destroy: () => void };
+          type SplitWindow = MenuWindow & {
+            openers: { createSplitButton: (config: Record<string, unknown>) => SplitInstance };
+            split?: SplitInstance;
+          };
+          const state = window as unknown as SplitWindow;
+          state.menu?.destroy();
+          state.split?.destroy();
+          document.body.replaceChildren();
+          document.documentElement.dir = dir;
+          const host = document.createElement("div");
+          host.style.cssText = "position:absolute;left:40px;top:40px";
+          document.body.append(host);
+          state.split = state.openers.createSplitButton({
+            text: "Save",
+            items: [
+              { id: "a", text: "Save draft" },
+              { id: "b", text: "Save template" },
+            ],
+          });
+          host.append(state.split.element);
+          state.split.trailingElement.id = "split-trailing";
+          state.split.trailingElement.focus();
+        }, { dir });
+
+        await page.keyboard.press("Enter");
+        await page.waitForFunction(() => {
+          const menu = document.querySelector<HTMLElement>(".mtrl-menu");
+          const first = menu?.querySelector<HTMLElement>('[data-id="a"]');
+          return !!menu && menu.classList.contains("mtrl-menu--visible") && !!first && document.activeElement === first;
+        });
+
+        const splitKeyboard = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = document.querySelector<HTMLElement>(".mtrl-menu")!;
+          const first = menu.querySelector<HTMLElement>('[data-id="a"]')!;
+          const style = getComputedStyle(first);
+          const probe = document.createElement("span");
+          probe.style.color = "var(--mtrl-sys-color-secondary)";
+          document.body.append(probe);
+          const secondary = getComputedStyle(probe).color;
+          probe.remove();
+          return {
+            secondary,
+            firstFocused: document.activeElement === first,
+            focusVisible: first.matches(":focus-visible"),
+            outlineStyle: style.outlineStyle,
+            outlineWidth: style.outlineWidth,
+            outlineOffset: style.outlineOffset,
+            outlineColor: style.outlineColor,
+            menuFocusVisible: menu.matches(":focus-visible"),
+            menuOutlineStyle: getComputedStyle(menu).outlineStyle,
+          };
+        });
+
+        assert.equal(splitKeyboard.firstFocused, true, `${splitLabel}: Enter must focus the first menu item`);
+        assert.equal(splitKeyboard.focusVisible, true, `${splitLabel}: keyboard-opened first item must match :focus-visible`);
+        assert.equal(splitKeyboard.outlineStyle, "solid", `${splitLabel}: first item outline-style must be solid`);
+        assert.equal(splitKeyboard.outlineWidth, "3px", `${splitLabel}: first item outline-width must be 3px`);
+        assert.equal(splitKeyboard.outlineOffset, "-3px", `${splitLabel}: first item outline-offset must be -3px`);
+        assert.equal(splitKeyboard.menuFocusVisible, false, `${splitLabel}: menu surface must not match :focus-visible when the first item is focused`);
+        assert.equal(splitKeyboard.menuOutlineStyle, "none", `${splitLabel}: menu surface must not show a focus outline when the first item is focused`);
+        if (mode.forcedColors === "none") {
+          assert.equal(splitKeyboard.outlineColor, splitKeyboard.secondary, `${splitLabel}: first item outline-color must equal resolved --mtrl-sys-color-secondary`);
+        } else {
+          const [, , , alpha] = parseColour(splitKeyboard.outlineColor);
+          assert.ok(alpha > 0, `${splitLabel}: forced-colors first item outline-color must be non-transparent (${splitKeyboard.outlineColor})`);
+        }
+
+        await page.keyboard.press("Escape");
+        await page.waitForFunction(() => {
+          const menu = document.querySelector<HTMLElement>(".mtrl-menu");
+          return !menu || !menu.classList.contains("mtrl-menu--visible");
+        });
+
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+        await page.click("#split-trailing");
+        await page.waitForFunction(() => {
+          const menu = document.querySelector<HTMLElement>(".mtrl-menu");
+          return !!menu && menu.classList.contains("mtrl-menu--visible") && document.activeElement === menu;
+        });
+
+        const splitPointer = await page.evaluate(() => {
+          document.getAnimations().forEach((animation) => animation.finish());
+          const menu = document.querySelector<HTMLElement>(".mtrl-menu")!;
+          const items = Array.from(menu.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+          return {
+            menuFocusVisible: menu.matches(":focus-visible"),
+            menuOutlineStyle: getComputedStyle(menu).outlineStyle,
+            anyItemFocusVisible: items.some((item) => item.matches(":focus-visible")),
+            itemOutlines: items.map((item) => getComputedStyle(item).outlineStyle),
+          };
+        });
+
+        assert.equal(splitPointer.menuFocusVisible, false, `${splitLabel}: pointer-opened split menu surface must not match :focus-visible`);
+        assert.equal(splitPointer.menuOutlineStyle, "none", `${splitLabel}: pointer-opened split menu surface must have outline-style none`);
+        assert.equal(splitPointer.anyItemFocusVisible, false, `${splitLabel}: pointer open must not leave any item matching :focus-visible`);
+        assert.deepEqual(splitPointer.itemOutlines, ["none", "none"], `${splitLabel}: pointer open must leave all items at outline-style none`);
+
+        await page.evaluate(() => {
+          (window as unknown as { split?: { destroy: () => void } }).split?.destroy();
+          document.documentElement.dir = "";
+        });
+      }
+    }
+
+    assert.notEqual(
+      secondaryByMode.light,
+      secondaryByMode.dark,
+      "light and dark modes must resolve distinct --mtrl-sys-color-secondary focus ring colours",
+    );
+  } finally {
+    await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "none" });
+    await page.evaluate(() => {
+      (window as unknown as MenuWindow).menu?.destroy();
+      (window as unknown as { split?: { destroy: () => void } }).split?.destroy();
+      document.body.replaceChildren();
+      document.documentElement.dir = "";
+      document.documentElement.removeAttribute("data-theme-mode");
+    });
+  }
+  console.log("Passed packed menu item and surface focus ring: 3dp inward secondary focus ring on keyboard-focused baseline and vertical items, empty menu surfaces, and split-button first items (LTR and RTL) across light, dark and forced-colors modes; no outline on pointer open.");
 }

@@ -18,8 +18,32 @@ import { BottomAppBarComponent, BottomAppBarConfig } from "./types";
 /**
  * Creates a bottom app bar component
  *
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use createToolbar with
+ * { variant: 'docked', placement: 'bottom' } from material/components/toolbar
+ * instead. A centred FAB, adding a FAB after creation, a custom
+ * transitionDuration and a custom tag are not yet available on the docked
+ * toolbar. Removal is parked until Material Design v4.
+ *
  * @param {BottomAppBarConfig} config - Configuration options
  * @returns {BottomAppBarComponent} Bottom app bar component instance
+ *
+ * @example
+ * // Before
+ * const bar = createBottomAppBar({ autoHide: true });
+ * bar.addAction(searchButton).addAction(archiveButton).addFab(fab);
+ *
+ * // After
+ * const toolbar = createToolbar({
+ *   variant: 'docked',
+ *   placement: 'bottom',
+ *   scrollBehavior: 'exit',
+ *   scrollThreshold: 10,
+ *   ariaLabel: 'Bottom app bar',
+ *   items: [searchButton, archiveButton],
+ *   fab,
+ *   fabPosition: 'end',
+ * });
  */
 export const createBottomAppBar = (
   config: BottomAppBarConfig = {}

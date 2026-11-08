@@ -316,6 +316,7 @@ const withSubmenu =
       }
     }
     submenuElement.setAttribute("role", "menu");
+    if (item.text) submenuElement.setAttribute("aria-label", item.text);
     submenuElement.setAttribute("tabindex", "-1");
     submenuElement.setAttribute("data-level", currentLevel.toString());
     submenuElement.setAttribute("data-parent-item", item.id);
@@ -340,6 +341,7 @@ const withSubmenu =
     // Create submenu list
     const submenuList = document.createElement("ul");
     submenuList.className = `${component.getClass("menu__list")}`;
+    submenuList.setAttribute("role", "none");
 
     // Create submenu items
     const submenuItems: HTMLElement[] = [];

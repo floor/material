@@ -1,3 +1,4 @@
+import { controlLabelConfig } from "../../core/config/control-label";
 // src/components/slider/config.ts
 // Class names are written out in full. The class helpers no longer add the
 // `mtrl-` prefix for you, so a modifier built here carries it.
@@ -89,7 +90,7 @@ export const getElementConfig = (config: SliderConfig) => {
     attributes["aria-disabled"] = "true";
   }
 
-  return createElementConfig(config, {
+  return controlLabelConfig(createElementConfig(config, {
     tag: "div",
     attributes,
     className: classes,
@@ -104,6 +105,6 @@ export const getElementConfig = (config: SliderConfig) => {
       mouseup: true,
     },
     interactive: true,
-  });
+  }), config.controlLabelOnly);
 };
 

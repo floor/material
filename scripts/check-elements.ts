@@ -22,6 +22,7 @@ import { checkTextFieldWarning } from "./check-text-field-warning";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
+import { checkToolbarCollapse } from "./check-toolbar-collapse-browser";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
@@ -29,6 +30,7 @@ import { checkFabPlacement } from "./check-fab-placement-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
+import { checkFocusVisibility } from "./check-focus-visibility";
 import { checkCardActions } from "./check-card-actions-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -183,6 +185,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
   if (selected("a")) {
+  await checkFocusVisibility(page);
   await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
@@ -4757,6 +4760,7 @@ try {
     check("badge: renders as the factory does with the global stylesheet");
 
     // Baseline declared no status roles, so these had no background.
+    // Status roles are harmonised to the theme primary, as M3 custom colours, so high contrast reaches 7:1.
     const status = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
       return Object.fromEntries(["success", "warning", "info"].map((color) => {
@@ -4767,9 +4771,9 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
-      info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 107, 94)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(167, 58, 16)", color: "rgb(255, 255, 255)" },
+      info: { bg: "rgb(55, 91, 169)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
   }
@@ -4975,11 +4979,12 @@ try {
   }
 
   // ---------------------------------------------------------------- drawer
+  const ACTIVE_ICON = '<svg viewBox="0 0 24 24" width="24" height="24" data-active="true"><path d="M4 4h16v16H4z"/></svg>';
   await fresh(
     page,
     `<m-drawer id="dr" open headline="Mail" value="inbox">
-       <m-drawer-item value="inbox" icon='${ICON}' badge="24">Inbox</m-drawer-item>
-       <m-drawer-item value="sent" icon='${ICON}'>Sent</m-drawer-item>
+       <m-drawer-item value="inbox" icon='${ICON}' selected-icon='${ACTIVE_ICON}' badge="24">Inbox</m-drawer-item>
+       <m-drawer-item value="sent" icon='${ICON}' selected-icon='${ACTIVE_ICON}'>Sent</m-drawer-item>
        <m-drawer-item type="divider"></m-drawer-item>
        <m-drawer-item type="section">Labels</m-drawer-item>
        <m-drawer-item value="family" disabled>Family</m-drawer-item>
@@ -5003,6 +5008,16 @@ try {
     assert.deepEqual(structure, { headline: "Mail", separators: 1, section: "Labels" });
     check("drawer: a navigation landmark named by its headline; items, a divider and a section headline; value is aria-current");
 
+    // The active destination shows its selected-icon; the others their icon.
+    const activeIcons = (): Promise<{ inbox: boolean; sent: boolean }> =>
+      page.evaluate(() => {
+        const root = document.getElementById("dr")?.shadowRoot as ShadowRoot;
+        const active = (id: string) => !!root.querySelector(`[data-id="${id}"] [class*="drawer__item-icon"] svg[data-active]`);
+        return { inbox: active("inbox"), sent: active("sent") };
+      });
+    assert.deepEqual(await activeIcons(), { inbox: true, sent: false });
+    check("drawer: the active destination shows its selected-icon and the others their icon");
+
     await page.evaluate(() => {
       const w = window as unknown as Win;
       w.events = [];
@@ -5018,7 +5033,8 @@ try {
       });
     await nav.getByRole("button", { name: "Sent", exact: true }).click();
     assert.deepEqual(await state(), { events: [{ detail: { value: "sent" }, target: "dr" }], value: "sent", attribute: "inbox", current: "sent" });
-    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays");
+    assert.deepEqual(await activeIcons(), { inbox: false, sent: true });
+    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays; the selected icons swap");
 
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press("Enter");
@@ -5475,6 +5491,8 @@ try {
   }
 
   await checkToolbarItemShape(page, check);
+
+  await checkToolbarCollapse(page, check);
 
   await checkTabBadge(page, check);
 
@@ -9510,13 +9528,32 @@ try {
     // A menu opened with a key puts focus on its first item on a timer, about 120ms
     // after the key. A fixed wait is not that moment: on a runner whose main thread
     // paused for a third of a second, the keys below got there first, were handled
-    // with no item focused, and focus ended one item short.
-    const focusOn = async (label: string): Promise<void> => {
-      for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
+    // with no item focused, and focus ended one item short. A single wait measured
+    // from the key is not that moment either: a renderer paused past its deadline
+    // leaves the menu still opening when the page resumes, and a wait that gives up
+    // silently hands the assertion the frame before the menu's own timer moves
+    // focus. A key-opened step waits for the menu to be open with the item
+    // focusable, then for focus to move; each wait has its own deadline and a
+    // failure that says what was found.
+    // An item the menu focuses is programmatically focusable: the menu gives
+    // every item a tabindex, -1 included. A tabindex of 0 is not the signal --
+    // the initial-focus pass sets every item back to -1 while focus stays on the
+    // last one, so requiring it would wait on a race the menu itself resolves.
+    const focusableItem = (label: string): Promise<boolean> =>
+      page.evaluate((label) => {
+        const root = (document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot;
+        const item = [...root.querySelectorAll<HTMLElement>("[data-id]")].find((el) => (el.textContent ?? "").trim() === label);
+        return !!item && item.hasAttribute("tabindex") && item.checkVisibility?.() !== false;
+      }, label);
+    const focusedByKey = async (step: string, label: string): Promise<void> => {
+      await eventually(step, `the open menu's "${label}" to be focusable`,
+        async () => (await menuState()).open && await focusableItem(label),
+        async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
+      await focusIs(step, label);
     };
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await focusOn("Copy");
+    await focusedByKey("menu, opened with Enter", "Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await closed("menu, Escape, opened with Enter");
@@ -9532,7 +9569,7 @@ try {
     // focus is still on the last item once every opening timer has run.
     await page.focus("#mb");
     await page.keyboard.press("ArrowUp");
-    await focusOn("PasteCtrl+V");
+    await focusedByKey("menu, opened with ArrowUp", "PasteCtrl+V");
     await settle();
     assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
     await page.keyboard.press("Escape");
@@ -9580,7 +9617,7 @@ try {
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await focusOn("Copy");
+    await focusedByKey("menu, opened with Enter after the submenu", "Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
@@ -10374,7 +10411,7 @@ try {
       })
     );
     await page.emulateMedia({ reducedMotion: null });
-    const fades = "opacity, color, background-color, border-color, outline-color, box-shadow, visibility";
+    const fades = "opacity, color, background-color, border-color, box-shadow, visibility";
     assert.deepEqual(read, [fades, fades], "under reduced motion a shadow root's transitions are limited to the fades");
     check("reduced motion: inside <m-button> and <m-button-group>, transitions are limited to the fades");
   }

@@ -35,9 +35,19 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 // advance like every other wait; its cancel clears the fake timeout.
 dom.window.requestAnimationFrame = g.requestAnimationFrame;
 dom.window.cancelAnimationFrame = (frame: number) => clearTimeout(frame);
+g.cancelAnimationFrame = dom.window.cancelAnimationFrame;
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
+g.customElements = dom.window.customElements;
 
-import createMenu from '../../../src/components/menu';
+import createMenu, { MENU_DEFAULTS } from '../../../src/components/menu';
+import createSelect from '../../../src/components/select';
+import createSplitButton from '../../../src/components/split-button';
+import createFabMenu from '../../../src/components/fab-menu';
+import createToolbar from '../../../src/components/toolbar';
+import { defineMenu } from '../../../src/elements/menu';
+import { setComponentDefaults } from '../../../src/core/config/global';
+
+defineMenu();
 
 // The clock is the tests' own. The menu is placed 20 ms after open()
 // and focuses itself 100 ms after that; a close hides at 50 ms and leaves the
@@ -97,6 +107,7 @@ afterEach(() => {
   // The real clock comes back even if clearing the document throws: a fake
   // clock left installed makes the next file's real waits time out
   try {
+    setComponentDefaults('menu', {});
     document.body.innerHTML = '';
   } finally {
     jest.useRealTimers();
@@ -379,14 +390,90 @@ describe('the size options reach the element', () => {
 });
 
 describe('the expressive vertical menu', () => {
-  test('is opt-in: a plain menu is still the baseline one', async () => {
+  test('is the default: MENU_DEFAULTS and a plain menu use the vertical variant with standard colour', async () => {
+    expect(MENU_DEFAULTS.VARIANT).toBe('vertical');
+    expect(MENU_DEFAULTS.COLOR).toBe('standard');
+
     const menu = createMenu({ opener, items });
     await opened(menu);
-    expect(menu.element.classList.contains('mtrl-menu--vertical')).toBe(false);
+    expect(menu.element.classList.contains('mtrl-menu--vertical')).toBe(true);
     expect(menu.element.classList.contains('mtrl-menu--vibrant')).toBe(false);
+    menu.destroy();
   });
 
-  test('the vertical variant carries its own class, and vibrant its own', async () => {
+  test('every menu caller defaults to the vertical variant: <m-menu>, select, split button, fab-menu and toolbar overflow', async () => {
+    jest.useRealTimers();
+    const waitOpen = () => new Promise((r) => setTimeout(r, 40));
+
+    // <m-menu>
+    const host = document.createElement('m-menu');
+    const item = document.createElement('m-menu-item');
+    item.setAttribute('value', 'cut');
+    item.textContent = 'Cut';
+    host.appendChild(item);
+    document.body.appendChild(host);
+    const mMenuSurface = host.shadowRoot?.querySelector('.mtrl-menu');
+    expect(mMenuSurface?.classList.contains('mtrl-menu--vertical')).toBe(true);
+    expect(mMenuSurface?.classList.contains('mtrl-menu--vibrant')).toBe(false);
+
+    // select (createOnDemandMenu -> createMenu)
+    const select = createSelect({ label: 'Action', options: items });
+    document.body.appendChild(select.element);
+    select.open();
+    await waitOpen();
+    const selectMenu = select.element.querySelector('.mtrl-select__menu');
+    expect(selectMenu).not.toBeNull();
+    expect(selectMenu!.classList.contains('mtrl-menu--vertical')).toBe(true);
+    expect(selectMenu!.classList.contains('mtrl-menu--vibrant')).toBe(false);
+    select.destroy();
+
+    // split button (createOnDemandMenu -> createMenu)
+    const split = createSplitButton({ text: 'Run', items });
+    document.body.appendChild(split.element);
+    split.expand();
+    await waitOpen();
+    const splitMenu = Array.from(document.querySelectorAll('.mtrl-menu')).find(
+      (el) => el !== mMenuSurface
+    );
+    expect(splitMenu).not.toBeUndefined();
+    expect(splitMenu!.classList.contains('mtrl-menu--vertical')).toBe(true);
+    expect(splitMenu!.classList.contains('mtrl-menu--vibrant')).toBe(false);
+    split.destroy();
+
+    // fab-menu (presentation: "menu")
+    const fabMenu = createFabMenu({
+      icon: '<svg viewBox="0 0 24 24"></svg>',
+      ariaLabel: 'Actions',
+      presentation: 'menu',
+      items: items.slice(0, 3),
+    });
+    document.body.appendChild(fabMenu.element);
+    fabMenu.open();
+    await waitOpen();
+    const fabMenuSurface = Array.from(document.querySelectorAll('.mtrl-menu')).find(
+      (el) => el !== mMenuSurface
+    );
+    expect(fabMenuSurface).not.toBeUndefined();
+    expect(fabMenuSurface!.classList.contains('mtrl-menu--vertical')).toBe(true);
+    expect(fabMenuSurface!.classList.contains('mtrl-menu--vibrant')).toBe(false);
+    fabMenu.destroy();
+
+    // toolbar overflow
+    let overflowMenu: ReturnType<typeof createMenu> | null = null;
+    const toolbar = createToolbar({
+      ariaLabel: 'Actions',
+      overflow: (overflowOpener) => {
+        overflowMenu = createMenu({ opener: overflowOpener, items });
+        return overflowMenu;
+      },
+    });
+    document.body.appendChild(toolbar.element);
+    expect(overflowMenu!.element.classList.contains('mtrl-menu--vertical')).toBe(true);
+    overflowMenu!.destroy();
+    toolbar.destroy();
+  });
+
+  test('the vertical variant carries its own class, vibrant its own, and baseline opts out', async () => {
     const standard = createMenu({ opener, items, variant: 'vertical' });
     await opened(standard);
     expect(standard.element.classList.contains('mtrl-menu--vertical')).toBe(true);
@@ -394,14 +481,61 @@ describe('the expressive vertical menu', () => {
     standard.close();
     await after(450);
 
-    const vibrant = createMenu({ opener, items, variant: 'vertical', color: 'vibrant' });
+    const vibrant = createMenu({ opener, items, color: 'vibrant' });
     await opened(vibrant);
     expect(vibrant.element.classList.contains('mtrl-menu--vertical')).toBe(true);
     expect(vibrant.element.classList.contains('mtrl-menu--vibrant')).toBe(true);
+    vibrant.close();
+    await after(450);
+
     // vibrant only means anything on the vertical variant
-    const baseline = createMenu({ opener, items, color: 'vibrant' });
+    const baseline = createMenu({ opener, items, variant: 'baseline', color: 'vibrant' });
     await opened(baseline);
+    expect(baseline.element.classList.contains('mtrl-menu--vertical')).toBe(false);
     expect(baseline.element.classList.contains('mtrl-menu--vibrant')).toBe(false);
+  });
+
+  test('setComponentDefaults("menu", { variant: "baseline" }) restores the baseline menu app-wide, and a per-menu variant wins', async () => {
+    jest.useRealTimers();
+    const waitOpen = () => new Promise((r) => setTimeout(r, 40));
+
+    const beforeOptOut = createMenu({ opener, items });
+    expect(beforeOptOut.element.classList.contains('mtrl-menu--vertical')).toBe(true);
+    beforeOptOut.destroy();
+
+    setComponentDefaults('menu', { variant: 'baseline' });
+
+    const defaultMenu = createMenu({ opener, items });
+    expect(defaultMenu.element.classList.contains('mtrl-menu--vertical')).toBe(false);
+    defaultMenu.destroy();
+
+    const host = document.createElement('m-menu');
+    document.body.appendChild(host);
+    expect(host.shadowRoot?.querySelector('.mtrl-menu')?.classList.contains('mtrl-menu--vertical')).toBe(false);
+
+    const select = createSelect({ label: 'Action', options: items });
+    document.body.appendChild(select.element);
+    select.open();
+    await waitOpen();
+    expect(select.element.querySelector('.mtrl-select__menu')?.classList.contains('mtrl-menu--vertical')).toBe(false);
+    select.destroy();
+
+    // Per-menu variant: "vertical" wins over the app-level baseline default
+    const explicitVertical = createMenu({ opener, items, variant: 'vertical' });
+    expect(explicitVertical.element.classList.contains('mtrl-menu--vertical')).toBe(true);
+    explicitVertical.destroy();
+
+    const verticalHost = document.createElement('m-menu');
+    verticalHost.setAttribute('variant', 'vertical');
+    document.body.appendChild(verticalHost);
+    expect(verticalHost.shadowRoot?.querySelector('.mtrl-menu')?.classList.contains('mtrl-menu--vertical')).toBe(true);
+
+    const verticalSelect = createSelect({ label: 'Action', options: items, menu: { variant: 'vertical' } });
+    document.body.appendChild(verticalSelect.element);
+    verticalSelect.open();
+    await waitOpen();
+    expect(verticalSelect.element.querySelector('.mtrl-select__menu')?.classList.contains('mtrl-menu--vertical')).toBe(true);
+    verticalSelect.destroy();
   });
 
   test('an item can carry a line of supporting text under its label', async () => {
@@ -439,17 +573,38 @@ describe('the expressive vertical menu', () => {
     expect(parent.classList.contains('mtrl-menu--active')).toBe(false);
     expect(parent.classList.contains('mtrl-menu--inactive')).toBe(false);
 
+    parent.getBoundingClientRect = () =>
+      ({ top: 80, bottom: 180, left: 40, right: 200, width: 160, height: 100, x: 40, y: 80, toJSON: () => ({}) }) as DOMRect;
+    menuItems(menu)[0]!.getBoundingClientRect = () =>
+      ({ top: 84, bottom: 128, left: 44, right: 196, width: 152, height: 44, x: 44, y: 84, toJSON: () => ({}) }) as DOMRect;
+
     menuItems(menu)[0]!.click();
     await after(400);
-    const submenu = document.querySelector('.mtrl-menu--submenu');
+    const submenu = document.querySelector<HTMLElement>('.mtrl-menu--submenu');
     expect(submenu).not.toBeNull();
     // the submenu looks like its parent
     expect(submenu!.classList.contains('mtrl-menu--vertical')).toBe(true);
     expect(submenu!.classList.contains('mtrl-menu--vibrant')).toBe(true);
+    // and opens flush with the parent menu surface (200px), not the 4dp-inset item (196px)
+    expect(submenu!.style.left).toBe('200px');
     // and the shape says which one is live
     expect(submenu!.classList.contains('mtrl-menu--active')).toBe(true);
     expect(parent.classList.contains('mtrl-menu--inactive')).toBe(true);
     expect(parent.classList.contains('mtrl-menu--active')).toBe(false);
+  });
+});
+
+describe('the deprecated dense option', () => {
+  test('still renders the dense variant, and only when asked', async () => {
+    const dense = createMenu({ opener, items, dense: true });
+    await opened(dense);
+    expect(dense.element.classList.contains('mtrl-menu--dense')).toBe(true);
+    dense.close();
+    await after(450);
+
+    const plain = createMenu({ opener, items });
+    await opened(plain);
+    expect(plain.element.classList.contains('mtrl-menu--dense')).toBe(false);
   });
 });
 

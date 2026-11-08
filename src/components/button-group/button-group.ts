@@ -303,7 +303,9 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       const button = (buttonConfig.text === undefined && buttonConfig.icon
         ? createIconButton({
             ...resolvedConfig,
-            ariaLabel: buttonConfig.ariaLabel,
+            // Keep the typed explicit-label contract; runtime callers without
+            // one receive the same value fallback as the custom element.
+            ariaLabel: buttonConfig.ariaLabel ?? buttonConfig.value,
             toggle: selectable,
             toggleOnClick: false,
             selectedIcon: buttonConfig.selectedIcon,

@@ -105,41 +105,41 @@ $contrast-emit: all !default;
   }
 }
 
-// Success, warning and info: not M3 scheme roles, so no scheme generates them.
-// Every theme takes these values, baseline included.
-// Each keeps its colour's HCT hue and chroma (material-color-utilities) at the
-// tones M3 uses for a role and its on-role: light tone 40 on 100, dark tone 80
-// on 20 (ColorSpec2021 primary / onPrimary). Those tones clear 4.5:1, so none
-// is shifted further.
-@mixin status-roles-light() {
-  // Success: #007B5A (hue 169, chroma 43) brought from tone 46 to 40. 6.45:1.
-  --#{$prefix}-sys-color-success: #006C4E;
-  --#{$prefix}-sys-color-on-success: #FFFFFF;
-
-  // Warning: #DD6D06 (hue 51, chroma 63) was tone 58, 3.35:1 under white.
-  // Tone 40 is #974800, 6.48:1, still orange.
-  --#{$prefix}-sys-color-warning: #974800;
-  --#{$prefix}-sys-color-on-warning: #FFFFFF;
-
-  // Info: #0061A4 is already tone 40 of its palette. 6.47:1.
-  --#{$prefix}-sys-color-info: #0061A4;
-  --#{$prefix}-sys-color-on-info: #FFFFFF;
+// Success, warning and info: custom semantic colour seeds (#007B5A, #DD6D06,
+// #0061A4) harmonised toward each theme's primary colour (Blend.harmonize,
+// capped at 15° HCT hue shift) and resolved at the theme's contrast level
+// (light tone 40 on 100, dark tone 80 on 20 at standard contrast). Defaults
+// are baseline's harmonised values.
+@mixin status-roles-light(
+  $success: #006b5e,
+  $on-success: #ffffff,
+  $warning: #a73a10,
+  $on-warning: #ffffff,
+  $info: #375ba9,
+  $on-info: #ffffff
+) {
+  --#{$prefix}-sys-color-success: #{$success};
+  --#{$prefix}-sys-color-on-success: #{$on-success};
+  --#{$prefix}-sys-color-warning: #{$warning};
+  --#{$prefix}-sys-color-on-warning: #{$on-warning};
+  --#{$prefix}-sys-color-info: #{$info};
+  --#{$prefix}-sys-color-on-info: #{$on-info};
 }
 
-@mixin status-roles-dark() {
-  // Success: #85CFA9 (hue 165, chroma 37) at tone 80, on-role at tone 20. 7.76:1.
-  --#{$prefix}-sys-color-success: #8CD6AF;
-  --#{$prefix}-sys-color-on-success: #003824;
-
-  // Warning: #FFB95C is already tone 80 (hue 71, chroma 43). Its on-role was
-  // tone 16; tone 20 is #462A00. 7.76:1.
-  --#{$prefix}-sys-color-warning: #FFB95C;
-  --#{$prefix}-sys-color-on-warning: #462A00;
-
-  // Info: #99CBFF is already tone 80. Its on-role was tone 20 in hue, not of
-  // this palette; tone 20 is #003355. 7.69:1.
-  --#{$prefix}-sys-color-info: #99CBFF;
-  --#{$prefix}-sys-color-on-info: #003355;
+@mixin status-roles-dark(
+  $success: #7ad7c6,
+  $on-success: #003730,
+  $warning: #ffb59d,
+  $on-warning: #5d1800,
+  $info: #b1c5ff,
+  $on-info: #002c70
+) {
+  --#{$prefix}-sys-color-success: #{$success};
+  --#{$prefix}-sys-color-on-success: #{$on-success};
+  --#{$prefix}-sys-color-warning: #{$warning};
+  --#{$prefix}-sys-color-on-warning: #{$on-warning};
+  --#{$prefix}-sys-color-info: #{$info};
+  --#{$prefix}-sys-color-on-info: #{$on-info};
 }
 
 // Error colours: the fallback for a theme whose palette sets no error family.
@@ -160,14 +160,14 @@ $contrast-emit: all !default;
 }
 
 // Common status colors, for themes whose palette sets no error family
-@mixin status-colors-light() {
+@mixin status-colors-light($args...) {
   @include status-error-light();
 
-  @include status-roles-light();
+  @include status-roles-light($args...);
 }
 
-@mixin status-colors-dark() {
+@mixin status-colors-dark($args...) {
   @include status-error-dark();
 
-  @include status-roles-dark();
+  @include status-roles-dark($args...);
 }
