@@ -19,7 +19,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [3.9.0] - 2026-11-08
 
-Lists you can build with.
+Lists, accessible names and a smaller package.
 
 ### Added
 
@@ -42,32 +42,190 @@ Lists you can build with.
   refuses control and custom slots, interactive descendants from `renderItem`,
   and an indicator side already occupied by a slot.
 
+- **The 2025 colour specification, by opt-in (#297).**
+  `material/theme/2025` provides the theme API with `spec: "2021" | "2025"`
+  on scheme creation and its variant factories. The default remains `"2021"`;
+  request `spec: "2025"` for tonal spot, vibrant, expressive or neutral.
+  Fidelity, content and monochrome fall back to `"2021"`. Pages importing
+  only `material/theme` omit the 2025 implementation.
+
+- **Docked toolbars collapse on scroll (#301).**
+  `scrollBehavior: "collapse"`, or `scroll-behavior="collapse"` on
+  `<m-toolbar>`, shrinks a docked toolbar toward its 48dp minimum target area
+  on forward scroll and expands it on reverse scroll or at the top. Taller
+  items keep their required height. Icon-and-label items hide their labels
+  visually while retaining their accessible names; label-only items keep
+  their labels. Items remain visible and focusable. `collapse` and `expand`
+  events fire on state changes. Floating toolbars are unaffected.
+
+- **Control-only labels for factory inputs (#326).**
+  `controlLabelOnly: true` on Checkbox, Switch, TextField and Slider factories
+  keeps `ariaLabel` on the real input or slider handles and omits the generated
+  wrapper's `aria-label`. The option is off by default: omitted or false
+  preserves the existing generated HTML byte for byte. Opting in changes
+  wrapper serialization and wrapper `[aria-label]` selectors. This is a
+  factory option, with no new custom-element attribute or automatic host-label
+  suppression; author host labels and native DOM methods remain untouched.
+
+### Changed
+
+- **Expressive vertical menus are the default (#305).**
+  Standalone menus, submenus and menus opened by selects, split buttons,
+  FAB menus and toolbar overflow use `variant: "vertical"`, with standard
+  colour, 44dp rows and a 16dp outer corner. Selected items use a rounded
+  tertiary-container fill without a trailing check mark. Pass
+  `variant: "baseline"` per menu to retain the previous layout, or call
+  `setComponentDefaults("menu", { variant: "baseline" })` once at application
+  startup (once at server boot). Submenus align with their parent surface;
+  explicit widths, density, forced colours and reduced motion retain their
+  intended layout and overrides.
+
+- **Loading and expandable card recipes (#299).**
+  Documented, browser-tested compositions use `createCard` with
+  `createProgress` for loading and a standard `createIconButton` for disclosure.
+  Loading sets `aria-busy` until content settles; disclosure uses a constant
+  accessible name, `aria-expanded`, `aria-controls` and the content's `hidden`
+  state. These recipes add no card options or dedicated styles.
+
+### Deprecated
+
+- **Bottom app bar (#304).**
+  The factory, custom element, types, constants and adapters are deprecated
+  in favour of `createToolbar({ variant: "docked", placement: "bottom" })`
+  or the equivalent `<m-toolbar>`. The existing component remains available
+  throughout 3.x. Migration is documented with its differences: the toolbar
+  uses a roving tab stop, renamed shadow parts and different scroll/reservation
+  defaults. A centred FAB, adding a FAB after creation, a custom transition
+  duration and a custom tag have no direct toolbar equivalent yet.
+
+### Fixed
+
+- **Tablist, tab and button-group names (#321).**
+  Factory tablists accept `ariaLabel`, and `<m-tabs aria-label>` names the
+  inner tablist and updates it in place. `<m-tab aria-label>` names its
+  rendered tab; `Tab.setAriaLabel()` updates that name without replacing the
+  tab or losing focus and selection. Otherwise unnamed tabs use their value
+  as a fallback. Badge counts remain in the tab's name without exposing a
+  separate nested status; standalone badges keep their existing semantics.
+  Icon-only factory button-group entries missing a label at runtime also use
+  their value. The TypeScript requirement for explicit group-entry labels
+  remains; descriptive labels are still preferable to value fallbacks.
+
+- **Split-button groups, switches and required radio groups (#323).**
+  A split button without `groupLabel` keeps `ariaLabel` on its leading button
+  without repeating that name on the surrounding group. Explicit group labels
+  are retained. `<m-switch aria-label>` forwards its name to the inner switch.
+  The additive factory `RadiosConfig.required` sets the group's
+  `aria-required="true"` and native required flags; custom-element required
+  changes synchronize both, including removal and re-addition.
+
+- **Date- and time-picker dialog names and date selection (#324).**
+  Picker dialogs use an explicit `ariaLabel`, otherwise their visible heading
+  or label, otherwise “Select time” or “Select date”. Both custom elements
+  forward `aria-label` and update the inner dialog in place. Factory
+  `setAriaLabel()` methods support the same updates, and time-picker title
+  changes keep the heading and naming references synchronized. Date-picker
+  days expose one named gridcell with selection state instead of a gridcell
+  containing a second named, pressed button. Focus and values are retained.
+
+- **Menu, fullscreen search and sheet names (#322).**
+  Menu lists receive their container's `aria-label` or `aria-labelledby`, and
+  open submenus are named from their parent item's text. Fullscreen search
+  exposes a named dialog from creation, using its configured accessible label
+  or placeholder, and updates that name when the placeholder or element label
+  changes. Bottom and side sheets accept `ariaLabel` and name their semantic
+  surface. Modal sheets in the top layer expose one named native dialog
+  instead of nested dialog roles. Their custom elements also accept
+  `variant="modal"` alongside boolean `modal`, and use the host's `title` as
+  a fallback when no headline or accessible label is supplied.
+
 ### Internal
 
-- **Listbox delivery (#279).**
-  The enhancer's JavaScript is omitted when it is not imported. Its radio
-  styles ship in the list and full stylesheets.
+- **Date-picker DOM compatibility (#324).**
+  The interactive day remains a native `<button>` with its existing classes
+  and `data-date`, but now carries `role="gridcell"` and `aria-selected`.
+  The outer `.mtrl-datepicker__cell` is presentational; selection state is on
+  the day gridcell, and day buttons no longer carry `aria-pressed`.
+  Month/year buttons retain `aria-pressed`. Day and range styling classes
+  remain; this picker fix changes no stylesheet. Code inspecting selection
+  attributes should read the day gridcell.
 
-- **Release size.**
-  The release build at `1d531074`
-  ([CI run 42409979312, package job 128516050243](https://github.com/floor/material/actions/runs/42409979312/job/128516050243))
-  packs **901,553 B compressed / 4,966,183 B unpacked / 1,628 files**.
-  Against the approved 3.8.2 release at `02fbdd21`
+- **Menu selection attributes (#322).**
+  Unselected `role="menuitem"` items omit `aria-selected="false"`.
+  Explicitly selected items retain `aria-selected="true"`, and listbox
+  `role="option"` items retain both true and false states. Menu styling
+  classes remain.
+
+- **Sheet dialog attributes (#322).**
+  For top-layer modal sheets, the accessible name belongs to the outer native
+  `<dialog>`; duplicate `role="dialog"` and `aria-modal="true"` attributes
+  are removed from the inner container. Its node, classes and focus target
+  remain. Default-layer modal containers retain their explicit dialog role
+  and modality attributes. Author attributes on custom-element hosts remain.
+
+- **Smaller published package: shared styles and declarations (#313).**
+  Generated element CSS and pre-upgrade strings are colocated in a shared
+  module while per-component entries retain tree-shaking. Wildcard style
+  exports share empty declaration targets. Unexported theme pass-through
+  wrappers are removed while preserving `scheme.colors`, public import paths,
+  compact hover documentation and the writable
+  `createElementConfig().style` return type.
+
+- **Listbox delivery and approved budgets (#279, #326).**
+  Unused listbox JavaScript is omitted; its radio styles ship in the list and
+  full stylesheets. The owner approved the all-JS gzip ceiling of
+  **130,050 B** on **2026-11-05**, applied in **#279**, and the form gzip
+  ceiling of **20,450 B** on **2026-11-07**, applied in **#326**.
+
+- **Release size against 3.8.2.**
+  This release PR at `ddd7d14d`
+  ([CI run 42455193839, package job 128652773678](https://github.com/floor/material/actions/runs/42455193839/job/128652773678))
+  packs **888,118 B compressed / 4,989,708 B unpacked / 1,549 files**.
+  Against published 3.8.2 at `02fbdd21`
   ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
-  that is **+3,295 B packed / +16,882 B unpacked / +2 files**.
-  It leaves **18,447 B** under the 920,000 B packed ceiling and **152,817 B**
-  under the 5,119,000 B unpacked ceiling; neither ceiling changes.
-  The all-JS gzip ceiling rises from 128,550 to 130,050 B under the
-  owner decision 2026-11-05, applied in #279; the default list budget stays
-  at 7,014 B.
+  that is **−10,140 B packed / +40,407 B unpacked / −77 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **31,882 B**
+  under the 920,000 B packed ceiling and **129,292 B** under the 5,119,000 B
+  unpacked ceiling; neither ceiling changes.
 
-  `all-js` is **416,969 / 128,630 / 106,603 B** raw/gzip/brotli
-  (**+4,129 / +1,318 / +958 B**), and the full stylesheet is
-  **639,570 / 59,034 / 42,153 B** (**+1,818 / +155 / +182 B**).
-  These measurements include the listbox feature and the 3.9.0 version banner.
-  The default list JavaScript measures **6,837 B gzip**, within its unchanged
-  7,014 B budget. Both README rows match **128.6 kB all-js / 59.0 kB full CSS**,
-  and SIZES.md matches.
+  | Payload (B, raw / gzip / Brotli) | 3.8.2 | 3.9.0 | Change |
+  | --- | --- | --- | --- |
+  | All JS | 412,840 / 127,312 / 105,645 | 418,953 / 129,264 / 107,214 | +6,113 / +1,952 / +1,569 |
+  | Full stylesheet | 637,752 / 58,879 / 41,971 | 640,972 / 59,172 / 42,192 | +3,220 / +293 / +221 |
+  | Button stylesheet | 58,901 / 5,220 / 4,022 | 59,523 / 5,300 / 4,082 | +622 / +80 / +60 |
+  | Form fixture | 65,250 / 20,387 / 18,174 | 65,398 / 20,431 / 18,243 | +148 / +44 / +69 |
+
+  All-JS gzip leaves **786 B** under its approved 130,050 B ceiling; form
+  gzip leaves **19 B** under 20,450 B. Full CSS leaves **4,578 B** under
+  63,750 B. Button CSS is exactly **5,300 B**, with **0 B** spare; its ceiling
+  does not rise.
+
+  Component payloads below are gzip bytes. Deferred bytes are loaded on
+  interaction, in addition to the initial graph.
+
+  | Component payload | 3.8.2 | 3.9.0 | Change | Ceiling | Spare |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | menu | 12,659 | 12,767 | +108 | 13,056 | 289 |
+  | menu deferred | 2,121 | 2,143 | +22 | 2,252 | 109 |
+  | fab-menu | 8,368 | 8,368 | +0 | 8,550 | 182 |
+  | fab-menu deferred | 10,647 | 10,766 | +119 | 10,854 | 88 |
+  | split-button | 9,704 | 9,716 | +12 | 9,728 | 12 |
+  | split-button deferred | 17,208 | 17,355 | +147 | 17,459 | 104 |
+  | select | 13,447 | 13,469 | +22 | 13,516 | 47 |
+  | select deferred | 10,618 | 10,733 | +115 | 10,752 | 19 |
+  | toolbar | 11,284 | 11,346 | +62 | 11,468 | 122 |
+  | all | 125,676 | 126,287 | +611 | 127,200 | 913 |
+
+  All package and component ceilings pass. The 2025 theme opt-in retains its
+  separate measured budget rows; default theme-entry ceilings are unchanged.
+  No additional budget increase is introduced by this release.
+
+- **Still OPEN: duplicate host names and default wrapper names.**
+  Names exposed on both a custom-element host and its inner control remain
+  open. Generated factory wrappers retain their existing labels by default;
+  `controlLabelOnly` addresses wrapper duplication only when explicitly
+  enabled on the four supported factories. It does not suppress author host
+  attributes or resolve custom-element host duplication.
 
 ## [3.8.2] - 2026-11-08
 
