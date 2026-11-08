@@ -6,14 +6,28 @@ import { createElement } from "../../../core/dom/create";
 import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 import { processClassNames, type BaseComponentConfig } from "../../../core/config/component";
+import { decorativeIconsOn } from "../../../core/compose/features/icon";
+
+const libraryGlyph = (html: string): boolean =>
+  html === SEARCH_ICONS.SEARCH || html === SEARCH_ICONS.BACK || html === SEARCH_ICONS.CLEAR;
 
 /**
- * Puts icon markup inside a control that already has its own accessible name.
- * The span is ours: the author's svg string is not given new attributes.
- * aria-hidden hides that svg from the accessibility tree
+ * Writes an icon into a named search control.
+ * With the opt-in off this is `setHTML` of the original string: the default
+ * bar matches the recorded bytes. With it on, a library glyph is hidden on
+ * the element and an author string is wrapped. The author's svg is not rewritten
  * (https://w3c.github.io/aria/#aria-hidden).
  */
 export const paintNamedIcon = (host: HTMLElement, html: string): void => {
+  if (!decorativeIconsOn()) {
+    setHTML(host, html);
+    return;
+  }
+  if (libraryGlyph(html)) {
+    setHTML(host, html);
+    host.querySelector("svg")?.setAttribute("aria-hidden", "true");
+    return;
+  }
   const wrap = document.createElement("span");
   wrap.setAttribute("aria-hidden", "true");
   setHTML(wrap, html);

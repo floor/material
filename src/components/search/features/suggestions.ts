@@ -3,6 +3,7 @@
 import { SearchStructure, SearchSuggestion } from "../types";
 import { SEARCH_CLASSES, SEARCH_KEYS, SEARCH_ICONS } from "../constants";
 import { createElement } from "../../../core/dom/create";
+import { decorativeIconsOn } from "../../../core/compose/features/icon";
 import type { EventCallback } from "../../../core/state/emitter";
 
 /**
@@ -111,10 +112,12 @@ export const withSuggestions =
       },
     });
 
-    // The option's name is its text. The icon beside that text is decorative.
-    // An option with no text keeps the icon, so the svg can still name it.
-    // The author's svg string is not rewritten.
-    const iconAttributes = suggestion.text.trim() ? { "aria-hidden": "true" } : undefined;
+    // The option's name is its text. The icon beside that text is decorative
+    // once the opt-in is on. Off, the span is the recorded markup. An option
+    // with no text keeps the icon, so the svg can still name it. The author's
+    // svg string is not rewritten (https://w3c.github.io/aria/#aria-hidden).
+    const iconAttributes =
+      decorativeIconsOn() && suggestion.text.trim() ? { "aria-hidden": "true" } : undefined;
     if (suggestion.icon) {
       createElement({
         tag: "span",

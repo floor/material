@@ -48,17 +48,16 @@ type Factory = (config?: object) => {
   setType?: (type: string) => void;
 };
 
-declare global {
-  interface Window {
-    ready?: boolean;
-    mountError?: string;
-    m?: Record<string, Factory>;
-    notice?: ReturnType<Factory>;
-    clock?: ReturnType<Factory>;
-    searchBar?: ReturnType<Factory>;
-    searchView?: ReturnType<Factory>;
-  }
-}
+/** Page fields for this check only. Not `declare global`: `ready`, `m`, and `clock` already augment Window in other check scripts. */
+type SvgCheckWindow = {
+  ready?: boolean;
+  mountError?: string;
+  m?: Record<string, Factory>;
+  notice?: ReturnType<Factory>;
+  clock?: ReturnType<Factory>;
+  searchBar?: ReturnType<Factory>;
+  searchView?: ReturnType<Factory>;
+};
 
 type AxNode = {
   nodeId?: string;
@@ -74,7 +73,10 @@ const GRAPHIC = new Set(["image", "graphics-document", "graphics-symbol", "graph
 const stylesheet = Bun.file(resolve("dist/styles.css"));
 assert(await stylesheet.exists(), "dist/styles.css is missing");
 
-const bundle = await Bun.build({ entrypoints: [resolve("src/index.ts")], target: "browser" });
+const bundle = await Bun.build({
+  entrypoints: [resolve("scripts/check-a11y-svg-f-entry.ts")],
+  target: "browser",
+});
 assert(bundle.success, bundle.logs.join("\n"));
 const js = await bundle.outputs[0].text();
 
@@ -89,7 +91,8 @@ const server = Bun.serve({
     if (url.pathname === "/styles.css") return new Response(stylesheet);
     return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head><body>
       <script type="module">
-        import { createButton, createIconButton, createFab, createExtendedFab, createSwitch, createMenu, createSearch, createDialog, createTimePicker, createTextField, createSelect } from "/material.js";
+        import { createButton, createIconButton, createFab, createExtendedFab, createSwitch, createMenu, createSearch, createDialog, createTimePicker, createTextField, createSelect, enableDecorativeIcons } from "/material.js";
+        enableDecorativeIcons();
         window.m = { createButton, createIconButton, createFab, createExtendedFab, createSwitch, createMenu, createSearch, createDialog, createTimePicker, createTextField, createSelect };
         window.ready = true;
       </script>
@@ -103,10 +106,11 @@ try {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(server.url.href);
-  await page.waitForFunction(() => window.ready === true);
+  await page.waitForFunction(() => (window as unknown as SvgCheckWindow).ready === true);
 
   await page.evaluate(({ icon, save }) => {
-    const m = window.m;
+    const view = window as unknown as SvgCheckWindow;
+    const m = view.m;
     if (!m) throw new Error("factories missing");
     const add = (element: HTMLElement) => document.body.append(element);
     try {
@@ -158,7 +162,9 @@ try {
       compose.element.id = "compose";
       add(compose.element);
 
-      const wifi = m.createSwitch({ label: "Wi-Fi" });
+      // Default switch HTML stays the recorded bytes. The thumb graphic is
+      // hidden only with the wrapper opt-in, the one output allowed to change.
+      const wifi = m.createSwitch({ label: "Wi-Fi", controlLabelOnly: true });
       wifi.element.id = "wifi";
       add(wifi.element);
 
@@ -173,7 +179,7 @@ try {
       const bar = m.createSearch({});
       bar.element.id = "search-bar";
       add(bar.element);
-      window.searchBar = bar;
+      view.searchBar = bar;
 
       const search = m.createSearch({
         value: "notes",
@@ -182,19 +188,19 @@ try {
       });
       search.element.id = "search-view";
       add(search.element);
-      window.searchView = search;
+      view.searchView = search;
 
       // Left closed for the first tree. A modal dialog makes the rest of the
       // page inert, so these open one at a time after that tree is read.
       const dialog = m.createDialog({ title: "Notice", closeButton: true, layer: "top" });
       dialog.element.id = "notice";
       add(dialog.element);
-      window.notice = dialog;
+      view.notice = dialog;
 
       const picker = m.createTimePicker({ value: "09:30" });
       picker.element.id = "clock";
       add(picker.element);
-      window.clock = picker;
+      view.clock = picker;
 
       const email = m.createTextField({ label: "Email", trailingIcon: icon, trailingIconLabel: "Clear text" });
       email.element.id = "email";
@@ -204,11 +210,11 @@ try {
       country.element.id = "country";
       add(country.element);
     } catch (error) {
-      window.mountError = error instanceof Error ? error.message : String(error);
+      view.mountError = error instanceof Error ? error.message : String(error);
     }
   }, { icon: ICON, save: SAVE });
 
-  const mountError = await page.evaluate(() => window.mountError ?? "");
+  const mountError = await page.evaluate(() => (window as unknown as SvgCheckWindow).mountError ?? "");
   assert.equal(mountError, "", mountError);
   assert.deepEqual(errors, [], errors.join("\n"));
   assert.equal(await page.evaluate(() => document.querySelector(".mtrl-checkbox__icon") === null), true);
@@ -322,7 +328,7 @@ try {
   }
   await named(menuSelector, "Cut", menuPage);
 
-  await page.evaluate(() => window.searchView?.expand?.());
+  await page.evaluate(() => (window as unknown as SvgCheckWindow).searchView?.expand?.());
   await page.waitForFunction(() => document.querySelector("#search-view .mtrl-search__leading-icon")?.getAttribute("aria-label") === "Go back");
 
   const dom = await page.evaluate(() => {
@@ -467,7 +473,7 @@ try {
   await named("#country [role='combobox']", "Country", openPage);
   assert.deepEqual(await unnamedGraphics(openPage), [], "unnamed graphic nodes while the page is not modal");
 
-  await page.evaluate((save) => window.searchBar?.setLeadingIcon?.(save), SAVE);
+  await page.evaluate((save) => (window as unknown as SvgCheckWindow).searchBar?.setLeadingIcon?.(save), SAVE);
   await page.waitForFunction(() => document.querySelector("#search-bar .mtrl-search__leading-icon svg title")?.textContent === "Save");
   const replaced = await axNodes();
   await named("#search-bar .mtrl-search__leading-icon", "Search", replaced);
@@ -477,11 +483,11 @@ try {
   }));
   assert.deepEqual(replacedDom, { hidden: "true", svgHidden: null });
 
-  await page.evaluate(() => window.searchBar?.expand?.());
+  await page.evaluate(() => (window as unknown as SvgCheckWindow).searchBar?.expand?.());
   await page.waitForFunction(() => document.querySelector("#search-bar .mtrl-search__leading-icon")?.getAttribute("aria-label") === "Go back");
   await named("#search-bar .mtrl-search__leading-icon", "Go back", await axNodes());
 
-  await page.evaluate(() => window.searchBar?.collapse?.());
+  await page.evaluate(() => (window as unknown as SvgCheckWindow).searchBar?.collapse?.());
   await page.waitForFunction(() => {
     const leading = document.querySelector("#search-bar .mtrl-search__leading-icon");
     return leading?.getAttribute("aria-label") === "Search" && leading.querySelector("svg title")?.textContent === "Save";
@@ -493,22 +499,23 @@ try {
     null,
   );
 
-  await page.evaluate(() => window.notice?.open?.());
+  await page.evaluate(() => (window as unknown as SvgCheckWindow).notice?.open?.());
   await page.waitForFunction(() => (document.getElementById("notice") as HTMLDialogElement | null)?.open === true);
   const dialogPage = await axNodes();
   await named("#notice [aria-label='Close dialog']", "Close dialog", dialogPage);
   assert.deepEqual(await unnamedGraphics(dialogPage), [], "unnamed graphic nodes in the open dialog");
 
   await page.evaluate(() => {
-    window.notice?.close?.();
-    window.clock?.open?.();
+    const view = window as unknown as SvgCheckWindow;
+    view.notice?.close?.();
+    view.clock?.open?.();
   });
   await page.waitForFunction(() => (document.querySelector("#clock dialog") as HTMLDialogElement | null)?.open === true);
   const dialPage = await axNodes();
   await named("#clock .mtrl-time-picker__toggle-type", "Toggle input picker", dialPage);
   assert.deepEqual(await unnamedGraphics(dialPage), [], "unnamed graphic nodes in the open time picker");
 
-  await page.evaluate(() => window.clock?.setType?.("input"));
+  await page.evaluate(() => (window as unknown as SvgCheckWindow).clock?.setType?.("input"));
   await page.waitForFunction(() => document.querySelector("#clock .mtrl-time-picker__toggle-type")?.getAttribute("aria-label") === "Toggle dial picker");
   const inputPage = await axNodes();
   await named("#clock .mtrl-time-picker__toggle-type", "Toggle dial picker", inputPage);

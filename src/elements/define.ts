@@ -24,7 +24,7 @@
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
 import { trackDirection } from "../core/dom/direction";
-import { bindSlotHost, syncDecorativeIcon } from "../core/compose/features/icon";
+import { bindSlotHost, syncSlottedIcon } from "../core/compose/features/icon-slot";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -614,7 +614,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
 
     /** The icon decoration, once a placed slot can see the host's light DOM. */
     #syncIcon(): void {
-      if (this.component) syncDecorativeIcon(this.component.element);
+      if (this.component) syncSlottedIcon(this.component.element);
     }
 
     #build(): void {
