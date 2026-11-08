@@ -167,8 +167,8 @@ export const withTextInput =
       maxLength: config.maxLength,
       pattern: config.pattern,
       autocomplete: config.autocomplete,
-      inputmode: config.inputMode,
-      enterkeyhint: config.enterKeyHint,
+      inputMode: config.inputMode,
+      enterKeyHint: config.enterKeyHint,
       // A textarea ignores a value attribute. Its default value is its text.
       value: isMultiline ? undefined : config.value || "",
       placeholder: config.placeholder || " ", // Always set placeholder (space if empty) for CSS detection
