@@ -42,10 +42,14 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     slideElements.forEach((el, i) => {
       el.dataset.index = String(i);
       el.setAttribute("aria-label", `${i + 1} of ${total}`);
+      // The loading default follows the position: the opening slide is eager,
+      // every other slide lazy. An explicit per-slide value wins.
+      const img = el.querySelector(`.${prefix}__image`);
+      if (img && !slideData[i]?.loading) img.setAttribute("loading", i === 0 ? "eager" : "lazy");
     });
   };
 
-  const fill = (el: HTMLElement, slide: CarouselSlide): void => {
+  const fill = (el: HTMLElement, slide: CarouselSlide, index: number): void => {
     el.replaceChildren();
     if (slide.content !== undefined) {
       if (typeof slide.content === "string") setHTML(el, slide.content);
@@ -58,6 +62,12 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
       img.src = safeUrl(slide.image);
       img.alt = slide.alt ?? slide.title ?? "";
       img.draggable = false;
+      img.setAttribute("loading", slide.loading ?? (index === 0 ? "eager" : "lazy"));
+      if (slide.decoding) img.setAttribute("decoding", slide.decoding);
+      // The intrinsic size reserves the box before the file arrives; the
+      // properties write the same width/height attributes.
+      if (slide.width !== undefined) img.width = slide.width;
+      if (slide.height !== undefined) img.height = slide.height;
       el.appendChild(img);
     }
     if (slide.title || slide.description || slide.buttonText) {
@@ -86,13 +96,13 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     }
   };
 
-  const createSlideElement = (slide: CarouselSlide): HTMLElement => {
+  const createSlideElement = (slide: CarouselSlide, index: number): HTMLElement => {
     const el = document.createElement("div");
     el.className = `${prefix}__item`;
     el.setAttribute("role", "group");
     el.setAttribute("aria-roledescription", "slide");
     el.tabIndex = 0;
-    fill(el, slide);
+    fill(el, slide, index);
     return el;
   };
 
@@ -104,7 +114,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
   const slides: SlidesAPI = {
     addSlide(slide, index) {
       const at = index !== undefined && index >= 0 && index <= slideData.length ? index : slideData.length;
-      const el = createSlideElement(slide);
+      const el = createSlideElement(slide, at);
       slideData.splice(at, 0, slide);
       if (at < slideElements.length) {
         track.insertBefore(el, slideElements[at]!);
@@ -127,7 +137,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     updateSlide(index, slide) {
       if (index < 0 || index >= slideElements.length) return slides;
       slideData[index] = slide;
-      fill(slideElements[index]!, slide);
+      fill(slideElements[index]!, slide, index);
       return slides;
     },
     getSlide: (index) => slideData[index] ?? null,
@@ -143,8 +153,8 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     slidesChanged = handler;
   };
 
-  (config.slides ?? []).forEach((slide) => {
-    const el = createSlideElement(slide);
+  (config.slides ?? []).forEach((slide, i) => {
+    const el = createSlideElement(slide, i);
     slideData.push(slide);
     slideElements.push(el);
     track.appendChild(el);

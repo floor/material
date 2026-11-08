@@ -9,7 +9,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { componentNames, diffComponentExports, readComponentExports, readPinned } from "../scripts/component-exports";
+import { componentNames, diffComponentExports, extraSubpaths, readComponentExports, readPinned } from "../scripts/component-exports";
 import { readRootExports } from "../scripts/root-exports";
 
 const ROOT = join(import.meta.dir, "..");
@@ -89,13 +89,16 @@ describe("the component subpaths' exports", () => {
     expect(now["button/constants"]?.map((e) => e.name)).toContain("BUTTON_VARIANTS");
   });
 
-  test("the types public members are typed with, and the documented tabs helper, stay public", () => {
+  test("the types public members are typed with stay public, and the documented tabs helper stays exported as deprecated", () => {
     const status = (component: string, name: string) => now[component]?.find((e) => e.name === name)?.status;
     expect([
       status("carousel", "SlidesAPI"), status("icon-button", "IconAPI"), status("icon-button", "ToggleManager"),
-      status("tabs", "IndicatorConfig"), status("tabs", "setupResponsiveBehavior"),
+      status("tabs", "IndicatorConfig"),
       status("tabs", "ResponsiveConfig"), status("tabs", "TabIndicator"), status("datepicker", "CalendarAPI"),
-    ]).toEqual(["public", "public", "public", "public", "public", "public", "public", "public"]);
+    ]).toEqual(["public", "public", "public", "public", "public", "public", "public"]);
+    // The helper an md3.io page still calls keeps working in 3.x; the
+    // `responsive` option on createTabs replaces it, and it goes in 4.0.
+    expect(status("tabs", "setupResponsiveBehavior")).toBe("deprecated");
   });
 
   test("a chip's set-only options are not on the public ChipConfig", async () => {
@@ -113,17 +116,21 @@ describe("the manifest lists each component subpath", () => {
     expect(keys.filter((key) => key.includes("*"))).toEqual([]);
   });
 
-  test("one entry per component, and one per component with constants, exactly", () => {
+  test("one entry per component, one per component with constants and one per extra module, exactly", () => {
     const expected = componentNames().flatMap((name) => [
       `./components/${name}`,
       ...(existsSync(join(ROOT, `src/components/${name}/constants.ts`)) ? [`./components/${name}/constants`] : []),
     ]);
-    expect([...keys].sort()).toEqual(expected.sort());
+    const extra = extraSubpaths().map((name) => `./components/${name}`);
+    expect([...keys].sort()).toEqual([...expected, ...extra].sort());
   });
 
-  test("each entry points at that component's built index or constants", () => {
+  test("each entry points at the module it names", () => {
     const wrong = keys.filter((key) => {
-      const file = key.endsWith("/constants") ? key.slice("./".length) : `${key.slice("./".length)}/index`;
+      const inner = key.slice("./components/".length);
+      const file = inner.endsWith("/constants") || extraSubpaths().includes(inner)
+        ? `components/${inner}`
+        : `components/${inner}/index`;
       const entry = pkg.exports[key];
       return entry.types !== `./dist/${file}.d.ts` || entry.import !== `./dist/${file}.js` || Object.keys(entry).length !== 2;
     });

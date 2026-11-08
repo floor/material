@@ -69,11 +69,12 @@ const createItemElement = (
   indicator.className = getClass("drawer__active-indicator");
   el.appendChild(indicator);
 
-  // Icon (optional, placed before label)
-  if (item.icon) {
+  // Icon (optional, placed before label): the item's active icon while it is
+  // the active destination, as the navigation rail swaps its destinations
+  if (item.icon || item.activeIcon) {
     const iconEl = document.createElement("span");
     iconEl.className = getClass("drawer__item-icon");
-    setHTML(iconEl, item.icon);
+    setHTML(iconEl, item.active && item.activeIcon ? item.activeIcon : item.icon);
     iconEl.setAttribute("aria-hidden", "true");
     el.appendChild(iconEl);
   }
@@ -219,6 +220,18 @@ export const withItems =
     };
 
     /**
+     * Shows the item's active icon while it is the active destination, and its
+     * own icon otherwise: the navigation rail's swap, mirrored here for the
+     * drawer's optional icons.
+     */
+    const swapIcon = (element: HTMLElement, active: boolean): void => {
+      const item = currentItems.find((entry) => entry.id === element.dataset.id);
+      const iconEl = element.querySelector<HTMLElement>(`.${component.getClass("drawer__item-icon")}`);
+      if (!item || !iconEl) return;
+      setHTML(iconEl, active && item.activeIcon ? item.activeIcon : item.icon);
+    };
+
+    /**
      * Sets the active item by id
      */
     const setActive = (id: string): void => {
@@ -233,6 +246,7 @@ export const withItems =
         element.classList.toggle(activeClass, element === target);
         if (element === target) element.setAttribute("aria-current", "page");
         else element.removeAttribute("aria-current");
+        swapIcon(element, element === target);
       });
       activeId = target ? id : null;
 
