@@ -126,6 +126,10 @@ describe("explicit contrast levels are opt-in", () => {
     // segmented rows read six list custom properties that the list does not
     // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
+    // A single-select listbox option carries a 20px radio ring in its leading
+    // or trailing slot and fills it when selected; the option itself takes the
+    // row's state layer and a pointer cursor, and a focused option rounds a
+    // segmented row like the row action did (styles/components/_list.scss).
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
@@ -269,6 +273,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The toolbar's collapsed state is the docked bar at the 48dp target area,
+    // and its icon+label button shows the icon alone at the target size, in two
+    // rules (the toolbar's class and :host-context) so SSR's style pruner can
+    // drop each from a root that cannot match it
+    // (styles/components/_toolbar.scss, styles/components/_button.scss).
     // The 14 dead selector groups verified to have no producer in src/ are
     // removed from the dialog, menu, select, slider, tabs and timepicker
     // component sheets (styles/components/_dialog.scss, _menu.scss,
@@ -287,9 +296,11 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("cce5d40bf72404536e0f2cb6e1b4664e105ffc59295051adc7cbe5882f612edf");
-    expect(css.length).toBe(543078);
+    // Combined CI 42453498524, unit job 128647496710.
+    expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
+      sha256: "771c74c1ed28372282548d16c73a8977703187a8b9949a18bf308b3bc829232d",
+      length: 546440,
+    });
   });
 
   test("today's sheets still resolve to the fixture", () => {

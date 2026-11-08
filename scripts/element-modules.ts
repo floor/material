@@ -38,3 +38,13 @@ export const declarationModules = Object.keys(declarations).map((name) => ({ nam
 /** `navigationRailItem` → `navigation-rail-item`: the file name of a generated adapter module. */
 export const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
+/**
+ * Deprecated elements, keyed by their registry name, with the note their
+ * generated adapters carry. The element module holds the same @deprecated
+ * note for direct element users; here the replacement is named by the
+ * framework's own component, which the caller passes in.
+ */
+export const elementDeprecations: Record<string, (toolbarComponent: string) => string> = {
+  bottomAppBar: (Toolbar) =>
+    `Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use ${Toolbar} with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar.`,
+};

@@ -120,7 +120,10 @@ export const withStructure =
     tag: "dialog",
     className: getClass(SEARCH_CLASSES.SURFACE),
     container: component.element,
-    attributes: { role: "none" },
+    attributes:
+      isViewState && config.viewMode === "fullscreen"
+        ? { "aria-label": config.ariaLabel || placeholder }
+        : { role: "none" },
   });
 
   // Create container (header in view mode, bar in bar mode)

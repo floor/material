@@ -52,10 +52,13 @@ const select = (component: RadiosComponent, value: unknown): void => {
 };
 
 /**
- * `required` is not a factory option: the element sets it on every input, and
- * the browser applies it to the group as it does to native radios.
+ * Marks the radiogroup required (`aria-required`) and each radio, so the
+ * group reports required and the browser validates it like native radios.
+ * Removing the attribute clears both. `aria-required="false"` is not written.
  */
 const applyRequired = (component: RadiosComponent, required: boolean): void => {
+  if (required) component.element.setAttribute("aria-required", "true");
+  else component.element.removeAttribute("aria-required");
   for (const radio of component.radios) radio.input.required = required;
 };
 
@@ -117,7 +120,7 @@ const radiosSpec = {
   attributes: {
     value: { type: "string", config: "value", update: (c, v) => select(c, v) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
-    required: { type: "boolean", update: (c, v) => applyRequired(c, !!v) },
+    required: { type: "boolean", config: "required", update: (c, v) => applyRequired(c, !!v) },
     direction: { type: "string", config: "direction" },
     "aria-label": {
       type: "string",

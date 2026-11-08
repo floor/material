@@ -183,8 +183,9 @@ export interface MenuConfig {
   /**
    * Menu variant. `'vertical'` is the M3 expressive menu: a rounded
    * container holding items that sit apart and change shape as they are
-   * hovered, focused, pressed or selected.
-   * @default 'baseline'
+   * hovered, focused, pressed or selected. `'baseline'` restores the
+   * squared 4dp container and 48dp items.
+   * @default 'vertical'
    */
   variant?: MenuVariant;
 
@@ -302,6 +303,11 @@ export interface MenuConfig {
    * When true, renders a compact menu with smaller items and tighter spacing.
    * Useful in dense UIs like toolbars and action bars where the standard
    * 48px item height is too large.
+   * @deprecated The library moves to one density scale
+   * (`--mtrl-density`) in 3.11.0, which leaves menus at their default
+   * density: M3 advises against densifying focused tasks such as selecting
+   * from a menu. This option still renders the dense variant and is removed
+   * in 4.0.
    * @default false
    */
   dense?: boolean;
@@ -310,6 +316,11 @@ export interface MenuConfig {
    * Additional CSS classes to add to the menu
    */
   class?: string;
+
+  /**
+   * Accessible label for assistive technology on the menu surface and list
+   */
+  ariaLabel?: string;
 
   /**
    * Component prefix for CSS class names
@@ -732,4 +743,10 @@ export interface MenuFeatureHost {
     hasOpenSubmenu: () => boolean;
     getActiveSubmenus: () => Array<{ element: HTMLElement }>;
   };
+}
+
+declare module "../../core/config/global" {
+  interface ComponentConfigMap {
+    menu?: Partial<MenuConfig>;
+  }
 }

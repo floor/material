@@ -8,7 +8,7 @@ export const defaultConfig: DatePickerConfig = {
 };
 export const createBaseConfig = (config: DatePickerConfig = {}) =>
   createComponentConfig(defaultConfig, config, "datepicker");
-export const getContainerConfig = (config: DatePickerConfig) => createElementConfig(config, {
+export const getContainerConfig = (config: DatePickerConfig) => createElementConfig({ ...config, ariaLabel: undefined }, {
   tag: "div", forwardEvents: { keydown: true, click: true }, interactive: true,
 });
 export default defaultConfig;
