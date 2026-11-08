@@ -296,10 +296,13 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    // Combined CI 42453498524, unit job 128647496710.
+    // The shape audit's two corners: the list's leading image takes the small
+    // step the leading video already took, and the time picker's action
+    // buttons take the full step the buttons spec gives every text button
+    // (styles/components/_list.scss, _timepicker.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "771c74c1ed28372282548d16c73a8977703187a8b9949a18bf308b3bc829232d",
-      length: 546440,
+      sha256: "981938899f82b194822d4d9ebd451ed88d021e6a794e59173376f66fd04cd593",
+      length: 546496,
     });
   });
 
