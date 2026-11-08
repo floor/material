@@ -599,6 +599,8 @@ try {
     // dist/styles.css itself carries no `:lang()` or `:dir()` rule.
     { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
   ];
+  // Complete the measurement report even when an earlier fixture exceeds its cap.
+  const overBudget: string[] = [];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
     await writeFile(entry, fixture.code);
@@ -609,7 +611,7 @@ try {
     assert.equal(outputs.length, 1, `${fixture.name}: expected one ${css ? "CSS" : "JS"} output`);
     const bytes = new Uint8Array(await outputs[0].arrayBuffer());
     sizes[fixture.name] = measure(bytes);
-    assert(sizes[fixture.name].gzip <= fixture.gzip, `${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
+    if (sizes[fixture.name].gzip > fixture.gzip) overBudget.push(`${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
     if (css) {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
@@ -682,6 +684,7 @@ try {
   assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
+  assert.equal(overBudget.length, 0, overBudget.join("\n"));
   await mkdir("analysis", { recursive: true });
   await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
