@@ -85,14 +85,9 @@ const createDatePicker = <M extends string = "single">(
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
   const nameDialog = () => {
-    const name = settings.ariaLabel?.trim();
-    if (name || !modal) {
-      dialog.removeAttribute("aria-labelledby");
-      dialog.setAttribute("aria-label", name || state.label);
-    } else {
-      dialog.removeAttribute("aria-label");
-      dialog.setAttribute("aria-labelledby", `${id}-title`);
-    }
+    const name = settings.ariaLabel?.trim() || (!modal ? state.label : "");
+    dialog.removeAttribute(name ? "aria-labelledby" : "aria-label");
+    dialog.setAttribute(name ? "aria-label" : "aria-labelledby", name || `${id}-title`);
   };
   nameDialog();
   const announcement = make("div", "sr-only", undefined, { "aria-live": "polite", "aria-atomic": "true" });

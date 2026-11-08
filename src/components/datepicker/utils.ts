@@ -80,16 +80,10 @@ export const parseInputDate = (text: string, format: string, locale = DEFAULT_LO
 export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY', locale = DEFAULT_LOCALE): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
   const m = date.getMonth() + 1, d = date.getDate(), y = date.getFullYear(), pad = (n: number) => String(n).padStart(2, '0');
-  return format.replace(TOKEN_RE, token =>
-    token === 'MMMM' ? dtf(locale, { month: 'long' }).format(date) :
-    token === 'MMM' ? dtf(locale, { month: 'short' }).format(date) :
-    token === 'MM' ? pad(m) :
-    token === 'M' ? String(m) :
-    token === 'YYYY' ? String(y) :
-    token === 'YY' ? String(y).slice(-2) :
-    token === 'DD' ? pad(d) :
-    String(d)
-  );
+  const values: Record<string, string> = { YYYY: String(y), YY: String(y).slice(-2), MM: pad(m), M: String(m), DD: pad(d), D: String(d) };
+  return format.replace(TOKEN_RE, token => token.startsWith('MMM')
+    ? dtf(locale, { month: token.length === 4 ? 'long' : 'short' }).format(date)
+    : values[token]);
 };
 
 export const getDaysInMonth = (year: number, month: number): number => new Date(year, month + 1, 0).getDate();
