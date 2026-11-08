@@ -249,6 +249,39 @@ describe("Material date picker", () => {
     const trigger = query<HTMLButtonElement>(picker, '[data-action="open"]'); picker.lifecycle.destroy(); picker.destroy(); trigger.click(); picker.open();
     expect(opens).toBe(1); expect(picker.element.isConnected).toBe(false); expect(document.body.style.overflow).toBe('');
   });
+  test("localized calendars retain accessible names, selected gridcells and in-place name updates", () => {
+    for (const variant of ["docked", "modal", "modal-input", "fullscreen"] as const) {
+      const picker = mount({ variant, locale: "fr-FR", label: "Départ", ariaLabel: "Choisir les dates", selectionMode: "range", value: ["2026-09-10", "2026-09-15"] });
+      expect(picker.getFormattedValue()).toBe("10/09/2026 - 15/09/2026");
+      picker.open();
+      if (variant === "modal-input") click(picker, '[data-action="toggle-mode"]');
+      const dialog = query(picker, "dialog");
+      expect(dialog.getAttribute("aria-label")).toBe("Choisir les dates");
+      expect(dialog.hasAttribute("aria-labelledby")).toBe(false);
+      const selected = day(picker, "2026-09-12");
+      const expectedName = new Intl.DateTimeFormat("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", calendar: "gregory", numberingSystem: "latn" }).format(new Date(2026, 8, 12));
+      expect(selected.getAttribute("aria-label")).toBe(expectedName);
+      expect(selected.getAttribute("role")).toBe("gridcell");
+      expect(selected.getAttribute("aria-selected")).toBe("true");
+      expect(selected.hasAttribute("aria-pressed")).toBe(false);
+      expect(selected.parentElement!.hasAttribute("role")).toBe(false);
+      expect(selected.parentElement!.hasAttribute("aria-selected")).toBe(false);
+      expect(day(picker, "2026-09-16").getAttribute("aria-selected")).toBe("false");
+      selected.focus();
+      picker.setAriaLabel("Nouveau nom");
+      expect(query(picker, "dialog")).toBe(dialog);
+      expect(document.activeElement).toBe(selected);
+      expect(dialog.getAttribute("aria-label")).toBe("Nouveau nom");
+      picker.setAriaLabel("");
+      expect(document.activeElement).toBe(selected);
+      if (variant === "docked") expect(dialog.getAttribute("aria-label")).toBe("Départ");
+      else {
+        expect(dialog.hasAttribute("aria-label")).toBe(false);
+        expect(document.getElementById(dialog.getAttribute("aria-labelledby")!)!.textContent).toBe("Départ");
+      }
+    }
+  });
+
   test("locale drives month/weekday names, first weekday, default dateFormat, and <m-datepicker locale> while keeping en-US default", () => {
     const def = mount({ value: "2026-09-15" });
     const en = mount({ value: "2026-09-15", locale: "en-US" });
