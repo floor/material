@@ -27,6 +27,9 @@ const switchSpec = {
     checked: { type: "boolean", config: "checked", update: (c, v) => void c.setValue(!!v) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     required: { type: "boolean", config: "required" },
+    // Names the inner switch, as on checkbox. The host keeps the author's
+    // aria-label; this copy is what the switch role exposes.
+    "aria-label": { type: "string", config: "ariaLabel" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValueAttribute(String(v ?? "")) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },

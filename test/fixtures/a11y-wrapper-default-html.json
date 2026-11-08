@@ -1,0 +1,22 @@
+{
+  "checkbox-enabled-omitted": "8b970bf32faff3008ea1e1f85acdc01e982152050de682b171d6332100f8874a",
+  "checkbox-enabled-false": "8b970bf32faff3008ea1e1f85acdc01e982152050de682b171d6332100f8874a",
+  "checkbox-disabled-omitted": "6307260619060d3a4d74d9bf2d157932b3518c1dc34a4eae92476f39c7ccbeb4",
+  "checkbox-disabled-false": "6307260619060d3a4d74d9bf2d157932b3518c1dc34a4eae92476f39c7ccbeb4",
+  "switch-enabled-omitted": "b689455782df174452a312b80e5c1c8d5d6dc07fe3c842f1c2f082c380173039",
+  "switch-enabled-false": "b689455782df174452a312b80e5c1c8d5d6dc07fe3c842f1c2f082c380173039",
+  "switch-disabled-omitted": "a99cc4d232428c8dd3733c1c5f882cd8d05514196e49da62e4dbb8f65d6e8aa2",
+  "switch-disabled-false": "a99cc4d232428c8dd3733c1c5f882cd8d05514196e49da62e4dbb8f65d6e8aa2",
+  "text-field-enabled-omitted": "e3eed754da1307a940098457d2d8348149e40ae6d3c3b6b260b2422f746e8511",
+  "text-field-enabled-false": "e3eed754da1307a940098457d2d8348149e40ae6d3c3b6b260b2422f746e8511",
+  "text-field-disabled-omitted": "cd34ddc9a5cc57059580004f259e1effd2f1804730ad4c0f1f89faa2d2e72407",
+  "text-field-disabled-false": "cd34ddc9a5cc57059580004f259e1effd2f1804730ad4c0f1f89faa2d2e72407",
+  "slider-enabled-omitted": "7fde42575599d6f34ebcc714e7575c4c6cb33f123ce505857e7c8cc7eef3b423",
+  "slider-enabled-false": "7fde42575599d6f34ebcc714e7575c4c6cb33f123ce505857e7c8cc7eef3b423",
+  "slider-disabled-omitted": "ae8fb95b24735d91657db1050c9e50e9687206480079d55dab57812cb950e6c2",
+  "slider-disabled-false": "ae8fb95b24735d91657db1050c9e50e9687206480079d55dab57812cb950e6c2",
+  "range-enabled-omitted": "b97c5f4d02ded8786dc38b1f6e9853cd3a9d742d7c88badfbdeeac3473d0cf6f",
+  "range-enabled-false": "b97c5f4d02ded8786dc38b1f6e9853cd3a9d742d7c88badfbdeeac3473d0cf6f",
+  "range-disabled-omitted": "2447b41406e440b8fc2f3cd43dc3b435d98d96d0a1812e73eba5d351fa554d32",
+  "range-disabled-false": "2447b41406e440b8fc2f3cd43dc3b435d98d96d0a1812e73eba5d351fa554d32"
+}

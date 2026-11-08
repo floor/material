@@ -95,9 +95,9 @@ export const getElementConfig = (config: MenuConfig) => {
     className: [
       config.visible ? MENU_CLASSES.VISIBLE : null,
       config.dense ? `${config.prefix}-menu--dense` : null,
-      // The expressive vertical menu, and its colour mapping
-      config.variant === "vertical" ? `${config.prefix}-menu--vertical` : null,
-      config.variant === "vertical" && config.color === "vibrant"
+      // The expressive vertical menu (default unless variant is "baseline"), and its colour mapping
+      config.variant !== "baseline" ? `${config.prefix}-menu--vertical` : null,
+      config.variant !== "baseline" && config.color === "vibrant"
         ? `${config.prefix}-menu--vibrant`
         : null,
       config.class,

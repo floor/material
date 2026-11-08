@@ -17,6 +17,746 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-11-08
+
+Lists, accessible names and a smaller package.
+
+### Added
+
+- **Single-select listboxes (#279).**
+  `withSingleSelectListbox` enhances a created list with `listbox` and `option`
+  roles, `aria-selected`, and visual-only radio indicators, leading by default
+  or trailing on request. Import it from `material/components/list` or `material`;
+  use `initialSelection` to choose the starting option.
+
+  One tab stop enters on the selected enabled option, or the first enabled
+  option. Arrow keys, Home, End and type-ahead move focus without changing
+  selection, skipping disabled rows; arrow navigation wraps, and type-ahead
+  uses a 500 ms buffer with repeated-letter cycling. Enter, click, or Space
+  when no type-ahead buffer is active selects an option. Pressing the selected
+  option again keeps it selected and emits no new `select` event. Selection
+  remains cancellable, and the existing programmatic selection methods remain
+  available, including clearing selection.
+
+  Keep `trackSelection` enabled and `multiSelect` disabled. The enhancer
+  refuses control and custom slots, interactive descendants from `renderItem`,
+  and an indicator side already occupied by a slot.
+
+- **The 2025 colour specification, by opt-in (#297).**
+  `material/theme/2025` provides the theme API with `spec: "2021" | "2025"`
+  on scheme creation and its variant factories. The default remains `"2021"`;
+  request `spec: "2025"` for tonal spot, vibrant, expressive or neutral.
+  Fidelity, content and monochrome fall back to `"2021"`. Pages importing
+  only `material/theme` omit the 2025 implementation.
+
+- **Docked toolbars collapse on scroll (#301).**
+  `scrollBehavior: "collapse"`, or `scroll-behavior="collapse"` on
+  `<m-toolbar>`, shrinks a docked toolbar toward its 48dp minimum target area
+  on forward scroll and expands it on reverse scroll or at the top. Taller
+  items keep their required height. Icon-and-label items hide their labels
+  visually while retaining their accessible names; label-only items keep
+  their labels. Items remain visible and focusable. `collapse` and `expand`
+  events fire on state changes. Floating toolbars are unaffected.
+
+- **Control-only labels for factory inputs (#326).**
+  `controlLabelOnly: true` on Checkbox, Switch, TextField and Slider factories
+  keeps `ariaLabel` on the real input or slider handles and omits the generated
+  wrapper's `aria-label`. The option is off by default: omitted or false
+  preserves the existing generated HTML byte for byte. Opting in changes
+  wrapper serialization and wrapper `[aria-label]` selectors. This is a
+  factory option, with no new custom-element attribute or automatic host-label
+  suppression; author host labels and native DOM methods remain untouched.
+
+### Changed
+
+- **Expressive vertical menus are the default (#305).**
+  Standalone menus, submenus and menus opened by selects, split buttons,
+  FAB menus and toolbar overflow use `variant: "vertical"`, with standard
+  colour, 44dp rows and a 16dp outer corner. Selected items use a rounded
+  tertiary-container fill without a trailing check mark. Pass
+  `variant: "baseline"` per menu to retain the previous layout, or call
+  `setComponentDefaults("menu", { variant: "baseline" })` once at application
+  startup (once at server boot). Submenus align with their parent surface;
+  explicit widths, density, forced colours and reduced motion retain their
+  intended layout and overrides.
+
+- **Loading and expandable card recipes (#299).**
+  Documented, browser-tested compositions use `createCard` with
+  `createProgress` for loading and a standard `createIconButton` for disclosure.
+  Loading sets `aria-busy` until content settles; disclosure uses a constant
+  accessible name, `aria-expanded`, `aria-controls` and the content's `hidden`
+  state. These recipes add no card options or dedicated styles.
+
+### Deprecated
+
+- **Bottom app bar (#304).**
+  The factory, custom element, types, constants and adapters are deprecated
+  in favour of `createToolbar({ variant: "docked", placement: "bottom" })`
+  or the equivalent `<m-toolbar>`. The existing component remains available
+  throughout 3.x. Migration is documented with its differences: the toolbar
+  uses a roving tab stop, renamed shadow parts and different scroll/reservation
+  defaults. A centred FAB, adding a FAB after creation, a custom transition
+  duration and a custom tag have no direct toolbar equivalent yet.
+
+### Fixed
+
+- **Tablist, tab and button-group names (#321).**
+  Factory tablists accept `ariaLabel`, and `<m-tabs aria-label>` names the
+  inner tablist and updates it in place. `<m-tab aria-label>` names its
+  rendered tab; `Tab.setAriaLabel()` updates that name without replacing the
+  tab or losing focus and selection. Otherwise unnamed tabs use their value
+  as a fallback. Badge counts remain in the tab's name without exposing a
+  separate nested status; standalone badges keep their existing semantics.
+  Icon-only factory button-group entries missing a label at runtime also use
+  their value. The TypeScript requirement for explicit group-entry labels
+  remains; descriptive labels are still preferable to value fallbacks.
+
+- **Split-button groups, switches and required radio groups (#323).**
+  A split button without `groupLabel` keeps `ariaLabel` on its leading button
+  without repeating that name on the surrounding group. Explicit group labels
+  are retained. `<m-switch aria-label>` forwards its name to the inner switch.
+  The additive factory `RadiosConfig.required` sets the group's
+  `aria-required="true"` and native required flags; custom-element required
+  changes synchronize both, including removal and re-addition.
+
+- **Date- and time-picker dialog names and date selection (#324).**
+  Picker dialogs use an explicit `ariaLabel`, otherwise their visible heading
+  or label, otherwise “Select time” or “Select date”. Both custom elements
+  forward `aria-label` and update the inner dialog in place. Factory
+  `setAriaLabel()` methods support the same updates, and time-picker title
+  changes keep the heading and naming references synchronized. Date-picker
+  days expose one named gridcell with selection state instead of a gridcell
+  containing a second named, pressed button. Focus and values are retained.
+
+- **Menu, fullscreen search and sheet names (#322).**
+  Menu lists receive their container's `aria-label` or `aria-labelledby`, and
+  open submenus are named from their parent item's text. Fullscreen search
+  exposes a named dialog from creation, using its configured accessible label
+  or placeholder, and updates that name when the placeholder or element label
+  changes. Bottom and side sheets accept `ariaLabel` and name their semantic
+  surface. Modal sheets in the top layer expose one named native dialog
+  instead of nested dialog roles. Their custom elements also accept
+  `variant="modal"` alongside boolean `modal`, and use the host's `title` as
+  a fallback when no headline or accessible label is supplied.
+
+### Internal
+
+- **Date-picker DOM compatibility (#324).**
+  The interactive day remains a native `<button>` with its existing classes
+  and `data-date`, but now carries `role="gridcell"` and `aria-selected`.
+  The outer `.mtrl-datepicker__cell` is presentational; selection state is on
+  the day gridcell, and day buttons no longer carry `aria-pressed`.
+  Month/year buttons retain `aria-pressed`. Day and range styling classes
+  remain; this picker fix changes no stylesheet. Code inspecting selection
+  attributes should read the day gridcell.
+
+- **Menu selection attributes (#322).**
+  Unselected `role="menuitem"` items omit `aria-selected="false"`.
+  Explicitly selected items retain `aria-selected="true"`, and listbox
+  `role="option"` items retain both true and false states. Menu styling
+  classes remain.
+
+- **Sheet dialog attributes (#322).**
+  For top-layer modal sheets, the accessible name belongs to the outer native
+  `<dialog>`; duplicate `role="dialog"` and `aria-modal="true"` attributes
+  are removed from the inner container. Its node, classes and focus target
+  remain. Default-layer modal containers retain their explicit dialog role
+  and modality attributes. Author attributes on custom-element hosts remain.
+
+- **Smaller published package: shared styles and declarations (#313).**
+  Generated element CSS and pre-upgrade strings are colocated in a shared
+  module while per-component entries retain tree-shaking. Wildcard style
+  exports share empty declaration targets. Unexported theme pass-through
+  wrappers are removed while preserving `scheme.colors`, public import paths,
+  compact hover documentation and the writable
+  `createElementConfig().style` return type.
+
+- **Listbox delivery and approved budgets (#279, #326).**
+  Unused listbox JavaScript is omitted; its radio styles ship in the list and
+  full stylesheets. The owner approved the all-JS gzip ceiling of
+  **130,050 B** on **2026-11-05**, applied in **#279**, and the form gzip
+  ceiling of **20,450 B** on **2026-11-07**, applied in **#326**.
+
+- **Release size against 3.8.2.**
+  This release PR at `ddd7d14d`
+  ([CI run 42455193839, package job 128652773678](https://github.com/floor/material/actions/runs/42455193839/job/128652773678))
+  packs **888,118 B compressed / 4,989,708 B unpacked / 1,549 files**.
+  Against published 3.8.2 at `02fbdd21`
+  ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
+  that is **−10,140 B packed / +40,407 B unpacked / −77 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **31,882 B**
+  under the 920,000 B packed ceiling and **129,292 B** under the 5,119,000 B
+  unpacked ceiling; neither ceiling changes.
+
+  | Payload (B, raw / gzip / Brotli) | 3.8.2 | 3.9.0 | Change |
+  | --- | --- | --- | --- |
+  | All JS | 412,840 / 127,312 / 105,645 | 418,953 / 129,264 / 107,214 | +6,113 / +1,952 / +1,569 |
+  | Full stylesheet | 637,752 / 58,879 / 41,971 | 640,972 / 59,172 / 42,192 | +3,220 / +293 / +221 |
+  | Button stylesheet | 58,901 / 5,220 / 4,022 | 59,523 / 5,300 / 4,082 | +622 / +80 / +60 |
+  | Form fixture | 65,250 / 20,387 / 18,174 | 65,398 / 20,431 / 18,243 | +148 / +44 / +69 |
+
+  All-JS gzip leaves **786 B** under its approved 130,050 B ceiling; form
+  gzip leaves **19 B** under 20,450 B. Full CSS leaves **4,578 B** under
+  63,750 B. Button CSS is exactly **5,300 B**, with **0 B** spare; its ceiling
+  does not rise.
+
+  Component payloads below are gzip bytes. Deferred bytes are loaded on
+  interaction, in addition to the initial graph.
+
+  | Component payload | 3.8.2 | 3.9.0 | Change | Ceiling | Spare |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | menu | 12,659 | 12,767 | +108 | 13,056 | 289 |
+  | menu deferred | 2,121 | 2,143 | +22 | 2,252 | 109 |
+  | fab-menu | 8,368 | 8,368 | +0 | 8,550 | 182 |
+  | fab-menu deferred | 10,647 | 10,766 | +119 | 10,854 | 88 |
+  | split-button | 9,704 | 9,716 | +12 | 9,728 | 12 |
+  | split-button deferred | 17,208 | 17,355 | +147 | 17,459 | 104 |
+  | select | 13,447 | 13,469 | +22 | 13,516 | 47 |
+  | select deferred | 10,618 | 10,733 | +115 | 10,752 | 19 |
+  | toolbar | 11,284 | 11,346 | +62 | 11,468 | 122 |
+  | all | 125,676 | 126,287 | +611 | 127,200 | 913 |
+
+  All package and component ceilings pass. The 2025 theme opt-in retains its
+  separate measured budget rows; default theme-entry ceilings are unchanged.
+  No additional budget increase is introduced by this release.
+
+- **Still OPEN: duplicate host names and default wrapper names.**
+  Names exposed on both a custom-element host and its inner control remain
+  open. Generated factory wrappers retain their existing labels by default;
+  `controlLabelOnly` addresses wrapper duplication only when explicitly
+  enabled on the four supported factories. It does not suppress author host
+  attributes or resolve custom-element host duplication.
+
+## [3.8.2] - 2026-11-08
+
+Keyboard focus visible everywhere.
+
+### Fixed
+
+- **Keyboard focus on drawer, slider, search and field controls (#316).**
+  Drawer items, slider handle bars and collapsed search inputs now draw visible
+  keyboard focus indicators. Filled text fields and selects retain their active
+  underline in forced colours, and navigation bars, rails and drawers distinguish
+  focused destinations from the active selection in forced colours.
+
+- **Focus contrast, clipping and stacking across component surfaces (#318).**
+  Carousel links draw a contrasting halo behind their focus ring over imagery,
+  and their rings follow horizontal and vertical keyline clips. Icon buttons
+  use the secondary focus colour; focused buttons, icon buttons and navigation
+  items paint above adjacent controls. FAB-menu and time-picker selectors use
+  inset rings. Scrollable chips reserve room for their rings, including at
+  fractional scroll positions, and keyboard scrolling keeps focused chips in
+  view in both left-to-right and right-to-left layouts.
+
+- **Pointer focus and reduced motion (#318).**
+  Dialog close-button state layers follow keyboard-visible focus instead of
+  remaining after pointer focus. Reduced-motion rules stop transitioning
+  outline colour in document styles and element shadow roots.
+
+### Internal
+
+- **Permanent browser checks for keyboard focus (#315, #318).**
+  CI checks 53 focusable targets across 20 component families in light, dark
+  and forced colours, plus pointer focus and reduced motion. It detects
+  insufficient indicator contrast, clipping and sibling occlusion; all known
+  focus-gap exceptions are removed. Additional checks cover 240 focus
+  measurements across factories and custom elements in left-to-right and
+  right-to-left layouts.
+
+- **Release size.**
+  The release build at `f772c833`
+  ([CI run 42406404092, package job 128505132816](https://github.com/floor/material/actions/runs/42406404092/job/128505132816))
+  packs **898,258 B compressed / 4,949,301 B unpacked / 1,626 files**.
+  Against v3.8.1 at `a0dd84f3`
+  ([CI run 42402063046, package job 128491957329](https://github.com/floor/material/actions/runs/42402063046/job/128491957329)),
+  that is **+676 B packed / +3,425 B unpacked**, with the file count unchanged.
+  It leaves **21,742 B** under the 920,000 B packed ceiling and **169,699 B**
+  under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,840 / 127,312 / 105,645 B** raw/gzip/brotli
+  (**+56 / +16 / −51 B**), and the full stylesheet is
+  **637,752 / 58,879 / 41,971 B** (**+895 / +132 / +99 B**).
+  These measurements include the runtime focus fixes and the 3.8.2 version
+  banner. The README rows remain 127.3 kB for all-js and 58.9 kB for full CSS,
+  and SIZES.md matches.
+
+## [3.8.1] - 2026-11-08
+
+Hover docs in your editor, and keyboard focus fixes for menus, split buttons and selects.
+
+### Changed
+
+- **Compact hover documentation in the shipped declarations (#308).**
+  Declaration comments keep the first summary sentence across wrapped lines
+  (or the first line when there is no sentence terminator), parameter names
+  whose source tags included descriptions, the first `@default` line and the
+  complete `@deprecated` note. Bare parameter tags, `@returns`, `@internal`,
+  examples and the remaining prose are omitted. The declaration documentation
+  itself adds no runtime JavaScript or CSS.
+
+### Fixed
+
+- **Visible keyboard focus in menus (#310).**
+  Keyboard-focused menu items and empty menu surfaces now show a 3px inward
+  secondary-colour outline, including in forced colours. Pointer opening
+  remains ringless. The previous surface rule passed a selector string as the
+  focus-ring mixin's colour argument, producing an invalid outline; menu items
+  had no matching outline rule.
+
+- **Keyboard opening of split-button menus (#311).**
+  Enter, Space and ArrowDown open on the first non-hidden item, including when
+  that item is disabled. ArrowUp opens on the last non-disabled item, falling
+  back to the last item if all are disabled. This works with an already-loaded
+  menu and an asynchronously loaded menu. The standalone menu opener uses the
+  same ArrowUp focus path, replacing its separate timer. Pointer opening keeps
+  focus on the menu surface, and `MenuComponent.open(event?, interactionType?)`
+  keeps its existing public signature.
+
+- **Visible active-option focus in selects (#312).**
+  Keyboard opening and option navigation show a 3px inward secondary-colour
+  outline on `.mtrl-menu__item--keyboard-active`. DOM focus stays on the
+  `.mtrl-text-field__input` combobox and its existing field indicator is
+  preserved. Pointer opening retains the selected option's active state and
+  `aria-activedescendant`, while withholding the keyboard outline until
+  keyboard interaction.
+
+### Internal
+
+- **Release size.**
+  The release build at `dac29446`
+  ([CI run 42400952354, package job 128488628262](https://github.com/floor/material/actions/runs/42400952354/job/128488628262))
+  packs **897,582 B compressed / 4,945,876 B unpacked / 1,626 files**.
+  Against v3.8.0 at `39e2becb`
+  ([CI run 42040150024, package job 127289094084](https://github.com/floor/material/actions/runs/42040150024/job/127289094084)),
+  that is **+68,384 B packed / +251,344 B unpacked**, with the file count
+  unchanged. It leaves **22,418 B** under the 920,000 B packed ceiling and
+  **173,124 B** under the 5,119,000 B unpacked ceiling; no budget changes.
+
+  `all-js` is **412,784 / 127,296 / 105,696 B** raw/gzip/brotli
+  (**+209 / +118 / +181 B**), and the full stylesheet is
+  **636,857 / 58,747 / 41,872 B** (**+150 / +2 / −53 B**). The declaration
+  documentation itself adds no runtime JS or CSS; the keyboard fixes move
+  those rows, and compressed sizes include the 3.8.1 version banner.
+  The README rows remain 127.3 kB for all-js and 58.7 kB for full CSS.
+  The select and split-button component rows measure 13,447 / 13,516 B and
+  9,704 / 9,728 B gzip against their unchanged budgets, and SIZES.md matches.
+
+## [3.8.0] - 2026-11-06
+
+Colour that adapts at runtime.
+
+### Added
+
+- **The package ships its third-party NOTICE (#303).**
+  The tarball carries a `NOTICE` at its root: the SVG path data for the Material
+  Symbols and Material Icons glyphs the JavaScript and one stylesheet embed,
+  Copyright Google LLC, under the Apache License, Version 2.0, with the full
+  licence text and the files that declare them. `package.json`'s `files` packs
+  it, and `bun run notice:check` fails a pull request whose tarball lacks it or
+  does not name the glyphs. #274's colour-utilities section is added to the
+  same file.
+
+- **Runtime colour from a seed or an image (#274).**
+  Three new subpaths, none on the root entry. `material/theme` carries
+  `createScheme(seed, { variant, mode, contrast })`, returning a Material
+  dynamic scheme; `applyScheme(scheme, target, { prefix })`, writing its role
+  colours to `--<prefix>-sys-color-*`; and one factory per variant —
+  `tonalSpot`, `vibrant`, `expressive`, `fidelity`, `content`, `neutral` and
+  `monochrome` — each `(source, dark, contrast) => scheme`. `material/theme/variants`
+  carries `createSchemeByName(seed, { variant, mode, contrast })` for a page
+  that switches variants at runtime, with all seven factories.
+  `material/theme/image` carries `sourceColorFromImage(image)`, the quantizer
+  and scorer that find an image's source colour. The seed may be a hex string,
+  an ARGB integer or an `Hct`; the defaults are tonal spot — Material's default
+  theme — light and standard contrast. A page passes the factory it builds
+  with, and the factories a page does not import tree-shake away. Everything a
+  caller types against is exported: `Hct` and the `DynamicScheme` type,
+  `SchemeFactory`, `SchemeMode`, `SchemeOptions` and `ApplyOptions` beside
+  `createScheme` and `applyScheme` on `material/theme`, and `ThemeVariant` and
+  `NamedSchemeOptions` beside `createSchemeByName` on
+  `material/theme/variants`.
+
+  `applyScheme` writes the 34 roles the stylesheet reads, with the prefix the
+  stylesheet was compiled with (`mtrl` by default), so a runtime scheme and a
+  Sass theme set the same custom properties; applying it to a section or any
+  other element scopes the scheme to that subtree, the "specified area" M3
+  describes for a content-based source. The twelve `*-fixed*` roles stay with
+  the Sass theme: no style reads them.
+
+  The colour science is ported from Google's material-color-utilities 0.4.0
+  (Apache-2.0): 34 files under `src/theme/vendor`, with their copyright and the
+  full licence added to the root `NOTICE` #303 already ships (+417 B).
+  No dependency is added. The scheme classes themselves are not exported: their
+  constructor takes a fourth argument, the colour-spec version, which no option
+  here selects, so the 2025 spec branch leaves the shipped graph entirely.
+  Parity stays at 0 differences: `test/theme/scheme.test.ts` compares every role
+  across 210 combinations — three seeds × seven variants × light and dark ×
+  contrast `-1, -0.5, 0, 0.5, 1` — against the pinned material-color-utilities
+  0.4.0 values and against the name-based lookup, and asserts that every
+  factory returns a scheme pinned to the 2021 spec.
+
+  The default path pays nothing: the root entry does not import the subpath, so
+  `dist/index.js` is byte-identical to 3.7.3 at `33b4bbea` and to every main
+  commit since — `697ec507`, `81467ef2` and `1ce5ff6d` all hash
+  `878b39f7972b33456a9a143f4fcb3c4273f5d8fa714928d4e500c8f9be5a21c2` in
+  their CI dist artifacts — and the `all-js`,
+  `button-initial` and component rows are unchanged. The subpath adds no
+  stylesheet: a scheme is written into the token properties the sheet already
+  reads.
+
+  `theme-runtime:check`, a new browser check in the styles group, decodes a
+  canvas image, makes a scheme from its source colour and applies it to one
+  section of a two-section page: the filled and text buttons inside the section
+  draw the new primary, the ones outside keep the page's, the document root
+  keeps its own tokens, and the section's 34 roles read back equal to the same
+  seed taken through the hex entry. The check waits for the transitions the
+  scheme starts rather than sleeping, and races them with a 2s deadline that
+  fails with a named message.
+
+  Material sources (read 2026-11-05):
+  [choosing a source](https://m3.material.io/styles/color/dynamic/choosing-a-source),
+  [content-based source](https://m3.material.io/styles/color/dynamic/content-based-source),
+  [choosing a colour scheme](https://m3.material.io/styles/color/choosing-a-scheme).
+
+### Changed
+
+- **Status colours harmonise with each theme and reach 7:1 at high contrast
+  (#275).**
+  The three semantic status seeds — `success` `#007B5A`, `warning` `#DD6D06`,
+  `info` `#0061A4` — are blended toward each theme's primary colour, capped at
+  15° in HCT hue, and the `X` and `on-X` tonal pairs are resolved with
+  Material 3's custom-colour contrast curves: `ContrastCurve(3, 4.5, 7, 7)`
+  against `highestSurface` for `X`, and `ContrastCurve(4.5, 7, 11, 21)` for
+  `on-X` against `X`. The build emits the six roles — `success`, `on-success`,
+  `warning`, `on-warning`, `info`, `on-info` — across all 20 themes, in light
+  and dark and at standard (`0`), medium (`0.5`) and high (`1`) contrast; the
+  runtime scheme gains the same six roles, 40 in all.
+
+  All 360 status contrast pairs reach at least 4.5:1 at standard and medium
+  contrast and at least 7:1 at high contrast (`[data-contrast="high"]` and
+  `@media (prefers-contrast: more)`); `warning` stays inside the 36.5–66.4°
+  orange HCT hue band in every light theme at every contrast level and in
+  every dark theme at standard contrast (the high-contrast theme's own dark
+  scheme excepted); and resolving the status roles leaves `error`, `on-error`,
+  `error-container` and `on-error-container` identical to a fresh scheme's
+  output across all 210 parity combinations and across sequential scheme
+  evaluations.
+
+  Under the `baseline` light theme the values change: `success` from
+  `rgb(0, 108, 78)` to `rgb(0, 107, 94)`, `warning` from `rgb(151, 72, 0)` to
+  `rgb(167, 58, 16)`, and `info` from `rgb(0, 97, 164)` to `rgb(55, 91, 169)`.
+  To keep the previous un-harmonised `baseline` light colours, override the
+  tokens on `:root`:
+
+  ```css
+  :root {
+    --mtrl-sys-color-success: rgb(0, 108, 78);
+    --mtrl-sys-color-warning: rgb(151, 72, 0);
+    --mtrl-sys-color-info: rgb(0, 97, 164);
+  }
+  ```
+
+  **Size:** on its push run (`1ce5ff6d`, run 42030849095, package job
+  127257100164), against #274's push run (`81467ef2`, run 42023890411, package
+  job 127233550950): the `full-css` row 620,654 → 636,707 raw (+16,053),
+  57,596 → 58,745 gzip (+1,149) and 41,460 → 41,899 brotli (+439); `base-css`
+  40,809 → 43,122 raw, 2,939 → 3,018 gzip; `button-css` 56,592 → 58,905 raw,
+  5,137 → 5,221 gzip; `select-css` 83,848 → 86,161 raw, 7,930 → 8,016 gzip;
+  `slider-css` 53,073 → 55,386 raw, 4,743 → 4,828 gzip; `navigation-rail-css`
+  55,067 → 57,380 raw, 5,123 → 5,205 gzip; `base-lite-css` 12,999 → 13,008
+  raw, 1,644 → 1,649 gzip. `all-js`, the SSR rows and every component entry
+  row are unchanged. In `README.md` and `npm-readme.md` the base row moves
+  from 2.9 to 3.0 kB, base and button from 5.1 to 5.2, and the full
+  stylesheet from 57.6 to 58.7.
+
+  `TARBALL_BYTES` moves from 865,000 to 920,000 by owner decision on
+  2026-11-05, set when #275's branch packed 913,528 B and before #300
+  normalized the packed Sass; `1ce5ff6d` now packs 828,974 B. No stylesheet
+  or consumer budget moved.
+
+  Material sources (read 2026-11-05):
+  [defining new colours](https://m3.material.io/styles/color/advanced/define-new-colors),
+  [adjusting existing colours](https://m3.material.io/styles/color/advanced/adjust-existing-colors),
+  [how the system works](https://m3.material.io/styles/color/system/how-the-system-works).
+
+### Fixed
+
+- **The packed declarations ship their `@deprecated` notes (#306).**
+  `printDeclarationModule` blanked every comment range, so `@deprecated`
+  never reached `dist/*.d.ts`: a typed consumer of the packed package got no
+  deprecation diagnostic from TypeScript (6385/6387), and an editor had
+  nothing to show for any option. The printer now keeps a JSDoc block that
+  carries `@deprecated`, whole and on the declaration it documents, and still
+  strips prose-only JSDoc, line comments, plain block comments and licence
+  banners. `declaration-docs:check`, a new CI step, reads the packed package
+  through its own `exports` as a typed consumer: root `material` must report
+  6385/6387 for `fab.setPosition` and `fab.getPosition`,
+  `material/components/fab` must report `setPosition` deprecated,
+  `material/elements` must report `FabSpec["attributes"].position` deprecated,
+  and a generated `material/react` adapter consumer must compile the entry and
+  report the first deprecated value export it finds; no adapter value export
+  is deprecated today, so on this head the adapter case is the compile. Each
+  consumer must also compile with no semantic diagnostics. Against the
+  declarations main shipped, all four names fail.
+
+  **Size:** at its merge `1bd75ec8` (push run 42034676271, package job
+  127270194588) the tarball packs 829,198 / 4,694,532 / 1,626: +224 packed
+  and +769 unpacked against #275's `1ce5ff6d` (828,974 / 4,693,763 / 1,626),
+  90,802 bytes under the 920,000 ceiling.
+  Keeping every JSDoc block was measured on CI at 972,818 packed / 5,180,608
+  unpacked, over both ceilings, so the prose does not ship.
+
+### Internal
+
+- **Licence banners survive the build, and the build refuses a module that
+  lost one (#274).**
+  Every shipped theme `.js` keeps its Apache-2.0 banner. The banner loss was
+  measured on the size probes: `stripRuntimeComments` routed only modules
+  containing `__PURE__` through the banner-keeping printer, and the ported
+  files have `__PURE__` nowhere, so 27 of them reached `dist` without the
+  banner. Now a module carrying a kept comment (`/*!`, `@license`,
+  `@preserve`, a pure annotation) takes the banner-keeping printer, and a
+  module carrying none takes the same comment-free printer as before, byte for
+  byte. A build guard fails the build, naming the file and the comment, when a
+  kept comment the source has is missing from the stripped output. The
+  red-on-main test `test/build/licence-banners.test.ts` fails against main's
+  `scripts/build-modules.ts` — 5 tests, the first on
+  `src/theme/vendor/dislike/dislike_analyzer.js keeps its licence banner`,
+  with the banner absent from the output — and passes on the branch. No kept
+  comment outside the ported theme files exists in `src`, so the rest of
+  `dist` is unchanged by that commit.
+
+- **The size cost of runtime colour.**
+  New consumer rows, `consumer:check` initial gzip: `theme` 17,266 B (budget
+  17,450, ceiling 20,500) and `theme-image` 20,821 B (budget 21,050, ceiling
+  24,000) at #275's merge `1ce5ff6d` (push run 42030849095, components-b job
+  127257100434); #274's merge `81467ef2` measured 17,037 and 20,593 (push run
+  42023890411, components-b job 127233551233). Each budget is its measurement
+  plus max(1%, 100 B), rounded up to the next 50.
+
+  Tarball, CI packer (Node 22.23.3 / npm 10.9.9), each a push run: 3.7.3 at
+  `33b4bbea` packs 777,600 B compressed, 4,475,560 B unpacked, 1,581 files
+  (run 42019967423, package job 127220397593); #303 at `697ec507` packs
+  781,664 / 4,487,507 / 1,582 (run 42021222008, package job 127224500961) —
+  +4,064 / +11,947 / +1, the `NOTICE`; #274 at `81467ef2` packs 822,426 /
+  4,647,253 / 1,626 (run 42023890411, package job 127233550950) — +40,762 /
+  +159,746 / +44 against #303; #275 at `1ce5ff6d` packs 828,974 / 4,693,763 /
+  1,626 (run 42030849095, package job 127257100164) — +6,548 / +46,510 / 0
+  against #274.
+
+  The unpacked deltas are byte-exact: #274 adds 44 files, all `dist/theme`
+  modules, and appends 417 B to the `NOTICE` and 116 B to `package.json`.
+  #275 adds no file; its +46,510 unpacked bytes are the status rules' output —
+  `dist/styles.css` +11,322, `dist/styles/contrast.css` +1,224,
+  `dist/styles/base.css` +612, `dist/themes` +18,666, `dist/theme` +1,099 and
+  the normalized theme Sass under `src/styles/themes` +13,587. The compressed
+  deltas are not the sum of their parts, so each row is the measured tree.
+
+- **The size cost of the release.**
+  On the release head `e8d635c3` (run 42036075729, package job 127274843027)
+  the packed tarball measures 829,198 B compressed, 4,694,532 B unpacked and
+  1,626 files, identical to the base `1bd75ec8` (run 42034676271, package
+  job 127270194588). `all-js` (412,575 / 127,178 / 105,515), `base-css`
+  (43,122 / 3,018 / 2,301), `button-initial` (22,463 / 7,563 / 6,778) and
+  the SSR entry (308,739 / 112,609 / 91,640) are identical too. The rows that
+  move are compressed-only: `full-css` brotli 41,899 → 41,925 (+26) at the
+  same raw and gzip; `base-lite-css` gzip 1,649 → 1,650 (+1); `button-css`
+  brotli 3,995 → 4,001 (+6); `select-css` brotli 6,589 → 6,595 (+6);
+  `slider-css` brotli 3,689 → 3,684 (−5); `navigation-rail-css` brotli
+  4,035 → 4,032 (−3). The cause is the version stamp in every shipped
+  licence banner changing one digit (`material v3.7.3` → `material v3.8.0`)
+  at identical length; every budget row stays green and no ceiling moved.
+
+## [3.7.3] - 2026-11-05
+
+Lighter, correct component styles.
+
+### Changed
+
+- **The packed Sass sources are normalized at publish time (#300).**
+  The `.scss` files the package ships now leave the tarball without the
+  silent (`//`) comments and indentation that never reach a consumer's CSS.
+  Loud comments, strings, `url()` data and custom-property values stay byte
+  for byte, and the compiled CSS is byte-identical for all 11 public Sass
+  entries: the package job compiles each entry from the packed tarball and
+  from the checkout and compares the two on every pull request. A generated
+  theme's origin header — the line md3.io reads from the installed package —
+  is the one silent comment kept, and all 14 themes keep theirs.
+
+  **Size:** at its merge (`f3cc6037`, push run 42017705644, package job
+  127212732299), against #298's merge as the previous main push (`91c4627f`,
+  run 42008536693, package job 127181840071): the packed tarball 857,184 →
+  777,599 bytes compressed (−79,585, about 79.6 kB) and 4,776,811 →
+  4,475,560 unpacked (−301,251), 1,581 files, unchanged. Every size row is
+  untouched — `all-js` 412,575 / 127,178 / 105,515, `full-css` 620,654 /
+  57,596 / 41,451, `select-css` 83,848 / 7,930 / 6,554 and `slider-css`
+  53,073 / 4,743 / 3,644, with the SSR, slider and base rows as they were.
+  No budget or ceiling moved, and no `SIZES.md`, `README.md` or
+  `npm-readme.md` row moves.
+
+### Removed
+
+- **The card's dead loading, expandable and swipeable styles (#278).**
+  The card's loading, expandable and swipeable members were removed from the
+  factory in 3.0.0, and the module that produced their markup stopped
+  shipping in 3.3.3. The stylesheets went on styling that markup anyway, in
+  all three sheets a consumer can load. Removed: `.mtrl-card__loading-overlay`,
+  `.mtrl-card__loading-spinner`, `.mtrl-card__expandable-content`,
+  `.mtrl-card__expand-button` (base, `::before` and
+  `[aria-expanded="true"]::before`), `.mtrl-card--swipeable`,
+  `.mtrl-card__swipe-left-action`, `.mtrl-card__swipe-right-action` and
+  `.mtrl-card--state-loading` — eight classes — with `@keyframes card-spinner`.
+  `.mtrl-card--dragging` stays: the draggable path in
+  `src/components/card/config.ts` adds and removes it.
+
+  One source fed all three files: `dist/styles.css` compiles `main`, and
+  `dist/styles/card.css` and `dist/elements/css/card.css` both compile
+  `components/card`, the card element's `styles: ["card"]`. Nothing the
+  package ships applies these names any more — the two constants that
+  remain, `LOADING` and `EXPANDED`, are reserved names nothing reads — and a
+  new test, `test/styles/dead-card-css.test.ts`, compiles the source behind
+  each of the three sheets and asserts none of the nine tokens appears. It
+  fails on the pre-release base `d78de9e4` and passes on the merged pull
+  requests.
+
+  There is no visual change. In an independent browser check across five
+  documented card configurations in light and dark, the computed geometry
+  and colours of every node matched, and the full-page screenshots were
+  byte-identical: SHA-256
+  `58702928c9b4a08ab75b62ede088703684a60aa92452c58784d74f1bbaae803a`
+  (light) and
+  `967ad11d2f4eead6d4968b59d8f380ce9bf0dd6d0790d728c196fd68c3eedf93`
+  (dark).
+
+  **Size:** at its merge (`71824018`, push run 42000192075, package job
+  127153577689), against the previous main push (`9ecfc6e6`, run 41998230130,
+  package job 127146939974): the `full-css` row 628,436 → 627,009 raw
+  (−1,427), 58,667 → 58,292 gzip (−375) and 42,173 → 41,911 brotli (−262);
+  the packed tarball 862,631 → 861,193 bytes compressed (−1,438), 4,828,612 →
+  4,820,848 unpacked (−7,764), 1,582 files, unchanged. Per built file, from
+  the two CI dists at gzip level 9 and not additive: each of
+  `dist/styles.css`, `dist/styles/card.css` and `dist/elements/css/card.css`
+  loses exactly 1,484 raw bytes; gzipped, 57,007 → 56,636 (−371), 2,189 →
+  1,844 (−345) and 1,925 → 1,577 (−348). No budget or ceiling moved, no
+  `SIZES.md` row changes, and the full-stylesheet row in `README.md` and
+  `npm-readme.md` moves from 58.7 to 58.3 kB.
+
+- **The dialog, menu, select, slider, tabs and timepicker dead styles (#280).**
+  Fourteen selector groups with no producer in `src/` are removed from six
+  component sheets: the dialog's icon and icon-content rules and their
+  header sibling, its `content--scrollable` and `content--emphasis`
+  modifiers and its fullscreen overlay arm; the menu's
+  `--position-top-start` / `--position-top-end` arms (the live
+  `--position-top` stays); the select's `--open` descendant text-field
+  rules, `--disabled`, `--error` trailing icon and `--small` / `--large`
+  arms; the slider's singular `__tick`; the tabs' class-based
+  `--hover` / `--focus` / `--pressed` button arms, `__scroll-indicator`
+  and `__scroll-button`; and the timepicker's `__sr-only`.
+
+  There is no visual change. In an independent browser check across 110
+  cases — the six components in their documented configurations, light and
+  dark, including hover, keyboard focus and pressed states driven by real
+  pointer and keyboard input — every computed geometry, colour and
+  full-page screenshot hash matched. A new test,
+  `test/styles/dead-component-css.test.ts`, compiles the source behind the
+  full sheet and both per-component sheets and asserts none of the removed
+  selectors appears; it fails on the pre-release base `d78de9e4` and passes
+  on the merged pull requests.
+
+  **Size:** at its merge (`ddaa7c2b`, push run 42002927172, package job
+  127162755350), against #278's merge as the previous main push (`71824018`,
+  run 42000192075, package job 127153577689): the `full-css` row 627,009 →
+  620,670 raw (−6,339), 58,292 → 57,596 gzip (−696) and 41,911 → 41,467
+  brotli (−444); `select-css` 8,083 → 7,930 gzip (−153) and `slider-css`
+  4,757 → 4,744 gzip (−13); the packed tarball 861,193 → 857,928 bytes
+  compressed (−3,265), 4,820,848 → 4,791,723 unpacked (−29,125), 1,582
+  files, unchanged. No budget or ceiling moved, no `SIZES.md` row changes,
+  and the full-stylesheet row in `README.md` and `npm-readme.md` moves from
+  58.3 to 57.6 kB.
+
+### Fixed
+
+- **The slider on large sizes (#281).**
+  On large sliders a piece of track could vanish near the extremes: on a
+  320px track an XL slider at 10% drew no active piece and at 90% no trailing
+  one. The bar's outer ends were clipped square instead of carrying the
+  track's rounded end, and the stop dot's centre sat one corner radius in
+  from the end — 8 / 8 / 12 / 16 / 28px by size — instead of 6dp.
+
+  The cause was the track itself: one rounded box with `overflow: hidden`
+  that clipped its children, while each piece of track inside it was a square
+  rectangle carrying only the 2dp inside corner at a handle gap. A piece
+  shorter than the corner radius was dropped rather than rounded, because a
+  clipped sliver would have shown. Now the track neither rounds nor clips:
+  each piece carries its own corners — the outer corner where it reaches an
+  end of the slider, written through the shape token
+  (`--mtrl-sys-shape-corner-small` through `-extra-large`, by size) so a
+  theme's corner scale reaches it, and the 2dp inside corner at a gap — with
+  the pair turning with the axis, so a mirrored or vertical slider puts the
+  outer end on its own side. A short piece keeps its end and its radii scale
+  to fit. The stop dot's centre is 6dp from the end of the track at every
+  size. A discrete slider (`ticks`) still ends its track on its first and
+  last tick: a piece that would only fill the inset before or after an end
+  tick is dropped, so the end tick is the track's visual end.
+
+  `scripts/check-slider.ts`, the Chromium check, reads the L (corner 16) and
+  XL (corner 28) sliders' piece boxes and computed radii at 0, 5, 10, 50, 90,
+  95 and 100 percent of a 320px track, and every value 0–100 of an XL slider:
+  the active piece starts at the track's start and measures the value less
+  the 8px gap, the trailing piece runs from one gap past the handle to the
+  track's end, the stop's centre is 314px — 6px from the end — at every value
+  below 100%, and the pieces' corners are the size's outer corner and 2px at
+  the gaps. Vertical and RTL sliders turn the corner pair with the axis; a
+  discrete slider at min and at max, all five sizes, LTR and RTL, light and
+  dark, keeps the end tick as the track's end.
+  `test/components/slider/slider.test.ts` follows: the stop's inline position
+  (`calc(100% - 8px)`, was `calc(100% - 10px)`), the short piece (now kept,
+  was "is not drawn") and the per-size corners as shape tokens. Both fail on
+  main `d78de9e4` — the browser check with `standard end stop: 312 where M3
+  puts 314`, the unit tests with six assertions — and pass on the branch,
+  14/14 jobs.
+
+  **Size:** at its merge (`81b3234a`, push run 42007247411, package job
+  127177390402), against #280's merge as the previous main push (`ddaa7c2b`,
+  run 42002927172, package job 127162755350): the slider entry 34,967 →
+  35,210 raw, 12,165 → 12,248 gzip (+83) and 11,018 → 11,098 brotli (+80);
+  `all-js` 412,325 → 412,575 raw, 127,086 → 127,178 gzip (+92) and 105,325 →
+  105,515 brotli (+190); `slider-css` 53,089 → 53,073 raw (−16), 4,744 →
+  4,743 gzip (−1) and 3,650 → 3,644 brotli (−6); the `full-css` row 620,670 →
+  620,654 raw (−16), its gzip unchanged at 57,596 and its brotli 41,467 →
+  41,451; the packed tarball 857,928 → 858,218 bytes compressed (+290),
+  4,791,723 → 4,792,400 unpacked (+677), 1,582 files, unchanged. In
+  `SIZES.md` the slider row moves from 33.7 KB minified and 11.8 KB gzip to
+  33.9 and 11.9 (+8.8 KB over core, unchanged), and the all row from 390.7 /
+  122.5 / +119.5 to 391.0 / 122.6 / +119.6, deferred +2.1 unchanged; the
+  all-js row in `README.md` and `npm-readme.md` moves from 127.1 to 127.2
+  kB. No budget or ceiling moved.
+
+- **The nested `dist/package.json` is no longer packed (#298).**
+  The build writes `dist/package.json` — a 15,615-byte export map — so that
+  its module and declaration prunes can read the relocated export map in
+  place, but nothing resolves it: it is not an export target and has no
+  runtime role, since `dist` inherits the root `type` and `sideEffects`. It
+  shipped in the tarball anyway, one file no runtime reads. The manifest's
+  `files` now excludes it (`"!dist/package.json"`), and the build still
+  writes it for its own prunes. The package job asserts the packed list
+  carries no nested manifest, so dropping the exclusion fails the size check
+  with the tarball CI would publish, and a new test,
+  `test/build/packed-manifest.test.ts`, pins both halves — the build's output
+  and its absence from `files`.
+
+  **Size:** at its merge (`91c4627f`, push run 42008536693, package job
+  127181840071), against #281's merge as the previous main push (`81b3234a`,
+  run 42007247411, package job 127177390402): the packed tarball 858,218 →
+  857,184 bytes compressed (−1,034), 4,792,400 → 4,776,811 unpacked
+  (−15,589 — the dropped manifest (15,615 B) less the 26 B `files` entry that
+  excludes it), 1,582 → 1,581 files. The bundle
+  rows are untouched: `all-js` 412,575 raw / 127,178 gzip / 105,515 brotli
+  and `full-css` 620,654 / 57,596 / 41,451, as are the SSR rows (inline
+  253,639 / 5,325 / 2,906, link 42,991 / 1,046 / 675) and the SSR entry
+  (308,739 / 112,609). No budget or ceiling moved, no `SIZES.md` row
+  changes, and no `README.md` or `npm-readme.md` row moves.
+
 ## [3.7.2] - 2026-11-05
 
 Component sheets stand alone.
@@ -6087,7 +6827,12 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.7.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
+[3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
+[3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
+[3.8.0]: https://github.com/floor/material/compare/v3.7.3...v3.8.0
+[3.7.3]: https://github.com/floor/material/compare/v3.7.2...v3.7.3
 [3.7.2]: https://github.com/floor/material/compare/v3.7.1...v3.7.2
 [3.7.1]: https://github.com/floor/material/compare/v3.7.0...v3.7.1
 [3.7.0]: https://github.com/floor/material/compare/v3.6.0...v3.7.0

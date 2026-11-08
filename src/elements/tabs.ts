@@ -2,7 +2,7 @@
 /**
  * `<m-tabs>` with `<m-tab>` children.
  *
- * Each `<m-tab>` declares one tab (`value`, `icon`, `badge`, `disabled`, and its
+ * Each `<m-tab>` declares one tab (`value`, `icon`, `aria-label`, `badge`, `disabled`, and its
  * text as content). The tabs element reads them into the factory's config and
  * rebuilds when they change; the children stay where the framework put them.
  * `value` on `<m-tabs>` is the default selection, which moves the live one
@@ -34,6 +34,7 @@ const declaredTabs = (host: HTMLElement): TabConfig[] => {
       text,
       value,
       icon: child.getAttribute("icon") ?? undefined,
+      ariaLabel: child.getAttribute("aria-label") ?? undefined,
       badge: badge ?? undefined,
       disabled: child.hasAttribute("disabled"),
       state: value === active ? "active" : undefined,
@@ -73,6 +74,7 @@ const updateTabs = (host: HTMLElement, component: TabsComponent): boolean => {
     }
     if (tab.getText() !== (config.text ?? "")) tab.setText(config.text ?? "");
     if (tab.getIcon() !== (config.icon ?? "")) tab.setIcon(config.icon ?? "");
+    tab.setAriaLabel(config.ariaLabel);
     if (config.badge !== undefined) {
       if (tab.getBadge() !== String(config.badge)) tab.setBadge(config.badge);
       else tab.showBadge();
@@ -100,6 +102,10 @@ const tabsSpec = {
     ":host(:dir(rtl)) :is(.mtrl-tab--icon-only,.mtrl-tab--icon-and-text) .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% - 6px);left:auto}" +
     ":host(:dir(rtl)) .mtrl-tab--text-only .mtrl-badge__wrapper .mtrl-badge--top-right{right:calc(100% + 4px);left:auto}",
   attributes: {
+    "aria-label": {
+      type: "string", config: "ariaLabel",
+      update: (c, v) => v === null ? c.element.removeAttribute("aria-label") : c.element.setAttribute("aria-label", String(v)),
+    },
     variant: { type: "string", config: "variant" },
     value: { type: "string" },
   },

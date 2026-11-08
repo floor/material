@@ -40,6 +40,7 @@ export interface SideSheetElementComponent extends SideSheetComponent {
 }
 
 interface SideSheetElementConfig extends SideSheetConfig {
+  host?: HTMLElement;
   headline?: string;
   modal?: boolean;
   noCloseButton?: boolean;
@@ -48,7 +49,8 @@ interface SideSheetElementConfig extends SideSheetConfig {
 }
 
 const create = (config: SideSheetElementConfig): SideSheetElementComponent => {
-  const { headline, modal, noCloseButton, noCloseOnScrimClick, noCloseOnEscape, ...rest } = config;
+  const { host, headline, modal, noCloseButton, noCloseOnScrimClick, noCloseOnEscape, ...rest } = config;
+  const isModal = modal || host?.getAttribute("variant") === "modal";
   const content = document.createElement("slot");
   const sheet = createSideSheet({
     ...rest,
@@ -58,8 +60,8 @@ const create = (config: SideSheetElementConfig): SideSheetElementComponent => {
     closeButton: !noCloseButton,
     closeOnScrimClick: !noCloseOnScrimClick,
     closeOnEscape: !noCloseOnEscape,
-    variant: modal ? "modal" : "standard",
-    layer: modal ? "top" : undefined,
+    variant: isModal ? "modal" : "standard",
+    layer: isModal ? "top" : undefined,
   });
   headlineSlot(sheet, PARTS, headline);
   return Object.assign(sheet, { show: () => sheet.open() });
@@ -94,6 +96,7 @@ const sideSheetSpec = {
     open: { detail: () => null, state: true },
     close: { detail: () => null, state: true },
   },
+  config: (host) => ({ host }),
   setup: (host, component) =>
     sheetSetup(host, component, PARTS, (handler) => {
       component.on("open", handler);

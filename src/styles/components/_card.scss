@@ -388,91 +388,10 @@ $component: '#{base.$prefix}-card';
     pointer-events: none;
   }
   
-  &--state-loading {
-    pointer-events: none;
-  }
-  
   // Elevation while dragged differs by variant, so it is set with each of them
   // above. The 0.9 opacity that used to be here is in no token.
   &--dragging {
     cursor: grabbing;
-  }
-  
-  // Loading overlay
-  &__loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: t.alpha('surface', 0.7);
-    z-index: f.get-z-index('default');
-  }
-  
-  &__loading-spinner {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 3px solid t.alpha('primary', 0.2);
-    border-top-color: t.color('primary');
-    animation: card-spinner 1s infinite linear;
-  }
-  
-  // Expandable content
-  &__expandable-content {
-    overflow: hidden;
-    transition: max-height f.get-motion-duration('medium1') f.get-motion-easing('standard');
-  }
-  
-  &__expand-button {
-    background: none;
-    border: none;
-    padding: 8px;
-    cursor: pointer;
-    color: t.color('primary');
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    
-    &::before {
-      content: '';
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-right: 2px solid currentColor;
-      border-bottom: 2px solid currentColor;
-      transform: rotate(45deg);
-      transition: transform f.get-motion-duration('short2') f.get-motion-easing('standard');
-    }
-    
-    &[aria-expanded="true"]::before {
-      transform: rotate(-135deg);
-    }
-  }
-  
-  // Swipeable card
-  &--swipeable {
-    touch-action: pan-y;
-    transition: transform f.get-motion-duration('medium1') f.get-motion-easing('standard');
-  }
-  
-  // Hidden buttons for accessibility
-  &__swipe-left-action,
-  &__swipe-right-action {
-    @include m.visually-hidden; // Use visually-hidden mixin
-  }
-}
-
-// Spinner animation
-@keyframes card-spinner {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
   }
 }
 
