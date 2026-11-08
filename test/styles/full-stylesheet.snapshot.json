@@ -1206,6 +1206,7 @@
     ".mtrl-menu--vertical .mtrl-menu__item--selected:focus-visible::before,.mtrl-menu--vertical .mtrl-menu__item--selected.mtrl-menu__item--active::before",
     ".mtrl-menu--vertical .mtrl-menu__item--selected:hover::before",
     ".mtrl-menu--vertical .mtrl-menu__item--selected:not(.mtrl-menu__item--submenu)::after",
+    ".mtrl-menu--vertical .mtrl-menu__item--submenu",
     ".mtrl-menu--vertical .mtrl-menu__item-icon",
     ".mtrl-menu--vertical .mtrl-menu__item-icon svg",
     ".mtrl-menu--vertical .mtrl-menu__item-label",

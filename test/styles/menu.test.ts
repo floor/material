@@ -31,7 +31,8 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__divider', 'flex-shrink')).toBe('0');
   });
 
-  test('the container is surface-container at level 2 with a 4dp corner', () => {
+  test('the container is surface-container at level 2 with a 4dp corner and border-box sizing', () => {
+    expect(value('.mtrl-menu', 'box-sizing')).toBe('border-box');
     expect(value('.mtrl-menu', 'background-color')).toBe('var(--mtrl-sys-color-surface-container)');
     expect(value('.mtrl-menu', 'border-radius')).toBe(corner(4));
     expect(value('.mtrl-menu', 'box-shadow')).toBe('0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15)');
@@ -234,6 +235,43 @@ describe('menu stylesheet', () => {
     test('the container morphs to show which menu is active', () => {
       expect(value('.mtrl-menu--vertical.mtrl-menu--active', 'border-radius')).toBe('24px');
       expect(value('.mtrl-menu--vertical.mtrl-menu--inactive', 'border-radius')).toBe(corner(8));
+    });
+
+    test('a selected item suppresses the trailing check while a submenu item keeps its chevron and 48px end padding', () => {
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item--selected:not(.mtrl-menu__item--submenu)::after', 'content')).toBe('none');
+      expect(rules('.mtrl-menu__item--submenu::after').length).toBeGreaterThan(0);
+      expect(value('.mtrl-menu__item--submenu::after', 'content')).toBe('""');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item--submenu', 'padding-inline-end')).toBe('48px');
+    });
+
+    test('forced colours, reduced motion and dense sit after the vertical rules so they win at equal specificity, and item height is static against density', () => {
+      const verticalSelectedIdx = css.indexOf('.mtrl-menu--vertical .mtrl-menu__item--selected {');
+      const verticalTransitionIdx = css.lastIndexOf('.mtrl-menu--vertical {\n  transition:');
+      const verticalItemIdx = css.indexOf('.mtrl-menu--vertical .mtrl-menu__item {');
+      const forcedColorsIdx = css.indexOf('@media (forced-colors: active)');
+      const reducedMotionIdx = css.indexOf('@media (prefers-reduced-motion: reduce)');
+      const denseItemIdx = css.indexOf('.mtrl-menu--dense .mtrl-menu__item {');
+
+      expect(verticalSelectedIdx).toBeGreaterThan(-1);
+      expect(forcedColorsIdx).toBeGreaterThan(verticalSelectedIdx);
+      expect(css.slice(forcedColorsIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__item--selected\s*\{[^}]*background-color:\s*Highlight;[^}]*color:\s*HighlightText;/
+      );
+      expect(css.slice(forcedColorsIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__group\s*\{[^}]*border:\s*1px solid CurrentColor;/
+      );
+
+      expect(verticalTransitionIdx).toBeGreaterThan(-1);
+      expect(reducedMotionIdx).toBeGreaterThan(verticalTransitionIdx);
+      expect(css.slice(reducedMotionIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__item\s*\{[^}]*transition:\s*none;/
+      );
+
+      expect(verticalItemIdx).toBeGreaterThan(-1);
+      expect(denseItemIdx).toBeGreaterThan(verticalItemIdx);
+      expect(value('.mtrl-menu--dense .mtrl-menu__item', 'min-height')).toBe('32px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'min-height')).toBe('44px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'min-height')).not.toContain('--mtrl-density');
     });
   });
 
