@@ -43,6 +43,14 @@ export interface SwitchConfig {
   /** ARIA label for accessibility */
   ariaLabel?: string;
 
+  /**
+   * Put ariaLabel only on the input/handle, omitting the generated wrapper label.
+   * Opt-in changes wrapper serialization and [aria-label] selectors.
+   * @default false
+   */
+  controlLabelOnly?: boolean;
+
+
   /** Prefix for class names */
   prefix?: string;
 

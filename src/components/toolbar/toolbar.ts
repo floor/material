@@ -184,7 +184,19 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
     component.emit(visible ? TOOLBAR_EVENTS.SHOW : TOOLBAR_EVENTS.HIDE);
   };
 
-  if (settings.exit) {
+  // Collapsed is not hidden: the toolbar keeps its focus order, its items and
+  // their names, and only gives up height and visible labels (the sheet).
+  let collapsed = false;
+  const setCollapsed = (next: boolean) => {
+    if (next === collapsed) return;
+    collapsed = next;
+    root.classList.toggle(`${block}--collapsed`, collapsed);
+    component.emit(collapsed ? TOOLBAR_EVENTS.COLLAPSE : TOOLBAR_EVENTS.EXPAND);
+  };
+
+  // One listener drives whichever scroll behaviour the config settled on;
+  // "exit" and "collapse" are exclusive, both being the one scrollBehavior.
+  if (settings.exit || settings.collapse) {
     const target = settings.scrollTarget ?? window;
     const position = () =>
       target === window ? window.scrollY : (target as HTMLElement).scrollTop;
@@ -194,13 +206,16 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
     let anchor = position();
     const onScroll = () => {
       const y = position();
+      const open = settings.exit ? visible : !collapsed;
       if (y <= 0) {
-        setVisible(true);
+        if (settings.exit) setVisible(true);
+        else setCollapsed(false);
         anchor = 0;
-      } else if (visible ? y - anchor >= threshold : anchor - y >= threshold) {
-        setVisible(!visible);
+      } else if (open ? y - anchor >= threshold : anchor - y >= threshold) {
+        if (settings.exit) setVisible(!visible);
+        else setCollapsed(!collapsed);
         anchor = y;
-      } else if (visible ? y < anchor : y > anchor) {
+      } else if (open ? y < anchor : y > anchor) {
         anchor = y;
       }
     };

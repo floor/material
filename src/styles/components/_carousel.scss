@@ -99,14 +99,19 @@ $component: '#{base.$prefix}-carousel';
     will-change: transform, clip-path;
     user-select: none;
 
-    &:focus {
+    &:focus,
+    &:focus-visible {
       outline: none;
     }
 
-    // Focus ring: 3dp secondary, inside the clip so it stays visible
-    &:focus-visible {
-      outline: 3px solid t.color('secondary');
-      outline-offset: -3px;
+    // Follow the visible keyline bounds, including compacted and vertical slides.
+    &:focus-visible::after {
+      content: '';
+      position: absolute;
+      inset: var(--#{base.$prefix}-carousel-inset, 0);
+      border: 3px solid t.color('secondary');
+      border-radius: inherit;
+      pointer-events: none;
     }
   }
 
@@ -152,9 +157,19 @@ $component: '#{base.$prefix}-carousel';
   &__button {
     display: inline-block;
     margin-top: 12px;
+    border-radius: v.shape('extra-small');
     color: inherit;
     text-decoration: none;
     @include m.typography('label-large');
+
+    &:focus { outline: none; }
+
+    &:focus-visible {
+      outline: 3px solid t.color('secondary');
+      outline-offset: 2px;
+      // An opaque halo keeps both edges of the ring distinct over images and scrims.
+      box-shadow: 0 0 0 6px t.color('surface');
+    }
   }
 
   // Reduced motion: no smooth scrolling; the component keeps every item one size

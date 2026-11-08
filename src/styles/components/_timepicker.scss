@@ -179,7 +179,7 @@ $component: '#{base.$prefix}-time-picker';
 
       // md.comp.focus-ring
       &:focus { outline: none; }
-      &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
+      &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: -3px; }
     }
   }
 
@@ -485,19 +485,6 @@ $component: '#{base.$prefix}-time-picker';
       margin: 16px 0;
     }
     
-  }
-  
-  // Accessibility
-  &__sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
 }
 

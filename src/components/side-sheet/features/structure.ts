@@ -34,10 +34,14 @@ export const withStructure =
       element.appendChild(scrim);
     }
 
+    const isTopDialog = element.localName === "dialog";
     const container = document.createElement("div");
     container.className = getClass(SIDE_SHEET_CLASSES.CONTAINER);
-    container.setAttribute("role", isModal ? "dialog" : "complementary");
-    if (isModal) container.setAttribute("aria-modal", "true");
+    if (!isTopDialog) {
+      container.setAttribute("role", isModal ? "dialog" : "complementary");
+      if (isModal) container.setAttribute("aria-modal", "true");
+    }
+    const surface = isTopDialog ? element : container;
     container.tabIndex = -1;
     if (config.width) container.style.width = `${config.width}px`;
     if (config.maxWidth) container.style.maxWidth = `${config.maxWidth}px`;
@@ -56,7 +60,7 @@ export const withStructure =
         title.id = `${getClass(SIDE_SHEET_CLASSES.TITLE)}-${Math.random()
           .toString(36)
           .slice(2, 9)}`;
-        container.setAttribute("aria-labelledby", title.id);
+        surface.setAttribute("aria-labelledby", title.id);
         header.appendChild(title);
       }
 
@@ -71,6 +75,10 @@ export const withStructure =
       }
 
       container.appendChild(header);
+    }
+
+    if (!config.title && config.ariaLabel) {
+      surface.setAttribute("aria-label", config.ariaLabel);
     }
 
     const content = document.createElement("div");
@@ -108,7 +116,8 @@ export const withStructure =
           title.id = `${getClass(SIDE_SHEET_CLASSES.TITLE)}-${Math.random()
             .toString(36)
             .slice(2, 9)}`;
-          container.setAttribute("aria-labelledby", title.id);
+          surface.removeAttribute("aria-label");
+          surface.setAttribute("aria-labelledby", title.id);
 
           let header = container.querySelector(
             `.${getClass(SIDE_SHEET_CLASSES.HEADER)}`

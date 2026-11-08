@@ -162,4 +162,28 @@ describe("pruneDeclarations", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  test("keeps shared static declaration targets on wildcard export keys", async () => {
+    const directory = await tree({
+      "styles.d.ts": "export {};\n",
+      "styles/button.js": 'import "./button.css";\n',
+      "styles/button.css": ".mtrl-button{}\n",
+      "elements/css/index.d.ts": "export {};\n",
+      "elements/css/button.js": 'import "../styles.js";\n',
+    });
+    try {
+      const result = await pruneDeclarations(directory, {
+        "./styles/*": { types: "./styles.d.ts", import: "./styles/*.js" },
+        "./elements/css/*": { types: "./elements/css/index.d.ts", import: "./elements/css/*.js" },
+      });
+      expect(result.removed).toEqual([]);
+      const remaining = await listing(directory);
+      expect(remaining.filter((path) => path.endsWith(".d.ts"))).toEqual([
+        "elements/css/index.d.ts",
+        "styles.d.ts",
+      ]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
