@@ -179,8 +179,13 @@ export const withInput =
 
     const input = component.structure?.input;
     if (input) {
+      const label = config.ariaLabel || text;
       input.placeholder = text;
-      input.setAttribute("aria-label", config.ariaLabel || text);
+      input.setAttribute("aria-label", label);
+      const surface = component.structure?.surface;
+      if (surface?.hasAttribute("aria-label")) {
+        surface.setAttribute("aria-label", label || "Search");
+      }
     }
   };
 

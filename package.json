@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -32,6 +32,7 @@
     "**/*.scss",
     "**/styles/*.js",
     "**/elements/css/*.js",
+    "**/theme/spec2025.js",
     "**/ssr/index.js",
     "**/ssr/react.js",
     "**/ssr/svelte.js",
@@ -354,7 +355,7 @@
     "./elements/css/hosts/*.css": "./dist/elements/css/hosts/*.css",
     "./elements/css/*.css": "./dist/elements/css/*.css",
     "./elements/css/*": {
-      "types": "./dist/elements/css/*.d.ts",
+      "types": "./dist/elements/css/index.d.ts",
       "import": "./dist/elements/css/*.js"
     },
     "./elements/preupgrade.css": {
@@ -439,8 +440,12 @@
       "types": "./dist/theme/image.d.ts",
       "import": "./dist/theme/image.js"
     },
+    "./theme/2025": {
+      "types": "./dist/theme/2025.d.ts",
+      "import": "./dist/theme/2025.js"
+    },
     "./styles/*": {
-      "types": "./dist/styles/*.d.ts",
+      "types": "./dist/styles.d.ts",
       "import": "./dist/styles/*.js"
     },
     "./themes/*": "./dist/themes/*.css",
@@ -520,7 +525,7 @@
     "consumer:check": "bun run scripts/check-consumer.ts",
     "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "ssr-comments:check": "bun run scripts/check-ssr-comments.ts",
-    "tabs:check": "bun run scripts/check-tabs.ts",
+    "tabs:check": "bun run scripts/check-tabs.ts && bun run scripts/check-a11y-name-role-b.ts",
     "slider:check": "bun run scripts/check-slider.ts",
     "tooltip:check": "bun run scripts/check-tooltip.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
@@ -532,10 +537,11 @@
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
-    "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts",
+    "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts && bun run scripts/check-a11y-name-role-d.ts",
     "dialog-reduced-motion:check": "bun run scripts/check-dialog-reduced-motion.ts",
     "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
-    "core:check": "bun run scripts/check-core.ts",
+    "keyboard-focus:check": "bun run scripts/check-keyboard-focus.ts",
+    "core:check": "bun run scripts/check-core.ts && bun run scripts/check-keyboard-focus.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",
     "ssr:check:a": "bun run scripts/check-ssr.ts a",
@@ -543,7 +549,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
-    "elements:check:b": "bun run scripts/check-elements.ts b",
+    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "dist-modules:check": "bun run scripts/check-dist-modules.ts",
     "syntax:check": "bun run scripts/check-syntax-floor.ts",

@@ -179,7 +179,7 @@ $component: '#{base.$prefix}-time-picker';
 
       // md.comp.focus-ring
       &:focus { outline: none; }
-      &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
+      &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: -3px; }
     }
   }
 

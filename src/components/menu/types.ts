@@ -312,6 +312,11 @@ export interface MenuConfig {
   class?: string;
 
   /**
+   * Accessible label for assistive technology on the menu surface and list
+   */
+  ariaLabel?: string;
+
+  /**
    * Component prefix for CSS class names
    * @default 'mtrl'
    */
@@ -703,7 +708,8 @@ export interface MenuFeatureHost {
     ) => void;
     handleInitialFocus: (
       menuElement: HTMLElement,
-      interactionType: "keyboard" | "mouse"
+      interactionType: "keyboard" | "mouse",
+      openingEvent?: Event
     ) => void;
     // Read by the opener feature, so a menu has one Tab tracker rather than
     // two: the same key press decides focus for both.

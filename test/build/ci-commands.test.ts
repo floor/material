@@ -89,6 +89,11 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(ran.filter(command => command !== "bun test" && !(command in scripts))).toEqual([]);
   });
 
+  test("runs the keyboard-focus browser check inside core:check", () => {
+    expect(scripts["keyboard-focus:check"]).toBe("bun run scripts/check-keyboard-focus.ts");
+    expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
+  });
+
   // A command that may be skipped, or may fail without failing its job, still
   // appears in the list above and no longer checks anything.
   test("runs them unconditionally, and their failure fails the job", () => {
