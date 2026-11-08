@@ -41,7 +41,8 @@ describe('carousel stylesheet', () => {
 
   test('items take the 28dp corner and a secondary focus ring', () => {
     expect(value('.mtrl-carousel__item', 'border-radius')).toBe(`var(--mtrl-carousel-corner, ${corner(28)})`);
-    expect(value('.mtrl-carousel__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-carousel__item:focus-visible::after', 'border')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-carousel__item:focus-visible::after', 'inset')).toBe('var(--mtrl-carousel-inset, 0)');
   });
 
   test('text over the image fades with the item size', () => {

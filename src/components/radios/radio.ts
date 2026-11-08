@@ -60,6 +60,10 @@ export const withRadio =
       input.disabled = true;
       radioContainer.classList.add(`${radiosClass}__item--disabled`);
     }
+
+    // The group is required as a whole. Each input takes the native flag so
+    // constraint validation matches `<m-radios required>`.
+    if (config.required) input.required = true;
     
     // Create label
     const label = document.createElement('label');

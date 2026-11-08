@@ -15,11 +15,17 @@ export function cascadeLayerOrder(): string {
   return styleLayerOrder();
 }
 
+/** JS identifier for a style entry in `dist/elements/styles.js`. */
+export function styleIdentifier(name: string): string {
+  return `s_${name.replace(/-/g, "_")}`;
+}
+
 /** JS module for one element stylesheet. It registers shadow CSS and nothing else. */
-export function elementStyleModule(name: string, css: string, imports: string[]): string {
+export function elementStyleModule(name: string, _css: string, imports: string[]): string {
+  const id = styleIdentifier(name);
   return imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
-    `\nimport { registerStyles } from "../styles.js";\n` +
-    `registerStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`;
+    `\nimport { registerStyles, ${id} } from "../styles.js";\n` +
+    `registerStyles({ ${JSON.stringify(name)}: ${id} });\n`;
 }
 
 /** One pre-upgrade file: the banner and the rules in `@layer mtrl.preupgrade`. */
@@ -152,7 +158,6 @@ export async function buildStyles(outdir: string, banner: string) {
       // can be independently inlined by Vite and duplicate shared styles.
       await writeFile(`${outdir}/${path}.js`, dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") +
         `\nimport "./${name}.css";\n`);
-      await writeFile(`${outdir}/${path}.d.ts`, "export {};\n");
     } else {
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
     }
@@ -166,7 +171,6 @@ export async function buildStyles(outdir: string, banner: string) {
       const name = path.slice("styles/".length);
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${styleLayerOrder()}@layer mtrl.base{${css}}\n`);
       await writeFile(`${outdir}/${path}.js`, `\nimport "./${name}.css";\n`);
-      await writeFile(`${outdir}/${path}.d.ts`, "export {};\n");
     } else {
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
     }
@@ -221,11 +225,12 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   const definition = await import("../src/elements/define");
   const { hostStyleText } = definition;
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
+  const styleExports: string[] = [];
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
+    styleExports.push(`export const ${styleIdentifier(name)} = ${JSON.stringify(css)};`);
     await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports));
     await writeFile(`${dir}/${name}.css`, css);
-    await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };
   await write("ripple", "utilities/ripple", []);
   // Only components that have an element, and what their CSS depends on.
@@ -242,6 +247,9 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   }
 
   const all = [...preupgrade.values()].join("");
+  styleExports.push(`export const preupgradeCss = ${JSON.stringify(all)};`);
+  const stylesFile = `${outdir}/elements/styles.js`;
+  await writeFile(stylesFile, `${await readFile(stylesFile, "utf8")}${styleExports.join("\n")}\n`);
   await mkdir(`${outdir}/elements/preupgrade`, { recursive: true });
   for (const [name, rules] of preupgrade) {
     await writeFile(`${outdir}/elements/preupgrade/${name}.css`, preupgradeStylesheet(rules, banner));
@@ -250,9 +258,9 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   // `import 'material/elements/preupgrade.css'` resolves through the types condition, as `material/styles` does
   await writeFile(`${outdir}/elements/preupgrade.css.d.ts`, "export {};\n");
   await writeFile(`${outdir}/elements/preupgrade.js`,
-    `import { DEFAULT_PREFIX, preupgradeSheet } from "./styles.js";\nconst css = ${JSON.stringify(all)};\n` +
+    `import { DEFAULT_PREFIX, preupgradeCss, preupgradeSheet } from "./styles.js";\n` +
     `/** The pre-upgrade stylesheet (elements/preupgrade.css) for a tag prefix, default "m". */\n` +
-    `export const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(css, [prefix]);\n`);
+    `export const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(preupgradeCss, [prefix]);\n`);
   // Shipped declarations carry signatures, not prose; the one handwritten
   // declaration follows the same rule as the compiler-emitted ones.
   await writeFile(`${outdir}/elements/preupgrade.d.ts`,

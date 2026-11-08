@@ -8,6 +8,7 @@ export const names: Equals<keyof ListEvents, "select" | "load" | "scroll" | "key
 export const scroll: Equals<Parameters<ListEvents["scroll"]>[0], ForwardedEventPayload<Event, HTMLElement>> = true;
 export const keydown: Equals<Parameters<ListEvents["keydown"]>[0], ForwardedEventPayload<KeyboardEvent, HTMLElement>> = true;
 export const elementChange: Equals<ElementEvents<ListSpec>["change"]["detail"]["value"], string | null> = true;
+export const selectAction: Equals<Parameters<ListEvents["select"]>[0]["action"], HTMLButtonElement | undefined> = true;
 list.on("keydown", payload => payload.originalEvent.key).off("scroll", payload => payload.element.scrollTop);
 // @ts-expect-error scroll never carries a component
 list.on("scroll", payload => payload.component);

@@ -51,7 +51,6 @@ describe('every theme contrast level', () => {
         const base = { ...standardRoles(baseline, 'baseline', mode === 'dark'), ...standardRoles(compiled, name, mode === 'dark') };
         for (const block of contrast.filter(block => isDark(block.selector) === (mode === 'dark'))) {
           for (const [role, value] of Object.entries(block.roles)) {
-            expect(['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info']).not.toContain(role);
             expect(value).not.toBe(base[role]);
           }
         }
@@ -75,28 +74,16 @@ describe('every theme contrast level', () => {
       const contrastBlocks = source.filter(b => b.selector.includes(`[data-theme-contrast=${level}]`));
       const selected = Object.assign({}, ...contrastBlocks.filter(b => isDark(b.selector) === (mode === 'dark')).map(b => b.roles));
       const roles = { ...base, ...(level === 'standard' ? {} : selected) };
-      const minimum = level === 'high' ? 7 : 4.5;
-      // The brief preserves standard and status colors. Keep the strict bound
-      // visible as an expected failure for precisely these existing exceptions;
-      // a fix makes test.failing fail too, requiring this list to be revisited.
-      // The status colours of #369 pass at standard and medium; only
-      // light high (7:1) still falls short for them.
-      const preservedFailure = (fg: string) =>
-        (mode === 'light' && level === 'high' && ['on-warning', 'on-success', 'on-info'].includes(fg));
+      const minimum = level === 'high' || (name === 'highcontrast' && level === 'standard') ? 7 : 4.5;
       test(`${name} ${level} ${mode}: generated block and text pairs reach ${minimum}:1`, () => {
         if (level !== 'standard' && !(name === 'highcontrast' && level === 'high')) expect(contrastBlocks.length).toBeGreaterThanOrEqual(2);
         const failures = pairs.flatMap(([fg, bg]) => {
           expect(roles[fg!]).toBeDefined(); expect(roles[bg!]).toBeDefined();
           const value = ratio(roles[fg!]!, roles[bg!]!);
-          return !preservedFailure(fg!) && value < minimum ? [`${fg}/${bg}: ${value.toFixed(4)}`] : [];
+          return value < minimum ? [`${fg}/${bg}: ${value.toFixed(4)}`] : [];
         });
         expect(failures).toEqual([]);
       });
-      for (const [fg, bg] of pairs.filter(([fg]) => preservedFailure(fg!))) {
-        test.failing(`${name} ${level} ${mode}: preserved ${fg}/${bg} below ${minimum}:1`, () => {
-          expect(ratio(roles[fg!]!, roles[bg!]!)).toBeGreaterThanOrEqual(minimum);
-        });
-      }
     }
   }
 });

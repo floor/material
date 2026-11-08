@@ -11,7 +11,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { elements } from "../src/elements";
-import { camel, declarationModules, elementModules, pascal } from "./element-modules";
+import { camel, declarationModules, elementDeprecations, elementModules, pascal } from "./element-modules";
 
 /** The package name the generated components import: mtrl, material, … */
 const pkg = (await Bun.file(join(import.meta.dir, "..", "package.json")).json()) as { name: string };
@@ -86,11 +86,12 @@ export async function emitSvelte(outdir: string): Promise<void> {
   for (const { name, module, styles } of elementModules) {
     const P = pascal(name);
     const live = Object.keys(elements[name as keyof typeof elements].spec.properties ?? {});
+    const note = elementDeprecations[name]?.(pascal("toolbar"));
     await writeFile(`${dir}/${P}.svelte`, component(name, live, module, styles));
     await writeFile(`${dir}/${P}.svelte.d.ts`, `import type { Component } from "svelte";
 import type { ${P}Spec, ${P}Element } from "../elements/index.js";
 import type { Bindable, SvelteProps } from "./runtime.js";
-declare const ${P}: Component<SvelteProps<${P}Spec>, { readonly element: ${P}Element | null }, Bindable<${P}Spec>>;
+${note ? `/** @deprecated ${note} */\n` : ""}declare const ${P}: Component<SvelteProps<${P}Spec>, { readonly element: ${P}Element | null }, Bindable<${P}Spec>>;
 export default ${P};
 `);
     exports.push(`export { default as ${P} } from "./${P}.svelte";`);
