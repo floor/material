@@ -97,6 +97,44 @@ $component: "#{base.$prefix}-list";
     &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
     &:disabled { cursor: default; }
   }
+  // Single-select listbox options (withSingleSelectListbox). A row is the
+  // `role="option"` itself, with no inner action, so it paints the state layer
+  // and the focus ring the action paints in a selectable list.
+  &__item[role="option"] {
+    cursor: pointer;
+    &::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: t.color("on-surface"); opacity: 0; }
+    &:hover:not(.#{$component}__item--disabled)::before { opacity: v.state("hover-state-layer-opacity"); }
+    &:active:not(.#{$component}__item--disabled)::before { opacity: v.state("pressed-state-layer-opacity"); }
+    &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: -2px; }
+    &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
+    &.#{$component}__item--disabled { cursor: default; }
+  }
+  // The radio is visual only; `aria-selected` carries the state. 20dp icon:
+  // a 2dp on-surface-variant ring and a 10dp primary dot on the fast spatial
+  // spring, as the radios' own circle.
+  &__radio {
+    position: relative;
+    width: 20px; height: 20px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    border: 2px solid t.color("on-surface-variant");
+    border-radius: 50%;
+    transition: m.spring(border-color, fast-effects);
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: t.color("primary");
+      transform: translate(-50%, -50%) scale(0);
+      transition: m.spring(transform, fast-spatial);
+    }
+  }
+  &__item--selected &__radio {
+    border-color: t.color("primary");
+    &::after { transform: translate(-50%, -50%) scale(1); }
+  }
   // Slotted controls are siblings of the row action and remain independently operable.
   &__item :is(button, input, select, textarea, a, [contenteditable="true"], [data-list-control]):not(.#{$component}__action) { position: relative; z-index: 1; }
   // Segmented. The child combinators keep a list nested in a row out of it.
@@ -133,6 +171,7 @@ $component: "#{base.$prefix}-list";
       border-radius: var(--#{base.$prefix}-list-item-shape-hover, v.shape('medium'));
     }
     > .#{$component}__item:has(.#{$component}__action:focus-visible):not(.#{$component}__item--disabled):not(.#{$component}__item--selected),
+    > .#{$component}__item[role="option"]:focus-visible:not(.#{$component}__item--disabled):not(.#{$component}__item--selected),
     > .#{$component}__item:active:not(.#{$component}__item--disabled):not(.#{$component}__item--selected),
     > .#{$component}__item.#{$component}__item--selected {
       border-radius: var(--#{base.$prefix}-list-item-shape-active, v.shape('large'));
@@ -142,11 +181,12 @@ $component: "#{base.$prefix}-list";
     background: t.color("secondary-container");
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
     .#{$component}__action::before { background: t.color("on-secondary-container"); }
+    &[role="option"]::before { background: t.color("on-secondary-container"); }
   }
   &__item--disabled {
     &.#{$component}__item--selected { background: t.alpha("on-surface", 0.38); }
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-surface"); }
-    .#{$component}__text, .#{$component}__leading, .#{$component}__trailing { opacity: 0.38; }
+    .#{$component}__text, .#{$component}__leading, .#{$component}__trailing, .#{$component}__radio { opacity: 0.38; }
   }
   &__divider { height: 1px; min-height: 1px; background: t.color("outline-variant"); margin-block: 0; }
   &__divider--inset { margin-inline-start: 72px; margin-inline-end: 16px; }

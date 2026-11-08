@@ -62,6 +62,13 @@ export interface RadiosConfig {
    * @default false
    */
   disabled?: boolean;
+
+  /**
+   * A selection is required before submit. Sets `aria-required="true"` on the
+   * radiogroup: the group is a div, which has no native required attribute
+   * (WAI-ARIA `aria-required`, https://w3c.github.io/aria/#aria-required).
+   */
+  required?: boolean;
   
   /** 
    * Whether to enable ripple effect

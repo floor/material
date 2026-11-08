@@ -20,8 +20,12 @@ describe("the root exports", () => {
     expect(changes, `Run \`bun run root-exports:update\` if intended:\n${changes.join("\n")}`).toEqual([]);
   });
 
-  test("nothing on the root is deprecated any more: what was is gone", () => {
-    expect(now.filter((e) => e.status !== "public").map((e) => e.name)).toEqual([]);
+  // 3.0.0 removed what the root had deprecated. Since 3.12 the owner's
+  // no-4.0 rule makes an in-place declaration deprecation the 3.x way to mark
+  // a name, so one is allowed: the fixture pins it as deprecated with where
+  // "declaration". Root-only and moving deprecations stay forbidden.
+  test("root-only and moving deprecations stay forbidden: only in-place declaration deprecations pass", () => {
+    expect(now.filter((e) => e.status !== "public" && e.where !== "declaration").map((e) => e.name)).toEqual([]);
   });
 
   test("the root keeps the components and the app-level helpers; the composition core is gone", () => {

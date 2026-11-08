@@ -2,8 +2,10 @@
 //
 // The menu stylesheet against the M3 tokens (Compose MenuTokens.kt) and the
 // baseline measurements on m3.material.io/components/menus/specs.
+import { readdirSync } from 'node:fs';
 import { describe, test, expect, beforeAll } from 'bun:test';
-import { compileString } from 'sass';
+import { compileString, Logger } from 'sass';
+import { baseStyles, componentStyles, standaloneThemes, themeStyles } from '../../scripts/style-manifest';
 import { corner } from '../utils/corner';
 
 let css = '';
@@ -29,7 +31,8 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__divider', 'flex-shrink')).toBe('0');
   });
 
-  test('the container is surface-container at level 2 with a 4dp corner', () => {
+  test('the container is surface-container at level 2 with a 4dp corner and border-box sizing', () => {
+    expect(value('.mtrl-menu', 'box-sizing')).toBe('border-box');
     expect(value('.mtrl-menu', 'background-color')).toBe('var(--mtrl-sys-color-surface-container)');
     expect(value('.mtrl-menu', 'border-radius')).toBe(corner(4));
     expect(value('.mtrl-menu', 'box-shadow')).toBe('0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15)');
@@ -70,6 +73,50 @@ describe('menu stylesheet', () => {
     // the hover and pressed layers are unaffected (the pressed one yields to a ripple)
     expect(value('.mtrl-menu__item:hover::before', 'opacity')).toBe('0.08');
     expect(value('.mtrl-menu__item:active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
+  });
+
+  test('the select\'s keyboard-reached option draws the 3dp inward secondary ring', () => {
+    // The active option of a listbox keeps focus on its combobox, so
+    // :focus-visible never matches it; the select marks the option a key
+    // reached and the sheet draws md.comp.focus-ring there.
+    expect(value('.mtrl-menu__item--keyboard-active', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu__item--keyboard-active', 'outline-offset')).toBe('-3px');
+  });
+
+  test('keyboard focus draws a 3dp inward secondary focus ring on the item and the surface, with no unconditional outline: none on the menu', () => {
+    expect(value('.mtrl-menu__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu__item:focus-visible', 'outline-offset')).toBe('-3px');
+    expect(value('.mtrl-menu:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value('.mtrl-menu:focus-visible', 'outline-offset')).toBe('-3px');
+    expect(value('.mtrl-menu', 'outline')).toBeUndefined();
+  });
+
+  test('no compiled stylesheet passes a quoted string as a colour in outline, color, background, border, box-shadow, fill, or stroke', () => {
+    const elements = readdirSync('src/styles/elements')
+      .map((file) => /^_(.+)\.scss$/.exec(file)?.[1])
+      .filter((name): name is string => !!name && !['config', 'index'].includes(name));
+    const entries: Array<[string, string]> = [
+      ['main', `@use "main";`],
+      ['base', baseStyles.map((source, index) => `@use "${source}" as b${index};`).join('\n')],
+      ...Object.entries(componentStyles).map(([key, entry]): [string, string] => [`component:${key}`, `@use "${entry.source}";`]),
+      ...elements.map((name): [string, string] => [`element:${name}`, `@use "elements/${name}";`]),
+      ...themeStyles.map((theme): [string, string] => [`theme:${theme}`, `@use "themes/${theme}";`]),
+      ...standaloneThemes.map((theme): [string, string] => [`standalone-theme:${theme}`, `@use "themes/${theme}";`]),
+    ];
+    const propRe = /(?:^|[;{\n])\s*((?:outline|color|background|border|box-shadow|fill|stroke)[a-z-]*)\s*:\s*([^;{}]+)/gi;
+    const hits: string[] = [];
+    for (const [name, source] of entries) {
+      const sheet = compileString(source, { loadPaths: ['src/styles'], style: 'expanded', logger: Logger.silent }).css;
+      for (const match of sheet.matchAll(propRe)) {
+        const prop = match[1];
+        const raw = match[2].trim();
+        const withoutUrls = raw.replace(/url\((?:"[^"]*"|'[^']*'|[^)]*)\)/gi, '');
+        if (/["']/.test(withoutUrls)) {
+          hits.push(`${name} -> ${prop}: ${raw}`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
   });
 
   test('a disabled item is dimmed but still reachable', () => {
@@ -188,6 +235,43 @@ describe('menu stylesheet', () => {
     test('the container morphs to show which menu is active', () => {
       expect(value('.mtrl-menu--vertical.mtrl-menu--active', 'border-radius')).toBe('24px');
       expect(value('.mtrl-menu--vertical.mtrl-menu--inactive', 'border-radius')).toBe(corner(8));
+    });
+
+    test('a selected item suppresses the trailing check while a submenu item keeps its chevron and 48px end padding', () => {
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item--selected:not(.mtrl-menu__item--submenu)::after', 'content')).toBe('none');
+      expect(rules('.mtrl-menu__item--submenu::after').length).toBeGreaterThan(0);
+      expect(value('.mtrl-menu__item--submenu::after', 'content')).toBe('""');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item--submenu', 'padding-inline-end')).toBe('48px');
+    });
+
+    test('forced colours, reduced motion and dense sit after the vertical rules so they win at equal specificity, and item height is static against density', () => {
+      const verticalSelectedIdx = css.indexOf('.mtrl-menu--vertical .mtrl-menu__item--selected {');
+      const verticalTransitionIdx = css.lastIndexOf('.mtrl-menu--vertical {\n  transition:');
+      const verticalItemIdx = css.indexOf('.mtrl-menu--vertical .mtrl-menu__item {');
+      const forcedColorsIdx = css.indexOf('@media (forced-colors: active)');
+      const reducedMotionIdx = css.indexOf('@media (prefers-reduced-motion: reduce)');
+      const denseItemIdx = css.indexOf('.mtrl-menu--dense .mtrl-menu__item {');
+
+      expect(verticalSelectedIdx).toBeGreaterThan(-1);
+      expect(forcedColorsIdx).toBeGreaterThan(verticalSelectedIdx);
+      expect(css.slice(forcedColorsIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__item--selected\s*\{[^}]*background-color:\s*Highlight;[^}]*color:\s*HighlightText;/
+      );
+      expect(css.slice(forcedColorsIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__group\s*\{[^}]*border:\s*1px solid CurrentColor;/
+      );
+
+      expect(verticalTransitionIdx).toBeGreaterThan(-1);
+      expect(reducedMotionIdx).toBeGreaterThan(verticalTransitionIdx);
+      expect(css.slice(reducedMotionIdx)).toMatch(
+        /\.mtrl-menu\s+\.mtrl-menu__item\s*\{[^}]*transition:\s*none;/
+      );
+
+      expect(verticalItemIdx).toBeGreaterThan(-1);
+      expect(denseItemIdx).toBeGreaterThan(verticalItemIdx);
+      expect(value('.mtrl-menu--dense .mtrl-menu__item', 'min-height')).toBe('32px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'min-height')).toBe('44px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'min-height')).not.toContain('--mtrl-density');
     });
   });
 

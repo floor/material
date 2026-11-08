@@ -133,9 +133,11 @@ $component: '#{base.$prefix}-slider';
   // Discrete ticks offset their repeat with cqw/cqh, which resolve against this
   // box. inset: 0 already gives it a definite size, so size containment holds.
   &__visual { position: absolute; inset: 0; pointer-events: none; container-type: size; }
-  &__track { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); overflow: hidden; }
-  // The track clips the outer corners (its radius is set per size); a segment's own
-  // corners are the inside ones, TrackInsideCornerSize = 2dp.
+  &__track { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); }
+  // Each piece of the track owns its ends: the outer corner where it reaches an end
+  // of the slider (8 / 8 / 12 / 16 / 28 by size) and the inside corner at a handle
+  // gap (TrackInsideCornerSize = 2dp). withTracks sets both per piece and the track
+  // clips nothing, so a piece shorter than the corner keeps its own ends.
   &__segment {
     position: absolute; height: 100%; border-radius: 2px;
     background: var(--#{base.$prefix}-slider-inactive-track-color); opacity: var(--#{base.$prefix}-slider-inactive-opacity);
@@ -157,8 +159,9 @@ $component: '#{base.$prefix}-slider';
     svg { width: 100%; height: 100%; fill: currentColor; }
     &--inactive { color: var(--#{base.$prefix}-slider-track-color); opacity: var(--#{base.$prefix}-slider-tick-opacity); }
   }
-  // Stop indicator: 4dp in the active track colour, centred one corner radius from the
-  // end. withTracks sets `right` per size.
+  // Stop indicator: 4dp in the active track colour, its centre 6dp from the end of
+  // the track at every size (m3.material.io sliders specs, Track). withTracks sets
+  // the position along the axis.
   &__dot { position: absolute; top: calc(50% - 2px); width: 4px; height: 4px;
     border-radius: 50%; background: var(--#{base.$prefix}-slider-track-color); opacity: var(--#{base.$prefix}-slider-active-opacity); }
 
@@ -192,6 +195,7 @@ $component: '#{base.$prefix}-slider';
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+      pointer-events: none;
       
       .#{$component}--secondary & {
         background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
@@ -204,11 +208,6 @@ $component: '#{base.$prefix}-slider';
       .#{$component}--error & {
         background-color: t.color('error');
       }
-    }
-
-    // Disabled pointer events on the pseudo-element
-    &::before {
-      pointer-events: none;
     }
     
     // PressedHandleWidth and FocusHandleWidth: 2dp, half the resting 4dp.
@@ -218,44 +217,10 @@ $component: '#{base.$prefix}-slider';
     &--focused::before {
       width: 2px;
     }
-    
-    // Hover state
-    &:hover::before {
-      background-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
-      
-      .#{$component}--secondary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
-      }
-      
-      .#{$component}--tertiary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('tertiary')});
-      }
-      
-      .#{$component}--error & {
-        background-color: t.color('error');
-      }
-      
-      .#{$component}--disabled & {
-        background-color: t.color('on-surface');
-        opacity: 0.38;
-      }
-    }
-    
-    // Active state
-    &:active::before {
-      background-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
-      
-      .#{$component}--secondary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('secondary')});
-      }
-      
-      .#{$component}--tertiary & {
-        background-color: var(--#{base.$prefix}-slider-color, #{t.color('tertiary')});
-      }
-      
-      .#{$component}--error & {
-        background-color: t.color('error');
-      }
+
+    &:focus-visible::before {
+      outline: 2px solid t.color('secondary');
+      outline-offset: 2px;
     }
   }
 
@@ -371,11 +336,15 @@ $component: '#{base.$prefix}-slider';
     }
   }
 
-  // Discrete slider with steps
-  &--discrete {
-    .#{$component}__tick {
-      width: 4px;
-      height: 4px;
+  @include m.high-contrast {
+    &__handle::before {
+      border: 1px solid ButtonText;
+      box-sizing: border-box;
+    }
+
+    &__handle:focus-visible::before {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
     }
   }
   

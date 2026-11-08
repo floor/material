@@ -37,10 +37,14 @@ export const withStructure =
       element.appendChild(scrim);
     }
 
+    const isTopDialog = element.localName === "dialog";
     const container = document.createElement("div");
     container.className = getClass(BOTTOM_SHEET_CLASSES.CONTAINER);
-    container.setAttribute("role", isModal ? "dialog" : "region");
-    if (isModal) container.setAttribute("aria-modal", "true");
+    if (!isTopDialog) {
+      container.setAttribute("role", isModal ? "dialog" : "region");
+      if (isModal) container.setAttribute("aria-modal", "true");
+    }
+    const surface = isTopDialog ? element : container;
     container.tabIndex = -1;
     if (config.maxWidth) {
       container.style.maxWidth = `${config.maxWidth}px`;
@@ -75,10 +79,12 @@ export const withStructure =
         .toString(36)
         .slice(2, 9)}`;
       // the headline names the sheet, so a screen reader announces it on open
-      container.setAttribute("aria-labelledby", title.id);
+      surface.setAttribute("aria-labelledby", title.id);
 
       header.appendChild(title);
       container.appendChild(header);
+    } else if (config.ariaLabel) {
+      surface.setAttribute("aria-label", config.ariaLabel);
     }
 
     const content = document.createElement("div");
@@ -123,7 +129,8 @@ export const withStructure =
           title.id = `${getClass(BOTTOM_SHEET_CLASSES.TITLE)}-${Math.random()
             .toString(36)
             .slice(2, 9)}`;
-          container.setAttribute("aria-labelledby", title.id);
+          surface.removeAttribute("aria-label");
+          surface.setAttribute("aria-labelledby", title.id);
           header.appendChild(title);
           container.insertBefore(header, content);
         },

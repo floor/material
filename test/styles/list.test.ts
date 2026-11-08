@@ -112,3 +112,13 @@ describe('list stylesheet: segmented', () => {
     expect(arms()).not.toMatch(/border-(start|end)-(start|end)-radius/);
   });
 });
+
+describe('listbox option radio', () => {
+  test('the visual-only radio is a 20px circle that fills in when its option is selected', () => {
+    expect(declared('.mtrl-list__radio', 'width')).toBe('20px');
+    expect(declared('.mtrl-list__radio', 'border-radius')).toBe('50%');
+    expect(declared('.mtrl-list__radio::after', 'border-radius')).toBe('50%');
+    expect(declared('.mtrl-list__item--selected .mtrl-list__radio::after', 'transform')).toContain('scale(1)');
+    expect(declared('.mtrl-list__item[role=option]', 'cursor')).toBe('pointer');
+  });
+});

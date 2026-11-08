@@ -102,9 +102,13 @@ export const ENTRIES: ChangeEntry[] = [
   {
     id: "consumer-size-budgets",
     file: "scripts/check-consumer.ts",
-    find: '["addClass", "addClass", CONSUMER_INITIAL_GZIP.addClass, "%s/core/dom"], ["text-field", "createTextField", CONSUMER_INITIAL_GZIP["text-field"], "%s"], ["button", "createButton", CONSUMER_INITIAL_GZIP.button, "%s"],',
-    replace: '["addClass", "addClass", CONSUMER_INITIAL_GZIP.addClass, "%t/core/dom"], ["text-field", "createTextField", CONSUMER_INITIAL_GZIP["text-field"], "%t"], ["button", "createButton", CONSUMER_INITIAL_GZIP.button, "%t"],',
-    reason: "the size budgets name the specifiers they measure; the bare `\"%s\"` entries are not import forms (the text-field rename moved the component's name to `text-field` after this entry was written)",
+    find: `    ["addClass", "export { addClass } from '%s/core/dom';", CONSUMER_INITIAL_GZIP.addClass],
+    ["text-field", "export { createTextField } from '%s';", CONSUMER_INITIAL_GZIP["text-field"]],
+    ["button", "export { createButton } from '%s';", CONSUMER_INITIAL_GZIP.button],`,
+    replace: `    ["addClass", "export { addClass } from '%t/core/dom';", CONSUMER_INITIAL_GZIP.addClass],
+    ["text-field", "export { createTextField } from '%t';", CONSUMER_INITIAL_GZIP["text-field"]],
+    ["button", "export { createButton } from '%t';", CONSUMER_INITIAL_GZIP.button],`,
+    reason: "the size budgets name the specifiers they measure; the bare entry strings are not import forms (the text-field rename moved the component's name to `text-field` after this entry was written)",
   },
   {
     id: "release-title",
