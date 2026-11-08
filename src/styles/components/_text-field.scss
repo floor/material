@@ -551,6 +551,15 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
+    @include m.high-contrast {
+        &--filled.#{$component}--focused .#{$component}__field::before {
+            opacity: 1;
+            background-color: transparent;
+            height: 0;
+            border-top: 2px solid CanvasText;
+        }
+    }
+
     // ===== OUTLINED VARIANT =====
     // The container is drawn by __outline in three segments: the leading
     // corner, the notch the floated label sits in, and the trailing rest.

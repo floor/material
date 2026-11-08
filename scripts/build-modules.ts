@@ -10,7 +10,7 @@ export function printRuntimeModule(filename: string, text: string): string {
     for (const position of [node.pos, node.end]) {
       for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
         const comment = text.slice(range.pos, range.end);
-        if (!/[@#]__PURE__/.test(comment) && !comment.startsWith("/*!")) comments.set(range.pos, range.end);
+        if (!keepComment(comment)) comments.set(range.pos, range.end);
       }
     }
     node.getChildren(file).forEach(visit);
@@ -49,18 +49,63 @@ export function minifyAdapterModule(text: string): string {
   return adapterMinifier.transformSync(text);
 }
 
-/** What every shipped runtime module goes through: prose out, PURE annotations and licence banners in. */
-export function stripRuntimeComments(filename: string, text: string): string {
-  return text.includes("__PURE__") ? printRuntimeModule(filename, text)
-    : ts.createPrinter({ removeComments: true }).printFile(
-      ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
-    );
+/** The comments a module carries that the shipped text keeps, in source order. */
+export function keptCommentsOf(filename: string, text: string): string[] {
+  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  const kept = new Set<string>();
+  function visit(node: ts.Node): void {
+    for (const position of [node.pos, node.end]) {
+      for (const range of [...ts.getLeadingCommentRanges(text, position) ?? [], ...ts.getTrailingCommentRanges(text, position) ?? []]) {
+        const comment = text.slice(range.pos, range.end);
+        if (keepComment(comment)) kept.add(comment);
+      }
+    }
+    node.getChildren(file).forEach(visit);
+  }
+  visit(file);
+  return [...kept];
 }
 
 /**
- * Drop declaration prose: signatures, not documentation, are the shipped
- * contract. The published API docs build from src (typedoc reads
- * `./src/index.ts`), and editors still resolve the same types.
+ * The strip's licence guard, callable on any pair: every kept comment the
+ * source carries must occur in the result, or the build stops naming the file
+ * and the comment that went missing.
+ */
+export function assertKeptCommentsSurvive(filename: string, source: string, stripped: string): void {
+  for (const comment of keptCommentsOf(filename, source)) {
+    if (!stripped.includes(comment)) {
+      throw new Error(`${filename}: the readable dist dropped a kept comment: ${comment.replace(/\s+/g, " ").slice(0, 200)}`);
+    }
+  }
+}
+
+/**
+ * What every shipped runtime module goes through: prose out, PURE annotations
+ * and licence banners in. A module that carries a kept comment takes the
+ * banner-keeping printer; every other module takes the plain comment-free
+ * printer, so its output is byte-identical to what it was. The strip checks
+ * itself: a kept comment the result no longer holds fails the build, naming
+ * the file and the comment.
+ */
+export function stripRuntimeComments(filename: string, text: string): string {
+  const stripped = keptCommentsOf(filename, text).length > 0 ? printRuntimeModule(filename, text)
+    : ts.createPrinter({ removeComments: true }).printFile(
+      ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
+    );
+  assertKeptCommentsSurvive(filename, text, stripped);
+  return stripped;
+}
+
+/**
+ * Ship a declaration's hover documentation, cut to what a typed consumer reads,
+ * and no other prose. A declaration keeps its JSDoc block's first summary
+ * sentence, its `@param` names without their descriptions, its `@default`, and
+ * any `@deprecated` note whole — the note is what an editor names the
+ * replacement from, and what TypeScript's deprecation suggestions (6385/6387)
+ * are read from. `@example` blocks and the remaining prose stay in the source:
+ * keeping every JSDoc block whole was measured at +150,392 bytes on the packed
+ * tarball, over the package's ceiling; this cut was measured at +56,126.
+ * Every non-JSDoc comment goes, as before.
  */
 export function printDeclarationModule(filename: string, text: string): string {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
@@ -75,7 +120,13 @@ export function printDeclarationModule(filename: string, text: string): string {
   }
   visit(file);
   for (const [start, end] of [...comments].sort(([a], [b]) => b - a)) {
-    text = text.slice(0, start) + text.slice(start, end).replace(/[^\r\n]/g, " ") + text.slice(end);
+    const comment = text.slice(start, end);
+    if (/^\/\*\*(?!\/)/.test(comment)) {
+      const compact = compactDeclarationComment(comment);
+      if (compact !== comment) text = text.slice(0, start) + compact + text.slice(end);
+      continue;
+    }
+    text = text.slice(0, start) + comment.replace(/[^\r\n]/g, " ") + text.slice(end);
   }
   return ts.createPrinter().printFile(ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true));
 }
@@ -220,6 +271,47 @@ export async function buildSSR(outdir: string) {
 /** A comment the shipped file keeps: a pure annotation, a licence banner or an @license/@preserve block. */
 function keepComment(comment: string): boolean {
   return /[@#]__PURE__/.test(comment) || comment.startsWith("/*!") || /@license|@preserve/.test(comment);
+}
+
+/**
+ * A declaration's JSDoc, cut to what the package ships: the first summary
+ * sentence, described `@param` names without their types and descriptions,
+ * `@default`, and the whole `@deprecated` note. `@example`, the remaining prose
+ * and a `@param` no source line described are dropped.
+ */
+function compactDeclarationComment(comment: string): string {
+  const body = comment.replace(/^\/\*\*/, "").replace(/\*\/\s*$/, "");
+  const lines = body.split(/\r?\n/).map(line => line.replace(/^\s*\*\s?/, "").trim());
+  const prose: string[] = [];
+  const tags: { name: string; lines: string[] }[] = [];
+  for (const line of lines) {
+    const tag = /^@(\w+)\b/.exec(line);
+    if (tag) tags.push({ name: tag[1]!, lines: [line] });
+    else if (tags.length) tags[tags.length - 1]!.lines.push(line);
+    else prose.push(line);
+  }
+  const summary = prose.filter(line => line !== "");
+  // The first sentence, wherever it ends: a summary line can run on into the
+  // next sentence and wrap before a full stop, and only its first sentence is
+  // the summary. With no full stop anywhere the first line is all there is.
+  const first = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1] ?? summary[0] ?? "";
+  const kept: string[] = first ? [first] : [];
+  for (const tag of tags) {
+    if (tag.name === "param") {
+      const match = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.-]+)(.*)$/.exec(tag.lines[0]!);
+      // A bare `@param name` describes nothing, and the name is already on the
+      // signature the hover shows: it ships only when some line described it.
+      const described = match !== null && [match[2] ?? "", ...tag.lines.slice(1)].some(line => line.trim() !== "");
+      if (match && described) kept.push(`@param ${match[1]}`);
+    } else if (tag.name === "default") {
+      kept.push(tag.lines[0]!);
+    } else if (tag.name === "deprecated") {
+      kept.push(...tag.lines.filter(line => line !== ""));
+    }
+  }
+  if (kept.length === 0) return "";
+  if (kept.length === 1) return `/** ${kept[0]} */`;
+  return `/**\n${kept.map(line => ` * ${line}`).join("\n")}\n */`;
 }
 
 /** The leaf nodes of the parse: every token, trivia and JSDoc excluded. */

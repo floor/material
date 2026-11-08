@@ -126,6 +126,10 @@ describe("explicit contrast levels are opt-in", () => {
     // segmented rows read six list custom properties that the list does not
     // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
+    // A single-select listbox option carries a 20px radio ring in its leading
+    // or trailing slot and fills it when selected; the option itself takes the
+    // row's state layer and a pointer cursor, and a focused option rounds a
+    // segmented row like the row action did (styles/components/_list.scss).
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
@@ -277,6 +281,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The toolbar's collapsed state is the docked bar at the 48dp target area,
+    // and its icon+label button shows the icon alone at the target size, in two
+    // rules (the toolbar's class and :host-context) so SSR's style pruner can
+    // drop each from a root that cannot match it
+    // (styles/components/_toolbar.scss, styles/components/_button.scss).
     // The 14 dead selector groups verified to have no producer in src/ are
     // removed from the dialog, menu, select, slider, tabs and timepicker
     // component sheets (styles/components/_dialog.scss, _menu.scss,
@@ -286,9 +295,21 @@ describe("explicit contrast levels are opt-in", () => {
     // 2dp inside corner at a handle gap, both written by the controller, and the
     // stop indicator's centre sits 6dp from the track's end at every size
     // (styles/components/_slider.scss).
-    expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("5ca8794dd93a95449f4ea8aca8ee9b56309efbf1a0292d66403e3245486807d2");
-    expect(css.length).toBe(531268);
+    // The three status seeds (success, warning, info) are harmonised to each
+    // theme's primary colour and emitted at standard, medium and high contrast
+    // so every status pair reaches 4.5:1 at standard/medium and 7:1 at high
+    // (styles/themes/_base-theme.scss, scripts/generate-themes.ts).
+    // Keyboard-focused menu items, select keyboard-active options and the menu
+    // surface draw an inward ring. Drawer, slider, search, text-field and active
+    // navigation indicators retain the focus fixes on main. Other focus rings
+    // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
+    // and reduced motion use their intended state rules.
+    // Main contrast/focus rules plus the density scale and drawer indicator masks.
+    // Measured by the single-file contrast check after merging 53ae0a44.
+    expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
+      sha256: "c8a69c99d1d57ff4f334ac84d74c1b5aaac89a4c56ef1328d49d77f4b3b9aa2b",
+      length: 546847,
+    });
   });
 
   test("today's sheets still resolve to the fixture", () => {

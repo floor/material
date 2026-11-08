@@ -35,6 +35,13 @@ export type SliderEventType =
  * @interface SliderConfig
  */
 export interface SliderConfig extends BaseComponentConfig {
+  /**
+   * Put ariaLabel only on the input/handle, omitting the generated wrapper label.
+   * Opt-in changes wrapper serialization and [aria-label] selectors.
+   * @default false
+   */
+  controlLabelOnly?: boolean;
+
   /** Minimum value of the slider */
   min?: number;
 

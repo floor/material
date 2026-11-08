@@ -121,6 +121,7 @@ const datepickerSpec = {
     "initial-view": { type: "string", config: "initialView" },
     "close-on-select": { type: "boolean", config: "closeOnSelect" },
     label: { type: "string", config: "label" },
+    "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(v === null ? "" : String(v)) },
     "supporting-text": {
       type: "string",
       config: "supportingText",

@@ -69,7 +69,7 @@ for (const prefix of [PREFIX]) {
     expect(propertyNames(carousel.element)).toEqual([`--${prefix}-carousel-corner`]);
     expect(carousel.element.style.getPropertyValue(`--${prefix}-carousel-corner`)).toBe('19px');
     for (const item of carousel.element.querySelectorAll<HTMLElement>(`.${prefix}-carousel__item`)) {
-      expect(propertyNames(item)).toEqual([`--${prefix}-carousel-fade`]);
+      expect(propertyNames(item)).toEqual([`--${prefix}-carousel-inset`, `--${prefix}-carousel-fade`]);
       expect(Number(item.style.getPropertyValue(`--${prefix}-carousel-fade`))).toBeGreaterThanOrEqual(0);
     }
   });

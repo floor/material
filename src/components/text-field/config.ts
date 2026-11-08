@@ -41,7 +41,7 @@ export const createBaseConfig = (
     type AcceptedKey = keyof TextFieldConfig | keyof BaseComponentConfig | "multiline";
     type Words<S extends string> = S extends `${infer Word} ${infer Rest}` ? Word | Words<Rest> : S;
     const KEY_LIST =
-      "type variant density name label value placeholder required noAsterisk disabled readonly maxLength pattern autocomplete leadingIcon trailingIcon trailingIconLabel onTrailingClick supportingText error prefixText suffixText class prefix componentName className parent id title tabIndex style data role ariaLabel ariaDescribedBy ariaLabelledBy ariaHidden multiline";
+      "type variant density name label value placeholder required noAsterisk disabled readonly maxLength pattern autocomplete leadingIcon trailingIcon trailingIconLabel onTrailingClick supportingText error prefixText suffixText class prefix componentName className parent id title tabIndex style data role ariaLabel ariaDescribedBy ariaLabelledBy ariaHidden multiline controlLabelOnly";
     type ListedKey = Words<typeof KEY_LIST>;
     const _complete: Exclude<AcceptedKey, ListedKey> extends never ? true : never = true;
     const _sound: ListedKey extends AcceptedKey ? true : never = true;
@@ -58,11 +58,14 @@ export const createBaseConfig = (
  * @param {TextFieldConfig} config - TextField configuration
  * @returns {Object} Element configuration object for withElement
  */
-export const getElementConfig = (config: TextFieldConfig) =>
-  createElementConfig(config, {
+export const getElementConfig = (config: TextFieldConfig) => {
+  const wrapper = createElementConfig(config, {
     tag: "div",
     className: config.class,
   });
+  if (config.controlLabelOnly) wrapper.ariaLabel = undefined;
+  return wrapper;
+};
 
 /**
  * Creates API configuration for the TextField component
