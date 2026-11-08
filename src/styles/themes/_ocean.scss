@@ -60,7 +60,7 @@
     --#{$prefix}-sys-color-inverse-primary: #8dcdff;
 
     // Include status colors for light theme
-    @include status-colors-light();
+    @include status-colors-light($success: #006b5e, $warning: #a73a10, $info: #00639b);
 
     &[data-theme-mode="dark"] {
         // Key colors
@@ -102,7 +102,7 @@
         --#{$prefix}-sys-color-inverse-primary: #006493;
 
         // Include status colors for dark theme
-        @include status-colors-dark();
+        @include status-colors-dark($success: #7ad7c6, $on-success: #003730, $warning: #ffb59d, $on-warning: #5d1800, $info: #96cbff, $on-info: #003353);
     }
 }
 
@@ -110,6 +110,9 @@
 @include create-theme-contrast("ocean", (
     medium: (
         light: (
+            success: #003e36,
+            warning: #671c00,
+            info: #00395c,
             error: #740006,
             error-container: #cf2c27,
             on-error-container: #ffffff,
@@ -151,6 +154,12 @@
             inverse-primary: #95cdf7,
         ),
         dark: (
+            success: #90eddc,
+            on-success: #002b26,
+            warning: #ffd3c5,
+            on-warning: #4b1200,
+            info: #c2dfff,
+            on-info: #002842,
             error: #ffd2cc,
             on-error: #540003,
             error-container: #ff5449,
@@ -195,6 +204,9 @@
     ),
     high: (
         light: (
+            success: #00332c,
+            warning: #561600,
+            info: #002f4c,
             error: #600004,
             error-container: #98000a,
             on-error-container: #ffffff,
@@ -236,6 +248,12 @@
             inverse-primary: #95cdf7,
         ),
         dark: (
+            success: #b0ffef,
+            on-success: #000000,
+            warning: #ffece7,
+            on-warning: #000000,
+            info: #e7f1ff,
+            on-info: #000000,
             error: #ffece9,
             on-error: #000000,
             error-container: #ffaea4,

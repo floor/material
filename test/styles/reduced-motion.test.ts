@@ -17,7 +17,7 @@ beforeAll(() => {
 
 describe('reduced motion', () => {
   test('transitions are limited to the properties that fade', () => {
-    expect(block).toContain('transition-property: opacity, color, background-color, border-color, outline-color, box-shadow, visibility !important;');
+    expect(block).toContain('transition-property: opacity, color, background-color, border-color, box-shadow, visibility !important;');
     expect(block).not.toContain('transition-duration');
   });
 
@@ -36,7 +36,7 @@ describe('reduced motion inside the elements\' shadow roots', () => {
   test('the host sheet every shadow root adopts carries the reset\'s rule, declaration for declaration', () => {
     const compressed = compileString(`@use 'base/reset';`, { loadPaths: ['src/styles'], style: 'compressed' }).css;
     const rule = compressed.match(/@media\(prefers-reduced-motion: reduce\)\{.*?(\*,\*::before,\*::after\{[^}]*\})\}/)?.[1] ?? '';
-    expect(rule).toContain('transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility');
+    expect(rule).toContain('transition-property:opacity,color,background-color,border-color,box-shadow,visibility');
     const host = BASE_HOST_STYLES.match(/@media \(prefers-reduced-motion:reduce\)\{(.*)\}$/)?.[1] ?? '';
     expect(normal(host)).toBe(normal(rule));
   });

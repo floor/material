@@ -11,7 +11,6 @@
 // range slider kept its initial aria-valuenow however its value changed, and a
 // valueFormatter shaped the value bubble but never reached assistive technology
 // through aria-valuetext.
-import { corner } from '../../utils/corner';
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -453,7 +452,7 @@ describe('a range slider given no second value', () => {
 // step, including the ends, by the corner radius, so the handle sits on the end
 // tick. The gap between the handle's edge and the track is 6dp, so 8px from the
 // centre of a 4px handle and 7px from a 2px one, and a stop indicator ends every
-// inactive track longer than a corner radius. The container is given a 300px width.
+// inactive track that is drawn. The container is given a 300px width.
 describe('slider track geometry', () => {
   const WIDTH = 300;
   const sized = async (config: Parameters<typeof createSlider>[0]) => {
@@ -482,7 +481,7 @@ describe('slider track geometry', () => {
     expect(inactive!.style.width).toBe('calc(60% - 8px)');
     const end = slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__dot')[1]!;
     expect(end.hidden).toBe(false);
-    expect(end.style.left).toBe('calc(100% - 10px)');
+    expect(end.style.left).toBe('calc(100% - 8px)');
   });
 
   test('a standard slider: active from the start, 8px gaps, an end stop only', async () => {
@@ -491,8 +490,8 @@ describe('slider track geometry', () => {
       { left: '0px', width: 'calc(50% - 8px)', active: true },
       { left: 'calc(50% + 8px)', width: 'calc(50% - 8px)', active: false },
     ]);
-    // Centred one corner radius (8px on XS) from the end: its 4px box starts 2px before.
-    expect(dots(slider)).toEqual([null, 'calc(100% - 10px)']);
+    // Its centre 6px from the end at every size: the 4px box starts 2px before.
+    expect(dots(slider)).toEqual([null, 'calc(100% - 8px)']);
     expect(handles(slider)[0]!.style.left).toBe('50%');
   });
 
@@ -504,18 +503,20 @@ describe('slider track geometry', () => {
     expect(segments(slider)[1]).toEqual({ left: '0px', width: 'calc(50% - 8px)', active: true });
   });
 
-  test('a piece of track at an end shorter than the corner radius is not drawn', async () => {
-    // value 3: the handle at 9px, the active track would run 0 to 1px.
+  test('a piece of track shorter than the corner radius keeps its end', async () => {
+    // value 3: the handle at 9px, the active track 0 to 1px. It used to be dropped,
+    // because the track clipped its pieces and a rounded sliver would show; each
+    // piece now carries its own corners, and the browser scales them to fit.
     const low = await sized({ value: 3 });
-    expect(segments(low)[1]!.width).toBe('0px');
-    // value 96: the inactive track would run 296 to 300.
+    expect(segments(low)[1]!.width).toBe('calc(3% - 8px)');
+    // value 96: the inactive track runs 296 to 300, out to the track's end and stop.
     const high = await sized({ value: 96 });
-    expect(segments(high)[2]!.width).toBe('0px');
-    expect(dots(high)).toEqual([null, null]);
-    // a range whose low handle sits near the start drops its start piece and stop.
+    expect(segments(high)[2]!.width).toBe('calc(4% - 8px)');
+    expect(dots(high)).toEqual([null, 'calc(100% - 8px)']);
+    // a range whose low handle sits inside its own gap still has no start piece.
     const range = await sized({ range: true, value: 2, secondValue: 80 });
     expect(segments(range)[0]!.width).toBe('0px');
-    expect(dots(range)).toEqual([null, 'calc(100% - 10px)']);
+    expect(dots(range)).toEqual([null, 'calc(100% - 8px)']);
   });
 
   test('at the maximum the inactive track and its stop are gone', async () => {
@@ -531,7 +532,7 @@ describe('slider track geometry', () => {
       { left: 'calc(20% + 8px)', width: 'calc(60% - 16px)', active: true },
       { left: 'calc(80% + 8px)', width: 'calc(20% - 8px)', active: false },
     ]);
-    expect(dots(slider)).toEqual(['6px', 'calc(100% - 10px)']);
+    expect(dots(slider)).toEqual(['4px', 'calc(100% - 8px)']);
   });
 
   test('a centred slider: active from the centre, the gap on the handle side only', async () => {
@@ -541,7 +542,7 @@ describe('slider track geometry', () => {
       { left: '50%', width: 'calc(25% - 8px)', active: true },
       { left: 'calc(75% + 8px)', width: 'calc(25% - 8px)', active: false },
     ]);
-    expect(dots(above)).toEqual(['6px', 'calc(100% - 10px)']);
+    expect(dots(above)).toEqual(['4px', 'calc(100% - 8px)']);
     const below = await sized({ centered: true, min: -50, max: 50, value: -25 });
     expect(segments(below)).toEqual([
       { left: '0px', width: 'calc(25% - 8px)', active: false },
@@ -570,10 +571,19 @@ describe('slider track geometry', () => {
 
   test('the corner radius and the handle height follow the size', async () => {
     const radii = { XS: 8, S: 8, M: 12, L: 16, XL: 28 } as const;
+    const steps = { XS: 'small', S: 'small', M: 'medium', L: 'large', XL: 'extra-large' } as const;
     const heights = { XS: 44, S: 44, M: 52, L: 68, XL: 108 } as const;
     for (const size of ['XS', 'S', 'M', 'L', 'XL'] as const) {
       const slider = await sized({ value: 50, size });
-      expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe(corner(radii[size]));
+      // A piece carries the size's outer corner at the end of the track it reaches
+      // and the inside corner at the gap. The track has neither a radius nor a clip.
+      // The outer corner reads the shape token, its px the fallback, so a theme's
+      // corners reach the pieces.
+      const outer = `var(--mtrl-sys-shape-corner-${steps[size]}, ${radii[size]}px)`;
+      const [active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment')).slice(1);
+      expect(active!.style.borderRadius).toBe(`${outer} 2px 2px ${outer}`);
+      expect(inactive!.style.borderRadius).toBe(`2px ${outer} ${outer} 2px`);
+      expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe('');
       expect(slider.element.style.getPropertyValue('--mtrl-slider-handle-height')).toBe(`${heights[size]}px`);
     }
   });

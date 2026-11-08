@@ -124,21 +124,36 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
   /**
    * Sets up initial focus within the menu
    * @param menuElement - The menu element to set focus within
-   * @param interactionType - How the menu was opened; focus lands on the
-   *   first item either way, so this is kept only for callers
+   * @param interactionType - How the menu was opened: a key focuses an item,
+   *   a pointer the surface
+   * @param openingEvent - The event the menu opened on, when there was one
    */
   const handleInitialFocus = (
     menuElement: HTMLElement,
     interactionType: "keyboard" | "mouse",
+    openingEvent?: Event,
   ): void => {
     // Reset typeahead when menu opens
     resetTypeahead();
 
     const items = menuItems(menuElement);
 
-    // ArrowUp on the opener sets the last item to 0, so clear first.
+    // The opening event is the intent: ArrowUp opens on the last item, as the
+    // menu button pattern asks, and every other open takes the first. The last
+    // item focus can reach skips a disabled one; when every item is disabled
+    // the last still takes focus, because the menu leaves focus nowhere
+    // otherwise.
+    const last = openingEvent instanceof KeyboardEvent &&
+      (openingEvent.key === "ArrowUp" || openingEvent.key === "Up");
+    const target = last
+      ? [...items].reverse().find(
+          (item) => !item.classList.contains(component.getClass("menu__item--disabled")),
+        ) ?? items[items.length - 1]
+      : items[0];
+
+    // Set one tab stop: the item focus is about to land on
     items.forEach((item) => item.setAttribute("tabindex", "-1"));
-    items[0]?.setAttribute("tabindex", "0");
+    target?.setAttribute("tabindex", "0");
 
     // An arrow may have moved focus before the opening timer ran. The menu
     // contains itself, so the root is not an item. Submenus live beside the
@@ -147,11 +162,11 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     if (focused !== menuElement && menuElement.contains(focused) ||
       focused?.closest(`.${component.getClass("menu--submenu")}`)?.getAttribute("data-owner") === menuElement.id) return;
 
-    // Opened with a key: focus the first item, which is what the spec asks
-    // for and what a person navigating by key expects to see marked
+    // Opened with a key: focus an item, which is what the spec asks for and
+    // what a person navigating by key expects to see marked
     // (m3.material.io menu accessibility, "Initial focus").
     if (interactionType === "keyboard" && items.length > 0) {
-      items[0].focus();
+      target.focus();
       return;
     }
 

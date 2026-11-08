@@ -57,7 +57,10 @@ describe("the component subpaths' exports", () => {
     }
   });
 
-  test("3.0.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
+  // 3.0.0 removed the constants 0.10.0 had deprecated. Since 3.12 a public
+  // name may be deprecated ahead of a 4.0 removal instead: the fixture pins
+  // which names are deprecated, so the change is deliberate and reviewed.
+  test("the constants 0.10.0 deprecated are gone from every subpath", () => {
     const gone = ["checkbox:CHECKBOX_VARIANTS", "radios:RADIO_VARIANTS", "radios:RADIO_LABEL_POSITIONS", "radios:RADIO_SIZES",
       "radios:RADIO_CLASSES", "timepicker:TIMEPICKER_DIAL", "timepicker:TIMEPICKER_Z_INDEX", "timepicker:TIMEPICKER_CLASSES"];
     const present = gone.flatMap((entry) => {
@@ -65,7 +68,6 @@ describe("the component subpaths' exports", () => {
       return [component!, `${component}/constants`].filter((key) => now[key]?.some((e) => e.name === name)).map((key) => `${key}:${name}`);
     });
     expect(present).toEqual([]);
-    expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
   });
 
   test("every component's variant type is exported from its subpath and from the root, as a public variant option's type", () => {

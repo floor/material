@@ -1467,6 +1467,13 @@
       "BaseComponent"
     ]
   },
+  "SchemeMode": {
+    "kind": "union",
+    "members": [
+      "\"dark\"",
+      "\"light\""
+    ]
+  },
   "SearchConfig.suggestions": {
     "kind": "union",
     "members": [
@@ -1617,6 +1624,13 @@
       "\"standard\""
     ]
   },
+  "SingleSelectListboxOptions.indicator": {
+    "kind": "union",
+    "members": [
+      "\"leading\"",
+      "\"trailing\""
+    ]
+  },
   "SliderConfig": {
     "kind": "extends",
     "bases": [
@@ -1736,6 +1750,13 @@
     "members": [
       "((element: E) => void)",
       "E"
+    ]
+  },
+  "SpecVersion": {
+    "kind": "union",
+    "members": [
+      "\"2021\"",
+      "\"2025\""
     ]
   },
   "SplitButtonElementComponent": {
@@ -1997,6 +2018,18 @@
       "\"tertiary-fixed-dim\""
     ]
   },
+  "ThemeVariant": {
+    "kind": "union",
+    "members": [
+      "\"content\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"tonal-spot\"",
+      "\"vibrant\""
+    ]
+  },
   "ThrottleComponent": {
     "kind": "extends",
     "bases": [
@@ -2182,6 +2215,7 @@
   "ToolbarScrollBehavior": {
     "kind": "union",
     "members": [
+      "\"collapse\"",
       "\"exit\"",
       "\"none\""
     ]
