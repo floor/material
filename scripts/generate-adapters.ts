@@ -163,13 +163,17 @@ ${entries}
 }
 `;
   }
-  const union = (names: Map<string, string[]>, type: (spec: string, name: string) => string): string =>
-    [...names].map(([name, specs]) => `      "${name}": ${specs.map((spec) => type(spec, name)).join(" | ")};`).join("\n");
+  const specUnion = elementModules.map(({ name, module: from }) => `import("../elements/${from}").${pascal(name)}Spec`).join(" | ");
+  const list = (names: Map<string, string[]>, fn: string): string =>
+    [...names.keys()].map((name) => `      "${name}": ${fn}<"${name}">;`).join("\n");
   return `${header}import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
 import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+type Spec = ${specUnion};
+type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
+type Ev<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it
@@ -179,11 +183,11 @@ ${entries}
     }
     /** \`prop:checked\`, \`prop:value\`: the elements' live properties. */
     interface ExplicitProperties {
-${union(byName("properties"), (spec, name) => `NonNullable<ElementProperties<${spec}>["${name}"]>`)}
+${list(byName("properties"), "Prop")}
     }
     /** \`on:change\` and the other element events. */
     interface CustomEvents {
-${union(byName("events"), (spec, name) => `ElementEvents<${spec}>["${name}"]`)}
+${list(byName("events"), "Ev")}
     }
   }
 }

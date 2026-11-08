@@ -149,9 +149,28 @@ $component: "#{$prefix}-menu";
             outline: none;
         }
 
+        // md.comp.focus-ring: 3dp in secondary, drawn inward because an item
+        // fills the list's width inside a scroll container that would clip an
+        // outward ring.
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
+        }
+
         &:focus-visible,
             &--active {
             @include m.state-layer(t.color("on-surface"), "focus");
+        }
+
+        // The select's active option is where the keyboard is, but focus
+        // stays in its combobox input, so :focus-visible never matches it.
+        // The select marks the option a key reached, and only then: a pointer
+        // opening or a hover draws no ring. md.comp.focus-ring: 3dp in
+        // secondary, drawn inward because an item fills the list's width
+        // inside a scroll container that would clip an outward ring.
+        &--keyboard-active {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
         }
 
         &:active {
@@ -346,8 +365,13 @@ $component: "#{$prefix}-menu";
         background-color: t.color("outline-variant");
     }
 
-    // Accessibility
-    @include m.focus-ring(".#{$component}__item:focus-visible");
+    // Accessibility: when a keyboard open lands on the menu surface itself
+    // (an empty menu, or one whose items are all hidden), the surface holds
+    // :focus-visible and draws the 3dp inward secondary focus ring.
+    &:focus-visible {
+        outline: 3px solid t.color("secondary");
+        outline-offset: -3px;
+    }
 
     // Reduced motion preference support
     @include m.reduced-motion {

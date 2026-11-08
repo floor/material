@@ -39,6 +39,11 @@ try {
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),
       exports: relocate(pkg.exports),
     };
+    // The nested manifest lets the prunes below and the reachability checks
+    // read the relocated export map in place. It is not a published file:
+    // package.json's `files` excludes dist/package.json (`dist` inherits the
+    // root `type` and `sideEffects`), and the package size check asserts it
+    // stays out of the tarball.
     await writeFile(`${staging}/package.json`, JSON.stringify(manifest, null, 2) + "\n");
 
     // The compiler emits a declaration for every module, including the ones no
