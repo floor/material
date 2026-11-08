@@ -223,6 +223,7 @@ const menuSpec = {
     variant: { type: "string", config: "variant" },
     color: { type: "string", config: "color" },
     "no-close-on-select": { type: "boolean", config: "noCloseOnSelect" },
+    /** @deprecated See MenuConfig.dense; the dense variant is removed in 4.0. */
     dense: { type: "boolean", config: "dense" },
     "max-height": { type: "string", config: "maxHeight", update: (c, v) => void (c.element.style.maxHeight = v === null ? "" : String(v)) },
     // Names the surface; set again in setup, the factory takes no label

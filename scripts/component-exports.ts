@@ -36,9 +36,18 @@ const kindOf = (symbol: ts.Symbol): ComponentExport["kind"] =>
 export const constantsNames = (): string[] =>
   componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/constants.ts`))).map((name) => `${name}/constants`);
 
+/**
+ * Component subpaths beyond an index and its constants: modules a page
+ * imports on purpose, which the component's index does not re-export, so
+ * their bytes stay out of that component's own graph.
+ */
+export const extraSubpaths = (): string[] => ["tabs/responsive"];
+
 export function readComponentExports(): ComponentExports {
-  const names = [...componentNames(), ...constantsNames()].sort();
-  const files = names.map((name) => join(ROOT, `src/components/${name.endsWith("/constants") ? `${name}.ts` : `${name}/index.ts`}`));
+  const extra = extraSubpaths();
+  const names = [...componentNames(), ...constantsNames(), ...extra].sort();
+  const files = names.map((name) =>
+    join(ROOT, `src/components/${name.endsWith("/constants") || extra.includes(name) ? `${name}.ts` : `${name}/index.ts`}`));
   const program = ts.createProgram(files, {
     strict: true, skipLibCheck: true, noEmit: true,
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,

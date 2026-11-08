@@ -304,6 +304,10 @@
       "types": "./dist/components/tabs/constants.d.ts",
       "import": "./dist/components/tabs/constants.js"
     },
+    "./components/tabs/responsive": {
+      "types": "./dist/components/tabs/responsive.d.ts",
+      "import": "./dist/components/tabs/responsive.js"
+    },
     "./components/text-field": {
       "types": "./dist/components/text-field/index.d.ts",
       "import": "./dist/components/text-field/index.js"
@@ -549,7 +553,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
-    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts",
+    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts && bun run scripts/check-a11y-name-role-e.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "dist-modules:check": "bun run scripts/check-dist-modules.ts",
     "syntax:check": "bun run scripts/check-syntax-floor.ts",

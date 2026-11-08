@@ -101,6 +101,7 @@ declare module "solid-js" {
       "select": Ev<"select">;
       "show": Ev<"show">;
       "hide": Ev<"hide">;
+      "focus": Ev<"focus">;
       "cancel": Ev<"cancel">;
       "confirm": Ev<"confirm">;
     }

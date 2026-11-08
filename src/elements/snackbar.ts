@@ -10,6 +10,12 @@
  * `show()` or by setting `open`, and dispatches `open`, `action` and `close`
  * (once per close, its `detail.reason` saying why).
  *
+ * `focus-shortcut` is the non-character key that moves focus to the action
+ * while the snackbar is on screen (default `"F8"`; no modifier may be held);
+ * `"false"`, `"off"` or empty turns it off, and a single character is refused
+ * because WCAG 2.1.4 would then apply. Moving focus that way dispatches
+ * `focus`.
+ *
  * Snackbars share the factory's queue, elements and factories alike: one
  * shows at a time, the others wait their turn in the order they were shown.
  * `open` is true from `show()` on, while it waits too; the `open` event comes
@@ -64,6 +70,7 @@ const snackbarSpec = {
       update: (c, v) => void c.setPosition((v ?? "center") as SnackbarPosition),
     },
     "queue-behavior": { type: "string", config: "queueBehavior" },
+    "focus-shortcut": { type: "string", config: "focusShortcut" },
   },
   properties: {
     open: { get: (c) => c.isOpen(), set: (c, v) => void (v ? c.show() : c.hide()) },
@@ -73,6 +80,7 @@ const snackbarSpec = {
     open: { detail: () => null, state: true },
     action: { detail: () => null },
     close: { detail: (event) => ({ reason: (event as SnackbarEvent).reason }), state: true },
+    focus: { detail: () => null },
   },
   config: (host) => (host.hasAttribute("message") ? {} : { message: messageOf(host) }),
   setup: (host, component) => {
