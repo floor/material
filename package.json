@@ -32,6 +32,7 @@
     "**/*.scss",
     "**/styles/*.js",
     "**/elements/css/*.js",
+    "**/theme/spec2025.js",
     "**/ssr/index.js",
     "**/ssr/react.js",
     "**/ssr/svelte.js",
@@ -354,7 +355,7 @@
     "./elements/css/hosts/*.css": "./dist/elements/css/hosts/*.css",
     "./elements/css/*.css": "./dist/elements/css/*.css",
     "./elements/css/*": {
-      "types": "./dist/elements/css/*.d.ts",
+      "types": "./dist/elements/css/index.d.ts",
       "import": "./dist/elements/css/*.js"
     },
     "./elements/preupgrade.css": {
@@ -439,8 +440,12 @@
       "types": "./dist/theme/image.d.ts",
       "import": "./dist/theme/image.js"
     },
+    "./theme/2025": {
+      "types": "./dist/theme/2025.d.ts",
+      "import": "./dist/theme/2025.js"
+    },
     "./styles/*": {
-      "types": "./dist/styles/*.d.ts",
+      "types": "./dist/styles.d.ts",
       "import": "./dist/styles/*.js"
     },
     "./themes/*": "./dist/themes/*.css",
@@ -543,7 +548,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
-    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts",
+    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "dist-modules:check": "bun run scripts/check-dist-modules.ts",
     "syntax:check": "bun run scripts/check-syntax-floor.ts",

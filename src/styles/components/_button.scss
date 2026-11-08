@@ -8,6 +8,7 @@
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-button';
+$collapsed: '.#{base.$prefix}-toolbar--collapsed';
 
 // =============================================================================
 // BUTTON COMPONENT STYLES
@@ -180,6 +181,17 @@ $content-color: (
 
   &__text {
     @include m.truncate;
+
+    // Keep collapsed label rules beside the label styles. Separate arms keep
+    // the class rule working in engines without :host-context, and let the
+    // SSR pruner drop either arm independently. The label remains the name.
+    :host-context(#{$collapsed}) .#{$component}--icon & {
+      @include m.visually-hidden;
+    }
+
+    #{$collapsed} .#{$component}--icon & {
+      @include m.visually-hidden;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -497,4 +509,30 @@ $content-color: (
   &[disabled].#{$component}--progress .#{$component}__progress {
     opacity: 0.7;
   }
+}
+
+// -----------------------------------------------------------------------------
+// A button in a collapsed toolbar (styles/components/_toolbar.scss, the
+// docked `scrollBehavior: 'collapse'` state): an icon+label button shows its
+// icon only. The label leaves the layout but stays the control's accessible
+// name, and the button squares up around the icon at the 48dp target area, as
+// an icon button (the s size keeps its 48dp ::after target). A label-only
+// button keeps its label, so it never becomes an empty pill.
+//
+// A toolbar element mirrors its collapsed class onto the <m-toolbar> host: no
+// descendant selector of the toolbar's sheet reaches a slotted item across
+// the shadow boundary, so the button's own shadow sheet reads the host's
+// class through :host-context. The two arms are separate rules, so an engine
+// without :host-context drops that rule alone and keeps the class one, and
+// the SSR style pruner (src/ssr/prune-styles.ts) can drop each one from a
+// rendered root whose markup carries no matching class.
+// -----------------------------------------------------------------------------
+#{$collapsed} .#{$component}--icon {
+  min-width: v.button('touch-target');
+  padding-inline: v.button('padding-icon');
+}
+
+:host-context(#{$collapsed}) .#{$component}--icon {
+  min-width: v.button('touch-target');
+  padding-inline: v.button('padding-icon');
 }

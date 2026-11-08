@@ -273,6 +273,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
+    // The toolbar's collapsed state is the docked bar at the 48dp target area,
+    // and its icon+label button shows the icon alone at the target size, in two
+    // rules (the toolbar's class and :host-context) so SSR's style pruner can
+    // drop each from a root that cannot match it
+    // (styles/components/_toolbar.scss, styles/components/_button.scss).
     // The 14 dead selector groups verified to have no producer in src/ are
     // removed from the dialog, menu, select, slider, tabs and timepicker
     // component sheets (styles/components/_dialog.scss, _menu.scss,
@@ -291,10 +296,9 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    // Combined CI 42420200880, unit job 128546761427.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b618ba664f4ed7613cb0f67f741c6d57a96370a30c2720dfc11389bcce3a2b58",
-      length: 545237,
+      sha256: "175f056121b7f5dcdd4869a57e26dfd973c6384b71b47ad5c703e5a11c2c4ec8",
+      length: 546159,
     });
   });
 

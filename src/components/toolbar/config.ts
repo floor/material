@@ -45,6 +45,7 @@ export interface ResolvedToolbarConfig extends ToolbarConfig {
   fabPosition: ToolbarFabPosition;
   elevated: boolean;
   exit: boolean;
+  collapse: boolean;
   scrollThreshold: number;
 }
 
@@ -95,6 +96,15 @@ export const createConfig = (config: ToolbarConfig = {}): ResolvedToolbarConfig 
     // level used here. The docked toolbar has "No shadow".
     elevated: floating && merged.elevated !== false,
     exit: merged.scrollBehavior === TOOLBAR_SCROLL_BEHAVIORS.EXIT,
+    // The height shrink is the docked toolbar's (m3.material.io toolbars
+    // guidelines: "Only shrink the height and use extra small buttons if
+    // vertical space is limited"). A floating toolbar's scroll collapse is a
+    // different behaviour — into a FAB or key action — and is a later release:
+    // the value has no effect on a floating toolbar yet. A vertical docked
+    // toolbar cannot exist (orientation resolves to horizontal), so there is
+    // no vertical collapse to resolve here.
+    collapse:
+      !floating && merged.scrollBehavior === TOOLBAR_SCROLL_BEHAVIORS.COLLAPSE,
     scrollThreshold: Math.max(0, Number(merged.scrollThreshold) || 0),
   };
 };
