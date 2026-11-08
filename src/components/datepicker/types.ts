@@ -203,6 +203,9 @@ export interface DatePickerConfig {
    * @example 'Select Date'
    */
   label?: string;
+
+  /** Accessible name of the calendar dialog; defaults to the visible label. */
+  ariaLabel?: string;
   
   /** 
    * Placeholder text for the input field
@@ -406,6 +409,9 @@ export interface DatePickerComponent<V = DatePickerValue> {
 
   /** The supporting text; empty or null shows the date format */
   setSupportingText: (text: string | null) => DatePickerComponent<V>;
+
+  /** Names the calendar dialog; empty restores its visible label. */
+  setAriaLabel: (label: string) => DatePickerComponent<V>;
   
   /**
    * Gets the formatted date string based on the selected date(s)

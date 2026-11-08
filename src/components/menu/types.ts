@@ -183,8 +183,9 @@ export interface MenuConfig {
   /**
    * Menu variant. `'vertical'` is the M3 expressive menu: a rounded
    * container holding items that sit apart and change shape as they are
-   * hovered, focused, pressed or selected.
-   * @default 'baseline'
+   * hovered, focused, pressed or selected. `'baseline'` restores the
+   * squared 4dp container and 48dp items.
+   * @default 'vertical'
    */
   variant?: MenuVariant;
 
@@ -315,6 +316,11 @@ export interface MenuConfig {
    * Additional CSS classes to add to the menu
    */
   class?: string;
+
+  /**
+   * Accessible label for assistive technology on the menu surface and list
+   */
+  ariaLabel?: string;
 
   /**
    * Component prefix for CSS class names
@@ -708,7 +714,8 @@ export interface MenuFeatureHost {
     ) => void;
     handleInitialFocus: (
       menuElement: HTMLElement,
-      interactionType: "keyboard" | "mouse"
+      interactionType: "keyboard" | "mouse",
+      openingEvent?: Event
     ) => void;
     // Read by the opener feature, so a menu has one Tab tracker rather than
     // two: the same key press decides focus for both.
@@ -736,4 +743,10 @@ export interface MenuFeatureHost {
     hasOpenSubmenu: () => boolean;
     getActiveSubmenus: () => Array<{ element: HTMLElement }>;
   };
+}
+
+declare module "../../core/config/global" {
+  interface ComponentConfigMap {
+    menu?: Partial<MenuConfig>;
+  }
 }

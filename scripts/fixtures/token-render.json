@@ -640,30 +640,30 @@
   ],
   [
    "5:div.mtrl-slider__track",
-   "8px 8px 8px 8px",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-slider__segment",
+   "8px 2px 2px 8px",
    "Roboto, sans-serif",
    true,
    true
   ],
   [
-   "6:div.mtrl-slider__segment",
-   "2px 2px 2px 2px",
-   "Roboto, sans-serif",
-   false,
-   true
-  ],
-  [
    "7:div.mtrl-slider__segment.mtrl-slider__segment--active",
-   "2px 2px 2px 2px",
+   "8px 2px 2px 8px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
    "8:div.mtrl-slider__segment",
-   "2px 2px 2px 2px",
+   "2px 8px 8px 2px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [

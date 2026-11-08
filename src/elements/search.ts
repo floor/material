@@ -142,8 +142,12 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
   if (widthMin !== undefined) setWidth(search, "min", widthMin);
   if (widthMax !== undefined) setWidth(search, "max", widthMax);
   const input = search.element.querySelector("input") as HTMLInputElement;
+  const surface = search.element.querySelector("dialog");
   // The host manages its mutable label independently of the factory config.
-  if (ariaLabel) input.setAttribute("aria-label", ariaLabel);
+  if (ariaLabel) {
+    input.setAttribute("aria-label", ariaLabel);
+    if (surface?.hasAttribute("aria-label")) surface.setAttribute("aria-label", ariaLabel);
+  }
 
   const { on, off } = search;
   const component: SearchElementComponent = Object.assign(search, {
@@ -206,7 +210,13 @@ const searchSpec = {
         // Reapply the current host label after updating the placeholder fallback.
         c.setPlaceholder(v === null ? "Search" : String(v));
         const label = host.getAttribute("aria-label");
-        if (label !== null) c.input.setAttribute("aria-label", label);
+        if (label !== null) {
+          c.input.setAttribute("aria-label", label);
+          const surface = c.element.querySelector("dialog");
+          if (surface?.hasAttribute("aria-label")) {
+            surface.setAttribute("aria-label", label || "Search");
+          }
+        }
       },
     },
     // The default value; not called once the element is dirty.
@@ -245,7 +255,14 @@ const searchSpec = {
     "aria-label": {
       type: "string",
       config: "ariaLabel",
-      update: (c, v) => c.input.setAttribute("aria-label", v === null ? c.getPlaceholder() : String(v)),
+      update: (c, v) => {
+        const label = v === null ? c.getPlaceholder() : String(v);
+        c.input.setAttribute("aria-label", label);
+        const surface = c.element.querySelector("dialog");
+        if (surface?.hasAttribute("aria-label")) {
+          surface.setAttribute("aria-label", label || "Search");
+        }
+      },
     },
   },
   properties: {

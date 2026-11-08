@@ -41,6 +41,12 @@ export interface SideSheetConfig {
    */
   title?: string;
 
+  /**
+   * Accessible label for assistive technology when no visible `title` headline
+   * is provided.
+   */
+  ariaLabel?: string;
+
   /** Body of the sheet, as markup or an element */
   content?: string | HTMLElement;
 

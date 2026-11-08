@@ -178,8 +178,8 @@ test("ArrowUp leaves one tab stop, and Enter after a close still does", () => {
   const menu = make(false, THREE);
   tick();
   opener.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
-  tick(); // Place the menu; the opener's timer focuses the last item.
-  tick(); // Initial focus runs after that timer.
+  tick(); // Place the menu and schedule initial focus.
+  tick(); // Initial focus reads ArrowUp from the opening event.
   const items = () => Array.from(menu.element.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
   const afterArrowUp = {
     focus: document.activeElement === items()[2] ? "last" : "other",
@@ -192,7 +192,9 @@ test("ArrowUp leaves one tab stop, and Enter after a close still does", () => {
   tick(); // Remove the closed menu and place it again.
   tick(); // Initial focus of the Enter open.
   expect({ afterArrowUp, afterEnter: { stops: tabStopIds(menu.element) } }).toEqual({
-    afterArrowUp: { focus: "last", stops: ["a"] },
+    // The focused item carries the tab stop, so the last item holds it after
+    // an ArrowUp open. The close and the Enter open move it back to the first.
+    afterArrowUp: { focus: "last", stops: ["c"] },
     afterEnter: { stops: ["a"] },
   });
 });
