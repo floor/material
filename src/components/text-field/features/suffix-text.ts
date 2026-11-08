@@ -1,7 +1,7 @@
 // src/components/text-field/features/suffix-text.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
-import { fieldOf } from './field';
+import { createTextSlot } from './text-slot';
 
 /**
  * Extended element component with lifecycle
@@ -77,54 +77,7 @@ export interface SuffixTextComponent extends BaseComponent, SuffixTextFeature {}
 // `& object` lets a component config that shares no key with SuffixTextConfig through.
 export const withSuffixText = <T extends SuffixTextConfig & object>(config: T) =>
   <C extends LifecycleElementComponent>(component: C): C & SuffixTextFeature => {
-    // The label offsets this feature used to write on a timer are gone:
-    // `placement.ts` owns label positioning and accounts for an icon and a
-    // prefix together, which the hardcoded 44px did not. `api.ts` already
-    // schedules a placement update after every one of these calls.
-    const PREFIX = config.prefix || 'mtrl';
-    const NAME = config.componentName || 'text-field';
-
-    // The slot is created when it is first needed, not only when the option was
-    // set at creation. The setters used to exist only on a component configured
-    // with this slot, so `setSuffixText()` on a plain field did nothing at all
-    // and said nothing about it.
-    let slot: HTMLElement | null = null;
-
-    const ensureSlot = (): HTMLElement => {
-      if (slot && slot.parentNode) return slot;
-      const element = document.createElement('span');
-      element.className = `${PREFIX}-${NAME}__suffix`;
-      fieldOf(component).appendChild(element);
-      component.element.classList.add(`${PREFIX}-${NAME}--with-suffix`);
-      slot = element;
-      return element;
-    };
-
-    const detachSlot = (): void => {
-      slot?.remove();
-      // Clearing the closure reference is the point: it used to keep pointing
-      // at the detached node, so a later `setSuffixText()` wrote into an element
-      // that was no longer in the document and nothing appeared.
-      slot = null;
-      component.element.classList.remove(`${PREFIX}-${NAME}--with-suffix`);
-    };
-
-    const write = (element: HTMLElement, value: string): void => {
-      element.textContent = value;
-    };
-
-    if (config.suffixText) {
-      write(ensureSlot(), config.suffixText);
-    }
-
-    if ('lifecycle' in component && component.lifecycle?.destroy) {
-      const originalDestroy = component.lifecycle.destroy as () => void;
-      component.lifecycle.destroy = () => {
-        slot?.remove();
-        slot = null;
-        originalDestroy.call(component.lifecycle);
-      };
-    }
+    const slot = createTextSlot(config, component, 'suffix');
 
     return {
       ...component,
@@ -134,17 +87,16 @@ export const withSuffixText = <T extends SuffixTextConfig & object>(config: T) =
       // by the time the next feature has spread it. The setters keep this
       // in step through `this`, which at call time is the finished object.
       // Whatever the creation option produced, if it produced anything.
-      suffixTextElement: slot,
+      suffixTextElement: slot.initial,
 
       setSuffixText(text: string) {
-        this.suffixTextElement = ensureSlot();
-        write(this.suffixTextElement, text);
+        this.suffixTextElement = slot.ensure();
+        this.suffixTextElement.textContent = text;
         return this;
       },
 
       removeSuffixText() {
-        if (slot) {
-          detachSlot();
+        if (slot.remove()) {
           this.suffixTextElement = null;
         }
         return this;

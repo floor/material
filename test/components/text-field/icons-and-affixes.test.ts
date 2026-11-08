@@ -33,6 +33,10 @@ g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createTextField from "../../../src/components/text-field";
+import { createBase, withElement } from "../../../src/core/compose/component";
+import { withField } from "../../../src/components/text-field/features/field";
+import { withPrefixText } from "../../../src/components/text-field/features/prefix-text";
+import { withSuffixText } from "../../../src/components/text-field/features/suffix-text";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
@@ -135,6 +139,59 @@ describe("the setters return the field, so they chain", () => {
     expect(chained.leadingIcon).not.toBeNull();
     expect(chained.suffixTextElement?.textContent).toBe("kg");
   });
+});
+
+for (const variant of ["filled", "outlined"] as const) {
+  test(`${variant} affixes stay independent through detachment, empty text and teardown`, () => {
+    const field = mount({ variant, prefixText: "", suffixText: "" }) as never as Record<string, any>;
+    const input = field.input;
+    field.setValue("42");
+    input.focus();
+    expect(field.prefixTextElement).toBeNull();
+    expect(field.suffixTextElement).toBeNull();
+
+    expect(field.setPrefixText("$").setSuffixText("kg")).toBe(field);
+    const prefix = field.prefixTextElement;
+    const suffix = field.suffixTextElement;
+    prefix.remove();
+    expect(field.setPrefixText("€")).toBe(field);
+    expect(field.prefixTextElement).not.toBe(prefix);
+    expect(field.suffixTextElement).toBe(suffix);
+    expect(field.prefixTextElement.parentNode).toBe(field.field);
+    expect(field.removePrefixText().setPrefixText("")).toBe(field);
+    expect(field.prefixTextElement.textContent).toBe("");
+    expect(field.suffixTextElement.textContent).toBe("kg");
+    expect(field.input).toBe(input);
+    expect(input.value).toBe("42");
+    expect(document.activeElement).toBe(input);
+    const lastPrefix = field.prefixTextElement;
+    field.destroy();
+    expect(lastPrefix.parentNode).toBeNull();
+    expect(suffix.parentNode).toBeNull();
+  });
+}
+
+test("affix features keep plain properties through composition and the lifecycle receiver", () => {
+  const config = { prefix: "site", componentName: "cash" };
+  let receiver: unknown;
+  const lifecycle = { destroy() { receiver = this; } };
+  const base = withField(config)({ ...withElement()(createBase(config)), lifecycle });
+  const decorated = withSuffixText(config)(withPrefixText(config)(base));
+  expect(Object.getOwnPropertyDescriptor(decorated, "prefixTextElement")?.get).toBeUndefined();
+  expect(Object.getOwnPropertyDescriptor(decorated, "suffixTextElement")?.get).toBeUndefined();
+  const finished = { ...decorated };
+  expect(finished.setPrefixText("$")).toBe(finished);
+  expect(finished.setSuffixText("kg")).toBe(finished);
+  const prefix = finished.prefixTextElement!;
+  const suffix = finished.suffixTextElement!;
+  expect(prefix.className).toBe("site-cash__prefix");
+  expect(suffix.className).toBe("site-cash__suffix");
+  expect(prefix.parentNode).toBe(base.field);
+  expect(suffix.parentNode).toBe(base.field);
+  finished.lifecycle.destroy();
+  expect(receiver).toBe(lifecycle);
+  expect(prefix.parentNode).toBeNull();
+  expect(suffix.parentNode).toBeNull();
 });
 
 describe("placement is batched", () => {
