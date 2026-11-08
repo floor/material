@@ -74,34 +74,40 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
     // Get the disabled class based on component name
     const disabledClass = `${component.getClass(config.componentName || component.componentName || 'component')}--disabled`;
 
-    const applyDisabled = (on: boolean): void => {
-      if (on) component.element.classList.add(disabledClass);
-      else component.element.classList.remove(disabledClass);
-
-      // Keep the live target reads and native/ARIA distinction in both directions.
-      if (hasDisableableInput(component)) {
-        component.input.disabled = on;
-        if (on) component.input.setAttribute('disabled', 'true');
-        else component.input.removeAttribute('disabled');
-      } else if (isFormControl(component.element)) {
-        component.element.disabled = on;
-        if (on) component.element.setAttribute('disabled', 'true');
-        else component.element.removeAttribute('disabled');
-      } else if (on) {
-        component.element.setAttribute('aria-disabled', 'true');
-      } else {
-        component.element.removeAttribute('aria-disabled');
-      }
-    };
-
+    // Directly implement disabled functionality
     const disabled: DisabledManager = {
       enable() {
-        applyDisabled(false);
+        component.element.classList.remove(disabledClass);
+        
+        if (hasDisableableInput(component)) {
+          component.input.disabled = false;
+          component.input.removeAttribute('disabled');
+        } else if (isFormControl(component.element)) {
+          component.element.disabled = false;
+          component.element.removeAttribute('disabled');
+        } else {
+          component.element.removeAttribute('aria-disabled');
+        }
+        
         return this;
       },
 
       disable() {
-        applyDisabled(true);
+        component.element.classList.add(disabledClass);
+        
+        if (hasDisableableInput(component)) {
+          component.input.disabled = true;
+          component.input.setAttribute('disabled', 'true');
+        } else if (isFormControl(component.element)) {
+          component.element.disabled = true;
+          component.element.setAttribute('disabled', 'true');
+        } else {
+          // A root that is not a form control has no `disabled`: the bare
+          // attribute is not valid there and tells assistive technology
+          // nothing. aria-disabled does.
+          component.element.setAttribute('aria-disabled', 'true');
+        }
+        
         return this;
       },
 
