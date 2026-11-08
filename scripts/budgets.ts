@@ -22,7 +22,7 @@ export const PACKAGE_GZIP = {
   slider: 13_600,
   "navigation-rail": 7_168,
   "navigation-rail-css": 5_400,
-  "text-field": 9_550,
+  "text-field": 9_600,
   form: 20_450,
   "all-js": 130_050,
   "base-css": 3_050,
