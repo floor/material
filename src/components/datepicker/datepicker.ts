@@ -85,14 +85,23 @@ const createDatePicker = <M extends string = "single">(
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
   const nameDialog = () => {
-    const name = settings.ariaLabel?.trim() || (!modal ? state.label : "");
-    dialog.removeAttribute(name ? "aria-labelledby" : "aria-label");
-    dialog.setAttribute(name ? "aria-label" : "aria-labelledby", name || `${id}-title`);
+    const name = settings.ariaLabel?.trim();
+    if (name || !modal) {
+      dialog.removeAttribute("aria-labelledby");
+      dialog.setAttribute("aria-label", name || state.label);
+    } else {
+      dialog.removeAttribute("aria-label");
+      dialog.setAttribute("aria-labelledby", `${id}-title`);
+    }
   };
   nameDialog();
   const announcement = make("div", "sr-only", undefined, { "aria-live": "polite", "aria-atomic": "true" });
   field.append(input, trigger); base.element.append(label, field, help, error, dialog);
-  const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat, state.locale) + (date && end ? ` - ${formatDate(end, state.dateFormat, state.locale)}` : "");
+  const formatted = (date: Date | null, end: Date | null, pattern = state.dateFormat, separator = " - ") => {
+    const format = (value: Date | null) => formatDate(value, pattern, state.locale);
+    return format(date) + (date && end ? separator + format(end) : "");
+  };
+  const parseEntry = (value: string) => parseInputDate(value, state.dateFormat, state.locale);
   const getValue = (): DatePickerValue => committed ? committedEnd ? [new Date(committed), new Date(committedEnd)] : new Date(committed) : null;
   const syncInput = () => {
     input.value = formatted(committed, committedEnd); input.removeAttribute("aria-invalid"); error.textContent = "";
@@ -236,7 +245,7 @@ const createDatePicker = <M extends string = "single">(
   const validateEntries = (): boolean => {
     const fields = Array.from(dialog.querySelectorAll<HTMLInputElement>('[data-entry]'));
     if (!fields.length) return !!state.selectedDate && state.isAllowed(state.selectedDate) && (state.selectionMode !== "range" || !!state.rangeEndDate && state.isAllowed(state.rangeEndDate));
-    const values = fields.map(field => parseInputDate(field.value, state.dateFormat, state.locale));
+    const values = fields.map(field => parseEntry(field.value));
     let valid = true;
     fields.forEach((field, index) => {
       const date = values[index];
@@ -248,7 +257,7 @@ const createDatePicker = <M extends string = "single">(
     if (valid) {
       state.selectedDate = values[0]; state.rangeEndDate = values[1] ?? null; setDisplayDate(values[0]!);
       const headline = dialog.querySelector<HTMLElement>(`.${cls("headline")}`);
-      if (headline) headline.textContent = formatDate(state.selectedDate, "MMM D, YYYY", state.locale) + (state.rangeEndDate ? ` – ${formatDate(state.rangeEndDate, "MMM D, YYYY", state.locale)}` : "");
+      if (headline) headline.textContent = formatted(state.selectedDate, state.rangeEndDate, "MMM D, YYYY", " – ");
     }
     return valid;
   };
@@ -257,7 +266,7 @@ const createDatePicker = <M extends string = "single">(
     if (modal || destroyed || base.disabled.isDisabled()) return;
     if (!input.value.trim()) { clearValue(true); return; }
     const pieces = state.selectionMode === "range" ? input.value.split(' - ') : [input.value];
-    const dates = pieces.map(value => parseInputDate(value, state.dateFormat, state.locale));
+    const dates = pieces.map(parseEntry);
     if (dates.length !== (state.selectionMode === 'range' ? 2 : 1) || dates.some(date => !date || !state.isAllowed(date)) || dates[1] && dates[0] && dates[1] < dates[0]) {
       input.setAttribute("aria-invalid", "true"); error.textContent = `Enter a selectable ${state.selectionMode === "range" ? "date range" : "date"} (${state.dateFormat}).`; return;
     }
