@@ -77,29 +77,5 @@ export interface SuffixTextComponent extends BaseComponent, SuffixTextFeature {}
 // `& object` lets a component config that shares no key with SuffixTextConfig through.
 export const withSuffixText = <T extends SuffixTextConfig & object>(config: T) =>
   <C extends LifecycleElementComponent>(component: C): C & SuffixTextFeature => {
-    const slot = createTextSlot(config, component, 'suffix');
-
-    return {
-      ...component,
-      // A plain property, not an accessor. These features are composed by
-      // piping `{...component}` through each one, and a spread invokes a
-      // getter and copies its value — so an accessor defined here is gone
-      // by the time the next feature has spread it. The setters keep this
-      // in step through `this`, which at call time is the finished object.
-      // Whatever the creation option produced, if it produced anything.
-      suffixTextElement: slot.initial,
-
-      setSuffixText(text: string) {
-        this.suffixTextElement = slot.ensure();
-        this.suffixTextElement.textContent = text;
-        return this;
-      },
-
-      removeSuffixText() {
-        if (slot.remove()) {
-          this.suffixTextElement = null;
-        }
-        return this;
-      }
-    };
+    return createTextSlot(config, component, 'suffix');
   };

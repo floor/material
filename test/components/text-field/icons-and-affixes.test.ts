@@ -175,7 +175,8 @@ test("affix features keep plain properties through composition and the lifecycle
   const config = { prefix: "site", componentName: "cash" };
   let receiver: unknown;
   const lifecycle = { destroy() { receiver = this; } };
-  const base = withField(config)({ ...withElement()(createBase(config)), lifecycle });
+  const element = { ...withElement()(createBase(config)), lifecycle };
+  const base = withField(config)(element);
   const decorated = withSuffixText(config)(withPrefixText(config)(base));
   expect(Object.getOwnPropertyDescriptor(decorated, "prefixTextElement")?.get).toBeUndefined();
   expect(Object.getOwnPropertyDescriptor(decorated, "suffixTextElement")?.get).toBeUndefined();
@@ -188,7 +189,7 @@ test("affix features keep plain properties through composition and the lifecycle
   expect(suffix.className).toBe("site-cash__suffix");
   expect(prefix.parentNode).toBe(base.field);
   expect(suffix.parentNode).toBe(base.field);
-  finished.lifecycle.destroy();
+  lifecycle.destroy();
   expect(receiver).toBe(lifecycle);
   expect(prefix.parentNode).toBeNull();
   expect(suffix.parentNode).toBeNull();

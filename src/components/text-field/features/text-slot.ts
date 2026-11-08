@@ -1,5 +1,7 @@
 import type { ElementComponent } from '../../../core/compose/component';
 import { fieldOf } from './field';
+import type { PrefixTextFeature } from './prefix-text';
+import type { SuffixTextFeature } from './suffix-text';
 
 interface TextSlotConfig {
   prefix?: string;
@@ -13,11 +15,13 @@ interface TextSlotComponent extends ElementComponent {
 }
 
 /** Private DOM state shared by the two independently reported text slots. */
-export const createTextSlot = (
+export function createTextSlot<C extends TextSlotComponent>(config: TextSlotConfig, component: C, side: 'prefix'): C & PrefixTextFeature;
+export function createTextSlot<C extends TextSlotComponent>(config: TextSlotConfig, component: C, side: 'suffix'): C & SuffixTextFeature;
+export function createTextSlot(
   config: TextSlotConfig,
   component: TextSlotComponent,
   side: 'prefix' | 'suffix',
-) => {
+): unknown {
   const prefix = config.prefix || 'mtrl';
   const name = config.componentName || 'text-field';
   let slot: HTMLElement | null = null;
@@ -44,15 +48,26 @@ export const createTextSlot = (
     };
   }
 
+  const member = `${side}TextElement`;
+  const title = side === 'prefix' ? 'Prefix' : 'Suffix';
   return {
-    initial: slot,
-    ensure,
-    remove(): boolean {
-      if (!slot) return false;
-      slot.remove();
-      slot = null;
-      component.element.classList.remove(`${prefix}-${name}--with-${side}`);
-      return true;
+    ...component,
+    // A data property survives the subsequent feature spreads. The methods
+    // update the finished object's report through their live receiver.
+    [member]: slot,
+    [`set${title}Text`](this: Record<string, unknown>, text: string) {
+      this[member] = ensure();
+      (this[member] as HTMLElement).textContent = text;
+      return this;
+    },
+    [`remove${title}Text`](this: Record<string, unknown>) {
+      if (slot) {
+        slot.remove();
+        slot = null;
+        component.element.classList.remove(`${prefix}-${name}--with-${side}`);
+        this[member] = null;
+      }
+      return this;
     },
   };
-};
+}
