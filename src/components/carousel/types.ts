@@ -29,6 +29,21 @@ export interface CarouselSlide {
   image?: string;
   /** Alternative text for the image; empty when the image is decorative */
   alt?: string;
+  /**
+   * Intrinsic width of the image in pixels, the `img`'s `width` attribute:
+   * the ratio the browser reserves before the file arrives.
+   */
+  width?: number;
+  /** Intrinsic height of the image in pixels, the `img`'s `height` attribute */
+  height?: number;
+  /**
+   * When the browser fetches the image. "lazy" for every slide after the
+   * first and "eager" for the first, so the opening slide paints with the
+   * page, unless set here.
+   */
+  loading?: "eager" | "lazy";
+  /** How the browser decodes the image; the browser decides when unset */
+  decoding?: "sync" | "async" | "auto";
   title?: string;
   description?: string;
   buttonText?: string;
