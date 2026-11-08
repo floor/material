@@ -35,6 +35,9 @@ export interface DrawerItemConfig {
   /** Icon HTML content (placed before label). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
 
+  /** Icon HTML content shown while this item is the active destination, in place of `icon`. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
+  activeIcon?: string;
+
   /** Badge text (e.g. unread count) */
   badge?: string;
 
