@@ -40,10 +40,10 @@ these rows drift from a fresh measurement.
 | navigation-bar | 16.1 KB | 6.0 KB | +2.9 KB |  |
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
-| loading-indicator | 22.9 KB | 9.3 KB | +6.3 KB |  |
+| loading-indicator | 22.8 KB | 9.3 KB | +6.3 KB |  |
 | split-button | 27.5 KB | 9.5 KB | +6.4 KB | +16.9 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
-| search | 32.2 KB | 10.8 KB | +7.8 KB |  |
+| search | 31.9 KB | 10.8 KB | +7.8 KB |  |
 | select | 41.8 KB | 13.2 KB | +10.1 KB | +10.5 KB |
 | slider | 34.0 KB | 11.9 KB | +8.9 KB |  |
 | snackbar | 36.1 KB | 11.9 KB | +8.9 KB | +6.9 KB |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 393.6 KB | 123.5 KB | +120.5 KB | +2.1 KB |
+| all | 393.2 KB | 123.5 KB | +120.4 KB | +2.1 KB |
 <!-- /size-table -->
