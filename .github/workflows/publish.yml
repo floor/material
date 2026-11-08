@@ -5,10 +5,11 @@
 # dist-tag, anything else under `latest`.
 #
 # Two jobs do the publishing, so the OIDC token exists in as few steps as
-# possible: `verify` runs
-# the checks, the build, the published-manifest step and `npm pack`, and uploads
-# the tarball; `publish` alone holds `id-token: write` and downloads the tarball,
-# re-checks its version and publishes it — no checkout, no install, no build.
+# possible: `verify` runs the checks, the build, the staging and normalization
+# of the published tree, the published-manifest step and `npm pack`, and uploads
+# the tarball; `publish` alone holds `id-token: write` and downloads the
+# tarball, re-checks its version and publishes it — no checkout, no install, no
+# build.
 # A third job, `dist-tags`, re-reads the registry after the publish and fails if
 # `next` was left behind `latest` or the version just published; nothing needs
 # it, so its failure is loud but blocks neither the publish nor the GitHub
@@ -82,16 +83,27 @@ jobs:
 
       - run: bun run build
 
-      # npm packs from the repository root, so the manifest it packs is the root
-      # package.json: drop what only the repository uses. prepublishOnly goes with the
-      # scripts, which is why the build runs as its own step above.
+      # npm packs from a staging copy, never from this checkout: the packable
+      # files are copied to .package-stage and the shipped Sass is normalized
+      # there (silent comments and ordinary indentation leave it, and
+      # scripts/check-styles-package.ts asserts every public entry still
+      # compiles to the same CSS). The step below and the pack both run in the
+      # copy, so the build output is never rewritten.
+      - name: Stage the published tree
+        run: bun scripts/stage-package.ts
+
+      # npm packs the staging directory's manifest: drop what only the repository
+      # uses. prepublishOnly goes with the scripts, which is why the build runs as
+      # its own step above.
       # The README it packs is the root README.md too: npm's page gets the short one,
-      # npm-readme.md, written over it in this job's checkout only (nothing is
+      # npm-readme.md, written over it in the staging copy only (nothing is
       # committed, and no package script rewrites a working tree).
       # scripts/package-fixture.ts runs this step's commands, read from this file by
-      # the step's name, on a copy of the tree for every packed check, and size:check
-      # asserts the result: each pull request proves which manifest and README ship.
+      # the step's name, on its own staged copy for every packed check, and
+      # size:check asserts the result: each pull request proves which manifest and
+      # README ship.
       - name: The published manifest and README
+        working-directory: .package-stage
         run: |
           npm pkg delete scripts eslintConfig typedocOptions
           cp npm-readme.md README.md
@@ -99,7 +111,8 @@ jobs:
       # Packed once, here, with the npm the Node 22 above ships; this exact file
       # is what publish uploads and npm gets.
       - name: Pack the tarball
-        run: npm pack
+        working-directory: .package-stage
+        run: npm pack --pack-destination ..
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

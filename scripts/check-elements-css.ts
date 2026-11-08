@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import { createServer } from "vite";
 import { elements } from "../src/elements";
 import { hostStyleText } from "../src/elements/define";
-import { cascadeLayerOrder } from "./build-styles";
+import { cascadeLayerOrder, styleIdentifier } from "./build-styles";
 import { assertRollbackBeats, repeatedAttributeBytes, specificityText, type Specificity } from "./preupgrade-specificity";
 import { preupgradeRollback } from "../src/elements/styles";
 import { componentStyles, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
@@ -24,13 +24,19 @@ assert.deepEqual(
   "Every element style and dependency must have a JS module",
 );
 
+const stylesJs = await readFile("dist/elements/styles.js", "utf8");
 for (const name of names) {
   const js = await readFile(join(dir, `${name}.js`), "utf8");
   const css = await readFile(join(dir, `${name}.css`), "utf8");
+  const id = styleIdentifier(name);
   assert(css.length > 0, `${name}.css is empty`);
   assert(
-    js.includes(`registerStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });`),
-    `${name}.css differs from the registered CSS string`,
+    js.includes(`registerStyles({ ${JSON.stringify(name)}: ${id} });`),
+    `${name}.js does not register ${id}`,
+  );
+  assert(
+    stylesJs.includes(`export const ${id} = ${JSON.stringify(css)};`),
+    `${name}.css differs from the CSS string in styles.js`,
   );
   assert(!js.includes("registerPreupgrade"), `${name} still registers pre-upgrade rules`);
   assert.equal(
@@ -43,6 +49,27 @@ for (const name of names) {
     pathToFileURL(resolve(dir, `${name}.js`)).href,
     `${name} must keep resolving to the JS registration module`,
   );
+}
+
+for (const name of names) {
+  const bundle = await Bun.build({
+    entrypoints: [resolve(dir, `${name}.js`)],
+    target: "browser",
+    format: "esm",
+    minify: false,
+  });
+  assert(bundle.success, `Failed to bundle ${name}.js: ${bundle.logs}`);
+  const output = await bundle.outputs[0]!.text();
+  const expected = new Set(name === "ripple" ? ["ripple"] : ["ripple", ...resolveStyleDependencies([name])]);
+  for (const candidate of names) {
+    const marker = `var ${styleIdentifier(candidate)} = `;
+    if (expected.has(candidate)) {
+      assert(output.includes(marker), `${name}.js bundle is missing dependency CSS for ${candidate}`);
+    } else {
+      assert(!output.includes(marker), `${name}.js bundle failed to tree-shake unrelated CSS for ${candidate}`);
+    }
+  }
+  assert(!output.includes(":not(:defined)"), `${name}.js bundle failed to tree-shake preupgradeCss from styles.js`);
 }
 
 for (const { spec } of Object.values(elements)) {

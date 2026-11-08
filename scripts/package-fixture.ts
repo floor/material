@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { stagePackage } from "./package-stage";
 
 export async function run(command: string[], cwd = process.cwd()) {
   const child = Bun.spawn(command, { cwd, stdout: "pipe", stderr: "pipe" });
@@ -32,24 +33,18 @@ export async function publishStepCommands(): Promise<string> {
 /**
  * Install the npm tarball without dependencies or network access.
  *
- * The tarball is the one a release publishes, not the working tree's: what npm
- * packs from the root (the manifest's `files`, package.json, README.md and
- * LICENSE) is copied to a staging directory, publish.yml's own step runs there
- * (it strips the manifest and puts npm-readme.md in README.md's place), and
- * npm packs the result. The working tree is never written.
+ * The tarball is the one a release publishes, not the working tree's: the
+ * packable files are staged exactly as publish.yml stages them, with the
+ * shipped Sass normalized (scripts/package-stage.ts), publish.yml's own step
+ * runs there (it strips the manifest and puts npm-readme.md in README.md's
+ * place), and npm packs the result. The working tree is never written.
  */
 export async function createPackageFixture() {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "mtrl-consumer-")));
   const cleanup = () => rm(directory, { recursive: true, force: true });
   try {
     const stage = join(directory, "stage");
-    const manifest = await Bun.file("package.json").json() as { files: string[] };
-    // `files` holds what publishes stages and, with a leading `!`, what npm
-    // excludes: a publish packs the checkout and lets npm apply both.
-    const included = manifest.files.filter(path => !path.startsWith("!"));
-    for (const path of [...included, "package.json", "README.md", "npm-readme.md", "LICENSE"]) {
-      await cp(path, join(stage, path), { recursive: true });
-    }
+    await stagePackage(stage);
     // As GitHub runs a step: bash, stopping at the first failing command.
     await run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", await publishStepCommands()], stage);
     const [pack] = JSON.parse(await run([

@@ -276,6 +276,28 @@ describe.each([
     standard.open();
     expect(calls).toEqual([]);
   });
+
+  test("an already-open non-top modal sheet does not make the outside inert at construction", () => {
+    const outside = document.body.appendChild(document.createElement("button"));
+    const sheet = create({ title: "Share", initialState: "partial", open: true });
+    expect(sheet.isOpen()).toBe(true);
+    expect(outside.hasAttribute("inert")).toBe(false);
+  });
+
+  test("a top-layer sheet's Tab listener is not removed on close and still works after close and re-open", () => {
+    const { sheet } = make();
+    const pressTab = () => {
+      const event = new dom.window.KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      sheet.element.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    sheet.open();
+    expect(pressTab()).toBe(true);
+    sheet.close();
+    expect(pressTab()).toBe(true);
+    sheet.open();
+    expect(pressTab()).toBe(true);
+  });
 });
 
 describe("modal drawer, layer: top", () => {

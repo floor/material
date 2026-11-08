@@ -48,33 +48,30 @@ export const withState =
     /** What had focus before a modal sheet took it */
     let previouslyFocused: HTMLElement | null = null;
     /** Undoes the inert page of a modal sheet outside the top layer */
-    let restorePage: (() => void) | null = null;
-
-    // A modal sheet outside the top layer does what showModal() does for one
-    // inside it: the page goes inert and Tab stays in the sheet. It did
-    // neither.
-    const trap = (on: boolean): void => {
-      if (!isModal || top) return;
-      if (on && !restorePage) {
-        restorePage = inertOutside(element);
-        element.addEventListener("keydown", handleTab);
-      } else if (!on && restorePage) {
-        restorePage();
-        restorePage = null;
-        element.removeEventListener("keydown", handleTab);
-      }
-    };
+    let restorePage: (() => void) | undefined;
+    let escape: ModalEscape | undefined;
 
     // A modal sheet's place among the open modals, while it is open: Escape
     // is a key press handled there, for the topmost one, in both layers
-    let escape: ModalEscape | undefined;
     const onStack = (on: boolean): void => {
       escape?.stop();
-      escape = on && isModal
-        ? onModalEscape(element, () => {
-            if (config.closeOnEscape) close();
-          })
-        : undefined;
+      escape =
+        on && isModal
+          ? onModalEscape(element, () => {
+              if (config.closeOnEscape) close();
+            })
+          : undefined;
+    };
+
+    // A modal sheet outside the top layer does what showModal() does for one
+    // inside it: the page goes inert and Tab stays in the sheet.
+    const trap = (on: boolean): void => {
+      onStack(on);
+      if (!isModal || top) return;
+      restorePage?.();
+      restorePage = on ? inertOutside(element) : undefined;
+      if (on) element.addEventListener("keydown", handleTab);
+      else element.removeEventListener("keydown", handleTab);
     };
 
     const applyState = (next: BottomSheetState): void => {
@@ -96,24 +93,20 @@ export const withState =
     };
 
     const handleKeydown = (event: KeyboardEvent): void => {
-      if (event.key !== "Escape") return;
-      if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
-      if (!config.closeOnEscape) return;
-      // A standard sheet (a modal one is on the stack) sits beside the page,
-      // not over it: Escape pressed elsewhere (closing a menu, say) is not meant for it
-      if (!event.composedPath().includes(element)) return;
+      if (
+        event.key !== "Escape" ||
+        state === BOTTOM_SHEET_STATES.HIDDEN ||
+        !config.closeOnEscape ||
+        !event.composedPath().includes(element)
+      )
+        return;
       event.preventDefault();
       close();
     };
 
-    const handleScrimClick = (): void => {
-      if (config.closeOnScrimClick) close();
-    };
-
-    // In the top layer the root covers the page and a click beside the sheet
-    // lands on it, as on the ::backdrop behind it
-    const handleBackdropClick = (event: MouseEvent): void => {
-      if (event.target === element) handleScrimClick();
+    const handleScrimClick = (event: MouseEvent): void => {
+      if ((event.currentTarget !== element || event.target === element) && config.closeOnScrimClick)
+        close();
     };
 
     // showModal() keeps focus off the page; Tab wraps at the ends rather than
@@ -138,7 +131,6 @@ export const withState =
 
       if (wasHidden) {
         trap(true);
-      onStack(true);
         if (isModal) structure.container.focus();
         component.emit(BOTTOM_SHEET_EVENTS.OPEN);
       }
@@ -148,7 +140,6 @@ export const withState =
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       setState(BOTTOM_SHEET_STATES.HIDDEN);
       trap(false);
-      onStack(false);
       // out of the top layer first: the page is inert until then. The
       // stylesheet keeps it in the top layer while it slides out.
       if (top) hideFromTopLayer(element);
@@ -167,7 +158,7 @@ export const withState =
     if (state !== BOTTOM_SHEET_STATES.HIDDEN) onStack(true);
     let stopCloses: (() => void) | null = null;
     if (top) {
-      element.addEventListener("click", handleBackdropClick);
+      element.addEventListener("click", handleScrimClick);
       element.addEventListener("keydown", handleTab);
       // a close the browser made on its own still closes the sheet
       stopCloses = onTopLayerClose(element, close);
@@ -193,10 +184,9 @@ export const withState =
         release: () => {
           document.removeEventListener("keydown", handleKeydown);
           structure.scrim?.removeEventListener("click", handleScrimClick);
-          element.removeEventListener("click", handleBackdropClick);
+          element.removeEventListener("click", handleScrimClick);
           element.removeEventListener("keydown", handleTab);
           trap(false);
-          onStack(false);
           stopCloses?.();
           if (top) hideFromTopLayer(element);
         },

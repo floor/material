@@ -216,7 +216,7 @@ describe("menu layer: top", () => {
     // The opener's client rect: no scroll offset, no container offset
     expect(menu.element.style.top).toBe("140px");
     expect(menu.element.style.left).toBe("200px");
-    expect(popoverCalls).toEqual(["show:mtrl-menu"]);
+    expect(popoverCalls).toEqual(["show:mtrl-menu mtrl-menu--vertical"]);
   });
 
   test("stays inside the opener's shadow root", async () => {

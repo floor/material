@@ -11,7 +11,7 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "size:check", "readme:check", "docs-imports:check", "styles-package:check", "size",
+  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
   "adapters:size",
   // the browser checks
   "elements:check:a", "elements:check:b", "shadow-styles:check",
@@ -21,7 +21,7 @@ const COMMANDS = [
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check",
-  "core:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "base-lite:check", "ssr:check:a", "ssr:check:b",
+  "core:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "base-lite:check", "component-sheets:check", "ssr:check:a", "ssr:check:b",
 ];
 
 interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
@@ -87,6 +87,11 @@ describe("CI (.github/workflows/ci.yml)", () => {
 
   test("runs only scripts that package.json defines", () => {
     expect(ran.filter(command => command !== "bun test" && !(command in scripts))).toEqual([]);
+  });
+
+  test("runs the keyboard-focus browser check inside core:check", () => {
+    expect(scripts["keyboard-focus:check"]).toBe("bun run scripts/check-keyboard-focus.ts");
+    expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
   });
 
   // A command that may be skipped, or may fail without failing its job, still

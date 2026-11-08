@@ -153,7 +153,7 @@ const withController =
     if (state.selectedItemId && item.id === state.selectedItemId) {
       itemElement.classList.add(`${itemClass}--selected`);
       itemElement.setAttribute("aria-selected", "true");
-    } else {
+    } else if (listbox) {
       itemElement.setAttribute("aria-selected", "false");
     }
 
@@ -268,6 +268,12 @@ const withController =
     menuList.className = `${component.getClass("menu__list")}`;
     menuList.setAttribute("role", listbox ? "listbox" : "menu");
     if (listbox) menuList.id = `${optionIdPrefix}-listbox`;
+    else {
+      const label = component.element.getAttribute("aria-label");
+      const labelledby = component.element.getAttribute("aria-labelledby");
+      if (label) menuList.setAttribute("aria-label", label);
+      if (labelledby) menuList.setAttribute("aria-labelledby", labelledby);
+    }
 
     // A gap separates groups rather than drawing a line across one surface, so
     // the items on either side of it go into their own list. Everything else
@@ -406,7 +412,8 @@ const withController =
         item.setAttribute("aria-selected", "true");
       } else {
         item.classList.remove(`${component.getClass("menu__item--selected")}`);
-        item.setAttribute("aria-selected", "false");
+        if (listbox) item.setAttribute("aria-selected", "false");
+        else item.removeAttribute("aria-selected");
       }
     });
 
@@ -502,6 +509,7 @@ const withController =
         component.keyboard?.handleInitialFocus(
           component.element,
           interactionType,
+          event,
         );
       }, 100);
 

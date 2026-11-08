@@ -143,6 +143,9 @@ export interface TimePickerConfig {
    */
   title?: string;
 
+  /** Accessible dialog name; defaults to the title, then "Select time". */
+  ariaLabel?: string;
+
   /**
    * Whether to show seconds selector
    * @default false
@@ -420,6 +423,9 @@ export interface TimePickerComponent {
    * @returns The time picker component for chaining
    */
   setTitle: (title: string) => TimePickerComponent;
+
+  /** Names the dialog; empty restores its title or "Select time". */
+  setAriaLabel: (label: string) => TimePickerComponent;
 
   /**
    * Gets the current time picker title

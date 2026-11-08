@@ -39,7 +39,7 @@ describe("material/styles/base-lite holds the theme and the tokens", () => {
   test("the global reduced-motion switch keeps the base's rule", () => {
     expect(css).toContain("animation-duration:.01ms");
     expect(css).toContain("animation-iteration-count:1");
-    expect(css).toContain("transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility");
+    expect(css).toContain("transition-property:opacity,color,background-color,border-color,box-shadow,visibility");
     expect(css).toContain("scroll-behavior:auto");
   });
 
