@@ -18,6 +18,7 @@ export async function checkTextFieldNames(page: Page): Promise<void> {
     { name: "explicit-over-label", config: { ariaLabel: "Email address", label: "Email" }, expected: "Email address", renamed: "Email address" },
     { name: "visible-label", config: { label: "Email" }, expected: "Email", renamed: "Updated email" },
     { name: "matching-label", config: { ariaLabel: "Email", label: "Email" }, expected: "Email", renamed: "Updated email" },
+    { name: "control-only-hints", config: { ariaLabel: "Code", controlLabelOnly: true, inputMode: "numeric", enterKeyHint: "done", value: "1234" }, expected: "Code" },
     { name: "empty-aria", config: { ariaLabel: "", label: "Email" }, expected: "Email", renamed: "Updated email" },
   ];
   for (const variant of ["filled", "outlined"]) for (const type of ["text", "multiline"]) {
@@ -33,6 +34,9 @@ export async function checkTextFieldNames(page: Page): Promise<void> {
           inputLabel: field.input.getAttribute("aria-label"),
           wrapperLabel: field.element.getAttribute("aria-label"),
           visibleLabels: field.element.querySelectorAll("label").length,
+          inputMode: field.input.getAttribute("inputmode"),
+          enterKeyHint: field.input.getAttribute("enterkeyhint"),
+          value: field.input.value,
         };
       }, JSON.stringify({ variant, type, ...scenario.config }));
       const read = async () => {
@@ -61,6 +65,13 @@ export async function checkTextFieldNames(page: Page): Promise<void> {
     || (report.renamed && JSON.stringify(report.renamed.map(node => node.name)) !== JSON.stringify([report.renamedExpected])));
   console.log(JSON.stringify({ textFieldNames: reports.length, failures }, null, 2));
   assert.deepEqual(failures, [], "the focused text-field control must carry its accessible name");
+  for (const report of reports.filter(report => report.scenario === "control-only-hints")) {
+    assert.equal(report.dom.wrapperLabel, null);
+    assert.equal(report.dom.inputLabel, "Code");
+    assert.equal(report.dom.inputMode, "numeric");
+    assert.equal(report.dom.enterKeyHint, "done");
+    assert.equal(report.dom.value, "1234");
+  }
   for (const report of reports.filter(report => report.scenario === "aria-only")) {
     assert.equal(report.dom.visibleLabels, 0, "an accessible name creates no visible label");
   }

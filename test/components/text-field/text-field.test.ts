@@ -220,6 +220,33 @@ describe('text-field', () => {
     expect(field.input.hasAttribute('inputmode')).toBe(false);
   });
 
+  test('keyboard hints coexist with control-only labels and retain a focused input', () => {
+    for (const variant of ['filled', 'outlined'] as const) for (const type of ['text', 'multiline'] as const) {
+      for (const controlLabelOnly of [undefined, false, true]) {
+        const field = mount({ variant, type, ariaLabel: 'Code', value: '1234', inputMode: 'numeric', enterKeyHint: 'done', ...(controlLabelOnly === undefined ? {} : { controlLabelOnly }) });
+        const input = field.input;
+        expect(field.element.getAttribute('aria-label')).toBe(controlLabelOnly ? null : 'Code');
+        expect(input.getAttribute('aria-label')).toBe('Code');
+        expect(input.getAttribute('inputmode')).toBe('numeric');
+        expect(input.getAttribute('enterkeyhint')).toBe('done');
+        input.focus();
+        const update = (name: 'inputmode' | 'enterkeyhint', value: string | null) =>
+          (textFieldElement.spec.attributes[name].update as (component: never, value: string | null) => void)(field as never, value);
+        update('inputmode', 'decimal'); update('enterkeyhint', 'next');
+        expect(field.input).toBe(input);
+        expect(document.activeElement).toBe(input);
+        expect(input.value).toBe('1234');
+        expect(input.getAttribute('inputmode')).toBe('decimal');
+        expect(input.getAttribute('enterkeyhint')).toBe('next');
+        update('inputmode', null); update('enterkeyhint', null);
+        expect(input.hasAttribute('inputmode')).toBe(false);
+        expect(input.hasAttribute('enterkeyhint')).toBe(false);
+        expect(document.activeElement).toBe(input);
+        field.destroy();
+      }
+    }
+  });
+
   test('supporting text from config, set later, and removed', () => {
     expect(helper(mount({ label: 'x', supportingText: 'We never share it' }))?.textContent).toBe('We never share it');
     const field = mount({ label: 'x' });
