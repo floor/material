@@ -9,6 +9,11 @@
  *
  * Parts: `bottom-app-bar`, `actions`, `fab-container`.
  *
+ * Deprecated in 3.x: Material Design 3 Expressive replaces the bottom app bar
+ * with the docked toolbar. Use `<m-toolbar variant="docked" placement="bottom">`
+ * instead. A centred FAB, adding a FAB after creation, a custom transition
+ * duration and a custom tag are not yet available on the docked toolbar.
+ *
  * @module elements
  */
 
@@ -66,12 +71,46 @@ const bottomAppBarSpec = {
   },
 } satisfies ElementSpec<BottomAppBarComponent>;
 
+/**
+ * The `<m-bottom-app-bar>` element.
+ *
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use `<m-toolbar variant="docked" placement="bottom">`
+ * and toolbarElement instead. A centred FAB, adding a FAB after creation, a
+ * custom transition duration and a custom tag are not yet available on the
+ * docked toolbar.
+ */
 export const bottomAppBarElement = defineElement<BottomAppBarComponent>(bottomAppBarSpec);
+
+/**
+ * @deprecated Use ToolbarSpec: the docked toolbar's element spec.
+ */
 export type BottomAppBarSpec = typeof bottomAppBarSpec;
-/** `<m-bottom-app-bar>` as a ref or a query returns it. */
+
+/**
+ * `<m-bottom-app-bar>` as a ref or a query returns it.
+ *
+ * @deprecated Use ToolbarElement: the docked toolbar's element type.
+ */
 export type BottomAppBarElement = ElementInstance<BottomAppBarSpec, BottomAppBarComponent>;
 
-/** Registers `<m-bottom-app-bar>` (or `<prefix-bottom-app-bar>`). */
+/**
+ * Registers `<m-bottom-app-bar>` (or `<prefix-bottom-app-bar>`).
+ *
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use defineToolbar and
+ * `<m-toolbar variant="docked" placement="bottom">` instead.
+ *
+ * @example
+ * // Before
+ * defineBottomAppBar();
+ * // <m-bottom-app-bar auto-hide> … </m-bottom-app-bar>
+ *
+ * // After
+ * defineToolbar();
+ * // <m-toolbar variant="docked" placement="bottom"
+ * //          scroll-behavior="exit" scroll-threshold="10"> … </m-toolbar>
+ */
 export const defineBottomAppBar = (options?: DefineOptions): string => bottomAppBarElement.define(options);
 
 declare global {

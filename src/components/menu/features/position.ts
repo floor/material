@@ -66,6 +66,17 @@ export const createPositioner = (
 
     // Get opener measurements first (needed for width calculation)
     const openerRect = openerElement.getBoundingClientRect();
+    // A submenu aligns vertically with the item that opened it and horizontally
+    // with the menu surface that item sits in, so the vertical menu's 4dp
+    // inline container padding does not pull the submenu 4dp inside the parent.
+    const parentMenu = isSubmenu
+      ? openerElement.closest<HTMLElement>(`.${component.getClass("menu")}`)
+      : null;
+    const rawParentMenuRect = parentMenu ? parentMenu.getBoundingClientRect() : null;
+    const horizontalRect =
+      rawParentMenuRect && rawParentMenuRect.width >= openerRect.width
+        ? rawParentMenuRect
+        : openerRect;
 
     // Make a copy of the menu for measurement without affecting the real menu
     const tempMenu = menuElement.cloneNode(true) as HTMLElement;
@@ -124,13 +135,13 @@ export const createPositioner = (
       // Check if this would push the submenu out of the viewport
       if (
         calculatedPosition.startsWith("right") &&
-        openerRect.right + menuRect.width + offset > viewportWidth - 16
+        horizontalRect.right + menuRect.width + offset > viewportWidth - 16
       ) {
         // Flip to the left side if it doesn't fit on the right
         calculatedPosition = calculatedPosition.replace("right", "left");
       } else if (
         calculatedPosition.startsWith("left") &&
-        openerRect.left - menuRect.width - offset < 16
+        horizontalRect.left - menuRect.width - offset < 16
       ) {
         // Flip to the right side if it doesn't fit on the left
         calculatedPosition = calculatedPosition.replace("left", "right");
@@ -300,7 +311,7 @@ export const createPositioner = (
         break;
       case "right-start":
         top = openerRect.top + offsetY;
-        left = openerRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + offset;
         break;
       case "right":
         // Custom top position might be set above; only set if not already defined
@@ -313,11 +324,11 @@ export const createPositioner = (
         } else {
           top += offsetY;
         }
-        left = openerRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + offset;
         break;
       case "right-end":
         top = openerRect.bottom + offsetY - height;
-        left = openerRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + offset;
         break;
       case "bottom-start":
         top = openerRect.bottom + offsetY + offset;
@@ -334,7 +345,7 @@ export const createPositioner = (
         break;
       case "left-start":
         top = openerRect.top + offsetY;
-        left = openerRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - offset;
         break;
       case "left":
         // Custom top position might be set above; only set if not already defined
@@ -347,11 +358,11 @@ export const createPositioner = (
         } else {
           top += offsetY;
         }
-        left = openerRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - offset;
         break;
       case "left-end":
         top = openerRect.bottom + offsetY - height;
-        left = openerRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - offset;
         break;
     }
 

@@ -92,7 +92,7 @@ describe("Material date picker", () => {
     const picker = mount({ variant: 'modal-input' }); picker.open();
     inputDate(query<HTMLInputElement>(picker, '[data-entry="start"]'), '09/20/2026');
     click(picker, '[data-action="toggle-mode"]');
-    expect(day(picker, '2026-09-20').getAttribute('aria-pressed')).toBe('true');
+    expect(day(picker, '2026-09-20').getAttribute('aria-selected')).toBe('true');
     click(picker, '[data-action="toggle-mode"]');
     expect(query<HTMLInputElement>(picker, '[data-entry="start"]').value).toBe('09/20/2026');
     key(query(picker, 'dialog'), 'Escape'); expect(picker.getFormattedValue()).toBe('09/15/2026');
@@ -132,7 +132,7 @@ describe("Material date picker", () => {
       expect(day(picker, date).classList.contains('mtrl-datepicker__day--outside')).toBe(true);
       expect(cell(date).className).toBe('mtrl-datepicker__cell');
     }
-    expect(cell('2026-10-02').getAttribute('aria-selected')).toBe('false');
+    expect(day(picker, '2026-10-02').getAttribute('aria-selected')).toBe('false');
   });
   test("bounds and special disabled dates apply to click, keyboard, entry and API", () => {
     const picker = mount({ minDate: new Date(2026, 8, 10, 14), maxDate: '2026-09-20', specialDates: [{ date: '2026-09-16', disabled: true }, { date: '2026-09-17', highlight: true, tooltip: 'Holiday' }] }); picker.open();

@@ -39,6 +39,7 @@ const contrast = (a: string, b: string): number => {
 };
 const PAIRS: [string, string][] = [
   ...["primary", "secondary", "tertiary", "error"].flatMap((role): [string, string][] => [[`on-${role}`, role], [`on-${role}-container`, `${role}-container`]]),
+  ["on-success", "success"], ["on-warning", "warning"], ["on-info", "info"],
   ["on-surface", "surface"], ["on-surface", "surface-container-highest"],
   ["on-surface-variant", "surface"], ["on-surface-variant", "surface-container-highest"],
   ["inverse-on-surface", "inverse-surface"], ["inverse-primary", "inverse-surface"],

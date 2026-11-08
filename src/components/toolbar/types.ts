@@ -110,13 +110,15 @@ export interface ToolbarConfig extends BaseComponentConfig {
 
   /**
    * `'exit'` hides the toolbar while the content scrolls forward and shows it
-   * when it scrolls back
+   * when it scrolls back; `'collapse'` shrinks it instead of hiding it, and
+   * keeps its items and their accessible names. `'collapse'` has no effect on
+   * a floating toolbar yet: collapsing one into a FAB is a later release.
    * @default 'none'
    */
   scrollBehavior?: ToolbarScrollBehavior | string;
 
   /**
-   * What scrolls, for `scrollBehavior: 'exit'`
+   * What scrolls, for `scrollBehavior: 'exit'` or `'collapse'`
    * @default window
    */
   scrollTarget?: HTMLElement | Window;
@@ -143,6 +145,10 @@ export interface ToolbarEvents {
   show: () => void;
   /** The toolbar left the screen */
   hide: () => void;
+  /** The toolbar shrank (`scrollBehavior: 'collapse'`) */
+  collapse: () => void;
+  /** The toolbar restored its height (`scrollBehavior: 'collapse'`) */
+  expand: () => void;
 }
 
 /**

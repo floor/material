@@ -84,7 +84,17 @@ const createDatePicker = <M extends string = "single">(
   dialog.setAttribute("aria-modal", String(modal));
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
-  if (modal) dialog.setAttribute("aria-labelledby", `${id}-title`); else dialog.setAttribute("aria-label", state.label);
+  const nameDialog = () => {
+    const name = settings.ariaLabel?.trim();
+    if (name || !modal) {
+      dialog.removeAttribute("aria-labelledby");
+      dialog.setAttribute("aria-label", name || state.label);
+    } else {
+      dialog.removeAttribute("aria-label");
+      dialog.setAttribute("aria-labelledby", `${id}-title`);
+    }
+  };
+  nameDialog();
   const announcement = make("div", "sr-only", undefined, { "aria-live": "polite", "aria-atomic": "true" });
   field.append(input, trigger); base.element.append(label, field, help, error, dialog);
   const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat, state.locale) + (date && end ? ` - ${formatDate(end, state.dateFormat, state.locale)}` : "");
@@ -448,6 +458,7 @@ const createDatePicker = <M extends string = "single">(
     setReadOnly(value) { setReadOnly(value); return api; }, isReadOnly: () => readOnly,
     setRequired(value) { input.required = value; if (!value) syncInput(); return api; }, checkValidity, reportValidity,
     setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
+    setAriaLabel(label) { settings.ariaLabel = label; nameDialog(); return api; },
     clear() { clearValue(false); return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
     setMinDate: setBound("minDate"),
