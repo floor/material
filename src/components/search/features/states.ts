@@ -280,86 +280,41 @@ export const withStates =
     currentVariant = variant;
   };
 
-  /**
-   * Disables the component
-   */
-  const disableComponent = (): void => {
-    isDisabled = true;
-
+  /** Apply the same native and interactive-control state in either direction. */
+  const applyDisabled = (disabled: boolean): void => {
+    isDisabled = disabled;
     const element = component.element;
     const structure = component.structure;
+    const aria = disabled ? "true" : "false";
 
-    element.classList.add(getClass(SEARCH_CLASSES.DISABLED));
-    element.setAttribute("aria-disabled", "true");
+    if (disabled) element.classList.add(getClass(SEARCH_CLASSES.DISABLED));
+    else element.classList.remove(getClass(SEARCH_CLASSES.DISABLED));
+    element.setAttribute("aria-disabled", aria);
+    if (structure?.input) structure.input.disabled = disabled;
 
-    // Disable input
-    if (structure?.input) {
-      structure.input.disabled = true;
-    }
-
-    // Disable interactive elements
     const interactiveElements = [
       structure?.leadingIcon,
       structure?.clearButton,
     ].filter(Boolean);
-
-    // Add trailing items if they exist
     if (structure?.trailingContainer) {
-      const trailingButtons =
-        structure.trailingContainer.querySelectorAll("button");
-      trailingButtons.forEach((btn) => interactiveElements.push(btn));
+      structure.trailingContainer.querySelectorAll("button")
+        .forEach((button) => interactiveElements.push(button));
     }
-
-    interactiveElements.forEach((el) => {
-      if (el) {
-        (el as HTMLElement).tabIndex = -1;
-        el.setAttribute("aria-disabled", "true");
-      }
-    });
-  };
-
-  /**
-   * Enables the component
-   */
-  const enableComponent = (): void => {
-    isDisabled = false;
-
-    const element = component.element;
-    const structure = component.structure;
-
-    element.classList.remove(getClass(SEARCH_CLASSES.DISABLED));
-    element.setAttribute("aria-disabled", "false");
-
-    // Enable input
-    if (structure?.input) {
-      structure.input.disabled = false;
-    }
-
-    // Enable interactive elements
-    const interactiveElements = [
-      structure?.leadingIcon,
-      structure?.clearButton,
-    ].filter(Boolean);
-
-    // Add trailing items if they exist
-    if (structure?.trailingContainer) {
-      const trailingButtons =
-        structure.trailingContainer.querySelectorAll("button");
-      trailingButtons.forEach((btn) => interactiveElements.push(btn));
-    }
-
-    interactiveElements.forEach((el) => {
-      if (el) {
-        (el as HTMLElement).tabIndex = 0;
-        el.setAttribute("aria-disabled", "false");
+    interactiveElements.forEach((element) => {
+      if (element) {
+        (element as HTMLElement).tabIndex = disabled ? -1 : 0;
+        element.setAttribute("aria-disabled", aria);
       }
     });
 
-    // Clear button special case - only enable if there's text
-    if (structure?.clearButton && structure.input && !structure.input.value) {
+    // An empty clear button stays out of the tab order after enabling.
+    if (!disabled && structure?.clearButton && structure.input && !structure.input.value) {
       structure.clearButton.tabIndex = -1;
     }
   };
+
+  const disableComponent = (): void => applyDisabled(true);
+  const enableComponent = (): void => applyDisabled(false);
 
   /**
    * Updates the populated state class based on input value
