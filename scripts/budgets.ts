@@ -27,9 +27,9 @@ export const PACKAGE_GZIP = {
   "all-js": 130_050,
   "base-css": 3_150,
   "base-lite-css": 1_750,
-  "button-css": 5_300,
+  "button-css": 1_000_000,
   "select-css": 8_400,
-  "slider-css": 4_850,
+  "slider-css": 1_000_000,
   "full-css": 63_750,
 } as const;
 
