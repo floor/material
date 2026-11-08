@@ -81,8 +81,7 @@ export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY', loc
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
   const m = date.getMonth() + 1, d = date.getDate(), y = date.getFullYear(), pad = (n: number) => String(n).padStart(2, '0');
   return format.replace(TOKEN_RE, token =>
-    token === 'MMMM' ? dtf(locale, { month: 'long' }).format(date) :
-    token === 'MMM' ? dtf(locale, { month: 'short' }).format(date) :
+    token.startsWith('MMM') ? dtf(locale, { month: token.length === 4 ? 'long' : 'short' }).format(date) :
     token === 'MM' ? pad(m) :
     token === 'M' ? String(m) :
     token === 'YYYY' ? String(y) :
@@ -115,7 +114,7 @@ export const generateCalendarDates = (
 ): CalendarDate[] => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const firstDay = (getFirstDayOfMonth(year, month) - firstDayOfWeek + 7) % 7;
+  const firstDay = (new Date(year, month, 1).getDay() - firstDayOfWeek + 7) % 7;
   return Array.from({ length: 42 }, (_, i) => {
     const date = new Date(year, month, 1 - firstDay + i);
     const isCurrentMonth = date.getMonth() === month;
@@ -130,7 +129,7 @@ export const generateCalendarDates = (
     if (isCurrentMonth && selectedDate && rangeEndDate) {
       calendarDate.isRangeStart = isSameDay(date, selectedDate);
       calendarDate.isRangeEnd = isSameDay(date, rangeEndDate);
-      calendarDate.isRangeMiddle = isDateInRange(date, selectedDate, rangeEndDate) && !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
+      calendarDate.isRangeMiddle = date >= selectedDate && date <= rangeEndDate && !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
     }
     return calendarDate;
   });
