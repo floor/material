@@ -176,10 +176,49 @@ Lists, accessible names and a smaller package.
   full stylesheets. The owner approved the all-JS gzip ceiling of
   **130,050 B** on **2026-11-05**, applied in **#279**, and the form gzip
   ceiling of **20,450 B** on **2026-11-07**, applied in **#326**.
-  The theme opt-in adds its own
-  measured budget rows; default theme-entry ceilings are unchanged. Final
-  combined size rows and margins will be recorded from this release PR's own CI
-  against the published 3.8.2 release before review.
+
+- **Release size against 3.8.2.**
+  This release PR at `ddd7d14d`
+  ([CI run 42455193839, package job 128652773678](https://github.com/floor/material/actions/runs/42455193839/job/128652773678))
+  packs **888,118 B compressed / 4,989,708 B unpacked / 1,549 files**.
+  Against published 3.8.2 at `02fbdd21`
+  ([CI run 42407831677, package job 128509462814](https://github.com/floor/material/actions/runs/42407831677/job/128509462814)),
+  that is **−10,140 B packed / +40,407 B unpacked / −77 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **31,882 B**
+  under the 920,000 B packed ceiling and **129,292 B** under the 5,119,000 B
+  unpacked ceiling; neither ceiling changes.
+
+  | Payload (B, raw / gzip / Brotli) | 3.8.2 | 3.9.0 | Change |
+  | --- | --- | --- | --- |
+  | All JS | 412,840 / 127,312 / 105,645 | 418,953 / 129,264 / 107,214 | +6,113 / +1,952 / +1,569 |
+  | Full stylesheet | 637,752 / 58,879 / 41,971 | 640,972 / 59,172 / 42,192 | +3,220 / +293 / +221 |
+  | Button stylesheet | 58,901 / 5,220 / 4,022 | 59,523 / 5,300 / 4,082 | +622 / +80 / +60 |
+  | Form fixture | 65,250 / 20,387 / 18,174 | 65,398 / 20,431 / 18,243 | +148 / +44 / +69 |
+
+  All-JS gzip leaves **786 B** under its approved 130,050 B ceiling; form
+  gzip leaves **19 B** under 20,450 B. Full CSS leaves **4,578 B** under
+  63,750 B. Button CSS is exactly **5,300 B**, with **0 B** spare; its ceiling
+  does not rise.
+
+  Component payloads below are gzip bytes. Deferred bytes are loaded on
+  interaction, in addition to the initial graph.
+
+  | Component payload | 3.8.2 | 3.9.0 | Change | Ceiling | Spare |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | menu | 12,659 | 12,767 | +108 | 13,056 | 289 |
+  | menu deferred | 2,121 | 2,143 | +22 | 2,252 | 109 |
+  | fab-menu | 8,368 | 8,368 | +0 | 8,550 | 182 |
+  | fab-menu deferred | 10,647 | 10,766 | +119 | 10,854 | 88 |
+  | split-button | 9,704 | 9,716 | +12 | 9,728 | 12 |
+  | split-button deferred | 17,208 | 17,355 | +147 | 17,459 | 104 |
+  | select | 13,447 | 13,469 | +22 | 13,516 | 47 |
+  | select deferred | 10,618 | 10,733 | +115 | 10,752 | 19 |
+  | toolbar | 11,284 | 11,346 | +62 | 11,468 | 122 |
+  | all | 125,676 | 126,287 | +611 | 127,200 | 913 |
+
+  All package and component ceilings pass. The 2025 theme opt-in retains its
+  separate measured budget rows; default theme-entry ceilings are unchanged.
+  No additional budget increase is introduced by this release.
 
 - **Still OPEN: duplicate host names and default wrapper names.**
   Names exposed on both a custom-element host and its inner control remain
