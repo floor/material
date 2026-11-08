@@ -212,6 +212,42 @@ describe("consolidateDeclarations", () => {
     }
   });
 
+  test("follows a type imported and re-exported through the 2025 entry", async () => {
+    const directory = await tree({
+      "index.d.ts": 'export type { BaseScheme } from "./theme/index.js";\n',
+      "theme/index.d.ts": "export interface BaseScheme { seed: string }\n",
+      "theme/2025.d.ts": 'export type { ThemeVariant } from "./spec2025.js";\n',
+      "theme/spec2025.d.ts": 'import type { ThemeVariant } from "./variants.js";\nexport type { ThemeVariant };\n',
+      "theme/variants.d.ts": 'export type ThemeVariant = "tonal-spot" | "expressive";\n',
+    });
+    try {
+      const result = await consolidateDeclarations(directory, {
+        ".": { types: "./index.d.ts" },
+        "./theme": { types: "./theme/index.d.ts" },
+        "./theme/2025": { types: "./theme/2025.d.ts" },
+        "./theme/variants": { types: "./theme/variants.d.ts" },
+      });
+      expect(result.removed).toEqual(["theme/spec2025.d.ts"]);
+      expect(result.kept).toEqual([]);
+      expect(await readFile(join(directory, "theme/2025.d.ts"), "utf8")).toContain('from "./variants.js"');
+      await writeFile(join(directory, "consumer.ts"), [
+        'import type { BaseScheme } from "./theme/index.js";',
+        'import type { ThemeVariant } from "./theme/2025.js";',
+        'import type { ThemeVariant as Original } from "./theme/variants.js";',
+        'export const variant: ThemeVariant = "expressive";',
+        "export const original: Original = variant;",
+        'export const base: BaseScheme = { seed: "#6750a4" };',
+        '// @ts-expect-error -- the forwarding entry must preserve the original union',
+        'export const wrong: ThemeVariant = "unknown";',
+        '// @ts-expect-error -- folding must not add a ThemeVariant export to the base entry',
+        'import type { ThemeVariant as NotPublic } from "./theme/index.js";',
+      ].join("\n"));
+      expect(await errorsIn(directory, "consumer.ts")).toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("is idempotent: the merged tree has nothing left to fold", async () => {
     const directory = await tree(FILES);
     try {

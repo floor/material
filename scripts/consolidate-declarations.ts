@@ -396,16 +396,11 @@ class Consolidation {
     }
   }
 
-  /** The exported barrel that already carries `name` from the group of `target`. */
+  /** Only the owning barrel can store the exact declaration when its file folds. */
   private exportingBarrel(target: string, name: string): string | undefined {
     const group = this.canonical(target);
-    const carries = (file: string): boolean => {
-      const declaring = this.before.get(file)?.get(name);
-      return !!declaring && this.groupOf(declaring) === group;
-    };
-    if (carries(group)) return group;
-    for (const candidate of [...this.targets].sort()) if (candidate !== group && carries(candidate)) return candidate;
-    return undefined;
+    const declaration = this.declarationOf(target, name, group);
+    return declaration && this.before.get(group)?.get(name) === declaration.file ? group : undefined;
   }
 
   /**
@@ -446,15 +441,19 @@ class Consolidation {
     if (!chosen) {
       const declaration = this.declarationOf(target, name, barrel);
       if (!declaration) throw new Error(`${target} does not declare ${name}, which another declaration needs`);
-      if (this.kept.has(declaration.file)) chosen = declaration.file;
+      if (this.kept.has(declaration.file)
+        || (this.targets.has(declaration.file) && this.before.get(declaration.file)?.get(name) === declaration.file)) chosen = declaration.file;
       else throw new Error(`nothing exports ${name} from ${barrel}, and ${declaration.file} is folded into it`);
     }
     this.routes.set(key, chosen);
     return chosen;
   }
 
-  /** Where a name is declared inside `group`, following a member's own re-exports. */
-  private declarationOf(file: string, name: string, group: string): { file: string; kind: "type" | "value" } | undefined {
+  /** Where a name is declared, following member and imported re-exports. */
+  private declarationOf(file: string, name: string, group: string, seen = new Set<string>()): { file: string; kind: "type" | "value" } | undefined {
+    const key = `${file}\0${name}`;
+    if (seen.has(key)) throw new Error(`declaration re-export cycle at ${file}: ${name}`);
+    seen.add(key);
     if (name === "default") {
       const declaration = defaultDeclarationOf(this.module(file));
       return declaration ? { file, kind: declaration.kind } : undefined;
@@ -465,6 +464,10 @@ class Consolidation {
     if (item?.local) {
       const declaration = this.module(item.local.file).declared.get(item.local.name)?.[0];
       if (declaration) return { file: item.local.file, kind: declaration.kind };
+    }
+    if (item?.reexport?.target) {
+      const { target, imported } = item.reexport;
+      return this.declarationOf(target, imported, this.canonical(target), seen);
     }
     return undefined;
   }
