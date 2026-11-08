@@ -59,10 +59,15 @@ export const TOOLBAR_ARRANGEMENTS = {
 
 export type ToolbarArrangement = (typeof TOOLBAR_ARRANGEMENTS)[keyof typeof TOOLBAR_ARRANGEMENTS];
 
-/** Scroll behaviours: stay on screen, or leave it while scrolling forward. */
+/**
+ * Scroll behaviours: stay on screen, leave it while scrolling forward, or —
+ * docked only — shrink while the content scrolls forward and restore when it
+ * scrolls back.
+ */
 export const TOOLBAR_SCROLL_BEHAVIORS = {
   NONE: "none",
   EXIT: "exit",
+  COLLAPSE: "collapse",
 } as const;
 
 export type ToolbarScrollBehavior = (typeof TOOLBAR_SCROLL_BEHAVIORS)[keyof typeof TOOLBAR_SCROLL_BEHAVIORS];
@@ -79,4 +84,6 @@ export const TOOLBAR_SCROLL_THRESHOLD = 40;
 export const TOOLBAR_EVENTS = {
   SHOW: "show",
   HIDE: "hide",
+  COLLAPSE: "collapse",
+  EXPAND: "expand",
 } as const;

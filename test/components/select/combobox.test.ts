@@ -236,6 +236,33 @@ describe('select as a combobox', () => {
     expect(select.isOpen()).toBe(false);
   });
 
+  test('the option a key reaches carries the keyboard marker; a pointer opening does not', async () => {
+    const { select, input } = await mount({ value: 'm' });
+    const activeItem = () => document.getElementById(input.getAttribute('aria-activedescendant')!)!;
+    const marked = () => [...document.querySelectorAll('.mtrl-menu__item--keyboard-active')];
+    await press(input, 'ArrowDown');
+    expect(activeItem().classList.contains('mtrl-menu__item--keyboard-active')).toBe(true);
+    const first = activeItem();
+    await press(input, 'ArrowDown');
+    expect(activeItem().classList.contains('mtrl-menu__item--keyboard-active')).toBe(true);
+    expect(first.classList.contains('mtrl-menu__item--keyboard-active')).toBe(false);
+    expect(marked()).toHaveLength(1);
+
+    // A pointer opening marks the selected option active, and nothing keyboard-reached
+    await press(input, 'Escape');
+    await settle();
+    select.element.click();
+    await wait(60);
+    expect(select.isOpen()).toBe(true);
+    expect(document.querySelector('.mtrl-menu__item--active')).not.toBeNull();
+    expect(marked()).toHaveLength(0);
+
+    // The keyboard takes the pointer-opened menu over, ring and all
+    await press(input, 'ArrowDown');
+    expect(activeItem().classList.contains('mtrl-menu__item--keyboard-active')).toBe(true);
+    expect(marked()).toHaveLength(1);
+  });
+
   test('typing moves to the next option starting with the typed text', async () => {
     const { input } = await mount({ value: 'xs' });
     await press(input, 'ArrowDown');

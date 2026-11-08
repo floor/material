@@ -84,6 +84,14 @@ export interface TextFieldConfig {
   /** Accessible name for the input; the visible label is the fallback. */
   ariaLabel?: string;
 
+  /**
+   * Put ariaLabel only on the input/handle, omitting the generated wrapper label.
+   * Opt-in changes wrapper serialization and [aria-label] selectors.
+   * @default false
+   */
+  controlLabelOnly?: boolean;
+
+
   /** Initial value */
   value?: string;
 
