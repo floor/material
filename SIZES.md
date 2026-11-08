@@ -23,7 +23,7 @@ these rows drift from a fresh measurement.
 | side-sheet | 17.8 KB | 6.5 KB | +3.5 KB |  |
 | button | 21.9 KB | 7.4 KB | +4.4 KB | +6.9 KB |
 | button-group | 36.6 KB | 11.8 KB | +8.8 KB | +6.9 KB |
-| card | 19.5 KB | 6.6 KB | +3.6 KB | +9.7 KB |
+| card | 19.6 KB | 6.6 KB | +3.6 KB | +9.7 KB |
 | carousel | 30.6 KB | 11.3 KB | +8.3 KB |  |
 | checkbox | 16.4 KB | 5.7 KB | +2.6 KB |  |
 | chips | 27.9 KB | 9.1 KB | +6.1 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 393.7 KB | 123.5 KB | +120.5 KB | +2.1 KB |
+| all | 393.8 KB | 123.6 KB | +120.5 KB | +2.1 KB |
 <!-- /size-table -->
