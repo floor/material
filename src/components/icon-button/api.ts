@@ -2,7 +2,6 @@
 
 import type { IconButtonComponent, IconButtonEvents } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
-import { syncDecorativeIcon } from "../../core/compose/features/icon";
 import {
   IconButtonVariant,
   IconButtonSize,
@@ -300,7 +299,6 @@ export const withAPI =
 
       setAriaLabel(label: string) {
         component.element.setAttribute("aria-label", label);
-        syncDecorativeIcon(component.element);
         return iconButtonComponent;
       },
 

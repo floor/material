@@ -5,8 +5,6 @@ import { addClass } from "../../core";
 import { ProgressComponent } from "../progress/types";
 
 import { setHTML } from "../../core/dom/html";
-import { syncDecorativeIcon } from "../../core/compose/features/icon";
-
 /**
  * API configuration options for button component
  * @category Components
@@ -446,7 +444,6 @@ export const withAPI =
        */
       setAriaLabel(label: string) {
         component.element.setAttribute("aria-label", label);
-        syncDecorativeIcon(component.element);
         return buttonComponent;
       },
 

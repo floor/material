@@ -180,17 +180,6 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
     };
 
     const write = (element: HTMLElement, value: string): void => {
-      // A labelled trailing icon is a button that already has aria-label.
-      // The graphic is decorative (https://w3c.github.io/aria/#aria-hidden).
-      // The unlabeled span is already aria-hidden. The author's svg string
-      // is not rewritten on either path.
-      if (element.tagName === 'BUTTON') {
-        const wrap = document.createElement('span');
-        wrap.setAttribute('aria-hidden', 'true');
-        setHTML(wrap, value);
-        element.replaceChildren(wrap);
-        return;
-      }
       setHTML(element, value);
     };
 

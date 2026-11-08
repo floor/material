@@ -1,10 +1,10 @@
 // src/core/compose/features/icon-decorate.ts
 //
-// Factory name walk. icon.ts does not import this module, so createButton
-// leaves icons untouched until enableDecorativeIcons() runs in the same bundle.
+// Factory name walk. The button, text-field, and form graphs do not import
+// this module, so their default HTML stays the recorded bytes.
 // A slot's light DOM is decided in icon-slot.ts; this walk has no slot assignment yet.
 
-import { decorativeIcon, registerDecorativeSync } from "./icon";
+import { setDecorativeIcons } from "./icon-opt-in";
 
 /** True when `node` contributes text that is not inside `icon`. */
 const hasText = (node: Node, icon: HTMLElement): boolean => {
@@ -37,15 +37,75 @@ const keepsNameWithoutIcon = (host: HTMLElement, icon: HTMLElement): boolean => 
   return false;
 };
 
-const sync = (host: HTMLElement): void => {
-  const icon = decorativeIcon(host);
-  if (!icon) return;
-  // The author's svg string is not rewritten (https://w3c.github.io/aria/#aria-hidden).
-  if (keepsNameWithoutIcon(host, icon)) icon.setAttribute("aria-hidden", "true");
-  else icon.removeAttribute("aria-hidden");
+/** Icons `withIcon` creates. A `--icon` modifier on the host is not one. */
+const isFactoryIcon = (el: Element): boolean => {
+  for (const name of Array.from(el.classList)) {
+    if (name.endsWith("-button__icon") || name.endsWith("-fab__icon") || name.endsWith("-slider__icon")) return true;
+  }
+  return false;
 };
+
+const syncFactoryIcon = (icon: HTMLElement): void => {
+  const host = icon.parentElement;
+  if (!host) return;
+  // The author's svg string is not rewritten (https://w3c.github.io/aria/#aria-hidden).
+  if (keepsNameWithoutIcon(host, icon)) {
+    if (icon.getAttribute("aria-hidden") !== "true") icon.setAttribute("aria-hidden", "true");
+  } else if (icon.hasAttribute("aria-hidden")) {
+    icon.removeAttribute("aria-hidden");
+  }
+};
+
+/** A labelled text-field trailing icon. The unmarked span is already hidden. */
+const isTrailingButton = (el: Element): boolean => {
+  for (const name of Array.from(el.classList)) {
+    if (name.endsWith("__trailing-icon--button")) return true;
+  }
+  return false;
+};
+
+/**
+ * Moves the graphic into a library span. The author's svg attributes stay.
+ * https://w3c.github.io/aria/#aria-hidden
+ */
+const syncTrailing = (button: HTMLElement): void => {
+  const only = button.firstElementChild;
+  if (
+    button.childNodes.length === 1 &&
+    only?.tagName === "SPAN" &&
+    only.getAttribute("aria-hidden") === "true"
+  ) return;
+  if (!button.firstChild) return;
+  const wrap = document.createElement("span");
+  wrap.setAttribute("aria-hidden", "true");
+  while (button.firstChild) wrap.appendChild(button.firstChild);
+  button.appendChild(wrap);
+};
+
+const scan = (root: ParentNode): void => {
+  const nodes = root.querySelectorAll("[class*='__icon'], [class*='trailing-icon--button']");
+  for (const el of nodes) {
+    if (isTrailingButton(el)) syncTrailing(el as HTMLElement);
+    else if (isFactoryIcon(el)) syncFactoryIcon(el as HTMLElement);
+  }
+};
+
+let watching = false;
 
 /** Turn the factory name walk on. Default output stays unchanged until this runs. */
 export const enableDecorativeIcons = (): void => {
-  registerDecorativeSync(sync);
+  setDecorativeIcons(true);
+  if (watching || typeof document === "undefined") return;
+  watching = true;
+  const run = (): void => scan(document);
+  run();
+  if (typeof MutationObserver !== "function") return;
+  const observer = new MutationObserver(run);
+  observer.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["aria-label", "aria-labelledby", "class"],
+  });
 };

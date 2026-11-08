@@ -6,7 +6,7 @@ import { createElement } from "../../../core/dom/create";
 import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 import { processClassNames, type BaseComponentConfig } from "../../../core/config/component";
-import { decorativeIconsOn } from "../../../core/compose/features/icon";
+import { decorativeIconsOn } from "../../../core/compose/features/icon-opt-in";
 
 const libraryGlyph = (html: string): boolean =>
   html === SEARCH_ICONS.SEARCH || html === SEARCH_ICONS.BACK || html === SEARCH_ICONS.CLEAR;

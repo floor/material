@@ -3,42 +3,6 @@
 import { BaseComponent, ElementComponent } from "../component";
 
 import { setHTML } from "../../dom/html";
-
-/**
- * The icon span `withIcon` created for a host.
- * Keyed by the host, not found by class: a group button's `mtrl-button--icon`
- * class ends in `-icon` and is not the icon. Scanning for that class hid the
- * button, so a named icon item lost its accessible name.
- */
-const icons = new WeakMap<HTMLElement, HTMLElement>();
-
-/** The icon span this feature created for `host`, if it created one. */
-export const decorativeIcon = (host: HTMLElement): HTMLElement | null => icons.get(host) ?? null;
-
-/**
- * The name walk lives in `icon-decorate.ts`, which this module does not import.
- * Until that module registers, a factory icon is left as it was created, so
- * the createButton graph does not pay for the walk and default HTML is unchanged.
- */
-let decorate: ((host: HTMLElement) => void) | null = null;
-
-/** True once `enableDecorativeIcons` has registered in this bundle. */
-export const decorativeIconsOn = (): boolean => decorate !== null;
-
-/** Register the name walk. Called only from the opt-in module. */
-export const registerDecorativeSync = (fn: (host: HTMLElement) => void): void => {
-  decorate = fn;
-};
-
-/**
- * Hides the icon when the opt-in says the control still has a name without it.
- * A no-op until `enableDecorativeIcons` runs. Called after setIcon, setText,
- * and setAriaLabel. A custom element calls `syncSlottedIcon` for its slot.
- */
-export const syncDecorativeIcon = (host: HTMLElement): void => {
-  decorate?.(host);
-};
-
 /**
  * Icon manager interface
  */
@@ -153,11 +117,6 @@ const createIcon = (
     return iconEl;
   };
 
-  // The opt-in module decides. Until it loads, the icon stays as created.
-  const markIcon = (): void => {
-    syncDecorativeIcon(element);
-  };
-
   return {
     /**
      * Sets icon HTML content
@@ -168,7 +127,6 @@ const createIcon = (
       if (!iconElement && html) {
         // Create new icon element
         iconElement = createIconElement(html);
-        icons.set(element, iconElement);
 
         // Insert at the appropriate position
         if (config.iconPosition === "end") {
@@ -195,11 +153,9 @@ const createIcon = (
             element.insertBefore(iconElement, element.firstChild);
           }
         }
-        markIcon();
       } else if (iconElement && html) {
         // Update existing icon
         setHTML(iconElement, html);
-        markIcon();
       }
       return this;
     },

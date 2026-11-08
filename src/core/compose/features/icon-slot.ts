@@ -2,8 +2,26 @@
 // icon-decorate.ts and is off until that module is loaded, and it cannot see
 // light DOM before the slot is in a shadow root. This module is what the
 // element calls after the slot is appended. The button factory does not import it.
+// The icon is the direct child `withIcon` marked with a `__icon` class. A host
+// class such as `mtrl-button--icon` is the control, not the graphic.
 
-import { decorativeIcon } from "./icon";
+/**
+ * The icon span `withIcon` placed on `host`.
+ * A modifier that merely ends in `-icon` is not it.
+ */
+const factoryIcon = (host: HTMLElement): HTMLElement | null => {
+  const children = host.children;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i] as HTMLElement;
+    const classes = child.classList;
+    if (!classes) continue;
+    // The server classList shim has no item(); Array.from is how render walks it.
+    for (const name of Array.from(classes)) {
+      if (name.endsWith("__icon")) return child;
+    }
+  }
+  return null;
+};
 
 /**
  * The custom element whose light DOM a slot was built to show.
@@ -100,7 +118,7 @@ const keepsName = (host: HTMLElement, icon: HTMLElement): boolean => {
  * light DOM or fallback changes.
  */
 export const syncSlottedIcon = (host: HTMLElement): void => {
-  const icon = decorativeIcon(host);
+  const icon = factoryIcon(host);
   if (!icon) return;
   if (keepsName(host, icon)) icon.setAttribute("aria-hidden", "true");
   else icon.removeAttribute("aria-hidden");

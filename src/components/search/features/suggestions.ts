@@ -3,7 +3,7 @@
 import { SearchStructure, SearchSuggestion } from "../types";
 import { SEARCH_CLASSES, SEARCH_KEYS, SEARCH_ICONS } from "../constants";
 import { createElement } from "../../../core/dom/create";
-import { decorativeIconsOn } from "../../../core/compose/features/icon";
+import { decorativeIconsOn } from "../../../core/compose/features/icon-opt-in";
 import type { EventCallback } from "../../../core/state/emitter";
 
 /**
