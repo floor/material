@@ -34,6 +34,16 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // The build writes dist/package.json so its module and declaration prunes
+  // read the export map in place. It is not an export target and has no
+  // runtime role (`dist` inherits the root `type` and `sideEffects`), so the
+  // manifest's `files` excludes it from the tarball. This asserts the real
+  // packed list: dropping the exclusion, or writing the file elsewhere, fails
+  // here with the tarball CI would publish.
+  assert(
+    !pack.files.some((file: { path: string }) => file.path === "dist/package.json"),
+    "The build's nested manifest is packed; it has no export or runtime role",
+  );
   // Which README and manifest ship. The fixture packs what publish.yml's step
   // makes of the tree, so these hold for a release: npm's page shows the short
   // README, the repository's long one stays on GitHub, and the manifest carries
@@ -331,26 +341,81 @@ try {
     await new Promise(resolve => setTimeout(resolve, 20));
     assert(card.element.querySelector('button')?.textContent.includes('Action'), 'Lazy card button did not load');
     card.destroy(); loading.destroy(); b.destroy(); field.destroy(); dom.window.close();
+
+    // Every export key and wildcard expansion in the packed manifest must resolve
+    // in Node to a file that ships in the tarball.
+    import { existsSync, readFileSync } from 'node:fs';
+    import { fileURLToPath } from 'node:url';
+    import { dirname, join as joinPath } from 'node:path';
+    const rootFile = fileURLToPath(import.meta.resolve('material'));
+    const pkgRoot = joinPath(dirname(rootFile), '..');
+    const pkgJson = JSON.parse(readFileSync(joinPath(pkgRoot, 'package.json'), 'utf8'));
+    const packedPaths = ${JSON.stringify(paths)};
+    let resolvedExportCount = 0;
+    for (const [key, value] of Object.entries(pkgJson.exports)) {
+      if (key === './react/jsx' || key === './solid/jsx') {
+        const typesRel = value.types.slice(2);
+        assert(packedPaths.includes(typesRel) && existsSync(joinPath(pkgRoot, typesRel)), \`Missing types target for \${key}: \${typesRel}\`);
+        resolvedExportCount += 1;
+        continue;
+      }
+      if (!key.includes('*')) {
+        const spec = key === '.' ? 'material' : \`material/\${key.slice(2)}\`;
+        const resolved = fileURLToPath(import.meta.resolve(spec));
+        assert(existsSync(resolved), \`Export \${spec} resolved to missing file \${resolved}\`);
+        if (typeof value === 'object' && value !== null && 'types' in value) {
+          const typesRel = value.types.slice(2);
+          assert(packedPaths.includes(typesRel) && existsSync(joinPath(pkgRoot, typesRel)), \`Missing types target for \${key}: \${typesRel}\`);
+        }
+        resolvedExportCount += 1;
+        continue;
+      }
+      const targetPattern = typeof value === 'string' ? value : (value.import ?? value.default);
+      const [tPre, tSuf] = targetPattern.slice(2).split('*');
+      const [kPre, kSuf] = key.slice(2).split('*');
+      const matches = packedPaths.filter(p => p.startsWith(tPre) && p.endsWith(tSuf) && !p.slice(tPre.length, p.length - tSuf.length).includes('/'));
+      assert(matches.length > 0, \`Wildcard export \${key} matched no packed files\`);
+      for (const match of matches) {
+        const star = match.slice(tPre.length, match.length - tSuf.length);
+        const spec = \`material/\${kPre}\${star}\${kSuf}\`;
+        const resolved = fileURLToPath(import.meta.resolve(spec));
+        assert(existsSync(resolved), \`Wildcard export \${spec} resolved to missing file \${resolved}\`);
+        resolvedExportCount += 1;
+      }
+    }
+    assert(resolvedExportCount >= 240, \`Expected at least 240 resolved export specifiers, got \${resolvedExportCount}\`);
   `);
   await run(["node", smoke], temporary);
-  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name`);
+  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name; all package.json exports resolve from the packed tarball`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");
   await writeFile(typeFixture, `
     import 'material/styles';
     import 'material/styles/button';
+    import 'material/elements/css';
+    import 'material/elements/css/button';
     import { createButton, type ButtonConfig, type NavigationRailConfig, type NavigationRailComponent } from 'material';
+    import { createScheme, applyScheme, tonalSpot, vibrant, expressive, fidelity, content, neutral, monochrome, Hct, type DynamicScheme } from 'material/theme';
+    import { createSchemeByName } from 'material/theme/variants';
+    import { sourceColorFromImage } from 'material/theme/image';
     import rail from 'material/components/navigation-rail';
     const railConfig: NavigationRailConfig = { expanded: true, layout: 'modal', items: [] };
     const navigation: NavigationRailComponent = rail(railConfig);
     navigation.on('select', event => event.originalEvent.preventDefault());
     import button from 'material/components/button';
     import { BUTTON_VARIANTS } from 'material/components/button/constants';
+    import { createElementConfig } from 'material/core';
     import { addClass } from 'material/core/dom';
     const config: ButtonConfig = { text: 'Save', variant: BUTTON_VARIANTS.FILLED };
     const a: ReturnType<typeof createButton> = button(config);
     addClass(a.element, 'ready');
+    const elementConfig = createElementConfig({ style: { color: 'red' } }, { tag: 'div' });
+    elementConfig.style!.length = 0;
+    const scheme: DynamicScheme = createScheme('#6750a4', { variant: tonalSpot });
+    const primaryArgb: number = scheme.primary;
+    const existingPublicMember = scheme.colors;
+    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb, existingPublicMember, elementConfig];
   `);
   await run(["node", resolve("node_modules/typescript/bin/tsc"), typeFixture,
     "--noEmit", "--strict", "--module", "NodeNext", "--moduleResolution", "NodeNext",

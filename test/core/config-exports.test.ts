@@ -72,4 +72,11 @@ describe("the package exports the live createComponentConfig", () => {
     expect(result.getElementClass).toBeUndefined();
     expect(result.baseClass).toBeUndefined();
   });
+
+  test("createElementConfig preserves a writable style return type and compact declaration alias", () => {
+    const config = createElementConfig({ style: { color: "red" } }, { tag: "div" });
+    expect(config.style?.color).toBe("red");
+    config.style!.length = 0;
+    expect(config.style?.length).toBe(0);
+  });
 });

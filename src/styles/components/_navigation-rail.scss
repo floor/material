@@ -338,6 +338,11 @@ $snap: 0s linear $midpoint;
   @include m.high-contrast {
     border-inline-end: 1px solid CanvasText;
     &__item--active .#{$component}__indicator { outline: 2px solid Highlight; outline-offset: -2px; }
+    &__item:focus-visible .#{$component}__indicator,
+    &__item--active:focus-visible .#{$component}__indicator {
+      outline: 3px solid CanvasText;
+      outline-offset: 2px;
+    }
   }
 }
 

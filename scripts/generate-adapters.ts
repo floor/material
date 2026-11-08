@@ -13,7 +13,7 @@
 import { readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { elements } from "../src/elements";
-import { camel, declarationModules, elementModules, kebab, pascal } from "./element-modules";
+import { camel, declarationModules, elementDeprecations, elementModules, kebab, pascal } from "./element-modules";
 
 /** The package name the generated adapters import: mtrl, material, … */
 const pkg = (await Bun.file(join(import.meta.dir, "..", "package.json")).json()) as { name: string };
@@ -68,7 +68,9 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`, [
+  const note = elementDeprecations[name]?.(framework.component("toolbar"));
+  const body = `${note ? `/** @deprecated ${note} */\n` : ""}export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`;
+  return module(framework, name, body, [
     ...styles.map((style) => `import "${pkg.name}/elements/css/${style}";`),
     `import { ${camel(name)}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
     `import { createComponent, type MComponent } from "./create";`,
@@ -101,8 +103,8 @@ ${[...elementModules, ...declarationModules].map(({ name }) => `export { ${frame
 // `material/react/jsx` and `material/solid/jsx`. Augmenting from material/elements would
 // break type-checking for an app without React or Solid.
 const tags = [
-  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element` })),
-  ...declarationModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `typeof import("../elements/${from}").${name}Declaration`, element: "HTMLElement" })),
+  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element`, deprecated: elementDeprecations[name]?.(pascal("toolbar")) })),
+  ...declarationModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `typeof import("../elements/${from}").${name}Declaration`, element: "HTMLElement", deprecated: undefined })),
 ];
 
 /** Each live property and element event name, with the specs that have it: Solid's `prop:` and `on:` are global. */
@@ -129,7 +131,7 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
  * @module ${framework.dir}/jsx
  */
 `;
-  const entries = tags.map(({ tag, spec, element }) => `      "${tag}": Tag<${spec}, ${element}>;`).join("\n");
+  const entries = tags.map(({ tag, spec, element, deprecated }) => `${deprecated ? `      /** @deprecated ${deprecated} */\n` : ""}      "${tag}": Tag<${spec}, ${element}>;`).join("\n");
   if (react) {
     return `${header}import type * as React from "react";
 import type { ElementEvents, ElementMarkup } from "../elements";
@@ -163,13 +165,17 @@ ${entries}
 }
 `;
   }
-  const union = (names: Map<string, string[]>, type: (spec: string, name: string) => string): string =>
-    [...names].map(([name, specs]) => `      "${name}": ${specs.map((spec) => type(spec, name)).join(" | ")};`).join("\n");
+  const specUnion = elementModules.map(({ name, module: from }) => `import("../elements/${from}").${pascal(name)}Spec`).join(" | ");
+  const list = (names: Map<string, string[]>, fn: string): string =>
+    [...names.keys()].map((name) => `      "${name}": ${fn}<"${name}">;`).join("\n");
   return `${header}import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
 import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+type Spec = ${specUnion};
+type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
+type Ev<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it
@@ -179,11 +185,11 @@ ${entries}
     }
     /** \`prop:checked\`, \`prop:value\`: the elements' live properties. */
     interface ExplicitProperties {
-${union(byName("properties"), (spec, name) => `NonNullable<ElementProperties<${spec}>["${name}"]>`)}
+${list(byName("properties"), "Prop")}
     }
     /** \`on:change\` and the other element events. */
     interface CustomEvents {
-${union(byName("events"), (spec, name) => `ElementEvents<${spec}>["${name}"]`)}
+${list(byName("events"), "Ev")}
     }
   }
 }

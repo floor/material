@@ -15,6 +15,11 @@
  * elevation) change in place. `show()` and `hide()` move the toolbar on and
  * off screen, and `show` and `hide` are dispatched when it does.
  *
+ * `scroll-behavior="collapse"` is docked only: on scroll the bar shrinks to
+ * the 48dp target area, and `collapse` and `expand` are dispatched when it
+ * does. It has no effect on a floating toolbar yet; collapsing one into a FAB
+ * is a later release.
+ *
  * Parts: `toolbar`, `bar`, `fab`, `overflow`.
  *
  * @module elements
@@ -99,6 +104,8 @@ const toolbarSpec = {
   events: {
     show: { detail: () => null, state: true },
     hide: { detail: () => null, state: true },
+    collapse: { detail: () => null, state: true },
+    expand: { detail: () => null, state: true },
   },
   config: readToolbar,
   // A FAB or an overflow menu arriving or leaving changes what the factory built.
@@ -116,7 +123,21 @@ const toolbarSpec = {
     // (src/components/toolbar/toolbar.ts). The browser queues that event as a
     // microtask; dispatching it here sets the one tab stop before connect returns.
     component.bar.dispatchEvent(new Event("slotchange"));
-    return () => overflow?.removeEventListener("slotchange", onOverflow);
+    // The collapsed state reaches slotted items through the host: their own
+    // shadow sheets match it with :host-context, which no selector of the
+    // toolbar's shadow sheet can do across the boundary
+    // (styles/components/_button.scss).
+    const collapsedClass = `${component.getClass("toolbar")}--collapsed`;
+    host.classList.remove(collapsedClass);
+    const onCollapse = (): void => host.classList.add(collapsedClass);
+    const onExpand = (): void => host.classList.remove(collapsedClass);
+    component.on("collapse", onCollapse);
+    component.on("expand", onExpand);
+    return () => {
+      overflow?.removeEventListener("slotchange", onOverflow);
+      component.off("collapse", onCollapse);
+      component.off("expand", onExpand);
+    };
   },
 } satisfies ElementSpec<ToolbarComponent>;
 

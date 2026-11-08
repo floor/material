@@ -182,6 +182,9 @@
 @include create-theme-contrast("baseline", (
     medium: (
         light: (
+            success: #003e36,
+            warning: #671c00,
+            info: #00327c,
             error: #740006,
             error-container: #cf2c27,
             on-error-container: #ffffff,
@@ -221,6 +224,12 @@
             inverse-primary: #cfbdfe,
         ),
         dark: (
+            success: #90eddc,
+            on-success: #002b26,
+            warning: #ffd3c5,
+            on-warning: #4b1200,
+            info: #d1dcff,
+            on-info: #00225a,
             error: #ffd2cc,
             on-error: #540003,
             error-container: #ff5449,
@@ -265,6 +274,9 @@
     ),
     high: (
         light: (
+            success: #00332c,
+            warning: #561600,
+            info: #002867,
             error: #600004,
             error-container: #98000a,
             on-error-container: #ffffff,
@@ -305,6 +317,12 @@
             inverse-primary: #cfbdfe,
         ),
         dark: (
+            success: #b0ffef,
+            on-success: #000000,
+            warning: #ffece7,
+            on-warning: #000000,
+            info: #edefff,
+            on-info: #000000,
             error: #ffece9,
             on-error: #000000,
             error-container: #ffaea4,
