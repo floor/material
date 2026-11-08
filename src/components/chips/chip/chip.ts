@@ -16,7 +16,11 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   const options = createComponentConfig<ChipOptions>({ type: "filter", ripple: true }, config, "chip");
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
-  const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withLifecycle())(options);
+  const elementConfig = createElementConfig(options, { tag: "div" });
+  // Input chips have two named actions. ariaLabel names the primary action,
+  // not its owned group as well; a group label authored later stays its own.
+  if (type === "input") elementConfig.ariaLabel = undefined;
+  const base = pipe(createBase, withEvents(), withElement(elementConfig), withLifecycle())(options);
   const root = base.element;
   const resources = getCleanup(base);
   // The set's selection hook. removeChip and the set's teardown both destroy
@@ -122,7 +126,6 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (remove) {
       remove.disabled = disabled;
       remove.setAttribute("aria-label", options.removeLabel ?? `Remove ${label.textContent ?? ""}`);
-      if (!options.cell) root.setAttribute("aria-label", label.textContent ?? "");
     }
     if (trailingAction) {
       trailingAction.disabled = disabled;
