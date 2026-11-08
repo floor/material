@@ -27,25 +27,9 @@ export const createCanvasContext = (
   const pixelRatio = window.devicePixelRatio || 1;
   const ctx = canvas.getContext('2d')!;
   
-  // Set display size
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-  
-  // Set actual size with pixel ratio
-  canvas.width = Math.round(width * pixelRatio);
-  canvas.height = Math.round(height * pixelRatio);
-  
-  // Scale context to match pixel ratio
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(pixelRatio, pixelRatio);
-  
-  return {
-    canvas,
-    ctx,
-    width,
-    height,
-    pixelRatio
-  };
+  const context = { canvas, ctx, width, height, pixelRatio };
+  updateCanvasDimensions(context, width, height);
+  return context;
 };
 
 /**
