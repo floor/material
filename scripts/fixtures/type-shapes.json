@@ -1941,6 +1941,31 @@
       "string"
     ]
   },
+  "TextFieldConfig.enterKeyHint": {
+    "kind": "union",
+    "members": [
+      "\"done\"",
+      "\"enter\"",
+      "\"go\"",
+      "\"next\"",
+      "\"previous\"",
+      "\"search\"",
+      "\"send\""
+    ]
+  },
+  "TextFieldConfig.inputMode": {
+    "kind": "union",
+    "members": [
+      "\"decimal\"",
+      "\"email\"",
+      "\"none\"",
+      "\"numeric\"",
+      "\"search\"",
+      "\"tel\"",
+      "\"text\"",
+      "\"url\""
+    ]
+  },
   "TextFieldConfig.type": {
     "kind": "union",
     "members": [

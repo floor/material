@@ -1863,6 +1863,32 @@ try {
     check("text field: the label attribute is the accessible name");
 
     type TextHost = HTMLElement & { value: string; component: unknown };
+    for (const variant of ["filled", "outlined"]) for (const type of ["text", "multiline"]) {
+      await page.evaluate(({ variant, type }) => {
+        const host = document.createElement("m-text-field");
+        host.id = "keyboard-hints";
+        for (const [key, value] of Object.entries({ variant, type, label: "Keyboard code", value: "1234", inputmode: "numeric", enterkeyhint: "done" })) host.setAttribute(key, value);
+        document.getElementById("factory")!.append(host);
+      }, { variant, type });
+      const input = page.locator("#keyboard-hints").getByRole("textbox", { name: "Keyboard code", exact: true });
+      assert.equal(await input.getAttribute("inputmode"), "numeric");
+      assert.equal(await input.getAttribute("enterkeyhint"), "done");
+      await input.focus();
+      const updated = await page.evaluate(() => {
+        const host = document.getElementById("keyboard-hints")!;
+        const root = host.shadowRoot!;
+        const input = root.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")!;
+        host.setAttribute("inputmode", "decimal"); host.setAttribute("enterkeyhint", "next");
+        const changed = { same: root.querySelector("input, textarea") === input, focused: root.activeElement === input, value: input.value, mode: input.getAttribute("inputmode"), hint: input.getAttribute("enterkeyhint") };
+        host.removeAttribute("inputmode"); host.removeAttribute("enterkeyhint");
+        const removed = { same: root.querySelector("input, textarea") === input, focused: root.activeElement === input, value: input.value, mode: input.getAttribute("inputmode"), hint: input.getAttribute("enterkeyhint") };
+        host.remove();
+        return { changed, removed };
+      });
+      assert.deepEqual(updated, { changed: { same: true, focused: true, value: "1234", mode: "decimal", hint: "next" }, removed: { same: true, focused: true, value: "1234", mode: null, hint: null } });
+    }
+    check("text field: keyboard hint creation, live update/removal retain native input, focus and value in both variants and text/textarea");
+
     let state = await page.evaluate(() => {
       const w = window as unknown as Win;
       w.events = [];
