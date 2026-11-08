@@ -341,7 +341,9 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
 
-A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions. Adding actions through the card APIs or named custom-element action slots warns in development when the card is clickable; it keeps the configured role, tab stop and activation behavior. Production bundles strip this diagnostic when `process.env.NODE_ENV` is replaced with `"production"`.
+A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions.
+
+Adding actions through the card APIs or named custom-element action slots warns in development when the card is clickable; it keeps the configured role, tab stop and activation behavior. Production bundles strip this diagnostic when `process.env.NODE_ENV` is replaced with `"production"`.
 
 `actions-align` aligns the card's slotted actions, using the factory's `actionsConfig.align` values. Start and end follow text direction. Changes after upgrade update the row; removing the attribute restores `end`. Framework adapters expose `actionsAlign`.
 
@@ -593,7 +595,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 129.3 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 129.5 kB |
 | `material/styles/base` | 3.0 kB |
 | `material/styles/base-lite` | 1.6 kB |
 | `material/styles/base` and `material/styles/button` | 5.3 kB |
