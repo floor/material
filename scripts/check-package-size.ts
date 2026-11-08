@@ -684,6 +684,15 @@ try {
   assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
+  if (overBudget.length) {
+    // The normal component step is downstream of this gate. Keep its canonical
+    // rows available for review even when a packed fixture needs an owner decision.
+    console.error("Collecting canonical component rows before reporting packed budget failures.");
+    const report = Bun.spawn([process.execPath, join(import.meta.dir, "size.ts")], {
+      cwd: resolve(import.meta.dir, ".."), stdout: "inherit", stderr: "inherit",
+    });
+    console.error(`Component size diagnostic exited ${await report.exited}.`);
+  }
   assert.equal(overBudget.length, 0, overBudget.join("\n"));
   await mkdir("analysis", { recursive: true });
   await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
