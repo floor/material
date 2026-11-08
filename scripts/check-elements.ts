@@ -4979,11 +4979,12 @@ try {
   }
 
   // ---------------------------------------------------------------- drawer
+  const ACTIVE_ICON = '<svg viewBox="0 0 24 24" width="24" height="24" data-active="true"><path d="M4 4h16v16H4z"/></svg>';
   await fresh(
     page,
     `<m-drawer id="dr" open headline="Mail" value="inbox">
-       <m-drawer-item value="inbox" icon='${ICON}' badge="24">Inbox</m-drawer-item>
-       <m-drawer-item value="sent" icon='${ICON}'>Sent</m-drawer-item>
+       <m-drawer-item value="inbox" icon='${ICON}' selected-icon='${ACTIVE_ICON}' badge="24">Inbox</m-drawer-item>
+       <m-drawer-item value="sent" icon='${ICON}' selected-icon='${ACTIVE_ICON}'>Sent</m-drawer-item>
        <m-drawer-item type="divider"></m-drawer-item>
        <m-drawer-item type="section">Labels</m-drawer-item>
        <m-drawer-item value="family" disabled>Family</m-drawer-item>
@@ -5007,6 +5008,16 @@ try {
     assert.deepEqual(structure, { headline: "Mail", separators: 1, section: "Labels" });
     check("drawer: a navigation landmark named by its headline; items, a divider and a section headline; value is aria-current");
 
+    // The active destination shows its selected-icon; the others their icon.
+    const activeIcons = (): Promise<{ inbox: boolean; sent: boolean }> =>
+      page.evaluate(() => {
+        const root = document.getElementById("dr")?.shadowRoot as ShadowRoot;
+        const active = (id: string) => !!root.querySelector(`[data-id="${id}"] [class*="drawer__item-icon"] svg[data-active]`);
+        return { inbox: active("inbox"), sent: active("sent") };
+      });
+    assert.deepEqual(await activeIcons(), { inbox: true, sent: false });
+    check("drawer: the active destination shows its selected-icon and the others their icon");
+
     await page.evaluate(() => {
       const w = window as unknown as Win;
       w.events = [];
@@ -5022,7 +5033,8 @@ try {
       });
     await nav.getByRole("button", { name: "Sent", exact: true }).click();
     assert.deepEqual(await state(), { events: [{ detail: { value: "sent" }, target: "dr" }], value: "sent", attribute: "inbox", current: "sent" });
-    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays");
+    assert.deepEqual(await activeIcons(), { inbox: false, sent: true });
+    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays; the selected icons swap");
 
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press("Enter");

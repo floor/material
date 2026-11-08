@@ -3,9 +3,10 @@
  * `<m-drawer>` with `<m-drawer-item>` children: the standard (in-page)
  * navigation drawer.
  *
- * Each `<m-drawer-item>` declares one destination (`value`, `icon`, `badge`,
- * `disabled`, and its text as the label), or with `type="section"` a section
- * headline (its text) and with `type="divider"` a divider. The drawer reads
+ * Each `<m-drawer-item>` declares one destination (`value`, `icon`,
+ * `selected-icon`, `badge`, `disabled`, and its text as the label), or with
+ * `type="section"` a section headline (its text) and with `type="divider"` a
+ * divider. The drawer reads
  * them into the factory's config and updates in place when they change; the
  * children stay where the framework put them. `value` on the drawer is the
  * default destination, which moves the live one until the user or script
@@ -56,6 +57,7 @@ const declaredItems = (host: HTMLElement, active: string | null): DrawerItemConf
       id,
       label,
       icon: child.getAttribute("icon") ?? undefined,
+      activeIcon: child.getAttribute("selected-icon") ?? undefined,
       badge: child.getAttribute("badge") ?? undefined,
       disabled: child.hasAttribute("disabled"),
       active: id === active,
@@ -195,6 +197,8 @@ export const drawerItemDeclaration = {
     label: { type: "string" },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Shown while this destination is active. */
+    "selected-icon": { type: "string" },
     badge: { type: "string" },
     disabled: { type: "boolean" },
   },
