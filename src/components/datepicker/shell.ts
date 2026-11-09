@@ -12,7 +12,11 @@
 // ./constants a module shared between this first load and the deferred
 // calendar chunk — and a shared module is hoisted whole, so the calendar's
 // five-icon object would ship in the first load. This shell therefore touches
-// ./constants not at all.
+// ./constants not at all, and ./utils for the same reason: one static helper
+// from it hoists the whole date-math module into the first load. The field's
+// own synchronous path — the locale, the derived format, the displayed value,
+// the strict parse of what is typed — lives in ./field-format, repeated the
+// same way; the calendar-side helpers arrive with the calendar.
 
 import { pipe } from "../../core/compose";
 import { createBase, withElement } from "../../core/compose/component";
@@ -24,7 +28,7 @@ import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
 import { eventsFrom, onModalEscape, type EventsFrom } from "../../core/dom/layer";
 import { withAPI } from "./api";
 import { PREFIX } from "../../core/config";
-import { addMonths, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./utils";
+import { formatDate, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./field-format";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 import type { DatePickerSurfaceFactory } from "./surface";
 
@@ -75,7 +79,10 @@ export function createDatePickerShell<M extends string = "single">(
     currentView: settings.variant !== "fullscreen" && ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
-    locale, firstDayOfWeek: getFirstDayOfWeek(locale),
+    // The week start is calendar-side: the surface sets it from the locale
+    // when it lands, and nothing reads it before the calendar paints. Until
+    // then the placeholder is the scale's default week start.
+    locale, firstDayOfWeek: 1,
     dateFormat: config.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
@@ -293,7 +300,9 @@ export function createDatePickerShell<M extends string = "single">(
   const setBound = (key: "minDate" | "maxDate") => (value: Date | string) => {
     const date = parseDate(value); if (date && !destroyed) { state[key] = date; renderSurface(); if (state.inputMode) validateSurface(); } return api;
   };
-  const stepMonth = (d: number) => nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), d)));
+  // Month steps start from a first of the month, where no clamp can bite, so
+  // the constructor's own month rollover replaces the helper it would pull.
+  const stepMonth = (d: number) => nav(() => setDisplayDate(new Date(state.currentYear, state.currentMonth + d, 1)));
   const api = withAPI({
     element: base.element, input, getClass: base.getClass,
     disabled: { enable: () => setDisabled(false), disable: () => setDisabled(true), isDisabled: () => base.disabled.isDisabled() }, lifecycle: { destroy }, destroy,

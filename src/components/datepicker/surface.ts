@@ -18,7 +18,7 @@ import { activeElementOf } from "../../core/dom/focus";
 import { createElement } from "../../core/dom/create";
 import { renderCalendar } from "./render";
 import type { DatePickerState } from "./types";
-import { addDays, addMonths, dtf, formatDate, parseDate, parseInputDate } from "./utils";
+import { addDays, addMonths, dtf, formatDate, getFirstDayOfWeek, parseDate, parseInputDate } from "./utils";
 
 const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
 function lockScroll(doc: Document): () => void {
@@ -70,6 +70,10 @@ export type DatePickerSurface = [
  * @returns The surface's functions, with the calendar painted into the dialog
  */
 export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialogElement, cls: (name: string) => string, view: Window, trigger: HTMLElement, closeOnSelect: boolean, isOpen: () => boolean, close: (restoreFocus?: boolean) => void, commitDraft: () => void, setDisplayDate: (date: Date) => void): DatePickerSurface {
+  // The deferred shell leaves the week start to the calendar: it is read only
+  // here (the grid's lead days, Home and End), so it is resolved from the
+  // locale now, with the helpers this module already loads.
+  state.firstDayOfWeek = getFirstDayOfWeek(state.locale);
   const modal = state.variant !== "docked";
   const announcement = createElement({ tag: "div", className: cls("sr-only"), attributes: { "aria-live": "polite", "aria-atomic": "true" } });
   let unlock: (() => void) | undefined;
