@@ -149,12 +149,8 @@ jobs:
         run: bun run ssr-comments:check
       - name: Packed SSR on Node and Bun, and browser isolation
         run: bun run ssr-consumer:check
-      - name: Packed imports and size budgets
-        run: bun run size:check
       - name: Public Sass entries compile from the packed package
         run: bun run styles-package:check
-      - name: README examples, specifiers, sizes and links against the packed package
-        run: bun run readme:check
       - name: The third-party notice is packed, and names the glyphs it covers
         run: bun run notice:check
       - name: Documented imports, in every doc and JSDoc example, against the packed package
@@ -163,10 +159,21 @@ jobs:
         run: bun run declaration-docs:check
       - name: Every packed declaration entry resolves to declarations a consumer can name and compile
         run: bun run declaration-exports:check
-      - name: Per-component gzip budgets
-        run: bun run size
       - name: One adapter component ships only its element
         run: bun run adapters:size
+      - name: Packed imports and size budgets
+        run: bun run size:check
+      - name: README examples, specifiers, sizes and links against the packed package
+        run: bun run readme:check
+      - name: Per-component gzip budgets
+        run: bun run size
+      - name: Package measurement evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-measurements
+          path: analysis/package-size.json
+          retention-days: 3
 
   # The browser checks, in groups that run side by side, on the build's dist/.
   # A run takes as long as its slowest group, so a check that grows moves to a
