@@ -95,7 +95,7 @@ try {
   checks += 3;
   const autumn = shown.rows.find((row) => row.name === "autumn");
   assert.equal(autumn?.seed, "not recorded", "autumn's seed is displayed as not recorded");
-  assert.equal(autumn?.seed !== "#795548", true, "autumn must not display its fallback primary as a seed");
+  assert.notEqual(autumn?.seed, "#795548", "autumn must not display its fallback primary as a seed");
   const desert = shown.rows.find((row) => row.name === "desert");
   assert.equal(desert?.secondary, "#4a87c4", "desert carries its custom secondary seed");
   const highcontrast = shown.rows.find((row) => row.name === "highcontrast");
@@ -182,7 +182,7 @@ console.log(JSON.stringify({
 }));`;
   const unbundled: Record<string, { resolved: string; records: number; seed: string; tokens: string; autumn: unknown }> = {};
   for (const runtime of [["node", ["node", "--input-type=module", "-e", probe]], ["bun", ["bun", "-e", probe]]] as const) {
-    const child = Bun.spawnSync(runtime[1], { cwd: directory, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawnSync([...runtime[1]], { cwd: directory, stdout: "pipe", stderr: "pipe" });
     assert.equal(child.exitCode, 0, `${runtime[0]} unbundled import failed:\n${child.stdout}\n${child.stderr}`);
     const read = JSON.parse(child.stdout.toString());
     unbundled[runtime[0]] = read;

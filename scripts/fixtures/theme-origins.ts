@@ -23,7 +23,7 @@ const label = (record: OriginRecord): Record<string, string> => {
   };
 };
 
-const rows = Object.entries(coreTheme.THEME_ORIGINS as Record<string, OriginRecord>).map(([name, record]) => ({
+const rows: Record<string, string>[] = Object.entries(coreTheme.THEME_ORIGINS as Record<string, OriginRecord>).map(([name, record]) => ({
   name,
   ...label(record),
 }));
