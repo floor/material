@@ -21,6 +21,7 @@ interface Lab {
   prefix: string;
   load(): Promise<string>;
 }
+const viteVersion = (JSON.parse(await readFile(resolve("node_modules/vite/package.json"), "utf8")) as { version: string }).version;
 const fixture = await createPackageFixture();
 await mkdir("tmp", { recursive: true });
 const scratch = await mkdtemp(resolve("tmp/menu-deferred-"));
@@ -35,7 +36,7 @@ const packedManifest = JSON.parse(await readFile(join(fixture.installed, "packag
 };
 const packedMenu = resolve(fixture.installed, packedManifest.exports["./components/menu"].import);
 const baselineHelper = join(dirname(packedMenu), "on-demand.js");
-const cases = ["factory", "eager", "element", "diagnostic"] as const;
+const cases = ["factory", "eager", "element", "diagnostic", "initial-eager"] as const;
 const outputs = new Map<string, { directory: string; gates: string[]; initial: string[] }>();
 const artifacts = resolve("analysis/browser/menu-deferred");
 await mkdir(artifacts, { recursive: true });
@@ -65,7 +66,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
     for (const name of [kind, "broker"]) await copyFile(join(sources, `${name}.js`), join(directory, `${name}.js`));
     if (kind === "diagnostic") await writeFile(join(directory, "baseline-helper.js"),
       `export { createOnDemandMenu } from ${JSON.stringify(baselineHelper)};`);
-    const style = kind === "element" ? 'material/elements/preupgrade/menu.css' : 'material/styles/menu';
+    const style = (kind === "element" || kind === "initial-eager") ? 'material/elements/preupgrade/menu.css' : 'material/styles/menu';
     await writeFile(join(directory, "index.html"), `<!doctype html><html data-theme="baseline" data-theme-mode="light"><head>
 <script>window.defined=[]; const define=customElements.define.bind(customElements);customElements.define=(name,...args)=>{window.defined.push(name);return define(name,...args)};</script>
 </head><body><button id="opener">Actions</button><button id="other">Outside</button>
@@ -90,9 +91,74 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       for (const imported of chunk?.imports ?? []) if (!initial.has(imported)) { initial.add(imported); visit(imported); }
     };
     for (const file of [...initial]) visit(file);
-    if (kind !== "eager") assert(gates.every(file => !initial.has(file)), `${kind}: controller leaked into initial graph`);
+    if (kind !== "eager" && kind !== "initial-eager") assert(gates.every(file => !initial.has(file)), `${kind}: controller leaked into initial graph`);
     outputs.set(kind, { directory: join(directory, "out"), gates, initial: [...initial] });
   }
+  // Same pinned Vite/HTML build, minified JS/CSS and static closure for all
+  // four 16-component consumers. Every emitted shared/dynamic asset counts
+  // once in full, including the facade, broker and delayed shadow CSS.
+  const sizes: Record<string, { initial: number; full: number; initialBrotli: number; fullBrotli: number }> = {};
+  const families = ["button", "text-field", "checkbox", "switch", "radios", "select", "dialog", "menu", "tabs", "list", "chips", "progress", "icon-button", "fab", "slider", "divider"];
+  for (const mode of ["factories", "elements"]) for (const delivery of (mode === "elements" ? ["eager", "deferred", "barrel"] : ["eager", "deferred"])) {
+    const name = `${mode}-${delivery}`;
+    const directory = join(scratch, name);
+    await mkdir(directory);
+    for (const file of [`app-${mode}`, "broker"]) await copyFile(join(sources, `${file}.js`), join(directory, `${file}.js`));
+    if (delivery === "barrel") {
+      const broker = await readFile(join(directory, "broker.js"), "utf8");
+      await writeFile(join(directory, "broker.js"), broker.replace("'material/elements/menu'", "'material/elements'"));
+    }
+    let main = "import 'material/styles/base';\n";
+    if (mode === "factories") {
+      main += families.map(family => `import 'material/styles/${family}';`).join("\n");
+      main += `\nimport {mount} from './app-factories.js';\n`;
+      main += delivery === "eager" ? "import createMenu from 'material/components/menu';\n"
+        : "import createMenu from 'material/components/menu/deferred';\n";
+      main += "window.menu=createMenu({opener:mount(),items:[{id:'one',text:'One'}]});";
+    } else {
+      main += families.filter(family => family !== "menu" || delivery === "eager")
+        .map(family => `import 'material/elements/css/${family}';`).join("\n");
+      main += "\nimport 'material/elements/preupgrade/menu.css';\nimport {mount} from './app-elements.js';\n";
+      main += delivery === "eager" ? "import {defineMenu} from 'material/elements/menu';defineMenu();mount();"
+        : "import {menuLoader,brokerMenu} from './broker.js';const {anchor,host}=mount();brokerMenu(anchor,host,menuLoader('m'),console.error);";
+    }
+    await writeFile(join(directory, "main.js"), main);
+    await writeFile(join(directory, "index.html"), '<!doctype html><html><body><script type="module" src="./main.js"></script></body></html>');
+    const measured = await build({ root: directory, configFile: false, envFile: false, logLevel: "error",
+      build: { outDir: join(directory, "out"), minify: true, cssMinify: true, modulePreload: { polyfill: false } } });
+    assert(!Array.isArray(measured) && "output" in measured);
+    const html = measured.output.find(file => file.fileName === "index.html");
+    assert(html?.type === "asset");
+    const initial = new Set([...String(html.source).matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+)"/g)].map(match => match[1]));
+    const visit = (name: string): void => {
+      const chunk = measured.output.find(file => file.fileName === name);
+      if (chunk?.type !== "chunk") return;
+      // Vite extracts CSS beside a JS chunk; HTML references initial CSS.
+      const metadata = chunk as typeof chunk & { viteMetadata?: { importedCss?: Set<string> } };
+      for (const imported of [...chunk.imports, ...metadata.viteMetadata?.importedCss ?? []]) {
+        if (!initial.has(imported)) { initial.add(imported); visit(imported); }
+      }
+    };
+    for (const file of [...initial]) visit(file);
+    const assets = measured.output.filter(file => /\.(js|css)$/.test(file.fileName)).map(file => {
+      const source = file.type === "chunk" ? file.code : file.source;
+      const bytes = typeof source === "string" ? Buffer.from(source) : Buffer.from(source);
+      return { file: file.fileName, initial: initial.has(file.fileName),
+        gzip: gzipSync(bytes, { level: 9 }).length,
+        brotli: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length };
+    });
+    sizes[name] = { initial: assets.filter(file => file.initial).reduce((sum, file) => sum + file.gzip, 0),
+      full: assets.reduce((sum, file) => sum + file.gzip, 0),
+      initialBrotli: assets.filter(file => file.initial).reduce((sum, file) => sum + file.brotli, 0),
+      fullBrotli: assets.reduce((sum, file) => sum + file.brotli, 0) };
+    await writeFile(join(artifacts, `${name}.json`), JSON.stringify({ ...sizes[name], assets, initial: [...initial] }, null, 2));
+  }
+  for (const mode of ["factories", "elements"]) {
+    console.log(`${mode} initial gzip ${sizes[`${mode}-eager`].initial} -> ${sizes[`${mode}-deferred`].initial}; fully loaded ${sizes[`${mode}-eager`].full} -> ${sizes[`${mode}-deferred`].full}`);
+    assert(sizes[`${mode}-deferred`].initial < sizes[`${mode}-eager`].initial, `${mode}: complete deferred fixture saves no initial bytes`);
+  }
+  console.log(`Ad-hoc element barrel loader initial gzip: ${sizes["elements-barrel"].initial}; dedicated entry: ${sizes["elements-deferred"].initial}`);
+  await writeFile(join(artifacts, "sizes.json"), JSON.stringify({ sizes, vite: viteVersion, bun: Bun.version, nodeCompatibility: process.version }, null, 2));
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const url = new URL(request.url);
     const [, kind, ...parts] = url.pathname.split("/");
@@ -119,7 +185,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       const gateFiles = outputs.get(kind)!.gates;
       await page.route("**/*", async route => {
         const path = new URL(route.request().url()).pathname;
-        if (kind !== "eager" && !unlocked && gateFiles.some(file => path.endsWith(`/${file}`))) waiting.push(route);
+        if (kind !== "eager" && kind !== "initial-eager" && !unlocked && gateFiles.some(file => path.endsWith(`/${file}`))) waiting.push(route);
         else await route.continue();
       });
       await page.goto(`${server.url}${kind}/?${query}`);
@@ -432,82 +498,35 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       }), beforeStyle, "SSR styling changed during hydration");
       record("closed SSR keeps root/styles/children and quiet state"); await finish();
     }
-    // Initially open own state starts registration eagerly and upgrades quietly.
+    // Initial upgrade keeps the existing eager setup event. Subsequent
+    // attribute/property changes are quiet in both delivery paths.
     {
+      const control = await fresh("initial-eager");
+      const expected = await control.page.evaluate(() => {
+        const { host, events, errors } = (window as unknown as { lab: Lab }).lab;
+        return [host.open, events, errors];
+      });
+      assert.deepEqual(expected, [true, ["open"], []]);
+      await control.page.evaluate(() => {
+        const { host, events } = (window as unknown as { lab: Lab }).lab;
+        host.open = false; host.open = true;
+        if (events.length !== 1) throw new Error("eager property updates emitted state events");
+      });
+      await control.finish();
       const { page, release, finish } = await fresh("element", "initial");
       await release();
       await page.waitForFunction(() => customElements.get("m-menu") !== undefined);
       assert.deepEqual(await page.evaluate(() => {
         const { host, events, errors } = (window as unknown as { lab: Lab }).lab;
         return [host.open, events, errors];
-      }), [true, [], []]);
-      record("initial open uses eager registration and quiet own-property upgrade"); await finish();
-    }
-    // Same pinned Vite/HTML build, minified JS/CSS and static closure for all
-    // four 16-component consumers. Every emitted shared/dynamic asset counts
-    // once in full, including the facade, broker and delayed shadow CSS.
-    const sizes: Record<string, { initial: number; full: number; initialBrotli: number; fullBrotli: number }> = {};
-    const families = ["button", "text-field", "checkbox", "switch", "radios", "select", "dialog", "menu", "tabs", "list", "chips", "progress", "icon-button", "fab", "slider", "divider"];
-    for (const mode of ["factories", "elements"]) for (const delivery of (mode === "elements" ? ["eager", "deferred", "barrel"] : ["eager", "deferred"])) {
-      const name = `${mode}-${delivery}`;
-      const directory = join(scratch, name);
-      await mkdir(directory);
-      for (const file of [`app-${mode}`, "broker"]) await copyFile(join(sources, `${file}.js`), join(directory, `${file}.js`));
-      if (delivery === "barrel") {
-        const broker = await readFile(join(directory, "broker.js"), "utf8");
-        await writeFile(join(directory, "broker.js"), broker.replace("'material/elements/menu'", "'material/elements'"));
-      }
-      let main = "import 'material/styles/base';\n";
-      if (mode === "factories") {
-        main += families.map(family => `import 'material/styles/${family}';`).join("\n");
-        main += `\nimport {mount} from './app-factories.js';\n`;
-        main += delivery === "eager" ? "import createMenu from 'material/components/menu';\n"
-          : "import createMenu from 'material/components/menu/deferred';\n";
-        main += "window.menu=createMenu({opener:mount(),items:[{id:'one',text:'One'}]});";
-      } else {
-        main += families.filter(family => family !== "menu" || delivery === "eager")
-          .map(family => `import 'material/elements/css/${family}';`).join("\n");
-        main += "\nimport 'material/elements/preupgrade/menu.css';\nimport {mount} from './app-elements.js';\n";
-        main += delivery === "eager" ? "import {defineMenu} from 'material/elements/menu';defineMenu();mount();"
-          : "import {menuLoader,brokerMenu} from './broker.js';const {anchor,host}=mount();brokerMenu(anchor,host,menuLoader('m'),console.error);";
-      }
-      await writeFile(join(directory, "main.js"), main);
-      await writeFile(join(directory, "index.html"), '<!doctype html><html><body><script type="module" src="./main.js"></script></body></html>');
-      const measured = await build({ root: directory, configFile: false, envFile: false, logLevel: "error",
-        build: { outDir: join(directory, "out"), minify: true, cssMinify: true, modulePreload: { polyfill: false } } });
-      assert(!Array.isArray(measured) && "output" in measured);
-      const html = measured.output.find(file => file.fileName === "index.html");
-      assert(html?.type === "asset");
-      const initial = new Set([...String(html.source).matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+)"/g)].map(match => match[1]));
-      const visit = (name: string): void => {
-        const chunk = measured.output.find(file => file.fileName === name);
-        if (chunk?.type !== "chunk") return;
-        // Vite extracts CSS beside a JS chunk; HTML references initial CSS.
-        const metadata = chunk as typeof chunk & { viteMetadata?: { importedCss?: Set<string> } };
-        for (const imported of [...chunk.imports, ...metadata.viteMetadata?.importedCss ?? []]) {
-          if (!initial.has(imported)) { initial.add(imported); visit(imported); }
-        }
-      };
-      for (const file of [...initial]) visit(file);
-      const assets = measured.output.filter(file => /\.(js|css)$/.test(file.fileName)).map(file => {
-        const source = file.type === "chunk" ? file.code : file.source;
-        const bytes = typeof source === "string" ? Buffer.from(source) : Buffer.from(source);
-        return { file: file.fileName, initial: initial.has(file.fileName),
-          gzip: gzipSync(bytes, { level: 9 }).length,
-          brotli: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length };
+      }), expected);
+      await page.evaluate(() => {
+        const { host, events } = (window as unknown as { lab: Lab }).lab;
+        host.open = false; host.open = true;
+        if (events.length !== 1) throw new Error("deferred registration changed quiet property updates");
       });
-      sizes[name] = { initial: assets.filter(file => file.initial).reduce((sum, file) => sum + file.gzip, 0),
-        full: assets.reduce((sum, file) => sum + file.gzip, 0),
-        initialBrotli: assets.filter(file => file.initial).reduce((sum, file) => sum + file.brotli, 0),
-        fullBrotli: assets.reduce((sum, file) => sum + file.brotli, 0) };
-      await writeFile(join(artifacts, `${name}.json`), JSON.stringify({ ...sizes[name], assets, initial: [...initial] }, null, 2));
+      record("initial open matches eager setup; subsequent property updates remain quiet"); await finish();
     }
-    for (const mode of ["factories", "elements"]) {
-      console.log(`${mode} initial gzip ${sizes[`${mode}-eager`].initial} -> ${sizes[`${mode}-deferred`].initial}; fully loaded ${sizes[`${mode}-eager`].full} -> ${sizes[`${mode}-deferred`].full}`);
-      assert(sizes[`${mode}-deferred`].initial < sizes[`${mode}-eager`].initial, `${mode}: complete deferred fixture saves no initial bytes`);
-    }
-    console.log(`Ad-hoc element barrel loader initial gzip: ${sizes["elements-barrel"].initial}; dedicated entry: ${sizes["elements-deferred"].initial}`);
-    await writeFile(join(artifacts, "sizes.json"), JSON.stringify({ sizes, vite: "8.2.2", node: process.version }, null, 2));
     await writeFile(join(artifacts, "results.json"), JSON.stringify({ results, outputs: Object.fromEntries(outputs) }, null, 2));
     console.log(`Deferred menu: ${results.length} packed styled cases passed`);
   } finally { server.stop(true); }
