@@ -59,4 +59,14 @@ describe("opt-in typography consumers", () => {
       expect(css).not.toContain("--mtrl-sys-typescale-label-small-font,");
     }
   });
+
+  test("group pre-upgrade size roles consume the same tracking, weight and face as the owned buttons", () => {
+    const css = compile(config("true") + '@use "elements/button-group";');
+    expect(css).toContain("var(--mtrl-sys-typescale-title-medium-font-weight, 500)");
+    for (const role of ["headline-small", "headline-large"]) {
+      expect(css).toContain(`var(--mtrl-sys-typescale-${role}-letter-spacing, 0)`);
+      expect(css).toContain(`var(--mtrl-sys-typescale-${role}-font-weight, 400)`);
+      expect(css).toContain(`var(--mtrl-sys-typescale-${role}-font, var(--mtrl-ref-typeface-brand, Roboto, sans-serif))`);
+    }
+  });
 });

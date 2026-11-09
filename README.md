@@ -249,7 +249,7 @@ Set only the role properties the application wants to customize:
 }
 ```
 
-Role properties inherit through element hosts into their shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled font family. No complete token sheet is required. Badge text consumes its existing size, line-height and weight properties; hidden text and dot badges keep their zero font size. Component adjustments, such as the button group's large-size weight and tracking, keep their existing priority.
+Role properties inherit through element hosts into their shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled font family. No complete token sheet is required. Badge text consumes its existing size, line-height and weight properties; hidden text and dot badges keep their zero font size. Button-group pre-upgrade items use the same size-specific role weight, tracking and reference face as their upgraded buttons; the large-size declarations keep their existing priority.
 
 A provided role value wins over the fallback. An inherited role font resolved on an ancestor keeps that ancestor's value; set the role font on the intended scope when changing its reference face. A missing token can use a fallback, but a supplied value of the wrong CSS type follows normal CSS invalid-value behavior.
 

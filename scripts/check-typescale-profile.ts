@@ -23,17 +23,17 @@ const js = `
 import createButton from 'material/components/button';
 import createTextField from 'material/components/text-field';
 import createBadge from 'material/components/badge';
-import {defineButton,defineTextField,defineBadge} from 'material/elements';
+import {defineButton,defineTextField,defineBadge,defineButtonGroup} from 'material/elements';
 import {preupgradeStyles} from 'PROFILE_PREUPGRADE';
 const scope=document.createElement('div');scope.id='scope';document.body.append(scope);
 const button=createButton({text:'Factory'});button.element.id='factory';scope.append(button.element);
 const field=createTextField({label:'Name',value:'Ada',supportingText:'Support'});field.element.id='field';scope.append(field.element);
 const badge=createBadge({label:'5'});badge.element.id='badge';scope.append(badge.element);
 scope.insertAdjacentHTML('beforeend','<m-button>Element</m-button><m-text-field label="Name" value="Ada" supporting-text="Support"></m-text-field><m-badge label="5"></m-badge>');
-Object.assign(window,{profile:{button,field,badge,defineButton,defineTextField,defineBadge,preupgradeStyles}});
+Object.assign(window,{profile:{button,field,badge,defineButton,defineTextField,defineBadge,defineButtonGroup,preupgradeStyles}});
 document.documentElement.dataset.ready='true';
 `;
-type API = { button: { setSize(size: string): void }; badge: { setVariant(variant: string): void }; defineButton(options?: { prefix: string }): void; defineTextField(): void; defineBadge(): void; preupgradeStyles(prefix?: string): string };
+type API = { button: { setSize(size: string): void }; badge: { setVariant(variant: string): void }; defineButton(options?: { prefix: string }): void; defineButtonGroup(options?: { prefix: string }): void; defineTextField(): void; defineBadge(): void; preupgradeStyles(prefix?: string): string };
 type ProfileWindow = Window & { profile: API };
 const metrics = (bytes: Uint8Array) => ({ raw: bytes.length, gzip: gzipSync(bytes, { level: 9 }).length,
   brotli: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length });
@@ -90,6 +90,15 @@ try {
     output.set(name, { files, html });
   }
   report.sizes = sizes;
+  const direct: Record<string, unknown> = {};
+  for (const selected of [false, true]) {
+    const prefix = selected ? "typescale/" : "";
+    const paths = family.flatMap(name => [`styles/${prefix}${name}.css`, `elements/css/${prefix}${name}.css`]);
+    paths.push(`elements/${prefix}preupgrade.css`);
+    direct[selected ? "selected" : "default"] = Object.fromEntries(await Promise.all(paths.map(async path =>
+      [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, "dist", path)).arrayBuffer()))])));
+  }
+  report.direct = direct;
   console.log(JSON.stringify({ package: report.package, sizes }));
   // Same packed public-root import and Bun ruler as the package gate, kept
   // observable here even when optional package growth blocks that job early.
@@ -116,7 +125,16 @@ try {
   const roles = [...plain.matchAll(/\.plain-probe-([\w-]+)\{/g)].map(match => match[1]);
   const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as typeof import("../src/ssr");
   const ssr = renderElement("m-button", { id: "ssr-button" }, "SSR", { styles: "link", cssBase: "/element-css" });
-  report.ssr = { inlineBytes: Buffer.byteLength(renderElement("m-button", {}, "SSR")), linked: ssr };
+  const linkedAssets: Record<string, unknown> = {};
+  const linkedPaths = [...new Set([...ssr.matchAll(/href="\/element-css\/([^"?#]+)"/g)].map(match => match[1]))];
+  assert.equal(linkedPaths.length, 4, "SSR button must retain its host, ripple and component dependency sheets");
+  for (const selected of [false, true]) {
+    const prefix = selected ? "typescale/" : "";
+    linkedAssets[selected ? "selected" : "default"] = Object.fromEntries(await Promise.all(linkedPaths.map(async path =>
+      [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, `dist/elements/css/${prefix}`, path)).arrayBuffer()))])));
+  }
+  report.ssr = { defaultInline: metrics(Buffer.from(renderElement("m-button", {}, "SSR"))),
+    linkedHtml: metrics(Buffer.from(ssr)), linked: ssr, external: linkedAssets };
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const path = new URL(request.url).pathname;
     if (path.startsWith("/element-css/")) {
@@ -190,26 +208,43 @@ try {
       await page.evaluate(() => { (window as unknown as ProfileWindow).profile.badge.setVariant("small"); document.querySelector("m-badge")!.setAttribute("variant", "small"); });
       assert.equal(await sizeOf(page, "#badge"), "0px");
       assert.equal(await sizeOf(page, "m-badge .mtrl-badge"), "0px");
-      const group = await page.evaluate(() => {
-        // Undefined element children use the pre-upgrade shim. Native buttons
-        // have a higher base-layer font reset and are not this fixture.
-        const style = document.createElement("style");
-        style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles("x");
-        document.head.append(style);
-        document.body.insertAdjacentHTML("beforeend", '<x-button-group size="m"><x-button>Group</x-button></x-button-group>');
-        const group = document.querySelector("x-button-group")!;
-        const child = group.querySelector("x-button")!;
-        const medium = getComputedStyle(child).fontSize;
-        document.documentElement.style.setProperty("--mtrl-sys-typescale-headline-small-letter-spacing", "2px");
-        document.documentElement.style.setProperty("--mtrl-sys-typescale-headline-small-font-weight", "650");
-        group.setAttribute("size", "l");
-        const large = getComputedStyle(child);
-        const result = { medium, large: large.fontSize, spacing: large.letterSpacing, weight: large.fontWeight };
-        group.remove();
-        return result;
-      });
-      assert.deepEqual([group.medium, group.large, group.weight], ["27px", "31px", "400"], "button-group role/adjustment mapping changed");
-      assert(["normal", "0px"].includes(group.spacing), "button-group large-size zero tracking changed");
+      const groups = [];
+      for (const [size, role, fontSize, spacing, weight, font] of [
+        ["m", "title-medium", "27px", "1px", "630", "monospace"],
+        ["l", "headline-small", "31px", "2px", "650", "monospace"],
+        ["xl", "headline-large", "37px", "3px", "670", "monospace"],
+      ]) {
+        const group = await page.evaluate(async ({ size, role, spacing, weight }) => {
+          const prefix = `tg-${size}`;
+          const style = document.createElement("style");
+          style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles(prefix);
+          document.head.append(style);
+          const group = document.createElement(`${prefix}-button-group`);
+          group.setAttribute("size", size);
+          // The group API parses item children into owned buttons on upgrade.
+          const child = document.createElement(`${prefix}-button-group-item`);
+          child.textContent = "Group";
+          group.append(child);
+          group.style.setProperty(`--mtrl-sys-typescale-${role}-letter-spacing`, spacing);
+          group.style.setProperty(`--mtrl-sys-typescale-${role}-font-weight`, weight);
+          group.style.setProperty("--mtrl-ref-typeface-brand", "monospace");
+          group.style.setProperty("--mtrl-ref-typeface-plain", "serif");
+          document.body.append(group);
+          const values = (el: Element) => { const s = getComputedStyle(el); return { size: s.fontSize, spacing: s.letterSpacing, weight: s.fontWeight, font: s.fontFamily }; };
+          const before = values(child);
+          (window as unknown as ProfileWindow).profile.defineButtonGroup({ prefix });
+          const button = group.shadowRoot!.querySelector("button")!;
+          void getComputedStyle(button).fontSize;
+          await Promise.all(button.getAnimations().filter(a => a.effect?.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {})));
+          const result = { size, before, after: values(button) };
+          group.remove();
+          return result;
+        }, { size, role, spacing, weight });
+        groups.push(group);
+        assert.deepEqual(group.before, group.after, `button-group ${size} role typography must agree before and after upgrade`);
+        assert.deepEqual(group.after, { size: fontSize, spacing, weight, font });
+      }
+      report.groups = groups;
       const custom = await page.evaluate(() => {
         const style = document.createElement("style"); style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles("x"); document.head.append(style);
         const host = document.createElement("x-button"); host.textContent = "Custom"; host.setAttribute("size", "m"); document.body.append(host);

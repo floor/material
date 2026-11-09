@@ -27,13 +27,13 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   padding: 0 list.nth($t, 3);
   @if $font {
     @if emit.$typography-tokens {
-      font-family: m.typography-value($role, 'font', var(--mtrl-ref-typeface-plain,Roboto,sans-serif));
+      font-family: m.typography-value($role, 'font', var(--mtrl-ref-typeface-#{f.typeface($role)}, #{map.get($type, 'font-family')}));
     }
     font-size: m.typography-value($role, 'font-size', map.get($type, 'font-size'));
     line-height: m.typography-value($role, 'line-height', map.get($type, 'line-height'));
     @if $letter { letter-spacing: m.typography-value($role, 'letter-spacing', map.get($type, 'letter-spacing')); }
   }
-  @if $weight { font-weight: m.typography-value($role, 'font-weight', map.get($type, 'font-weight')); }
+  @if $weight or emit.$typography-tokens { font-weight: m.typography-value($role, 'font-weight', map.get($type, 'font-weight')); }
 }
 
 @include c.host('button-group') {
@@ -93,7 +93,18 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   }
 
   &:is([size='m'], [size='l'], [size='xl'])::before { margin-inline-end: -8px; }
-  &:is([size='l'], [size='xl']) > * { letter-spacing: 0; font-weight: 400; }
+  @if emit.$typography-tokens {
+    // These are the large roles' current defaults. Keep their priority while
+    // consuming the same overrides as the buttons created after upgrade.
+    @each $size, $role in ('l': 'headline-small', 'xl': 'headline-large') {
+      &[size='#{$size}'] > * {
+        letter-spacing: m.typography-value($role, 'letter-spacing', 0);
+        font-weight: m.typography-value($role, 'font-weight', 400);
+      }
+    }
+  } @else {
+    &:is([size='l'], [size='xl']) > * { letter-spacing: 0; font-weight: 400; }
+  }
 
   // The shim tracks the centre the items actually moved: half the height
   // reduction, which stops where the height's 32dp floor does.
