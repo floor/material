@@ -5,6 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import * as sass from "sass";
 import { baseStyles, componentStyles } from "../../scripts/style-manifest";
+import { styleLayerOrder } from "../../scripts/build-styles";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
@@ -70,8 +71,10 @@ describe("material/styles/typography", () => {
     expect(build).toContain('emit("styles/typography", typographyStyles, typographyDependencies)');
     // The rules lived in mtrl.base. A new layer name would change the order
     // every stylesheet declares, which is what keeps load order from mattering.
-    // base-lite joins them: its rules belong in the base layer too.
-    expect(build).toContain('name === "typography" || name === "base-lite" ? "base"');
+    // Check the layer contract rather than the source spelling of the base
+    // aliases. elements-css:check also checks the emitted typography.css.
+    expect(styleLayerOrder()).toContain("mtrl.base,");
+    expect(styleLayerOrder()).not.toContain("mtrl.typography");
     expect(typographySources).toEqual(["base/typescale", "base/typography"]);
   });
 
