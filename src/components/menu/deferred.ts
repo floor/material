@@ -61,6 +61,9 @@ const resolveOpener = (value: MenuConfig["opener"]): HTMLElement => {
  * loaded. CSS stays the application's synchronous stylesheet choice.
  */
 export const createDeferredMenu = (config: DeferredMenuConfig): DeferredMenuComponent => {
+  // Like the eager factory's merged configuration, keep option values stable.
+  // Later caller edits must not change how installed handlers are removed.
+  config = { ...config };
   let opener = resolveOpener(config.opener);
   let openerTarget = typeof config.opener === "string" ? opener : config.opener;
   let menu: MenuComponent | null = null;

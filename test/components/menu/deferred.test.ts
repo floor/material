@@ -359,4 +359,14 @@ describe("deferred menu", () => {
     expect(menu.isOpen()).toBe(false);
   });
 
+  test("mutating the caller's configuration cannot prevent opener cleanup", () => {
+    const config = { opener, items, manualOpen: false };
+    const menu = createDeferredMenu(config); handles.push(menu);
+    config.manualOpen = true;
+    menu.destroy();
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+    opener.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(false);
+  });
+
 });
