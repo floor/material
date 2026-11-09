@@ -231,7 +231,7 @@ $swap: 48ms;
     &:focus-visible {
       @include m.state-layer(currentColor, 'focus');
       outline: 2px solid t.color('secondary');
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
 
     &:active {

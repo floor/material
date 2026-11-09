@@ -3,6 +3,7 @@
 // text. From the $button tokens, as components/_button.scss.
 @use 'sass:map';
 @use 'sass:list';
+@use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
@@ -19,10 +20,14 @@ $containers: (
 );
 
 @mixin size($size) {
-  height: v.button('height-#{$size}');
+  // As components/_button.scss: density moves the height 4dp a step down to
+  // the 32dp visible target, and the round radius half as far (its floor, 16dp,
+  // is half of that target). Reading the shared property keeps a page that
+  // sets it from shifting at upgrade; the layer declares none.
+  height: f.density(v.button('height-#{$size}'), 32px);
   padding: 0 v.button('padding-#{$size}');
   gap: v.button('icon-gap-#{$size}');
-  border-radius: v.button('shape-round-#{$size}');
+  border-radius: f.density(v.button('shape-round-#{$size}'), 16px, 2px);
   @include m.typography(map.get($label-typescale, $size));
 
   // The icon's place (its markup is an attribute, drawn on upgrade). A

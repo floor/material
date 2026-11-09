@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
-import createList from "../../../src/components/list";
+import createList, { withSingleSelectListbox } from "../../../src/components/list";
+import createSwitch from "../../../src/components/switch";
 import type { ListComponent, ListConfig, ListItem } from "../../../src/components/list/types";
 
 let dom: JSDOM;
 let lists: ListComponent<ListItem>[];
 beforeEach(() => {
   dom = new JSDOM("<!doctype html><body></body>", { pretendToBeVisual: true });
-  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent });
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, HTMLInputElement: dom.window.HTMLInputElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent, CustomEvent: dom.window.CustomEvent, MutationObserver: dom.window.MutationObserver, getComputedStyle: dom.window.getComputedStyle.bind(dom.window), requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(Date.now()), 0) });
   lists = [];
 });
 afterEach(() => { lists.forEach(list => list.destroy()); dom.window.close(); });
@@ -114,6 +115,35 @@ describe("Material list anatomy", () => {
   });
 });
 
+describe("trailing controls", () => {
+  const switchIn = (list: ListComponent<ListItem>, index = 0) => row(list, index).querySelector<HTMLInputElement>('[data-list-control] input[role="switch"]')!;
+  test("a component instance is unwrapped and an unnamed switch takes the row's name and description", () => {
+    const list = mount([{ headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    expect(input).not.toBeNull();
+    expect(row(list).textContent).not.toContain("[object Object]");
+    expect(input.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")?.id ?? "");
+    expect(input.getAttribute("aria-describedby")).toBe(row(list).querySelector(".mtrl-list__supporting")?.id ?? "");
+    const named = mount([{ headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({ ariaLabel: "Wireless" }) } }]);
+    const labelled = switchIn(named);
+    expect(labelled.getAttribute("aria-label")).toBe("Wireless");
+    expect(labelled.hasAttribute("aria-labelledby")).toBe(false);
+  });
+  test("a click on the row toggles the switch and the row follows the switch's state", () => {
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    row(list).click();
+    expect(input.checked).toBe(true);
+    expect(list.getSelectedItemIds()).toEqual(["wifi"]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(true);
+    expect(action(list).getAttribute("aria-pressed")).toBe("true");
+    input.click();
+    expect(input.checked).toBe(false);
+    expect(list.getSelectedItemIds()).toEqual([]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(false);
+  });
+});
+
 describe("real list selection and lifecycle", () => {
   test("selection is immediately reflected and refresh preserves it", async () => {
     const list = mount([{ id: "a", headline: "A", selected: true }, { id: "b", headline: "B" }]);
@@ -128,6 +158,18 @@ describe("real list selection and lifecycle", () => {
     const handler = (event: { component: ListComponent<ListItem>; preventDefault(): void }) => { calls++; expect(event.component).toBe(list); event.preventDefault(); };
     list.on("select", handler); action(list).click(); expect(calls).toBe(1); expect(list.getSelectedItems()).toEqual([]);
     list.off("select", handler); action(list).click(); expect(list.getSelectedItemIds()).toEqual(["a"]);
+  });
+  test("a select event carries the row's own button, and element stays the row", () => {
+    const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }]);
+    const events: { element: HTMLElement; action?: HTMLButtonElement }[] = [];
+    list.on("select", event => events.push(event));
+    action(list, 1).click(); action(list).click();
+    expect(events).toHaveLength(2);
+    expect(events[0].action === action(list, 1)).toBe(true);
+    expect(events[1].action === action(list)).toBe(true);
+    expect(events[0].element === row(list, 1)).toBe(true);
+    expect(events[1].element === row(list)).toBe(true);
+    expect(events[0].element === events[0].action).toBe(false);
   });
   test("multi-selection toggles independently; unknown IDs never create phantom selections", () => {
     const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }], { multiSelect: true, initialSelection: ["missing"] });
@@ -163,5 +205,183 @@ describe("real list selection and lifecycle", () => {
     const retained = action(first); let calls = 0; first.on("select", () => calls++);
     first.destroy(); retained.click(); await first.refresh(); expect(calls).toBe(0); expect(first.element.querySelector(".mtrl-list__item")).toBeNull();
     action(second).click(); expect(second.getSelectedItemIds()).toEqual(["0"]);
+  });
+});
+
+describe("single-select listbox mode", () => {
+  const mountBox = (
+    items: ListItem[],
+    config: Partial<ListConfig<ListItem>> = {},
+    options?: Parameters<typeof withSingleSelectListbox>[1],
+  ) => {
+    const list = withSingleSelectListbox(createList({ ...config, items }), options);
+    lists.push(list); document.body.append(list.element); return list;
+  };
+  const options = (list: ListComponent<ListItem>) =>
+    Array.from(list.element.querySelectorAll<HTMLElement>('[role="option"]'));
+  const key = (target: Element, name: string) =>
+    target.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: name, bubbles: true, cancelable: true }));
+  const selectedStates = (list: ListComponent<ListItem>) =>
+    options(list).map((option) => option.getAttribute("aria-selected"));
+  /** A list whose enhancement must refuse; the base list is still cleaned up. */
+  const refuses = (
+    config: Partial<ListConfig<ListItem>>,
+    options?: Parameters<typeof withSingleSelectListbox>[1],
+  ) => {
+    const base = createList({ items: [{ headline: "Row" }], ...config }); lists.push(base);
+    return () => withSingleSelectListbox(base, options);
+  };
+
+  test("roles, the box's name, and initial aria-selected on every option", () => {
+    const list = mountBox(
+      [{ id: "luna", headline: "Luna" }, { id: "oberon", headline: "Oberon" }, { id: "titania", headline: "Titania" }],
+      { initialSelection: ["oberon"], ariaLabel: "Ringtone" },
+    );
+    expect(list.element.getAttribute("role")).toBe("listbox");
+    expect(list.element.getAttribute("aria-label")).toBe("Ringtone");
+    const opts = options(list);
+    expect(opts).toHaveLength(3);
+    expect(list.element.querySelectorAll("button.mtrl-list__action")).toHaveLength(0);
+    expect(selectedStates(list)).toEqual(["false", "true", "false"]);
+    for (const option of opts) expect(option.getAttribute("aria-pressed")).toBeNull();
+  });
+
+  test("the option is named by the headline and described by the supporting text", () => {
+    const list = mountBox([{ id: "oberon", headline: "Oberon", supportingText: "Classic chime" }]);
+    const [option] = options(list);
+    const headline = option!.querySelector(".mtrl-list__headline")!;
+    const supporting = option!.querySelector(".mtrl-list__supporting")!;
+    expect(headline.textContent).toBe("Oberon");
+    expect(option!.getAttribute("aria-labelledby")).toBe(headline.id);
+    expect(option!.getAttribute("aria-describedby")).toBe(supporting.id);
+  });
+
+  test("the radio is visual only, aria-hidden, and sits on the requested side", () => {
+    const list = mountBox([{ headline: "Luna" }, { headline: "Oberon" }]);
+    for (const option of options(list)) {
+      const radio = option.querySelector(".mtrl-list__radio");
+      expect(radio).not.toBeNull();
+      expect(radio!.getAttribute("aria-hidden")).toBe("true");
+      expect(option.querySelector("input")).toBeNull();
+      expect(option.querySelector('[role="radio"]')).toBeNull();
+      expect(option.firstElementChild).toBe(radio);
+    }
+    const trailing = mountBox([{ headline: "Luna" }], {}, { indicator: "trailing" });
+    expect(options(trailing)[0]!.lastElementChild).toBe(options(trailing)[0]!.querySelector(".mtrl-list__radio"));
+  });
+
+  test("one tab stop: the selected option, else the first enabled one", () => {
+    const plain = mountBox([{ headline: "Luna" }, { headline: "Oberon" }, { headline: "Titania" }]);
+    expect(options(plain).map((option) => option.tabIndex)).toEqual([0, -1, -1]);
+    const chosen = mountBox(
+      [{ headline: "Luna" }, { headline: "Oberon" }, { headline: "Titania" }],
+      { initialSelection: ["1"] },
+    );
+    expect(options(chosen).map((option) => option.tabIndex)).toEqual([-1, 0, -1]);
+    const disabled = mountBox([{ headline: "Luna", disabled: true }, { headline: "Oberon" }]);
+    expect(options(disabled).map((option) => option.tabIndex)).toEqual([-1, 0]);
+  });
+
+  test("arrows, Home and End move focus only; leaving the box restores the stop", () => {
+    const list = mountBox(
+      [{ id: "first", headline: "First" }, { kind: "divider" }, { id: "middle", headline: "Middle" },
+        { id: "off", headline: "Disabled", disabled: true }, { id: "last", headline: "Last" }],
+      { initialSelection: ["middle"] },
+    );
+    const events: unknown[] = [];
+    list.on("select", (event) => { events.push(event); });
+    const opts = options(list);
+    const [first, middle, , last] = opts;
+    expect(opts.map((option) => option.tabIndex)).toEqual([-1, 0, -1, -1]);
+
+    first!.focus();
+    key(first!, "ArrowDown");
+    expect(document.activeElement).toBe(middle!);
+    expect(middle!.tabIndex).toBe(0);
+    key(middle!, "ArrowRight");
+    expect(document.activeElement).toBe(last!);
+    key(last!, "ArrowDown");
+    expect(document.activeElement).toBe(first!);
+    key(first!, "ArrowUp");
+    expect(document.activeElement).toBe(last!);
+    key(last!, "Home");
+    expect(document.activeElement).toBe(first!);
+    key(first!, "End");
+    expect(document.activeElement).toBe(last!);
+
+    expect(events).toHaveLength(0);
+    expect(selectedStates(list)).toEqual(["false", "true", "false", "false"]);
+
+    last!.dispatchEvent(new dom.window.FocusEvent("focusout", { bubbles: true, relatedTarget: document.body }));
+    expect(opts.map((option) => option.tabIndex)).toEqual([-1, 0, -1, -1]);
+  });
+
+  test("type-ahead searches by prefix and cycles a repeated letter", async () => {
+    const list = mountBox([{ headline: "Apple" }, { headline: "Apricot" }, { headline: "Banana" }, { headline: "Blueberry" }]);
+    const [apple, apricot, banana, blueberry] = options(list);
+    apple!.focus();
+    key(apple!, "a"); key(apple!, "p"); key(apple!, "r");
+    expect(document.activeElement).toBe(apricot!);
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    key(apricot!, "b");
+    expect(document.activeElement).toBe(banana!);
+    key(banana!, "b");
+    expect(document.activeElement).toBe(blueberry!);
+  });
+
+  test("Space, Enter and click select; re-press keeps; select is cancellable", () => {
+    const list = mountBox(
+      [{ id: "luna", headline: "Luna" }, { id: "oberon", headline: "Oberon" }, { id: "titania", headline: "Titania" }],
+      { initialSelection: ["oberon"] },
+    );
+    const events: Array<{ element: Element; action?: unknown }> = [];
+    list.on("select", (event) => { events.push(event as unknown as { element: Element; action?: unknown }); });
+    const [luna, oberon, titania] = options(list);
+
+    titania!.focus();
+    key(titania!, " ");
+    expect(events).toHaveLength(1);
+    expect(events[0]!.element).toBe(titania!);
+    expect(events[0]!.action).toBeUndefined();
+    expect(titania!.getAttribute("aria-selected")).toBe("true");
+    expect(titania!.classList.contains("mtrl-list__item--selected")).toBe(true);
+    expect(oberon!.getAttribute("aria-selected")).toBe("false");
+    expect(oberon!.classList.contains("mtrl-list__item--selected")).toBe(false);
+    expect(list.getSelectedItemIds()).toEqual(["titania"]);
+
+    key(titania!, " ");
+    expect(events).toHaveLength(1);
+    expect(titania!.getAttribute("aria-selected")).toBe("true");
+    expect(list.getSelectedItemIds()).toEqual(["titania"]);
+
+    luna!.focus();
+    key(luna!, "Enter");
+    expect(events).toHaveLength(2);
+    expect(list.getSelectedItemIds()).toEqual(["luna"]);
+
+    titania!.click();
+    expect(events).toHaveLength(3);
+    expect(list.getSelectedItemIds()).toEqual(["titania"]);
+
+    const guarded = mountBox([{ id: "a", headline: "A" }, { id: "b", headline: "B" }], { initialSelection: ["a"] });
+    guarded.on("select", (event) => { event.preventDefault(); });
+    const second = options(guarded)[1]!;
+    second.click();
+    expect(second.getAttribute("aria-selected")).toBe("false");
+    expect(second.classList.contains("mtrl-list__item--selected")).toBe(false);
+    expect(guarded.getSelectedItemIds()).toEqual(["a"]);
+  });
+
+  test("multiSelect, secondary controls, custom slots and interactive descendants are refused", () => {
+    expect(refuses({ multiSelect: true })).toThrow(/multiSelect/);
+    expect(refuses({ trackSelection: false })).toThrow(/trackSelection/);
+    expect(refuses({ items: [{ headline: "Row", trailing: { type: "control", content: "<button>Edit</button>" } }] }))
+      .toThrow(/secondary controls/);
+    expect(refuses({ items: [{ headline: "Row", trailing: { type: "custom", content: "<button>Edit</button>" } }] }))
+      .toThrow(/secondary controls/);
+    expect(refuses({ renderItem: () => { const element = document.createElement("div"); element.innerHTML = "<button>Edit</button>"; return element; } }))
+      .toThrow(/interactive/);
+    expect(refuses({ items: [{ headline: "Row", leading: { type: "icon", content: icon } }] }))
+      .toThrow(/indicator/);
   });
 });

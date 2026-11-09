@@ -276,6 +276,28 @@ describe.each([
     standard.open();
     expect(calls).toEqual([]);
   });
+
+  test("an already-open non-top modal sheet does not make the outside inert at construction", () => {
+    const outside = document.body.appendChild(document.createElement("button"));
+    const sheet = create({ title: "Share", initialState: "partial", open: true });
+    expect(sheet.isOpen()).toBe(true);
+    expect(outside.hasAttribute("inert")).toBe(false);
+  });
+
+  test("a top-layer sheet's Tab listener is not removed on close and still works after close and re-open", () => {
+    const { sheet } = make();
+    const pressTab = () => {
+      const event = new dom.window.KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      sheet.element.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    sheet.open();
+    expect(pressTab()).toBe(true);
+    sheet.close();
+    expect(pressTab()).toBe(true);
+    sheet.open();
+    expect(pressTab()).toBe(true);
+  });
 });
 
 describe("modal drawer, layer: top", () => {
@@ -490,5 +512,43 @@ describe("modal drawer, layer: top: the key press asks as the browser's cancel d
     escape(drawer.element);
     expect(drawer.isOpen()).toBe(false);
     drawer.destroy();
+  });
+
+  test("the synthetic cancel event is cancelable and preventDefault() sets defaultPrevented", () => {
+    const drawer = createDrawer({ variant: "modal", layer: "top", items: [{ id: "a", label: "Inbox" }] });
+    document.body.append(drawer.element);
+    const events: Array<{ cancelable: boolean; defaultPrevented: boolean }> = [];
+    drawer.element.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      events.push({ cancelable: event.cancelable, defaultPrevented: event.defaultPrevented });
+    }, true);
+    drawer.open();
+    pressEscape();
+    expect(events).toEqual([{ cancelable: true, defaultPrevented: true }]);
+    expect(drawer.isOpen()).toBe(true);
+    drawer.destroy();
+  });
+
+  test("Escape on a default-layer dialog and on a sheet dispatches no synthetic cancel, so a capture listener cannot keep it open", () => {
+    const modals: Modal[] = [
+      createDialog({ title: "Discard?" }) as unknown as Modal,
+      createBottomSheet({ title: "Share" }) as unknown as Modal,
+      createBottomSheet({ title: "Share", layer: "top" }) as unknown as Modal,
+      createSideSheet({ title: "Share" }) as unknown as Modal,
+      createSideSheet({ title: "Share", layer: "top" }) as unknown as Modal,
+    ];
+    for (const modal of modals) {
+      let cancels = 0;
+      modal.element.addEventListener("cancel", (event) => {
+        cancels++;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+      modal.open();
+      pressEscape();
+      expect([cancels, modal.isOpen()]).toEqual([0, false]);
+      modal.destroy();
+    }
   });
 });

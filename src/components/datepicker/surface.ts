@@ -18,7 +18,7 @@ import { activeElementOf } from "../../core/dom/focus";
 import { createElement } from "../../core/dom/create";
 import { renderCalendar } from "./render";
 import type { DatePickerState } from "./types";
-import { addDays, addMonths, formatDate, parseDate, parseInputDate } from "./utils";
+import { addDays, addMonths, dtf, formatDate, parseDate, parseInputDate } from "./utils";
 
 const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
 function lockScroll(doc: Document): () => void {
@@ -140,7 +140,7 @@ export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialog
     if (current && kept) current.scrollTop = kept.top + (shiftBy === null ? 0 : current.scrollHeight - kept.height);
     shiftBy = null;
     centre();
-    announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    announcement.textContent = dtf(state.locale, { month: "long", year: "numeric" }).format(new Date(state.currentYear, state.currentMonth, 1));
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
     else if (focus) focusCurrent();
   };
@@ -166,7 +166,7 @@ export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialog
   const validateEntries = (): boolean => {
     const fields = Array.from(dialog.querySelectorAll<HTMLInputElement>('[data-entry]'));
     if (!fields.length) return !!state.selectedDate && state.isAllowed(state.selectedDate) && (state.selectionMode !== "range" || !!state.rangeEndDate && state.isAllowed(state.rangeEndDate));
-    const values = fields.map(field => parseInputDate(field.value, state.dateFormat));
+    const values = fields.map(field => parseInputDate(field.value, state.dateFormat, state.locale));
     let valid = true;
     fields.forEach((field, index) => {
       const date = values[index];
@@ -178,7 +178,7 @@ export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialog
     if (valid) {
       state.selectedDate = values[0]; state.rangeEndDate = values[1] ?? null; setDisplayDate(values[0]!);
       const headline = dialog.querySelector<HTMLElement>(`.${cls("headline")}`);
-      if (headline) headline.textContent = formatDate(state.selectedDate, "MMM D, YYYY") + (state.rangeEndDate ? ` – ${formatDate(state.rangeEndDate, "MMM D, YYYY")}` : "");
+      if (headline) headline.textContent = formatDate(state.selectedDate, "MMM D, YYYY", state.locale) + (state.rangeEndDate ? ` – ${formatDate(state.rangeEndDate, "MMM D, YYYY", state.locale)}` : "");
     }
     return valid;
   };
@@ -222,8 +222,8 @@ export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialog
       else if (event.key === "ArrowRight") next = addDays(date, ahead);
       else if (event.key === "ArrowUp") next = addDays(date, -7);
       else if (event.key === "ArrowDown") next = addDays(date, 7);
-      else if (event.key === "Home") next = addDays(date, -date.getDay());
-      else if (event.key === "End") next = addDays(date, 6 - date.getDay());
+      else if (event.key === "Home") next = addDays(date, -((date.getDay() - state.firstDayOfWeek + 7) % 7));
+      else if (event.key === "End") next = addDays(date, 6 - ((date.getDay() - state.firstDayOfWeek + 7) % 7));
       else if (event.key === "PageUp" || event.key === "PageDown") next = addMonths(date, (event.key === "PageUp" ? -1 : 1) * (event.shiftKey ? 12 : 1));
       else return;
       event.preventDefault();
@@ -306,4 +306,3 @@ export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialog
     },
   ];
 }
-

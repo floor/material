@@ -186,7 +186,21 @@ export const elements = {
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
-export const declarations = {
+export const declarations: {
+  readonly tab: typeof tabDeclaration;
+  readonly radio: typeof radioDeclaration;
+  readonly navigationBarItem: typeof navigationBarItemDeclaration;
+  readonly navigationRailItem: typeof navigationRailItemDeclaration;
+  readonly drawerItem: typeof drawerItemDeclaration;
+  readonly buttonGroupItem: typeof buttonGroupItemDeclaration;
+  readonly chip: typeof chipDeclaration;
+  readonly listItem: typeof listItemDeclaration;
+  readonly carouselItem: typeof carouselItemDeclaration;
+  readonly menuItem: typeof menuItemDeclaration;
+  readonly fabMenuItem: typeof fabMenuItemDeclaration;
+  readonly selectOption: typeof selectOptionDeclaration;
+  readonly searchSuggestion: typeof searchSuggestionDeclaration;
+} = {
   tab: tabDeclaration,
   radio: radioDeclaration,
   navigationBarItem: navigationBarItemDeclaration,
@@ -200,7 +214,7 @@ export const declarations = {
   fabMenuItem: fabMenuItemDeclaration,
   selectOption: selectOptionDeclaration,
   searchSuggestion: searchSuggestionDeclaration,
-} as const;
+};
 
 /** Registers every element. */
 export const defineAll = (options?: DefineOptions): void => {

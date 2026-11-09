@@ -22,13 +22,14 @@ export const PACKAGE_GZIP = {
   slider: 13_600,
   "navigation-rail": 7_168,
   "navigation-rail-css": 5_400,
-  "text-field": 9_550,
-  form: 20_400,
-  "all-js": 128_550,
-  "base-css": 3_050,
-  "button-css": 5_300,
+  "text-field": 9_600,
+  form: 20_500,
+  "all-js": 130_650,
+  "base-css": 3_150,
+  "base-lite-css": 1_750,
+  "button-css": 5_550,
   "select-css": 8_400,
-  "slider-css": 4_850,
+  "slider-css": 5_050,
   "full-css": 63_750,
 } as const;
 
@@ -40,12 +41,23 @@ export const SSR_ENTRY = { raw: 311_000, gzip: 113_000 } as const;
 
 /** check-package-size.ts: a server-rendered page of 44 roots, [floor, ceiling]. */
 export const SSR_PAGE = {
-  inline: { raw: [251_100, 256_200], gzip: [5_200, 5_450] },
+  // The density scale's rules reach the page's pre-upgrade inline sheet, so the
+  // inline page's raw bytes outgrow the old 256,200 ceiling while its gzip row
+  // stays inside the unchanged budget. Owner decision 2026-11-09: the raw
+  // ceiling is 263,950, the measured row plus 1% rounded up to 50; the floors
+  // and the gzip row stay as they are.
+  inline: { raw: [251_100, 263_950], gzip: [5_200, 5_450] },
   link: { raw: [42_300, 43_200], gzip: [900, 1_150] },
 } as const;
 
+/** check-ssr-comments.ts: each shipped SSR adapter entry, minified by the build (bytes). */
+export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, solid: 600 } as const;
+
 /** check-package-size.ts: what an install downloads, and what it unpacks to. */
-export const TARBALL_BYTES = 883_000;
+// The readable, comment-stripped dist: at the 865,000 ceiling the package job
+// measured 863,703 B packed (1,297 B spare) where the base packed 882,799, as
+// 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
+export const TARBALL_BYTES = 920_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts.
@@ -59,4 +71,15 @@ export const CONSUMER_INITIAL_GZIP = {
   addClass: 750,
   "text-field": 10_000,
   button: 8_700,
+  // Runtime colour, 3.8.0. Both rows are the first CI measurement plus
+  // max(1%, 100 B), rounded up to the next 50; the ceilings, 20,500 B for the
+  // scheme and 24,000 B with the image path, stay above them.
+  theme: 17_450,
+  "theme-image": 21_050,
+  // The opt-in 2025 spec has its own entry and keeps its existing rows:
+  // first green CI measurement 20,569 / 24,143 B plus max(1%, 100 B),
+  // rounded up to the next 50 (owner-side ruling, 2026-11-05).
+  // The default entries retain main's current ceilings above.
+  "theme-2025": 20_800,
+  "theme-2025-image": 24_400,
 } as const;

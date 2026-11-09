@@ -11,7 +11,7 @@ import {
 } from './types';
 import { TIMEPICKER_EVENTS as EVENTS } from './constants';
 import { formatFormValue } from './utils';
-import { renderTimePicker } from './render';
+import { nameTimePicker, renderTimePicker } from './render';
 import type { TimePickerEvents, TimeFormat, TimePickerType, TimePickerOrientation } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
@@ -117,14 +117,6 @@ export const createTimePickerAPI = (
   // dialog's cancel event, and before that a document listener that closed
   // every open picker.
   let escape: ModalEscape | undefined;
-  // A close request that is not a key press (a back gesture) still arrives as
-  // the dialog's cancel. The browser's cancel in the task the picker opened in
-  // is the opening key's, when the page stopped that key press before it
-  // reached the window.
-  const handleCancel = (event: Event) => {
-    event.preventDefault();
-    if (!escape?.opening) cancel();
-  };
   // Shows the surface of an open picker. At creation (the `open` option) it
   // runs a task later: by then the caller has put the picker in the page, and
   // a modal <dialog> must not be moved once it is shown.
@@ -142,12 +134,6 @@ export const createTimePickerAPI = (
     else dialog.setAttribute('open', '');
     dialogElement.classList.add('active');
     focusField();
-  };
-  // A click on the backdrop lands on the dialog element itself, outside its box.
-  const handleClickOutside = (event: MouseEvent) => {
-    if (event.target !== dialog) return;
-    const box = dialog.getBoundingClientRect();
-    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
   };
   const focusField = () => {
     const field = dialog.querySelector<HTMLElement>('[data-active="true"]') ?? dialog.querySelector<HTMLElement>('input, button');
@@ -333,18 +319,17 @@ export const createTimePickerAPI = (
     setTitle(title: string) {
       config.title = title;
       
-      // Update title element if it exists
-      const titleElement = dialogElement.querySelector(part('title'));
-      if (titleElement) {
-        titleElement.textContent = title;
-      } else {
-        // Re-render to add title
-        render();
-      }
+      nameTimePicker(dialogElement, config);
       
       return this;
     },
     
+    setAriaLabel(label: string) {
+      config.ariaLabel = label;
+      nameTimePicker(dialogElement, config);
+      return this;
+    },
+
     getTitle() {
       return config.title || '';
     },
@@ -368,17 +353,8 @@ export const createTimePickerAPI = (
     },
     
     destroy() {
-      // Close if open
-      if (isOpen) {
-        this.close();
-      }
-      
-      // Remove from DOM
-      if (modalElement && modalElement.parentNode) {
-        modalElement.parentNode.removeChild(modalElement);
-      }
-      
-      // Call lifecycle destroy
+      if (isOpen) this.close();
+      modalElement?.remove();
       options.lifecycle.destroy();
     },
     
@@ -395,6 +371,11 @@ export const createTimePickerAPI = (
   
   // Set up event handlers for the time picker dialog
   dialogElement.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+      const box = dialog.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
+      return;
+    }
     const target = event.target as HTMLElement;
     
     // Handle cancel button click
@@ -418,13 +399,11 @@ export const createTimePickerAPI = (
     
   });
 
-  dialog.addEventListener('cancel', handleCancel);
   // The dialog is in the component's element, which can sit in a form: Enter
   // in its fields moves between them and must not submit that form.
   dialog.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault();
   });
-  dialog.addEventListener('click', handleClickOutside);
 
   // The initial render uses the same synchronization path as later renders.
   render();

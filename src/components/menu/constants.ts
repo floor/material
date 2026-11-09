@@ -14,9 +14,9 @@
  * @category Components
  */
 export const MENU_VARIANTS = {
-  /** The original M3 menu (default, for compatibility) */
+  /** The original M3 baseline menu */
   BASELINE: "baseline",
-  /** The M3 expressive vertical menu */
+  /** The M3 expressive vertical menu (default) */
   VERTICAL: "vertical",
 } as const;
 
@@ -64,8 +64,8 @@ export const MENU_POSITION = {
  * Default configuration values for menus
  */
 export const MENU_DEFAULTS = {
-  /** Default variant; the baseline menu, so existing menus are untouched */
-  VARIANT: MENU_VARIANTS.BASELINE,
+  /** Default variant; the M3 expressive vertical menu */
+  VARIANT: MENU_VARIANTS.VERTICAL,
   /** Default colour mapping for the vertical variant */
   COLOR: MENU_COLORS.STANDARD,
   /** Default menu position */

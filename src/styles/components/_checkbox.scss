@@ -18,6 +18,8 @@ $component: '#{base.$prefix}-checkbox';
   // the unlabelled case, where the content is only the 18px icon.
   min-height: 48px;
   min-width: 48px;
+  // Without the base reset: the 4px padding must stay inside the 48px target.
+  box-sizing: border-box;
   padding: 4px 0;
   user-select: none;
 

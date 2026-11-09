@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createDeferredDatePicker from "../../../src/components/datepicker/deferred";
-import type { DatePickerComponent } from "../../../src/components/datepicker";
+import createDatePicker, { type DatePickerComponent } from "../../../src/components/datepicker";
 
 let dom: JSDOM;
 let instances: DatePickerComponent[];
@@ -24,8 +24,8 @@ afterEach(() => {
   for (const picker of instances) picker.destroy();
   dom.window.close();
 });
-const mount = (config = {}) => {
-  const picker = createDeferredDatePicker(config);
+const mount = (config = {}, create = createDeferredDatePicker) => {
+  const picker = create(config);
   instances.push(picker);
   document.body.append(picker.element);
   return picker;
@@ -110,3 +110,35 @@ describe("deferred datepicker contract", () => {
     expect(picker.element.querySelectorAll("dialog").length).toBe(1);
   });
 });
+
+
+// Main's current contract must also hold through the deferred copy. The
+// default entry is the control, and remains untouched by this integration.
+for (const [name, create] of [["default", createDatePicker], ["deferred", createDeferredDatePicker]] as const) {
+  test(`${name}: locale formatting and week navigation agree with the shared renderer`, async () => {
+    const picker = mount({ locale: "fr-FR", value: new Date(2026, 6, 15), variant: "modal" }, create);
+    expect(picker.getFormattedValue()).toBe("15/07/2026");
+    picker.open();
+    await landed(picker);
+    expect(dialogOf(picker).textContent?.toLowerCase()).toContain("juillet");
+    const day = dialogOf(picker).querySelector<HTMLElement>('[data-date="2026-07-15"]')!;
+    day.focus();
+    day.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+    expect((document.activeElement as HTMLElement).dataset.date).toBe("2026-07-13");
+  });
+
+  test(`${name}: the dialog owns its explicit accessible name and setter`, async () => {
+    const picker = mount({ variant: "modal", ariaLabel: "Travel date" }, create);
+    expect(picker.element.hasAttribute("aria-label")).toBe(false);
+    expect(dialogOf(picker).getAttribute("aria-label")).toBe("Travel date");
+    expect(picker.setAriaLabel("Departure")).toBe(picker);
+    expect(dialogOf(picker).getAttribute("aria-label")).toBe("Departure");
+    picker.setAriaLabel("");
+    if (!dialogOf(picker).querySelector('[id$="-title"]')) {
+      expect(dialogOf(picker).getAttribute("aria-label")).toBe("Select date");
+    }
+    picker.open();
+    await landed(picker);
+    expect(dialogOf(picker).getAttribute("aria-labelledby")).toBeTruthy();
+  });
+}

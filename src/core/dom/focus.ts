@@ -32,20 +32,6 @@ export const deepActiveElement = (): Element | null => {
 };
 
 /**
- * Whether an element is a tab stop: focusable in sequence, enabled, shown to
- * assistive technology, rendered. `aria-hidden="true"` takes an element out of
- * the accessibility tree, so it is not a candidate — the dialog's own filter
- * skipped it before this path was shared.
- */
-const isTabStop = (element: Element): element is HTMLElement =>
-  (element as Partial<HTMLElement>).tabIndex !== undefined &&
-  (element as HTMLElement).tabIndex >= 0 &&
-  !element.matches(":disabled, [inert] *, [inert], [aria-hidden='true']") &&
-  // A rendered element has a layout box and a client rect. A DOM without
-  // layout (JSDOM) reports neither, and a test there supplies the box.
-  ((element as HTMLElement).offsetWidth > 0 || element.getClientRects().length > 0);
-
-/**
  * The tab stops in a container, in the order Tab reaches them: through slots
  * to what is assigned to them and into shadow roots, which is where the
  * content of a web component sits. Slots are told by shape, as the roots are
@@ -54,16 +40,22 @@ const isTabStop = (element: Element): element is HTMLElement =>
 export const tabStops = (container: Element): HTMLElement[] => {
   const found: HTMLElement[] = [];
   const visit = (element: Element): void => {
-    const slot = element as Partial<HTMLSlotElement>;
-    if (element.localName === "slot" && typeof slot.assignedElements === "function") {
-      const assigned = slot.assignedElements({ flatten: true });
-      (assigned.length ? assigned : Array.from(element.children)).forEach(visit);
-      return;
-    }
-    if (isTabStop(element)) found.push(element);
-    Array.from((element.shadowRoot ?? element).children).forEach(visit);
+    const assigned =
+      element.localName === "slot" &&
+      (element as Partial<HTMLSlotElement>).assignedElements?.({ flatten: true });
+    if (
+      !assigned &&
+      (element as HTMLElement).tabIndex >= 0 &&
+      !element.matches(":disabled,[inert] *,[inert],[aria-hidden='true']") &&
+      ((element as HTMLElement).offsetWidth || element.getClientRects().length) > 0
+    )
+      found.push(element as HTMLElement);
+    for (const child of assigned && assigned.length
+      ? assigned
+      : (element.shadowRoot ?? element).children)
+      visit(child);
   };
-  Array.from(container.children).forEach(visit);
+  for (const child of container.children) visit(child);
   return found;
 };
 
@@ -81,12 +73,11 @@ export const wrapTab = (container: HTMLElement, event: KeyboardEvent): void => {
   const active = deepActiveElement();
   const target = !stops.length
     ? container
-    : event.shiftKey && (active === stops[0] || !stops.includes(active as HTMLElement))
-      ? stops[stops.length - 1]
-      : !event.shiftKey && active === stops[stops.length - 1]
-        ? stops[0]
-        : null;
-  if (!target) return;
-  event.preventDefault();
-  target.focus();
+    : event.shiftKey
+      ? (active === stops[0] || !stops.includes(active as HTMLElement)) && stops.at(-1)
+      : active === stops.at(-1) && stops[0];
+  if (target) {
+    event.preventDefault();
+    target.focus();
+  }
 };

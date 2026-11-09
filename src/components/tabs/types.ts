@@ -104,8 +104,8 @@ export interface TabConfig {
   groupId?: string;
 
   /**
-   * Accessible name for a tab with an icon and no text, which otherwise has
-   * none.
+   * Accessible name for a tab. Without text or an explicit label, its value
+   * supplies a fallback; provide a descriptive label for icon-only tabs.
    */
   ariaLabel?: string;
 
@@ -205,6 +205,9 @@ export interface TabConfig {
  * @category Components
  */
 export interface TabsConfig {
+  /** Accessible name for the tablist when it has no visible label. */
+  ariaLabel?: string;
+
   /**
    * Id for this tab group, used to build each tab's element id as
    * `tab-<groupId>-<value>` and to find panels as
@@ -225,6 +228,16 @@ export interface TabsConfig {
    * @default false
    */
   autoActivate?: boolean;
+
+  /**
+   * A behaviour to apply to the group while it is created, e.g.
+   * `tabsResponsive({ smallScreen: { layout: 'icon-only' } })` from
+   * `material/components/tabs/responsive`. That module is a plugin the app
+   * imports itself, so a consumer that never passes it carries none of its
+   * code; createTabs calls it synchronously, so the first paint already
+   * carries its layout.
+   */
+  responsive?: (tabs: TabsComponent) => void;
 
   /**
    * Tabs variant (primary or secondary)
@@ -374,6 +387,9 @@ export interface TabComponent {
   
   /** Sets the tab's text content */
   setText: (content: string) => TabComponent;
+
+  /** Sets the explicit accessible label; undefined restores text/value naming. */
+  setAriaLabel: (label: string | undefined) => TabComponent;
   
   /** Gets the tab's text content */
   getText: () => string;

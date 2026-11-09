@@ -308,9 +308,11 @@ $default-width: 360px;
         align-items: center;
         position: relative;
         width: calc(100% - 24px);
-        min-height: 56px;
+        // Density takes 4dp a step off the pill, down to the 36dp floor that
+        // is also the dense option's height.
+        min-height: f.density(56px, 36px);
         flex-shrink: 0;
-        height: 56px;
+        height: f.density(56px, 36px);
         margin: 0 12px;
         padding: 0 24px 0 16px;
         gap: 12px;
@@ -322,8 +324,12 @@ $default-width: 360px;
         text-decoration: none;
         box-sizing: border-box;
         outline: none;
-        // Clip the indicator, the state layer and the ripple to the pill
-        overflow: hidden;
+        // The item does not clip: the 48dp touch target has to reach above and
+        // below a pill density can take to 36dp. The pill and the state layer
+        // are clipped by the indicator instead, with the same pair of
+        // coincident rounded masks the item's overflow used to draw, so the
+        // active pill keeps its exact antialiasing at every density.
+        overflow: visible;
         isolation: isolate;
         -webkit-tap-highlight-color: transparent;
         @include m.typography("label-large");
@@ -343,32 +349,57 @@ $default-width: 360px;
             position: absolute;
             inset: 0;
             border-radius: inherit;
-            background-color: t.color("secondary-container");
-            opacity: 0;
-            transform: scaleX(0.32);
-            transform-origin: center;
+            // The pill is painted by ::before and clipped here, exactly as the
+            // item's overflow: hidden clipped it on main; the state layer is
+            // ::after, so it shares the same clip and does not scale with the
+            // pill.
+            overflow: hidden;
             pointer-events: none;
             z-index: 0;
-            transition:
-                transform v.motion("spring-default-spatial-duration")
-                    v.motion("spring-default-spatial-easing"),
-                opacity v.motion("spring-default-spatial-duration")
+
+            // The pill itself: a secondary container that scales in from the
+            // middle of the item.
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background-color: t.color("secondary-container");
+                opacity: 0;
+                transform: scaleX(0.32);
+                transform-origin: center;
+                transition:
+                    transform v.motion("spring-default-spatial-duration")
+                        v.motion("spring-default-spatial-easing"),
+                    opacity v.motion("spring-default-spatial-duration")
+                        v.motion("spring-default-effects-easing");
+            }
+
+            // State layer for hover, focus and press, drawn above the pill in
+            // the item's current content colour.
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background-color: currentColor;
+                opacity: 0;
+                transition: opacity v.motion("spring-default-effects-duration")
                     v.motion("spring-default-effects-easing");
+            }
         }
 
-        // State layer for hover, focus and press, drawn above the indicator
-        // in the item's current content colour
-        &::before {
+        // A 48dp tall touch target. At density the pill can be as short as
+        // 36dp; the hit area then reaches above and below it, while the pill's
+        // painted width and height stay as the density sets them.
+        &::after {
             content: "";
             position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background-color: currentColor;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1;
-            transition: opacity v.motion("spring-default-effects-duration")
-                v.motion("spring-default-effects-easing");
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 48px;
+            transform: translateY(-50%);
         }
 
         // Press ripple, between the indicator and the content
@@ -383,15 +414,18 @@ $default-width: 360px;
         &:hover:not([disabled]) {
             color: t.color("on-surface");
 
-            &::before {
+            .#{$component}__active-indicator::after {
                 opacity: v.state("hover-state-layer-opacity");
             }
         }
 
         &:focus-visible {
             color: t.color("on-surface");
+            outline: 3px solid t.color("secondary");
+            outline-offset: 2px;
+            z-index: 1;
 
-            &::before {
+            .#{$component}__active-indicator::after {
                 opacity: v.state("focus-state-layer-opacity");
             }
         }
@@ -400,7 +434,8 @@ $default-width: 360px;
             color: t.color("on-surface");
 
             // A rippled item leaves the press to its ripple.
-            &:not(:has(> .#{base.$prefix}-ripple))::before {
+            &:not(:has(> .#{base.$prefix}-ripple))
+                .#{$component}__active-indicator::after {
                 opacity: v.state("pressed-state-layer-opacity");
             }
         }
@@ -417,7 +452,7 @@ $default-width: 360px;
         }
 
         &--active {
-            .#{$component}__active-indicator {
+            .#{$component}__active-indicator::before {
                 opacity: 1;
                 transform: scaleX(1);
                 transition:
@@ -528,58 +563,15 @@ $default-width: 360px;
     }
 
     // ========================================================================
-    // DENSE VARIANT — compact items for admin UIs
+    // DENSE VARIANT — the density scale's last step
     // ========================================================================
+    // The option is now an alias: it sets the shared property, so items land
+    // on the same 36dp floor a denser container gives them. The type, icon,
+    // badge and divider overrides it used to carry are gone — density never
+    // moves type or icons — and the sheet's own padding stays at 12px 0.
 
     &--dense {
-        .#{$component}__sheet {
-            padding: 8px 0;
-        }
-
-        .#{$component}__headline {
-            @include m.typography("label-large");
-            padding: 10px 20px 0;
-            margin-bottom: 2px;
-        }
-
-        .#{$component}__item {
-            min-height: 36px;
-            height: 36px;
-            margin: 0 8px;
-            padding: 0 16px 0 12px;
-            width: calc(100% - 16px);
-            gap: 8px;
-            border-radius: v.shape('full');
-            @include m.typography("body-medium");
-
-            .#{$component}__active-indicator {
-                border-radius: v.shape('full');
-            }
-        }
-
-        .#{$component}__item-icon {
-            width: 20px;
-            height: 20px;
-
-            svg {
-                width: 20px;
-                height: 20px;
-            }
-        }
-
-        .#{$component}__item-badge {
-            @include m.typography("label-medium");
-        }
-
-        .#{$component}__divider {
-            width: calc(100% - 40px);
-            margin: 4px 20px;
-        }
-
-        .#{$component}__section-label {
-            @include m.typography("label-large");
-            padding: 10px 20px 2px;
-        }
+        --#{base.$prefix}-density: -5;
     }
 
     // ========================================================================
@@ -588,10 +580,6 @@ $default-width: 360px;
 
     @include m.rtl-selector('.#{$component}__item') {
         padding: 0 16px 0 24px;
-    }
-
-    @include m.rtl-selector('.#{$component}--dense .#{$component}__item') {
-        padding: 0 12px 0 16px;
     }
 
     // ========================================================================
@@ -616,7 +604,11 @@ $default-width: 360px;
 
         &__item,
         &__item::before,
-        &__active-indicator {
+        &__active-indicator,
+        // The pill and state layer rules are two classes deep, so their switch
+        // has to match that specificity to win over the transitions above.
+        &__item &__active-indicator::before,
+        &__item &__active-indicator::after {
             transition: none;
         }
     }
@@ -633,14 +625,14 @@ $default-width: 360px;
         &__item {
             &--active {
                 .#{$component}__active-indicator {
-                    outline: 2px solid currentColor;
+                    outline: 2px solid Highlight;
                     outline-offset: -2px;
                 }
             }
 
             &:focus-visible {
-                outline: 2px solid currentColor;
-                outline-offset: -2px;
+                outline: 3px solid CanvasText;
+                outline-offset: 2px;
             }
         }
 

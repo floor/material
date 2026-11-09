@@ -31,14 +31,10 @@ interface ModalState {
   priority: string;
 }
 const modals = new WeakMap<Document, ModalState>();
-// Roots shown with showModal(): the browser makes everything outside the
-// topmost of them inert, across shadow roots, which the walk below cannot.
-const layered = new WeakSet<Element>();
 function updateBackground(doc: Document, state: ModalState): void {
-  state.inerted.forEach(element => element.removeAttribute("inert"));
-  state.inerted = [];
+  state.inerted.splice(0).forEach(element => element.removeAttribute("inert"));
   const topmost = state.roots.at(-1);
-  let branch: Element | undefined = topmost && !layered.has(topmost) ? topmost : undefined;
+  let branch: Element | undefined = topmost && topmost.localName !== "dialog" ? topmost : undefined;
   while (branch?.parentElement) {
     for (const sibling of branch.parentElement.children) {
       if (sibling !== branch && !sibling.hasAttribute("inert")) {
@@ -79,7 +75,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   const doc = root.ownerDocument;
   const isModal = config.variant === "modal";
   const top = config.layer === "top";
-  if (top) layered.add(root);
   const dismissible = config.dismissible !== false;
   let isOpen = config.open === true;
   let destroyed = false;
@@ -88,8 +83,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   // A modal drawer's place among the open modals, while it is open: Escape is
   // a key press handled there, for the topmost one, in both layers
   let escape: ModalEscape | undefined;
-  // True while the drawer sends a key press on as a `cancel` of its own
-  let asking = false;
   // In the top layer the root's ::backdrop is the scrim
   const scrimElement = isModal && !top ? doc.createElement("div") : null;
   if (scrimElement) {
@@ -111,40 +104,17 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   };
   const isTopModal = () => modals.get(doc)?.roots.at(-1) === root;
   function handleKeydown(event: KeyboardEvent): void {
-    if (!isOpen || !isTopModal() || event.defaultPrevented) return;
-    if (event.key === "Tab") {
-      const items = focusable();
-      const first = items[0], last = items.at(-1);
-      const active = activeElementOf(root);
-      if (!first) { event.preventDefault(); root.focus(); }
-      else if (event.shiftKey && (active === first || active === root || !root.contains(active))) {
-        event.preventDefault(); last!.focus();
-      } else if (!event.shiftKey && (active === last || active === root || !root.contains(active))) {
-        event.preventDefault(); first.focus();
-      }
-    }
+    if (!isOpen || !isTopModal() || event.defaultPrevented || event.key !== "Tab") return;
+    const items = focusable();
+    const first = items[0], last = items.at(-1), active = activeElementOf(root), out = active === root || !root.contains(active);
+    const target = !first ? root : event.shiftKey ? (active === first || out) && last : (active === last || out) && first;
+    if (target) { event.preventDefault(); target.focus(); }
   }
   // The event's target is retargeted to the shadow host when focus moves
   // inside a shadow root: where focus went is read from the drawer's own root.
   function handleFocus(): void {
     if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
-  // A close request reaches the topmost modal as its cancel event; the drawer
-  // decides. The browser's `cancel` of the task it opened in is the opening
-  // key's, when the page stopped that key press before it reached the window.
-  const handleCancel = (event: Event): void => {
-    event.preventDefault();
-    if ((asking || !escape?.opening) && dismissible) close();
-  };
-  // Escape as a key press. In the top layer it asks as the browser's `cancel`
-  // did, on the <dialog>: <m-drawer> refuses it there (no-close-on-escape).
-  const onEscape = (): void => {
-    if (top) {
-      asking = true;
-      root.dispatchEvent(new Event("cancel", { cancelable: true }));
-      asking = false;
-    } else if (dismissible) close();
-  };
   // The root covers the page, so a click beside the sheet lands on it, as on
   // the ::backdrop behind it
   const handleBackdropClick = (event: MouseEvent): void => {
@@ -165,7 +135,13 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     previousFocus = deepActiveElement() as HTMLElement | null;
     if (root.isConnected) acquireModal(root);
     escape?.stop();
-    escape = onModalEscape(root, onEscape);
+    escape = onModalEscape(
+      root,
+      () => {
+        if (dismissible) close();
+      },
+      top && (() => root.dispatchEvent(new Event("cancel", { cancelable: true }))),
+    );
     doc.addEventListener("keydown", handleKeydown);
     doc.addEventListener("focusin", handleFocus);
     frame = requestAnimationFrame(() => {
@@ -204,7 +180,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   }
   let stopCloses: (() => void) | null = null;
   if (top) {
-    root.addEventListener("cancel", handleCancel);
     root.addEventListener("click", handleBackdropClick);
     // A close the browser made on its own still closes the drawer
     stopCloses = onTopLayerClose(root, close);
@@ -223,7 +198,6 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
       destroyed = true; isOpen = false; deactivate(); synchronize();
       scrimElement?.removeEventListener("click", close);
       scrimElement?.remove();
-      root.removeEventListener("cancel", handleCancel);
       root.removeEventListener("click", handleBackdropClick);
       stopCloses?.();
     },

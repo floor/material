@@ -31,14 +31,20 @@ $component: '#{base.$prefix}-toolbar';
   align-items: center;
   gap: 8px;
   box-sizing: border-box;
-  transition: transform v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
+  transition:
+    transform v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing'),
+    min-height v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
 
   &__bar {
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    // The 64dp bar. Only a docked bar follows the density scale (below); a
+    // floating pill keeps its height.
     min-height: 64px;
+    transition:
+      min-height v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
     color: var(--#{$component}-content);
 
     > * {
@@ -55,7 +61,10 @@ $component: '#{base.$prefix}-toolbar';
     // Docked, the toolbar meets the window edges
     --#{$component}-margin: 0px;
     width: 100%;
-    min-height: 64px;
+    // The 64dp height through the density scale, floored at the 48dp target
+    // area (m3.material.io toolbars guidelines). Docked only: a floating
+    // toolbar is not in the vertical flow and keeps its 64px pill.
+    min-height: max(48px, 64px + 4px * var(--#{base.$prefix}-density, 0));
     padding-inline: 16px;
     background-color: var(--#{$component}-container);
     border-radius: var(--#{$component}-shape, #{v.shape('none')});
@@ -63,6 +72,21 @@ $component: '#{base.$prefix}-toolbar';
     .#{$component}__bar {
       flex: 1;
       justify-content: space-between;
+      min-height: max(48px, 64px + 4px * var(--#{base.$prefix}-density, 0));
+    }
+  }
+
+  // Collapsed: the same items at the 48dp target area's height. The floor is
+  // constant across the density scale (0..-5), so it is written out. A
+  // min-height is a floor, so an item taller than it — a text field, a paired
+  // FAB — keeps the container at its own height. The items' labels are the
+  // button's rules (styles/components/_button.scss): an icon+label item shows
+  // its icon at the target size, a label-only item keeps its label.
+  &--collapsed {
+    min-height: 48px;
+
+    .#{$component}__bar {
+      min-height: 48px;
     }
   }
 
@@ -199,6 +223,10 @@ $component: '#{base.$prefix}-toolbar';
 
   @include m.reduced-motion {
     transition-duration: 0.01ms;
+
+    .#{$component}__bar {
+      transition-duration: 0.01ms;
+    }
   }
 
   @include m.high-contrast {
@@ -245,14 +273,16 @@ $component: '#{base.$prefix}-toolbar';
 // and keeps the standalone morphs.
 .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round,
 slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)) {
-  --#{base.$prefix}-icon-button-shape-selected: 20px;
-  --#{base.$prefix}-icon-button-shape-pressed: 20px;
+  // The resting radius is half the item's height, so it follows the density
+  // scale exactly as the icon button's own round radius does.
+  --#{base.$prefix}-icon-button-shape-selected: #{f.density(20px, 16px, 2px)};
+  --#{base.$prefix}-icon-button-shape-pressed: #{f.density(20px, 16px, 2px)};
 }
 
 @each $size, $radius in ("xs": 16px, "m": 28px, "l": 48px, "xl": 68px) {
   .#{base.$prefix}-toolbar .#{base.$prefix}-toolbar__bar > .#{base.$prefix}-icon-button--round.#{base.$prefix}-icon-button--#{$size},
   slot:not([name])::slotted(:is([data-mtrl-icon-button], m-icon-button)[size=#{$size}]) {
-    --#{base.$prefix}-icon-button-shape-selected: #{$radius};
-    --#{base.$prefix}-icon-button-shape-pressed: #{$radius};
+    --#{base.$prefix}-icon-button-shape-selected: #{f.density($radius, 16px, 2px)};
+    --#{base.$prefix}-icon-button-shape-pressed: #{f.density($radius, 16px, 2px)};
   }
 }

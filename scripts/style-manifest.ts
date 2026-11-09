@@ -63,6 +63,15 @@ export const baseStyles = [
   "utilities/ripple", "base/document",
 ];
 
+// The opt-in theme-only base (`material/styles/base-lite`): the baseline roles
+// in light and dark, the shape and typeface tokens, the global reduced-motion
+// switch and the body theme, without the contrast modes, the reset, or the
+// ripple. The build emits it with `$contrast-emit: none`; `base/reduced-motion`
+// is the switch on its own (the reset includes the same mixin in place).
+export const baseLiteStyles = [
+  "themes/baseline", "base/foundation", "base/reduced-motion", "base/body-theme",
+];
+
 // Opt-in explicit contrast for the baseline theme (`material/styles/contrast`).
 // Emitted in the base cascade layer, beside typography. A theme's own file is
 // `material/themes/<name>-contrast`.

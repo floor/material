@@ -1,0 +1,9 @@
+// src/styles/base/_reduced-motion.scss
+//
+// The global reduced-motion switch on its own, for `material/styles/base-lite`,
+// whose sheet drops the rest of the reset. `_reset.scss` includes the same
+// mixin in place, so `material/styles/base` is unchanged. The build compiles
+// this partial; it is not part of the public Sass API and does not ship.
+@use "../abstract/mixins" as m;
+
+@include m.global-reduced-motion;

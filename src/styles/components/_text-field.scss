@@ -85,7 +85,11 @@ $component: "#{base.$prefix}-text-field";
         @include m.shape("extra-small");
         padding: 13px 16px;
         width: 100%;
-        height: 56px;
+        // The field's one dimension the scale moves; 40px is its floor (the
+        // compact option's height), reached at the fourth step.
+        height: f.density(56px, 40px);
+        // Without the base reset: the input's 56px must include its padding.
+        box-sizing: border-box;
         color: t.color("on-surface");
         caret-color: t.color("primary");
         border: 0;
@@ -241,7 +245,7 @@ $component: "#{base.$prefix}-text-field";
     // Where the content starts and ends: 16dp in (TextFieldPadding), or after
     // an icon, which is 12dp in with 16dp after it ("Left/right padding with
     // icons 12dp", "Padding between icons and text 16dp", m3.material.io text
-    // fields): 52dp with the 24dp icon, 48dp with compact's 20dp one. The
+    // fields): 52dp with the 24dp icon. The
     // label, a prefix and a suffix stand there; the label is not moved by a
     // prefix (Compose TextFieldImpl, "Prefix/suffix does not get applied to
     // label").
@@ -410,8 +414,11 @@ $component: "#{base.$prefix}-text-field";
         .#{$component}__input {
             background-color: t.color("surface-container-highest");
             // Under the label: 8dp, its 16dp line, the 24dp text, then 8dp with
-            // the 1dp indicator (m3.material.io: "Top/bottom padding 8dp")
-            padding: 24px 16px 7px;
+            // the 1dp indicator (m3.material.io: "Top/bottom padding 8dp").
+            // Density splits the 4dp a step 3:1, the larger share coming off
+            // the label's side, so the padding and the height lose the same
+            // 4dp and the text stays clear of the floated label.
+            padding: f.density(24px, 12px, 3px) 16px f.density(7px, 3px, 1px);
             border-bottom: 1px solid t.color("on-surface-variant");
             border-radius: f.get-shape("extra-small") f.get-shape("extra-small")
                 0 0;
@@ -462,19 +469,19 @@ $component: "#{base.$prefix}-text-field";
         // A prefix or suffix is on the text's line: under a label, 24dp down
         // (its centre 36dp); without one it is centred, as the base places it.
         // It shows only once the label has floated, so the state is not in
-        // the selector.
+        // the selector. Density moves the text's line with the top padding.
         &:has(> .#{$component}__field > .#{$component}__label) {
             .#{$component}__prefix,
             .#{$component}__suffix {
-                top: 36px;
+                top: f.density(36px, 24px, 3px);
             }
         }
 
         // Without a label the text is centred: 16dp above and below it
         // (contentPaddingWithoutLabel), the indicator in the last of them
         &:not(:has(> .#{$component}__field > .#{$component}__label)) .#{$component}__input {
-            padding-top: 16px;
-            padding-bottom: 15px;
+            padding-top: f.density(16px, 8px, 2px);
+            padding-bottom: f.density(15px, 7px, 2px);
         }
 
         // Focus state
@@ -536,10 +543,20 @@ $component: "#{base.$prefix}-text-field";
             pointer-events: none;
         }
 
-        // Icon adjustments for filled variant
+        // Icon adjustments for filled variant: the icon is centred in the
+        // field, so it follows the height's centre (floored with it)
         &.#{$component}--with-leading-icon .#{$component}__leading-icon,
         &.#{$component}--with-trailing-icon .#{$component}__trailing-icon {
-            top: 28px;
+            top: f.density(28px, 20px, 2px);
+        }
+    }
+
+    @include m.high-contrast {
+        &--filled.#{$component}--focused .#{$component}__field::before {
+            opacity: 1;
+            background-color: transparent;
+            height: 0;
+            border-top: 2px solid CanvasText;
         }
     }
 
@@ -635,7 +652,8 @@ $component: "#{base.$prefix}-text-field";
         .#{$component}__input {
             background-color: transparent;
             // 16dp all round (contentPaddingWithoutLabel), 1px of it the border
-            padding: 15px 16px;
+            // Density takes 2dp a side, so the 4dp a step is the height's.
+            padding: f.density(15px, 7px, 2px) 16px;
             // transparent: the outline draws the edge, this keeps the text
             // where the old input border put it. Top and bottom only: the
             // horizontal insets are the filled field's, to the pixel
@@ -658,8 +676,10 @@ $component: "#{base.$prefix}-text-field";
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
             // Centred on the top edge (`endY = -(it.height / 2)`), whatever
-            // its height: up the 28px to the edge, and half its scaled box
-            transform: translateY(calc(-28px - 37.5%)) scale(0.75);
+            // its height: up the 28px to the edge, and half its scaled box.
+            // The edge is the field's half-height, so density moves it with
+            // the height, down to the floor's 20px.
+            transform: translateY(calc(#{f.density-offset(28px, 20px, 2px)} - 37.5%)) scale(0.75);
             // The floated label starts 16dp in, inside the notch, whatever
             // the icon at rest: the label's own inset, either direction
             --#{$component}-start: 16px;
@@ -668,8 +688,10 @@ $component: "#{base.$prefix}-text-field";
         // Floated from the input's own state too, as the filled variant is
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
             // Centred on the top edge (`endY = -(it.height / 2)`), whatever
-            // its height: up the 28px to the edge, and half its scaled box
-            transform: translateY(calc(-28px - 37.5%)) scale(0.75);
+            // its height: up the 28px to the edge, and half its scaled box.
+            // The edge is the field's half-height, so density moves it with
+            // the height, down to the floor's 20px.
+            transform: translateY(calc(#{f.density-offset(28px, 20px, 2px)} - 37.5%)) scale(0.75);
             --#{$component}-start: 16px;
         }
 
@@ -727,37 +749,43 @@ $component: "#{base.$prefix}-text-field";
     // own 12px put the first line under the filled field's floated label.
     &--multiline {
         .#{$component}__input {
-            min-height: v.text-field('height-multiline');
+            // The box takes the field's four steps and stops with it: the
+            // floor is where the single-line field meets its 40px (100 - 16).
+            min-height: f.density(v.text-field('height-multiline'), 84px);
             height: auto;
             resize: vertical;
-            padding-top: v.text-field('padding-top-multiline');
+            padding-top: f.density(v.text-field('padding-top-multiline'), 8px, 2px);
         }
 
         // Under the floated label: 8dp, then its 16dp line
         // (TextFieldWithLabelVerticalPadding, MinFocusedLabelLineHeight)
         &.#{$component}--filled:has(> .#{$component}__field > .#{$component}__label) .#{$component}__input {
-            padding-top: v.text-field('padding-top-multiline-label');
+            padding-top: f.density(v.text-field('padding-top-multiline-label'), 12px, 3px);
         }
 
         // The input's own border is the rest of the 16dp
         &.#{$component}--outlined .#{$component}__input {
-            padding-top: calc(#{v.text-field('padding-top-multiline')} - #{v.text-field('border-width')});
+            padding-top: calc(#{f.density(v.text-field('padding-top-multiline'), 8px, 2px)} - #{v.text-field('border-width')});
         }
 
         .#{$component}__prefix,
         .#{$component}__suffix {
-            top: 28px;
+            top: f.density(28px, 20px, 2px);
         }
 
-        // The single-line field's centre: its 56px box, halved
+        // The single-line field's centre: its 56px box, halved, floored with
+        // the height's 40px
         .#{$component}__label {
-            top: 28px;
+            top: f.density(28px, 20px, 2px);
         }
     }
 
     // Support for multiline inputs
     &__input[type="multiline"] {
-        min-height: v.text-field('height-multiline');
+        // As --multiline: the box takes the field's four steps and stops with
+        // it. The text, the label and the affixes are centred in the box or
+        // anchored to its top, so they follow without a value of their own.
+        min-height: f.density(v.text-field('height-multiline'), 84px);
         height: auto; // Allow height to adjust based on content
         max-height: none; // Remove max-height constraint from regular inputs
         flex-shrink: 1; // Allow some shrinking for multiline
@@ -771,116 +799,17 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
-    // ===== DENSITY VARIANTS =====
-    // Compact density (40px height)
+    // ===== DENSITY: THE COMPACT OPTION =====
+    // `density: "compact"` is the scale's fourth step (56 - 16 = 40px, the
+    // field's floor) and nothing more: the property carries it, and the rules
+    // above compute the geometry. The block this replaces also set Body
+    // Medium, 20dp icon boxes and 16dp glyphs; density never moves type or
+    // icons (M3, text fields: "Text size shouldn't change as the container
+    // size scales"), so those are gone. The floats need no step of their own:
+    // the filled label is anchored to the field's centre, which the height's
+    // floor holds, and the outlined label's edge is the half-height it reads.
     &--density-compact {
-        .#{$component}__input {
-            height: 40px;
-            padding: 8px 16px;
-            @include m.typography("body-medium"); // Slightly smaller text
-        }
-
-        // Adjust label position for compact
-        .#{$component}__label {
-            @include m.typography("body-medium");
-        }
-
-        // Adjust icon positions for compact height
-        .#{$component}__leading-icon,
-        .#{$component}__trailing-icon {
-            width: 20px;
-            height: 20px;
-
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        // Adjust prefix/suffix position for compact
-        .#{$component}__prefix,
-        .#{$component}__suffix {
-            @include m.typography("body-medium");
-        }
-
-        // Filled variant with compact density
-        &.#{$component}--filled {
-            .#{$component}__input {
-                padding: 12px 16px 4px; // Adjusted for filled variant
-            }
-
-            // Populated/focused label position
-            &:not(.#{$component}--empty) .#{$component}__label,
-            &.#{$component}--focused .#{$component}__label {
-                transform: translateY(-90%) scale(0.75); // Adjusted for compact height
-            }
-
-            // A prefix or suffix on the compact text's line, under a label
-            &:has(> .#{$component}__field > .#{$component}__label) {
-                .#{$component}__prefix,
-                .#{$component}__suffix {
-                    top: 23.5px;
-                }
-            }
-
-            // Without a label, the 20px line centred in the 40px box
-            &:not(:has(> .#{$component}__field > .#{$component}__label)) .#{$component}__input {
-                padding-top: 10px;
-                padding-bottom: 9px;
-            }
-
-            // Adjust icons for filled compact
-            .#{$component}__leading-icon,
-            .#{$component}__trailing-icon {
-                top: 20px; // Adjusted for compact filled
-            }
-        }
-
-        // Outlined variant with compact density
-        &.#{$component}--outlined {
-            .#{$component}__input {
-                padding: 9px 16px;
-            }
-
-            // Focused/populated position
-            &:not(.#{$component}--empty) .#{$component}__label,
-            &.#{$component}--focused .#{$component}__label {
-                // On the edge of the 40px box: 20px up, and half its scaled box
-                transform: translateY(calc(-20px - 37.5%)) scale(0.75);
-            }
-        }
-
-        // Multiline with compact density: no M3 measure, so the first line
-        // and the label are the compact single-line field's
-        &.#{$component}--multiline {
-            .#{$component}__input {
-                min-height: 40px;
-                padding: v.text-field('padding-top-multiline-compact') v.text-field('padding-horizontal') 8px;
-            }
-
-            &.#{$component}--filled:has(> .#{$component}__field > .#{$component}__label) .#{$component}__input {
-                padding-top: v.text-field('padding-top-multiline-compact-label');
-            }
-
-            &.#{$component}--outlined .#{$component}__input {
-                padding-top: calc(#{v.text-field('padding-top-multiline-compact')} - #{v.text-field('border-width')});
-            }
-
-            .#{$component}__label,
-            .#{$component}__prefix,
-            .#{$component}__suffix {
-                top: 20px;
-            }
-        }
-
-        // The compact icon box is 20dp: the content starts 48dp in
-        &.#{$component}--with-leading-icon {
-            --#{$component}-start: 48px;
-        }
-
-        &.#{$component}--with-trailing-icon {
-            --#{$component}-end: 48px;
-        }
+        --#{base.$prefix}-density: -4;
     }
 
     // ===== THE INPUT'S SIDES, AND THE MIRROR =====

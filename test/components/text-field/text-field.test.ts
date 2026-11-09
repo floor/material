@@ -39,6 +39,7 @@ g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createTextField, { type TextFieldValuePayload, type TextFieldFocusPayload } from '../../../src/components/text-field';
+import { textFieldElement } from '../../../src/elements/text-field';
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
@@ -198,6 +199,52 @@ describe('text-field', () => {
     expect(field.getAttribute('autocomplete')).toBe('email');
     field.removeAttribute('autocomplete');
     expect(field.input.hasAttribute('autocomplete')).toBe(false);
+  });
+
+  test('inputMode and enterKeyHint reach the input from config, and the element attributes move it', () => {
+    const created = mount({ label: 'Phone', type: 'tel', inputMode: 'tel', enterKeyHint: 'next' });
+    expect(created.input.getAttribute('inputmode')).toBe('tel');
+    expect(created.input.getAttribute('enterkeyhint')).toBe('next');
+
+    // <m-text-field>'s attribute callbacks, applied to a field created without
+    // them: the host attribute writes the native one on the input, and a
+    // removal removes it.
+    const field = mount({ label: 'Phone' });
+    const update = (name: 'inputmode' | 'enterkeyhint'): ((c: never, v: unknown) => void) =>
+      (textFieldElement.spec.attributes as unknown as Record<string, { update: (c: never, v: unknown) => void }>)[name].update;
+    update('inputmode')(field as never, 'decimal');
+    update('enterkeyhint')(field as never, 'go');
+    expect(field.input.getAttribute('inputmode')).toBe('decimal');
+    expect(field.input.getAttribute('enterkeyhint')).toBe('go');
+    update('inputmode')(field as never, null);
+    expect(field.input.hasAttribute('inputmode')).toBe(false);
+  });
+
+  test('keyboard hints coexist with control-only labels and retain a focused input', () => {
+    for (const variant of ['filled', 'outlined'] as const) for (const type of ['text', 'multiline'] as const) {
+      for (const controlLabelOnly of [undefined, false, true]) {
+        const field = mount({ variant, type, ariaLabel: 'Code', value: '1234', inputMode: 'numeric', enterKeyHint: 'done', ...(controlLabelOnly === undefined ? {} : { controlLabelOnly }) });
+        const input = field.input;
+        expect(field.element.getAttribute('aria-label')).toBe(controlLabelOnly ? null : 'Code');
+        expect(input.getAttribute('aria-label')).toBe('Code');
+        expect(input.getAttribute('inputmode')).toBe('numeric');
+        expect(input.getAttribute('enterkeyhint')).toBe('done');
+        input.focus();
+        const update = (name: 'inputmode' | 'enterkeyhint', value: string | null) =>
+          (textFieldElement.spec.attributes[name].update as (component: never, value: string | null) => void)(field as never, value);
+        update('inputmode', 'decimal'); update('enterkeyhint', 'next');
+        expect(field.input).toBe(input);
+        expect(document.activeElement).toBe(input);
+        expect(input.value).toBe('1234');
+        expect(input.getAttribute('inputmode')).toBe('decimal');
+        expect(input.getAttribute('enterkeyhint')).toBe('next');
+        update('inputmode', null); update('enterkeyhint', null);
+        expect(input.hasAttribute('inputmode')).toBe(false);
+        expect(input.hasAttribute('enterkeyhint')).toBe(false);
+        expect(document.activeElement).toBe(input);
+        field.destroy();
+      }
+    }
   });
 
   test('supporting text from config, set later, and removed', () => {

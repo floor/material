@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
-import { buildModules, buildSSR } from "./build-modules";
+import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
+import { consolidateDeclarations } from "./consolidate-declarations";
 import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
 import { emitSvelte } from "./svelte-package";
@@ -39,6 +40,11 @@ try {
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),
       exports: relocate(pkg.exports),
     };
+    // The nested manifest lets the prunes below and the reachability checks
+    // read the relocated export map in place. It is not a published file:
+    // package.json's `files` excludes dist/package.json (`dist` inherits the
+    // root `type` and `sideEffects`), and the package size check asserts it
+    // stays out of the tarball.
     await writeFile(`${staging}/package.json`, JSON.stringify(manifest, null, 2) + "\n");
 
     // The compiler emits a declaration for every module, including the ones no
@@ -46,10 +52,24 @@ try {
     const pruned = await pruneDeclarations(staging, manifest.exports);
     console.log(`Pruned ${pruned.removed.length} unreachable declarations (${pruned.bytes} bytes)`);
 
+    // Fold the declarations no `exports` entry names into the barrel that
+    // exports their directory, so a consumer reads one file per entry instead
+    // of one per module. The pass keeps each barrel's exported names exactly.
+    const consolidated = await consolidateDeclarations(staging, manifest.exports);
+    console.log(
+      `Consolidated ${consolidated.merged} declarations into ${consolidated.groups} barrels ` +
+      `(${consolidated.bytes} bytes, ${consolidated.kept.length} kept)`,
+    );
+
     // A module no export target reaches and no shipped module imports is a
     // file no consumer can load: ship the reachable tree and nothing beside it.
     const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
     console.log(`Pruned ${modules.removed.length} unreachable modules (${modules.bytes} bytes)`);
+
+    // Readable, comment-stripped modules: indentation and blank lines go, tokens
+    // and one line per statement stay. The prunes above have already read the emit.
+    const stripped = await stripShippedModules(staging);
+    console.log(`Stripped ${stripped.files} modules (${stripped.bytes} bytes)`);
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);

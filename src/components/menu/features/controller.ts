@@ -153,7 +153,7 @@ const withController =
     if (state.selectedItemId && item.id === state.selectedItemId) {
       itemElement.classList.add(`${itemClass}--selected`);
       itemElement.setAttribute("aria-selected", "true");
-    } else {
+    } else if (listbox) {
       itemElement.setAttribute("aria-selected", "false");
     }
 
@@ -171,6 +171,9 @@ const withController =
     if (item.icon) {
       const iconElement = document.createElement("span");
       iconElement.className = `${component.getClass("menu__item-icon")}`;
+      // The item's name is its text. The icon is decorative beside that text.
+      // An item with no text keeps the icon, so the svg can still name it.
+      if (item.text.trim()) iconElement.setAttribute("aria-hidden", "true");
       setHTML(iconElement, item.icon);
       contentContainer.appendChild(iconElement);
     }
@@ -268,6 +271,12 @@ const withController =
     menuList.className = `${component.getClass("menu__list")}`;
     menuList.setAttribute("role", listbox ? "listbox" : "menu");
     if (listbox) menuList.id = `${optionIdPrefix}-listbox`;
+    else {
+      const label = component.element.getAttribute("aria-label");
+      const labelledby = component.element.getAttribute("aria-labelledby");
+      if (label) menuList.setAttribute("aria-label", label);
+      if (labelledby) menuList.setAttribute("aria-labelledby", labelledby);
+    }
 
     // A gap separates groups rather than drawing a line across one surface, so
     // the items on either side of it go into their own list. Everything else
@@ -406,7 +415,8 @@ const withController =
         item.setAttribute("aria-selected", "true");
       } else {
         item.classList.remove(`${component.getClass("menu__item--selected")}`);
-        item.setAttribute("aria-selected", "false");
+        if (listbox) item.setAttribute("aria-selected", "false");
+        else item.removeAttribute("aria-selected");
       }
     });
 
@@ -502,6 +512,7 @@ const withController =
         component.keyboard?.handleInitialFocus(
           component.element,
           interactionType,
+          event,
         );
       }, 100);
 

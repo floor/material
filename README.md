@@ -159,6 +159,17 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
+### Factory control labels
+
+Checkbox, Switch, TextField and Slider factories accept `controlLabelOnly: true`
+to put `ariaLabel` only on the real input or slider handle. The option defaults
+to false; omitted/false output is unchanged.
+
+Opting in omits the generated wrapper's `aria-label`, changing its serialized
+HTML and wrapper `[aria-label]` selectors. The control keeps its name, focus
+and form behavior. Authored custom-element host labels remain unchanged, so
+duplicate host names remain a known limitation.
+
 ## Styles
 
 The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
@@ -186,11 +197,14 @@ What each stylesheet holds:
 | Import | Holds |
 |--------|-------|
 | `material/styles/base` | The baseline theme in light and dark, the colour, shape and typeface tokens, a reset and the ripple |
+| `material/styles/base-lite` | The baseline theme in light and dark, the colour, shape and typeface tokens, the body theme and the reduced-motion switch; no reset, ripple or contrast modes |
 | `material/styles/typography` | The type scale, the type classes (`.mtrl-display-large` to `.mtrl-label-small`), the text utilities, and the styles for headings and paragraphs |
 | `material/styles/<component>` | One component, with what it depends on |
 | `material/styles` | Every component, the typography, and the twelve themes with their contrast levels |
 
 Import the typography stylesheet when the page uses the type classes, relies on material's heading styles, or reads a `--mtrl-sys-typescale-*` token in its own CSS. It has to load after the base; the import takes care of that.
+
+`material/styles/base-lite` is the base for element-based pages: the theme, the tokens and the body theme, without the reset, the ripple or the contrast modes. Each element's shadow root carries its own ripple and box-sizing rules, and base-lite keeps the global reduced-motion switch. Factory components draw their ripple from the full base, so a factory page keeps `material/styles/base`. Import one base or the other, not both.
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
@@ -326,6 +340,10 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | `<m-button>` | `toggle` | boolean: a toggle button, dispatching `change` with `{ selected, value }` |
 | `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
+
+A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions.
+
+Adding actions through the card APIs or named custom-element action slots warns in development when the card is clickable; it keeps the configured role, tab stop and activation behavior. Production bundles strip this diagnostic when `process.env.NODE_ENV` is replaced with `"production"`.
 
 `actions-align` aligns the card's slotted actions, using the factory's `actionsConfig.align` values. Start and end follow text direction. Changes after upgrade update the row; removing the attribute restores `end`. Framework adapters expose `actionsAlign`.
 
@@ -565,6 +583,7 @@ On a declaration child:
 - `trailing-icon` on `<m-chip>`
 - `avatar` on `<m-chip>` — input chips only, and it takes precedence over `icon`; not a person's name or an image URL
 - `icon` on `<m-drawer-item>`
+- `selected-icon` on `<m-drawer-item>` — while that destination is active
 - `leading-icon` on `<m-list-item>`
 - `leading-avatar` on `<m-list-item>` — not a person's name or an image URL
 - `trailing-icon` on `<m-list-item>`
@@ -591,17 +610,18 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 127.4 kB |
-| `material/styles/base` | 2.9 kB |
-| `material/styles/base` and `material/styles/button` | 5.1 kB |
-| `material/styles`, the full stylesheet | 58.7 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 130.5 kB |
+| `material/styles/base` | 3.1 kB |
+| `material/styles/base-lite` | 1.7 kB |
+| `material/styles/base` and `material/styles/button` | 5.4 kB |
+| `material/styles`, the full stylesheet | 59.4 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
 
 ## Browser support
 
-Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
+Current Chrome, Edge, Firefox and Safari. The JavaScript targets ES2022, parsed in CI with acorn 8: a parser that stops before ES2022 cannot load the package. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
 
 ## Upgrading
 
@@ -632,3 +652,5 @@ Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+Third-party notices: the package ships Material Symbols and Material Icons glyphs, copyright Google LLC, under the Apache License 2.0; [NOTICE](NOTICE) includes the licence text and lists the files that declare them.

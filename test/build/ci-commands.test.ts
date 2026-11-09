@@ -11,7 +11,7 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "dist-modules:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "size:check", "readme:check", "docs-imports:check", "styles-package:check", "size",
+  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "declaration-exports:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
   "adapters:size",
   // the browser checks
   "elements:check:a", "elements:check:b", "shadow-styles:check",
@@ -21,10 +21,10 @@ const COMMANDS = [
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check",
-  "core:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "ssr:check:a", "ssr:check:b",
+  "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "base-lite:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
 ];
 
-interface Step { run?: string; if?: string; "continue-on-error"?: unknown }
+interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
 interface Job {
   needs?: string | string[];
   if?: string;
@@ -89,6 +89,11 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(ran.filter(command => command !== "bun test" && !(command in scripts))).toEqual([]);
   });
 
+  test("runs the keyboard-focus browser check inside core:check", () => {
+    expect(scripts["keyboard-focus:check"]).toBe("bun run scripts/check-keyboard-focus.ts");
+    expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
+  });
+
   // A command that may be skipped, or may fail without failing its job, still
   // appears in the list above and no longer checks anything.
   test("runs them unconditionally, and their failure fails the job", () => {
@@ -105,6 +110,27 @@ describe("CI (.github/workflows/ci.yml)", () => {
       }
     }
     expect(loose).toEqual([]);
+  });
+
+  // A command that hangs runs until the run is cancelled. On 2026-11-03 the
+  // adapters job's checks step held its job for 30 minutes, and the step's log
+  // was gone afterwards, so nothing named the sub-check that hung. A step that
+  // loops over a group of commands therefore carries a deadline that fails on
+  // its own, and logs each sub-check's start and its end.
+  test("bounds a hung group of checks, and names each sub-check it runs", () => {
+    const unbounded: string[] = [];
+    for (const [jobName, job] of Object.entries(workflow.jobs)) {
+      for (const step of job.steps) {
+        const run = step.run ?? "";
+        if (!run.includes("for script in ${{ matrix.")) continue;
+        const label = `${jobName}: ${step.name ?? "unnamed step"}`;
+        const minutes = step["timeout-minutes"];
+        if (typeof minutes !== "number" || minutes < 1 || minutes > 10) unbounded.push(`${label}: timeout-minutes is ${String(minutes)}`);
+        if (!run.includes('echo "::group::$script (start)"')) unbounded.push(`${label}: no start line`);
+        if (!run.includes('echo "$script: passed in $((SECONDS - start))s"')) unbounded.push(`${label}: no end line`);
+      }
+    }
+    expect(unbounded).toEqual([]);
   });
 
   test("gates the required `check` status on every other job", () => {

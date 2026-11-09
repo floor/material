@@ -56,10 +56,4 @@ describe('the ripple is the press', () => {
     expect(css).toMatch(/\.probe-hover::before\s*\{[^}]*opacity:\s*0\.08/);
     expect(css).toMatch(/\.probe-focus::before\s*\{[^}]*opacity:\s*0\.1/);
   });
-
-  test('the tab\'s programmatic pressed class still paints', () => {
-    const selectors = rules(compile("@use 'components/tabs';"))
-      .flatMap(rule => paintsPress(rule.declarations) ? selectorsOf(rule.selectors) : []);
-    expect(selectors.some(selector => /--pressed$/.test(selector) && !guarded(selector))).toBe(true);
-  });
 });

@@ -124,8 +124,11 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       withLifecycle()
     )(baseConfig);
 
-    // Material 3 size, kind and density tokens (height, gap, corners)
+    // Material 3 size, kind and density tokens (height, gap, corners). The
+    // density property is cleared first: a group returned to the default must
+    // inherit a container's density again rather than keep the old value.
     const applySizeStyles = (density: ButtonGroupDensity) => {
+      component.element.style.removeProperty(`--${baseConfig.prefix}-density`);
       Object.entries(getSizeStyles(baseConfig.prefix, baseConfig.size, kind, density)).forEach(([prop, value]) => {
         component.element.style.setProperty(prop, value);
       });
@@ -303,7 +306,9 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       const button = (buttonConfig.text === undefined && buttonConfig.icon
         ? createIconButton({
             ...resolvedConfig,
-            ariaLabel: buttonConfig.ariaLabel,
+            // Keep the typed explicit-label contract; runtime callers without
+            // one receive the same value fallback as the custom element.
+            ariaLabel: buttonConfig.ariaLabel ?? buttonConfig.value,
             toggle: selectable,
             toggleOnClick: false,
             selectedIcon: buttonConfig.selectedIcon,

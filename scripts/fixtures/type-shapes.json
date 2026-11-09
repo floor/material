@@ -335,6 +335,21 @@
       "string"
     ]
   },
+  "CarouselSlide.decoding": {
+    "kind": "union",
+    "members": [
+      "\"async\"",
+      "\"auto\"",
+      "\"sync\""
+    ]
+  },
+  "CarouselSlide.loading": {
+    "kind": "union",
+    "members": [
+      "\"eager\"",
+      "\"lazy\""
+    ]
+  },
   "CarouselVariant": {
     "kind": "union",
     "members": [
@@ -1238,7 +1253,8 @@
     "kind": "union",
     "members": [
       "HTMLElement",
-      "string"
+      "string",
+      "{ element: HTMLElement }"
     ]
   },
   "ListSlot.type": {
@@ -1467,6 +1483,13 @@
       "BaseComponent"
     ]
   },
+  "SchemeMode": {
+    "kind": "union",
+    "members": [
+      "\"dark\"",
+      "\"light\""
+    ]
+  },
   "SearchConfig.suggestions": {
     "kind": "union",
     "members": [
@@ -1617,6 +1640,13 @@
       "\"standard\""
     ]
   },
+  "SingleSelectListboxOptions.indicator": {
+    "kind": "union",
+    "members": [
+      "\"leading\"",
+      "\"trailing\""
+    ]
+  },
   "SliderConfig": {
     "kind": "extends",
     "bases": [
@@ -1693,6 +1723,13 @@
       "\"timeout\""
     ]
   },
+  "SnackbarConfig.focusShortcut": {
+    "kind": "union",
+    "members": [
+      "false",
+      "string"
+    ]
+  },
   "SnackbarDuration": {
     "kind": "union",
     "members": [
@@ -1729,6 +1766,13 @@
     "members": [
       "((element: E) => void)",
       "E"
+    ]
+  },
+  "SpecVersion": {
+    "kind": "union",
+    "members": [
+      "\"2021\"",
+      "\"2025\""
     ]
   },
   "SplitButtonElementComponent": {
@@ -1898,6 +1942,31 @@
       "string"
     ]
   },
+  "TextFieldConfig.enterKeyHint": {
+    "kind": "union",
+    "members": [
+      "\"done\"",
+      "\"enter\"",
+      "\"go\"",
+      "\"next\"",
+      "\"previous\"",
+      "\"search\"",
+      "\"send\""
+    ]
+  },
+  "TextFieldConfig.inputMode": {
+    "kind": "union",
+    "members": [
+      "\"decimal\"",
+      "\"email\"",
+      "\"none\"",
+      "\"numeric\"",
+      "\"search\"",
+      "\"tel\"",
+      "\"text\"",
+      "\"url\""
+    ]
+  },
   "TextFieldConfig.type": {
     "kind": "union",
     "members": [
@@ -1988,6 +2057,18 @@
       "\"tertiary-container\"",
       "\"tertiary-fixed\"",
       "\"tertiary-fixed-dim\""
+    ]
+  },
+  "ThemeVariant": {
+    "kind": "union",
+    "members": [
+      "\"content\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"tonal-spot\"",
+      "\"vibrant\""
     ]
   },
   "ThrottleComponent": {
@@ -2175,6 +2256,7 @@
   "ToolbarScrollBehavior": {
     "kind": "union",
     "members": [
+      "\"collapse\"",
       "\"exit\"",
       "\"none\""
     ]

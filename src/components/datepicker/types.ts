@@ -75,68 +75,6 @@ export type DatePickerView = 'day' | 'month' | 'year';
 export type DatePickerSelectionMode = 'single' | 'range';
 
 /**
- * Day names for the calendar
- * @internal
- */
-export const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-/**
- * Month names for the calendar
- * @internal
- */
-export const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 
-  'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December'
-];
-
-/**
- * Month names abbreviated
- * @internal
- */
-export const MONTH_NAMES_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 
-  'May', 'Jun', 'Jul', 'Aug',
-  'Sep', 'Oct', 'Nov', 'Dec'
-];
-
-/**
- * CSS class name for today's date
- * @internal
- */
-export const TODAY_CLASS = 'datepicker__day--today';
-
-/**
- * CSS class name for selected date
- * @internal
- */
-export const SELECTED_CLASS = 'datepicker__day--selected';
-
-/**
- * CSS class name for dates outside the current month
- * @internal
- */
-export const OUTSIDE_MONTH_CLASS = 'datepicker__day--outside';
-
-/**
- * CSS class for the first date in a range
- * @internal
- */
-export const RANGE_START_CLASS = 'datepicker__cell--range-start';
-
-/**
- * CSS class for the last date in a range
- * @internal
- */
-export const RANGE_END_CLASS = 'datepicker__cell--range-end';
-
-/**
- * CSS class for dates between start and end in a range
- * @internal
- */
-export const RANGE_MIDDLE_CLASS = 'datepicker__cell--range';
-
-/**
  * Configuration interface for the DatePicker component
  * @category Components
  */
@@ -192,8 +130,15 @@ export interface DatePickerConfig {
    */
   maxDate?: Date | string;
   
+  /**
+   * BCP 47 locale tag driving month and weekday names, the first day of the
+   * week, and the default displayed date format when `dateFormat` is omitted.
+   * @default 'en-US'
+   */
+  locale?: string;
+
   /** 
-   * Format for displaying dates
+   * Format for displaying dates (derived from `locale` when omitted)
    * @default 'MM/DD/YYYY'
    */
   dateFormat?: string;
@@ -203,6 +148,9 @@ export interface DatePickerConfig {
    * @example 'Select Date'
    */
   label?: string;
+
+  /** Accessible name of the calendar dialog; defaults to the visible label. */
+  ariaLabel?: string;
   
   /** 
    * Placeholder text for the input field
@@ -406,6 +354,9 @@ export interface DatePickerComponent<V = DatePickerValue> {
 
   /** The supporting text; empty or null shows the date format */
   setSupportingText: (text: string | null) => DatePickerComponent<V>;
+
+  /** Names the calendar dialog; empty restores its visible label. */
+  setAriaLabel: (label: string) => DatePickerComponent<V>;
   
   /**
    * Gets the formatted date string based on the selected date(s)
@@ -477,6 +428,8 @@ export interface DatePickerState {
   focusedDate: Date;
   minDate: Date | null;
   maxDate: Date | null;
+  locale: string;
+  firstDayOfWeek: number;
   dateFormat: string;
   variant: DatePickerVariant;
   selectionMode: DatePickerSelectionMode;

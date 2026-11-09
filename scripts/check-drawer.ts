@@ -66,6 +66,14 @@ try {
   // Reduced motion stops movement and keeps fades: nothing that moves or resizes the drawer may transition
   const reduced = await page.locator('.mtrl-drawer').evaluate(el => getComputedStyle(el).transitionProperty);
   assert(!/transform|width|height|top|left|inset/.test(reduced), `Drawer still moves under reduced motion: ${reduced}`);
+  // The pill and the state layer own the item's transitions, so the switch has
+  // to reach their pseudo-elements, not only the indicator element.
+  const indicatorMotion = await page.locator('.mtrl-drawer__item--active .mtrl-drawer__active-indicator').evaluate(el => ({
+    pill: getComputedStyle(el, '::before').transitionDuration,
+    state: getComputedStyle(el, '::after').transitionDuration,
+  }));
+  assert.equal(indicatorMotion.pill, '0s', `The active pill still transitions under reduced motion: ${indicatorMotion.pill}`);
+  assert.equal(indicatorMotion.state, '0s', `The state layer still transitions under reduced motion: ${indicatorMotion.state}`);
   await page.click('#outside');
   assert.equal(await page.locator('#outside').evaluate(el => el === document.activeElement), true);
   await page.evaluate(() => window.mountDrawer({ variant: 'modal' }));

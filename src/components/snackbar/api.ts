@@ -61,6 +61,34 @@ export const withAPI =
       component.emit?.(type, { snackbar: api, originalEvent: null, ...extra });
     };
 
+    // M3 snackbar accessibility: on web a shortcut should reach an actionable
+    // snackbar's action. It is one non-character key (F1-F12 and the like),
+    // so WCAG 2.1.4 does not apply; it is named on the button and live only
+    // while this snackbar is on screen. `false`, `off` or a single character
+    // turns it off.
+    const shortcut = config.focusShortcut === false
+      ? ''
+      : (config.focusShortcut ?? SNACKBAR_DEFAULTS.FOCUS_SHORTCUT).trim();
+    const key = /^(off|false|.)$/i.test(shortcut) ? '' : shortcut.toLowerCase();
+    if (key && component.actionButton) component.actionButton.setAttribute('aria-keyshortcuts', shortcut);
+
+    const onShortcut = (event: KeyboardEvent): void => {
+      if (!component.actionButton?.isConnected
+        || event.key.toLowerCase() !== key
+        || event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+      // Focus already in the snackbar: nothing to move, and Tab moves it
+      if (element.contains(activeElementOf(element))) return;
+      event.preventDefault();
+      event.stopPropagation();
+      // Where focus was when the key was pressed: close() goes back there,
+      // not to where it was when the snackbar opened
+      previouslyFocused = deepActiveElement();
+      component.actionButton.focus();
+      emit('focus', { originalEvent: event });
+    };
+
+    const unlisten = (): void => void element.ownerDocument.removeEventListener('keydown', onShortcut);
+
     /**
      * An action wider than 128dp goes below the text on its own line, as the
      * Android snackbar does (`maxActionInlineWidth`) and Compose's
@@ -113,6 +141,7 @@ export const withAPI =
       }
       if (api.state !== 'visible') return;
       api.state = 'hidden';
+      unlisten();
       component.timer?.stop();
 
       // Focus goes back where it came from if it was inside the snackbar;
@@ -146,6 +175,7 @@ export const withAPI =
       void element.offsetHeight;
       element.classList.add(cls(SNACKBAR_CLASSES.VISIBLE));
       component.timer?.start();
+      if (key && component.actionButton) element.ownerDocument.addEventListener('keydown', onShortcut);
       emit('open');
     };
 
@@ -291,6 +321,7 @@ export const withAPI =
         // Without events; a queued one must not be shown after this
         if (entry) queue.remove(entry);
         api.state = 'hidden';
+        unlisten();
         cancelRemoval();
         takeOff();
         element.remove();
@@ -326,6 +357,7 @@ export const withAPI =
     if (config.onOpen) api.on('open', config.onOpen);
     if (config.onClose) api.on('close', config.onClose);
     if (config.onAction) api.on('action', config.onAction);
+    if (config.onFocus) api.on('focus', config.onFocus);
     if (config.on) {
       for (const [type, handler] of Object.entries(config.on)) {
         if (handler) api.on(type as SnackbarEventType, handler);

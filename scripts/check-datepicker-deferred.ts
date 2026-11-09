@@ -343,6 +343,32 @@ try {
     assert.equal(opened, true, "the first open after a preload shows at once");
     await page.close();
   }
+  // The copied shell and surface honor the current locale and dialog-name
+  // APIs as well as the deferred import contract above.
+  {
+    const page = await open();
+    const shell = await page.evaluate(() => {
+      const state = window as unknown as DatePickerWindow;
+      const picker = state.createDeferredDatePicker({ variant: "modal", locale: "fr-FR", value: new Date(2026, 6, 15), ariaLabel: "Travel date" });
+      state.picker = picker;
+      document.body.append(picker.element);
+      picker.setAriaLabel("Departure");
+      const result = { value: picker.getFormattedValue(), outerName: picker.element.getAttribute("aria-label"), dialogName: picker.element.querySelector("dialog")!.getAttribute("aria-label") };
+      picker.open();
+      return result;
+    });
+    assert.deepEqual(shell, { value: "15/07/2026", outerName: null, dialogName: "Departure" });
+    await page.waitForFunction(() => (window as unknown as DatePickerWindow).picker.element.querySelector("dialog[open] [data-date]") !== null);
+    assert.equal(await page.getByRole("dialog", { name: "Departure", exact: true }).count(), 1);
+    assert((await page.locator("dialog").textContent())?.toLowerCase().includes("juillet"));
+    await page.locator('[data-date="2026-07-15"]').focus();
+    await page.keyboard.press("Home");
+    assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement)?.dataset.date), "2026-07-13", "Home moves to the locale's Monday");
+    await page.evaluate(() => { (window as unknown as DatePickerWindow).picker.setAriaLabel(""); });
+    assert.equal(await page.getByRole("dialog", { name: "Select date", exact: true }).count(), 1);
+    await page.close();
+    console.log("Deferred locale formatting, Monday week navigation and dialog name updates passed.");
+  }
 } finally {
   await browser.close();
   server.stop(true);

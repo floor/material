@@ -23,6 +23,9 @@ $component: "#{$prefix}-menu";
 }
 
 .#{$component} {
+    // A menu is a focused task: the density scale stops at its surface, so a
+    // page-wide value cannot shrink its items or anything inside it.
+    --#{base.$prefix}-density: 0;
     // Base styles
     @include m.typography("body-medium");
     @include m.shape("extra-small");
@@ -36,6 +39,7 @@ $component: "#{$prefix}-menu";
     color: t.color("on-surface");
     @include m.elevation(2);
     overflow: hidden;
+    box-sizing: border-box;
 
     // Initial state - hidden with proper transform origin
     display: flex;
@@ -76,9 +80,7 @@ $component: "#{$prefix}-menu";
     }
 
     // Position variations with appropriate transform origins
-    &--position-top,
-    &--position-top-start,
-    &--position-top-end {
+    &--position-top {
         transform-origin: bottom center;
     }
 
@@ -151,9 +153,28 @@ $component: "#{$prefix}-menu";
             outline: none;
         }
 
+        // md.comp.focus-ring: 3dp in secondary, drawn inward because an item
+        // fills the list's width inside a scroll container that would clip an
+        // outward ring.
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
+        }
+
         &:focus-visible,
             &--active {
             @include m.state-layer(t.color("on-surface"), "focus");
+        }
+
+        // The select's active option is where the keyboard is, but focus
+        // stays in its combobox input, so :focus-visible never matches it.
+        // The select marks the option a key reached, and only then: a pointer
+        // opening or a hover draws no ring. md.comp.focus-ring: 3dp in
+        // secondary, drawn inward because an item fills the list's width
+        // inside a scroll container that would clip an outward ring.
+        &--keyboard-active {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
         }
 
         &:active {
@@ -348,59 +369,14 @@ $component: "#{$prefix}-menu";
         background-color: t.color("outline-variant");
     }
 
-    // Accessibility
-    @include m.focus-ring(".#{$component}__item:focus-visible");
-
-    // Reduced motion preference support
-    @include m.reduced-motion {
-        transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
-
-        &,
-        &--visible {
-            transform: none;
-        }
+    // Accessibility: when a keyboard open lands on the menu surface itself
+    // (an empty menu, or one whose items are all hidden), the surface holds
+    // :focus-visible and draws the 3dp inward secondary focus ring.
+    &:focus-visible {
+        outline: 3px solid t.color("secondary");
+        outline-offset: -3px;
     }
 
-    // High contrast mode
-    @include m.high-contrast {
-        border: 1px solid CurrentColor;
-
-        .#{$component}__divider {
-            background-color: CurrentColor;
-        }
-
-        .#{$component}__item--disabled {
-            opacity: 1;
-            color: GrayText;
-        }
-    }
-
-    // Dense variant — compact items for toolbars and dense UIs
-    &--dense {
-        padding: 4px 0;
-
-        .#{$component}__item {
-            @include m.typography("body-medium");
-            min-height: 32px;
-            padding: 4px 12px;
-            padding-right: 32px;
-
-            &--submenu {
-                padding-right: 36px;
-            }
-
-            &-icon svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        .#{$component}__divider {
-            margin: 4px 0;
-        }
-    }
-
-    // RTL Support
     // -------------------------------------------------------------------------
     // The M3 expressive vertical menu (Compose SegmentedMenuTokens and
     // StandardMenuTokens / VibrantMenuTokens). A 16dp container holding 44dp
@@ -466,6 +442,10 @@ $component: "#{$prefix}-menu";
                     v.motion("spring-fast-spatial-easing"),
                 background-color v.motion("duration-short2")
                     v.motion("easing-standard");
+
+            &--submenu {
+                padding-inline-end: 48px;
+            }
 
             // The shape is the state: 4dp at rest, 12dp once it is touched
             &:hover,
@@ -685,6 +665,69 @@ $component: "#{$prefix}-menu";
         }
     }
 
+    // Dense variant — compact items for toolbars and dense UIs
+    &--dense {
+        padding: 4px 0;
+
+        .#{$component}__item {
+            @include m.typography("body-medium");
+            min-height: 32px;
+            padding: 4px 12px;
+            padding-right: 32px;
+
+            &--submenu {
+                padding-right: 36px;
+            }
+
+            &-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .#{$component}__divider {
+            margin: 4px 0;
+        }
+    }
+
+    // Reduced motion preference support
+    @include m.reduced-motion {
+        transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
+
+        &,
+        &--visible {
+            transform: none;
+        }
+
+        .#{$component}__item {
+            transition: none;
+        }
+    }
+
+    // High contrast mode
+    @include m.high-contrast {
+        border: 1px solid CurrentColor;
+
+        .#{$component}__group {
+            border: 1px solid CurrentColor;
+        }
+
+        .#{$component}__divider {
+            background-color: CurrentColor;
+        }
+
+        .#{$component}__item--selected {
+            background-color: Highlight;
+            color: HighlightText;
+        }
+
+        .#{$component}__item--disabled {
+            opacity: 1;
+            color: GrayText;
+        }
+    }
+
+    // RTL Support
     @include mirrored {
         transform-origin: top right;
     }
@@ -692,11 +735,7 @@ $component: "#{$prefix}-menu";
     // --position-top is its own class. A suffix on the --rtl compound would
     // compile to menu--rtl--position-top, which nothing carries.
     [dir='rtl'] &--position-top,
-    [dir='rtl'] &--position-top-start,
-    [dir='rtl'] &--position-top-end,
-    &.#{$component}--rtl.#{$component}--position-top,
-    &.#{$component}--rtl.#{$component}--position-top-start,
-    &.#{$component}--rtl.#{$component}--position-top-end {
+    &.#{$component}--rtl.#{$component}--position-top {
         transform-origin: bottom right;
     }
 

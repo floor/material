@@ -15,8 +15,8 @@ import {
   SEARCH_ICONS,
 } from "../constants";
 
-import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
+import { paintNamedIcon } from "./structure";
 import { hideFromTopLayer, showInTopLayer, onModalEscape, type ModalEscape } from "../../../core/dom/layer";
 import { activeElementOf } from "../../../core/dom/focus";
 import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
@@ -98,14 +98,7 @@ export const withStates =
   };
   // Escape on a full-screen view, from anywhere in it but the input (which
   // clears its text first), is a key press handled for the topmost open modal
-  // What is not a key press still arrives as the modal dialog's
-  // cancel; the browser's cancel in the task the view opened in is the opening
-  // key's, when the page stopped that key press before it reached the window.
   let escape: ModalEscape | undefined;
-  const onCancel = (event: Event): void => {
-    event.preventDefault();
-    if (!escape?.opening) collapseToBar();
-  };
   // Set while the surface moves in or out of the top layer, and focus is put
   // back, so that focus does not reopen the view.
   let refocusing = false;
@@ -120,7 +113,6 @@ export const withStates =
       surface.removeAttribute("role");
       surface.setAttribute("aria-label", component.structure?.input.getAttribute("aria-label") || "Search");
       showInTopLayer(surface, { kind: "modal" });
-      surface.addEventListener("cancel", onCancel);
       escape?.stop();
       escape = onModalEscape(surface, () => collapseToBar());
     } else {
@@ -156,7 +148,6 @@ export const withStates =
     refocusing = false;
     window.removeEventListener("scroll", place, true);
     window.removeEventListener("resize", place);
-    surface.removeEventListener("cancel", onCancel);
     escape?.stop();
     document.removeEventListener("pointerdown", onOutside, true);
   };
@@ -179,10 +170,10 @@ export const withStates =
     element.classList.remove(getClass(SEARCH_CLASSES.STATE_BAR));
     element.classList.add(getClass(SEARCH_CLASSES.STATE_VIEW));
 
-    // Update leading icon to back arrow
+    // Update leading icon to back arrow. The button keeps its own name.
     if (structure?.leadingIcon) {
-      setHTML(structure.leadingIcon, SEARCH_ICONS.BACK);
       structure.leadingIcon.setAttribute("aria-label", "Go back");
+      paintNamedIcon(structure.leadingIcon, SEARCH_ICONS.BACK);
     }
 
     openSurface();
@@ -220,10 +211,10 @@ export const withStates =
     element.classList.remove(getClass(SEARCH_CLASSES.STATE_VIEW));
     element.classList.add(getClass(SEARCH_CLASSES.STATE_BAR));
 
-    // Update leading icon to search icon
+    // Update leading icon to search icon. The button keeps its own name.
     if (structure?.leadingIcon) {
-      setHTML(structure.leadingIcon, config.leadingIcon || SEARCH_ICONS.SEARCH);
       structure.leadingIcon.setAttribute("aria-label", "Search");
+      paintNamedIcon(structure.leadingIcon, config.leadingIcon || SEARCH_ICONS.SEARCH);
     }
 
     closeSurface(restoreFocus);

@@ -21,10 +21,10 @@ import { createElement } from "../../core/dom/create";
 import { createComponentConfig, createElementConfig } from "../../core/config/component";
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
-import { eventsFrom, onModalEscape, type EventsFrom, type ModalEscape } from "../../core/dom/layer";
+import { eventsFrom, onModalEscape, type EventsFrom } from "../../core/dom/layer";
 import { withAPI } from "./api";
 import { PREFIX } from "../../core/config";
-import { addMonths, formatDate, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
+import { addMonths, formatDate, getFirstDayOfWeek, getLocaleDateFormat, isSameDay, parseDate, parseInputDate, resolveLocale, toIsoValue } from "./utils";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 import type { DatePickerSurfaceFactory } from "./surface";
 
@@ -38,7 +38,7 @@ export const defaultConfig: DatePickerConfig = {
 };
 export const createBaseConfig = (config: DatePickerConfig = {}) =>
   createComponentConfig(defaultConfig, config, "datepicker");
-export const getContainerConfig = (config: DatePickerConfig) => createElementConfig(config, {
+export const getContainerConfig = (config: DatePickerConfig) => createElementConfig({ ...config, ariaLabel: undefined }, {
   tag: "div", forwardEvents: { keydown: true, click: true }, interactive: true,
 });
 
@@ -68,13 +68,15 @@ export function createDatePickerShell<M extends string = "single">(
   const id = `${PREFIX}-datepicker-${++nextId}`;
   const cls = (name: string) => base.getClass(`datepicker__${name}`);
   const today = parseDate(new Date())!;
+  const locale = resolveLocale(settings.locale);
   const state: DatePickerState = {
     id, prefix: PREFIX, label: settings.label || "Select date", selectedDate: null, rangeEndDate: null,
     // The full-screen list has no month or year views.
     currentView: settings.variant !== "fullscreen" && ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
-    dateFormat: settings.dateFormat || "MM/DD/YYYY", variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
+    locale, firstDayOfWeek: getFirstDayOfWeek(locale),
+    dateFormat: config.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
@@ -84,32 +86,48 @@ export function createDatePickerShell<M extends string = "single">(
   // While it is open: a modal picker's place among the open modals (Escape is
   // a key press handled there, for the topmost one), and for a docked one the
   // marker that tells the click that opened it from every later one
-  let escape: ModalEscape | undefined, from: EventsFrom | undefined;
-  const release = () => { escape?.stop(); from?.stop(); escape = from = undefined; };
+  let guard: Partial<EventsFrom> | undefined;
+  const release = () => { guard?.stop?.(); guard = undefined; };
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
-  const label = createElement({ tag: "label", className: cls("label"), text: state.label, attributes: { for: `${id}-input` } });
-  const field = createElement({ tag: "div", className: cls("anchor") });
-  const input = doc.createElement("input");
-  input.className = cls("input"); input.id = `${id}-input`; input.type = "text"; input.readOnly = modal;
-  if (settings.name) input.name = settings.name;
-  input.placeholder = settings.placeholder || state.dateFormat; input.autocomplete = "off";
-  input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
-  const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, TRIGGER_ICON);
-  trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
+  const make = (tag: string, name: string, text?: string, attributes?: Record<string, string | boolean>) =>
+    createElement({ tag, className: cls(name), text, attributes });
+  const label = make("label", "label", state.label, { for: `${id}-input` });
+  const field = make("div", "anchor");
+  const input = make("input", "input", undefined, {
+    id: `${id}-input`, type: "text", placeholder: settings.placeholder || state.dateFormat, autocomplete: "off",
+    "aria-describedby": `${id}-help ${id}-error`, ...(settings.name ? { name: settings.name } : {}),
+  }) as HTMLInputElement;
+  input.readOnly = modal;
+  const trigger = make("button", "trigger", undefined, {
+    type: "button", "data-action": "open", "aria-label": "Choose date", "aria-haspopup": "dialog", "aria-controls": `${id}-dialog`, "aria-expanded": "false",
+  }) as HTMLButtonElement;
+  setHTML(trigger, TRIGGER_ICON);
   // The supporting text, the date format unless given.
-  const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });
-  const error = createElement({ tag: "div", className: cls("error"), attributes: { id: `${id}-error`, "aria-live": "polite" } });
+  const help = make("div", "help", settings.supportingText || state.dateFormat, { id: `${id}-help` });
+  const error = make("div", "error", undefined, { id: `${id}-error`, "aria-live": "polite" });
   const dialog = doc.createElement("dialog"); dialog.id = `${id}-dialog`; dialog.className = cls("calendar");
   dialog.classList.add(base.getClass(`datepicker--${modal ? "modal" : "docked"}`));
   if (state.variant === "fullscreen") dialog.classList.add(base.getClass("datepicker--fullscreen"));
   dialog.setAttribute("aria-modal", String(modal));
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
-  if (modal) dialog.setAttribute("aria-labelledby", `${id}-title`);
-  else dialog.setAttribute("aria-label", state.label);
+  const nameDialog = () => {
+    const name = settings.ariaLabel?.trim();
+    if (name || !modal) {
+      dialog.removeAttribute("aria-labelledby");
+      dialog.setAttribute("aria-label", name || state.label);
+    } else {
+      dialog.setAttribute("aria-labelledby", `${id}-title`);
+      // Before the surface lands there is no title to resolve. Keep the
+      // deferred entry's synchronous fallback name until it exists.
+      if (dialog.querySelector(`#${id}-title`)) dialog.removeAttribute("aria-label");
+      else dialog.setAttribute("aria-label", state.label);
+    }
+  };
+  nameDialog();
   field.append(input, trigger); base.element.append(label, field, help, error, dialog);
-  const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat) + (date && end ? ` - ${formatDate(end, state.dateFormat)}` : "");
+  const formatted = (date: Date | null, end: Date | null) => formatDate(date, state.dateFormat, state.locale) + (date && end ? ` - ${formatDate(end, state.dateFormat, state.locale)}` : "");
   const getValue = (): DatePickerValue => committed ? committedEnd ? [new Date(committed), new Date(committedEnd)] : new Date(committed) : null;
   const syncInput = () => {
     input.value = formatted(committed, committedEnd); input.removeAttribute("aria-invalid"); error.textContent = "";
@@ -142,7 +160,7 @@ export function createDatePickerShell<M extends string = "single">(
   const open = () => {
     if (destroyed || opened || base.disabled.isDisabled() || readOnly) return;
     opened = true; release();
-    if (modal) escape = onModalEscape(dialog, () => close()); else from = eventsFrom(dialog);
+    guard = modal ? onModalEscape(dialog, () => close()) : eventsFrom(dialog);
     resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
     let initial = committed ?? today;
     if (state.minDate && initial < state.minDate) initial = state.minDate;
@@ -181,7 +199,7 @@ export function createDatePickerShell<M extends string = "single">(
     if (modal || destroyed || base.disabled.isDisabled()) return;
     if (!input.value.trim()) { clearValue(true); return; }
     const pieces = state.selectionMode === "range" ? input.value.split(' - ') : [input.value];
-    const dates = pieces.map(value => parseInputDate(value, state.dateFormat));
+    const dates = pieces.map(value => parseInputDate(value, state.dateFormat, state.locale));
     if (dates.length !== (state.selectionMode === 'range' ? 2 : 1) || dates.some(date => !date || !state.isAllowed(date)) || dates[1] && dates[0] && dates[1] < dates[0]) {
       input.setAttribute("aria-invalid", "true"); error.textContent = `Enter a selectable ${state.selectionMode === "range" ? "date range" : "date"} (${state.dateFormat}).`; return;
     }
@@ -209,14 +227,10 @@ export function createDatePickerShell<M extends string = "single">(
     }
     keySurface(event);
   };
-  // A close request that is not a key press. The browser's cancel in the task
-  // the picker opened in is the opening key's, when the page stopped that key
-  // press before it reached the window.
-  const onCancel = (event: Event) => { event.preventDefault(); if (!escape?.opening) close(); };
   const onOutside = (event: MouseEvent) => {
     // The click that called open() reaches the document after it: the event
     // that opened the picker never dismisses it, and only that one
-    if (!opened || (from && !from.after(event))) return;
+    if (!opened || (guard?.after && !guard.after(event))) return;
     if (!modal && event.target instanceof Node && !event.composedPath().includes(base.element)) close(false);
     if (modal && event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close(); }
   };
@@ -227,10 +241,16 @@ export function createDatePickerShell<M extends string = "single">(
     // Use the destination so moving between days cannot close the popup mid-click.
     if (!destroyed && opened && !modal && event.relatedTarget instanceof Node && !base.element.contains(event.relatedTarget)) close(false);
   };
-  base.element.addEventListener("click", onClick); base.element.addEventListener("keydown", onKey);
-  base.element.addEventListener("focusout", onFocusOut);
-  dialog.addEventListener("click", onDialogClick); dialog.addEventListener("cancel", onCancel);
-  input.addEventListener("change", onInputChange); input.addEventListener("click", onInputClick); doc.addEventListener("click", onOutside);
+  const listeners: [EventTarget, string, EventListener][] = [
+    [base.element, "click", onClick as EventListener],
+    [base.element, "keydown", onKey as EventListener],
+    [base.element, "focusout", onFocusOut as EventListener],
+    [dialog, "click", onDialogClick as EventListener],
+    [input, "change", onInputChange],
+    [input, "click", onInputClick],
+    [doc, "click", onOutside as EventListener],
+  ];
+  for (const [el, ev, fn] of listeners) el.addEventListener(ev, fn);
   // The entry's surface: the calendar, or the stand-in that imports it. The
   // tuple is the surface's whole runtime contract, so a stand-in forwards
   // without this shell knowing which it holds.
@@ -265,11 +285,15 @@ export function createDatePickerShell<M extends string = "single">(
     if (destroyed) return;
     destroyed = true; close();
     destroySurface();
-    doc.removeEventListener("click", onOutside); input.removeEventListener("change", onInputChange); input.removeEventListener("click", onInputClick);
-    base.element.removeEventListener("click", onClick); base.element.removeEventListener("keydown", onKey); base.element.removeEventListener("focusout", onFocusOut);
-    dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("cancel", onCancel);
+    for (const [el, ev, fn] of listeners) el.removeEventListener(ev, fn);
     base.lifecycle.destroy();
   };
+  const showView = (v: DatePickerView) => () => { state.currentView = v; state.inputMode = false; renderSurface(); };
+  const nav = (fn: () => void) => () => { navigationRequested = !opened; fn(); renderSurface(); };
+  const setBound = (key: "minDate" | "maxDate") => (value: Date | string) => {
+    const date = parseDate(value); if (date && !destroyed) { state[key] = date; renderSurface(); if (state.inputMode) validateSurface(); } return api;
+  };
+  const stepMonth = (d: number) => nav(() => setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), d)));
   const api = withAPI({
     element: base.element, input, getClass: base.getClass,
     disabled: { enable: () => setDisabled(false), disable: () => setDisabled(true), isDisabled: () => base.disabled.isDisabled() }, lifecycle: { destroy }, destroy,
@@ -279,18 +303,17 @@ export function createDatePickerShell<M extends string = "single">(
     setReadOnly(value) { setReadOnly(value); return api; }, isReadOnly: () => readOnly,
     setRequired(value) { input.required = value; if (!value) syncInput(); return api; }, checkValidity, reportValidity,
     setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
+    setAriaLabel(label) { settings.ariaLabel = label; nameDialog(); return api; },
     clear() { clearValue(false); return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
-    setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; renderSurface(); if (state.inputMode) validateSurface(); } return api; },
-    setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; renderSurface(); } return api; },
+    setMinDate: setBound("minDate"),
+    setMaxDate: setBound("maxDate"),
     calendar: {
-      goToDate(value) { const date = parseDate(value); if (date) { navigationRequested = !opened; setDisplayDate(date); renderSurface(); } },
-      nextMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), 1)); renderSurface(); },
-      prevMonth() { navigationRequested = !opened; setDisplayDate(addMonths(new Date(state.currentYear, state.currentMonth, 1), -1)); renderSurface(); },
-      nextYear() { navigationRequested = !opened; state.currentYear++; renderSurface(); }, prevYear() { navigationRequested = !opened; state.currentYear--; renderSurface(); },
-      showDayView() { state.currentView = "day"; state.inputMode = false; renderSurface(); },
-      showMonthView() { state.currentView = "month"; state.inputMode = false; renderSurface(); },
-      showYearView() { state.currentView = "year"; state.inputMode = false; renderSurface(); },
+      goToDate(value) { const date = parseDate(value); if (date) nav(() => setDisplayDate(date))(); },
+      nextMonth: stepMonth(1),
+      prevMonth: stepMonth(-1),
+      nextYear: nav(() => state.currentYear++), prevYear: nav(() => state.currentYear--),
+      showDayView: showView("day"), showMonthView: showView("month"), showYearView: showView("year"),
       getCurrentView: () => state.currentView,
     },
   }, base);

@@ -61,7 +61,7 @@
 
     // Success, warning, info and the error fallback, from the shared status
     // roles (the values once written here were shadowed by this include)
-    @include status-colors-light();
+    @include status-colors-light($success: #206c3a, $warning: #9f4200, $info: #375ba9);
 
     &[data-theme-mode="dark"] {
         // Key colors
@@ -81,7 +81,7 @@
         --#{$prefix}-sys-color-on-tertiary-container: #cfe9be;
 
         // Include status colors for dark theme
-        @include status-colors-dark();
+        @include status-colors-dark($success: #8cd79b, $on-success: #003918, $warning: #ffb692, $on-warning: #552000, $info: #b1c5ff, $on-info: #002c70);
 
         // Neutral colors
         --#{$prefix}-sys-color-surface: #201a17;
@@ -111,6 +111,9 @@
 @include create-theme-contrast("autumn", (
     medium: (
         light: (
+            success: #00401c,
+            warning: #5f2400,
+            info: #00327c,
             error: #740006,
             error-container: #cf2c27,
             on-error-container: #ffffff,
@@ -152,6 +155,12 @@
             inverse-primary: #ffb59a,
         ),
         dark: (
+            success: #a1eeb0,
+            on-success: #002d12,
+            warning: #ffd3bf,
+            on-warning: #441800,
+            info: #d1dcff,
+            on-info: #00225a,
             error: #ffd2cc,
             on-error: #540003,
             error-container: #ff5449,
@@ -195,6 +204,9 @@
     ),
     high: (
         light: (
+            success: #003416,
+            warning: #4f1d00,
+            info: #002867,
             error: #600004,
             error-container: #98000a,
             on-error-container: #ffffff,
@@ -236,6 +248,12 @@
             inverse-primary: #ffb59a,
         ),
         dark: (
+            success: #c0ffca,
+            on-success: #000000,
+            warning: #ffece5,
+            on-warning: #000000,
+            info: #edefff,
+            on-info: #000000,
             error: #ffece9,
             on-error: #000000,
             error-container: #ffaea4,

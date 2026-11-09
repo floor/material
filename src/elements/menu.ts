@@ -223,12 +223,23 @@ const menuSpec = {
     variant: { type: "string", config: "variant" },
     color: { type: "string", config: "color" },
     "no-close-on-select": { type: "boolean", config: "noCloseOnSelect" },
+    /** @deprecated See MenuConfig.dense; the dense variant is removed in 4.0. */
     dense: { type: "boolean", config: "dense" },
     "max-height": { type: "string", config: "maxHeight", update: (c, v) => void (c.element.style.maxHeight = v === null ? "" : String(v)) },
     // Names the surface; set again in setup, the factory takes no label
     "aria-label": {
       type: "string",
-      update: (c, v) => (v === null ? c.element.removeAttribute("aria-label") : c.element.setAttribute("aria-label", String(v))),
+      update: (c, v) => {
+        const list = c.element.querySelector(".mtrl-menu__list");
+        if (v === null) {
+          c.element.removeAttribute("aria-label");
+          list?.removeAttribute("aria-label");
+        } else {
+          const text = String(v);
+          c.element.setAttribute("aria-label", text);
+          list?.setAttribute("aria-label", text);
+        }
+      },
     },
   },
   properties: {
@@ -259,7 +270,11 @@ const menuSpec = {
     // An anchor rendered just after the menu, in the same pass
     const frame = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => findPending(c)) : null;
     if (host.hasAttribute("open")) c.show();
-    if (host.hasAttribute("aria-label")) c.element.setAttribute("aria-label", host.getAttribute("aria-label") ?? "");
+    if (host.hasAttribute("aria-label")) {
+      const label = host.getAttribute("aria-label") ?? "";
+      c.element.setAttribute("aria-label", label);
+      c.element.querySelector(".mtrl-menu__list")?.setAttribute("aria-label", label);
+    }
     return () => {
       keep.disconnect();
       if (frame !== null) cancelAnimationFrame(frame);

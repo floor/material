@@ -34,6 +34,16 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // The build writes dist/package.json so its module and declaration prunes
+  // read the export map in place. It is not an export target and has no
+  // runtime role (`dist` inherits the root `type` and `sideEffects`), so the
+  // manifest's `files` excludes it from the tarball. This asserts the real
+  // packed list: dropping the exclusion, or writing the file elsewhere, fails
+  // here with the tarball CI would publish.
+  assert(
+    !pack.files.some((file: { path: string }) => file.path === "dist/package.json"),
+    "The build's nested manifest is packed; it has no export or runtime role",
+  );
   // Which README and manifest ship. The fixture packs what publish.yml's step
   // makes of the tree, so these hold for a release: npm's page shows the short
   // README, the repository's long one stays on GitHub, and the manifest carries
@@ -131,8 +141,11 @@ try {
       // follow the measurement.
       // The inline sheet drops the rules the rendered markup cannot match
       // (src/ssr/prune-styles.ts): 253,639 raw, 5,325 gzip, CI's package job on
-      // this branch. Measured plus 1% or 100, rounded up to 50, is 256,200 raw
-      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200.
+      // this branch. Measured plus 1% or 100, rounded up to 50, was 256,200 raw
+      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200. The density
+      // scale's rules then took the raw row past that ceiling: 261,329 raw,
+      // 5,407 gzip in CI. Owner decision 2026-11-05: the raw ceiling is 263,950,
+      // the measured row plus 1% rounded up to 50, and the gzip row still fits.
       inline: { options: {}, ...SSR_PAGE.inline },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
@@ -208,6 +221,12 @@ try {
   // main 850584ff measured 884,987 with CI's Node 22.23.3 / npm 10.9.9 and the
   // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
   // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
+  // The readable, comment-stripped dist (build-modules.ts strips formatting after
+  // the prunes): the package job measures 863,703 B packed where the base packed
+  // 882,799. The ceiling carries 1,297 B over the measurement, as 883,000 carried
+  // 1,432 B over 881,568 when it was set: 865,000.
+  // This job self-checks it: a real figure above the ceiling fails here, and the
+  // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
@@ -325,26 +344,81 @@ try {
     await new Promise(resolve => setTimeout(resolve, 20));
     assert(card.element.querySelector('button')?.textContent.includes('Action'), 'Lazy card button did not load');
     card.destroy(); loading.destroy(); b.destroy(); field.destroy(); dom.window.close();
+
+    // Every export key and wildcard expansion in the packed manifest must resolve
+    // in Node to a file that ships in the tarball.
+    import { existsSync, readFileSync } from 'node:fs';
+    import { fileURLToPath } from 'node:url';
+    import { dirname, join as joinPath } from 'node:path';
+    const rootFile = fileURLToPath(import.meta.resolve('material'));
+    const pkgRoot = joinPath(dirname(rootFile), '..');
+    const pkgJson = JSON.parse(readFileSync(joinPath(pkgRoot, 'package.json'), 'utf8'));
+    const packedPaths = ${JSON.stringify(paths)};
+    let resolvedExportCount = 0;
+    for (const [key, value] of Object.entries(pkgJson.exports)) {
+      if (key === './react/jsx' || key === './solid/jsx') {
+        const typesRel = value.types.slice(2);
+        assert(packedPaths.includes(typesRel) && existsSync(joinPath(pkgRoot, typesRel)), \`Missing types target for \${key}: \${typesRel}\`);
+        resolvedExportCount += 1;
+        continue;
+      }
+      if (!key.includes('*')) {
+        const spec = key === '.' ? 'material' : \`material/\${key.slice(2)}\`;
+        const resolved = fileURLToPath(import.meta.resolve(spec));
+        assert(existsSync(resolved), \`Export \${spec} resolved to missing file \${resolved}\`);
+        if (typeof value === 'object' && value !== null && 'types' in value) {
+          const typesRel = value.types.slice(2);
+          assert(packedPaths.includes(typesRel) && existsSync(joinPath(pkgRoot, typesRel)), \`Missing types target for \${key}: \${typesRel}\`);
+        }
+        resolvedExportCount += 1;
+        continue;
+      }
+      const targetPattern = typeof value === 'string' ? value : (value.import ?? value.default);
+      const [tPre, tSuf] = targetPattern.slice(2).split('*');
+      const [kPre, kSuf] = key.slice(2).split('*');
+      const matches = packedPaths.filter(p => p.startsWith(tPre) && p.endsWith(tSuf) && !p.slice(tPre.length, p.length - tSuf.length).includes('/'));
+      assert(matches.length > 0, \`Wildcard export \${key} matched no packed files\`);
+      for (const match of matches) {
+        const star = match.slice(tPre.length, match.length - tSuf.length);
+        const spec = \`material/\${kPre}\${star}\${kSuf}\`;
+        const resolved = fileURLToPath(import.meta.resolve(spec));
+        assert(existsSync(resolved), \`Wildcard export \${spec} resolved to missing file \${resolved}\`);
+        resolvedExportCount += 1;
+      }
+    }
+    assert(resolvedExportCount >= 240, \`Expected at least 240 resolved export specifiers, got \${resolvedExportCount}\`);
   `);
   await run(["node", smoke], temporary);
-  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name`);
+  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name; all package.json exports resolve from the packed tarball`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");
   await writeFile(typeFixture, `
     import 'material/styles';
     import 'material/styles/button';
+    import 'material/elements/css';
+    import 'material/elements/css/button';
     import { createButton, type ButtonConfig, type NavigationRailConfig, type NavigationRailComponent } from 'material';
+    import { createScheme, applyScheme, tonalSpot, vibrant, expressive, fidelity, content, neutral, monochrome, Hct, type DynamicScheme } from 'material/theme';
+    import { createSchemeByName } from 'material/theme/variants';
+    import { sourceColorFromImage } from 'material/theme/image';
     import rail from 'material/components/navigation-rail';
     const railConfig: NavigationRailConfig = { expanded: true, layout: 'modal', items: [] };
     const navigation: NavigationRailComponent = rail(railConfig);
     navigation.on('select', event => event.originalEvent.preventDefault());
     import button from 'material/components/button';
     import { BUTTON_VARIANTS } from 'material/components/button/constants';
+    import { createElementConfig } from 'material/core';
     import { addClass } from 'material/core/dom';
     const config: ButtonConfig = { text: 'Save', variant: BUTTON_VARIANTS.FILLED };
     const a: ReturnType<typeof createButton> = button(config);
     addClass(a.element, 'ready');
+    const elementConfig = createElementConfig({ style: { color: 'red' } }, { tag: 'div' });
+    elementConfig.style!.length = 0;
+    const scheme: DynamicScheme = createScheme('#6750a4', { variant: tonalSpot });
+    const primaryArgb: number = scheme.primary;
+    const existingPublicMember = scheme.colors;
+    void [vibrant, expressive, fidelity, content, neutral, monochrome, Hct, createSchemeByName, sourceColorFromImage, applyScheme, primaryArgb, existingPublicMember, elementConfig];
   `);
   await run(["node", resolve("node_modules/typescript/bin/tsc"), typeFixture,
     "--noEmit", "--strict", "--module", "NodeNext", "--moduleResolution", "NodeNext",
@@ -436,6 +510,11 @@ try {
     // The base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
     // Merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
     { name: "base-css", code: "import 'material/styles/base';", gzip: PACKAGE_GZIP["base-css"] },
+    // The opt-in theme-only base: the roles, the tokens, the body theme and
+    // the global reduced-motion switch, with no reset, ripple or contrast
+    // modes. It has no `.mtrl-` class of its own, so its side-effect
+    // assertions are in the block below.
+    { name: "base-lite-css", code: "import 'material/styles/base-lite';", gzip: PACKAGE_GZIP["base-lite-css"] },
     // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
     // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
     { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: PACKAGE_GZIP["button-css"] },
@@ -523,6 +602,8 @@ try {
     // dist/styles.css itself carries no `:lang()` or `:dir()` rule.
     { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
   ];
+  // Complete the measurement report even when an earlier fixture exceeds its cap.
+  const overBudget: string[] = [];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
     await writeFile(entry, fixture.code);
@@ -533,11 +614,18 @@ try {
     assert.equal(outputs.length, 1, `${fixture.name}: expected one ${css ? "CSS" : "JS"} output`);
     const bytes = new Uint8Array(await outputs[0].arrayBuffer());
     sizes[fixture.name] = measure(bytes);
-    assert(sizes[fixture.name].gzip <= fixture.gzip, `${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
+    if (!(sizes[fixture.name].gzip <= fixture.gzip)) overBudget.push(`${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
     if (css) {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
-      assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
+      if (fixture.name === "base-lite-css") {
+        assert(text.includes("--mtrl-ref-typeface-plain") && text.includes("--mtrl-sys-shape-corner-"), "base-lite tokens were discarded");
+        assert(text.includes("prefers-reduced-motion"), "base-lite lost the global reduced-motion switch");
+        assert(!text.includes(".mtrl-ripple") && !text.includes("prefers-contrast") && !text.includes("box-sizing"),
+          "base-lite carries a group it promises to drop");
+      } else {
+        assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
+      }
       if (fixture.name === "button-css") {
         assert(text.includes(".mtrl-button") && text.includes(".mtrl-progress"));
         assert(!text.includes(".mtrl-text-field"), "Unrelated component CSS retained");
@@ -599,6 +687,16 @@ try {
   assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
+  if (overBudget.length) {
+    // The normal component step is downstream of this gate. Keep its canonical
+    // rows available for review even when a packed fixture needs an owner decision.
+    console.error("Collecting canonical component rows before reporting packed budget failures.");
+    const report = Bun.spawn([process.execPath, join(import.meta.dir, "size.ts")], {
+      cwd: resolve(import.meta.dir, ".."), stdout: "inherit", stderr: "inherit",
+    });
+    console.error(`Component size diagnostic exited ${await report.exited}.`);
+  }
+  assert.equal(overBudget.length, 0, overBudget.join("\n"));
   await mkdir("analysis", { recursive: true });
   await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,

@@ -36,6 +36,8 @@ export const getElementConfig = (config: RadiosConfig) => {
     tag: "div",
     attributes: {
       role: "radiogroup",
+      // Absent when not required. Never the string "false" or "undefined".
+      ...(config.required ? { "aria-required": "true" } : {}),
     },
     className: config.class,
   });

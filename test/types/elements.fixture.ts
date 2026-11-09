@@ -8,8 +8,9 @@
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   ButtonElement, ElementEvents, ElementProps, SwitchElement, SwitchSpec, TabAttributes, TabsSpec,
-  TextFieldElement, TextFieldSpec,
+  TextFieldElement, TextFieldSpec, ToolbarElement, ToolbarSpec,
 } from "../../src/elements";
+import type { ToolbarEvents } from "../../src/components/toolbar";
 
 /** true when A and B are the same type */
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
@@ -51,9 +52,24 @@ button.disabled = "yes";
 type TextFieldProps = ElementProps<TextFieldSpec>;
 assert<Equals<TextFieldProps["value"], string | undefined>>();
 assert<Equals<TextFieldProps["maxlength"], number | undefined>>();
+// The virtual keyboard hints: the native attribute spellings, typed as strings.
+assert<Equals<TextFieldProps["inputmode"], string | undefined>>();
+assert<Equals<TextFieldProps["enterkeyhint"], string | undefined>>();
 assert<Equals<keyof ElementEvents<TextFieldSpec>, "input" | "change" | "trailing">>();
 assert<Equals<ElementEvents<TextFieldSpec>["input"], CustomEvent<{ value: string }>>>();
 declare const field: TextFieldElement;
 field.select();
 field.setError(true, "Required");
 field.value = "text";
+
+// The toolbar's collapse state joins its show/hide: all four bridge to the
+// host and none carries a payload.
+assert<Equals<keyof ElementEvents<ToolbarSpec>, "show" | "hide" | "collapse" | "expand">>();
+assert<Equals<keyof ToolbarEvents, "show" | "hide" | "collapse" | "expand">>();
+assert<Equals<Parameters<ToolbarEvents["collapse"]>, []>>();
+assert<Equals<Parameters<ToolbarEvents["expand"]>, []>>();
+declare const toolbar: ToolbarElement;
+toolbar.show();
+toolbar.hide();
+// @ts-expect-error -- collapse is dispatched, not a method
+toolbar.collapse();

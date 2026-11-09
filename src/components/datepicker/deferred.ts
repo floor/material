@@ -63,7 +63,7 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
   };
   // The surface renders the title the dialog is labelled by; until it lands,
   // the field's label names the dialog.
-  if (dialog.getAttribute("aria-modal") === "true") dialog.setAttribute("aria-label", state.label);
+  if (dialog.getAttribute("aria-modal") === "true" && !dialog.hasAttribute("aria-label")) dialog.setAttribute("aria-label", state.label);
   trigger.addEventListener("pointerenter", request, { once: true });
   trigger.addEventListener("focus", request, { once: true });
   return [

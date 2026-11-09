@@ -29,7 +29,10 @@
  * `initial-view` is the view the calendar first opens on: `day`, `month` or
  * `year` (the full-screen variant has the days only). `close-on-select`
  * closes the calendar on a date chosen, committing it: a modal variant then
- * needs no Save. The factory reads both once: a change recreates the picker.
+ * needs no Save. `locale` is a BCP 47 tag driving month and weekday names, the
+ * first day of the week, and the default displayed date format when
+ * `date-format` is omitted (`en-US` by default). The factory reads these once:
+ * a change recreates the picker.
  *
  * The input of a modal variant is read-only, which takes it out of constraint
  * validation: the element reports the factory's `required` check as
@@ -118,9 +121,11 @@ const datepickerSpec = {
     min: { type: "string", config: "minDate" },
     max: { type: "string", config: "maxDate" },
     "date-format": { type: "string", config: "dateFormat" },
+    locale: { type: "string", config: "locale" },
     "initial-view": { type: "string", config: "initialView" },
     "close-on-select": { type: "boolean", config: "closeOnSelect" },
     label: { type: "string", config: "label" },
+    "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(v === null ? "" : String(v)) },
     "supporting-text": {
       type: "string",
       config: "supportingText",
