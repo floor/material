@@ -43,9 +43,6 @@ export const withAPI =
     let isVisible = false;
     let showTimer: number | null = null;
     let hideTimer: number | null = null;
-    // True only for the focus a pointer press gives the anchor. That focus is
-    // not a fresh one, so it must not bring the tooltip back.
-    let arm = false;
     const showDelay = config.showDelay ?? TOOLTIP_DEFAULTS.SHOW_DELAY;
     const hideDelay = config.hideDelay ?? TOOLTIP_DEFAULTS.HIDE_DELAY;
     const showOnFocus = config.showOnFocus !== false;
@@ -206,9 +203,12 @@ export const withAPI =
         targetEl.addEventListener("blur", handleTargetBlur);
       }
 
-      // Press and the key that activates the anchor. The menu opens after
-      // these, so the tooltip is already gone when it appears.
-      targetEl.addEventListener("pointerdown", handlePointerDown);
+      // Press, the click that follows it, and the key that activates the
+      // anchor. hide() clears a show the press's focus just queued, so the
+      // tooltip stays gone until a later hover or focus. The menu opens
+      // after the press, so it is already gone when the menu appears.
+      targetEl.addEventListener("pointerdown", dismiss);
+      targetEl.addEventListener("click", dismiss);
       targetEl.addEventListener("keydown", handleKeyDown);
     };
 
@@ -218,7 +218,8 @@ export const withAPI =
         targetEl.removeEventListener("mouseleave", handleTargetMouseLeave);
         targetEl.removeEventListener("focus", handleTargetFocus);
         targetEl.removeEventListener("blur", handleTargetBlur);
-        targetEl.removeEventListener("pointerdown", handlePointerDown);
+        targetEl.removeEventListener("pointerdown", dismiss);
+        targetEl.removeEventListener("click", dismiss);
         targetEl.removeEventListener("keydown", handleKeyDown);
       }
     };
@@ -247,22 +248,11 @@ export const withAPI =
     // "Tooltips shouldn't cover the parent element." The same rule for the
     // menu an anchor opens: hide on press, stay hidden while aria-expanded
     // is "true", and show again only on a hover or focus after it closes.
-    // The focus a pointer press causes is dispatched in that same turn, so
-    // the flag still stands; the timeout clears it for a later focus.
-    const handlePointerDown = () => {
-      arm = true;
-      api.hide(true);
-      window.setTimeout(() => { arm = false; }, 0);
-    };
+    const dismiss = () => api.hide(true);
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      arm = false;
-      api.hide(true);
+      if (event.key === "Enter" || event.key === " ") dismiss();
     };
-    const handleTargetFocus = () => {
-      if (arm) arm = false;
-      else api.show();
-    };
+    const handleTargetFocus = () => api.show();
     const handleTargetBlur = () => api.hide();
 
     // Create the API object
