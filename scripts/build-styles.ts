@@ -332,7 +332,6 @@ async function emitTypescaleStyles(outdir: string, options: sass.StringOptions<"
   const all = [...rules.values()].join("");
   for (const [name, css] of rules) await writeFile(`${preupgrade}/preupgrade/${name}.css`, preupgradeStylesheet(css, banner));
   await writeFile(`${preupgrade}/preupgrade.css`, preupgradeStylesheet(all, banner));
-  await writeFile(`${preupgrade}/preupgrade.js`, 'import { DEFAULT_PREFIX, preupgradeSheet } from "../styles.js";\n' +
-    `const css = ${JSON.stringify(all)};\nexport const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(css, [prefix]);\n`);
-  await writeFile(`${preupgrade}/preupgrade.d.ts`, "export declare const preupgradeStyles: (prefix?: string) => string;\n");
+  const helper = `${preupgrade}/preupgrade.js`;
+  await writeFile(helper, `${await readFile(helper, "utf8")}\nconst preupgradeCss = ${JSON.stringify(all)};\n`);
 }
