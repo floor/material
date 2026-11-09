@@ -555,7 +555,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
-    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts && bun run scripts/check-a11y-name-role-e.ts",
+    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts && bun run scripts/check-a11y-name-role-e.ts && bun run scripts/check-a18-card-actions.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "dist-modules:check": "bun run scripts/check-dist-modules.ts",
     "syntax:check": "bun run scripts/check-syntax-floor.ts",

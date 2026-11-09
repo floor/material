@@ -13,6 +13,7 @@ import type { ElementComponent } from "../../core/compose/component";
 import type { EventComponent } from "../../core/compose/features";
 import { CardComponent, CardComponentConfig, CardConfig } from "./types";
 import { CARD_VARIANTS, CARD_ELEVATIONS } from "./constants";
+import { NESTED_ACTION_SELECTOR } from "./api";
 
 /**
  * Default configuration for the Card component.
@@ -207,7 +208,12 @@ export const getElementConfig = (config: CardConfig) => {
     ],
     attributes: ariaAttributes,
     forwardEvents: {
-      click: () => !!config.clickable,
+      // Flag off: `!!clickable`, and the closest() walk is not reached.
+      click: (ctx, event) => !!config.clickable && !(
+        config.promoteChildActions &&
+        event.target !== ctx.element &&
+        (event.target as Element | null)?.closest?.(NESTED_ACTION_SELECTOR)
+      ),
       mouseenter: () => !!isInteractive,
       mouseleave: () => !!isInteractive,
       keydown: () => !!isInteractive,
@@ -264,6 +270,7 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
     comp.element.addEventListener("keydown", (e: KeyboardEvent) => {
       // Activate on Enter or Space
       if ((e.key === "Enter" || e.key === " ") && config.clickable) {
+        if (config.promoteChildActions && e.target !== comp.element) return;
         e.preventDefault();
         comp.element.click();
       }

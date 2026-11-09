@@ -1,5 +1,5 @@
 // src/components/card/api.ts
-import { BaseComponent, CardComponent, ApiOptions, CardEvents } from './types';
+import { BaseComponent, CardComponent, ApiOptions, CardConfig, CardEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import { warnDev } from '../../core/utils/warn';
 
@@ -24,12 +24,29 @@ type ComponentWithElements = Omit<BaseComponent, 'config' | 'addClass'> & {
   off: (event: string, handler: EventCallback) => unknown;
 };
 
-/** Warn after supported content insertion; preserve the author's clickable contract. */
-const warnNestedActions = (element: HTMLElement, clickable?: boolean): void => {
+/**
+ * Controls inside a clickable card. One string, shared with the click guard.
+ * Slots cover `<m-card>` actions; `m-button` and `m-icon-button` cover light DOM.
+ */
+export const NESTED_ACTION_SELECTOR =
+  'button, a[href], input, select, textarea, m-button, m-icon-button, [role="button"], [role="link"], slot[name="actions"], slot[name="header-action"]';
+
+/**
+ * A clickable card with nested actions stays a button unless
+ * `promoteChildActions` opts into the container pattern: article, no tab
+ * stop. The development warning stays inside the production guard so the
+ * accessibility URL is stripped from a production build.
+ * @see https://m3.material.io/components/cards/accessibility
+ */
+export const syncNestedActions = (element: HTMLElement, config: CardConfig): void => {
+  if (!config.clickable || !element.querySelector(NESTED_ACTION_SELECTOR)) return;
+  if (config.promoteChildActions) {
+    if (element.getAttribute('role') === 'button') element.setAttribute('role', 'article');
+    element.removeAttribute('tabindex');
+    return;
+  }
   if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
-    if (clickable && element.querySelector('button, a[href], input, select, textarea, [role="button"], [role="link"], slot[name="actions"], slot[name="header-action"]')) {
-      warnDev('card', 'A clickable card contains actions. Use a card without clickable for child actions: https://m3.material.io/components/cards/accessibility');
-    }
+    warnDev('card', 'A clickable card contains actions. Use a card without clickable for child actions: https://m3.material.io/components/cards/accessibility');
   }
 };
 
@@ -67,7 +84,7 @@ export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: Compon
   addContent(contentElement: HTMLElement): CardComponent {
     if (contentElement && contentElement.classList.contains(`${component.getClass('card')}__content`)) {
       component.element.appendChild(contentElement);
-      warnNestedActions(component.element, config.clickable);
+      syncNestedActions(component.element, config);
     }
     return this;
   },
@@ -110,7 +127,7 @@ export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: Compon
         before = before.nextElementSibling;
       }
       component.element.insertBefore(headerElement, before);
-      warnNestedActions(component.element, config.clickable);
+      syncNestedActions(component.element, config);
 
       // Name the card with its title unless it already has a name
       const titleId = title(headerElement);
@@ -152,7 +169,7 @@ export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: Compon
       } else {
         component.element.appendChild(mediaElement);
       }
-      warnNestedActions(component.element, config.clickable);
+      syncNestedActions(component.element, config);
     }
     return this;
   },
@@ -190,7 +207,7 @@ export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: Compon
 
       // Add actions at the end
       component.element.appendChild(actionsElement);
-      warnNestedActions(component.element, config.clickable);
+      syncNestedActions(component.element, config);
     }
     return this;
   },

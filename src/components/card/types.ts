@@ -77,10 +77,19 @@ export interface CardConfig {
    * A card that acts on activation: a button (role, tab stop, Enter and
    * Space click it) with the ripple. Material recommends a non-clickable
    * container when the card holds buttons or links. Supported content setters
-   * warn in development when these patterns are combined; behavior is unchanged.
+   * warn in development when these patterns are combined. The default keeps
+   * that button, its tab stop, and the warning. `promoteChildActions` chooses
+   * the container instead.
    * @see https://m3.material.io/components/cards/accessibility
    */
   clickable?: boolean;
+  /**
+   * Opt in so a clickable card with nested actions is an article container,
+   * not a button. The tab stop moves to the child controls, and Enter or
+   * Space on a child does not activate the card. Off by default.
+   * @see https://m3.material.io/components/cards/accessibility
+   */
+  promoteChildActions?: boolean;
   /** Whether the card is draggable */
   draggable?: boolean;
   /** Additional CSS class(es) */

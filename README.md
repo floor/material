@@ -343,7 +343,9 @@ Attributes are defaults and properties the live state, as on native controls. A 
 
 A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions.
 
-Adding actions through the card APIs or named custom-element action slots warns in development when the card is clickable; it keeps the configured role, tab stop and activation behavior. Production bundles strip this diagnostic when `process.env.NODE_ENV` is replaced with `"production"`.
+Opt in with `promoteChildActions` or `promote-child-actions` when that clickable card should keep its child actions. The card becomes an article, Tab reaches those children, and the development warning stays off.
+
+Without that opt-in, adding actions through the card APIs or named custom-element action slots warns in development when the card is clickable and keeps the configured role, tab stop and activation behavior. Production bundles strip this diagnostic when `process.env.NODE_ENV` is replaced with `"production"`.
 
 `actions-align` aligns the card's slotted actions, using the factory's `actionsConfig.align` values. Start and end follow text direction. Changes after upgrade update the row; removing the attribute restores `end`. Framework adapters expose `actionsAlign`.
 
