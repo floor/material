@@ -203,11 +203,8 @@ export const withAPI =
         targetEl.addEventListener("blur", handleTargetBlur);
       }
 
-      // Press, the click that follows it, and the key that activates the
-      // anchor. hide() clears a show the press's focus just queued, so the
-      // tooltip stays gone until a later hover or focus. The menu opens
-      // after the press, so it is already gone when the menu appears.
-      targetEl.addEventListener("pointerdown", dismiss);
+      // Press on any anchor, the click that follows, and Enter or Space.
+      targetEl.addEventListener("pointerdown", press);
       targetEl.addEventListener("click", dismiss);
       targetEl.addEventListener("keydown", handleKeyDown);
     };
@@ -218,7 +215,7 @@ export const withAPI =
         targetEl.removeEventListener("mouseleave", handleTargetMouseLeave);
         targetEl.removeEventListener("focus", handleTargetFocus);
         targetEl.removeEventListener("blur", handleTargetBlur);
-        targetEl.removeEventListener("pointerdown", dismiss);
+        targetEl.removeEventListener("pointerdown", press);
         targetEl.removeEventListener("click", dismiss);
         targetEl.removeEventListener("keydown", handleKeyDown);
       }
@@ -245,14 +242,29 @@ export const withAPI =
       if (event.key === "Escape" && isVisible) api.hide(true);
     };
     // https://m3.material.io/components/tooltips/guidelines (2026-11-09):
-    // "Tooltips shouldn't cover the parent element." The same rule for the
-    // menu an anchor opens: hide on press, stay hidden while aria-expanded
-    // is "true", and show again only on a hover or focus after it closes.
+    // "Tooltips shouldn't cover the parent element." A press hides any
+    // anchor. The focus that press causes is ignored until the pointer is
+    // released; a later hover, or a keyboard focus after release, may show.
+    let pressed = false;
+    const menuOpen = () => target?.getAttribute("aria-expanded") === "true";
     const dismiss = () => api.hide(true);
+    const press = () => {
+      pressed = true;
+      dismiss();
+    };
+    const release = () => {
+      pressed = false;
+    };
+    // Capture so a pointerup dispatched on the anchor reaches us, including
+    // one released outside the anchor.
+    document.addEventListener("pointerup", release, true);
+    document.addEventListener("pointercancel", release, true);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") dismiss();
     };
-    const handleTargetFocus = () => api.show();
+    const handleTargetFocus = () => {
+      if (!pressed) api.show();
+    };
     const handleTargetBlur = () => api.hide();
 
     // Create the API object
@@ -370,9 +382,9 @@ export const withAPI =
       },
 
       show(immediate = false) {
-        // An open menu stays uncovered. Press hides at once and clears a
-        // show that was still waiting, so this one guard is enough.
-        if (target?.getAttribute("aria-expanded") === "true") return this;
+        // An open menu stays uncovered. A show already waiting is caught
+        // again when its callback runs: the menu may have opened since.
+        if (menuOpen()) return this;
 
         // Clear any existing timers
         if (showTimer !== null) {
@@ -386,7 +398,7 @@ export const withAPI =
         }
 
         const showTooltip = () => {
-          if (!target) return this;
+          if (!target || menuOpen()) return this;
 
           if (topLayer) {
             if (layerTimer !== null) window.clearTimeout(layerTimer);
@@ -524,6 +536,8 @@ export const withAPI =
         window.removeEventListener("resize", handleWindowResize);
         window.removeEventListener("scroll", handleWindowScroll, true);
         document.removeEventListener("keydown", handleDocumentKeydown);
+        document.removeEventListener("pointerup", release, true);
+        document.removeEventListener("pointercancel", release, true);
         component.element.removeEventListener("mouseenter", handleTooltipMouseEnter);
         component.element.removeEventListener("mouseleave", handleTooltipMouseLeave);
 
