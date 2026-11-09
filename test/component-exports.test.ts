@@ -9,7 +9,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { componentNames, diffComponentExports, extraSubpaths, readComponentExports, readPinned } from "../scripts/component-exports";
+import { componentNames, deferredNames, diffComponentExports, extraSubpaths, readComponentExports, readPinned } from "../scripts/component-exports";
 import { readRootExports } from "../scripts/root-exports";
 
 const ROOT = join(import.meta.dir, "..");
@@ -121,14 +121,14 @@ describe("the manifest lists each component subpath", () => {
       `./components/${name}`,
       ...(existsSync(join(ROOT, `src/components/${name}/constants.ts`)) ? [`./components/${name}/constants`] : []),
     ]);
-    const extra = extraSubpaths().map((name) => `./components/${name}`);
+    const extra = [...extraSubpaths(), ...deferredNames()].map((name) => `./components/${name}`);
     expect([...keys].sort()).toEqual([...expected, ...extra].sort());
   });
 
   test("each entry points at the module it names", () => {
     const wrong = keys.filter((key) => {
       const inner = key.slice("./components/".length);
-      const file = inner.endsWith("/constants") || extraSubpaths().includes(inner)
+      const file = inner.endsWith("/constants") || inner.endsWith("/deferred") || extraSubpaths().includes(inner)
         ? `components/${inner}`
         : `components/${inner}/index`;
       const entry = pkg.exports[key];
