@@ -168,7 +168,9 @@ export const createDial = (options: DialOptions): Dial => {
     current = dialValue(time, next, format);
     const index = items.findIndex(item => item.value === current);
     const target = next === "hour" ? items[nearest(current)] : { angle: current * 6, radius: OUTER };
-    // Keep the angle continuous so the hand takes the shorter way round.
+    // Retarget from the rendered position, including an unfinished spring.
+    // The last destination can be on the other side of the shortest path.
+    if (animate) angle = parseFloat(getComputedStyle(element).getPropertyValue(`--${prefix}-time-picker-angle`)) || 0;
     const delta = ((target.angle - (angle % 360)) % 360 + 540) % 360 - 180;
     angle += delta;
     element.style.setProperty(`--${prefix}-time-picker-angle`, `${angle}deg`);

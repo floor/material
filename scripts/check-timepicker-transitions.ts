@@ -178,6 +178,45 @@ try {
     await page.mouse.click(box.x + box.width / 2 - 75, box.y + box.height / 2);
     check(`${reduced}: click after dragging animates again`, reduced ? (await snapshot()).all === 0 : (await snapshot()).hand > 0);
   }
+  // Observe each real pointer selection in a single event turn: CSS must
+  // retarget from its rendered angle, not the previous destination's angle.
+  for (const mode of ["hour", "minute"]) {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await mount();
+    if (mode === "minute") { await snapshot("minute"); await page.waitForTimeout(600); }
+    for (const [value, delay] of [[3, 50], [12, 100], [8, 200], [2, 50], [10, 150], [1, 50]]) {
+      await face.evaluate(el => {
+        const read = () => parseFloat(getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle"));
+        let before = 0;
+        el.addEventListener("pointerdown", () => { before = read(); }, { capture: true, once: true });
+        el.addEventListener("pointerdown", () => {
+          const after = read();
+          el.setAttribute("data-motion-sample", JSON.stringify({ before, after,
+            target: parseFloat((el as HTMLElement).style.getPropertyValue("--mtrl-time-picker-angle")),
+            active: el.getAnimations().some(a => a instanceof CSSTransition),
+          }));
+        }, { once: true });
+      });
+      const target = await point(mode === "hour" ? `${value} o'clock` : `${value * 5 % 60} minutes`);
+      await page.mouse.click(target.x, target.y);
+      const sample = JSON.parse((await face.getAttribute("data-motion-sample"))!) as {
+        before: number; after: number; target: number; active: boolean;
+      };
+      const nearest = ((value * 30 - sample.before) % 360 + 540) % 360 - 180;
+      check(`${mode}/${value}: retarget begins at the on-screen angle`, Math.abs(sample.before - sample.after) < 0.1);
+      check(`${mode}/${value}: new destination takes shortest rendered path`, Math.abs(sample.target - sample.before) <= 180.1);
+      check(`${mode}/${value}: retarget has active hand motion`, sample.active);
+      await page.waitForTimeout(delay);
+      const visible = await face.evaluate(el => parseFloat(getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle")));
+      check(`${mode}/${value}: visible hand moves toward new number`, Math.abs(nearest) < 0.1 || (visible - sample.before) * nearest > 0);
+      console.log(`retarget/${mode}/${value}/${delay}ms: ${JSON.stringify({ ...sample, visible, nearest })}`);
+      await face.evaluate(el => el.removeAttribute("data-motion-sample"));
+      check(`${mode}/${value}: click chain keeps selected mode`, await face.getAttribute("aria-label") === (mode === "hour" ? "Hour" : "Minute"));
+      // Main used a shorter automatic-advance timer; recover its face so a
+      // failing baseline still measures the rest of the click chain.
+      if (await face.getAttribute("aria-label") !== (mode === "hour" ? "Hour" : "Minute")) await snapshot(mode);
+    }
+  }
   await page.evaluate(() => (window as unknown as MotionWindow).picker.destroy());
   assert.deepEqual(errors, [], "browser errors");
   const artifacts = resolve("tmp/timepicker-transitions");
