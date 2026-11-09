@@ -17,6 +17,9 @@ $component: "#{base.$prefix}-bottom-sheet";
 // not stretch across a desktop window.
 // -----------------------------------------------------------------------------
 .#{$component} {
+    // A sheet is a task context: the density scale stops at its surface, so a
+    // page-wide value cannot shrink a control inside its content.
+    --#{base.$prefix}-density: 0;
     position: fixed;
     inset: 0;
     z-index: v.z-index("modal");

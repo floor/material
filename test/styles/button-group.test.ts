@@ -28,7 +28,11 @@ beforeAll(() => {
 describe('button group stylesheet', () => {
   test('the group is a flex row spaced by the size gap; buttons follow the container height', () => {
     expect(value('.mtrl-button-group', 'gap')).toBe('var(--mtrl-button-group-gap, 12px)');
-    expect(value('.mtrl-button-group > .mtrl-button, .mtrl-button-group > .mtrl-icon-button', 'height')).toBe('var(--mtrl-button-group-height)');
+    // The height the group sets is the size's base; the scale's property
+    // lowers it 4dp a step, and the height-scale is what the buttons read
+    expect(value('.mtrl-button-group', '--mtrl-button-group-height-scale'))
+      .toBe('max(32px, var(--mtrl-button-group-height) + 4px * var(--mtrl-density, 0))');
+    expect(value('.mtrl-button-group > .mtrl-button, .mtrl-button-group > .mtrl-icon-button', 'height')).toBe('var(--mtrl-button-group-height-scale)');
   });
 
   test('buttons keep their own colours: the group paints no containers, borders or dividers', () => {

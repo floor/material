@@ -25,7 +25,7 @@ export const PACKAGE_GZIP = {
   "text-field": 9_600,
   form: 20_500,
   "all-js": 130_650,
-  "base-css": 3_050,
+  "base-css": 3_150,
   "base-lite-css": 1_750,
   "button-css": 5_550,
   "select-css": 8_400,
@@ -41,7 +41,12 @@ export const SSR_ENTRY = { raw: 311_000, gzip: 113_000 } as const;
 
 /** check-package-size.ts: a server-rendered page of 44 roots, [floor, ceiling]. */
 export const SSR_PAGE = {
-  inline: { raw: [251_100, 256_200], gzip: [5_200, 5_450] },
+  // The density scale's rules reach the page's pre-upgrade inline sheet, so the
+  // inline page's raw bytes outgrow the old 256,200 ceiling while its gzip row
+  // stays inside the unchanged budget. Owner decision 2026-11-09: the raw
+  // ceiling is 263,950, the measured row plus 1% rounded up to 50; the floors
+  // and the gzip row stay as they are.
+  inline: { raw: [251_100, 263_950], gzip: [5_200, 5_450] },
   link: { raw: [42_300, 43_200], gzip: [900, 1_150] },
 } as const;
 

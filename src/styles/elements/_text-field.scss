@@ -3,6 +3,7 @@
 // typography, box and baseline; a tall inherited strut can enlarge the host.
 @use 'config' as c;
 @use 'field';
+@use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
@@ -15,13 +16,15 @@
   // The value (or a space holding its baseline) paints the inner field.
   // Its half-pixel inset matches the input's baseline. The outer host must
   // retain the page's typography, including the space below that baseline.
+  // Every length the component's sheet takes through the density functions,
+  // the surrogate takes the same way, so nothing moves at upgrade.
   &::before {
     content: attr(value) ' ';
     display: inline-block;
     box-sizing: border-box;
     width: 100%;
-    height: v.text-field('height');
-    padding: 24.5px v.text-field('padding-horizontal') 0;
+    height: f.density(v.text-field('height'), 40px);
+    padding: f.density(24.5px, 12.5px, 3px) v.text-field('padding-horizontal') 0;
     border-radius: v.text-field('border-radius') v.text-field('border-radius') 0 0;
     border-bottom: v.text-field('border-width') solid t.color('on-surface-variant');
     background-color: t.color('surface-container-highest');
@@ -33,49 +36,38 @@
   }
 
   &:not([label])::before {
-    padding-top: 16.5px;
+    padding-top: f.density(16.5px, 8.5px, 2px);
   }
 
   &[variant='outlined']::before {
-    padding-top: 15.5px;
+    padding-top: f.density(15.5px, 7.5px, 2px);
     border: v.text-field('border-width') solid t.color('outline');
     border-radius: v.text-field('border-radius');
     background: none;
   }
 
-  &[density='compact'] {
-    &::before {
-      height: 40px;
-      padding-top: 13.5px;
-      @include m.typography('body-medium');
-    }
-
-    &:not([label])::before { padding-top: 10px; }
-    &[variant='outlined']::before { padding-top: 9px; }
-  }
+  // The option is the scale's fourth step. The pre-upgrade layer declares no
+  // custom property — the rollback's `all: revert-layer` leaves one behind on
+  // a rendered host — so the block at the end writes that step's geometry out.
 
   // Reserve the helper/counter row under the field, keeping the fill and
   // indicator inside the field's own box.
   &[supporting-text]:not([supporting-text='']),
   &[maxlength] {
     &::before {
-      height: calc(#{v.text-field('height')} + #{field.$supporting-row});
+      height: calc(#{f.density(v.text-field('height'), 40px)} + #{field.$supporting-row});
       border-bottom: field.$supporting-row solid transparent;
       background-clip: padding-box;
       background-image: linear-gradient(to top, #{t.color('on-surface-variant')} v.text-field('border-width'), transparent v.text-field('border-width'));
     }
 
     &[variant='outlined']::before {
-      padding-top: calc(15.5px + #{v.text-field('border-width')});
+      padding-top: calc(#{f.density(15.5px, 7.5px, 2px)} + #{v.text-field('border-width')});
       padding-left: calc(#{v.text-field('padding-horizontal')} + #{v.text-field('border-width')});
       border-width: 0 0 field.$supporting-row;
       border-radius: v.text-field('border-radius') / v.text-field('border-radius') v.text-field('border-radius') calc(#{v.text-field('border-radius')} + #{field.$supporting-row}) calc(#{v.text-field('border-radius')} + #{field.$supporting-row});
       background-image: none;
       box-shadow: inset 0 0 0 v.text-field('border-width') t.color('outline');
-    }
-
-    &[density='compact']::before {
-      height: calc(40px + #{field.$supporting-row});
     }
   }
 
@@ -83,26 +75,23 @@
     content: attr(label);
     white-space: nowrap;
     position: absolute;
-    top: v.text-field('padding-vertical');
+    top: f.density(v.text-field('padding-vertical'), 8px, 2px);
     left: v.text-field('padding-horizontal');
     color: t.color('on-surface-variant');
     @include m.typography('body-large');
   }
 
   &[label][value]:not([value=''])::after {
-    top: 8px;
+    top: f.density(8px, 0px, 2px);
     @include m.typography('body-small');
   }
 
+  // Centred on the field's top edge, which does not move: the field grows
+  // down from it.
   &[variant='outlined'][label][value]:not([value=''])::after {
     top: -8px;
     padding: 0 4px;
     left: 12px;
-  }
-
-  &[density='compact']::after {
-    top: 10px;
-    @include m.typography('body-medium');
   }
 
   // Multiline reserves the textarea's box and first line. Compact multiline
@@ -115,48 +104,26 @@
   &[type='multiline'] {
     &::before {
       display: inline-flex;
-      height: v.text-field('height-multiline');
-      padding-top: v.text-field('padding-top-multiline');
+      height: f.density(v.text-field('height-multiline'), 84px);
+      padding-top: f.density(v.text-field('padding-top-multiline'), 8px, 2px);
     }
 
     &[label]::before {
-      padding-top: v.text-field('padding-top-multiline-label');
+      padding-top: f.density(v.text-field('padding-top-multiline-label'), 12px, 3px);
     }
 
     &[variant='outlined']::before {
-      padding-top: calc(#{v.text-field('padding-top-multiline')} - #{v.text-field('border-width')});
-    }
-
-    &[density='compact'] {
-      &::before {
-        height: 40px;
-        padding-top: v.text-field('padding-top-multiline-compact');
-      }
-
-      &[label]::before {
-        padding-top: v.text-field('padding-top-multiline-compact-label');
-      }
-
-      &[variant='outlined']::before {
-        padding-top: calc(#{v.text-field('padding-top-multiline-compact')} - #{v.text-field('border-width')});
-      }
+      padding-top: calc(#{f.density(v.text-field('padding-top-multiline'), 8px, 2px)} - #{v.text-field('border-width')});
     }
 
     &[supporting-text]:not([supporting-text='']),
     &[maxlength] {
       &::before {
-        height: calc(#{v.text-field('height-multiline')} + #{field.$supporting-row});
+        height: calc(#{f.density(v.text-field('height-multiline'), 84px)} + #{field.$supporting-row});
       }
 
       &[variant='outlined']::before {
-        padding-top: v.text-field('padding-top-multiline');
-      }
-
-      &[density='compact'] {
-        &::before { height: calc(40px + #{field.$supporting-row}); }
-        &[variant='outlined']::before {
-          padding-top: v.text-field('padding-top-multiline-compact');
-        }
+        padding-top: f.density(v.text-field('padding-top-multiline'), 8px, 2px);
       }
     }
   }
@@ -180,6 +147,76 @@
   // form, the element being form-associated.
   &[type='hidden' i] {
     display: none;
+  }
+
+  // The compact option is the scale's fourth step, written out: every length
+  // above floors at its fourth step (56 - 16 = 40px and the paddings that go
+  // with it), so the compact geometry is that floor. The type stays Body
+  // Large — density never moves type — and the block this replaces set Body
+  // Medium.
+  &[density='compact'] {
+    &::before {
+      height: 40px;
+      padding-top: 12.5px;
+    }
+
+    &:not([label])::before {
+      padding-top: 8.5px;
+    }
+
+    &[variant='outlined']::before {
+      padding-top: 7.5px;
+    }
+
+    &[supporting-text]:not([supporting-text='']),
+    &[maxlength] {
+      &::before {
+        height: calc(40px + #{field.$supporting-row});
+      }
+
+      &[variant='outlined']::before {
+        padding-top: calc(7.5px + #{v.text-field('border-width')});
+      }
+    }
+
+    &[label]::after {
+      top: 8px;
+    }
+
+    &[label][value]:not([value=''])::after {
+      top: 0;
+    }
+
+    // Outlined floats its label on the field's top edge, which does not move.
+    &[variant='outlined'][label][value]:not([value=''])::after {
+      top: -8px;
+    }
+
+    &[type='multiline'] {
+      &::before {
+        height: 84px;
+        padding-top: 8px;
+      }
+
+      &[label]::before {
+        padding-top: 12px;
+      }
+
+      &[variant='outlined']::before {
+        padding-top: calc(8px - #{v.text-field('border-width')});
+      }
+
+      &[supporting-text]:not([supporting-text='']),
+      &[maxlength] {
+        &::before {
+          height: calc(84px + #{field.$supporting-row});
+        }
+
+        &[variant='outlined']::before {
+          padding-top: 8px;
+        }
+      }
+    }
   }
 
   > * { display: none; }
