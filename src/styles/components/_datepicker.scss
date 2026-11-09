@@ -170,7 +170,7 @@ $component: '#{base.$prefix}-datepicker';
   &__cell--range {
     position: relative;
     background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px) no-repeat;
-    .#{$component}__day:not(.#{$component}__day--selected) { color: t.color('on-secondary-container'); }
+    .#{$component}__day:not(.#{$component}__day--selected, .#{$component}__day--outside) { color: t.color('on-secondary-container'); }
   }
   &__cell--range-start { background-size: 50% 100%; background-position: var(--#{$component}-start); }
   &__cell--range-end { background-size: 50% 100%; background-position: var(--#{$component}-end); }

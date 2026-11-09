@@ -5,12 +5,14 @@ import type { Page } from "playwright";
 import type createDatePicker from "../src/components/datepicker";
 import { checkDatePickerEnter } from "./check-datepicker-enter";
 import { checkDatePickerLocale } from "./check-datepicker-locale";
+import { checkDatePickerRangeOutsideDays } from "./check-datepicker-range-outside-days";
 
 type PickerWindow = Window & { core: { createDatePicker: typeof createDatePicker }; picker: ReturnType<typeof createDatePicker>; dateChanges: string[]; dateCloses: number };
 export async function checkDatePicker(page: Page, artifacts: string): Promise<void> {
   await page.setViewportSize({ width: 800, height: 850 });
   await checkDatePickerEnter(page);
   await checkDatePickerLocale(page);
+  await checkDatePickerRangeOutsideDays(page, artifacts);
   await page.evaluate(() => {
     const state = window as unknown as PickerWindow;
     document.documentElement.setAttribute('data-theme', 'baseline'); document.documentElement.setAttribute('data-theme-mode', 'light');

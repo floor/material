@@ -126,7 +126,7 @@ export const generateCalendarDates = (
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
       isDisabled: Boolean((minDate && date < minDate) || (maxDate && date > maxDate)),
     };
-    if (isCurrentMonth && selectedDate && rangeEndDate) {
+    if (selectedDate && rangeEndDate) {
       calendarDate.isRangeStart = isSameDay(date, selectedDate);
       calendarDate.isRangeEnd = isSameDay(date, rangeEndDate);
       calendarDate.isRangeMiddle = date >= selectedDate && date <= rangeEndDate && !calendarDate.isRangeStart && !calendarDate.isRangeEnd;
