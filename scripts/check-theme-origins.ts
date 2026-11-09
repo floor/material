@@ -130,7 +130,7 @@ try {
   // Packed consumer: the npm tarball, through the package's own exports.
   fixture = await createPackageFixture();
   const { directory, installed } = fixture;
-  const declarations = await readFile(join(installed, "core/theme/index.d.ts"), "utf8");
+  const declarations = await readFile(join(installed, "dist/core/theme/index.d.ts"), "utf8");
   for (const name of ["BASELINE_SEED", "THEME_ORIGINS", "ThemeOriginVariant", "BuiltInThemeName", "BaselineThemeOrigin", "AuthoredThemeOrigin", "GeneratedThemeOrigin"]) {
     assert.ok(declarations.includes(name), `the shipped declarations do not name ${name}`);
   }
