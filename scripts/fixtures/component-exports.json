@@ -974,6 +974,88 @@
       "status": "public"
     }
   ],
+  "datepicker/deferred": [
+    {
+      "name": "CalendarAPI",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createDeferredDatePicker",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerInput",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerSelectionMode",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerSwipePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerTapPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerValue",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerValueOf",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerView",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerVisibilityPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "dialog": [
     {
       "name": "createDialog",

@@ -537,6 +537,19 @@ increase. Keeping another eager menu import can remove the saving. The packed
 `menu-deferred:check` compares initial and fully loaded JS/CSS, including shared
 chunks and the recipe, in the same styled 16-component fixtures.
 
+### The date picker's deferred entry
+
+A date picker can bring its calendar on demand too. Import the factory from the component's `deferred` entry instead of the root:
+
+```typescript
+import { createDeferredDatePicker } from 'material/components/datepicker/deferred';
+```
+
+It is the same picker and the same API: the field, the trigger and the open and close state are there when the factory returns. The calendar is imported on the first open, or on the pointer or focus on the trigger that precedes it.
+
+Until it arrives the dialog has no calendar and no focus into it, and `aria-expanded` stays `false`. The dialog is named by `aria-label` because the title its name points at does not exist yet.
+
+Opening and closing are never held behind the load. The open state answers at once, and so does a close while the calendar is in flight; the calendar mounts when its chunk lands and stays closed. Read the open state rather than the dialog's markup while an open is in flight.
 
 ### Bundling
 
