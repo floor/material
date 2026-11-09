@@ -168,6 +168,8 @@ export const createBaseConfig = (config: CardConfig = {}): CardComponentConfig =
  */
 export const getElementConfig = (config: CardConfig) => {
   const isInteractive = config.interactive || config.clickable;
+  // One boolean for the five forwards. The arrow wrappers only repeated it.
+  const forward = !!isInteractive;
   // A clickable card is a button. Any other card is an article: self-contained
   // content its headline can name, which a region landmark per card is not
   // (it floods landmark navigation). `interactive` alone is the hover and
@@ -214,11 +216,11 @@ export const getElementConfig = (config: CardConfig) => {
         event.target !== ctx.element &&
         (event.target as Element).closest?.(NESTED_ACTION_SELECTOR)
       ),
-      mouseenter: () => !!isInteractive,
-      mouseleave: () => !!isInteractive,
-      keydown: () => !!isInteractive,
-      focus: () => !!isInteractive,
-      blur: () => !!isInteractive,
+      mouseenter: forward,
+      mouseleave: forward,
+      keydown: forward,
+      focus: forward,
+      blur: forward,
     },
     interactive: isInteractive,
   });

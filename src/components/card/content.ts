@@ -48,7 +48,7 @@ export const createCardContent = (config: CardContentConfig = {}): HTMLElement =
         className: [
           config.class,
           config.padding === false ? `${PREFIX}-card__content--no-padding` : null
-        ].filter((name): name is string => Boolean(name)),
+        ].filter(Boolean) as string[],
         attributes: {
           // No role: an unnamed region per block is a landmark with no name
           // Add explicit style attributes to ensure visibility
@@ -198,15 +198,6 @@ export const createCardHeader = (config: CardHeaderConfig = {}): HTMLElement => 
 };
 
 /**
- * Controls inside a clickable card. One string, shared with the click guard.
- * Exact slot names: `actions` and `header-action`.
- * Stays next to the header-action class string; moving it copies those names.
- * @see https://m3.material.io/components/cards/accessibility
- */
-export const NESTED_ACTION_SELECTOR =
-  "button,a[href],input,select,textarea,m-button,m-icon-button,[role=button],[role=link],slot[name=actions],slot[name=header-action]";
-
-/**
  * Creates a card actions component
  * 
  * @param {CardActionsConfig} config - Actions configuration
@@ -248,7 +239,7 @@ export const createCardActions = (config: CardActionsConfig = {}): HTMLElement =
           config.fullBleed ? `${PREFIX}-card__actions--full-bleed` : null,
           config.vertical ? `${PREFIX}-card__actions--vertical` : null,
           config.align ? `${PREFIX}-card__actions--${config.align}` : null
-        ].filter((name): name is string => Boolean(name)),
+        ].filter(Boolean) as string[],
         attributes: {
           'role': 'group' // Semantically group actions together
         }
@@ -277,6 +268,16 @@ export const createCardActions = (config: CardActionsConfig = {}): HTMLElement =
     throw new Error(`Failed to create card actions: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
+
+/**
+ * Controls inside a clickable card. One string, shared with the click guard.
+ * Exact slot names: `actions` and `header-action`.
+ * Placed after `card__actions` and `card__header-action` so those names are
+ * already in the chunk.
+ * @see https://m3.material.io/components/cards/accessibility
+ */
+export const NESTED_ACTION_SELECTOR =
+  "button,a[href],input,select,textarea,m-button,m-icon-button,[role=button],[role=link],slot[name=actions],slot[name=header-action]";
 
 /**
  * Creates a card media component
@@ -317,7 +318,7 @@ export const createCardMedia = (config: CardMediaConfig = {}): HTMLElement => {
           config.class,
           config.aspectRatio ? `${PREFIX}-card__media--${config.aspectRatio.replace(':', '-')}` : null,
           config.contain ? `${PREFIX}-card__media--contain` : null
-        ].filter((name): name is string => Boolean(name))
+        ].filter(Boolean) as string[]
       })
     )(baseConfig);
 
