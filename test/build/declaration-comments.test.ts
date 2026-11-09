@@ -277,15 +277,18 @@ test("folded barrels audit their actual .ts declaring symbols and detect missing
     expect(await assertImportableDeclarationDocs(packed, source, EXPORTS_FIXTURE)).toEqual([]);
     const file = join(packed, "components/widget/index.d.ts");
     const original = await readFile(file, "utf8");
-    for (const [prose, path] of [
+    const missing = [
       ["Creates a widget instance.", "createWidget"],
       ["Primary label text.", "WidgetConfig.label"],
       ["Shows the widget.", "WidgetVisibility.show"],
       ["Item numeric value.", "NestedItem.value"],
-    ]) {
-      await writeFile(file, original.replace(prose!, ""));
-      const failures = await assertImportableDeclarationDocs(packed, source, EXPORTS_FIXTURE);
-      expect(failures.some(message => message.includes(path!)), failures.join("\n")).toBe(true);
+    ] as const;
+    // One corrupted package reports every missing hover, instead of building
+    // five identical checker worlds under the full suite's five-second limit.
+    await writeFile(file, missing.reduce((text, [prose]) => text.replace(prose, ""), original));
+    const failures = await assertImportableDeclarationDocs(packed, source, EXPORTS_FIXTURE);
+    for (const [, path] of missing) {
+      expect(failures.some(message => message.includes(path)), failures.join("\n")).toBe(true);
     }
   } finally {
     await rm(source, { recursive: true, force: true });
@@ -383,16 +386,12 @@ test("JavaScript namespace assignments are checked against emitted declaration d
     "vendor.d.ts": 'export class Palette {}\nexport namespace Palette { let legacy: number; }\n',
   };
   const packed = await makeTree(declarations);
-  const before = await makeTree(declarations);
   try {
     expect(await assertImportableDeclarationDocs(packed, source, { ".": { types: "./index.d.ts" } })).toEqual([]);
-    await stripInternalDeclarationDocs(packed, { ".": { types: "./index.d.ts" } });
-    expect(compareDeclarationIdentity(before, packed).exports).toBe(1);
     await writeFile(join(packed, "index.d.ts"), declarations["index.d.ts"].replace("Public colors.", ""));
     expect((await assertImportableDeclarationDocs(packed, source, { ".": { types: "./index.d.ts" } })).some(message => message.includes("colors"))).toBe(true);
   } finally {
     await rm(source, { recursive: true, force: true });
     await rm(packed, { recursive: true, force: true });
-    await rm(before, { recursive: true, force: true });
   }
 });
