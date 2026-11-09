@@ -310,7 +310,7 @@ The typefaces and the corner scale are custom properties too, so setting one on 
 }
 ```
 
-Density is a custom property as well. `--mtrl-density` steps from `0` to `-5`, and the classes `.mtrl-density--1` … `.mtrl-density--5` set a step on a container:
+Density is a custom property as well: `--mtrl-density` steps from 0 to -5 on a container. The classes from `.mtrl-density--1` to `.mtrl-density--5` set the same steps by name:
 
 ```css
 .toolbar {
