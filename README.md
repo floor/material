@@ -197,6 +197,7 @@ What each stylesheet holds:
 | Import | Holds |
 |--------|-------|
 | `material/styles/base` | The baseline theme in light and dark, the colour, shape and typeface tokens, a reset and the ripple |
+| `material/styles/base-elements` | The same theme, tokens, reset and system contrast response as the base, without global ripple rules; for element applications |
 | `material/styles/base-lite` | The baseline theme in light and dark, the colour, shape and typeface tokens, the body theme and the reduced-motion switch; no reset, ripple or contrast modes |
 | `material/styles/typography` | The type scale, the type classes (`.mtrl-display-large` to `.mtrl-label-small`), the text utilities, and the styles for headings and paragraphs |
 | `material/styles/<component>` | One component, with what it depends on |
@@ -204,7 +205,9 @@ What each stylesheet holds:
 
 Import the typography stylesheet when the page uses the type classes, relies on material's heading styles, or reads a `--mtrl-sys-typescale-*` token in its own CSS. It has to load after the base; the import takes care of that.
 
-`material/styles/base-lite` is the base for element-based pages: the theme, the tokens and the body theme, without the reset, the ripple or the contrast modes. Each element's shadow root carries its own ripple and box-sizing rules, and base-lite keeps the global reduced-motion switch. Factory components draw their ripple from the full base, so a factory page keeps `material/styles/base`. Import one base or the other, not both.
+Element applications can use `material/styles/base-elements` to keep the base's reset and system contrast response while omitting the global ripple rules. Each element's shadow root carries its own ripple CSS. Add `material/styles/contrast` for explicit baseline contrast attributes, just as with the full base.
+
+`material/styles/base-lite` is a smaller option for element pages that also omit the page reset and contrast modes: it keeps the theme, tokens, body theme and global reduced-motion switch. Factory components and page-level `data-ripple` utilities need `material/styles/base`. Choose one base entry for the page.
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 

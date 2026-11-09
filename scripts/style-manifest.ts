@@ -63,6 +63,10 @@ export const baseStyles = [
   "utilities/ripple", "base/document",
 ];
 
+// Element roots adopt their own ripple sheet. Keep every other full-base
+// rule, including reset and system contrast, for element applications.
+export const baseElementsStyles = baseStyles.filter(source => source !== "utilities/ripple");
+
 // The opt-in theme-only base (`material/styles/base-lite`): the baseline roles
 // in light and dark, the shape and typeface tokens, the global reduced-motion
 // switch and the body theme, without the contrast modes, the reset, or the
