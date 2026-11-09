@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { existsSync } from "node:fs";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, writeFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { printDeclarationModule } from "./build-modules";
 
@@ -230,6 +230,17 @@ export async function collectImportableDeclarations(
     }
   }
 
+  // Module augmentations contribute members to consumers even when no entry
+  // directly re-exports the augmentation file.
+  for (const sf of program.getSourceFiles()) {
+    if (!resolve(sf.fileName).startsWith(`${root}/`)) continue;
+    for (const stmt of sf.statements) {
+      if (ts.isModuleDeclaration(stmt) && (ts.isStringLiteral(stmt.name) || stmt.flags & ts.NodeFlags.GlobalAugmentation)) {
+        enqueueStatement(stmt, "ambient augmentation");
+      }
+    }
+  }
+
   while (queue.length > 0) {
     const { stmt, specifier } = queue.shift()!;
     const visitRef = (node: ts.Node): void => {
@@ -239,8 +250,9 @@ export async function collectImportableDeclarations(
         markEntityName(node.typeName, specifier);
       } else if (ts.isTypeQueryNode(node)) {
         markEntityName(node.exprName, specifier);
-      } else if (ts.isImportTypeNode(node) && node.qualifier) {
-        markEntityName(node.qualifier, specifier);
+      } else if (ts.isImportTypeNode(node)) {
+        if (node.qualifier) markEntityName(node.qualifier, specifier);
+        else if (ts.isLiteralTypeNode(node.argument)) markSymbol(checker.getSymbolAtLocation(node.argument.literal), specifier);
       }
       ts.forEachChild(node, visitRef);
     };
@@ -322,17 +334,14 @@ export async function stripInternalDeclarationDocs(
 
     let updated = text;
     for (const [start, end] of [...toStrip.entries()].sort(([a], [b]) => b - a)) {
-      updated = updated.slice(0, start) + updated.slice(start, end).replace(/[^\r\n]/g, " ") + updated.slice(end);
+      updated = updated.slice(0, start) + updated.slice(end);
     }
-    const printed = ts.createPrinter().printFile(
-      ts.createSourceFile(absPath, updated, ts.ScriptTarget.Latest, true),
-    );
-    if (printed === text) continue;
+    if (updated === text) continue;
 
-    await writeFile(absPath, printed);
+    await writeFile(absPath, updated);
     files += 1;
     declarations += strippedInFile;
-    bytes += Buffer.byteLength(text, "utf8") - Buffer.byteLength(printed, "utf8");
+    bytes += Buffer.byteLength(text, "utf8") - Buffer.byteLength(updated, "utf8");
   }
 
   return { files, declarations, bytes };
@@ -352,6 +361,14 @@ function shippedJsDocFor(rawComment: string, isSourceTs: boolean): string {
   if (!isSourceTs) return rawComment;
   const probed = printDeclarationModule("probe.d.ts", `${rawComment}\nexport type Probe = unknown;\n`);
   const match = /^\/\*\*[\s\S]*?\*\//.exec(probed.trim());
+  const prose = rawComment.slice(3, -2).split(/\r?\n/)
+    .map(line => line.replace(/^\s*\*\s?/, "").trim());
+  const tag = prose.findIndex(line => line.startsWith("@"));
+  const summary = (tag < 0 ? prose : prose.slice(0, tag)).filter(Boolean);
+  const first = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1] ?? summary[0];
+  if (first && (!match || !normalizeJsDoc(match[0]).includes(first))) {
+    throw new Error(`Source JSDoc summary was erased while computing the expected hover: ${first}`);
+  }
   return match ? match[0] : "";
 }
 
@@ -447,30 +464,14 @@ function extractDocsInStatement(
   }
 }
 
-function extractFileDocs(filePath: string, text: string): Map<string, ExtractedStatementDocs> {
-  const isSourceTs = !filePath.endsWith(".d.ts");
-  const sf = ts.createSourceFile(filePath, text, ts.ScriptTarget.Latest, true);
-  const byName = new Map<string, ExtractedStatementDocs>();
-
-  for (const stmt of sf.statements) {
-    const name = statementNameOf(stmt);
-    if (!name) continue;
-    let entry = byName.get(name);
-    if (!entry) {
-      entry = { summaries: new Set<string>(), members: new Map<string, Set<string>>() };
-      byName.set(name, entry);
-    }
-    extractDocsInStatement(stmt, sf, text, isSourceTs, entry);
-  }
-  return byName;
-}
-
 function resolveReferenceFile(declFile: string, referenceRoot: string): string | undefined {
   const relInsideDist = declFile.replace(/^dist\//, "");
   const candidates = [
     join(referenceRoot, declFile),
     join(referenceRoot, relInsideDist),
     join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".ts")),
+    join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".tsx")),
+    join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".js")),
     ...(relInsideDist === "ssr/index.d.ts" ? [join(referenceRoot, "ssr/render-element.ts")] : []),
   ];
   return candidates.find(candidate => existsSync(candidate));
@@ -492,57 +493,130 @@ export async function assertImportableDeclarationDocs(
     ? { name: "material", exports: exportsMap }
     : await Bun.file(join(root, "package.json")).json() as { name?: string; exports?: unknown };
 
-  const { declarations } = await collectImportableDeclarations(
-    root,
-    manifest.exports,
-    manifest.name ?? "material",
-  );
-
-  const refDocsCache = new Map<string, Map<string, ExtractedStatementDocs>>();
-  const packedDocsCache = new Map<string, Map<string, ExtractedStatementDocs>>();
-  const failures: string[] = [];
-
-  for (const decl of declarations) {
-    const refFile = resolveReferenceFile(decl.file, refRoot);
-    if (!refFile) continue;
-
-    let refFileDocs = refDocsCache.get(refFile);
-    if (!refFileDocs) {
-      refFileDocs = extractFileDocs(refFile, await readFile(refFile, "utf8"));
-      refDocsCache.set(refFile, refFileDocs);
+  const packed = await collectImportableDeclarations(root, manifest.exports, manifest.name ?? "material");
+  const refs = new Map(packed.entries.map(entry => [entry.specifier, resolveReferenceFile(entry.types, refRoot)]));
+  const sourceFiles = (await filesUnder(refRoot)).filter(file => /\.(?:tsx?|mts|cts|js)$/.test(file));
+  const sourceProgram = ts.createProgram(sourceFiles.map(file => join(refRoot, file)), { ...COMPILER_OPTIONS, allowJs: true, jsx: ts.JsxEmit.Preserve });
+  const sourceChecker = sourceProgram.getTypeChecker();
+  const failures = new Set<string>();
+  const seenSymbols = new Map<ts.Symbol, Set<ts.Symbol>>();
+  const seenTypes = new Map<ts.Type, Set<ts.Type>>();
+  const statementDocs = new Map<ts.Statement, ExtractedStatementDocs>();
+  const local = (node: ts.Node, base: string) => resolve(node.getSourceFile().fileName).startsWith(`${base}/`);
+  const unalias = (checker: ts.TypeChecker, symbol: ts.Symbol) => symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  const seen = <T>(map: Map<T, Set<T>>, a: T, b: T): boolean => {
+    const values = map.get(a) ?? new Set<T>();
+    if (values.has(b)) return true;
+    values.add(b); map.set(a, values); return false;
+  };
+  const statementOf = (node: ts.Node): ts.Statement | undefined => {
+    let current: ts.Node | undefined = node;
+    while (current?.parent && !ts.isSourceFile(current.parent)) current = current.parent;
+    return current && ts.isStatement(current) ? current : undefined;
+  };
+  const docsOf = (statement: ts.Statement, isSource: boolean): ExtractedStatementDocs => {
+    let result = statementDocs.get(statement);
+    if (!result) {
+      result = { summaries: new Set<string>(), members: new Map<string, Set<string>>() };
+      const sf = statement.getSourceFile();
+      extractDocsInStatement(statement, sf, sf.text, isSource, result);
+      statementDocs.set(statement, result);
     }
-    const expected = refFileDocs.get(decl.name);
-    if (!expected) continue;
-
-    const packedFile = join(root, decl.file);
-    let packedFileDocs = packedDocsCache.get(packedFile);
-    if (!packedFileDocs) {
-      packedFileDocs = extractFileDocs(packedFile, await readFile(packedFile, "utf8"));
-      packedDocsCache.set(packedFile, packedFileDocs);
+    return result;
+  };
+  const auditStatement = (before: ts.Statement, after: ts.Statement[], path: string): void => {
+    const expected = docsOf(before, !before.getSourceFile().isDeclarationFile);
+    const actual = after.map(statement => docsOf(statement, false));
+    const name = statementNameOf(before) ?? path;
+    const where = `${relative(root, after[0]!.getSourceFile().fileName)}#${name}`;
+    for (const summary of expected.summaries) {
+      if (!actual.some(docs => docs.summaries.has(summary))) failures.add(`${where} (reachable from ${path}): importable declaration lost its JSDoc ${JSON.stringify(summary)}`);
     }
-    const actual = packedFileDocs.get(decl.name);
-
-    for (const expectedSummary of expected.summaries) {
-      if (!actual || !actual.summaries.has(expectedSummary)) {
-        failures.push(
-          `${decl.file}#${decl.name} (reachable from ${decl.viaSpecifier}): ` +
-            `importable declaration lost its JSDoc ${JSON.stringify(expectedSummary)}`,
-        );
+    for (const [member, comments] of expected.members) {
+      for (const comment of comments) {
+        if (!actual.some(docs => docs.members.get(member)?.has(comment))) failures.add(`${where}.${member} (reachable from ${path}): importable member lost its JSDoc ${JSON.stringify(comment)}`);
       }
     }
-
-    for (const [memberName, expectedMemberDocs] of expected.members) {
-      const actualMemberDocs = actual?.members.get(memberName);
-      for (const expectedDoc of expectedMemberDocs) {
-        if (!actualMemberDocs || !actualMemberDocs.has(expectedDoc)) {
-          failures.push(
-            `${decl.file}#${decl.name}.${memberName} (reachable from ${decl.viaSpecifier}): ` +
-              `importable member lost its JSDoc ${JSON.stringify(expectedDoc)}`,
-          );
-        }
-      }
+  };
+  const pairSymbol = (source: ts.Symbol, output: ts.Symbol, path: string): void => {
+    source = unalias(sourceChecker, source); output = unalias(packed.checker, output);
+    if (seen(seenSymbols, source, output)) return;
+    const before = source.declarations?.filter(node => local(node, refRoot)) ?? [];
+    const after = output.declarations?.filter(node => local(node, root)) ?? [];
+    if (!before.length || !after.length) return;
+    // The checker resolves aliases and folded private names to their actual
+    // declarations. Physical source/output filenames need not correspond.
+    for (const declaration of before) {
+      const a = statementOf(declaration);
+      const statements = [...new Set(after.map(statementOf).filter((statement): statement is ts.Statement => statement !== undefined))];
+      if (a && statements.length) auditStatement(a, statements, path);
+    }
+    if (source.flags & ts.SymbolFlags.Type && output.flags & ts.SymbolFlags.Type) {
+      pairType(sourceChecker.getDeclaredTypeOfSymbol(source), packed.checker.getDeclaredTypeOfSymbol(output), path);
+    }
+    if (source.flags & ts.SymbolFlags.Value && output.flags & ts.SymbolFlags.Value) {
+      pairType(sourceChecker.getTypeOfSymbolAtLocation(source, before[0]!), packed.checker.getTypeOfSymbolAtLocation(output, after[0]!), path);
+    }
+  };
+  const pairType = (before: ts.Type, after: ts.Type, path: string): void => {
+    if (seen(seenTypes, before, after)) return;
+    const a = before.aliasSymbol ?? before.symbol, b = after.aliasSymbol ?? after.symbol;
+    if (a && b) pairSymbol(a, b, path);
+    const localType = (type: ts.Type, base: string) => (type.aliasSymbol ?? type.symbol)?.declarations?.some(node => local(node, base));
+    const parts = (type: ts.Type, checker: ts.TypeChecker): readonly ts.Type[] => type.isUnionOrIntersection() ? type.types
+      : type.aliasTypeArguments ?? (type.flags & ts.TypeFlags.Object && (type as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+        ? checker.getTypeArguments(type as ts.TypeReference) : []);
+    const aa = parts(before, sourceChecker), bb = parts(after, packed.checker);
+    aa.forEach((type, index) => { if (bb[index]) pairType(type, bb[index]!, path); });
+    if (!localType(before, refRoot) || !localType(after, root)) return;
+    const properties = new Map(packed.checker.getPropertiesOfType(after).map(symbol => [symbol.name, symbol]));
+    for (const symbol of sourceChecker.getPropertiesOfType(before)) {
+      const next = properties.get(symbol.name);
+      if (next) pairSymbol(symbol, next, `${path}.${symbol.name}`);
+    }
+    for (const kind of [ts.SignatureKind.Call, ts.SignatureKind.Construct]) {
+      const signatures = packed.checker.getSignaturesOfType(after, kind);
+      sourceChecker.getSignaturesOfType(before, kind).forEach((signature, index) => {
+        const next = signatures[index]; if (!next) return;
+        signature.parameters.forEach((parameter, i) => {
+          const other = next.parameters[i];
+          if (other) pairSymbol(parameter, other, `${path}.parameter[${i}]`);
+        });
+        pairType(sourceChecker.getReturnTypeOfSignature(signature), packed.checker.getReturnTypeOfSignature(next), `${path}.return`);
+        signature.typeParameters?.forEach((parameter, i) => {
+          const constraint = sourceChecker.getBaseConstraintOfType(parameter);
+          const nextParameter = next.typeParameters?.[i];
+          const nextConstraint = nextParameter && packed.checker.getBaseConstraintOfType(nextParameter);
+          if (constraint && nextConstraint) pairType(constraint, nextConstraint, path);
+        });
+      });
+    }
+    const indexes = packed.checker.getIndexInfosOfType(after);
+    sourceChecker.getIndexInfosOfType(before).forEach((info, index) => {
+      const next = indexes[index]; if (next) pairType(info.type, next.type, `${path}.index`);
+    });
+    if (before.isClassOrInterface() && after.isClassOrInterface()) {
+      const bases = packed.checker.getBaseTypes(after);
+      sourceChecker.getBaseTypes(before).forEach((base, index) => { if (bases[index]) pairType(base, bases[index]!, path); });
+    }
+  };
+  for (const entry of packed.entries) {
+    const file = refs.get(entry.specifier);
+    // Generated Svelte components have no handwritten module counterpart.
+    // The build's mandatory before/after identity proof covers ALL their
+    // symbols and tags against the unstripped generated declarations.
+    if (!file && /^(?:dist\/)?svelte\/(?:index|[^/]+\.svelte)\.d\.ts$/.test(entry.types)) continue;
+    const source = file && sourceProgram.getSourceFile(file);
+    const output = packed.program.getSourceFile(join(root, entry.types));
+    const a = source && sourceChecker.getSymbolAtLocation(source);
+    const b = output && packed.checker.getSymbolAtLocation(output);
+    if (!a || !b) { failures.add(`${entry.specifier}: cannot resolve source and packed declaration entries`); continue; }
+    const exports = new Map(packed.checker.getExportsOfModule(b).map(symbol => [symbol.name, symbol]));
+    for (const symbol of sourceChecker.getExportsOfModule(a)) {
+      const next = exports.get(symbol.name);
+      if (next) pairSymbol(symbol, next, `${entry.specifier}.${symbol.name}`);
+      else failures.add(`${entry.specifier}.${symbol.name}: cannot resolve packed symbol`);
     }
   }
-
-  return failures;
+  return [...failures].sort();
 }

@@ -2,6 +2,8 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { compareDeclarationIdentity } from "../../scripts/check-declaration-identity";
+import { consolidateDeclarations } from "../../scripts/consolidate-declarations";
 import { printDeclarationModule } from "../../scripts/build-modules";
 import {
   assertImportableDeclarationDocs,
@@ -246,5 +248,105 @@ test("stripInternalDeclarationDocs keeps JSDoc on direct exports, re-exports, he
   } finally {
     await rm(dir, { recursive: true, force: true });
     await rm(refDir, { recursive: true, force: true });
+  }
+});
+
+
+// The sources re-export declarations that the package folds into a different
+// physical file. Expected prose comes from real .ts sources, never another
+// copy of the packed declarations.
+const SOURCE_FILES = {
+  "index.ts": 'export * from "./components/widget/index.js";\n',
+  "components/widget/index.ts": 'export { createWidget } from "./types.js"; export type { WidgetConfig, WidgetComponent, ReexportedOption } from "./types.js";\n',
+  "components/widget/types.ts": TYPES_DTS.replace(
+    "/** Creates a widget instance. */",
+    "/** Creates a widget instance. More prose.\n * @param config The configuration.\n * @default undefined\n */",
+  ),
+};
+const FOLDED_FILES = {
+  ...FIXTURE_FILES,
+  "components/widget/index.d.ts": printDeclarationModule("index.d.ts", SOURCE_FILES["components/widget/types.ts"]
+    .replace(/\bexport /g, "") + '\nexport { createWidget }; export type { WidgetConfig, WidgetComponent, ReexportedOption };\n'),
+};
+delete (FOLDED_FILES as Record<string, string>)["components/widget/types.d.ts"];
+
+test("folded barrels audit their actual .ts declaring symbols and detect missing public hover prose", async () => {
+  const source = await makeTree(SOURCE_FILES);
+  const packed = await makeTree(FOLDED_FILES);
+  try {
+    expect(await assertImportableDeclarationDocs(packed, source, EXPORTS_FIXTURE)).toEqual([]);
+    const file = join(packed, "components/widget/index.d.ts");
+    const original = await readFile(file, "utf8");
+    for (const [prose, path] of [
+      ["Creates a widget instance.", "createWidget"],
+      ["Primary label text.", "WidgetConfig.label"],
+      ["Shows the widget.", "WidgetVisibility.show"],
+      ["Item numeric value.", "NestedItem.value"],
+    ]) {
+      await writeFile(file, original.replace(prose!, ""));
+      const failures = await assertImportableDeclarationDocs(packed, source, EXPORTS_FIXTURE);
+      expect(failures.some(message => message.includes(path!)), failures.join("\n")).toBe(true);
+    }
+  } finally {
+    await rm(source, { recursive: true, force: true });
+    await rm(packed, { recursive: true, force: true });
+  }
+});
+
+test("folded stripping retains the public hover cut and every internal deprecated block", async () => {
+  const dir = await makeTree(FOLDED_FILES);
+  const source = await makeTree(SOURCE_FILES);
+  try {
+    const result = await stripInternalDeclarationDocs(dir, EXPORTS_FIXTURE);
+    expect(result.declarations).toBeGreaterThan(0);
+    expect(result.bytes).toBeGreaterThan(0);
+    const stripped = await readFile(join(dir, "components/widget/index.d.ts"), "utf8");
+    expect(stripped).toContain("Creates a widget instance.");
+    expect(stripped).toContain("@param config");
+    expect(stripped).toContain("@default undefined");
+    expect(stripped).toContain("Shows the widget.");
+    expect(stripped).toContain("Item numeric value.");
+    expect(stripped).toContain("@deprecated Use WidgetConfig instead. Removal in 4.0.");
+    expect(stripped).toContain("@deprecated Old active flag.");
+    expect(stripped).not.toContain("Internal DOM structure not reachable from exports.");
+    expect(stripped).not.toContain("Internal helper not reachable from exports.");
+    expect(await assertImportableDeclarationDocs(dir, source, EXPORTS_FIXTURE)).toEqual([]);
+  } finally {
+    await rm(source, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("namespace import signatures and ambient augmentations keep their reachable docs", async () => {
+  const dir = await makeTree({
+    "index.d.ts": 'export declare const api: typeof import("./nested.js");\n',
+    "nested.d.ts": '/** Namespace member. */ export interface Nested { /** Nested value. */ value: string }\n',
+    "augmentation.d.ts": 'declare module "example" { /** Extended configuration. */ interface Config { /** Extension value. */ value: string } }\n/** Hidden helper. */ declare const hidden: string;\n',
+  });
+  try {
+    await stripInternalDeclarationDocs(dir, { ".": { types: "./index.d.ts" } });
+    expect(await readFile(join(dir, "nested.d.ts"), "utf8")).toContain("Namespace member.");
+    const augmented = await readFile(join(dir, "augmentation.d.ts"), "utf8");
+    expect(augmented).toContain("Extended configuration.");
+    expect(augmented).toContain("Extension value.");
+    expect(augmented).not.toContain("Hidden helper.");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+
+test("stripping then folding retains the complete public documentation identity", async () => {
+  const before = await makeTree(FIXTURE_FILES);
+  const after = await makeTree(FIXTURE_FILES);
+  try {
+    await stripInternalDeclarationDocs(after, EXPORTS_FIXTURE);
+    await consolidateDeclarations(after, EXPORTS_FIXTURE);
+    const proof = compareDeclarationIdentity(before, after);
+    expect(proof.entries).toBe(2);
+    expect(proof.pairs).toBeGreaterThan(5);
+  } finally {
+    await rm(before, { recursive: true, force: true });
+    await rm(after, { recursive: true, force: true });
   }
 });

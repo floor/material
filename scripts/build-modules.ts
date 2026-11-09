@@ -227,8 +227,8 @@ export function buildModules(outdir: string) {
       text = stripRuntimeComments(filename, text);
     }
     if (filename.endsWith(".d.ts")) {
-      // Shipped declarations carry signatures, not prose: hovers and the
-      // published docs read src, which the tarball does not carry.
+      // Keep the public hover cut before the reachability pass removes
+      // documentation belonging only to unreferenced internal declarations.
       text = printDeclarationModule(filename, text);
     }
     ts.sys.writeFile(filename, text);
