@@ -346,4 +346,17 @@ describe("deferred menu", () => {
     expect(opener.hasAttribute("aria-controls")).toBe(false);
   });
 
+  test("a shadow-root opener becoming disabled cancels before delayed focus", async () => {
+    const host = document.createElement("div");
+    opener.replaceWith(host);
+    host.attachShadow({ mode: "open" }).append(opener);
+    const menu = make();
+    await menu.preload();
+    menu.open(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    await Promise.resolve();
+    opener.disabled = true;
+    await Promise.resolve();
+    expect(menu.isOpen()).toBe(false);
+  });
+
 });

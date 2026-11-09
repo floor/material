@@ -123,10 +123,17 @@ export const createDeferredMenu = (config: DeferredMenuConfig): DeferredMenuComp
       try { callback(payload); } catch (error) { console.error(`A listener for "${name}" threw:`, error); }
     }
   };
-  const usable = (): boolean => opener.isConnected && !opener.matches(":disabled, [disabled], [aria-disabled='true']") &&
-    !opener.closest("[inert], [hidden], dialog:not([open])") &&
-    (!config.container || config.container.isConnected) &&
-    getComputedStyle(opener).display !== "none" && getComputedStyle(opener).visibility !== "hidden";
+  const usable = (): boolean => {
+    if (!opener.isConnected || opener.matches(":disabled, [disabled], [aria-disabled='true']") ||
+      (config.container && !config.container.isConnected)) return false;
+    for (let node: Element | undefined = opener; node;) {
+      if (node.closest("[inert], [hidden], dialog:not([open])") ||
+        getComputedStyle(node).display === "none" || getComputedStyle(node).visibility === "hidden") return false;
+      const root = node.getRootNode();
+      node = "host" in root ? (root as ShadowRoot).host : undefined;
+    }
+    return true;
+  };
   const registry = { close: (event?: Event): void => { api.close(event, false); } };
   const stopPending = (keepWatch = false): void => {
     from?.stop();
@@ -162,8 +169,14 @@ export const createDeferredMenu = (config: DeferredMenuConfig): DeferredMenuComp
     dialog = opener.closest("dialog");
     dialog?.addEventListener("close", cancelled);
     observer = new MutationObserver(() => { if (opened && !usable()) api.close(undefined, false); });
-    observer.observe(document, { subtree: true, childList: true, attributes: true,
-      attributeFilter: ["disabled", "aria-disabled", "open", "hidden", "inert"] });
+    const options = { subtree: true, childList: true, attributes: true,
+      attributeFilter: ["disabled", "aria-disabled", "open", "hidden", "inert", "style", "class"] };
+    observer.observe(document, options);
+    // Document observers do not cross shadow boundaries. Watch each root
+    // containing the opener too, including changes to an outer shadow host.
+    for (let root = opener.getRootNode(); "host" in root; root = (root as ShadowRoot).host.getRootNode()) {
+      observer.observe(root, options);
+    }
   };
   const click = (event: MouseEvent): void => {
     if (!usable()) return;

@@ -287,6 +287,33 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       });
       results.push("containing dialog close cancels cold request"); await finish();
     }
+    {
+      const { page, release, finish } = await fresh();
+      await page.evaluate(() => {
+        const opener = document.querySelector("#opener")!;
+        const host = document.createElement("div"); opener.replaceWith(host);
+        host.attachShadow({ mode: "open" }).append(opener);
+      });
+      await page.locator("#opener").press("ArrowDown");
+      await page.evaluate(() => {
+        const state = (window as unknown as { lab: Lab & { lateFocus: boolean; cancelledBeforeTimers: boolean } }).lab;
+        state.lateFocus = false;
+        document.addEventListener("focusin", event => {
+          if (event.composedPath().some(node => node === state.menu.element)) state.lateFocus = true;
+        });
+        void state.menu.preload().then(async () => {
+          (state.menu.getOpener() as HTMLButtonElement).disabled = true;
+          await Promise.resolve();
+          state.cancelledBeforeTimers = !state.menu.isOpen();
+        });
+      });
+      await release();
+      await page.waitForFunction(() => (window as unknown as { lab: Lab & { cancelledBeforeTimers?: boolean } }).lab.cancelledBeforeTimers !== undefined);
+      assert.equal(await page.evaluate(() => (window as unknown as { lab: Lab & { cancelledBeforeTimers: boolean } }).lab.cancelledBeforeTimers), true);
+      await page.waitForSelector(".mtrl-menu", { state: "detached" });
+      assert.equal(await page.evaluate(() => (window as unknown as { lab: Lab & { lateFocus: boolean } }).lab.lateFocus), false);
+      results.push("disabled shadow opener cancels delayed focus"); await finish();
+    }
     // A construction failure clears the slot; an explicit retry uses current items.
     {
       const { page, release, finish } = await fresh();
