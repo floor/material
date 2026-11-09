@@ -469,7 +469,7 @@
     ".mtrl-datepicker__calendar::backdrop",
     ".mtrl-datepicker__cancel,.mtrl-datepicker__confirm,.mtrl-datepicker__save",
     ".mtrl-datepicker__cell--range",
-    ".mtrl-datepicker__cell--range .mtrl-datepicker__day:not(.mtrl-datepicker__day--selected)",
+    ".mtrl-datepicker__cell--range .mtrl-datepicker__day:not(.mtrl-datepicker__day--selected,.mtrl-datepicker__day--outside)",
     ".mtrl-datepicker__cell--range-end",
     ".mtrl-datepicker__cell--range-start",
     ".mtrl-datepicker__cell--range-start.mtrl-datepicker__cell--range-end",
