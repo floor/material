@@ -152,7 +152,7 @@ export async function buildStyles(outdir: string, banner: string) {
       // order and emits into mtrl.base, so it can load before or after the
       // base without moving either sheet's rules.
       // Contrast is emitted separately, in that same layer (`emitExplicit`).
-      const layer = name === "typography" || name === "base-lite" || name === "base-elements" ? "base" : name;
+      const layer = name === "typography" || name === "base-lite" ? "base" : name === "base-elements" ? "base" : name;
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
