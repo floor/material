@@ -41,6 +41,7 @@ const artifacts = resolve("analysis/browser/menu-deferred");
 await mkdir(artifacts, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const results: string[] = [];
+const record = (result: string): void => { results.push(result); console.log(`menu-deferred: ${result}`); };
 try {
   // Resolve the actual packed export map on Node with no synthetic globals.
   const probe = join(fixture.directory, "deferred-import.mjs");
@@ -150,7 +151,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       assert.deepEqual(before, { elementIsNull: false, hasOff: false, expanded: "true", preloadIsPromise: false });
       await release();
       await page.waitForSelector(".mtrl-menu--visible");
-      results.push("unchanged private helper: four absent public guarantees recorded");
+      record("unchanged private helper: four absent public guarantees recorded");
       await finish();
     }
     for (const kind of ["factory", "eager"]) for (const gesture of ["click", "Enter", "Space", "ArrowDown", "ArrowUp"]) {
@@ -172,7 +173,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         if (item.getAttribute("aria-disabled") !== "true") throw new Error("disabled item lost state");
       });
       if (kind === "factory") assert.deepEqual(await page.evaluate(() => (window as unknown as { lab: Lab }).lab.events), [["open", true]]);
-      results.push(`${kind} ${gesture} focus/ARIA/style`);
+      record(`${kind} ${gesture} focus/ARIA/style`);
       await finish();
     }
     for (const action of ["close", "Escape", "Tab", "outside", "toggle", "replace", "remove", "disable", "destroy", "reopen"]) {
@@ -202,7 +203,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
           return [menu.isOpen(), !!menu.element?.isConnected, document.querySelector(".mtrl-menu--visible") !== null];
         }), [false, false, false]);
       }
-      results.push(`cold ${action}`); await finish();
+      record(`cold ${action}`); await finish();
     }
     // preload is a real promise boundary, with no open event or focus change.
     {
@@ -219,7 +220,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         const { menu, events } = (window as unknown as { lab: Lab }).lab;
         return [menu.isReady(), menu.isOpen(), menu.element?.isConnected, events.length, document.activeElement?.id];
       }), [true, false, false, 0, "opener"]);
-      results.push("preload closed/no focus"); await finish();
+      record("preload closed/no focus"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -244,7 +245,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         const { menu, events } = (window as unknown as { lab: Lab }).lab;
         return [menu.isOpen(), menu.getPosition(), menu.getSelected(), events];
       }), [true, "top-end", "one", [["open", true], ["select", true, true]]]);
-      results.push("queued setters/on-off/live selection identity and cancellation"); await finish();
+      record("queued setters/on-off/live selection identity and cancellation"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -265,7 +266,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         if (eager.isOpen() || !state.menu.isOpen()) throw new Error("deferred ownership");
         eager.destroy(); state.second.destroy();
       });
-      results.push("two handles share code but keep state; eager/pending registry ownership"); await finish();
+      record("two handles share code but keep state; eager/pending registry ownership"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -273,7 +274,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       await page.locator("#opener").press("ArrowUp");
       await release(); await shown(page, "ArrowUp");
       assert.deepEqual(await page.evaluate(() => (window as unknown as { lab: Lab }).lab.events), [["open", true]]);
-      results.push("later cold arrow updates focus intent without activation"); await finish();
+      record("later cold arrow updates focus intent without activation"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -290,7 +291,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         await menu.preload();
         if (menu.isOpen() || menu.element?.isConnected) throw new Error("closed dialog received a late menu");
       });
-      results.push("containing dialog close cancels cold request"); await finish();
+      record("containing dialog close cancels cold request"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -317,7 +318,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       assert.equal(await page.evaluate(() => (window as unknown as { lab: Lab & { cancelledBeforeTimers: boolean } }).lab.cancelledBeforeTimers), true);
       await page.waitForSelector(".mtrl-menu", { state: "detached" });
       assert.equal(await page.evaluate(() => (window as unknown as { lab: Lab & { lateFocus: boolean } }).lab.lateFocus), false);
-      results.push("disabled shadow opener cancels delayed focus"); await finish();
+      record("disabled shadow opener cancels delayed focus"); await finish();
     }
     // A construction failure clears the slot; an explicit retry uses current items.
     {
@@ -337,7 +338,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       });
       await page.waitForSelector(".mtrl-menu--visible");
       assert.deepEqual(await page.evaluate(() => (window as unknown as { lab: Lab }).lab.errors), []);
-      results.push("construction failure/order/explicit retry"); await finish();
+      record("construction failure/order/explicit retry"); await finish();
     }
     {
       const { page, release, finish } = await fresh();
@@ -348,7 +349,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         const { menu, events, errors } = (window as unknown as { lab: Lab }).lab;
         return [menu.isOpen(), menu.isReady(), events.map(row => row[0]), errors];
       }), [false, false, ["open", "close", "loaderror"], []]);
-      results.push("network failure/order/no unhandled rejection"); await finish();
+      record("network failure/order/no unhandled rejection"); await finish();
     }
     for (const prefix of ["m", "lazy-test"]) for (const gesture of ["click", "ArrowUp"]) {
       const { page, release, finish } = await fresh("element", `prefix=${prefix}`);
@@ -363,7 +364,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         return order.indexOf(`${prefix}-menu-item`) < order.indexOf(`${prefix}-menu`);
       }, prefix), true);
       assert.equal(await page.locator("#opener").getAttribute("aria-controls"), null, "cross-shadow IDREF added");
-      results.push(`element ${prefix} ${gesture} once/registration order`); await finish();
+      record(`element ${prefix} ${gesture} once/registration order`); await finish();
     }
     {
       const { page, release, finish } = await fresh("element");
@@ -376,7 +377,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         const { host, events } = (window as unknown as { lab: Lab }).lab;
         return [host.anchor === document.querySelector("#opener"), events];
       }), [true, ["open"]]);
-      results.push("element explicit preload hands off warm anchor once/own anchor retained"); await finish();
+      record("element explicit preload hands off warm anchor once/own anchor retained"); await finish();
     }
     // Browser cancellation semantics are exercised against actual cold inputs.
     for (const action of ["Escape", "Tab", "outside", "toggle", "remove"]) {
@@ -390,9 +391,9 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       await page.evaluate(async () => { await (window as unknown as { lab: Lab }).lab.load(); });
       assert.deepEqual(await page.evaluate(() => {
         const { host, events, errors } = (window as unknown as { lab: Lab }).lab;
-        return [host.open, events, errors];
-      }), [false, [], []]);
-      results.push(`element cold ${action} cancels`); await finish();
+        return [!!host.open, host.isConnected, !!host.shadowRoot?.querySelector(".mtrl-menu--visible"), events, errors];
+      }), [false, action !== "remove", false, [], []]);
+      record(`element cold ${action} cancels`); await finish();
     }
     {
       const { page, release, finish } = await fresh("element", "ssr");
@@ -405,7 +406,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         return [state.host.shadowRoot === state.shadowBefore, state.host.open, state.events.length,
           !!state.host.shadowRoot?.querySelector("style,link"), state.host.querySelectorAll("m-menu-item").length];
       }), [true, false, 0, true, 1]);
-      results.push("closed SSR keeps root/styles/children and quiet state"); await finish();
+      record("closed SSR keeps root/styles/children and quiet state"); await finish();
     }
     // Initially open own state starts registration eagerly and upgrades quietly.
     {
@@ -416,7 +417,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
         const { host, events, errors } = (window as unknown as { lab: Lab }).lab;
         return [host.open, events, errors];
       }), [true, [], []]);
-      results.push("initial open uses eager registration and quiet own-property upgrade"); await finish();
+      record("initial open uses eager registration and quiet own-property upgrade"); await finish();
     }
     // Same pinned Vite/HTML build, minified JS/CSS and static closure for all
     // four 16-component consumers. Every emitted shared/dynamic asset counts
@@ -486,7 +487,10 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
     await writeFile(join(artifacts, "results.json"), JSON.stringify({ results, outputs: Object.fromEntries(outputs) }, null, 2));
     console.log(`Deferred menu: ${results.length} packed styled cases passed`);
   } finally { server.stop(true); }
-} finally { await browser.close(); await fixture.cleanup(); }
+} finally {
+  await writeFile(join(artifacts, "progress.json"), JSON.stringify({ results }, null, 2));
+  await browser.close(); await fixture.cleanup();
+}
 
 async function shown(page: Page, gesture: string): Promise<void> {
   await page.waitForSelector(".mtrl-menu--visible");
