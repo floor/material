@@ -44,6 +44,7 @@ Load date-picker calendars and menus on demand, lighter element application styl
 
 - Set the deferred date-picker calendar payload budget to **6,451 B gzip**, approved on **2026-11-09**, after separating the synchronous field-format path from the calendar helpers. The initial deferred entry keeps its **9,369 B gzip** ceiling; the default date-picker entry keeps its existing ceiling. At integration, CI measured **9,366 B** for the initial deferred entry and **6,315 B** for its calendar payload. These are integration measurements, not final release-package totals.
 - The element base stylesheet adds **1,098 B** to the compressed package and two files, measured on #348's CI.
+- Release measurements: **130,849 B** of gzip-compressed root JavaScript and **883,320 B** in the compressed npm package, measured by the release branch's CI package job.
 
 ## [3.10.1] - 2026-11-09
 
