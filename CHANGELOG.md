@@ -17,6 +17,25 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.10.1] - 2026-11-09
+
+Continuous date ranges, smoother time selection, and smaller downloads.
+
+### Fixed
+
+- **Date picker:** Keep range bands continuous through visible days from adjacent months, including the range endpoints, while preserving muted outside-month text.
+- **Time picker:** Animate dial selections and smoothly retarget rapid selections along the shortest path. Input-field changes move the hand immediately; programmatic value updates retain their animation. Scale and fade the digits when switching between hours and minutes, reversing the scale direction on return. Respect reduced-motion preferences.
+
+### Performance
+
+- Remove **9.3 kB** of declaration-comment and license-banner overhead from the compressed package, preserving public TypeScript documentation, deprecation notes, and license notices.
+- Share private helpers for search control state and canvas sizing, reducing the compressed root JavaScript by **47 B**.
+
+### Size
+
+- Raise three gzip budgets by owner decision on 2026-11-09: time picker **11,468 → 11,704 B**, every-component initial scenario **127,500 → 127,850 B**, and all root JavaScript **130,650 → 130,950 B**.
+- Release measurements: **130,770 B** of gzip-compressed root JavaScript and **869,071 B** in the compressed npm package, measured by the release branch’s CI package job.
+
 ## [3.10.0] - 2026-11-09
 
 Selection actions, slide images, active destinations, one density scale and a localized date picker.
@@ -7051,7 +7070,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.9.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.10.1...HEAD
+[3.10.1]: https://github.com/floor/material/compare/v3.10.0...v3.10.1
 [3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
 [3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2
 [3.8.1]: https://github.com/floor/material/compare/v3.8.0...v3.8.1
