@@ -210,12 +210,12 @@ export const getElementConfig = (config: CardConfig) => {
     ],
     attributes: ariaAttributes,
     forwardEvents: {
-      // Flag off: `!!clickable`, and the closest() walk is not reached.
-      click: (ctx, event) => !!config.clickable && !(
+      // Flag off: clickable is falsy, and the closest() walk is not reached.
+      // Stop at the card root: `[role=button]` matches it, and that hit is not a child action.
+      click: (ctx, event) => (config.clickable && !(
         config.promoteChildActions &&
-        event.target !== ctx.element &&
-        (event.target as Element).closest?.(NESTED_ACTION_SELECTOR)
-      ),
+        ((event.target as Element).closest?.(NESTED_ACTION_SELECTOR) || ctx.element) !== ctx.element
+      )) as boolean,
       mouseenter: forward,
       mouseleave: forward,
       keydown: forward,

@@ -19,6 +19,14 @@ const mount = <T extends {element: HTMLElement}>(id: string, component: T): T =>
 };
 
 const promotedActivation = {card: 0, action: 0};
+const plainActivation = {card: 0};
+const plain = mount('card-promoted-plain', createCard({
+  clickable: true,
+  promoteChildActions: true,
+  header: {title: 'Promoted plain card'},
+  content: {text: 'Plain body'},
+}));
+plain.on('click', () => plainActivation.card++);
 const detail = createButton({text: 'Promoted detail'});
 detail.on('click', () => promotedActivation.action++);
 const withActions = mount('card-actions-promoted', createCard({
@@ -57,4 +65,4 @@ const exerciseWarning = (part: string, clickable = true, promoteChildActions = f
   return result;
 };
 
-Object.assign(window, {mtrlA18: {promotedActivation, exerciseWarning}, ready: true});
+Object.assign(window, {mtrlA18: {promotedActivation, plainActivation, exerciseWarning}, ready: true});

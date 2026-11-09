@@ -135,6 +135,17 @@ try {
   const promoted = await page.evaluate(() => Reflect.get(window, 'mtrlA18').promotedActivation as {card: number; action: number});
   console.log('Promoted Enter:', JSON.stringify(promoted));
   check('promoted-enter', promoted.card === 0 && promoted.action === 1);
+  await page.locator('#card-promoted-plain .mtrl-card__header-title').click();
+  await page.locator('#card-promoted-plain .mtrl-card__content').click();
+  await page.locator('#card-promoted-plain').focus();
+  await page.keyboard.press('Enter');
+  const plain = await page.evaluate(() => {
+    const element = document.getElementById('card-promoted-plain');
+    const card = Reflect.get(window, 'mtrlA18').plainActivation.card as number;
+    return {card, role: element?.getAttribute('role') ?? null, tabindex: element?.getAttribute('tabindex') ?? null};
+  });
+  console.log('Promoted plain:', JSON.stringify(plain));
+  check('promoted-plain-activates', plain.card === 3 && plain.role === 'button' && plain.tabindex === '0');
   for (const part of ['header', 'content', 'media', 'actions']) {
     const before = warnings.length;
     const dynamic = await page.evaluate(part => Reflect.get(window, 'mtrlA18').exerciseWarning(part, true, true), part) as {
