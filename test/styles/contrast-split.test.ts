@@ -309,11 +309,12 @@ describe("explicit contrast levels are opt-in", () => {
     // buttons take the full step the buttons spec gives every text button
     // (styles/components/_list.scss, _timepicker.scss).
     // Main contrast/focus rules plus the density scale and drawer indicator
-    // masks. Measured by the single-file contrast check after merging
-    // 53ae0a44; re-pinned from CI's built stylesheet if the merged sheet moved.
+    // masks. The merged tree's sheet, re-pinned from CI's built stylesheet
+    // (run 42580597104): +56 B over the branch's own measurement after
+    // merging 53ae0a44.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "c8a69c99d1d57ff4f334ac84d74c1b5aaac89a4c56ef1328d49d77f4b3b9aa2b",
-      length: 546847,
+      sha256: "0aef97b4d25144f01642c7a0c552078dcfc1b9f6949027e597ab2afded4e512a",
+      length: 546903,
     });
   });
 
