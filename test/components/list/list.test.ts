@@ -159,6 +159,18 @@ describe("real list selection and lifecycle", () => {
     list.on("select", handler); action(list).click(); expect(calls).toBe(1); expect(list.getSelectedItems()).toEqual([]);
     list.off("select", handler); action(list).click(); expect(list.getSelectedItemIds()).toEqual(["a"]);
   });
+  test("a select event carries the row's own button, and element stays the row", () => {
+    const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }]);
+    const events: { element: HTMLElement; action?: HTMLButtonElement }[] = [];
+    list.on("select", event => events.push(event));
+    action(list, 1).click(); action(list).click();
+    expect(events).toHaveLength(2);
+    expect(events[0].action === action(list, 1)).toBe(true);
+    expect(events[1].action === action(list)).toBe(true);
+    expect(events[0].element === row(list, 1)).toBe(true);
+    expect(events[1].element === row(list)).toBe(true);
+    expect(events[0].element === events[0].action).toBe(false);
+  });
   test("multi-selection toggles independently; unknown IDs never create phantom selections", () => {
     const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }], { multiSelect: true, initialSelection: ["missing"] });
     expect(list.getSelectedItemIds()).toEqual([]);

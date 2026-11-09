@@ -55,7 +55,8 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     if (control && control !== row.action) { follow(row); return; }
     const payload = {
       // `value`: the row's id, as the <m-list> element's `activate` carries it.
-      item: row.item, value: row.id, element: row.element, originalEvent: event,
+      // `element` is the row itself; `action` is its primary button.
+      item: row.item, value: row.id, element: row.element, action: row.action, originalEvent: event,
       component: component.eventTarget?.current ?? component,
       defaultPrevented: false,
       preventDefault() { this.defaultPrevented = true; },

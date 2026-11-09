@@ -1,6 +1,6 @@
 // src/components/tabs/index.ts
 import createTabs from "./tabs";
-import { setupResponsiveBehavior } from "./responsive";
+import { setupResponsiveBehavior } from "./responsive-legacy";
 import { tabIdFor, tabPanelIdFor } from "./utils";
 
 // Export constants
@@ -29,12 +29,12 @@ export type {
   IndicatorConfig,
 } from "./types";
 
-// Public and documented (md3.io tabs); a responsive option on createTabs
-// replaces it in a later 3.x release
+// Public and documented (md3.io tabs), deprecated in favour of the
+// `responsive` option on createTabs; removal in 4.0
 export { setupResponsiveBehavior };
 // Public: a page that writes its own panels names them with the derived ids
 export { tabIdFor, tabPanelIdFor };
-export type { ResponsiveConfig } from "./responsive";
+export type { ResponsiveConfig } from "./responsive-legacy";
 // Public: TabsComponent.getIndicator returns it
 export type { TabIndicator } from "./indicator";
 

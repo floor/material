@@ -14,7 +14,7 @@
 //
 // So the assertions below are mostly about keeping what was already true,
 // while the map replaces a single union-and-one-payload signature with one
-// that can tell its four events apart.
+// that can tell its events apart.
 //
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
@@ -31,12 +31,13 @@ declare const snackbar: SnackbarComponent;
 
 // --- the keys -------------------------------------------------------------
 
-// Exactly the four names in SNACKBAR_EVENTS. `dismiss` fires alongside
+// Exactly the names in SNACKBAR_EVENTS. `dismiss` fires alongside
 // `close` and is what the queue listens to, so it is a real event rather than
-// an alias and belongs in the map.
+// an alias and belongs in the map. `focus` is the keyboard shortcut reaching
+// the action.
 export const theEventsAreExactlyThese: Equals<
   keyof SnackbarEvents,
-  "open" | "close" | "action" | "dismiss"
+  "open" | "close" | "action" | "dismiss" | "focus"
 > = true;
 
 // --- the payload ----------------------------------------------------------
@@ -47,8 +48,8 @@ type ClosePayload = Parameters<CloseHandler>[0];
 export const closeCarriesTheSnackbarEvent: Equals<ClosePayload, SnackbarEvent> = true;
 
 // The payload is not the DOM event. It carries one, under `originalEvent`,
-// and that field is nullable because three of the four events have no DOM
-// event behind them at all.
+// and that field is nullable because most events have no DOM event behind
+// them at all.
 export const payloadIsNotItselfAnEvent: Equals<ClosePayload, Event> = false;
 
 export const theDomEventIsNullable: Equals<
@@ -56,8 +57,8 @@ export const theDomEventIsNullable: Equals<
   Event | null
 > = true;
 
-// All four carry the same shape today. That is worth asserting rather than
-// assuming: the map's value is that the four *can* diverge -- `reason` is
+// They all carry the same shape today. That is worth asserting rather than
+// assuming: the map's value is that they *can* diverge -- `reason` is
 // only ever set on `close` and `dismiss` -- and narrowing those two later is
 // now a local change instead of a new signature.
 export const openCarriesTheSameShapeForNow: Equals<

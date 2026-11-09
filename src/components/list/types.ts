@@ -261,9 +261,16 @@ export interface SelectEvent<T = unknown> {
   value: string;
 
   /**
-   * DOM element for the selected item
+   * DOM element for the selected item: the row, never its button
    */
   element: HTMLElement;
+
+  /**
+   * The row's primary action button that carried the activation, the same
+   * node the row exposes to assistive technology. Focus it to put the
+   * keyboard back on the row.
+   */
+  action?: HTMLButtonElement;
 
   /**
    * Original DOM event
