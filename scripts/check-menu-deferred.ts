@@ -24,6 +24,9 @@ interface Lab {
 const fixture = await createPackageFixture();
 await mkdir("tmp", { recursive: true });
 const scratch = await mkdtemp(resolve("tmp/menu-deferred-"));
+// The app lives inside the library checkout, whose sideEffects list deliberately
+// excludes ordinary JS. Consumer startup imports must retain their side effects.
+await writeFile(join(scratch, "package.json"), JSON.stringify({ type: "module", sideEffects: true }));
 await mkdir(join(scratch, "node_modules"));
 await symlink(fixture.installed, join(scratch, "node_modules/material"), "dir");
 const sources = resolve("scripts/fixtures/menu-deferred");
