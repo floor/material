@@ -28,6 +28,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { deprecationOf } from "./export-deprecation";
 import { createPackageFixture } from "./package-fixture";
+import { assertImportableDeclarationDocs } from "./strip-internal-declaration-docs";
 
 const ROOT = join(import.meta.dir, "..");
 const manifest = await Bun.file(join(ROOT, "package.json")).json() as { name: string };
@@ -53,7 +54,7 @@ interface Consumer {
   /** The deprecated names its use of the packed package must report. */
   deprecated: string[];
   /** A documented name the consumer reads, and the documentation an editor shows for it. */
-  hover?: { name: string; at: string; documentation: string };
+  hover?: { name: string; at: string; documentation?: string; tags?: Record<string, string> }[];
 }
 
 const consumers: Consumer[] = [
@@ -68,7 +69,11 @@ const built = createFab({ icon: "<svg/>", ariaLabel: "Add", type: "button" });
 export { built };
 `,
     deprecated: ["setPosition", "getPosition"],
-    hover: { name: "type", at: 'type: "button"', documentation: "Button type attribute" },
+    hover: [
+      { name: "type", at: 'type: "button"', documentation: "Button type attribute" },
+      { name: "setPosition", at: "setPosition(", tags: { deprecated: "placement option/attribute" } },
+      { name: "getPosition", at: "getPosition()", tags: { deprecated: "Removal in 4.0." } },
+    ],
   },
   {
     file: "component-consumer.ts",
@@ -89,8 +94,47 @@ attributes.position;
 export {};
 `,
     deprecated: ["position"],
+    hover: [{ name: "position", at: "position;", tags: { deprecated: "Physical alias, does not mirror in RTL; removal in 4.0." } }],
   },
 ];
+
+// These are actual packed-package LanguageService consumers, including types
+// folded into their exported barrels and inherited/signature-referenced APIs.
+for (const entry of [manifest.name, `${manifest.name}/components/button`]) {
+  consumers.push({
+    file: `button-${consumers.length}.ts`,
+    source: `import { createButton, type ButtonComponent } from "${entry}";
+const button = createButton({});
+declare const inherited: ButtonComponent;
+inherited.icon.setIcon("<svg/>");
+export { button };
+`,
+    deprecated: [],
+    hover: [
+      { name: "createButton", at: "createButton({", documentation: "Creates a new Button component with the specified configuration.", tags: { param: "config" } },
+      { name: "IconAPI.setIcon", at: "setIcon(", documentation: "Sets the icon HTML content", tags: { param: "html" } },
+    ],
+  });
+}
+consumers.push({
+  file: "folded-dialog-consumer.ts",
+  source: `import { createDialog, type DialogConfig, type DialogComponent, type DialogButton } from "${manifest.name}/components/dialog";
+declare const config: DialogConfig;
+declare const dialog: DialogComponent;
+declare const action: DialogButton;
+const built = createDialog(config);
+dialog.open();
+action.text;
+export { built };
+`,
+  deprecated: [],
+  hover: [
+    { name: "createDialog", at: "createDialog(config)", documentation: "Creates a new Dialog component with the specified configuration.", tags: { param: "config" } },
+    { name: "DialogConfig", at: "DialogConfig;", documentation: "Configuration interface for the Dialog component" },
+    { name: "DialogComponent.open", at: "open()", documentation: "Opens the dialog." },
+    { name: "DialogButton.text", at: "text;", documentation: "Button text label" },
+  ],
+});
 
 const adapters = ["react", "vue", "solid"] as const;
 
@@ -192,15 +236,22 @@ try {
     // What the editor shows for a documented option, read from the same
     // declarations: the build ships the JSDoc's first sentence, so a hover on
     // the option is not empty.
-    if (consumer.hover) {
-      const at = consumer.source.indexOf(consumer.hover.at);
-      const documentation = (at === -1 ? undefined : service.getQuickInfoAtPosition(file, at))
-        ?.documentation?.map(part => part.text).join("") ?? "";
-      if (!documentation.includes(consumer.hover.documentation)) {
-        failures.push(`${consumer.file}: ${consumer.hover.name} shows no "${consumer.hover.documentation}" documentation from the packed declarations`);
+    for (const hover of consumer.hover ?? []) {
+      const at = consumer.source.indexOf(hover.at);
+      const info = at === -1 ? undefined : service.getQuickInfoAtPosition(file, at);
+      const documentation = ts.displayPartsToString(info?.documentation);
+      if (hover.documentation && !documentation.includes(hover.documentation)) {
+        failures.push(`${consumer.file}: ${hover.name} shows no "${hover.documentation}" documentation from the packed declarations`);
+      }
+      for (const [name, expected] of Object.entries(hover.tags ?? {})) {
+        const tags = info?.tags?.filter(tag => tag.name === name).map(tag => ts.displayPartsToString(tag.text)).join("\n") ?? "";
+        if (!tags.includes(expected)) failures.push(`${consumer.file}: ${hover.name} lost @${name} ${expected}`);
       }
     }
   }
+
+  const importableDocFailures = await assertImportableDeclarationDocs(packageRoot, join(ROOT, "src"));
+  failures.push(...importableDocFailures);
 } finally {
   await fixture?.cleanup();
   if (!fixture) await rm(directory, { recursive: true, force: true });
@@ -212,7 +263,7 @@ if (failures.length) {
   process.exit(1);
 }
 const deprecatedCount = consumers.reduce((count, consumer) => count + consumer.deprecated.length, 0);
-const hoverCount = consumers.filter(consumer => consumer.hover).length;
+const hoverCount = consumers.reduce((count, consumer) => count + (consumer.hover?.length ?? 0), 0);
 console.log(
   `${manifest.name}: ${consumers.length} consumers read the packed declarations, ` +
   `${deprecatedCount} deprecated names reported, ${hoverCount} hover ${hoverCount === 1 ? "text" : "texts"} read` +

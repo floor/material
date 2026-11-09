@@ -301,7 +301,19 @@ $component: '#{base.$prefix}-time-picker';
     transition-property: --#{$component}-angle, --#{$component}-radius;
 
     &--dragging { transition: none; }
-    &--swap .#{$component}__dial-numbers:not(.#{$component}__dial-numbers--selected) { animation: #{$component}-swap 175ms linear; }
+    &--swap[aria-label="Hour"] {
+      --#{$component}-digits-in: 1.2;
+      --#{$component}-digits-out: 0.8;
+    }
+    &--swap > .#{$component}__dial-numbers {
+      animation: #{$component}-digits-in-scale v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing'),
+        #{$component}-digits-in-fade v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing');
+    }
+    &--swap > .#{$component}__dial-numbers--leaving {
+      pointer-events: none;
+      animation: #{$component}-digits-out-scale v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing'),
+        #{$component}-digits-out-fade v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing') forwards;
+    }
   }
 
   &__dial-numbers {
@@ -514,9 +526,10 @@ $component: '#{base.$prefix}-time-picker';
 @property --#{$component}-angle { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
 @property --#{$component}-radius { syntax: '<length>'; inherits: true; initial-value: 101px; }
 
-@keyframes #{$component}-swap {
-  from { opacity: 0; }
-}
+@keyframes #{$component}-digits-in-scale { from { transform: scale(var(--#{$component}-digits-in, 0.8)); } to { transform: scale(1); } }
+@keyframes #{$component}-digits-out-scale { from { transform: scale(1); } to { transform: scale(var(--#{$component}-digits-out, 1.2)); } }
+@keyframes #{$component}-digits-in-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes #{$component}-digits-out-fade { from { opacity: 1; } to { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
   .#{$component}__dialog[open] { animation: none; }

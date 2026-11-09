@@ -13,6 +13,7 @@ import type { ElementComponent } from "../../core/compose/component";
 import type { EventComponent } from "../../core/compose/features";
 import { CardComponent, CardComponentConfig, CardConfig } from "./types";
 import { CARD_VARIANTS, CARD_ELEVATIONS } from "./constants";
+import { NESTED_ACTION_SELECTOR } from "./content";
 
 /**
  * Default configuration for the Card component.
@@ -167,6 +168,8 @@ export const createBaseConfig = (config: CardConfig = {}): CardComponentConfig =
  */
 export const getElementConfig = (config: CardConfig) => {
   const isInteractive = config.interactive || config.clickable;
+  // One boolean for the five forwards. The arrow wrappers only repeated it.
+  const forward = !!isInteractive;
   // A clickable card is a button. Any other card is an article: self-contained
   // content its headline can name, which a region landmark per card is not
   // (it floods landmark navigation). `interactive` alone is the hover and
@@ -207,12 +210,17 @@ export const getElementConfig = (config: CardConfig) => {
     ],
     attributes: ariaAttributes,
     forwardEvents: {
-      click: () => !!config.clickable,
-      mouseenter: () => !!isInteractive,
-      mouseleave: () => !!isInteractive,
-      keydown: () => !!isInteractive,
-      focus: () => !!isInteractive,
-      blur: () => !!isInteractive,
+      // Flag off: clickable is falsy, and the closest() walk is not reached.
+      // Stop at the card root: `[role=button]` matches it, and that hit is not a child action.
+      click: (ctx, event) => (config.clickable && !(
+        config.promoteChildActions &&
+        ((event.target as Element).closest?.(NESTED_ACTION_SELECTOR) || ctx.element) !== ctx.element
+      )) as boolean,
+      mouseenter: forward,
+      mouseleave: forward,
+      keydown: forward,
+      focus: forward,
+      blur: forward,
     },
     interactive: isInteractive,
   });
@@ -263,7 +271,7 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
     // Keyboard interactions for accessibility
     comp.element.addEventListener("keydown", (e: KeyboardEvent) => {
       // Activate on Enter or Space
-      if ((e.key === "Enter" || e.key === " ") && config.clickable) {
+      if ((e.key === "Enter" || e.key === " ") && config.clickable && !(config.promoteChildActions && e.target !== comp.element)) {
         e.preventDefault();
         comp.element.click();
       }
