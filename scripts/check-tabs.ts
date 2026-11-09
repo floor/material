@@ -30,6 +30,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { tabsResponsive } from "../src/components/tabs/responsive";
 
 const bundle = await Bun.build({
   entrypoints: ["src/components/tabs/index.ts"],
@@ -50,6 +51,17 @@ const elementBundle = await Bun.build({
 assert(elementBundle.success, String(elementBundle.logs));
 const elementJs = await elementBundle.outputs[0].text();
 
+// The plugin the responsive option is built from, in its own entry: this is
+// what a page that wants the behaviour imports, and what a page that does not
+// never loads. It is built alone so the check holds exactly that entry.
+const responsiveBundle = await Bun.build({
+  entrypoints: ["src/components/tabs/responsive.ts"],
+  target: "browser",
+  minify: false,
+});
+assert(responsiveBundle.success, String(responsiveBundle.logs));
+const responsiveJs = await responsiveBundle.outputs[0].text();
+
 // The icon an <m-tab icon> declares, for the element page that starts stacked.
 const elementIcon = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
 
@@ -62,7 +74,38 @@ const server = Bun.serve({
       return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/tabs-element.js")
       return new Response(elementJs, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/tabs-responsive.js")
+      return new Response(responsiveJs, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/responsive") {
+      // A 400px page: below the 600px small breakpoint. mountResponsive reports
+      // what the group carries while createTabs builds it, before it is in the
+      // document, then inserts it in the same task.
+      return new Response(
+        `<!doctype html><html><head><link rel="stylesheet" href="/styles.css">
+<style>body{margin:0}main{width:400px}</style></head><body><main id="host"></main>
+<script type="module">import createTabs from '/tabs.js';
+import { tabsResponsive } from '/tabs-responsive.js';
+const ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+window.mountResponsive = (config) => {
+  window.tr?.destroy?.();
+  const tabs = createTabs({ tabs: [
+    { text: 'Flights', value: 'f', icon: ICON, state: 'active' },
+    { text: 'Trips', value: 't', icon: ICON },
+  ], responsive: tabsResponsive(config) });
+  const layouts = (tab) => ['icon-only', 'text-only', 'icon-and-text']
+    .filter((name) => tab.element.classList.contains('mtrl-tab--' + name));
+  const before = {
+    small: tabs.element.classList.contains('mtrl-tabs--responsive-small'),
+    layouts: tabs.getTabs().map(layouts),
+  };
+  document.getElementById('host').append(tabs.element);
+  window.tr = tabs;
+  return before;
+};</script></body></html>`,
+        { headers: { "Content-Type": "text/html" } }
+      );
+    }
     if (path === "/element" || path === "/element-icon") {
       // ?dir=html puts rtl on the document, ?dir=container on the container the
       // element sits in: ordinary ways a page gives <m-tabs> its direction.
@@ -674,13 +717,64 @@ try {
 
   assert.deepEqual(elementErrors, [], `element page errors: ${elementErrors.join(", ")}`);
 
+  // ── The `responsive` option: no frame shows the built layout ───────
+  //
+  // The option runs while createTabs builds the group, so the element carries
+  // its small-screen layout before it is in the document: there is no frame to
+  // paint between the built layout and the responsive one. The first frame the
+  // group can be painted in is sampled after insertion, and the stylesheet has
+  // to agree with the classes by then.
+  const responsivePage = await browser.newPage({ viewport: { width: 400, height: 600 } });
+  const responsiveErrors: string[] = [];
+  responsivePage.on("pageerror", (error) => responsiveErrors.push(error.message));
+  await responsivePage.goto(`http://127.0.0.1:${server.port}/responsive`);
+  await responsivePage.waitForFunction(() => !!(window as unknown as { mountResponsive?: unknown }).mountResponsive);
+
+  type ResponsiveWin = { mountResponsive: (config?: unknown) => unknown };
+  const before = await responsivePage.evaluate(() => (window as unknown as ResponsiveWin).mountResponsive());
+  assert.deepEqual(before, { small: true, layouts: [["icon-only"], ["icon-only"]] },
+    "the responsive option applies while createTabs builds the group, before the element is in the document");
+  checks++;
+
+  const firstFrame = await responsivePage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => {
+    const root = document.querySelector(".mtrl-tabs") as HTMLElement;
+    const tab = root.querySelector('[role="tab"]') as HTMLElement;
+    const style = getComputedStyle(tab);
+    resolve({
+      small: root.classList.contains("mtrl-tabs--responsive-small"),
+      layout: ["icon-only", "text-only", "icon-and-text"].filter((name) => tab.classList.contains(`mtrl-tab--${name}`)),
+      padding: `${style.paddingLeft} ${style.paddingRight}`,
+      minWidth: style.minWidth,
+    });
+  })));
+  assert.deepEqual(firstFrame, { small: true, layout: ["icon-only"], padding: "12px 12px", minWidth: "72px" },
+    "the first frame after insertion already carries the small-screen layout and its stylesheet");
+  checks++;
+  await responsivePage.close();
+  assert.deepEqual(responsiveErrors, [], `responsive page errors: ${responsiveErrors.join(", ")}`);
+
+  // On a server there is no window to measure, so the plugin applies nothing;
+  // this script runs in that same server process, and importing it here is the
+  // server render's import.
+  assert.equal(typeof window, "undefined", "the server check runs with no window");
+  let touched = 0;
+  const stand = {
+    element: { classList: { toggle: () => { touched++; } } },
+    getTabs: () => [],
+  } as unknown as Parameters<ReturnType<typeof tabsResponsive>>[0];
+  assert.doesNotThrow(() => tabsResponsive({ smallScreen: { layout: "text-only" } })(stand),
+    "on a server the responsive option applies without a window");
+  assert.equal(touched, 0, "on a server the responsive option leaves the group as built");
+  checks++;
+
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
   console.log(
     `Passed ${checks} tabs checks: fixed tabs in an evenly divided row, ` +
       `scrollable tabs in their scroller, both directions, divider and indicator out of flow, ` +
       `the M3 indicator per variant, a centred stacked icon, inactive state colours and the focus ring, ` +
-      `a config badge on its tab by factory, element and later setBadge, and a badged tab's name ` +
-      `carrying its count by factory, setBadge, overflow display, dot, setText, rtl and shadow root.`
+      `a config badge on its tab by factory, element and later setBadge, a badged tab's name ` +
+      `carrying its count by factory, setBadge, overflow display, dot, setText, rtl and shadow root, ` +
+      `and the responsive option's layout before insertion, on the first frame and on a server.`
   );
 } finally {
   await browser.close();

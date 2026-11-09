@@ -18,8 +18,12 @@ const value = (selector: string, property: string) =>
     .filter(([, name]) => name === property)
     .map(([, , result]) => result.trim()).pop();
 
-// Half of the container height per size: 32, 40, 56, 96 and 136dp
-const round = { xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' } as const;
+// Half of the container height per size: 32, 40, 56, 96 and 136dp. Density
+// moves the radius half as far as the height (2dp a step) and floors it at
+// 16dp, so a round button stays half of a container the scale has lowered.
+const roundBase = { xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' } as const;
+const round = (size: keyof typeof roundBase) =>
+  `max(16px, ${roundBase[size]} + 2px * var(--mtrl-density, 0))`;
 
 beforeAll(() => {
   css = compileString("@use 'components/icon-button';", { loadPaths: ['src/styles'] }).css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -27,18 +31,18 @@ beforeAll(() => {
 
 describe('icon button shape', () => {
   test('round is half the container height per size', () => {
-    expect(value(root, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round.s})`);
-    expect(value(`${root}--round`, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round.s})`);
+    expect(value(root, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round('s')})`);
+    expect(value(`${root}--round`, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round('s')})`);
     for (const size of ['xs', 'm', 'l', 'xl'] as const) {
-      expect(value(`${root}--round${root}--${size}`, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round[size]})`);
+      expect(value(`${root}--round${root}--${size}`, 'border-radius')).toBe(`var(--mtrl-button-shape, ${round(size)})`);
     }
   });
 
   test('a selected square button becomes round with the same real radius', () => {
     const selected = `${root}--selected${root}--square:not(:active)`;
-    expect(value(selected, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${round.s})`);
+    expect(value(selected, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${round('s')})`);
     for (const size of ['xs', 'm', 'l', 'xl'] as const) {
-      expect(value(`${selected}${root}--${size}`, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${round[size]})`);
+      expect(value(`${selected}${root}--${size}`, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${round(size)})`);
     }
   });
 
@@ -50,9 +54,8 @@ describe('icon button shape', () => {
   test('the container does not clip: the state layer and ripple clip themselves, the 48dp target reaches outside', () => {
     expect(value(root, 'overflow')).toBe('visible');
     expect(value(`${root}::before`, 'border-radius')).toBe('inherit');
-    for (const size of ['xs', 's']) {
-      expect(value(`${root}--${size}::after`, 'width')).toBe('48px');
-      expect(value(`${root}--${size}::after`, 'height')).toBe('48px');
-    }
+    // One base rule covers every size, including a container the scale lowers.
+    expect(value(`${root}::after`, 'width')).toBe('48px');
+    expect(value(`${root}::after`, 'height')).toBe('48px');
   });
 });

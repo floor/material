@@ -2,6 +2,7 @@
 import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
+import { consolidateDeclarations } from "./consolidate-declarations";
 import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
 import { stripInternalDeclarationDocs } from "./strip-internal-declaration-docs";
@@ -57,6 +58,15 @@ try {
     // non-`@deprecated` JSDoc on strictly internal declarations.
     const internalDocs = await stripInternalDeclarationDocs(staging, manifest.exports);
     console.log(`Stripped JSDoc from ${internalDocs.declarations} internal declarations across ${internalDocs.files} files (${internalDocs.bytes} bytes)`);
+
+    // Fold the declarations no `exports` entry names into the barrel that
+    // exports their directory, so a consumer reads one file per entry instead
+    // of one per module. The pass keeps each barrel's exported names exactly.
+    const consolidated = await consolidateDeclarations(staging, manifest.exports);
+    console.log(
+      `Consolidated ${consolidated.merged} declarations into ${consolidated.groups} barrels ` +
+      `(${consolidated.bytes} bytes, ${consolidated.kept.length} kept)`,
+    );
 
     // A module no export target reaches and no shipped module imports is a
     // file no consumer can load: ship the reachable tree and nothing beside it.

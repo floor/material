@@ -36,7 +36,7 @@ export type SnackbarCloseReason = 'timeout' | 'action' | 'close-button' | 'escap
 /**
  * Available snackbar event types
  */
-export type SnackbarEventType = 'open' | 'close' | 'action' | 'dismiss';
+export type SnackbarEventType = 'open' | 'close' | 'action' | 'dismiss' | 'focus';
 
 /**
  * Snackbar event data
@@ -57,8 +57,8 @@ export interface SnackbarEvent {
  * What each snackbar event hands its handler.
  *
  * `on`/`off` are generic over these keys rather than taking a
- * `SnackbarEventType` and one payload type for all four, so a handler is
- * checked against the event it is registered for. The four payloads are the
+ * `SnackbarEventType` and one payload type for every event, so a handler is
+ * checked against the event it is registered for. The payloads are the
  * same shape today; the map is what makes them able to differ -- `reason` is
  * only ever set on `close` and `dismiss`, and narrowing those two is now a
  * local change rather than a new signature.
@@ -74,6 +74,8 @@ export interface SnackbarEvents {
   action: (event: SnackbarEvent) => void;
   /** Fired with `close`; the queue listens to it */
   dismiss: (event: SnackbarEvent) => void;
+  /** The keyboard shortcut moved focus to the action button */
+  focus: (event: SnackbarEvent) => void;
 }
 
 /**
@@ -103,6 +105,18 @@ export interface SnackbarConfig {
 
   /** Position of the snackbar along the bottom edge */
   position?: SnackbarPosition;
+
+  /**
+   * One non-character key that moves focus to the action button while the
+   * snackbar is on screen, named as `KeyboardEvent.key` (`"F8"` by default;
+   * `"F6"`, `"F9"` and so on). No modifier may be held, and a single
+   * character is refused, so WCAG 2.1.4 does not apply. `false`, `"off"` or
+   * empty turns it off. Only active with an action.
+   */
+  focusShortcut?: string | false;
+
+  /** Callback invoked when the keyboard shortcut moves focus to the action */
+  onFocus?: (event: SnackbarEvent) => void;
 
   /**
    * How this snackbar interacts with the queue when shown.

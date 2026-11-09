@@ -122,6 +122,19 @@ export interface TextFieldConfig {
   /** Autocomplete attribute */
   autocomplete?: string;
 
+  /**
+   * The virtual keyboard a touch device shows for the input (its `inputmode`):
+   * `"numeric"` a digits keypad, `"email"` one with `@` and `.`, `"none"` no
+   * keyboard at all where the page provides its own.
+   */
+  inputMode?: "none" | "text" | "decimal" | "numeric" | "tel" | "search" | "email" | "url";
+
+  /**
+   * What the virtual keyboard's Enter key says (the input's `enterkeyhint`):
+   * the step a form's flow expects next, such as "next" or "done".
+   */
+  enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
+
   /** Leading icon HTML content. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
 

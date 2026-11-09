@@ -51,7 +51,11 @@ const literals = (component: string): string[] => {
   const values = Array.from(css.matchAll(/border(?:-[a-z]+)*-radius\s*:\s*([^;]+);/g), (m) => m[1]!);
   const found = new Set<string>();
   for (const value of values) {
-    const bare = value.replace(/var\(--mtrl-sys-shape-corner-[a-z-]+,\s*[\d.]+px\)/g, '');
+    const bare = value
+      .replace(/var\(--mtrl-sys-shape-corner-[a-z-]+,\s*[\d.]+px\)/g, '')
+      // The density scale's own step (2dp a corner step): the radius still
+      // reads a literal base, which stays listed and checked.
+      .replace(/\+\s*[\d.]+px\s*\*\s*var\(--mtrl-density,\s*0\)/g, '');
     for (const px of bare.match(/\b\d+(?:\.\d+)?px\b/g) ?? []) found.add(px);
   }
   return [...found].sort();

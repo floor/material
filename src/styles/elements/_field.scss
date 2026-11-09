@@ -3,6 +3,7 @@
 // and <m-datepicker>: the container (filled or outlined, default or
 // compact), the label and the value on the input's line.
 @use '../abstract/variables' as v;
+@use '../abstract/functions' as f;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 
@@ -20,11 +21,13 @@ $supporting-row: 20px;
   box-sizing: border-box;
   // The unsized field's width, as components/_text-field.scss sets it.
   width: v.text-field('width');
-  height: v.text-field('height');
+  // The scale's property moves the box and the lines inside it, exactly as it
+  // does the text field the select becomes.
+  height: f.density(v.text-field('height'), 40px);
   // The input's line, where the upgraded field's text is: 24px down under a
   // label. The half pixel is the line's baseline, as measured: with
   // it, the sibling on this line does not move at upgrade.
-  padding: 24.5px (v.text-field('padding-horizontal') + $trailing) 0 v.text-field('padding-horizontal');
+  padding: f.density(24.5px, 12.5px, 3px) (v.text-field('padding-horizontal') + $trailing) 0 v.text-field('padding-horizontal');
   border-radius: v.text-field('border-radius') v.text-field('border-radius') 0 0;
   border-bottom: v.text-field('border-width') solid t.color('on-surface-variant');
   background-color: t.color('surface-container-highest');
@@ -43,23 +46,23 @@ $supporting-row: 20px;
   &[label]::after {
     content: attr(label);
     position: absolute;
-    top: v.text-field('padding-vertical');
+    top: f.density(v.text-field('padding-vertical'), 8px, 2px);
     left: v.text-field('padding-horizontal');
     color: t.color('on-surface-variant');
   }
 
   &[label][value]:not([value=''])::after {
-    top: 8px;
+    top: f.density(8px, 0px, 2px);
     @include m.typography('body-small');
   }
 
   // Without a label the text is centred in the field
   &:not([label]) {
-    padding-top: 16.5px;
+    padding-top: f.density(16.5px, 8.5px, 2px);
   }
 
   &[variant='outlined'] {
-    padding-top: 15.5px;
+    padding-top: f.density(15.5px, 7.5px, 2px);
     border: v.text-field('border-width') solid t.color('outline');
     border-radius: v.text-field('border-radius');
     background: none;
@@ -73,20 +76,27 @@ $supporting-row: 20px;
 
   &[density='compact'] {
     height: 40px;
-    padding-top: 13.5px;
-    @include m.typography('body-medium');
+    padding-top: 12.5px;
 
     &::after {
-      top: 10px;
-      @include m.typography('body-medium');
+      top: 8px;
+    }
+
+    &[label][value]:not([value=''])::after {
+      top: 0;
     }
 
     &:not([label]) {
-      padding-top: 10px;
+      padding-top: 8.5px;
     }
 
     &[variant='outlined'] {
-      padding-top: 9px;
+      padding-top: 7.5px;
+    }
+
+    // Outlined floats its label on the field's top edge, which does not move.
+    &[variant='outlined'][label][value]:not([value=''])::after {
+      top: -8px;
     }
   }
 
@@ -98,7 +108,7 @@ $supporting-row: 20px;
   &[supporting-text]:not([supporting-text='']),
   &[maxlength] {
     $row: $supporting-row;
-    height: calc(#{v.text-field('height')} + #{$row});
+    height: calc(#{f.density(v.text-field('height'), 40px)} + #{$row});
     border-bottom: $row solid transparent;
     background-clip: padding-box;
     background-image: linear-gradient(to top, #{t.color('on-surface-variant')} v.text-field('border-width'), transparent v.text-field('border-width'));
@@ -106,7 +116,7 @@ $supporting-row: 20px;
     // Outlined: the outline as an inset ring round the padding box, whose
     // bottom corners keep their radius inside the reserved border
     &[variant='outlined'] {
-      padding-top: calc(15.5px + #{v.text-field('border-width')});
+      padding-top: calc(#{f.density(15.5px, 7.5px, 2px)} + #{v.text-field('border-width')});
       padding-left: calc(#{v.text-field('padding-horizontal')} + #{v.text-field('border-width')});
       border-width: 0 0 $row;
       border-radius: v.text-field('border-radius') / v.text-field('border-radius') v.text-field('border-radius') calc(#{v.text-field('border-radius')} + #{$row}) calc(#{v.text-field('border-radius')} + #{$row});
@@ -116,6 +126,10 @@ $supporting-row: 20px;
 
     &[density='compact'] {
       height: calc(40px + #{$row});
+
+      &[variant='outlined'] {
+        padding-top: calc(7.5px + #{v.text-field('border-width')});
+      }
     }
   }
 

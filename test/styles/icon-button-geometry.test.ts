@@ -36,17 +36,23 @@ describe('icon button geometry tokens', () => {
       for (const [index, width] of ['narrow', 'default', 'wide'].entries()) {
         test(`${row.size} ${shape} ${width}: container, icon and outline dimensions`, () => {
           const widthSelector = width === 'default' ? sizeSelector : `${root}--${width}${suffix}`;
-          expect(value(widthSelector, 'width')).toBe(`${row.widths[index]}px`);
-          expect(value(sizeSelector, 'height')).toBe(`${row.container}px`);
+          // The default width is the container's, floored at the 32dp target;
+          // a narrow or wide width never goes under the target either, and is
+          // never widened by it.
+          expect(value(widthSelector, 'width')).toBe(width === 'default'
+            ? `max(32px, ${row.widths[index]}px + 4px * var(--mtrl-density, 0))`
+            : `max(min(${row.widths[index]}px, 32px), ${row.widths[index]}px + 4px * var(--mtrl-density, 0))`);
+          expect(value(sizeSelector, 'height')).toBe(`max(32px, ${row.container}px + 4px * var(--mtrl-density, 0))`);
           for (const iconSelector of ['.mtrl-icon', `${root}__icon`]) {
             expect(value(`${sizeSelector} ${iconSelector}`, 'width')).toBe(`${row.icon}px`);
             expect(value(`${sizeSelector} ${iconSelector}`, 'height')).toBe(`${row.icon}px`);
           }
           expect(value(`${root}--outlined${root}--${row.size}`, 'border-width')).toBe(`${row.outline}px`);
           // Shapes change only radii, preserving the shared size and width rules.
-          // Round is half the container height, a real radius so the press morph animates.
+          // Round is half the container height, a real radius so the press morph animates;
+          // it steps half as far as the height (2dp), so it stays half of it.
           const shapeSelector = `${root}--${shape}${suffix}`;
-          expect(value(shapeSelector, 'border-radius')).toBe(`var(--mtrl-button-shape, ${shape === 'round' ? `${row.container / 2}px` : corner(row.square)})`);
+          expect(value(shapeSelector, 'border-radius')).toBe(`var(--mtrl-button-shape, ${shape === 'round' ? `max(16px, ${row.container / 2}px + 2px * var(--mtrl-density, 0))` : corner(row.square)})`);
           expect(value(shapeSelector, 'width')).toBeUndefined();
           expect(value(shapeSelector, 'height')).toBeUndefined();
         });
@@ -59,7 +65,7 @@ describe('icon button geometry tokens', () => {
           shape === 'round' ? `var(--mtrl-icon-button-shape-${name}, ${radius})` : radius;
         expect(value(`${root}:active${root}--${shape}${suffix}`, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, ${middle('pressed', corner(row.pressed))})`);
         const selectedSelector = `${root}--selected${root}--${shape}:not(:active)${suffix}`;
-        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${middle('selected', shape === 'round' ? corner(row.square) : `${row.container / 2}px`)})`);
+        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${middle('selected', shape === 'round' ? corner(row.square) : `max(16px, ${row.container / 2}px + 2px * var(--mtrl-density, 0))`)})`);
       });
     }
     test(`${row.size}: public constants match the token dimensions`, () => {
@@ -70,16 +76,16 @@ describe('icon button geometry tokens', () => {
     });
   }
 
-  for (const size of ['xs', 's']) {
-    test(`${size}: centered 48dp pseudo-element target`, () => {
-      const selector = `${root}--${size}::after`;
-      expect(value(selector, 'content')).toBe('""');
-      expect(value(selector, 'position')).toBe('absolute');
-      expect(value(selector, 'width')).toBe('48px');
-      expect(value(selector, 'height')).toBe('48px');
-      expect(value(selector, 'top')).toBe('50%');
-      expect(value(selector, 'left')).toBe('50%');
-      expect(value(selector, 'transform')).toBe('translate(-50%, -50%)');
-    });
-  }
+  test('every size keeps a centered 48dp pseudo-element target', () => {
+    // One rule on the base covers every size: the overlay reaches outside a
+    // container the scale has taken under 48dp.
+    const selector = `${root}::after`;
+    expect(value(selector, 'content')).toBe('""');
+    expect(value(selector, 'position')).toBe('absolute');
+    expect(value(selector, 'width')).toBe('48px');
+    expect(value(selector, 'height')).toBe('48px');
+    expect(value(selector, 'top')).toBe('50%');
+    expect(value(selector, 'left')).toBe('50%');
+    expect(value(selector, 'transform')).toBe('translate(-50%, -50%)');
+  });
 });

@@ -72,7 +72,9 @@ export const SNACKBAR_EVENTS = {
   /** The action button was clicked */
   ACTION: 'action',
   /** Fired with `close`; the queue listens to it */
-  DISMISS: 'dismiss'
+  DISMISS: 'dismiss',
+  /** The keyboard shortcut moved focus to the action button */
+  FOCUS: 'focus'
 } as const;
 
 /**
@@ -107,6 +109,8 @@ export const SNACKBAR_DEFAULTS = {
   QUEUE_GAP: 200,
   /** Accessible name of the close icon */
   CLOSE_LABEL: 'Dismiss',
+  /** The key that moves focus to an actionable snackbar's action */
+  FOCUS_SHORTCUT: 'F8',
   /** The longest of the exit transitions, after which the element is
    *  removed whether or not `transitionend` came */
   ANIMATION_DURATION: 425,
