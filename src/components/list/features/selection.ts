@@ -1,5 +1,6 @@
 import { LIST_EVENTS } from "../constants";
 import { getCleanup } from "../../../core/compose/cleanup";
+import { controlIn } from "./anatomy";
 import type { ListConfig, ListFeatureHost, ListItem, ListSelection, ListRow } from "../types";
 
 export const withSelection = (config: ListConfig<ListItem>) =>
@@ -31,21 +32,44 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     const nearest = event.target.closest(`.${component.getClass("list__item")}`);
     return rows().find(row => row.element === nearest);
   };
+  /** A row's trailing checkable control, when it has one: the row's action too. */
+  const controlFor = (row: ListRow): HTMLElement | undefined => {
+    const slot = row.element.querySelector<HTMLElement>(`.${component.getClass("list__trailing")}[data-list-control]`);
+    return slot ? controlIn(slot) : undefined;
+  };
+  /** M3: the selected state applies to the entire list item, so the row follows its control. */
+  const follow = (row: ListRow) => {
+    const control = controlFor(row);
+    if (!control) return;
+    const checked = control.matches(":checked") || control.getAttribute("aria-checked") === "true";
+    if (checked === selected.has(row.id)) return;
+    if (checked && !config.multiSelect) selected.clear();
+    if (checked) selected.add(row.id); else selected.delete(row.id);
+    apply();
+  };
   const activate = (event: MouseEvent) => {
     if (!config.trackSelection || resources.destroyed || event.defaultPrevented) return;
     const row = ownedRow(event);
     if (!row || row.item.disabled || !(event.target instanceof Element)) return;
     const control = event.target.closest('button, input, select, textarea, a, [contenteditable="true"], [data-list-control]');
-    if (control && control !== row.action) return;
+    if (control && control !== row.action) { follow(row); return; }
     const payload = {
       // `value`: the row's id, as the <m-list> element's `activate` carries it.
-      item: row.item, value: row.id, element: row.element, originalEvent: event,
+      // `element` is the row itself; `action` is its primary button.
+      item: row.item, value: row.id, element: row.element, action: row.action, originalEvent: event,
       component: component.eventTarget?.current ?? component,
       defaultPrevented: false,
       preventDefault() { this.defaultPrevented = true; },
     };
     component.emit?.(LIST_EVENTS.SELECT, payload);
     if (payload.defaultPrevented || resources.destroyed) return;
+    const trailing = controlFor(row);
+    if (trailing) {
+      // The control is the row's action: a click on the row's text reaches it.
+      trailing.click();
+      follow(row);
+      return;
+    }
     const wasSelected = selected.has(row.id);
     if (!config.multiSelect) selected.clear();
     if (wasSelected) selected.delete(row.id); else selected.add(row.id);

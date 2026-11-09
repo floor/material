@@ -335,6 +335,21 @@
       "string"
     ]
   },
+  "CarouselSlide.decoding": {
+    "kind": "union",
+    "members": [
+      "\"async\"",
+      "\"auto\"",
+      "\"sync\""
+    ]
+  },
+  "CarouselSlide.loading": {
+    "kind": "union",
+    "members": [
+      "\"eager\"",
+      "\"lazy\""
+    ]
+  },
   "CarouselVariant": {
     "kind": "union",
     "members": [
@@ -1238,7 +1253,8 @@
     "kind": "union",
     "members": [
       "HTMLElement",
-      "string"
+      "string",
+      "{ element: HTMLElement }"
     ]
   },
   "ListSlot.type": {
@@ -1707,6 +1723,13 @@
       "\"timeout\""
     ]
   },
+  "SnackbarConfig.focusShortcut": {
+    "kind": "union",
+    "members": [
+      "false",
+      "string"
+    ]
+  },
   "SnackbarDuration": {
     "kind": "union",
     "members": [
@@ -1917,6 +1940,31 @@
     "members": [
       "TextFieldDensity",
       "string"
+    ]
+  },
+  "TextFieldConfig.enterKeyHint": {
+    "kind": "union",
+    "members": [
+      "\"done\"",
+      "\"enter\"",
+      "\"go\"",
+      "\"next\"",
+      "\"previous\"",
+      "\"search\"",
+      "\"send\""
+    ]
+  },
+  "TextFieldConfig.inputMode": {
+    "kind": "union",
+    "members": [
+      "\"decimal\"",
+      "\"email\"",
+      "\"none\"",
+      "\"numeric\"",
+      "\"search\"",
+      "\"tel\"",
+      "\"text\"",
+      "\"url\""
     ]
   },
   "TextFieldConfig.type": {

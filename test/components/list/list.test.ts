@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createList, { withSingleSelectListbox } from "../../../src/components/list";
+import createSwitch from "../../../src/components/switch";
 import type { ListComponent, ListConfig, ListItem } from "../../../src/components/list/types";
 
 let dom: JSDOM;
 let lists: ListComponent<ListItem>[];
 beforeEach(() => {
   dom = new JSDOM("<!doctype html><body></body>", { pretendToBeVisual: true });
-  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent });
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, HTMLInputElement: dom.window.HTMLInputElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent, CustomEvent: dom.window.CustomEvent, MutationObserver: dom.window.MutationObserver, getComputedStyle: dom.window.getComputedStyle.bind(dom.window), requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(Date.now()), 0) });
   lists = [];
 });
 afterEach(() => { lists.forEach(list => list.destroy()); dom.window.close(); });
@@ -114,6 +115,35 @@ describe("Material list anatomy", () => {
   });
 });
 
+describe("trailing controls", () => {
+  const switchIn = (list: ListComponent<ListItem>, index = 0) => row(list, index).querySelector<HTMLInputElement>('[data-list-control] input[role="switch"]')!;
+  test("a component instance is unwrapped and an unnamed switch takes the row's name and description", () => {
+    const list = mount([{ headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    expect(input).not.toBeNull();
+    expect(row(list).textContent).not.toContain("[object Object]");
+    expect(input.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")?.id ?? "");
+    expect(input.getAttribute("aria-describedby")).toBe(row(list).querySelector(".mtrl-list__supporting")?.id ?? "");
+    const named = mount([{ headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({ ariaLabel: "Wireless" }) } }]);
+    const labelled = switchIn(named);
+    expect(labelled.getAttribute("aria-label")).toBe("Wireless");
+    expect(labelled.hasAttribute("aria-labelledby")).toBe(false);
+  });
+  test("a click on the row toggles the switch and the row follows the switch's state", () => {
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    row(list).click();
+    expect(input.checked).toBe(true);
+    expect(list.getSelectedItemIds()).toEqual(["wifi"]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(true);
+    expect(action(list).getAttribute("aria-pressed")).toBe("true");
+    input.click();
+    expect(input.checked).toBe(false);
+    expect(list.getSelectedItemIds()).toEqual([]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(false);
+  });
+});
+
 describe("real list selection and lifecycle", () => {
   test("selection is immediately reflected and refresh preserves it", async () => {
     const list = mount([{ id: "a", headline: "A", selected: true }, { id: "b", headline: "B" }]);
@@ -128,6 +158,18 @@ describe("real list selection and lifecycle", () => {
     const handler = (event: { component: ListComponent<ListItem>; preventDefault(): void }) => { calls++; expect(event.component).toBe(list); event.preventDefault(); };
     list.on("select", handler); action(list).click(); expect(calls).toBe(1); expect(list.getSelectedItems()).toEqual([]);
     list.off("select", handler); action(list).click(); expect(list.getSelectedItemIds()).toEqual(["a"]);
+  });
+  test("a select event carries the row's own button, and element stays the row", () => {
+    const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }]);
+    const events: { element: HTMLElement; action?: HTMLButtonElement }[] = [];
+    list.on("select", event => events.push(event));
+    action(list, 1).click(); action(list).click();
+    expect(events).toHaveLength(2);
+    expect(events[0].action === action(list, 1)).toBe(true);
+    expect(events[1].action === action(list)).toBe(true);
+    expect(events[0].element === row(list, 1)).toBe(true);
+    expect(events[1].element === row(list)).toBe(true);
+    expect(events[0].element === events[0].action).toBe(false);
   });
   test("multi-selection toggles independently; unknown IDs never create phantom selections", () => {
     const list = mount([{ id: "a", headline: "A" }, { id: "b", headline: "B" }], { multiSelect: true, initialSelection: ["missing"] });
