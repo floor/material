@@ -304,8 +304,13 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    // Main contrast/focus rules plus the density scale and drawer indicator masks.
-    // Measured by the single-file contrast check after merging 53ae0a44.
+    // The shape audit's two corners: the list's leading image takes the small
+    // step the leading video already took, and the time picker's action
+    // buttons take the full step the buttons spec gives every text button
+    // (styles/components/_list.scss, _timepicker.scss).
+    // Main contrast/focus rules plus the density scale and drawer indicator
+    // masks. Measured by the single-file contrast check after merging
+    // 53ae0a44; re-pinned from CI's built stylesheet if the merged sheet moved.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
       sha256: "c8a69c99d1d57ff4f334ac84d74c1b5aaac89a4c56ef1328d49d77f4b3b9aa2b",
       length: 546847,

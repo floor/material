@@ -159,6 +159,8 @@ jobs:
         run: bun run docs-imports:check
       - name: Packed declarations carry their deprecation notes and hover documentation
         run: bun run declaration-docs:check
+      - name: Every packed declaration entry resolves to declarations a consumer can name and compile
+        run: bun run declaration-exports:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element
@@ -195,7 +197,7 @@ jobs:
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
           - group: components-a
             browsers: chromium
-            checks: core:check carousel:check
+            checks: core:check carousel:check a11y-svg:check
           - group: components-b
             browsers: chromium
             checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check switch-transition:check

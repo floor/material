@@ -24,6 +24,7 @@
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
 import { trackDirection } from "../core/dom/direction";
+import { bindSlotHost, syncSlottedIcon } from "../core/compose/features/icon-slot";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -480,8 +481,10 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       if (!this.component || previous === next) return;
       if (spec.slot && name === spec.slot.attribute) {
         // The slot's fallback text; a component built without a slot is rebuilt to place one.
-        if (this.#slot) this.#slot.textContent = next ?? "";
-        else if (next) this.#rebuild(true);
+        if (this.#slot) {
+          this.#slot.textContent = next ?? "";
+          this.#syncIcon();
+        } else if (next) this.#rebuild(true);
         return;
       }
       const attribute = spec.attributes?.[name];
@@ -592,6 +595,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         if (text || hasContent(this)) {
           const slot = document.createElement("slot");
           slot.textContent = text ?? "";
+          // The factory reads the icon before this slot is in the shadow root.
+          // The host's light DOM is what the slot will show.
+          bindSlotHost(slot, this);
           config[spec.slot.config] = slot;
           this.#slot = slot;
         }
@@ -606,6 +612,11 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       return config;
     }
 
+    /** The icon decoration, once a placed slot can see the host's light DOM. */
+    #syncIcon(): void {
+      if (this.component) syncSlottedIcon(this.component.element);
+    }
+
     #build(): void {
       // On build, which is also the rebuild a live host does: direction is
       // read again after the component it is restyled for exists.
@@ -618,6 +629,10 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       if (this.#slot && !component.element.contains(this.#slot)) this.#slot = null;
 
       root.append(component.element);
+      // The factory decides the icon before this append. A slot's assigned
+      // nodes are the host's children only once the slot is in this root, so
+      // a label that is light-DOM text is visible to the decoration from here.
+      this.#syncIcon();
       this.#exposeParts(root);
       const events = component as unknown as Subscribable;
 
@@ -684,6 +699,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
             return;
           }
           if (observe || (spec.slot && !this.#slot && hasContent(this))) this.#rebuild(true);
+          // A slot that already exists is not rebuilt. Light DOM added or
+          // removed still changes whether the icon is the control's only name.
+          else if (this.#slot) this.#syncIcon();
         });
         this.#observer.observe(this, {
           childList: true,

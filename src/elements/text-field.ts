@@ -133,6 +133,8 @@ const textFieldSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     error: { type: "boolean", config: "error", update: (c, v) => void c.setError(!!v) },
     autocomplete: { type: "string", config: "autocomplete", update: inputAttribute("autocomplete") },
+    inputmode: { type: "string", config: "inputMode", update: inputAttribute("inputmode") },
+    enterkeyhint: { type: "string", config: "enterKeyHint", update: inputAttribute("enterkeyhint") },
     "aria-label": { type: "string", config: "ariaLabel", update: inputAttribute("aria-label") },
   },
   properties: {

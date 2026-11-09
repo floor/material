@@ -435,7 +435,9 @@ $component: '#{base.$prefix}-time-picker';
     padding: 10px 12px;
     border: none;
     background: transparent;
-    border-radius: f.get-shape('small');
+    // Text buttons: M3 buttons spec, shape Round (default), Corner sizes says
+    // Full at every size; the actions were on the 8px small step.
+    border-radius: f.get-shape('full');
     cursor: pointer;
     @include m.typography('label-large');
     color: t.color('primary');

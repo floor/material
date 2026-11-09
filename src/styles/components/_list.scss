@@ -79,7 +79,9 @@ $component: "#{base.$prefix}-list";
       background: t.color("primary-container"); color: t.color("on-primary-container");
       @include m.typography("title-medium");
     }
-    &--image { width: 56px; height: 56px; overflow: hidden; }
+    // Leading media share one slot in the lists spec (leading media, image or
+    // video), and its shape token is the same 8px step for both.
+    &--image { width: 56px; height: 56px; overflow: hidden; border-radius: v.shape('small'); }
     &--video { width: 100px; height: 56px; overflow: hidden; border-radius: v.shape('small'); }
     &--avatar, &--image, &--video {
       img, svg, video { width: 100%; height: 100%; object-fit: cover; }

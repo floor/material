@@ -235,10 +235,15 @@ export const renderTimePicker = (
       ? "Toggle input picker"
       : "Toggle dial picker"
   );
-  setHTML(toggleTypeButton,
+  // The button already has its own name. The graphic is decorative. An author
+  // icon string is wrapped, not rewritten (https://w3c.github.io/aria/#aria-hidden).
+  const toggleIcon = document.createElement("span");
+  toggleIcon.setAttribute("aria-hidden", "true");
+  setHTML(toggleIcon,
     config.type === TIME_PICKER_TYPE.DIAL
       ? config.keyboardIcon || TIMEPICKER_ICONS.KEYBOARD
       : config.clockIcon || TIMEPICKER_ICONS.CLOCK);
+  toggleTypeButton.appendChild(toggleIcon);
   actions.appendChild(toggleTypeButton);
 
   // Create action buttons container

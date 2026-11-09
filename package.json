@@ -304,6 +304,10 @@
       "types": "./dist/components/tabs/constants.d.ts",
       "import": "./dist/components/tabs/constants.js"
     },
+    "./components/tabs/responsive": {
+      "types": "./dist/components/tabs/responsive.d.ts",
+      "import": "./dist/components/tabs/responsive.js"
+    },
     "./components/text-field": {
       "types": "./dist/components/text-field/index.d.ts",
       "import": "./dist/components/text-field/index.js"
@@ -507,6 +511,7 @@
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
     "declaration-docs:check": "bun run scripts/check-declaration-docs.ts",
+    "declaration-exports:check": "bun run scripts/check-declaration-exports.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
@@ -542,6 +547,7 @@
     "toolbar-card:check": "bun run scripts/check-toolbar-card.ts",
     "keyboard-focus:check": "bun run scripts/check-keyboard-focus.ts",
     "core:check": "bun run scripts/check-core.ts && bun run scripts/check-keyboard-focus.ts",
+    "a11y-svg:check": "bun run scripts/check-a11y-svg-f.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr:check": "bun run scripts/check-ssr.ts",
     "ssr:check:a": "bun run scripts/check-ssr.ts a",
@@ -549,7 +555,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements:check:a": "bun run scripts/check-elements.ts a",
-    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts",
+    "elements:check:b": "bun run scripts/check-elements.ts b && bun run scripts/check-a11y-name-role-a.ts && bun run scripts/check-a11y-wrapper-opt-in.ts && bun run scripts/check-a11y-name-role-e.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
     "dist-modules:check": "bun run scripts/check-dist-modules.ts",
     "syntax:check": "bun run scripts/check-syntax-floor.ts",
