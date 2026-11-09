@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 396.1 KB | 124.3 KB | +121.2 KB | +2.1 KB |
+| all | 396.2 KB | 124.3 KB | +121.2 KB | +2.1 KB |
 <!-- /size-table -->
