@@ -159,6 +159,8 @@ jobs:
         run: bun run docs-imports:check
       - name: Packed declarations carry their deprecation notes and hover documentation
         run: bun run declaration-docs:check
+      - name: Every packed declaration entry resolves to declarations a consumer can name and compile
+        run: bun run declaration-exports:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element

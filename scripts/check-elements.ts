@@ -1863,6 +1863,32 @@ try {
     check("text field: the label attribute is the accessible name");
 
     type TextHost = HTMLElement & { value: string; component: unknown };
+    for (const variant of ["filled", "outlined"]) for (const type of ["text", "multiline"]) {
+      await page.evaluate(({ variant, type }) => {
+        const host = document.createElement("m-text-field");
+        host.id = "keyboard-hints";
+        for (const [key, value] of Object.entries({ variant, type, label: "Keyboard code", value: "1234", inputmode: "numeric", enterkeyhint: "done" })) host.setAttribute(key, value);
+        document.getElementById("factory")!.append(host);
+      }, { variant, type });
+      const input = page.locator("#keyboard-hints").getByRole("textbox", { name: "Keyboard code", exact: true });
+      assert.equal(await input.getAttribute("inputmode"), "numeric");
+      assert.equal(await input.getAttribute("enterkeyhint"), "done");
+      await input.focus();
+      const updated = await page.evaluate(() => {
+        const host = document.getElementById("keyboard-hints")!;
+        const root = host.shadowRoot!;
+        const input = root.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")!;
+        host.setAttribute("inputmode", "decimal"); host.setAttribute("enterkeyhint", "next");
+        const changed = { same: root.querySelector("input, textarea") === input, focused: root.activeElement === input, value: input.value, mode: input.getAttribute("inputmode"), hint: input.getAttribute("enterkeyhint") };
+        host.removeAttribute("inputmode"); host.removeAttribute("enterkeyhint");
+        const removed = { same: root.querySelector("input, textarea") === input, focused: root.activeElement === input, value: input.value, mode: input.getAttribute("inputmode"), hint: input.getAttribute("enterkeyhint") };
+        host.remove();
+        return { changed, removed };
+      });
+      assert.deepEqual(updated, { changed: { same: true, focused: true, value: "1234", mode: "decimal", hint: "next" }, removed: { same: true, focused: true, value: "1234", mode: null, hint: null } });
+    }
+    check("text field: keyboard hint creation, live update/removal retain native input, focus and value in both variants and text/textarea");
+
     let state = await page.evaluate(() => {
       const w = window as unknown as Win;
       w.events = [];
@@ -10713,6 +10739,59 @@ try {
     assert.deepEqual({ ...acted, focus }, { open: false, home: true, events: ["open", "action", "close:action"], focus: "ps-save" });
     await page.evaluate(() => (document.getElementById("ps-modal") as HTMLDialogElement).close());
     check("snackbar: its action dispatches action once and closes once, focus returns, and it goes back to its root");
+
+    // F8 moves focus to an actionable snackbar's action inside the shadow
+    // root, and dispatches the focus event; focus-shortcut="false" turns the
+    // shortcut off, and the element reopens without it.
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      (document.getElementById("ps-save") as HTMLElement).focus();
+      const bar = root.getElementById("ps-bar") as Host & { __focus: number };
+      bar.__focus = 0;
+      // The element's re-dispatch is a CustomEvent; the host also receives
+      // the browser's own retargeted focus event, which this count ignores.
+      bar.addEventListener("focus", (event) => {
+        if (event instanceof CustomEvent) bar.__focus++;
+      });
+      bar.show();
+    });
+    await wait(500);
+    await page.keyboard.press("F8");
+    await wait(100);
+    const shortcut = await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      const bar = root.getElementById("ps-bar") as Host & { __focus: number };
+      const action = bar.component?.element.querySelector('[class*="snackbar__action"]') as HTMLElement;
+      let deep = document.activeElement as Element | null;
+      while (deep?.shadowRoot?.activeElement) deep = deep.shadowRoot.activeElement;
+      return { stamped: action.getAttribute("aria-keyshortcuts"), focused: deep === action, focusEvent: bar.__focus, events: [...events] };
+    });
+    assert.deepEqual(shortcut, { stamped: "F8", focused: true, focusEvent: 1, events: ["open"] });
+
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      bar.setAttribute("focus-shortcut", "false");
+    });
+    await wait(100);
+    await page.evaluate(() => (document.getElementById("ps-save") as HTMLElement).focus());
+    await page.keyboard.press("F8");
+    await wait(100);
+    const noShortcut = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const action = bar.component?.element.querySelector('[class*="snackbar__action"]') as HTMLElement;
+      let deep = document.activeElement as Element | null;
+      while (deep?.shadowRoot?.activeElement) deep = deep.shadowRoot.activeElement;
+      return { stamped: action.getAttribute("aria-keyshortcuts"), focused: deep === action, open: bar.component?.element.matches(":popover-open") };
+    });
+    assert.deepEqual(noShortcut, { stamped: null, focused: false, open: true });
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => void };
+      bar.removeAttribute("focus-shortcut");
+      bar.hide();
+    });
+    await wait(500);
+    check("snackbar: F8 moves focus to the action in the shadow root and dispatches focus; focus-shortcut=false turns it off");
 
     // duration in place: it hides on its own after it
     await page.evaluate(() => {

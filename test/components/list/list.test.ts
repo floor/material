@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createList, { withSingleSelectListbox } from "../../../src/components/list";
+import createSwitch from "../../../src/components/switch";
 import type { ListComponent, ListConfig, ListItem } from "../../../src/components/list/types";
 
 let dom: JSDOM;
 let lists: ListComponent<ListItem>[];
 beforeEach(() => {
   dom = new JSDOM("<!doctype html><body></body>", { pretendToBeVisual: true });
-  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent });
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, HTMLInputElement: dom.window.HTMLInputElement, Element: dom.window.Element, Node: dom.window.Node, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent, KeyboardEvent: dom.window.KeyboardEvent, CustomEvent: dom.window.CustomEvent, MutationObserver: dom.window.MutationObserver, getComputedStyle: dom.window.getComputedStyle.bind(dom.window), requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(Date.now()), 0) });
   lists = [];
 });
 afterEach(() => { lists.forEach(list => list.destroy()); dom.window.close(); });
@@ -111,6 +112,35 @@ describe("Material list anatomy", () => {
     expect(list.element.hasAttribute("tabindex")).toBe(false);
     expect(row(list).querySelector("button")).toBeNull();
     row(list).click(); list.selectItem(0); expect(list.getSelectedItemIds()).toEqual([]);
+  });
+});
+
+describe("trailing controls", () => {
+  const switchIn = (list: ListComponent<ListItem>, index = 0) => row(list, index).querySelector<HTMLInputElement>('[data-list-control] input[role="switch"]')!;
+  test("a component instance is unwrapped and an unnamed switch takes the row's name and description", () => {
+    const list = mount([{ headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    expect(input).not.toBeNull();
+    expect(row(list).textContent).not.toContain("[object Object]");
+    expect(input.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")?.id ?? "");
+    expect(input.getAttribute("aria-describedby")).toBe(row(list).querySelector(".mtrl-list__supporting")?.id ?? "");
+    const named = mount([{ headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({ ariaLabel: "Wireless" }) } }]);
+    const labelled = switchIn(named);
+    expect(labelled.getAttribute("aria-label")).toBe("Wireless");
+    expect(labelled.hasAttribute("aria-labelledby")).toBe(false);
+  });
+  test("a click on the row toggles the switch and the row follows the switch's state", () => {
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", trailing: { type: "control", content: createSwitch({}) } }]);
+    const input = switchIn(list);
+    row(list).click();
+    expect(input.checked).toBe(true);
+    expect(list.getSelectedItemIds()).toEqual(["wifi"]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(true);
+    expect(action(list).getAttribute("aria-pressed")).toBe("true");
+    input.click();
+    expect(input.checked).toBe(false);
+    expect(list.getSelectedItemIds()).toEqual([]);
+    expect(row(list).classList.contains("mtrl-list__item--selected")).toBe(false);
   });
 });
 

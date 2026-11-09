@@ -105,8 +105,12 @@ export interface ListSlot {
    * For `icon` and `avatar`, a string is markup.
    * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    * An avatar string is not a person's name or an image URL. An `image` is a URL.
+   *
+   * A component instance (anything with an `element`: `createSwitch({})`,
+   * `createCheckbox({})`, `createRadios({})`) contributes its element, so it
+   * can be passed in a `control` slot as it is.
    */
-  content: string | HTMLElement;
+  content: string | HTMLElement | { element: HTMLElement };
 }
 
 export interface ListItem {
@@ -124,6 +128,12 @@ export interface ListItem {
    * (a checkbox, a radio, a switch). It is sized by its content: a control
    * that fills its container, such as a slider, is not a list-row control
    * and goes outside the row.
+   *
+   * A control with no accessible name of its own takes the row's headline
+   * as its name and the supporting text as its description; a name the app
+   * gave always wins. With `trackSelection`, a checkable control is the
+   * row's action too: a click on the row reaches it, and the row's selected
+   * state follows the control's.
    */
   trailing?: ListSlot;
   /** Blocks user activation; programmatic selection is still allowed. */
