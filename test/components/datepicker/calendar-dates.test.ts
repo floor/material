@@ -84,3 +84,28 @@ describe("generateCalendarDates marks disabled cells", () => {
     expect(leading.every((d) => d.isDisabled === true)).toBe(true);
   });
 });
+
+describe("generateCalendarDates marks ranges across month boundaries", () => {
+  test.each([
+    { start: new Date(2025, 8, 28), end: new Date(2025, 9, 9), days: [[8, 28, 'start'], [8, 29, 'middle'], [8, 30, 'middle'], [9, 9, 'end'], [10, 1, '']] },
+    { start: new Date(2025, 9, 24), end: new Date(2025, 10, 2), days: [[9, 24, 'start'], [10, 1, 'middle'], [10, 2, 'end'], [10, 3, '']] },
+  ])("October grid preserves endpoint and middle flags for $start through $end", ({ start, end, days }) => {
+    const dates = generateCalendarDates(2025, 9, start, end);
+    for (const [month, day, part] of days) {
+      const cell = dates.find(cell => cell.date.getMonth() === month && cell.day === day)!;
+      expect(cell.isRangeStart).toBe(part === 'start');
+      expect(cell.isRangeEnd).toBe(part === 'end');
+      expect(cell.isRangeMiddle).toBe(part === 'middle');
+    }
+  });
+
+  test("a single selected outside-month day has no range flags", () => {
+    const dates = generateCalendarDates(2025, 9, new Date(2025, 8, 28));
+    expect(dates[0].isSelected).toBe(true);
+    for (const cell of dates) {
+      expect(cell.isRangeStart).toBeUndefined();
+      expect(cell.isRangeEnd).toBeUndefined();
+      expect(cell.isRangeMiddle).toBeUndefined();
+    }
+  });
+});

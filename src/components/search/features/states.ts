@@ -15,8 +15,8 @@ import {
   SEARCH_ICONS,
 } from "../constants";
 
-import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
+import { paintNamedIcon } from "./structure";
 import { hideFromTopLayer, showInTopLayer, onModalEscape, type ModalEscape } from "../../../core/dom/layer";
 import { activeElementOf } from "../../../core/dom/focus";
 import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
@@ -170,10 +170,10 @@ export const withStates =
     element.classList.remove(getClass(SEARCH_CLASSES.STATE_BAR));
     element.classList.add(getClass(SEARCH_CLASSES.STATE_VIEW));
 
-    // Update leading icon to back arrow
+    // Update leading icon to back arrow. The button keeps its own name.
     if (structure?.leadingIcon) {
-      setHTML(structure.leadingIcon, SEARCH_ICONS.BACK);
       structure.leadingIcon.setAttribute("aria-label", "Go back");
+      paintNamedIcon(structure.leadingIcon, SEARCH_ICONS.BACK);
     }
 
     openSurface();
@@ -211,10 +211,10 @@ export const withStates =
     element.classList.remove(getClass(SEARCH_CLASSES.STATE_VIEW));
     element.classList.add(getClass(SEARCH_CLASSES.STATE_BAR));
 
-    // Update leading icon to search icon
+    // Update leading icon to search icon. The button keeps its own name.
     if (structure?.leadingIcon) {
-      setHTML(structure.leadingIcon, config.leadingIcon || SEARCH_ICONS.SEARCH);
       structure.leadingIcon.setAttribute("aria-label", "Search");
+      paintNamedIcon(structure.leadingIcon, config.leadingIcon || SEARCH_ICONS.SEARCH);
     }
 
     closeSurface(restoreFocus);

@@ -24,6 +24,9 @@ $icon-button: '#{base.$prefix}-icon-button';
 $margin: 16px;
 
 .#{$component} {
+  // An alert: the density scale stops at the snackbar, so a page-wide value
+  // cannot shrink its action.
+  --#{base.$prefix}-density: 0;
   @include m.typography('body-medium');
   box-sizing: border-box;
   position: fixed;

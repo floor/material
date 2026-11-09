@@ -270,6 +270,14 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // Every length the density scale moves reads one registered integer
+    // property through `max(floor, base + step * var(--mtrl-density, 0))`, and
+    // the compact text field, its select and the dense drawer are aliases for
+    // a step (styles/abstract/_functions.scss, styles/base/_tokens.scss).
+    // The drawer's active pill and hover/focus/pressed state layer are painted
+    // by the active indicator's `::before` and `::after`, which the
+    // reduced-motion switch also reaches, so the item keeps its 48dp touch
+    // target unclipped (styles/components/_drawer.scss).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -296,10 +304,16 @@ describe("explicit contrast levels are opt-in", () => {
     // navigation indicators retain the focus fixes on main. Other focus rings
     // retain contrast, scroll/clip clearance and sibling stacking; pointer focus
     // and reduced motion use their intended state rules.
-    // Combined CI 42453498524, unit job 128647496710.
+    // The shape audit's two corners: the list's leading image takes the small
+    // step the leading video already took, and the time picker's action
+    // buttons take the full step the buttons spec gives every text button
+    // (styles/components/_list.scss, _timepicker.scss).
+    // Main contrast/focus rules plus the density scale and drawer indicator
+    // masks. Range bands preserve adjacent-month muted text by excluding
+    // outside days from their foreground selector (+31 B, CI 42608902656).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "771c74c1ed28372282548d16c73a8977703187a8b9949a18bf308b3bc829232d",
-      length: 546440,
+      sha256: "59a0dfe11ac69ba1ed84dc5af26b412d721d634aa3d476ddc54c3290820b619e",
+      length: 546934,
     });
   });
 

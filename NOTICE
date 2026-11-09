@@ -25,7 +25,9 @@ Runtime colour (material/theme)
 The files under src/theme/vendor are a copy of material-color-utilities
 (https://github.com/material-foundation/material-color-utilities),
 Copyright 2021 Google LLC, licensed under the Apache License, Version 2.0.
-Each copied file keeps its original copyright and licence header.
+Each copied file in src/theme/vendor keeps its original copyright and licence
+header; each shipped file under dist/theme/vendor carries a one-line
+Copyright Google LLC and Apache-2.0 notice pointing to this NOTICE file.
 
 The full licence text follows.
 

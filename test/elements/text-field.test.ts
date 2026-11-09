@@ -13,3 +13,16 @@ describe("<m-text-field>: the trailing icon's label attribute", () => {
     expect(typeof attributes["trailing-icon-label"].update).toBe("function");
   });
 });
+
+// The virtual keyboard hints are spelled as the native input attributes are:
+// the config keys are the factory's (`inputMode`, `enterKeyHint`), the host
+// attributes lowercase, written onto the inner input. The update, rather than
+// a rebuild, keeps the field's value and focus.
+describe("<m-text-field>: the virtual keyboard hint attributes", () => {
+  test("`inputmode` and `enterkeyhint` map to the factory's `inputMode` and `enterKeyHint`", () => {
+    expect(attributes.inputmode).toMatchObject({ type: "string", config: "inputMode" });
+    expect(attributes.enterkeyhint).toMatchObject({ type: "string", config: "enterKeyHint" });
+    expect(typeof attributes.inputmode.update).toBe("function");
+    expect(typeof attributes.enterkeyhint.update).toBe("function");
+  });
+});

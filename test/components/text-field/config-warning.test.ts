@@ -43,6 +43,7 @@ test("every supported key stays quiet, on the factory and the element path", () 
     type: "text", variant: "outlined", density: "compact", name: "n", label: "l",
     value: "v", placeholder: "p", required: true, noAsterisk: true, disabled: false,
     readonly: false, maxLength: 20, pattern: ".*", autocomplete: "off",
+    inputMode: "numeric", enterKeyHint: "send", controlLabelOnly: true,
     leadingIcon: "<svg></svg>", trailingIcon: "<svg></svg>", trailingIconLabel: "Clear",
     onTrailingClick: () => {}, supportingText: "s", error: false, prefixText: "pre",
     suffixText: "suf", class: "c", prefix: "mtrl", componentName: "text-field",
@@ -51,6 +52,8 @@ test("every supported key stays quiet, on the factory and the element path", () 
     ariaHidden: false, multiline: true,
   } as unknown as TextFieldConfig));
   expect(field.input.maxLength).toBe(20);
+  expect(field.input.getAttribute("inputmode")).toBe("numeric");
+  expect(field.input.getAttribute("enterkeyhint")).toBe("send");
   expect(messages).toEqual([]);
 });
 

@@ -1,9 +1,12 @@
 #!/usr/bin/env bun
-import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
+import { compareDeclarationIdentity } from "./check-declaration-identity";
+import { consolidateDeclarations } from "./consolidate-declarations";
 import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
+import { stripInternalDeclarationDocs } from "./strip-internal-declaration-docs";
 import { emitSvelte } from "./svelte-package";
 
 const outdir = "./dist";
@@ -14,6 +17,7 @@ try {
   // Type-check before removing the previous distribution.
   // buildModules also emits declarations and rejects any compiler errors.
   const staging = await mkdtemp("./.mtrl-build-");
+  const beforeDocs = await mkdtemp("./.mtrl-doc-proof-");
   try {
     console.log("Building ESM modules and declarations...");
     buildModules(staging);
@@ -51,6 +55,25 @@ try {
     const pruned = await pruneDeclarations(staging, manifest.exports);
     console.log(`Pruned ${pruned.removed.length} unreachable declarations (${pruned.bytes} bytes)`);
 
+    // Keep JSDoc on every declaration reachable from `exports` (including
+    // re-exports, heritage clauses, and signature-referenced types) and strip
+    // non-`@deprecated` JSDoc on strictly internal declarations.
+    await cp(staging, beforeDocs, { recursive: true });
+    const internalDocs = await stripInternalDeclarationDocs(staging, manifest.exports);
+    if (internalDocs.declarations <= 0 || internalDocs.bytes <= 0) throw new Error("Internal declaration JSDoc strip unexpectedly removed no declarations or bytes");
+    console.log(`Stripped JSDoc from ${internalDocs.declarations} internal declarations across ${internalDocs.files} files (${internalDocs.bytes} bytes)`);
+
+    // Fold the declarations no `exports` entry names into the barrel that
+    // exports their directory, so a consumer reads one file per entry instead
+    // of one per module. The pass keeps each barrel's exported names exactly.
+    const consolidated = await consolidateDeclarations(staging, manifest.exports);
+    console.log(
+      `Consolidated ${consolidated.merged} declarations into ${consolidated.groups} barrels ` +
+      `(${consolidated.bytes} bytes, ${consolidated.kept.length} kept)`,
+    );
+    const docsProof = compareDeclarationIdentity(beforeDocs, staging);
+    console.log(`Declaration documentation identity: ${docsProof.exports} exports, ${docsProof.pairs} symbol pairs; zero documentation differences`);
+
     // A module no export target reaches and no shipped module imports is a
     // file no consumer can load: ship the reachable tree and nothing beside it.
     const modules = await pruneUnreachableModules(staging, manifest.exports, manifest.name);
@@ -66,6 +89,7 @@ try {
     console.log(`Built ${pkg.name} ${pkg.version} in ${outdir}`);
   } finally {
     await rm(staging, { recursive: true, force: true });
+    await rm(beforeDocs, { recursive: true, force: true });
   }
 } catch (error) {
   console.error(error);

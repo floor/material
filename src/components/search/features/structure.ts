@@ -6,6 +6,33 @@ import { createElement } from "../../../core/dom/create";
 import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 import { processClassNames, type BaseComponentConfig } from "../../../core/config/component";
+import { decorativeIconsOn } from "../../../core/compose/features/icon-opt-in";
+
+const libraryGlyph = (html: string): boolean =>
+  html === SEARCH_ICONS.SEARCH || html === SEARCH_ICONS.BACK || html === SEARCH_ICONS.CLEAR;
+
+/**
+ * Writes an icon into a named search control.
+ * With the opt-in off this is `setHTML` of the original string: the default
+ * bar matches the recorded bytes. With it on, a library glyph is hidden on
+ * the element and an author string is wrapped. The author's svg is not rewritten
+ * (https://w3c.github.io/aria/#aria-hidden).
+ */
+export const paintNamedIcon = (host: HTMLElement, html: string): void => {
+  if (!decorativeIconsOn()) {
+    setHTML(host, html);
+    return;
+  }
+  if (libraryGlyph(html)) {
+    setHTML(host, html);
+    host.querySelector("svg")?.setAttribute("aria-hidden", "true");
+    return;
+  }
+  const wrap = document.createElement("span");
+  wrap.setAttribute("aria-hidden", "true");
+  setHTML(wrap, html);
+  host.replaceChildren(wrap);
+};
 
 /**
  * Creates the search component DOM structure following MD3 specifications
@@ -129,13 +156,13 @@ export const withStructure =
     tag: "button",
     className: getClass(SEARCH_CLASSES.LEADING_ICON),
     container,
-    html: leadingIconHtml,
     attributes: {
       type: "button",
       tabindex: isDisabled ? "-1" : "0",
       "aria-label": isViewState ? "Go back" : "Search",
     },
   });
+  paintNamedIcon(leadingIcon, leadingIconHtml);
 
   // Create input wrapper
   const inputWrapper = createElement({
@@ -198,13 +225,13 @@ export const withStructure =
       tag: "button",
       className: clearButtonClasses.join(" "),
       container,
-      html: SEARCH_ICONS.CLEAR,
       attributes: {
         type: "button",
         tabindex: isDisabled || !value ? "-1" : "0",
         "aria-label": "Clear search",
       },
     });
+    paintNamedIcon(clearButton, SEARCH_ICONS.CLEAR);
   }
 
   // Trailing icon buttons and the avatar. onClick was never wired,
@@ -228,9 +255,12 @@ export const withStructure =
     const element = createElement({
       tag: button ? "button" : "div",
       className: getClass(avatar ? SEARCH_CLASSES.AVATAR : SEARCH_CLASSES.TRAILING_ICON),
-      html: item.content,
       attributes,
     });
+    // A named button or image keeps that name. The graphic inside is decorative.
+    // An unnamed trailing item is already aria-hidden on the element itself.
+    if (button || item.ariaLabel) paintNamedIcon(element, item.content);
+    else setHTML(element, item.content);
     if (item.onClick) element.addEventListener("click", item.onClick);
     return element;
   };
@@ -251,7 +281,7 @@ export const withStructure =
   // The bar's leading icon; the open view shows the back arrow meanwhile.
   const setLeadingIcon = (html: string): void => {
     config.leadingIcon = html;
-    if (!component.element.classList.contains(getClass(SEARCH_CLASSES.STATE_VIEW))) setHTML(leadingIcon, html);
+    if (!component.element.classList.contains(getClass(SEARCH_CLASSES.STATE_VIEW))) paintNamedIcon(leadingIcon, html);
   };
 
   // Create divider and content area (for view state or when suggestions are provided)

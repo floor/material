@@ -17,6 +17,230 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-11-09
+
+Selection actions, slide images, active destinations, one density scale and a localized date picker.
+
+### Added
+
+- **The row's action button on the list's `select` event (#271).**
+  The `select` event now carries `action`, the row's primary action button:
+  the button the row already exposes to assistive technology, named by its
+  headline, described by its supporting text and carrying `aria-pressed` for
+  its selection. `element` keeps its meaning — it is always the row — and
+  nothing else in the payload changes. A handler serving several lists can
+  tell which row's control carried an activation without querying the DOM,
+  and can return focus to that button after a dialog or a menu closes.
+
+- **A row's trailing control belongs to the row (#272).**
+  A component instance is accepted as a row's trailing control — anything
+  with an `element`, so `createSwitch({})`, `createCheckbox({})` and
+  `createRadios({})` pass as they are; before, the object was stringified
+  into the slot and the row showed `[object Object]`. A trailing control
+  with no accessible name of its own takes the row's headline as its name
+  and the supporting text as its description, through the same ids the
+  row's own action button uses; a name the app gave always wins, and an
+  `aria-describedby` the app set is kept. With `trackSelection`, a click
+  on the row's text reaches a trailing checkable control — a switch, a
+  checkbox, a radio — and the row's selected state follows the control's,
+  from the row and from the control itself. Non-checkable trailing
+  controls (a "More" button, a text field) keep the row's existing
+  behaviour: they stay independent, and the row's own selection toggle
+  does not reach them.
+
+- **Per-slide image width, height, loading and decoding (#284).**
+  A slide may state `width`, `height`, `loading` and `decoding`, applied to
+  the `<img>` the carousel builds. `width` and `height` name the file's
+  intrinsic size in pixels, so the browser reserves a box of that ratio
+  before the file arrives and the carousel does not jump as images load.
+  `loading` chooses when a file is fetched: the slide that opens the
+  carousel is `"eager"`, every later one `"lazy"`, and an explicit value
+  wins; the default follows the slide when one is inserted or removed at
+  the front. `decoding` passes the hint of the same name to the image. All
+  four are optional; a slide without them renders exactly as before.
+
+- **An item's active icon in the drawer (#285).**
+  `DrawerItemConfig` gains `activeIcon`, shown in place of `icon` while the
+  item is the active destination. `setActive` swaps the two icons in place
+  alongside the active class and `aria-current`, so focus and the ripple
+  survive the change, and an item that starts active renders the right icon
+  from the start. `<m-drawer-item>` reads it as `selected-icon`, as the
+  navigation rail, bar and button group do.
+
+- **A responsive option for tabs (#293).**
+  `createTabs` takes `responsive`: a behaviour the app imports from
+  `material/components/tabs/responsive` and passes in as
+  `tabsResponsive({ smallScreen: { layout: "icon-only" } })`. Below the
+  small breakpoint (600 by default) a tab built with an icon and a label
+  takes the small-screen layout, and the group carries the
+  `--responsive-small` class while it does; tabs added later and window
+  resizes follow, and a custom layout or breakpoint is honoured. The plugin
+  lives in its own entry, which the tabs entry does not re-export, so a
+  plain `createTabs` carries none of it. The option is applied while the
+  group is built, before the element is in the document, so no painted
+  frame shows the large-screen layout first; a server render, with no
+  window to measure, applies nothing and leaves the group as built.
+
+- **A focus shortcut for an actionable snackbar (#288).**
+  `focusShortcut` (default `"F8"`) moves focus to a snackbar's action
+  while it is on screen: one non-character key name (`"F6"`, `"F9"` and
+  so on), never a single character; `false`, `"off"` or an empty string
+  turns it off. The key is written on the action button as
+  `aria-keyshortcuts`, the document listener exists only between `open()`
+  and `close()` of a snackbar that has an action, and no modifier may be
+  held, so the key cannot clash with browser or screen-reader chords or
+  disturb typing. Focus returns to where it was when the key was pressed,
+  a running auto-dismiss countdown pauses while focus is inside the
+  snackbar, and the `focus` event fires when the shortcut moves focus.
+  On `<m-snackbar>` the attribute is `focus-shortcut`, and changing it
+  takes effect at once.
+
+- **Keyboard hints on text fields (#283).**
+  `inputMode` (`none | text | decimal | numeric | tel | search | email |
+  url`) and `enterKeyHint` (`enter | done | go | next | previous | search
+  | send`) reach the field's native input or textarea, choosing the
+  virtual keyboard and its enter-key label. On `<m-text-field>` they are
+  the native lowercase `inputmode` and `enterkeyhint` attributes; live
+  changes and removals update the existing input in place, keeping its
+  value and focus. A misspelled key still reports the development
+  diagnostic, and select's keyboard behaviour is unchanged.
+
+- **A locale option for the date picker (#296).**
+  `locale` — the option on `createDatePicker` and the `<m-datepicker
+  locale>` attribute — drives month and weekday names, the first
+  weekday, Home/End row navigation and the default field format.
+  Omitted, invalid or unsupported locales fall back to `en-US`.
+  Editable fields use Gregorian dates and Latin digits so displayed
+  values round-trip through input parsing, and an explicit `dateFormat`
+  stays authoritative; calendar and announcement names use the selected
+  locale. The 3.9 dialog naming and selected-day semantics are
+  unchanged: named day buttons keep `role="gridcell"` and
+  `aria-selected`, wrappers stay presentational, and in-place
+  `setAriaLabel()` naming is retained.
+
+- **One density scale (#294).**
+  `--mtrl-density` is one inherited integer custom property, 0 down to
+  −5, that a container sets to compact what it holds, with
+  `.mtrl-density--1`…`--5` sugar classes. Buttons, icon buttons, button
+  groups, list rows, drawer items, text fields and selects follow it —
+  4px a step, the visible touch target never below 48px, and hit-area
+  overlays growing any container density takes under it. Density moves
+  heights, never type or icons: the text field's `compact` option is the
+  scale's fourth step with Body Large type kept (a multiline field floors
+  at 84px), the drawer's `dense` option is its fifth, and the button
+  group's `comfortable` and `compact` are its first and second, the
+  outer radius derived at half the scaled height. The design's fixed
+  surfaces — menus, dialogs, snackbars, date and time pickers, bottom
+  and side sheets — pin the property at 0 on their own root, so a
+  page-wide value cannot shrink the controls inside them; tooltips,
+  cards and FABs never read it. The menu's `dense` option is unchanged
+  here (its deprecation is #287, in this release). A browser check
+  measures every step's geometry, the floors, the 48px targets and the
+  fixed surfaces.
+
+### Deprecated
+
+- **The menu `dense` option (#287).**
+  `MenuConfig.dense` and the `dense` attribute on `<m-menu>` are deprecated.
+  The library moves to one density scale, `--mtrl-density`, in 3.11.0, which
+  leaves menus at their default density: Material advises against increasing
+  density in focused tasks such as selecting from a menu. The option still
+  renders the dense variant exactly as before and is removed in 4.0.
+
+- **The tabs responsive helper (#293).**
+  `setupResponsiveBehavior` from `material/components/tabs` is deprecated:
+  pass `tabsResponsive(config)` from `material/components/tabs/responsive`
+  as `createTabs`'s `responsive` option instead — the same configuration,
+  the same behaviour, applied while the group is built. The helper keeps
+  working throughout 3.x and is removed in 4.0.
+
+### Fixed
+
+- **The Material 3 corner for time picker actions and list media (#290).**
+  The time picker's cancel and confirm buttons are text buttons, and the
+  buttons spec gives the round shape the full radius at every size; they now
+  take the full pill instead of the small step. A list's leading image now
+  rounds like its leading video — one leading-media element, one small
+  step — instead of staying square. Both radii come from the shape scale
+  tokens, so a theme that overrides the scale moves them with it.
+
+- **Input chip names and a card guidance diagnostic (#329).**
+  A standalone input chip no longer names its owned group and its primary
+  checkbox with the same label: the name stays on the primary action and
+  only the library-generated group label is removed, so an authored group
+  label survives later label updates, and primary and remove action names,
+  selection and chip-set cells are unchanged. A clickable card whose
+  supported content inserts child actions now reports a development-only
+  diagnostic linking the Material guidance, stripped from production
+  bundles; configured roles, tab stops, ripple and activation behaviour
+  stay as they were.
+
+- **Redundant icons are hidden from assistive technology, on request
+  (#331).**
+  With `enableDecorativeIcons()`, an icon wrapper that duplicates its
+  control's name — an icon beside text, or a label — is hidden, and the
+  decision is re-made after text, icon or label changes, including
+  custom-element slots during server rendering. An SVG title that
+  provides the control's sole name keeps the icon exposed, and authored
+  SVG and host attributes are preserved. Default markup is unchanged —
+  every default component graph stays byte-identical — and nothing is
+  hidden until the app calls.
+
+### Performance
+
+- **The text field's initial graph, off its ceiling (#338).**
+  The factory defaults `type: "text"` and `variant: "filled"` are inlined
+  where the constants table was imported, and the three text slots —
+  leading icon, prefix, suffix — share one install helper instead of
+  three copies of the same first-use logic. Nothing changes in behaviour
+  or default markup; the packed consumer's initial graph falls from
+  9,999 to 9,887 B gzip, away from the 10,000 B ceiling it had been
+  measured one byte under.
+
+### Internal
+
+- **Raised size ceilings for this group (#334 and #336, with #283, #294
+  and #296).** By the owner decision of 2026-11-08, making room for this
+  group: text-field 9,550 → 9,600 B and form 20,450 → 20,500 B (#283),
+  base-css 3,050 → 3,150 B (#294), and the datepicker scenario ceiling
+  13,209 → 13,250 B (#296). By the owner decision of 2026-11-09: all-js
+  130,050 → 130,650 B, button CSS 5,300 → 5,550 B and slider CSS
+  4,850 → 5,050 B (#334), the every-component scenario cap `all`
+  127,200 → 127,500 B (#336), and #294's inline-page raw band
+  256,200 → 263,950 B. The release's final all-js figure, 130,522 B, is
+  measured on main 5223a64d (push run 42592202621), the tree the release
+  ships; the measured stack end `all` 127,359 leaves 141 B under the new
+  cap.
+
+- **Folded type declarations (#314).**
+  The package's TypeScript declarations are consolidated: 313 declaration
+  files fold into their exported barrels, so the published package is
+  17.5 kB smaller to download (872,855 B packed) and unpacks 313 files
+  lighter (1,238), with no runtime change — every shipped JavaScript file
+  is byte-identical, every package export and import resolves as before,
+  and type-checking against the package is unchanged.
+
+- **Release size against 3.9.0.**
+  The merged main head `5223a64d`
+  ([CI run 42592202621, package job 129076650121](https://github.com/floor/material/actions/runs/42592202621/job/129076650121))
+  packs **877,050 B compressed / 4,964,814 B unpacked / 1,239 files**.
+  Against the published 3.9.0 release at `53ae0a44`
+  ([CI run 42486644714, package job 128750092972](https://github.com/floor/material/actions/runs/42486644714/job/128750092972)),
+  that is **−11,068 B packed / −24,894 B unpacked / −310 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **42,950 B**
+  under the 920,000 B packed ceiling and **154,186 B** under the 5,119,000 B
+  unpacked ceiling; neither ceiling changes. This release adds only the
+  notes and the version line on top of that head — the notes are not
+  packed, so the packed figures carry; the version banner itself moves
+  compressed rows a few bytes, and the release PR's own run records them.
+
+  | Payload (B, raw / gzip / Brotli) | 3.9.0 | 3.10.0 | Change |
+  | --- | --- | --- | --- |
+  | All JS | 418,953 / 129,264 / 107,214 | 420,481 / 130,522 / 108,138 | +1,528 / +1,258 / +924 |
+  | Full stylesheet | 640,972 / 59,172 / 42,192 | 641,081 / 59,420 / 42,190 | +109 / +248 / −2 |
+  | Button stylesheet | 59,523 / 5,300 / 4,082 | 60,848 / 5,440 / 4,190 | +1,325 / +140 / +108 |
+  | Form fixture | 65,398 / 20,431 / 18,243 | 64,399 / 20,359 / 18,200 | −999 / −72 / −43 |
+
 ## [3.9.0] - 2026-11-08
 
 Lists, accessible names and a smaller package.
