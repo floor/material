@@ -222,4 +222,49 @@ describe('withDisabled', () => {
     const result3 = enhanced.disabled.toggle();
     expect(result3).toBe(enhanced.disabled);
   });
+
+  test('re-evaluates the native input and preserves getter reads and serialized attributes', () => {
+    const first = document.createElement('input');
+    const second = document.createElement('input');
+    second.disabled = true;
+    let input = first;
+    let reads = 0;
+    Object.defineProperty(component, 'input', {
+      enumerable: true,
+      get() { reads++; return input; },
+    });
+    const enhanced = withDisabled({})(component);
+    reads = 0;
+    expect(enhanced.disabled.disable()).toBe(enhanced.disabled);
+    expect(reads).toBe(4);
+    expect(first.getAttribute('disabled')).toBe('true');
+    expect(enhanced.element.hasAttribute('aria-disabled')).toBe(false);
+
+    input = second;
+    reads = 0;
+    expect(enhanced.disabled.enable()).toBe(enhanced.disabled);
+    expect(reads).toBe(4);
+    expect(second.disabled).toBe(false);
+    expect(second.hasAttribute('disabled')).toBe(false);
+    expect(first.disabled).toBe(true);
+  });
+
+  test('native roots retain the true attribute and div roots remove ARIA when enabled', () => {
+    for (const tag of ['button', 'input', 'select', 'textarea', 'fieldset', 'div']) {
+      const element = document.createElement(tag);
+      const enhanced = withDisabled({})({ ...component, element });
+      enhanced.disabled.disable();
+      if (tag === 'div') {
+        expect(element.getAttribute('aria-disabled')).toBe('true');
+        expect(element.hasAttribute('disabled')).toBe(false);
+      } else {
+        expect(element.getAttribute('disabled')).toBe('true');
+        expect(element.hasAttribute('aria-disabled')).toBe(false);
+      }
+      enhanced.disabled.enable();
+      expect(element.hasAttribute('disabled')).toBe(false);
+      expect(element.hasAttribute('aria-disabled')).toBe(false);
+    }
+  });
+
 });

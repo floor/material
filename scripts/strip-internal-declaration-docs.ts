@@ -1,0 +1,535 @@
+import ts from "typescript";
+import { existsSync } from "node:fs";
+import { readdir, writeFile } from "node:fs/promises";
+import { join, relative, resolve } from "node:path";
+import { printDeclarationModule } from "./build-modules";
+
+/**
+ * Keep JSDoc comments on every declaration a consumer can reach from the
+ * package's `exports` map — directly, through re-exports, or through heritage
+ * clauses (`extends` / `implements`) and public-signature type references —
+ * and strip non-`@deprecated` JSDoc comments on declarations that are strictly
+ * internal.
+ */
+
+export interface DeclarationEntry {
+  /** The package specifier a consumer writes (e.g. `material/components/fab`). */
+  specifier: string;
+  /** The declaration file the entry's `types` target names, relative to `packageRoot`. */
+  types: string;
+}
+
+export interface ImportableDeclarationInfo {
+  /** Path of the `.d.ts` file relative to `packageRoot`. */
+  file: string;
+  /** Top-level declaration name. */
+  name: string;
+  /** AST statement node in the `.d.ts` file. */
+  statement: ts.Statement;
+  /** First `exports` specifier through which this declaration was reached. */
+  viaSpecifier: string;
+}
+
+export interface StripInternalDocsResult {
+  /** Number of `.d.ts` files modified. */
+  files: number;
+  /** Number of internal top-level declarations whose non-`@deprecated` JSDoc was stripped. */
+  declarations: number;
+  /** Total bytes removed across all `.d.ts` files. */
+  bytes: number;
+}
+
+const COMPILER_OPTIONS: ts.CompilerOptions = {
+  strict: true,
+  skipLibCheck: true,
+  noEmit: true,
+  target: ts.ScriptTarget.ES2022,
+  module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
+};
+
+function typesTarget(value: unknown): string | undefined {
+  if (typeof value === "string") return value.endsWith(".d.ts") ? value : undefined;
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const types = (value as { types?: unknown }).types;
+    if (typeof types === "string") return types;
+  }
+  return undefined;
+}
+
+async function filesUnder(directory: string, rel = ""): Promise<string[]> {
+  const files: string[] = [];
+  for (const entry of await readdir(join(directory, rel), { withFileTypes: true })) {
+    const path = rel === "" ? entry.name : `${rel}/${entry.name}`;
+    if (entry.isDirectory()) files.push(...await filesUnder(directory, path));
+    else files.push(path);
+  }
+  return files;
+}
+
+/**
+ * Expand every concrete and wildcard `types` target in `exports` against the
+ * files under `packageRoot`. Handles both packed manifests (`./dist/...`) and
+ * relocated build manifests (`./...`).
+ */
+export async function declarationEntriesOf(
+  exportsMap: unknown,
+  packageRoot: string,
+  packageName = "material",
+): Promise<DeclarationEntry[]> {
+  if (!exportsMap || typeof exportsMap !== "object" || Array.isArray(exportsMap)) {
+    throw new Error("the package manifest has no exports map");
+  }
+  const files = await filesUnder(packageRoot);
+  const fileSet = new Set(files);
+  const hasDistPrefix = files.some(file => file.startsWith("dist/"));
+  const entries: DeclarationEntry[] = [];
+
+  for (const [key, value] of Object.entries(exportsMap as Record<string, unknown>)) {
+    const rawTypes = typesTarget(value)?.replace(/^\.\//, "");
+    if (!rawTypes) continue;
+    const types = !hasDistPrefix && rawTypes.startsWith("dist/")
+      ? rawTypes.slice("dist/".length)
+      : rawTypes;
+    const specifier = `${packageName}${key.slice(1)}`;
+    const star = types.indexOf("*");
+    if (star === -1) {
+      if (fileSet.has(types)) entries.push({ specifier, types });
+      continue;
+    }
+    const prefix = types.slice(0, star);
+    const suffix = types.slice(star + 1);
+    for (const file of files) {
+      if (!file.startsWith(prefix) || !file.endsWith(suffix)) continue;
+      const wildcard = file.slice(prefix.length, file.length - suffix.length);
+      entries.push({ specifier: specifier.replace("*", wildcard), types: file });
+    }
+  }
+  return entries.sort((a, b) => a.specifier.localeCompare(b.specifier));
+}
+
+function statementNameOf(stmt: ts.Statement): string | undefined {
+  if (
+    ts.isInterfaceDeclaration(stmt) ||
+    ts.isTypeAliasDeclaration(stmt) ||
+    ts.isFunctionDeclaration(stmt) ||
+    ts.isClassDeclaration(stmt) ||
+    ts.isEnumDeclaration(stmt) ||
+    ts.isModuleDeclaration(stmt)
+  ) {
+    return stmt.name?.text;
+  }
+  if (ts.isVariableStatement(stmt)) {
+    const decl = stmt.declarationList.declarations[0];
+    return decl && ts.isIdentifier(decl.name) ? decl.name.text : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Walk every `exports`-map `types` entry, resolve its re-exports, and follow
+ * heritage clauses (`extends` / `implements`) and public-signature type
+ * references (`TypeReferenceNode`, `TypeQueryNode`, `ImportTypeNode`) across
+ * the `.d.ts` tree in `packageRoot` (Variant 1B).
+ */
+export async function collectImportableDeclarations(
+  packageRoot: string,
+  exportsMap: unknown,
+  packageName = "material",
+): Promise<{
+  entries: DeclarationEntry[];
+  program: ts.Program;
+  checker: ts.TypeChecker;
+  importableStatements: Set<ts.Statement>;
+  declarations: ImportableDeclarationInfo[];
+}> {
+  const root = resolve(packageRoot);
+  const entries = await declarationEntriesOf(exportsMap, root, packageName);
+  const allFiles = await filesUnder(root);
+  const dtsFiles = allFiles.filter(file => file.endsWith(".d.ts")).sort();
+  const rootNames = [...new Set([
+    ...entries.map(entry => join(root, entry.types)),
+    ...dtsFiles.map(file => join(root, file)),
+  ])];
+
+  const program = ts.createProgram(rootNames, COMPILER_OPTIONS);
+  const checker = program.getTypeChecker();
+
+  const importableStatements = new Set<ts.Statement>();
+  const specifierByStatement = new Map<ts.Statement, string>();
+  const visitedSymbols = new Set<ts.Symbol>();
+  const queue: Array<{ stmt: ts.Statement; specifier: string }> = [];
+
+  const enclosingPackageStatement = (node: ts.Node): ts.Statement | undefined => {
+    let cur: ts.Node | undefined = node;
+    while (cur && (!cur.parent || !ts.isSourceFile(cur.parent))) {
+      cur = cur.parent;
+    }
+    if (!cur || !ts.isStatement(cur)) return undefined;
+    if (ts.isImportDeclaration(cur) || ts.isExportDeclaration(cur) || ts.isExportAssignment(cur)) {
+      return undefined;
+    }
+    const sf = cur.getSourceFile();
+    if (!resolve(sf.fileName).startsWith(`${root}/`)) return undefined;
+    return cur;
+  };
+
+  const enqueueStatement = (stmt: ts.Statement, specifier: string): void => {
+    if (importableStatements.has(stmt)) return;
+    importableStatements.add(stmt);
+    specifierByStatement.set(stmt, specifier);
+    queue.push({ stmt, specifier });
+  };
+
+  const markSymbol = (sym: ts.Symbol | undefined, specifier: string): void => {
+    if (!sym || visitedSymbols.has(sym)) return;
+    visitedSymbols.add(sym);
+
+    let target = sym;
+    if (target.flags & ts.SymbolFlags.Alias) {
+      try {
+        target = checker.getAliasedSymbol(target);
+      } catch {
+        // Unresolvable external peer alias; keep original symbol.
+      }
+    }
+    visitedSymbols.add(target);
+
+    for (const decl of [...(sym.getDeclarations() ?? []), ...(target.getDeclarations() ?? [])]) {
+      const stmt = enclosingPackageStatement(decl);
+      if (stmt) enqueueStatement(stmt, specifier);
+    }
+
+    if (target.flags & (ts.SymbolFlags.ValueModule | ts.SymbolFlags.NamespaceModule)) {
+      try {
+        for (const member of checker.getExportsOfModule(target)) {
+          markSymbol(member, specifier);
+        }
+      } catch {
+        // Ignore external ambient module resolution errors.
+      }
+    }
+  };
+
+  const markEntityName = (name: ts.EntityName, specifier: string): void => {
+    markSymbol(checker.getSymbolAtLocation(name), specifier);
+    if (ts.isQualifiedName(name)) {
+      markEntityName(name.left, specifier);
+      markSymbol(checker.getSymbolAtLocation(name.right), specifier);
+    }
+  };
+
+  for (const entry of entries) {
+    const sf = program.getSourceFile(join(root, entry.types));
+    if (!sf) continue;
+    const modSym = checker.getSymbolAtLocation(sf);
+    if (!modSym) continue;
+    for (const exported of checker.getExportsOfModule(modSym)) {
+      markSymbol(exported, entry.specifier);
+    }
+  }
+
+  // Module augmentations contribute members to consumers even when no entry
+  // directly re-exports the augmentation file.
+  for (const sf of program.getSourceFiles()) {
+    if (!resolve(sf.fileName).startsWith(`${root}/`)) continue;
+    for (const stmt of sf.statements) {
+      if (ts.isModuleDeclaration(stmt) && (ts.isStringLiteral(stmt.name) || stmt.flags & ts.NodeFlags.GlobalAugmentation)) {
+        enqueueStatement(stmt, "ambient augmentation");
+      }
+    }
+  }
+
+  while (queue.length > 0) {
+    const { stmt, specifier } = queue.shift()!;
+    const visitRef = (node: ts.Node): void => {
+      if (ts.isExpressionWithTypeArguments(node)) {
+        markSymbol(checker.getSymbolAtLocation(node.expression), specifier);
+      } else if (ts.isTypeReferenceNode(node)) {
+        markEntityName(node.typeName, specifier);
+      } else if (ts.isTypeQueryNode(node)) {
+        markEntityName(node.exprName, specifier);
+      } else if (ts.isImportTypeNode(node)) {
+        if (node.qualifier) markEntityName(node.qualifier, specifier);
+        else if (ts.isLiteralTypeNode(node.argument)) markSymbol(checker.getSymbolAtLocation(node.argument.literal), specifier);
+      }
+      ts.forEachChild(node, visitRef);
+    };
+    visitRef(stmt);
+  }
+
+  const declarations: ImportableDeclarationInfo[] = [];
+  for (const stmt of importableStatements) {
+    const name = statementNameOf(stmt);
+    if (!name) continue;
+    const file = relative(root, resolve(stmt.getSourceFile().fileName)).replace(/\\/g, "/");
+    declarations.push({
+      file,
+      name,
+      statement: stmt,
+      viaSpecifier: specifierByStatement.get(stmt) ?? packageName,
+    });
+  }
+  declarations.sort((a, b) => a.file.localeCompare(b.file) || a.name.localeCompare(b.name));
+
+  return { entries, program, checker, importableStatements, declarations };
+}
+
+function isDeprecatedJsDoc(comment: string): boolean {
+  return /^\/\*\*(?!\/)/.test(comment) && /@deprecated\b/.test(comment);
+}
+
+function isJsDocComment(comment: string): boolean {
+  return /^\/\*\*(?!\/)/.test(comment);
+}
+
+/**
+ * Strip non-`@deprecated` JSDoc comments on declarations in `outdir` that are
+ * not reachable from `exports` (nor referenced by the heritage clauses or
+ * public signatures of any importable declaration).
+ */
+export async function stripInternalDeclarationDocs(
+  outdir: string,
+  exportsMap: unknown,
+): Promise<StripInternalDocsResult> {
+  const root = resolve(outdir);
+  const { program, importableStatements } = await collectImportableDeclarations(root, exportsMap);
+  const allFiles = await filesUnder(root);
+  const dtsFiles = allFiles.filter(file => file.endsWith(".d.ts")).sort();
+
+  let files = 0;
+  let declarations = 0;
+  let bytes = 0;
+
+  for (const relPath of dtsFiles) {
+    const absPath = join(root, relPath);
+    const sf = program.getSourceFile(absPath);
+    if (!sf) continue;
+
+    const text = sf.getFullText();
+    const toStrip = new Map<number, number>();
+    let strippedInFile = 0;
+
+    for (const stmt of sf.statements) {
+      if (importableStatements.has(stmt)) continue;
+      if (ts.isImportDeclaration(stmt) || ts.isExportDeclaration(stmt) || ts.isExportAssignment(stmt)) continue;
+
+      let stmtHadStrippedJsDoc = false;
+      const collectComments = (node: ts.Node): void => {
+        for (const range of ts.getLeadingCommentRanges(text, node.pos) ?? []) {
+          const comment = text.slice(range.pos, range.end);
+          if (isJsDocComment(comment) && !isDeprecatedJsDoc(comment)) {
+            toStrip.set(range.pos, range.end);
+            stmtHadStrippedJsDoc = true;
+          }
+        }
+        node.getChildren(sf).forEach(collectComments);
+      };
+      collectComments(stmt);
+      if (stmtHadStrippedJsDoc) strippedInFile += 1;
+    }
+
+    if (toStrip.size === 0) continue;
+
+    let updated = text;
+    for (const [start, end] of [...toStrip.entries()].sort(([a], [b]) => b - a)) {
+      updated = updated.slice(0, start) + updated.slice(end);
+    }
+    if (updated === text) continue;
+
+    await writeFile(absPath, updated);
+    files += 1;
+    declarations += strippedInFile;
+    bytes += Buffer.byteLength(text, "utf8") - Buffer.byteLength(updated, "utf8");
+  }
+
+  return { files, declarations, bytes };
+}
+
+function normalizeJsDoc(comment: string): string {
+  return comment.replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
+}
+
+function shippedJsDocFor(rawComment: string, isSourceTs: boolean): string {
+  if (!isJsDocComment(rawComment)) return "";
+  if (!isSourceTs) return rawComment;
+  const probed = printDeclarationModule("probe.d.ts", `${rawComment}\nexport type Probe = unknown;\n`);
+  const match = /^\/\*\*[\s\S]*?\*\//.exec(probed.trim());
+  const prose = rawComment.slice(3, -2).split(/\r?\n/)
+    .map(line => line.replace(/^\s*\*\s?/, "").trim());
+  const tag = prose.findIndex(line => line.startsWith("@"));
+  const summary = (tag < 0 ? prose : prose.slice(0, tag)).filter(Boolean);
+  const first = /^(.*?[.!?])(?:\s|$)/.exec(summary.join(" "))?.[1] ?? summary[0];
+  if (first && (!match || !normalizeJsDoc(match[0]).includes(first))) {
+    throw new Error(`Source JSDoc summary was erased while computing the expected hover: ${first}`);
+  }
+  return match ? match[0] : "";
+}
+
+function leadingJsDocsOf(node: ts.Node, text: string, isSourceTs: boolean): string[] {
+  const docs: string[] = [];
+  for (const range of ts.getLeadingCommentRanges(text, node.pos) ?? []) {
+    const shipped = shippedJsDocFor(text.slice(range.pos, range.end), isSourceTs);
+    if (shipped) docs.push(shipped);
+  }
+  return docs;
+}
+
+function resolveReferenceFile(declFile: string, referenceRoot: string): string | undefined {
+  const relInsideDist = declFile.replace(/^dist\//, "");
+  const candidates = [
+    join(referenceRoot, declFile),
+    join(referenceRoot, relInsideDist),
+    join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".ts")),
+    join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".tsx")),
+    join(referenceRoot, relInsideDist.replace(/\.d\.ts$/, ".js")),
+    ...(relInsideDist === "ssr/index.d.ts" ? [join(referenceRoot, "ssr/render-element.ts")] : []),
+  ];
+  return candidates.find(candidate => existsSync(candidate));
+}
+
+/**
+ * Verify that every declaration reachable from `package.json` `exports`
+ * (including barrel re-exports, heritage base interfaces, and signature-referenced
+ * option types) preserves all JSDoc comments emitted from its reference source.
+ */
+export async function assertImportableDeclarationDocs(
+  packageRoot: string,
+  referenceRoot: string,
+  exportsMap?: unknown,
+): Promise<string[]> {
+  const root = resolve(packageRoot);
+  const refRoot = resolve(referenceRoot);
+  const manifest = exportsMap
+    ? { name: "material", exports: exportsMap }
+    : await Bun.file(join(root, "package.json")).json() as { name?: string; exports?: unknown };
+
+  const packed = await collectImportableDeclarations(root, manifest.exports, manifest.name ?? "material");
+  const refs = new Map(packed.entries.map(entry => [entry.specifier, resolveReferenceFile(entry.types, refRoot)]));
+  const sourceFiles = (await filesUnder(refRoot)).filter(file => /\.(?:tsx?|mts|cts|js)$/.test(file));
+  const sourceProgram = ts.createProgram(sourceFiles.map(file => join(refRoot, file)), { ...COMPILER_OPTIONS, allowJs: true, jsx: ts.JsxEmit.Preserve });
+  const sourceChecker = sourceProgram.getTypeChecker();
+  const failures = new Set<string>();
+  const seenSymbols = new Map<ts.Symbol, Set<ts.Symbol>>();
+  const seenTypes = new Map<ts.Type, Set<ts.Type>>();
+
+  const local = (node: ts.Node, base: string) => resolve(node.getSourceFile().fileName).startsWith(`${base}/`);
+  const unalias = (checker: ts.TypeChecker, symbol: ts.Symbol) => symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  const seen = <T>(map: Map<T, Set<T>>, a: T, b: T): boolean => {
+    const values = map.get(a) ?? new Set<T>();
+    if (values.has(b)) return true;
+    values.add(b); map.set(a, values); return false;
+  };
+  const docsOf = (declaration: ts.Declaration): string[] => {
+    const sf = declaration.getSourceFile();
+    // This source audit checks handwritten TypeScript's hover cut. TypeScript
+    // does not emit JSDoc on inferred JavaScript namespace assignments; raw JS
+    // comments are not a declaration-doc oracle. The mandatory build identity
+    // proof instead protects every doc/tag in their unstripped emitted .d.ts.
+    if (/\.[cm]?jsx?$/.test(sf.fileName)) return [];
+    // A variable's JSDoc belongs to its VariableStatement, not its name node.
+    let node: ts.Node = declaration;
+    if (ts.isVariableDeclaration(node) && ts.isVariableDeclarationList(node.parent) && ts.isVariableStatement(node.parent.parent)) node = node.parent.parent;
+    if (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword)) return [];
+    if (!sf.isDeclarationFile && ts.isFunctionDeclaration(node) && node.body && sf.statements.some(other =>
+      other !== node && ts.isFunctionDeclaration(other) && other.name?.text === (node as ts.FunctionDeclaration).name?.text && !other.body)) return [];
+    return leadingJsDocsOf(node, sf.text, !sf.isDeclarationFile).map(normalizeJsDoc);
+  };
+  const labelOf = (declaration: ts.Declaration): string => {
+    const names: string[] = [];
+    for (let node: ts.Node | undefined = declaration; node && !ts.isSourceFile(node); node = node.parent) {
+      const name = (node as ts.NamedDeclaration).name;
+      if (name && (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name))) names.unshift(name.text);
+    }
+    return names.join(".");
+  };
+  const pairSymbol = (source: ts.Symbol, output: ts.Symbol, path: string): void => {
+    source = unalias(sourceChecker, source); output = unalias(packed.checker, output);
+    if (seen(seenSymbols, source, output)) return;
+    const before = source.declarations?.filter(node => local(node, refRoot)) ?? [];
+    const after = output.declarations?.filter(node => local(node, root)) ?? [];
+    if (!before.length || !after.length) return;
+    // Compare the paired declarations' OWN docs. A function type inferred
+    // from a helper's body does not inherit that helper's declaration prose.
+    const actual = new Set(after.flatMap(docsOf));
+    for (const declaration of before) {
+      for (const expected of docsOf(declaration)) {
+        if (!actual.has(expected)) failures.add(`${relative(root, after[0]!.getSourceFile().fileName)}#${labelOf(declaration) || path} (reachable from ${path}): importable declaration/member lost its JSDoc ${JSON.stringify(expected)}`);
+      }
+    }
+    if (source.flags & ts.SymbolFlags.Type && output.flags & ts.SymbolFlags.Type) {
+      pairType(sourceChecker.getDeclaredTypeOfSymbol(source), packed.checker.getDeclaredTypeOfSymbol(output), path);
+    }
+    if (source.flags & ts.SymbolFlags.Value && output.flags & ts.SymbolFlags.Value) {
+      pairType(sourceChecker.getTypeOfSymbolAtLocation(source, before[0]!), packed.checker.getTypeOfSymbolAtLocation(output, after[0]!), path);
+    }
+  };
+  const pairType = (before: ts.Type, after: ts.Type, path: string): void => {
+    if (seen(seenTypes, before, after)) return;
+    const a = before.aliasSymbol ?? before.symbol, b = after.aliasSymbol ?? after.symbol;
+    const named = (symbol: ts.Symbol) => symbol.declarations?.some(node =>
+      ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
+      ts.isEnumDeclaration(node) || ts.isModuleDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node));
+    if (a && b && named(a) && named(b)) pairSymbol(a, b, path);
+    const localType = (type: ts.Type, base: string) => (type.aliasSymbol ?? type.symbol)?.declarations?.some(node => local(node, base));
+    const parts = (type: ts.Type, checker: ts.TypeChecker): readonly ts.Type[] => type.isUnionOrIntersection() ? type.types
+      : type.aliasTypeArguments ?? (type.flags & ts.TypeFlags.Object && (type as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+        ? checker.getTypeArguments(type as ts.TypeReference) : []);
+    const aa = parts(before, sourceChecker), bb = parts(after, packed.checker);
+    aa.forEach((type, index) => { if (bb[index]) pairType(type, bb[index]!, path); });
+    if (!localType(before, refRoot) || !localType(after, root)) return;
+    const properties = new Map(packed.checker.getPropertiesOfType(after).map(symbol => [symbol.name, symbol]));
+    for (const symbol of sourceChecker.getPropertiesOfType(before)) {
+      const next = properties.get(symbol.name);
+      if (next) pairSymbol(symbol, next, `${path}.${symbol.name}`);
+    }
+    for (const kind of [ts.SignatureKind.Call, ts.SignatureKind.Construct]) {
+      const signatures = packed.checker.getSignaturesOfType(after, kind);
+      sourceChecker.getSignaturesOfType(before, kind).forEach((signature, index) => {
+        const next = signatures[index]; if (!next) return;
+        signature.parameters.forEach((parameter, i) => {
+          const other = next.parameters[i];
+          if (other) pairSymbol(parameter, other, `${path}.parameter[${i}]`);
+        });
+        pairType(sourceChecker.getReturnTypeOfSignature(signature), packed.checker.getReturnTypeOfSignature(next), `${path}.return`);
+        signature.typeParameters?.forEach((parameter, i) => {
+          const constraint = sourceChecker.getBaseConstraintOfType(parameter);
+          const nextParameter = next.typeParameters?.[i];
+          const nextConstraint = nextParameter && packed.checker.getBaseConstraintOfType(nextParameter);
+          if (constraint && nextConstraint) pairType(constraint, nextConstraint, path);
+        });
+      });
+    }
+    const indexes = packed.checker.getIndexInfosOfType(after);
+    sourceChecker.getIndexInfosOfType(before).forEach((info, index) => {
+      const next = indexes[index]; if (next) pairType(info.type, next.type, `${path}.index`);
+    });
+    if (before.isClassOrInterface() && after.isClassOrInterface()) {
+      const bases = packed.checker.getBaseTypes(after);
+      sourceChecker.getBaseTypes(before).forEach((base, index) => { if (bases[index]) pairType(base, bases[index]!, path); });
+    }
+  };
+  for (const entry of packed.entries) {
+    const file = refs.get(entry.specifier);
+    // Generated Svelte components have no handwritten module counterpart.
+    // The build's mandatory before/after identity proof covers ALL their
+    // symbols and tags against the unstripped generated declarations.
+    if (!file && /^(?:dist\/)?svelte\/(?:index|[^/]+\.svelte)\.d\.ts$/.test(entry.types)) continue;
+    const source = file && sourceProgram.getSourceFile(file);
+    const output = packed.program.getSourceFile(join(root, entry.types));
+    const a = source && sourceChecker.getSymbolAtLocation(source);
+    const b = output && packed.checker.getSymbolAtLocation(output);
+    // Style-only exports have no declared names or hover docs. The one
+    // generated pre-upgrade helper is covered by the build identity proof.
+    if (!a && b && (packed.checker.getExportsOfModule(b).length === 0 || /^(?:dist\/)?elements\/preupgrade\.d\.ts$/.test(entry.types))) continue;
+    if (!a || !b) { failures.add(`${entry.specifier}: cannot resolve source and packed declaration entries`); continue; }
+    const exports = new Map(packed.checker.getExportsOfModule(b).map(symbol => [symbol.name, symbol]));
+    for (const symbol of sourceChecker.getExportsOfModule(a)) {
+      const next = exports.get(symbol.name);
+      if (next) pairSymbol(symbol, next, `${entry.specifier}.${symbol.name}`);
+      else failures.add(`${entry.specifier}.${symbol.name}: cannot resolve packed symbol`);
+    }
+  }
+  return [...failures].sort();
+}

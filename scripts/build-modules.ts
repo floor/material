@@ -2,8 +2,24 @@ import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 
+const VENDOR_APACHE_BANNER = /^\/\*![\s\S]*?Copyright (20\d\d) Google LLC[\s\S]*?Licensed under the Apache License, Version 2\.0[\s\S]*?\*\//;
+
+/**
+ * Condense the 16-line Apache-2.0 boilerplate header in vendored theme modules
+ * into a single-line `@license` pointer naming the copyright year, Google LLC,
+ * Apache-2.0, and the package's root `NOTICE` file.
+ */
+export function compactVendorLicenceBanner(filename: string, text: string): string {
+  if (!/(?:^|[/\\])theme[/\\]vendor[/\\]/.test(filename)) return text;
+  return text.replace(
+    VENDOR_APACHE_BANNER,
+    "/*! @license Copyright $1 Google LLC | Apache-2.0 (see NOTICE) */",
+  );
+}
+
 /** Drop runtime prose without losing the annotations consumers need for tree shaking, or a licence banner. */
 export function printRuntimeModule(filename: string, text: string): string {
+  text = compactVendorLicenceBanner(filename, text);
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
   const comments = new Map<number, number>();
   function visit(node: ts.Node): void {
@@ -51,6 +67,7 @@ export function minifyAdapterModule(text: string): string {
 
 /** The comments a module carries that the shipped text keeps, in source order. */
 export function keptCommentsOf(filename: string, text: string): string[] {
+  text = compactVendorLicenceBanner(filename, text);
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
   const kept = new Set<string>();
   function visit(node: ts.Node): void {
@@ -88,6 +105,7 @@ export function assertKeptCommentsSurvive(filename: string, source: string, stri
  * the file and the comment.
  */
 export function stripRuntimeComments(filename: string, text: string): string {
+  text = compactVendorLicenceBanner(filename, text);
   const stripped = keptCommentsOf(filename, text).length > 0 ? printRuntimeModule(filename, text)
     : ts.createPrinter({ removeComments: true }).printFile(
       ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
@@ -209,8 +227,8 @@ export function buildModules(outdir: string) {
       text = stripRuntimeComments(filename, text);
     }
     if (filename.endsWith(".d.ts")) {
-      // Shipped declarations carry signatures, not prose: hovers and the
-      // published docs read src, which the tarball does not carry.
+      // Keep the public hover cut before the reachability pass removes
+      // documentation belonging only to unreferenced internal declarations.
       text = printDeclarationModule(filename, text);
     }
     ts.sys.writeFile(filename, text);
