@@ -43,7 +43,7 @@ export const SSR_ENTRY = { raw: 311_000, gzip: 113_000 } as const;
 export const SSR_PAGE = {
   // The density scale's rules reach the page's pre-upgrade inline sheet, so the
   // inline page's raw bytes outgrow the old 256,200 ceiling while its gzip row
-  // stays inside the unchanged budget. Owner decision 2026-11-05: the raw
+  // stays inside the unchanged budget. Owner decision 2026-11-09: the raw
   // ceiling is 263,950, the measured row plus 1% rounded up to 50; the floors
   // and the gzip row stay as they are.
   inline: { raw: [251_100, 263_950], gzip: [5_200, 5_450] },
