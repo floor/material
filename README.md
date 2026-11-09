@@ -310,6 +310,16 @@ The typefaces and the corner scale are custom properties too, so setting one on 
 }
 ```
 
+Density is a custom property as well. `--mtrl-density` steps from `0` to `-5`, and the classes `.mtrl-density--1` … `.mtrl-density--5` set a step on a container:
+
+```css
+.toolbar {
+  --mtrl-density: -2;
+}
+```
+
+Typography, icons and touch targets keep their size; each component stops at its own height floor, and fixed-height surfaces such as menus and dialogs do not take part. The [Theming guide](https://md3.io/docs/theming/#density) lists the floors.
+
 The [Theming guide](https://md3.io/docs/theming/#the-other-tokens) lists the type, shape and state tokens.
 
 ## Web components
