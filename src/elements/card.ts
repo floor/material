@@ -17,7 +17,8 @@
  * A region is built only when it has content, and the card is recreated when
  * a region appears or goes away; content changes inside a region are the
  * slot's. `clickable` makes the card a button (Enter and Space click it) and
- * its activation is the native `click`.
+ * its activation is the native `click`. `promote-child-actions` opts a
+ * clickable card that holds child actions into an article container.
  *
  * Parts: `card`, `content`.
  *
@@ -124,7 +125,9 @@ const setDisabled = (component: CardComponent, disabled: boolean): void => {
   else element.removeAttribute("aria-disabled");
   if (component.config.clickable || component.config.interactive) {
     if (disabled) element.removeAttribute("tabindex");
-    else element.setAttribute("tabindex", "0");
+    else if (!(component.config.promoteChildActions && element.getAttribute("role") === "article")) {
+      element.setAttribute("tabindex", "0");
+    }
   }
 };
 
@@ -150,6 +153,7 @@ const cardSpec = {
   attributes: {
     variant: { type: "string", config: "variant" },
     clickable: { type: "boolean", config: "clickable" },
+    "promote-child-actions": { type: "boolean", config: "promoteChildActions" },
     "full-width": {
       type: "boolean",
       config: "fullWidth",
