@@ -347,11 +347,6 @@ export async function stripInternalDeclarationDocs(
   return { files, declarations, bytes };
 }
 
-interface ExtractedStatementDocs {
-  summaries: Set<string>;
-  members: Map<string, Set<string>>;
-}
-
 function normalizeJsDoc(comment: string): string {
   return comment.replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
 }
@@ -379,89 +374,6 @@ function leadingJsDocsOf(node: ts.Node, text: string, isSourceTs: boolean): stri
     if (shipped) docs.push(shipped);
   }
   return docs;
-}
-
-function memberNameOf(node: ts.Node): string | undefined {
-  if (
-    ts.isPropertySignature(node) ||
-    ts.isMethodSignature(node) ||
-    ts.isPropertyDeclaration(node) ||
-    ts.isMethodDeclaration(node) ||
-    ts.isGetAccessorDeclaration(node) ||
-    ts.isSetAccessorDeclaration(node) ||
-    ts.isEnumMember(node) ||
-    ts.isPropertyAssignment(node)
-  ) {
-    const name = node.name;
-    if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-      return name.text;
-    }
-  }
-  return undefined;
-}
-
-function hasPrivateModifier(node: ts.Node): boolean {
-  if (!ts.canHaveModifiers(node)) return false;
-  return (ts.getModifiers(node) ?? []).some(
-    mod => mod.kind === ts.SyntaxKind.PrivateKeyword,
-  );
-}
-
-function extractDocsInStatement(
-  stmt: ts.Statement,
-  sf: ts.SourceFile,
-  text: string,
-  isSourceTs: boolean,
-  target: ExtractedStatementDocs,
-): void {
-  // Skip implementation signature of overloaded functions in .ts source files.
-  if (isSourceTs && ts.isFunctionDeclaration(stmt) && stmt.body) {
-    const name = stmt.name?.text;
-    const hasOverloads = name !== undefined && sf.statements.some(
-      other => other !== stmt && ts.isFunctionDeclaration(other) && other.name?.text === name && !other.body,
-    );
-    if (hasOverloads) return;
-  }
-
-  for (const doc of leadingJsDocsOf(stmt, text, isSourceTs)) {
-    target.summaries.add(normalizeJsDoc(doc));
-  }
-
-  const visitMembers = (node: ts.Node): void => {
-    if (hasPrivateModifier(node)) return;
-    const memberName = memberNameOf(node);
-    if (memberName) {
-      for (const doc of leadingJsDocsOf(node, text, isSourceTs)) {
-        let set = target.members.get(memberName);
-        if (!set) {
-          set = new Set<string>();
-          target.members.set(memberName, set);
-        }
-        set.add(normalizeJsDoc(doc));
-      }
-    }
-    // Do not descend into runtime function/method bodies in .ts source files.
-    if (ts.isFunctionLike(node) && "body" in node && node.body) {
-      for (const child of node.getChildren(sf)) {
-        if (child !== node.body) visitMembers(child);
-      }
-      return;
-    }
-    // When a VariableDeclaration in .ts has an explicit type annotation, tsc
-    // emits the type annotation rather than the initializer literal.
-    if (isSourceTs && ts.isVariableDeclaration(node) && node.type && node.initializer) {
-      visitMembers(node.name);
-      visitMembers(node.type);
-      return;
-    }
-    for (const child of node.getChildren(sf)) {
-      visitMembers(child);
-    }
-  };
-
-  for (const child of stmt.getChildren(sf)) {
-    visitMembers(child);
-  }
 }
 
 function resolveReferenceFile(declFile: string, referenceRoot: string): string | undefined {
@@ -501,7 +413,7 @@ export async function assertImportableDeclarationDocs(
   const failures = new Set<string>();
   const seenSymbols = new Map<ts.Symbol, Set<ts.Symbol>>();
   const seenTypes = new Map<ts.Type, Set<ts.Type>>();
-  const statementDocs = new Map<ts.Statement, ExtractedStatementDocs>();
+
   const local = (node: ts.Node, base: string) => resolve(node.getSourceFile().fileName).startsWith(`${base}/`);
   const unalias = (checker: ts.TypeChecker, symbol: ts.Symbol) => symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
   const seen = <T>(map: Map<T, Set<T>>, a: T, b: T): boolean => {
@@ -509,34 +421,23 @@ export async function assertImportableDeclarationDocs(
     if (values.has(b)) return true;
     values.add(b); map.set(a, values); return false;
   };
-  const statementOf = (node: ts.Node): ts.Statement | undefined => {
-    let current: ts.Node | undefined = node;
-    while (current?.parent && !ts.isSourceFile(current.parent)) current = current.parent;
-    return current && ts.isStatement(current) ? current : undefined;
+  const docsOf = (declaration: ts.Declaration): string[] => {
+    const sf = declaration.getSourceFile();
+    // A variable's JSDoc belongs to its VariableStatement, not its name node.
+    let node: ts.Node = declaration;
+    if (ts.isVariableDeclaration(node) && ts.isVariableDeclarationList(node.parent) && ts.isVariableStatement(node.parent.parent)) node = node.parent.parent;
+    if (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword)) return [];
+    if (!sf.isDeclarationFile && ts.isFunctionDeclaration(node) && node.body && sf.statements.some(other =>
+      other !== node && ts.isFunctionDeclaration(other) && other.name?.text === (node as ts.FunctionDeclaration).name?.text && !other.body)) return [];
+    return leadingJsDocsOf(node, sf.text, !sf.isDeclarationFile).map(normalizeJsDoc);
   };
-  const docsOf = (statement: ts.Statement, isSource: boolean): ExtractedStatementDocs => {
-    let result = statementDocs.get(statement);
-    if (!result) {
-      result = { summaries: new Set<string>(), members: new Map<string, Set<string>>() };
-      const sf = statement.getSourceFile();
-      extractDocsInStatement(statement, sf, sf.text, isSource, result);
-      statementDocs.set(statement, result);
+  const labelOf = (declaration: ts.Declaration): string => {
+    const names: string[] = [];
+    for (let node: ts.Node | undefined = declaration; node && !ts.isSourceFile(node); node = node.parent) {
+      const name = (node as ts.NamedDeclaration).name;
+      if (name && (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name))) names.unshift(name.text);
     }
-    return result;
-  };
-  const auditStatement = (before: ts.Statement, after: ts.Statement[], path: string): void => {
-    const expected = docsOf(before, !before.getSourceFile().isDeclarationFile);
-    const actual = after.map(statement => docsOf(statement, false));
-    const name = statementNameOf(before) ?? path;
-    const where = `${relative(root, after[0]!.getSourceFile().fileName)}#${name}`;
-    for (const summary of expected.summaries) {
-      if (!actual.some(docs => docs.summaries.has(summary))) failures.add(`${where} (reachable from ${path}): importable declaration lost its JSDoc ${JSON.stringify(summary)}`);
-    }
-    for (const [member, comments] of expected.members) {
-      for (const comment of comments) {
-        if (!actual.some(docs => docs.members.get(member)?.has(comment))) failures.add(`${where}.${member} (reachable from ${path}): importable member lost its JSDoc ${JSON.stringify(comment)}`);
-      }
-    }
+    return names.join(".");
   };
   const pairSymbol = (source: ts.Symbol, output: ts.Symbol, path: string): void => {
     source = unalias(sourceChecker, source); output = unalias(packed.checker, output);
@@ -544,12 +445,13 @@ export async function assertImportableDeclarationDocs(
     const before = source.declarations?.filter(node => local(node, refRoot)) ?? [];
     const after = output.declarations?.filter(node => local(node, root)) ?? [];
     if (!before.length || !after.length) return;
-    // The checker resolves aliases and folded private names to their actual
-    // declarations. Physical source/output filenames need not correspond.
+    // Compare the paired declarations' OWN docs. A function type inferred
+    // from a helper's body does not inherit that helper's declaration prose.
+    const actual = new Set(after.flatMap(docsOf));
     for (const declaration of before) {
-      const a = statementOf(declaration);
-      const statements = [...new Set(after.map(statementOf).filter((statement): statement is ts.Statement => statement !== undefined))];
-      if (a && statements.length) auditStatement(a, statements, path);
+      for (const expected of docsOf(declaration)) {
+        if (!actual.has(expected)) failures.add(`${relative(root, after[0]!.getSourceFile().fileName)}#${labelOf(declaration) || path} (reachable from ${path}): importable declaration/member lost its JSDoc ${JSON.stringify(expected)}`);
+      }
     }
     if (source.flags & ts.SymbolFlags.Type && output.flags & ts.SymbolFlags.Type) {
       pairType(sourceChecker.getDeclaredTypeOfSymbol(source), packed.checker.getDeclaredTypeOfSymbol(output), path);
@@ -561,7 +463,10 @@ export async function assertImportableDeclarationDocs(
   const pairType = (before: ts.Type, after: ts.Type, path: string): void => {
     if (seen(seenTypes, before, after)) return;
     const a = before.aliasSymbol ?? before.symbol, b = after.aliasSymbol ?? after.symbol;
-    if (a && b) pairSymbol(a, b, path);
+    const named = (symbol: ts.Symbol) => symbol.declarations?.some(node =>
+      ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
+      ts.isEnumDeclaration(node) || ts.isModuleDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node));
+    if (a && b && named(a) && named(b)) pairSymbol(a, b, path);
     const localType = (type: ts.Type, base: string) => (type.aliasSymbol ?? type.symbol)?.declarations?.some(node => local(node, base));
     const parts = (type: ts.Type, checker: ts.TypeChecker): readonly ts.Type[] => type.isUnionOrIntersection() ? type.types
       : type.aliasTypeArguments ?? (type.flags & ts.TypeFlags.Object && (type as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
@@ -610,6 +515,9 @@ export async function assertImportableDeclarationDocs(
     const output = packed.program.getSourceFile(join(root, entry.types));
     const a = source && sourceChecker.getSymbolAtLocation(source);
     const b = output && packed.checker.getSymbolAtLocation(output);
+    // Style-only exports have no declared names or hover docs. The one
+    // generated pre-upgrade helper is covered by the build identity proof.
+    if (!a && b && (packed.checker.getExportsOfModule(b).length === 0 || /^(?:dist\/)?elements\/preupgrade\.d\.ts$/.test(entry.types))) continue;
     if (!a || !b) { failures.add(`${entry.specifier}: cannot resolve source and packed declaration entries`); continue; }
     const exports = new Map(packed.checker.getExportsOfModule(b).map(symbol => [symbol.name, symbol]));
     for (const symbol of sourceChecker.getExportsOfModule(a)) {

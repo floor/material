@@ -350,3 +350,23 @@ test("stripping then folding retains the complete public documentation identity"
     await rm(after, { recursive: true, force: true });
   }
 });
+
+
+test("inferred function signatures do not inherit implementation-helper prose", async () => {
+  const source = await makeTree({ "index.ts": `
+/** Implementation helper. */
+function helper(value: number) { return value; }
+/** Public registry. */
+export const registry = { run: helper };
+` });
+  const packed = await makeTree({ "index.d.ts": `
+/** Public registry. */
+export declare const registry: { run: (value: number) => number };
+` });
+  try {
+    expect(await assertImportableDeclarationDocs(packed, source, { ".": { types: "./index.d.ts" } })).toEqual([]);
+  } finally {
+    await rm(source, { recursive: true, force: true });
+    await rm(packed, { recursive: true, force: true });
+  }
+});
