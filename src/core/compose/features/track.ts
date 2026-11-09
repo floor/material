@@ -30,6 +30,12 @@ export interface TrackConfig {
    * "icon on selected and unselected switch" configuration.
    */
   unselectedIcon?: string;
+
+  /**
+   * When true, the thumb graphic is `aria-hidden`. Omitted and false leave
+   * the default bytes alone: the wrapper check pins that HTML.
+   */
+  controlLabelOnly?: boolean;
 }
 
 /**
@@ -75,6 +81,10 @@ export const withTrack = <T extends TrackConfig>(config: T) =>
     if (config.icon !== 'none') {
       const icon = document.createElement('span');
       icon.className = `${config.prefix}-${config.componentName}__thumb-icon`;
+      // The switch name is the label or aria-label on the input, so the thumb
+      // graphic is decorative. Default HTML stays the recorded bytes. Only the
+      // wrapper opt-in may add aria-hidden (https://w3c.github.io/aria/#aria-hidden).
+      if (config.controlLabelOnly) icon.setAttribute('aria-hidden', 'true');
       setHTML(icon, config.icon || DEFAULT_ICON);
       thumb.appendChild(icon);
     }
@@ -82,6 +92,7 @@ export const withTrack = <T extends TrackConfig>(config: T) =>
     if (config.unselectedIcon) {
       const icon = document.createElement('span');
       icon.className = `${config.prefix}-${config.componentName}__thumb-icon ${config.prefix}-${config.componentName}__thumb-icon--unselected`;
+      if (config.controlLabelOnly) icon.setAttribute('aria-hidden', 'true');
       setHTML(icon, config.unselectedIcon);
       thumb.appendChild(icon);
       component.element.classList.add(`${config.prefix}-${config.componentName}--icons`);
