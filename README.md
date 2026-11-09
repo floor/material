@@ -467,6 +467,69 @@ document.body.append(button.element);
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
+A standalone menu can also defer its implementation with the explicit
+`material/components/menu/deferred` entry. This is an opt-in delivery choice;
+`createMenu` and the existing element and framework entries keep their synchronous
+behavior. Enable code splitting and keep factory styles loaded normally:
+
+```ts
+import createDeferredMenu from 'material/components/menu/deferred';
+import 'material/styles/base';
+import 'material/styles/menu';
+
+const menu = createDeferredMenu({
+  opener: '#actions',
+  items: [{ id: 'save', text: 'Save' }],
+  on: { loaderror: ({ error }) => console.error(error) },
+});
+menu.open();             // synchronous requested state and one open event
+await menu.preload();    // joins the request; does not open or focus by itself
+const surface = menu.element; // real HTMLElement after readiness, otherwise null
+```
+
+The handle supports the menu's non-DOM operations, including queued setters,
+`on`/`off`, `toggle`, `getOpener` and selection. Fluent methods always return the
+handle, and event payloads identify that handle. It is not a `MenuComponent`:
+`element` is nullable, `isReady()` reports construction, and `preload()` returns a
+Promise. `isOpen()` reports the accepted request before a cold popup exists;
+`aria-expanded` stays false and the opener is busy during that interval. Closing
+cancels presentation without pretending to abort a module fetch. Destroying is
+terminal and rejects outstanding and future preload calls with `AbortError`.
+
+A failed import or construction closes the request, emits `loaderror` and rejects
+`preload()`. Explicit subsequent requests may retry; a browser-cached module
+failure can require a page reload. There is no automatic retry or cache busting.
+Register an error handler before opening and handle the Promise when awaiting
+preload. Existing eager menus remain appropriate when DOM access or initially
+open content must be usable immediately.
+
+For elements, `material/elements/menu` is a dedicated registration boundary for
+the existing `defineMenu`, `menuElement` and `menuItemDeclaration`. Importing it
+registers nothing. Delay both that entry and `material/elements/css/menu`, then
+call `defineMenu` only after both resolve. Import
+`material/elements/preupgrade/menu.css` with the page's normal base/theme styles.
+The [checked application recipe](scripts/fixtures/menu-deferred/broker.js) keeps
+one registration Promise, records cold input once, cancels stale intent and
+handles failures. Its call to `toggle(originalEvent)` happens after registration;
+it never redispatches the gesture. The [element fixture](scripts/fixtures/menu-deferred/element.js)
+shows the recipe with authored items and early host listeners. Methods such as
+`show`, `hide` and `toggle` do not exist before upgrade: application callers must
+await registration. Custom prefixes register their item declarations first; supply matching pre-upgrade
+CSS with `preupgradeStyles(prefix)` from `material/elements/preupgrade`.
+
+Closed SSR content can defer client registration while keeping its declarative
+shadow root and styles. Initially open attributes/properties use eager
+registration and ready styles; no initial-byte saving is claimed for that path.
+SSR rendering and framework adapters remain synchronous. Factory ARIA references
+are not copied across the element's shadow boundary.
+
+Deferral shifts initial JavaScript and, for the element recipe, shadow CSS to
+later requests. It adds a facade or application broker, so fully loaded cost can
+increase. Keeping another eager menu import can remove the saving. The packed
+`menu-deferred:check` compares initial and fully loaded JS/CSS, including shared
+chunks and the recipe, in the same styled 16-component fixtures.
+
+
 ### Bundling
 
 The build ships two direction forms. The full stylesheet and the per-component sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties an old-target bundler rewrites, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can put them on the wrong side. Logical margins remain, and an old-target bundler can still rewrite those.

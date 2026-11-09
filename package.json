@@ -208,6 +208,10 @@
       "types": "./dist/components/menu/index.d.ts",
       "import": "./dist/components/menu/index.js"
     },
+    "./components/menu/deferred": {
+      "types": "./dist/components/menu/deferred.d.ts",
+      "import": "./dist/components/menu/deferred.js"
+    },
     "./components/menu/constants": {
       "types": "./dist/components/menu/constants.d.ts",
       "import": "./dist/components/menu/constants.js"
@@ -351,6 +355,10 @@
     "./elements": {
       "types": "./dist/elements/index.d.ts",
       "import": "./dist/elements/index.js"
+    },
+    "./elements/menu": {
+      "types": "./dist/elements/menu-entry.d.ts",
+      "import": "./dist/elements/menu-entry.js"
     },
     "./elements/css": {
       "types": "./dist/elements/css/index.d.ts",
@@ -540,6 +548,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts",
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
+    "menu-deferred:check": "bun run scripts/check-menu-deferred.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
     "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts && bun run scripts/check-a11y-name-role-d.ts",
