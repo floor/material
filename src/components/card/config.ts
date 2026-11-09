@@ -212,7 +212,7 @@ export const getElementConfig = (config: CardConfig) => {
       click: (ctx, event) => !!config.clickable && !(
         config.promoteChildActions &&
         event.target !== ctx.element &&
-        (event.target as Element | null)?.closest?.(NESTED_ACTION_SELECTOR)
+        (event.target as Element).closest?.(NESTED_ACTION_SELECTOR)
       ),
       mouseenter: () => !!isInteractive,
       mouseleave: () => !!isInteractive,
@@ -269,8 +269,7 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
     // Keyboard interactions for accessibility
     comp.element.addEventListener("keydown", (e: KeyboardEvent) => {
       // Activate on Enter or Space
-      if ((e.key === "Enter" || e.key === " ") && config.clickable) {
-        if (config.promoteChildActions && e.target !== comp.element) return;
+      if ((e.key === "Enter" || e.key === " ") && config.clickable && !(config.promoteChildActions && e.target !== comp.element)) {
         e.preventDefault();
         comp.element.click();
       }

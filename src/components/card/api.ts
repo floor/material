@@ -26,27 +26,25 @@ type ComponentWithElements = Omit<BaseComponent, 'config' | 'addClass'> & {
 
 /**
  * Controls inside a clickable card. One string, shared with the click guard.
- * Slots cover `<m-card>` actions; `m-button` and `m-icon-button` cover light DOM.
- */
-export const NESTED_ACTION_SELECTOR =
-  'button, a[href], input, select, textarea, m-button, m-icon-button, [role="button"], [role="link"], slot[name="actions"], slot[name="header-action"]';
-
-/**
- * A clickable card with nested actions stays a button unless
- * `promoteChildActions` opts into the container pattern: article, no tab
- * stop. The development warning stays inside the production guard so the
- * accessibility URL is stripped from a production build.
+ * Identifier values need no quotes. The card template's action slots are
+ * `actions` and `header-action`, both matched by `name*=action`.
  * @see https://m3.material.io/components/cards/accessibility
  */
+export const NESTED_ACTION_SELECTOR =
+  "button,a[href],input,select,textarea,m-button,m-icon-button,[role=button],[role=link],slot[name*=action]";
+
+/**
+ * Opt-in: a clickable card with nested actions becomes an article and drops
+ * its tab stop. The development warning stays inside the production guard so
+ * its URL is absent from a production build. The default path does not query.
+ */
 export const syncNestedActions = (element: HTMLElement, config: CardConfig): void => {
-  if (!config.clickable || !element.querySelector(NESTED_ACTION_SELECTOR)) return;
-  if (config.promoteChildActions) {
-    if (element.getAttribute('role') === 'button') element.setAttribute('role', 'article');
-    element.removeAttribute('tabindex');
-    return;
-  }
-  if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production") {
-    warnDev('card', 'A clickable card contains actions. Use a card without clickable for child actions: https://m3.material.io/components/cards/accessibility');
+  // The development warning is the else branch so a production build drops it.
+  if (config.clickable && config.promoteChildActions && element.querySelector(NESTED_ACTION_SELECTOR)) {
+    if (element.role === "button") element.role = "article";
+    element.removeAttribute("tabindex");
+  } else if (/*#__PURE__*/ (() => { try { return process.env.NODE_ENV !== "production"; } catch { return false; } })() && process.env.NODE_ENV !== "production" && config.clickable && element.querySelector(NESTED_ACTION_SELECTOR)) {
+    warnDev("card", "A clickable card contains actions. Use a card without clickable for child actions: https://m3.material.io/components/cards/accessibility");
   }
 };
 
