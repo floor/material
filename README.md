@@ -304,7 +304,9 @@ const origin = THEME_ORIGINS['desert' as BuiltInThemeName];
 // { kind: 'generated', seed: '#9a7a3e', variant: 'tonal-spot', contrast: 0, secondary: '#4a87c4' }
 ```
 
-A generated theme carries its seed, variant and the generator's nominal contrast input (`highcontrast` is `1`; a user's contrast preference does not change the record). The baseline's record describes its documented seed association — its palette is maintained as published tokens. An authored theme carries its documented source seed where its source records one, and `null` where it does not (`autumn` has no recorded seed, and none is invented); with no verified recipe, its `variant` and `contrast` are `null` too. The map and its records are frozen, and a bundler removes the whole block from consumers that never read it.
+A generated theme carries its seed, variant and the generator's nominal contrast input (`highcontrast` is `1`; a user's contrast preference does not change the record). The baseline's record describes its documented seed association — its palette is maintained as published tokens.
+
+An authored theme carries its documented source seed where its source records one, and `null` where it does not: `autumn` has no recorded seed, and none is invented. Its variant and contrast are `null` too, no recipe being verified for it. The map and its records are frozen, and a bundler removes the whole block from consumers that never read it.
 
 ### Custom properties
 
