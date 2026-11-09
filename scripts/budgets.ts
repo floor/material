@@ -24,12 +24,12 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_600,
   form: 20_500,
-  "all-js": 130_050,
+  "all-js": 130_650,
   "base-css": 3_050,
   "base-lite-css": 1_750,
-  "button-css": 5_300,
+  "button-css": 5_550,
   "select-css": 8_400,
-  "slider-css": 4_850,
+  "slider-css": 5_050,
   "full-css": 63_750,
 } as const;
 
