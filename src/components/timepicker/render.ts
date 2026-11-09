@@ -267,6 +267,7 @@ export const renderTimePicker = (
 
   // Track active selector for clock dial
   let activeSelector: DialSelector = "hour";
+  let advance: ReturnType<typeof setTimeout>;
 
   const fields = (): Array<[DialSelector, TimeField]> =>
     ([["hour", hoursInput], ["minute", minutesInput], ["second", secondsInput]] as Array<[DialSelector, TimeField | undefined]>)
@@ -274,6 +275,7 @@ export const renderTimePicker = (
 
   /** Makes one part the active one: the filled box, the checked radio, the dial's face. */
   const setActive = (unit: DialSelector): void => {
+    clearTimeout(advance);
     activeSelector = unit;
     for (const [type, field] of fields()) {
       field.setAttribute("data-active", String(type === unit));
@@ -310,18 +312,18 @@ export const renderTimePicker = (
   }
 
   /** Shows the time everywhere: the fields, AM/PM and the dial. */
-  const refresh = (): void => {
+  const refresh = (animate = false): void => {
     show(hoursInput, config.format === TIME_FORMAT.MILITARY ? timeValue.hours : timeValue.hours % 12 || 12);
     show(minutesInput, timeValue.minutes);
     show(secondsInput, timeValue.seconds ?? 0);
     markPeriod();
-    dial.update(timeValue, activeSelector);
+    dial.update(timeValue, activeSelector, animate);
   };
 
   /** Moves the time inside the limits, then shows it. */
-  const settle = (): void => {
+  const settle = (animate = false): void => {
     Object.assign(timeValue, constrainTime(timeValue, limits, minuteStep, secondStep));
-    refresh();
+    refresh(animate);
   };
 
   /** Notifies once, and only when the time differs from `before`. */
@@ -345,8 +347,9 @@ export const renderTimePicker = (
     }
   }
 
-  // The dial shows the time at once; it no longer waits for a canvas to size.
-  dial.update(timeValue, activeSelector);
+  // Initial renders (including setValue) retain their hand animation.
+  // Field changes jump; a DOM-only server has no computed styles.
+  dial.update(timeValue, activeSelector, typeof getComputedStyle === "function");
 
   // The mode toggle is handled once, by the API, which re-renders the picker and
   // keeps focus on the toggle. This listener switched the view in place as well,
@@ -545,6 +548,7 @@ export const renderTimePicker = (
   // The value before a drag began: what a release compares against to notify.
   let started: TimeValue | null = null;
   function selectFromDial(value: number, final: boolean, pointer: boolean): void {
+    clearTimeout(advance);
     if (!final && !started) started = { ...timeValue };
     const previousValue = started ?? { ...timeValue };
     // A pointer lands between labels; it picks the nearest step.
@@ -559,13 +563,13 @@ export const renderTimePicker = (
       } else if (secondsInput) {
         timeValue.seconds = value;
       }
-      settle();
+      settle(true);
     }
     if (!final) return;
     started = null;
     notify(previousValue);
     if (picked && pointer && activeSelector === "hour") {
-      setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, 200);
+      advance = setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, parseFloat(getComputedStyle(dial.element).transitionDuration) * 1000);
     }
   }
 

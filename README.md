@@ -598,11 +598,11 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 130.6 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 130.8 kB |
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |
-| `material/styles`, the full stylesheet | 59.4 kB |
+| `material/styles`, the full stylesheet | 59.6 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).

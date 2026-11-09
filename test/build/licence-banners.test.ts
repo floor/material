@@ -22,15 +22,22 @@ function vendored(): string[] {
   return files.sort();
 }
 
-test("every vendored licence banner survives the readable strip", () => {
+test("every vendored licence banner condenses into a NOTICE pointer with its source copyright year", () => {
   const files = vendored();
   expect(files.length).toBeGreaterThan(0);
   for (const file of files) {
     const text = readFileSync(file, "utf8");
     const licence = banner(text);
-    expect(licence, `${relative(import.meta.dir, file)} opens with a licence banner`).toStartWith("/*!");
+    const label = relative(import.meta.dir, file);
+    expect(licence, `${label} opens with a licence banner`).toStartWith("/*!");
+    expect(licence, `${label} names Apache-2.0 in source`).toContain("Licensed under the Apache License, Version 2.0");
+    const year = /Copyright (20\d\d) Google LLC/.exec(licence)?.[1];
+    expect(year, `${label} states a Google LLC copyright year`).toBeDefined();
+    const expectedPointer = `/*! @license Copyright ${year} Google LLC | Apache-2.0 (see NOTICE) */`;
     const stripped = build.stripRuntimeComments(file, text);
-    expect(stripped, `${relative(import.meta.dir, file)} keeps its licence banner`).toContain(licence);
+    expect(stripped, `${label} starts with the condensed NOTICE pointer`).toStartWith(`${expectedPointer}\n`);
+    expect(stripped, `${label} drops the 16-line boilerplate body`).not.toContain('Licensed under the Apache License, Version 2.0 (the "License");');
+    expect(() => build.assertKeptCommentsSurvive(file, text, stripped.replace(expectedPointer, ""))).toThrow(expectedPointer);
   }
 });
 

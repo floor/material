@@ -12,6 +12,8 @@ import { callbacksFixture, wait } from "../callbacks.fixture";
 const mount = callbacksFixture();
 
 const setup = async (config: SearchConfig = {}) => {
+  // JSDOM does not implement scrolling; keyboard selection uses the browser API.
+  HTMLElement.prototype.scrollIntoView ??= () => {};
   const log: string[] = [];
   const search = mount(createSearch({ suggestions: ["Apple", "Banana"], collapseOnBlur: false, ...config }));
   for (const name of ["input", "submit", "clear", "suggestionSelect", "expand", "collapse"] as const) {
@@ -119,3 +121,33 @@ test("a suggestion with supporting text is a two-line item", async () => {
   expect(item.classList.contains("mtrl-search__suggestion-item--two-line")).toBe(true);
   expect(item.querySelector(".mtrl-search__suggestion-supporting")!.textContent).toBe("Portugal");
 });
+
+for (const value of ["", "memo"]) {
+  test(`disabled search controls retain their native, ARIA and tab states for ${value || "empty"} input`, async () => {
+    const p = await setup({ value, trailingItems: [
+      { id: "mic", type: "icon", content: "<svg></svg>", ariaLabel: "Voice" },
+      { id: "avatar", type: "avatar", content: '<img alt="">' },
+    ] });
+    const leading = p.search.element.querySelector<HTMLElement>(".mtrl-search__leading-icon")!;
+    const clear = p.search.element.querySelector<HTMLElement>(".mtrl-search__clear-button")!;
+    const trailing = p.search.element.querySelector<HTMLElement>('[data-trailing-id="mic"]')!;
+    const avatar = p.search.element.querySelector<HTMLElement>('[data-trailing-id="avatar"]')!;
+    p.log.length = 0;
+    expect(p.search.disable()).toBe(p.search);
+    expect(p.search.isDisabled()).toBe(true);
+    expect(p.input.disabled).toBe(true);
+    expect(p.search.element.getAttribute("aria-disabled")).toBe("true");
+    expect([leading, clear, trailing].map(element => [element.tabIndex, element.getAttribute("aria-disabled")]))
+      .toEqual([[-1, "true"], [-1, "true"], [-1, "true"]]);
+    expect(avatar.hasAttribute("aria-disabled")).toBe(false);
+    expect(p.search.enable()).toBe(p.search);
+    expect(p.search.isDisabled()).toBe(false);
+    expect(p.input.disabled).toBe(false);
+    expect(p.search.element.getAttribute("aria-disabled")).toBe("false");
+    expect([leading, clear, trailing].map(element => [element.tabIndex, element.getAttribute("aria-disabled")]))
+      .toEqual([[0, "false"], [value ? 0 : -1, "false"], [0, "false"]]);
+    expect(p.search.element.querySelector("input")).toBe(p.input);
+    expect(p.input.value).toBe(value);
+    expect(p.log).toEqual([]);
+  });
+}

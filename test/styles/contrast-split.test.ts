@@ -309,12 +309,12 @@ describe("explicit contrast levels are opt-in", () => {
     // buttons take the full step the buttons spec gives every text button
     // (styles/components/_list.scss, _timepicker.scss).
     // Main contrast/focus rules plus the density scale and drawer indicator
-    // masks. The merged tree's sheet, re-pinned from CI's built stylesheet
-    // (run 42580597104): +56 B over the branch's own measurement after
-    // merging 53ae0a44.
+    // masks. Range bands preserve adjacent-month muted text by excluding
+    // outside days from their foreground selector (+31 B, CI 42608902656).
+    // Time-picker digit scale/fade uses spatial/effects motion tokens, with inverse hour return (+1,336 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "0aef97b4d25144f01642c7a0c552078dcfc1b9f6949027e597ab2afded4e512a",
-      length: 546903,
+      sha256: "cd7a5ff672c6b01f2d2cf9a45d05050572eea822b4fbd0569acd52368c374bc6",
+      length: 548270,
     });
   });
 

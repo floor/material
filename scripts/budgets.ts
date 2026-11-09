@@ -24,7 +24,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_600,
   form: 20_500,
-  "all-js": 130_650,
+  "all-js": 130_950, // Owner decision 2026-11-09: time picker transitions in 3.10.1 and card child actions in 3.11.
   "base-css": 3_150,
   "base-lite-css": 1_750,
   "button-css": 5_550,
