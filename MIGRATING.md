@@ -19,6 +19,14 @@ Logical sides follow the page's direction; physical sides do not. Use `placement
 
 `position`, its physical values and the legacy `setPosition` / `getPosition` methods are deprecated for removal in 4.0. They remain available in 3.x; existing physical placement is preserved. For live logical placement on an element, change its `placement` attribute.
 
+## Deprecations in 3.10.0
+
+Two names are deprecated for removal in 4.0; both keep working throughout 3.x.
+
+The menu's `dense` option and the `<m-menu dense>` attribute are deprecated. The library moved to one density scale, `--mtrl-density`, which leaves menus at their default density: M3 advises against densifying focused tasks such as selecting from a menu. Remove the option; there is no replacement to set.
+
+`setupResponsiveBehavior` from `material/components/tabs` is deprecated. Pass `tabsResponsive(config)` from `material/components/tabs/responsive` as `createTabs`'s `responsive` option instead — the same configuration, the same behaviour, applied while the group is built.
+
 ## 1. Replace retired themes first
 
 | Retired name in 3.0.0 | Replacement |

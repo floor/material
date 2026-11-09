@@ -158,9 +158,10 @@ export interface DrawerConfig extends BaseComponentConfig {
   width?: string | number;
 
   /**
-   * When true, renders a compact drawer with smaller items and tighter spacing.
-   * Useful in dense UIs like admin panels where the standard 56px item height
-   * is too large.
+   * An alias for the density scale's last step: sets `--mtrl-density: -5`,
+   * so items land on the 36dp height of that step while keeping their 48dp
+   * touch target. Sheet padding, typography, icons, badges and dividers are
+   * unchanged — density never moves type or icons.
    * @default false
    */
   dense?: boolean;
