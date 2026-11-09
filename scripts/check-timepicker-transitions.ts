@@ -78,17 +78,18 @@ try {
       else {
         const outgoing = state.digits.find(g => g.first === oldFirst);
         const incoming = state.digits.find(g => g.first === newFirst);
-        const grows = (group: typeof outgoing) => group?.motions.some(m => m.frames[0].scale < m.frames.at(-1)!.scale);
+        const scales = (group: typeof outgoing) => group?.motions.some(m => mode === "hour"
+          ? m.frames[0].scale > m.frames.at(-1)!.scale : m.frames[0].scale < m.frames.at(-1)!.scale);
         const fades = (group: typeof outgoing, out: boolean) => group?.motions.some(m => out
           ? m.frames[0].opacity > m.frames.at(-1)!.opacity : m.frames[0].opacity < m.frames.at(-1)!.opacity);
-        check(`${mode}: leaving digits scale up and fade out`, !!grows(outgoing) && !!fades(outgoing, true));
-        check(`${mode}: arriving digits scale to one and fade in`, !!grows(incoming) && !!fades(incoming, false) && !!incoming?.motions.some(m => m.frames[0].scale < 1 && m.frames.at(-1)!.scale === 1));
+        check(`${mode}: leaving digits scale in the requested direction and fade out`, !!scales(outgoing) && !!fades(outgoing, true));
+        check(`${mode}: arriving digits scale to one and fade in`, !!scales(incoming) && !!fades(incoming, false) && !!incoming?.motions.some(m => (mode === "hour" ? m.frames[0].scale > 1 : m.frames[0].scale < 1) && m.frames.at(-1)!.scale === 1));
       }
       if (!reduced) {
         await page.waitForTimeout(50);
         const mid = await snapshot();
         const leaving = mid.digits.find(g => g.first === oldFirst);
-        check(`${mode}: leaving digits remain visible during fade`, !!leaving && leaving.opacity > 0 && leaving.opacity < 1 && leaving.scale > 1);
+        check(`${mode}: leaving digits remain visible during fade`, !!leaving && leaving.opacity > 0 && leaving.opacity < 1 && (mode === "hour" ? leaving.scale < 1 : leaving.scale > 1));
       }
       await page.waitForTimeout(600);
       const settled = await snapshot();
@@ -107,6 +108,75 @@ try {
     await page.mouse.move(dragTarget.x + dragTarget.width / 2, dragTarget.y + dragTarget.height / 2);
     check(`${reduced}: dragging follows immediately`, (await snapshot()).hand === 0);
     await page.mouse.up();
+  }
+  // Real pointer events: normal click noise must not cancel a spring; an old
+  // hour-selection timer must not cut a later selection short.
+  const face = page.locator(".mtrl-time-picker__dial-face");
+  const point = async (name: string) => {
+    const box = await page.getByRole("option", { name, exact: true }).boundingBox();
+    assert(box);
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  for (const reduced of [false, true]) {
+    await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+    await mount();
+    const three = await point("3 o'clock");
+    await page.mouse.move(three.x, three.y);
+    await page.mouse.down();
+    await page.mouse.move(three.x + 1, three.y);
+    await page.mouse.up();
+    const jitter = await snapshot();
+    console.log(`jitter/${reduced}: ${JSON.stringify(jitter)}`);
+    check(`${reduced}: one-pixel click noise keeps hand animation`, reduced ? jitter.all === 0 : jitter.hand > 0);
+    await page.waitForTimeout(600);
+    await mount();
+    await page.mouse.click(three.x, three.y);
+    if (!reduced) {
+      await page.waitForTimeout(40);
+      await page.mouse.click(three.x, three.y);
+      check("same value during a spring preserves motion", (await snapshot()).hand > 0);
+    }
+    await page.waitForTimeout(reduced ? 30 : 220);
+    const six = await point(await face.getAttribute("aria-label") === "Hour" ? "6 o'clock" : "30 minutes");
+    await page.mouse.click(six.x, six.y);
+    const second = await snapshot();
+    check(`${reduced}: quick second selection animates`, reduced ? second.all === 0 : second.hand > 0);
+    if (!reduced) {
+      await page.waitForTimeout(270);
+      const mid = await snapshot();
+      console.log(`second-selection-mid: ${JSON.stringify(mid)}`);
+      check("earlier click cannot interrupt the later hour spring", await face.getAttribute("aria-label") === "Hour" && mid.hand > 0);
+    }
+    await page.waitForTimeout(600);
+    check(`${reduced}: completed hour selection advances to minutes`, await face.getAttribute("aria-label") === "Minute");
+    if (!reduced) {
+      await mount();
+      await page.mouse.click(three.x, three.y);
+      await page.waitForTimeout(100);
+      await snapshot("hour");
+      await page.waitForTimeout(500);
+      check("explicit field choice cancels pending automatic mode switch", await face.getAttribute("aria-label") === "Hour" && (await snapshot()).hand === 0);
+    }
+    await mount();
+    await snapshot("minute");
+    // Click dial track between labels immediately after a field mode change.
+    const box = await face.boundingBox();
+    assert(box);
+    await page.mouse.click(box.x + box.width / 2 + 75, box.y + box.height / 2);
+    const track = await snapshot();
+    check(`${reduced}: track click just after mode change animates hand`, reduced ? track.all === 0 : track.hand > 0);
+    await page.waitForTimeout(600);
+    // Re-selecting a settled value has zero distance: it must stay still,
+    // rather than invent a full turn to manufacture a transition.
+    const angle = await face.evaluate(el => getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle"));
+    await page.mouse.click(box.x + box.width / 2 + 75, box.y + box.height / 2);
+    check(`${reduced}: same settled value stays in place`, await face.evaluate(el => getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle")) === angle);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 75);
+    check(`${reduced}: real track drag follows instantly`, (await snapshot()).hand === 0);
+    await page.mouse.up();
+    await page.mouse.click(box.x + box.width / 2 - 75, box.y + box.height / 2);
+    check(`${reduced}: click after dragging animates again`, reduced ? (await snapshot()).all === 0 : (await snapshot()).hand > 0);
   }
   await page.evaluate(() => (window as unknown as MotionWindow).picker.destroy());
   assert.deepEqual(errors, [], "browser errors");

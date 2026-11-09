@@ -198,14 +198,19 @@ export const createDial = (options: DialOptions): Dial => {
     return step || 12;
   };
   let dragging = false;
+  let pointerX = 0;
+  let pointerY = 0;
   element.addEventListener("pointerdown", event => {
     if (event.button !== 0) return;
     dragging = true;
+    pointerX = event.clientX;
+    pointerY = event.clientY;
     element.setPointerCapture?.(event.pointerId);
     options.onSelect(valueAt(event), false, true);
   });
+  // Small pointer noise during a click must not cancel its spring.
   element.addEventListener("pointermove", event => {
-    if (dragging) {
+    if (dragging && (element.classList.contains(cls("dial-face--dragging")) || Math.hypot(event.clientX - pointerX, event.clientY - pointerY) > 4)) {
       element.classList.add(cls("dial-face--dragging"));
       options.onSelect(valueAt(event), false, true);
     }

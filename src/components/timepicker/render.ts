@@ -267,6 +267,7 @@ export const renderTimePicker = (
 
   // Track active selector for clock dial
   let activeSelector: DialSelector = "hour";
+  let advance: ReturnType<typeof setTimeout>;
 
   const fields = (): Array<[DialSelector, TimeField]> =>
     ([["hour", hoursInput], ["minute", minutesInput], ["second", secondsInput]] as Array<[DialSelector, TimeField | undefined]>)
@@ -274,6 +275,7 @@ export const renderTimePicker = (
 
   /** Makes one part the active one: the filled box, the checked radio, the dial's face. */
   const setActive = (unit: DialSelector): void => {
+    clearTimeout(advance);
     activeSelector = unit;
     for (const [type, field] of fields()) {
       field.setAttribute("data-active", String(type === unit));
@@ -545,6 +547,7 @@ export const renderTimePicker = (
   // The value before a drag began: what a release compares against to notify.
   let started: TimeValue | null = null;
   function selectFromDial(value: number, final: boolean, pointer: boolean): void {
+    clearTimeout(advance);
     if (!final && !started) started = { ...timeValue };
     const previousValue = started ?? { ...timeValue };
     // A pointer lands between labels; it picks the nearest step.
@@ -565,7 +568,7 @@ export const renderTimePicker = (
     started = null;
     notify(previousValue);
     if (picked && pointer && activeSelector === "hour") {
-      setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, parseFloat(getComputedStyle(dial.element).transitionDuration) * 1000);
+      advance = setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, parseFloat(getComputedStyle(dial.element).transitionDuration) * 1000);
     }
   }
 
