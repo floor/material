@@ -310,18 +310,18 @@ export const renderTimePicker = (
   }
 
   /** Shows the time everywhere: the fields, AM/PM and the dial. */
-  const refresh = (): void => {
+  const refresh = (animate = false): void => {
     show(hoursInput, config.format === TIME_FORMAT.MILITARY ? timeValue.hours : timeValue.hours % 12 || 12);
     show(minutesInput, timeValue.minutes);
     show(secondsInput, timeValue.seconds ?? 0);
     markPeriod();
-    dial.update(timeValue, activeSelector);
+    dial.update(timeValue, activeSelector, animate);
   };
 
   /** Moves the time inside the limits, then shows it. */
-  const settle = (): void => {
+  const settle = (animate = false): void => {
     Object.assign(timeValue, constrainTime(timeValue, limits, minuteStep, secondStep));
-    refresh();
+    refresh(animate);
   };
 
   /** Notifies once, and only when the time differs from `before`. */
@@ -559,13 +559,13 @@ export const renderTimePicker = (
       } else if (secondsInput) {
         timeValue.seconds = value;
       }
-      settle();
+      settle(true);
     }
     if (!final) return;
     started = null;
     notify(previousValue);
     if (picked && pointer && activeSelector === "hour") {
-      setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, 200);
+      setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, parseFloat(getComputedStyle(dial.element).transitionDuration) * 1000);
     }
   }
 

@@ -24,7 +24,7 @@ export interface DialOptions {
 export interface Dial {
   element: HTMLElement;
   /** Shows a time on the dial for the part being set. */
-  update: (time: TimeValue, selector: DialSelector) => void;
+  update: (time: TimeValue, selector: DialSelector, animate?: boolean) => void;
 }
 
 // M3 dial geometry (Compose): a 256dp face, labels on a 101dp ring, the 24-hour
@@ -108,6 +108,18 @@ export const createDial = (options: DialOptions): Dial => {
   };
 
   const build = (next: DialSelector) => {
+    // Keep a non-interactive copy until its exit fade ends.
+    element.querySelectorAll(`.${cls("dial-numbers--leaving")}`).forEach(el => el.remove());
+    if (selector && element.ownerDocument.defaultView?.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+      const leaving = numbers.cloneNode(true) as HTMLElement;
+      leaving.classList.add(cls("dial-numbers--leaving"));
+      leaving.setAttribute("aria-hidden", "true");
+      leaving.inert = true;
+      leaving.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+      leaving.addEventListener("animationend", () => leaving.remove(), { once: true });
+      leaving.addEventListener("animationcancel", () => leaving.remove(), { once: true });
+      element.append(leaving);
+    }
     selector = next;
     items = itemsFor(next, format);
     element.setAttribute("aria-label", next === "hour" ? "Hour" : next === "minute" ? "Minute" : "Second");
@@ -131,7 +143,7 @@ export const createDial = (options: DialOptions): Dial => {
       place(copy, item);
       return copy;
     }));
-    // The hour and minute faces cross-fade.
+    // Restart the spatial scale and opacity effects together.
     element.classList.remove(cls("dial-face--swap"));
     void element.offsetWidth;
     element.classList.add(cls("dial-face--swap"));
@@ -144,7 +156,8 @@ export const createDial = (options: DialOptions): Dial => {
     return Math.round(value / 5) % items.length;
   };
 
-  const update = (time: TimeValue, next: DialSelector) => {
+  const update = (time: TimeValue, next: DialSelector, animate = false) => {
+    if (!animate) element.style.transition = "none";
     // Rebuilding the face removes the focused number; focus moves to the new
     // face's tab stop rather than falling back to the dialog.
     // Read from the dial's own root: inside a shadow root the document sees only
@@ -169,6 +182,7 @@ export const createDial = (options: DialOptions): Dial => {
       if (option !== focused) option.tabIndex = i === stop ? 0 : -1;
     });
     if (refocus) numbers.querySelector<HTMLElement>('[tabindex="0"]')?.focus({ preventScroll: true });
+    if (!animate) { void element.offsetWidth; element.style.transition = ""; }
   };
 
   // Pointer: the angle from the centre picks the value, and the distance picks
@@ -188,11 +202,13 @@ export const createDial = (options: DialOptions): Dial => {
     if (event.button !== 0) return;
     dragging = true;
     element.setPointerCapture?.(event.pointerId);
-    element.classList.add(cls("dial-face--dragging"));
     options.onSelect(valueAt(event), false, true);
   });
   element.addEventListener("pointermove", event => {
-    if (dragging) options.onSelect(valueAt(event), false, true);
+    if (dragging) {
+      element.classList.add(cls("dial-face--dragging"));
+      options.onSelect(valueAt(event), false, true);
+    }
   });
   const release = (event: PointerEvent) => {
     if (!dragging) return;

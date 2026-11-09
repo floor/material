@@ -311,9 +311,10 @@ describe("explicit contrast levels are opt-in", () => {
     // Main contrast/focus rules plus the density scale and drawer indicator
     // masks. Range bands preserve adjacent-month muted text by excluding
     // outside days from their foreground selector (+31 B, CI 42608902656).
+    // Time-picker digit scale/fade uses spatial/effects motion tokens (+1,144 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "59a0dfe11ac69ba1ed84dc5af26b412d721d634aa3d476ddc54c3290820b619e",
-      length: 546934,
+      sha256: "bafe98a771f57e9d748a230ccb1644d5582c31a3b3495603309a353515fa0dda",
+      length: 548078,
     });
   });
 
