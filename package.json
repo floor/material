@@ -585,6 +585,8 @@
     "name:check": "bun scripts/package-name.ts material --check",
     "check:dist-tags": "bun run scripts/check-dist-tags.ts",
     "themes:generate": "bun scripts/generate-themes.ts",
+    "themes:origins": "bun scripts/generate-themes.ts --origins",
+    "themes:origins:check": "bun scripts/generate-themes.ts --origins --check",
     "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
     "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts",
     "vue-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue-ssr.ts",
