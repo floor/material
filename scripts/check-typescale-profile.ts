@@ -9,6 +9,7 @@ import { build } from "vite";
 import * as sass from "sass";
 import { chromium, type Page } from "playwright";
 import { createPackageFixture } from "./package-fixture";
+import { PACKAGE_GZIP } from "./budgets";
 
 const fixture = await createPackageFixture();
 const scratch = await mkdtemp(resolve(".typescale-packed-"));
@@ -36,7 +37,14 @@ type API = { button: { setSize(size: string): void }; badge: { setVariant(varian
 type ProfileWindow = Window & { profile: API };
 const metrics = (bytes: Uint8Array) => ({ raw: bytes.length, gzip: gzipSync(bytes, { level: 9 }).length,
   brotli: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length });
-const sizeOf = (page: Page, selector: string) => page.locator(selector).evaluate(el => getComputedStyle(el).fontSize);
+const sizeOf = (page: Page, selector: string) => page.locator(selector).evaluate(async el => {
+  // Badge styles transition all properties. Flush the changed value and sample
+  // after finite transitions, rather than reading their previous endpoint.
+  void getComputedStyle(el).fontSize;
+  await Promise.all(el.getAnimations().filter(animation => animation.effect?.getComputedTiming().endTime !== Infinity)
+    .map(animation => animation.finished.catch(() => {})));
+  return getComputedStyle(el).fontSize;
+});
 try {
   await mkdir(join(scratch, "node_modules"));
   await symlink(fixture.installed, join(scratch, "node_modules/material"), "dir");
@@ -83,6 +91,18 @@ try {
   }
   report.sizes = sizes;
   console.log(JSON.stringify({ package: report.package, sizes }));
+  // Same packed public-root import and Bun ruler as the package gate, kept
+  // observable here even when optional package growth blocks that job early.
+  const allEntry = join(scratch, "all-js.ts");
+  await writeFile(allEntry, "export * from 'material';\n");
+  const allBuild = await Bun.build({ entrypoints: [allEntry], format: "esm", target: "browser", minify: true });
+  assert(allBuild.success, String(allBuild.logs));
+  const allOutput = allBuild.outputs.filter(output => output.path.endsWith(".js"));
+  assert.equal(allOutput.length, 1);
+  const allJs = metrics(new Uint8Array(await allOutput[0].arrayBuffer()));
+  report.allJs = allJs;
+  console.log(`packed all-js: ${allJs.gzip} gzip / cap ${PACKAGE_GZIP["all-js"]}`);
+  assert(allJs.gzip <= PACKAGE_GZIP["all-js"], "default packed root exceeds its existing ceiling");
 
   // Both probe compilations use the packed Sass sources. No role literals are
   // duplicated in this harness; comparison is against the existing emitter.
@@ -171,15 +191,22 @@ try {
       assert.equal(await sizeOf(page, "#badge"), "0px");
       assert.equal(await sizeOf(page, "m-badge .mtrl-badge"), "0px");
       const group = await page.evaluate(() => {
-        document.body.insertAdjacentHTML("beforeend", '<m-button-group size="m"><button>Group</button></m-button-group>');
-        const group = document.querySelector("m-button-group")!;
-        const child = group.querySelector("button")!;
+        // Undefined element children use the pre-upgrade shim. Native buttons
+        // have a higher base-layer font reset and are not this fixture.
+        const style = document.createElement("style");
+        style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles("x");
+        document.head.append(style);
+        document.body.insertAdjacentHTML("beforeend", '<x-button-group size="m"><x-button>Group</x-button></x-button-group>');
+        const group = document.querySelector("x-button-group")!;
+        const child = group.querySelector("x-button")!;
         const medium = getComputedStyle(child).fontSize;
         document.documentElement.style.setProperty("--mtrl-sys-typescale-headline-small-letter-spacing", "2px");
         document.documentElement.style.setProperty("--mtrl-sys-typescale-headline-small-font-weight", "650");
         group.setAttribute("size", "l");
         const large = getComputedStyle(child);
-        return { medium, large: large.fontSize, spacing: large.letterSpacing, weight: large.fontWeight };
+        const result = { medium, large: large.fontSize, spacing: large.letterSpacing, weight: large.fontWeight };
+        group.remove();
+        return result;
       });
       assert.deepEqual([group.medium, group.large, group.weight], ["27px", "31px", "400"], "button-group role/adjustment mapping changed");
       assert(["normal", "0px"].includes(group.spacing), "button-group large-size zero tracking changed");
