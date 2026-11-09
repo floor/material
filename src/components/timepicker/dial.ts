@@ -82,7 +82,7 @@ export const createDial = (options: DialOptions): Dial => {
   const id = `${prefix}-time-picker-dial-${++dials}`;
   const element = document.createElement("div");
   element.className = cls("dial-face");
-  element.setAttribute("role", "listbox");
+  element.role = "listbox";
   const numbers = document.createElement("div");
   numbers.className = cls("dial-numbers");
   const track = document.createElement("div");
@@ -93,13 +93,14 @@ export const createDial = (options: DialOptions): Dial => {
   handle.className = cls("dial-handle");
   const selected = document.createElement("div");
   selected.className = `${cls("dial-numbers")} ${cls("dial-numbers--selected")}`;
-  for (const part of [track, centre, handle, selected]) part.setAttribute("aria-hidden", "true");
+  for (const part of [track, centre, handle, selected]) part.ariaHidden = "true";
   element.append(numbers, track, centre, handle, selected);
 
   let selector: DialSelector | null = null;
   let items: DialItem[] = [];
   let angle = 0;
-  let current = 0;
+  let leaving: HTMLElement | undefined;
+  const angleProperty = `--${prefix}-time-picker-angle`;
 
   const place = (el: HTMLElement, item: DialItem) => {
     const radians = (item.angle * Math.PI) / 180;
@@ -109,40 +110,36 @@ export const createDial = (options: DialOptions): Dial => {
 
   const build = (next: DialSelector) => {
     // Keep a non-interactive copy until its exit fade ends.
-    element.querySelectorAll(`.${cls("dial-numbers--leaving")}`).forEach(el => el.remove());
+    leaving?.remove();
     if (selector && element.ownerDocument.defaultView?.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
-      const leaving = numbers.cloneNode(true) as HTMLElement;
-      leaving.classList.add(cls("dial-numbers--leaving"));
-      leaving.setAttribute("aria-hidden", "true");
-      leaving.inert = true;
-      leaving.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
-      leaving.addEventListener("animationend", () => leaving.remove(), { once: true });
-      leaving.addEventListener("animationcancel", () => leaving.remove(), { once: true });
-      element.append(leaving);
+      const old = numbers.cloneNode(true) as HTMLElement;
+      old.classList.add(cls("dial-numbers--leaving"));
+      old.ariaHidden = "true";
+      old.inert = true;
+      for (const number of old.children) number.removeAttribute("id");
+      for (const type of ["animationend", "animationcancel"]) old.addEventListener(type, () => old.remove(), { once: true });
+      element.append(old);
+      leaving = old;
     }
     selector = next;
     items = itemsFor(next, format);
-    element.setAttribute("aria-label", next === "hour" ? "Hour" : next === "minute" ? "Minute" : "Second");
-    numbers.replaceChildren(...items.map((item, index) => {
+    element.ariaLabel = next === "hour" ? "Hour" : next === "minute" ? "Minute" : "Second";
+    const number = (item: DialItem, index?: number) => {
       const option = document.createElement("span");
       option.className = cls("dial-number");
       if (item.radius === INNER) option.classList.add(cls("dial-number--inner"));
-      option.id = `${id}-${index}`;
-      option.setAttribute("role", "option");
-      option.setAttribute("aria-label", nameFor(next, format, item.value));
-      option.dataset.value = String(item.value);
+      if (index !== undefined) {
+        option.id = `${id}-${index}`;
+        option.role = "option";
+        option.ariaLabel = nameFor(next, format, item.value);
+        option.dataset.value = String(item.value);
+      }
       option.textContent = item.text;
       place(option, item);
       return option;
-    }));
-    selected.replaceChildren(...items.map(item => {
-      const copy = document.createElement("span");
-      copy.className = cls("dial-number");
-      if (item.radius === INNER) copy.classList.add(cls("dial-number--inner"));
-      copy.textContent = item.text;
-      place(copy, item);
-      return copy;
-    }));
+    };
+    numbers.replaceChildren(...items.map(number));
+    selected.replaceChildren(...items.map(item => number(item)));
     // Restart the spatial scale and opacity effects together.
     element.classList.remove(cls("dial-face--swap"));
     void element.offsetWidth;
@@ -165,22 +162,21 @@ export const createDial = (options: DialOptions): Dial => {
     const focused = activeElementOf(element);
     const refocus = next !== selector && numbers.contains(focused);
     if (next !== selector) build(next);
-    current = dialValue(time, next, format);
-    const index = items.findIndex(item => item.value === current);
-    const target = next === "hour" ? items[nearest(current)] : { angle: current * 6, radius: OUTER };
+    const current = dialValue(time, next, format);
+    const stop = nearest(current);
+    const index = items[stop].value === current ? stop : -1;
+    const target = next === "hour" ? items[stop] : { angle: current * 6, radius: OUTER };
     // Retarget from the rendered position, including an unfinished spring.
     // The last destination can be on the other side of the shortest path.
-    if (animate) angle = parseFloat(getComputedStyle(element).getPropertyValue(`--${prefix}-time-picker-angle`)) || 0;
+    if (animate) angle = parseFloat(getComputedStyle(element).getPropertyValue(angleProperty)) || 0;
     const delta = ((target.angle - (angle % 360)) % 360 + 540) % 360 - 180;
     angle += delta;
-    element.style.setProperty(`--${prefix}-time-picker-angle`, `${angle}deg`);
+    element.style.setProperty(angleProperty, `${angle}deg`);
     element.style.setProperty(`--${prefix}-time-picker-radius`, `${target.radius}px`);
     handle.classList.toggle(cls("dial-handle--between"), index < 0);
-    const stop = nearest(current);
     numbers.querySelectorAll<HTMLElement>("[role=option]").forEach((option, i) => {
-      option.setAttribute("aria-selected", String(i === index));
-      if (options.allowed?.(next, items[i].value) === false) option.setAttribute("aria-disabled", "true");
-      else option.removeAttribute("aria-disabled");
+      option.ariaSelected = String(i === index);
+      option.ariaDisabled = options.allowed?.(next, items[i].value) === false ? "true" : null;
       if (option !== focused) option.tabIndex = i === stop ? 0 : -1;
     });
     if (refocus) numbers.querySelector<HTMLElement>('[tabindex="0"]')?.focus({ preventScroll: true });
@@ -199,33 +195,32 @@ export const createDial = (options: DialOptions): Dial => {
     if (format === TIME_FORMAT.MILITARY) return Math.hypot(dx, dy) < (OUTER + INNER) / 2 ? step + 12 : step;
     return step || 12;
   };
-  let dragging = false;
-  let pointerX = 0;
-  let pointerY = 0;
+  let dragging = 0; // Idle, pressed, or dragging (2).
+  let origin: PointerEvent;
   element.addEventListener("pointerdown", event => {
     if (event.button !== 0) return;
-    dragging = true;
-    pointerX = event.clientX;
-    pointerY = event.clientY;
+    dragging = 1;
+    origin = event;
     element.setPointerCapture?.(event.pointerId);
     options.onSelect(valueAt(event), false, true);
   });
   // Small pointer noise during a click must not cancel its spring.
   element.addEventListener("pointermove", event => {
-    if (dragging && (element.classList.contains(cls("dial-face--dragging")) || Math.hypot(event.clientX - pointerX, event.clientY - pointerY) > 4)) {
+    if (dragging && (dragging === 2 || Math.hypot(event.clientX - origin.clientX, event.clientY - origin.clientY) > 4)) {
+      dragging = 2;
       element.classList.add(cls("dial-face--dragging"));
       options.onSelect(valueAt(event), false, true);
     }
   });
   const release = (event: PointerEvent) => {
     if (!dragging) return;
-    dragging = false;
+    dragging = 0;
     element.classList.remove(cls("dial-face--dragging"));
     options.onSelect(valueAt(event), true, true);
   };
   element.addEventListener("pointerup", release);
   element.addEventListener("pointercancel", () => {
-    dragging = false;
+    dragging = 0;
     element.classList.remove(cls("dial-face--dragging"));
   });
 

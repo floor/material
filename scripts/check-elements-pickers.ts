@@ -427,7 +427,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       return {
         draft: `${box("hours")}:${box("minutes")}`,
         focused: root.activeElement?.textContent ?? "",
-        disabled: [...root.querySelectorAll('[role="option"][aria-disabled="true"]')].map((o) => o.textContent ?? ""),
+        disabled: [...root.querySelectorAll('.mtrl-time-picker__dial-numbers:not(.mtrl-time-picker__dial-numbers--leaving) [role="option"][aria-disabled="true"]')].map((o) => o.textContent ?? ""),
       };
     });
 
