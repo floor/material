@@ -35,7 +35,7 @@ these rows drift from a fresh measurement.
 | fab-menu | 22.1 KB | 8.2 KB | +5.1 KB | +10.5 KB |
 | extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
 | icon-button | 18.7 KB | 6.3 KB | +3.3 KB |  |
-| list | 19.0 KB | 6.7 KB | +3.6 KB |  |
+| list | 19.9 KB | 7.0 KB | +3.9 KB |  |
 | menu | 38.6 KB | 12.5 KB | +9.4 KB | +2.1 KB |
 | navigation-bar | 16.1 KB | 6.0 KB | +2.9 KB |  |
 | navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 394.4 KB | 123.8 KB | +120.8 KB | +2.1 KB |
+| all | 395.3 KB | 124.1 KB | +121.1 KB | +2.1 KB |
 <!-- /size-table -->

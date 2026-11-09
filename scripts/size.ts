@@ -207,7 +207,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "fab-menu": kb(8.35), // With the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304; the width reveal and the clamped colour easing: 8,381; 8,177 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; open in the call for the menu presentation, close() before the surface arrives, and the last open() winning during the load (families 3 and 5): 8,174 to 8,204 against e64fbafa. kb(8.1) is 8,294 (90 above, short of 100); raised to kb(8.15) = 8,345 (141 above), Node 22.23.3 / npm 10.9.9
   "extended-fab": kb(6.15), // 5,929 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   "icon-button": kb(6.5), // 6,374 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  list: kb(6.85), // Full list anatomy. 6,578 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
+  list: kb(7.1), // Full list anatomy. 6,578 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; raised to 7,270 by the owner's decision, 2026-11-05.
   // layer: "top" and the core/dom top-layer helper add 485 (12,519 to 13,004)
   menu: kb(12.75), // 12,453 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks): 12,494 to 12,660 against e64fbafa's tree. kb(12.45) is 12,748 (88 above, short of 100); raised to kb(12.5) = 12,800 (140 above), Node 22.23.3 / npm 10.9.9
   "navigation-bar": kb(6.05), // 5,848, its destinations shared with the rail
