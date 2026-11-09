@@ -533,6 +533,7 @@
     "density:check": "bun run scripts/check-density.ts",
     "theme-root-scope:check": "bun run scripts/check-theme-root-scope.ts",
     "theme-runtime:check": "bun run scripts/check-theme-runtime.ts",
+    "theme-origins:check": "bun run scripts/check-theme-origins.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
     "component-exports:check": "bun run scripts/component-exports.ts",
     "component-exports:update": "bun run scripts/component-exports.ts --update",
