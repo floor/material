@@ -44,15 +44,15 @@ these rows drift from a fresh measurement.
 | split-button | 27.5 KB | 9.5 KB | +6.4 KB | +17.0 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.6 KB | 10.9 KB | +7.9 KB |  |
-| select | 41.9 KB | 13.2 KB | +10.1 KB | +10.5 KB |
+| select | 40.8 KB | 13.0 KB | +10.0 KB | +10.5 KB |
 | slider | 34.0 KB | 11.9 KB | +8.9 KB |  |
 | snackbar | 36.7 KB | 12.1 KB | +9.1 KB | +6.9 KB |
 | switch | 18.8 KB | 6.2 KB | +3.2 KB |  |
 | tabs | 41.9 KB | 13.4 KB | +10.4 KB | +6.9 KB |
-| text-field | 28.9 KB | 8.9 KB | +5.9 KB |  |
+| text-field | 27.9 KB | 8.7 KB | +5.7 KB |  |
 | timepicker | 31.8 KB | 11.0 KB | +8.0 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 395.3 KB | 124.5 KB | +121.4 KB | +2.1 KB |
+| all | 394.2 KB | 124.4 KB | +121.3 KB | +2.1 KB |
 <!-- /size-table -->
