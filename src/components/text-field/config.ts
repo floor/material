@@ -7,15 +7,16 @@ import {
 import { TextFieldConfig, ApiOptions } from "./types";
 import type { DisabledComponent } from "../../core/compose/features/disabled";
 import type { LifecycleComponent } from "../../core/compose/features/lifecycle";
-import { TEXT_FIELD_DEFAULTS } from "./constants";
 import { warnDev } from "../../core/utils/warn";
 
 /**
  * Default configuration for the TextField component
  */
+// Inlined from TEXT_FIELD_DEFAULTS (type "text", variant "filled") so the
+// constants table is not in the initial graph. The exported table is unchanged.
 export const defaultConfig: TextFieldConfig = {
-  type: TEXT_FIELD_DEFAULTS.TYPE,
-  variant: TEXT_FIELD_DEFAULTS.VARIANT,
+  type: "text",
+  variant: "filled",
 };
 
 /**
