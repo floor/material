@@ -186,6 +186,17 @@ Selection actions, slide images, active destinations, one density scale and a lo
   every default component graph stays byte-identical — and nothing is
   hidden until the app calls.
 
+### Performance
+
+- **The text field's initial graph, off its ceiling (#338).**
+  The factory defaults `type: "text"` and `variant: "filled"` are inlined
+  where the constants table was imported, and the three text slots —
+  leading icon, prefix, suffix — share one install helper instead of
+  three copies of the same first-use logic. Nothing changes in behaviour
+  or default markup; the packed consumer's initial graph falls from
+  9,999 to 9,887 B gzip, away from the 10,000 B ceiling it had been
+  measured one byte under.
+
 ### Internal
 
 - **Raised size ceilings for this group (#334 and #336, with #283, #294
@@ -196,9 +207,9 @@ Selection actions, slide images, active destinations, one density scale and a lo
   130,050 → 130,650 B, button CSS 5,300 → 5,550 B and slider CSS
   4,850 → 5,050 B (#334), the every-component scenario cap `all`
   127,200 → 127,500 B (#336), and #294's inline-page raw band
-  256,200 → 263,950 B. The release's final all-js figure, 130,618 B, is
-  measured on main a79665f2 (push run 42586777996), the tree the release
-  ships; the measured stack end `all` 127,475 leaves 25 B under the new
+  256,200 → 263,950 B. The release's final all-js figure, 130,522 B, is
+  measured on main 5223a64d (push run 42592202621), the tree the release
+  ships; the measured stack end `all` 127,359 leaves 141 B under the new
   cap.
 
 - **Folded type declarations (#314).**
@@ -210,14 +221,14 @@ Selection actions, slide images, active destinations, one density scale and a lo
   and type-checking against the package is unchanged.
 
 - **Release size against 3.9.0.**
-  The merged main head `a79665f2`
-  ([CI run 42586777996, package job 129058775697](https://github.com/floor/material/actions/runs/42586777996/job/129058775697))
-  packs **877,203 B compressed / 4,966,117 B unpacked / 1,239 files**.
+  The merged main head `5223a64d`
+  ([CI run 42592202621, package job 129076650121](https://github.com/floor/material/actions/runs/42592202621/job/129076650121))
+  packs **877,050 B compressed / 4,964,814 B unpacked / 1,239 files**.
   Against the published 3.9.0 release at `53ae0a44`
   ([CI run 42486644714, package job 128750092972](https://github.com/floor/material/actions/runs/42486644714/job/128750092972)),
-  that is **−10,915 B packed / −23,591 B unpacked / −310 files**.
-  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **42,797 B**
-  under the 920,000 B packed ceiling and **152,883 B** under the 5,119,000 B
+  that is **−11,068 B packed / −24,894 B unpacked / −310 files**.
+  Both jobs used Node 22.23.3 / npm 10.9.9. The package leaves **42,950 B**
+  under the 920,000 B packed ceiling and **154,186 B** under the 5,119,000 B
   unpacked ceiling; neither ceiling changes. This release adds only the
   notes and the version line on top of that head — the notes are not
   packed, so the packed figures carry; the version banner itself moves
@@ -225,10 +236,10 @@ Selection actions, slide images, active destinations, one density scale and a lo
 
   | Payload (B, raw / gzip / Brotli) | 3.9.0 | 3.10.0 | Change |
   | --- | --- | --- | --- |
-  | All JS | 418,953 / 129,264 / 107,214 | 421,554 / 130,618 / 108,261 | +2,601 / +1,354 / +1,047 |
+  | All JS | 418,953 / 129,264 / 107,214 | 420,481 / 130,522 / 108,138 | +1,528 / +1,258 / +924 |
   | Full stylesheet | 640,972 / 59,172 / 42,192 | 641,081 / 59,420 / 42,190 | +109 / +248 / −2 |
   | Button stylesheet | 59,523 / 5,300 / 4,082 | 60,848 / 5,440 / 4,190 | +1,325 / +140 / +108 |
-  | Form fixture | 65,398 / 20,431 / 18,243 | 65,471 / 20,469 / 18,261 | +73 / +38 / +18 |
+  | Form fixture | 65,398 / 20,431 / 18,243 | 64,399 / 20,359 / 18,200 | −999 / −72 / −43 |
 
 ## [3.9.0] - 2026-11-08
 
