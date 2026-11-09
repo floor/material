@@ -130,9 +130,6 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("12h" as never).setValue("11:00"));
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("13:00"));
-  assert.equal((await hand()).angle, 30, "API value changes jump immediately");
-  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("11:00"));
-  await dialog.getByRole("option", { name: "1 o'clock", exact: true }).click();
   const path: number[] = [];
   for (let i = 0; i < 6; i++) { path.push((await hand()).angle); await page.waitForTimeout(40); }
   assert.ok(path.every(angle => angle >= 330 || angle <= 31), `11 to 1 springs forward through 12, not back round the dial (${path.join(", ")})`);

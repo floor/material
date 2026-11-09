@@ -347,8 +347,9 @@ export const renderTimePicker = (
     }
   }
 
-  // The dial shows the time at once; it no longer waits for a canvas to size.
-  dial.update(timeValue, activeSelector);
+  // Initial renders (including setValue) retain their hand animation.
+  // Field changes jump; a DOM-only server has no computed styles.
+  dial.update(timeValue, activeSelector, typeof getComputedStyle === "function");
 
   // The mode toggle is handled once, by the API, which re-renders the picker and
   // keeps focus on the toggle. This listener switched the view in place as well,
