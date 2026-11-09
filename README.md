@@ -477,6 +477,76 @@ document.body.append(button.element);
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
+A standalone menu can also defer its implementation with the explicit
+`material/components/menu/deferred` entry. This is an opt-in delivery choice;
+`createMenu` and the existing element and framework entries keep their synchronous
+behavior. Enable code splitting and keep factory styles loaded normally:
+
+```ts
+import createDeferredMenu from 'material/components/menu/deferred';
+import 'material/styles/base';
+import 'material/styles/menu';
+
+const menu = createDeferredMenu({
+  opener: '#actions',
+  items: [{ id: 'save', text: 'Save' }],
+  on: { loaderror: ({ error }) => console.error(error) },
+});
+menu.open();             // synchronous requested state and one open event
+await menu.preload();    // joins the request; does not open or focus by itself
+const surface = menu.element; // real HTMLElement after readiness, otherwise null
+```
+
+The handle mirrors the menu's non-DOM operations: queued setters, event
+subscriptions, toggling, and access to opener and selection state. Fluent methods
+and event payloads identify the same handle.
+
+It is not a synchronous `MenuComponent`. The `element` property is nullable.
+Readiness is reported by `isReady()`, while `preload()` returns a Promise.
+
+The requested state from `isOpen()` precedes the cold popup. During that interval,
+`aria-expanded` stays false and the opener is busy. Closing cancels presentation
+without pretending to abort a module fetch. Destroying is terminal and rejects
+outstanding and future preload calls with `AbortError`.
+
+A failed import or construction closes the request, emits `loaderror` and rejects
+`preload()`. Explicit subsequent requests may retry; a browser-cached module
+failure can require a page reload. There is no automatic retry or cache busting.
+Register an error handler before opening and handle the Promise when awaiting
+preload. Existing eager menus remain appropriate when DOM access or initially
+open content must be usable immediately.
+
+For elements, `material/elements/menu` is the existing menu's dedicated
+registration boundary. It exports `defineMenu` plus the menu and item declaration
+definitions. Importing it registers nothing.
+
+Delay both that entry and `material/elements/css/menu`. Call `defineMenu` after
+both resolve. Import `material/elements/preupgrade/menu.css` with the page's
+normal base/theme styles.
+
+The [checked application recipe](scripts/fixtures/menu-deferred/broker.js) keeps
+one registration Promise, records cold input once, cancels stale intent and
+handles failures. It calls `toggle(originalEvent)` after registration and never
+redispatches the gesture. The [element fixture](scripts/fixtures/menu-deferred/element.js)
+shows authored items and early host listeners.
+
+Element methods do not exist before upgrade: application callers must await
+registration. Custom prefixes register their item declarations first. Supply
+matching pre-upgrade CSS with `preupgradeStyles(prefix)` from
+`material/elements/preupgrade`.
+
+Closed SSR content can defer client registration while keeping its declarative
+shadow root and styles. Initially open attributes/properties use eager
+registration and ready styles; no initial-byte saving is claimed for that path.
+SSR rendering and framework adapters remain synchronous. Factory ARIA references
+are not copied across the element's shadow boundary.
+
+Deferral shifts initial JavaScript and, for the element recipe, shadow CSS to
+later requests. It adds a facade or application broker, so fully loaded cost can
+increase. Keeping another eager menu import can remove the saving. The packed
+`menu-deferred:check` compares initial and fully loaded JS/CSS, including shared
+chunks and the recipe, in the same styled 16-component fixtures.
+
 ### The date picker's deferred entry
 
 A date picker can bring its calendar on demand too. Import the factory from the component's `deferred` entry instead of the root:
