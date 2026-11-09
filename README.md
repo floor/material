@@ -214,18 +214,20 @@ Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application 
 Components can opt into the existing type-scale role properties. Compile Sass with the configuration loaded first:
 
 ```scss
-@use "material/src/styles/config" with ($typography-tokens: true);
+@use "material/src/styles/config" with ($typescale-tokens: true);
 @use "material/src/styles/main";
 ```
 
 The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any component or element Sass module is loaded. It changes how component text consumes tokens; the existing typography classes already consume them.
 
-Compile pre-upgrade Sass separately with the same configuration. Its existing tag-prefix option still applies:
+Compile pre-upgrade Sass separately with the same configuration. Set its tag prefix on the shared entry:
 
 ```scss
-@use "material/src/styles/config" with ($typography-tokens: true);
-@use "material/src/styles/elements" with ($tag-prefix: "x");
+@use "material/src/styles/config" with ($typescale-tokens: true, $tag-prefix: "x");
+@use "material/src/styles/elements";
 ```
+
+The shared configuration also forwards the existing contrast, direction and design-token map options. Once configured, load subsequent entries without another configuration clause. For a single-entry build, the main and pre-upgrade entries also accept the type-scale flag directly.
 
 For prebuilt factory styles, select the role-aware component sheet:
 

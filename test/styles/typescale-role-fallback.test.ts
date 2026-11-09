@@ -4,7 +4,7 @@ import { compileThemeSources } from "../../scripts/build-styles";
 
 const options: sass.StringOptions<"sync"> = { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent };
 const compile = (source: string) => sass.compileString(source, options).css;
-const config = (value: string) => `@use "config" with ($typography-tokens: ${value});\n`;
+const config = (value: string) => `@use "config" with ($typescale-tokens: ${value});\n`;
 const roleProbe = '@use "abstract/variables" as v; @use "abstract/mixins" as m; @each $role, $spec in v.$typescale { .probe-#{$role} { @include m.typography($role); } }';
 
 describe("opt-in typography consumers", () => {
@@ -46,7 +46,31 @@ describe("opt-in typography consumers", () => {
 
   test("configuration must precede any dependent module", () => {
     expect(() => compile('@use "components/button";' + config("true"))).toThrow("already loaded");
-    expect(compile(config("true") + '@use "components/button"; @use "elements" with ($tag-prefix: "x");')).toContain("x-button:not(:defined)");
+    expect(compile('@use "config" with ($typescale-tokens: true, $tag-prefix: "x"); @use "components/button"; @use "elements";')).toContain("x-button:not(:defined)");
+  });
+
+  test("shared configuration forwards flags, contrast, tag prefix and fallback maps without CSS", () => {
+    const shared = '@use "config" with ($typescale-tokens: true, $direction-arms: true, $contrast-emit: none, $tag-prefix: "x");';
+    expect(compile(shared)).toBe("");
+    const css = compile(shared + '@use "main"; @use "elements";');
+    expect(css).toContain("x-button:not(:defined)");
+    expect(css).not.toContain("m-button:not(:defined)");
+    expect(css).not.toContain("data-theme-contrast");
+    expect(css).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
+    const maps = compile('@use "config" with ($state: (hover: 0.123)); @use "abstract/variables" as v; @use "sass:map"; .probe { opacity: map.get(v.$state, hover); }');
+    expect(maps).toBe(".probe{opacity:.123}");
+  });
+
+  test("entry forwards support one-entry configuration and preserve omitted defaults", () => {
+    for (const entry of ["main", "elements"]) {
+      expect(compile(config("false") + `@use "${entry}";`)).toBe(compile(`@use "${entry}";`));
+      expect(() => compile(`@use "${entry}" with ($typescale-tokens: "true");`)).toThrow("$typescale-tokens must be true or false");
+    }
+    const main = compile('@use "main" with ($typescale-tokens: true, $contrast-emit: none);');
+    expect(main).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
+    expect(main).not.toContain("data-theme-contrast");
+    expect(compile('@use "elements" with ($typescale-tokens: true, $tag-prefix: "x");')).toContain("x-button:not(:defined)");
+    expect(() => compile(config("true") + '@use "main" with ($typescale-tokens: true);')).toThrow("already loaded");
   });
 
   test("badge text consumes its three existing properties; dots remain zero sized text", () => {

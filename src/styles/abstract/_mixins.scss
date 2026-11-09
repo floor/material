@@ -6,7 +6,6 @@
 @use 'variables' as v;
 @use 'functions' as f;
 @use 'emit' as emit;
-@use '../config' as config;
 
 // Common icons map
 $icons: (
@@ -33,7 +32,7 @@ $icons: (
 // Only the selected profile reads role tokens. Keep the caller's exact value
 // as fallback, including direct component adjustments and family lists.
 @function typography-value($role, $property, $fallback) {
-  @if config.$typography-tokens {
+  @if emit.$typescale-tokens {
     @return var(--#{base.$prefix}-sys-typescale-#{$role}-#{$property}, #{$fallback});
   }
   @return $fallback;

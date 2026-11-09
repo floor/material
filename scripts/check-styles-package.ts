@@ -77,12 +77,28 @@ try {
   for (const name of ["main", "elements"]) {
     for (const value of ["true", "false"]) {
       const compileProfile = (prefix: string, paths: string[]) => sass.compileString(
-        `@use "${prefix}config" with ($typography-tokens: ${value}); @use "${prefix}${name}";`,
+        `@use "${prefix}config" with ($typescale-tokens: ${value}); @use "${prefix}${name}";`,
         { loadPaths: paths, style: "compressed", logger: sass.Logger.silent },
       ).css;
       assert.equal(compileProfile("material/src/styles/", loadPaths), compileProfile("", ["src/styles"]), `${name}/${value}: packed configuration differs`);
     }
   }
+  const contract = (source: string, packed: boolean) => sass.compileString(
+    source.replaceAll("PUBLIC/", packed ? "material/src/styles/" : ""),
+    { loadPaths: packed ? loadPaths : ["src/styles"], style: "compressed", logger: sass.Logger.silent },
+  ).css;
+  const shared = '@use "PUBLIC/config" with ($typescale-tokens: true, $direction-arms: true, $contrast-emit: none, $tag-prefix: "x");';
+  assert.equal(contract(shared, true), "", "configured public entry emits CSS");
+  const combined = contract(shared + '@use "PUBLIC/main"; @use "PUBLIC/elements";', true);
+  assert.equal(combined, contract(shared + '@use "PUBLIC/main"; @use "PUBLIC/elements";', false));
+  assert(combined.includes("x-button:not(:defined)") && !combined.includes("m-button:not(:defined)"), "shared tag prefix did not propagate");
+  assert(!combined.includes("data-theme-contrast"), "shared contrast configuration did not propagate");
+  assert(combined.includes("var(--mtrl-sys-typescale-label-large-font-size, 14px)"), "shared role emission did not propagate");
+  for (const source of [
+    '@use "PUBLIC/main" with ($typescale-tokens: true, $contrast-emit: none);',
+    '@use "PUBLIC/elements" with ($typescale-tokens: true, $tag-prefix: "x");',
+    '@use "PUBLIC/config" with ($state: (hover: 0.123)); @use "PUBLIC/abstract/variables" as v; @use "sass:map"; .probe { opacity: map.get(v.$state, hover); }',
+  ]) assert.equal(contract(source, true), contract(source, false), "public forwards differ after packing");
   // The positive control: the packed entries are the normalized copies, not
   // the checkout's own files. The compile above is the safety contract; this
   // fails if the normalization quietly stops running (every shipped source is

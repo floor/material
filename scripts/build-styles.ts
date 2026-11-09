@@ -293,8 +293,8 @@ export async function preupgradeStyles(names: string[], options: sass.StringOpti
 }
 
 /** Configuration in a fresh Sass compilation, before any dependent module. */
-export function typographyPrelude(): string {
-  return '@use "config" as typography-config with ($typography-tokens: true);\n';
+export function typographyPrelude(arms = false): string {
+  return `@use "config" as typography-config with ($typescale-tokens: true${arms ? ", $direction-arms: true" : ""});\n`;
 }
 
 /** Optional profiles never append strings or imports to a default module. */
@@ -304,7 +304,7 @@ async function emitTypescaleStyles(outdir: string, options: sass.StringOptions<"
   const preupgrade = `${outdir}/elements/typescale`;
   await Promise.all([mkdir(light, { recursive: true }), mkdir(`${shadow}/hosts`, { recursive: true }), mkdir(`${preupgrade}/preupgrade`, { recursive: true })]);
   const compile = (source: string, arms = false) => sass.compileString(
-    typographyPrelude() + (arms ? directionArmsPrelude() : "") + `@use "${source}";`, options,
+    typographyPrelude(arms) + `@use "${source}";`, options,
   ).css;
   for (const [name, entry] of Object.entries(componentStyles)) {
     const css = compile(entry.source, true);

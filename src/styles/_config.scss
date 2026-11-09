@@ -1,9 +1,9 @@
-// Configure before loading main, elements, or any component module.
-// Configuration emits no CSS. The default preserves the existing styles.
-@use 'sass:meta';
-
-$typography-tokens: false !default;
-
-@if meta.type-of($typography-tokens) != 'bool' {
-  @error '$typography-tokens must be true or false';
-}
+// Configure once, before loading main, elements or selective sheets.
+// Subsequent entries inherit this configuration and use plain @use statements.
+// This public entry only forwards configuration and emits no CSS.
+@forward 'abstract/emit' show $typescale-tokens, $direction-arms;
+@forward 'themes/base-theme' show $contrast-emit;
+@forward 'elements/config' show $tag-prefix;
+@forward 'abstract/variables' show
+  $state, $motion, $elevation, $typescale, $shape, $breakpoints, $z-index,
+  $card, $chip-config, $button, $text-field;

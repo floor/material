@@ -116,7 +116,7 @@ try {
   // Both probe compilations use the packed Sass sources. No role literals are
   // duplicated in this harness; comparison is against the existing emitter.
   const probes = (selected: boolean) => sass.compileString(
-    `@use "material/src/styles/config" with ($typography-tokens: ${selected});\n` +
+    `@use "material/src/styles/config" with ($typescale-tokens: ${selected});\n` +
     '@use "material/src/styles/abstract/variables" as v; @use "material/src/styles/abstract/mixins" as m;' +
     `@each $role, $spec in v.$typescale { .${selected ? "selected" : "plain"}-probe-#{$role} { @include m.typography($role); } }`,
     { loadPaths: [join(scratch, "node_modules")], style: "compressed", logger: sass.Logger.silent },
