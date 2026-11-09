@@ -2141,6 +2141,83 @@
       "status": "public"
     }
   ],
+  "menu/deferred": [
+    {
+      "name": "createDeferredMenu",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuLoadErrorEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DeferredMenuSelectEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuContent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuDivider",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuGap",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
   "navigation-bar": [
     {
       "name": "createNavigationBar",

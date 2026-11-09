@@ -304,7 +304,7 @@ export interface MenuConfig {
    * Useful in dense UIs like toolbars and action bars where the standard
    * 48px item height is too large.
    * @deprecated The library moves to one density scale
-   * (`--mtrl-density`) in 3.11.0, which leaves menus at their default
+   * (`--mtrl-density`) in 3.10.0, which leaves menus at their default
    * density: M3 advises against densifying focused tasks such as selecting
    * from a menu. This option still renders the dense variant and is removed
    * in 4.0.

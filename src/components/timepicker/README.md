@@ -195,6 +195,14 @@ The TimePicker component is designed with accessibility in mind:
 - High contrast colors and clear visual indicators
 - Support for reducing motion based on user preferences
 
+## Motion
+
+The dial hand springs to a selection. Dial picks, the initial dial setup and `setValue()` animate the hand along the shortest arc, retargeting from the angle currently rendered as `--mtrl-time-picker-angle`, so a pick made mid-flight starts from where the hand is, not from its last destination. Editing the time in the input fields is different: those updates jump the hand at once, with no spring.
+
+Switching between the hour, minute and second faces scales and fades both digit rings. The outgoing ring grows to `1.2` and fades out while the incoming ring settles from `0.8` to `1`; returning to hours reverses the direction — the outgoing ring shrinks to `0.8` and the incoming one settles from `1.2`. The hooks are `.mtrl-time-picker__dial-face--swap` with `--mtrl-time-picker-digits-in` and `--mtrl-time-picker-digits-out`; the outgoing ring is cloned as an inert `.mtrl-time-picker__dial-numbers--leaving` layer that removes itself when its animation ends.
+
+Under `prefers-reduced-motion: reduce` the dialog appear animation, the hand spring and the digit swap are disabled, and no leaving layer is created.
+
 ## Customization
 
 ### Custom Styling

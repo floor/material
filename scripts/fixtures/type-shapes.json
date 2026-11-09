@@ -631,6 +631,31 @@
       "BaseComponent"
     ]
   },
+  "DeferredMenuComponent.element": {
+    "kind": "union",
+    "members": [
+      "HTMLElement",
+      "null"
+    ]
+  },
+  "DeferredMenuConfig": {
+    "kind": "extends",
+    "bases": [
+      "Omit<MenuConfig, \"on\">"
+    ]
+  },
+  "DeferredMenuEvent": {
+    "kind": "extends",
+    "bases": [
+      "Omit<MenuEvent, \"menu\">"
+    ]
+  },
+  "DeferredMenuSelectEvent": {
+    "kind": "extends",
+    "bases": [
+      "Omit<MenuSelectEvent, \"menu\">"
+    ]
+  },
   "Described.model": {
     "kind": "union",
     "members": [
@@ -1329,6 +1354,13 @@
       "HTMLElement",
       "null",
       "string"
+    ]
+  },
+  "MenuColor": {
+    "kind": "union",
+    "members": [
+      "\"standard\"",
+      "\"vibrant\""
     ]
   },
   "MenuConfig.container": {

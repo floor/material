@@ -201,6 +201,9 @@ jobs:
           - group: components-b
             browsers: chromium
             checks: consumer:check tabs:check slider:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check switch-transition:check
+          - group: menu-deferred
+            browsers: chromium
+            checks: menu-deferred:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check theme-runtime:check base-lite:check component-sheets:check density:check

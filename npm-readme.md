@@ -82,7 +82,7 @@ The baseline theme applies by default and follows the system light or dark prefe
 <html data-theme="ocean" data-theme-mode="dark">
 ```
 
-Colours, typefaces and shapes are CSS custom properties (`--mtrl-sys-color-primary`, …), so one declaration restyles every component that reads it. Guide: [md3.io/docs/theming](https://md3.io/docs/theming/); the themes side by side: [md3.io/styles/themes](https://md3.io/styles/themes/).
+Colours, typefaces and shapes are CSS custom properties (`--mtrl-sys-color-primary`, …), so one declaration restyles every component that reads it. Density is one property too: `--mtrl-density` steps from 0 to -5. A class from `.mtrl-density--1` to `.mtrl-density--5` sets a step as well. Guide: [md3.io/docs/theming](https://md3.io/docs/theming/); the themes side by side: [md3.io/styles/themes](https://md3.io/styles/themes/).
 
 ## Sizes
 
