@@ -320,6 +320,20 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       assert.equal(await page.evaluate(() => (window as unknown as { lab: Lab & { lateFocus: boolean } }).lab.lateFocus), false);
       record("disabled shadow opener cancels delayed focus"); await finish();
     }
+    {
+      const { page, finish } = await fresh();
+      await page.evaluate(() => {
+        const state = (window as unknown as { lab: Lab }).lab;
+        const opener = document.querySelector<HTMLButtonElement>("#other")!;
+        const config = { opener, items: [], manualOpen: false };
+        const handle = state.createDeferredMenu(config);
+        config.manualOpen = true; handle.destroy();
+        const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+        opener.dispatchEvent(event);
+        if (event.defaultPrevented || handle.isOpen()) throw new Error("destroy retained the opener handler");
+      });
+      record("caller config edits cannot prevent terminal cleanup"); await finish();
+    }
     // A construction failure clears the slot; an explicit retry uses current items.
     {
       const { page, release, finish } = await fresh();
@@ -397,15 +411,25 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
     }
     {
       const { page, release, finish } = await fresh("element", "ssr");
-      assert.equal(await page.evaluate(() => !!(window as unknown as { lab: Lab }).lab.host.shadowRoot), true);
+      const beforeStyle = await page.evaluate(() => {
+        const surface = (window as unknown as { lab: Lab }).lab.host.shadowRoot!.querySelector(".mtrl-menu")!;
+        const style = getComputedStyle(surface);
+        return [style.minWidth, style.position, style.color, style.fontSize];
+      });
       await page.evaluate(() => { void (window as unknown as { lab: Lab }).lab.load(); });
       await release();
       await page.evaluate(async () => { await (window as unknown as { lab: Lab }).lab.load(); });
       assert.deepEqual(await page.evaluate(() => {
         const state = (window as unknown as { lab: Lab & { shadowBefore: ShadowRoot } }).lab;
         return [state.host.shadowRoot === state.shadowBefore, state.host.open, state.events.length,
-          !!state.host.shadowRoot?.querySelector("style,link"), state.host.querySelectorAll("m-menu-item").length];
+          !!(state.host.shadowRoot?.querySelector("style,link") || state.host.shadowRoot?.adoptedStyleSheets.length),
+          state.host.querySelectorAll("m-menu-item").length];
       }), [true, false, 0, true, 1]);
+      assert.deepEqual(await page.evaluate(() => {
+        const surface = (window as unknown as { lab: Lab }).lab.host.shadowRoot!.querySelector(".mtrl-menu")!;
+        const style = getComputedStyle(surface);
+        return [style.minWidth, style.position, style.color, style.fontSize];
+      }), beforeStyle, "SSR styling changed during hydration");
       record("closed SSR keeps root/styles/children and quiet state"); await finish();
     }
     // Initially open own state starts registration eagerly and upgrades quietly.
