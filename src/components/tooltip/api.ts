@@ -43,6 +43,9 @@ export const withAPI =
     let isVisible = false;
     let showTimer: number | null = null;
     let hideTimer: number | null = null;
+    // True only for the focus a pointer press gives the anchor. That focus is
+    // not a fresh one, so it must not bring the tooltip back.
+    let arm = false;
     const showDelay = config.showDelay ?? TOOLTIP_DEFAULTS.SHOW_DELAY;
     const hideDelay = config.hideDelay ?? TOOLTIP_DEFAULTS.HIDE_DELAY;
     const showOnFocus = config.showOnFocus !== false;
@@ -202,6 +205,12 @@ export const withAPI =
         targetEl.addEventListener("focus", handleTargetFocus);
         targetEl.addEventListener("blur", handleTargetBlur);
       }
+
+      // Press and the key that activates the anchor. The menu opens after
+      // these, so the tooltip is already gone when it appears.
+      targetEl.addEventListener("pointerdown", handlePointerDown);
+      targetEl.addEventListener("pointerup", handlePointerUp);
+      targetEl.addEventListener("keydown", handleKeyDown);
     };
 
     const removeTargetEvents = (targetEl: HTMLElement) => {
@@ -210,6 +219,9 @@ export const withAPI =
         targetEl.removeEventListener("mouseleave", handleTargetMouseLeave);
         targetEl.removeEventListener("focus", handleTargetFocus);
         targetEl.removeEventListener("blur", handleTargetBlur);
+        targetEl.removeEventListener("pointerdown", handlePointerDown);
+        targetEl.removeEventListener("pointerup", handlePointerUp);
+        targetEl.removeEventListener("keydown", handleKeyDown);
       }
     };
 
@@ -233,7 +245,30 @@ export const withAPI =
     const handleDocumentKeydown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isVisible) api.hide(true);
     };
-    const handleTargetFocus = () => api.show();
+    // https://m3.material.io/components/tooltips/guidelines (2026-11-09):
+    // "Tooltips shouldn't cover the parent element." The same rule for the
+    // menu an anchor opens: hide on press, stay hidden while aria-expanded
+    // is "true", and show again only on a hover or focus after it closes.
+    const menuOpen = () => target?.getAttribute("aria-expanded") === "true";
+    const handlePointerDown = () => {
+      arm = true;
+      api.hide(true);
+    };
+    const handlePointerUp = () => {
+      arm = false;
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      arm = false;
+      api.hide(true);
+    };
+    const handleTargetFocus = () => {
+      if (arm) {
+        arm = false;
+        return;
+      }
+      api.show();
+    };
     const handleTargetBlur = () => api.hide();
 
     // Create the API object
@@ -351,6 +386,10 @@ export const withAPI =
       },
 
       show(immediate = false) {
+        // An open menu stays uncovered. A show queued from the hover that
+        // is still in progress does not land on top of it.
+        if (menuOpen()) return this;
+
         // Clear any existing timers
         if (showTimer !== null) {
           window.clearTimeout(showTimer);
@@ -363,7 +402,7 @@ export const withAPI =
         }
 
         const showTooltip = () => {
-          if (!target) return this;
+          if (!target || target.getAttribute("aria-expanded") === "true") return this;
 
           if (topLayer) {
             if (layerTimer !== null) window.clearTimeout(layerTimer);
