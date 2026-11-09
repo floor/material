@@ -270,6 +270,14 @@ describe("explicit contrast levels are opt-in", () => {
     // picker's month and year buttons set `padding: 0`
     // (styles/components/_text-field.scss, _top-app-bar.scss,
     // _bottom-app-bar.scss, _checkbox.scss, _radios.scss, _datepicker.scss).
+    // Every length the density scale moves reads one registered integer
+    // property through `max(floor, base + step * var(--mtrl-density, 0))`, and
+    // the compact text field, its select and the dense drawer are aliases for
+    // a step (styles/abstract/_functions.scss, styles/base/_tokens.scss).
+    // The drawer's active pill and hover/focus/pressed state layer are painted
+    // by the active indicator's `::before` and `::after`, which the
+    // reduced-motion switch also reaches, so the item keeps its 48dp touch
+    // target unclipped (styles/components/_drawer.scss).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -300,9 +308,12 @@ describe("explicit contrast levels are opt-in", () => {
     // step the leading video already took, and the time picker's action
     // buttons take the full step the buttons spec gives every text button
     // (styles/components/_list.scss, _timepicker.scss).
+    // Main contrast/focus rules plus the density scale and drawer indicator
+    // masks. Pinned at the density branch's own measurement after merging
+    // 53ae0a44; the stacked tree re-pins from its own measurement.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "981938899f82b194822d4d9ebd451ed88d021e6a794e59173376f66fd04cd593",
-      length: 546496,
+      sha256: "c8a69c99d1d57ff4f334ac84d74c1b5aaac89a4c56ef1328d49d77f4b3b9aa2b",
+      length: 546847,
     });
   });
 

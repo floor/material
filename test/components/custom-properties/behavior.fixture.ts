@@ -26,12 +26,21 @@ const propertyNames = (element: HTMLElement) => Array.from(element.style).filter
 for (const prefix of [PREFIX]) {
   test(`${prefix}: button-group geometry properties track size and density`, () => {
     const group = attach(createButtonGroup({ prefix, kind: 'connected', size: 'm', buttons: [{ text: 'Day' }] }));
-    const names = ['height', 'icon', 'gap', 'inner-corner', 'pressed-corner', 'radius'].map(name => `--${prefix}-button-group-${name}`);
-    expect(propertyNames(group.element).sort()).toEqual(names.sort());
-    expect(names.map(name => group.element.style.getPropertyValue(name))).toEqual(names.map(name => ({ height: '56px', icon: '24px', gap: '2px', 'inner-corner': `var(--${prefix}-sys-shape-corner-small, 8px)`, 'pressed-corner': `var(--${prefix}-sys-shape-corner-extra-small, 4px)`, radius: '28px' })[name.slice(`--${prefix}-button-group-`.length)]));
+    const name = (suffix: string) => `--${prefix}-button-group-${suffix}`;
+    const base = ['height', 'icon', 'gap', 'inner-corner', 'pressed-corner'].map(name);
+    expect(propertyNames(group.element).sort()).toEqual(base.sort());
+    expect(group.element.style.getPropertyValue(name('height'))).toBe('56px');
+    expect(group.element.style.getPropertyValue(name('icon'))).toBe('24px');
+    expect(group.element.style.getPropertyValue(name('gap'))).toBe('2px');
+    expect(group.element.style.getPropertyValue(name('inner-corner'))).toBe(`var(--${prefix}-sys-shape-corner-small, 8px)`);
+    expect(group.element.style.getPropertyValue(name('pressed-corner'))).toBe(`var(--${prefix}-sys-shape-corner-extra-small, 4px)`);
+    // The radius is derived in the stylesheet from the scaled height, so the
+    // density step is the only property the option adds; the height stays the
+    // size's base and the stylesheet lowers it.
     group.setDensity('compact');
-    expect(group.element.style.getPropertyValue(`--${prefix}-button-group-height`)).toBe('48px');
-    expect(group.element.style.getPropertyValue(`--${prefix}-button-group-radius`)).toBe('24px');
+    expect(group.element.style.getPropertyValue(name('height'))).toBe('56px');
+    expect(group.element.style.getPropertyValue(`--${prefix}-density`)).toBe('-2');
+    expect(propertyNames(group.element).sort()).toEqual([...base, `--${prefix}-density`].sort());
   });
 
   // The card's --card-elevation writes were read by no stylesheet

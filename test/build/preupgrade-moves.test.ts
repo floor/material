@@ -139,11 +139,12 @@ describe("the button group matrix", () => {
       expect(row.strictBox, row.variant).toBe(true);
       expect(row.knownMoves, row.variant).toBeUndefined();
       // The container height the size and density fix, on both sides of the
-      // upgrade; and the group upgrades synchronously, as the host rows do.
-      expect(row.hostHeight, row.variant).toBe(
+      // upgrade, floored at the 32px visible target; and the group upgrades
+      // synchronously, as the host rows do.
+      expect(row.hostHeight, row.variant).toBe(Math.max(32,
         ({ xs: 32, s: 40, m: 56, l: 96, xl: 136 } as Record<string, number>)[row.variant.split(";")[0]]
           - ({ default: 0, comfortable: 4, compact: 8 } as Record<string, number>)[row.variant.split(";")[1].trim()],
-      );
+      ));
       expect(row.settleMs, row.variant).toBe(100);
     }
   });

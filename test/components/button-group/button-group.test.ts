@@ -690,12 +690,16 @@ describe("Button group selection (Material 3 kinds)", () => {
     expect(beta.element.getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("density lowers the container height by 4dp per step", () => {
+  it("density sets the scale's step and leaves the size's height alone", () => {
     const group = createButtonGroup({ size: "s", density: "compact", buttons: [{ text: "A" }] });
-    expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("32px");
+    // The height is the size's base; the stylesheet lowers it 4dp a step
+    expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("40px");
+    expect(group.element.style.getPropertyValue("--mtrl-density")).toBe("-2");
     group.setDensity("comfortable");
-    expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("36px");
+    expect(group.element.style.getPropertyValue("--mtrl-density")).toBe("-1");
     group.setDensity("default");
+    // A default group sets no step, so it follows a denser container
+    expect(group.element.style.getPropertyValue("--mtrl-density")).toBe("");
     expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("40px");
   });
 

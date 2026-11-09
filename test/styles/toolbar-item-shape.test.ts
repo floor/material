@@ -24,6 +24,9 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 
 const round = { xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' } as const;
+// Half the item's height: the density scale moves it half as far as the
+// height (2dp a step) and floors it with the height's 32dp.
+const half = (base: string) => `max(16px, ${base} + 2px * var(--mtrl-density, 0))`;
 
 const compile = (source: string): string =>
   compileString(`@use 'components/${source}';`, { loadPaths: ['src/styles'], style: 'expanded' }).css
@@ -66,7 +69,7 @@ describe('icon button morphs read the toolbar context', () => {
 
   test('a square button and a plain radius override are unchanged', () => {
     const selected = '.mtrl-icon-button--selected.mtrl-icon-button--square:not(:active)';
-    expect(value(buttons, selected, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${round.s})`);
+    expect(value(buttons, selected, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${half(round.s)})`);
     const pressed = '.mtrl-icon-button:active.mtrl-icon-button--square';
     expect(value(buttons, pressed, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, var(--mtrl-sys-shape-corner-small, 8px))`);
   });
@@ -81,7 +84,7 @@ describe('a toolbar keeps its round items round', () => {
     for (const size of Object.keys(round) as Array<keyof typeof round>) {
       const pins = [value(toolbar, items(size), '--mtrl-icon-button-shape-selected'),
         value(toolbar, items(size), '--mtrl-icon-button-shape-pressed')];
-      expect(pins).toEqual([round[size], round[size]]);
+      expect(pins).toEqual([half(round[size]), half(round[size])]);
     }
   });
 

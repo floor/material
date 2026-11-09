@@ -39,6 +39,9 @@ beforeAll(() => {
 });
 
 describe('button stylesheet: sizes (ButtonXSmall…XLargeTokens.kt)', () => {
+  // The token heights are the size's base; the scale's property lowers each
+  // 4dp a step and stops at the 32dp visible target.
+  const density = (base: string) => `max(32px, ${base} + 4px * var(--mtrl-density, 0))`;
   const sizes: Record<string, { height: string; padding: string; gap: string; icon: string; font: string }> = {
     xs: { height: '32px', padding: '0 12px', gap: '4px', icon: '20px', font: '14px' },
     s: { height: '40px', padding: '0 16px', gap: '8px', icon: '20px', font: '14px' },
@@ -50,7 +53,7 @@ describe('button stylesheet: sizes (ButtonXSmall…XLargeTokens.kt)', () => {
   for (const [size, expected] of Object.entries(sizes)) {
     test(`${size}: container, spacing, icon and label`, () => {
       const block = rule(`.mtrl-button--${size}`);
-      expect(declaration(block, 'height')).toBe(expected.height);
+      expect(declaration(block, 'height')).toBe(density(expected.height));
       expect(declaration(block, 'padding')).toBe(expected.padding);
       expect(declaration(block, 'gap')).toBe(expected.gap);
       expect(declaration(block, 'font-size')).toBe(expected.font);
@@ -60,14 +63,16 @@ describe('button stylesheet: sizes (ButtonXSmall…XLargeTokens.kt)', () => {
 
   test('the default button is the s size', () => {
     const block = rule('.mtrl-button');
-    expect(declaration(block, 'height')).toBe('40px');
+    expect(declaration(block, 'height')).toBe(density('40px'));
     expect(declaration(block, 'padding')).toBe('0 16px');
     expect(declaration(block, 'min-width')).toBe('58px');
-    expect(declaration(block, 'border-radius')).toBe('var(--mtrl-button-shape, 20px)');
+    expect(declaration(block, 'border-radius')).toBe('var(--mtrl-button-shape, max(16px, 20px + 2px * var(--mtrl-density, 0)))');
   });
 
-  test('xs and s extend the hit area to a 48dp target', () => {
-    const block = rule('.mtrl-button--xs::after, .mtrl-button--s::after');
+  test('every size extends the hit area to a 48dp target', () => {
+    // One base rule covers every size: a container the scale takes under 48dp
+    // still reaches the target.
+    const block = rule('.mtrl-button::after');
     expect(declaration(block, 'height')).toBe('48px');
     expect(declaration(block, 'left')).toBe('0');
     expect(declaration(block, 'right')).toBe('0');
@@ -95,19 +100,21 @@ describe('button stylesheet: shapes', () => {
     // A pill written as 9999px paints correctly but animates as a step: the
     // interpolated value stays above half the height for nearly the whole
     // transition, so the press morph held the pill and then snapped square.
-    // Half the height is the same pill and a real animation.
+    // Half the height is the same pill and a real animation; density moves the
+    // radius half as far as the height (2dp a step), so it stays half of it.
     const round = (size: string) => value(`.mtrl-button--${size}`, 'border-radius');
-    expect(round('xs')).toBe(shape('16px'));
-    expect(round('s')).toBe(shape('20px'));
-    expect(round('m')).toBe(shape('28px'));
-    expect(round('l')).toBe(shape('48px'));
-    expect(round('xl')).toBe(shape('68px'));
+    const half = (base: string) => `max(16px, ${base} + 2px * var(--mtrl-density, 0))`;
+    expect(round('xs')).toBe(shape(half('16px')));
+    expect(round('s')).toBe(shape(half('20px')));
+    expect(round('m')).toBe(shape(half('28px')));
+    expect(round('l')).toBe(shape(half('48px')));
+    expect(round('xl')).toBe(shape(half('68px')));
 
     // Each is exactly half the container height the size test asserts
     const heights: Record<string, number> = { xs: 32, s: 40, m: 56, l: 96, xl: 136 };
     for (const [size, height] of Object.entries(heights)) {
       const declared = value(`.mtrl-button--${size}`, 'border-radius');
-      expect(declared).toBe(shape(`${height / 2}px`));
+      expect(declared).toBe(shape(half(`${height / 2}px`)));
     }
   });
 
@@ -120,7 +127,7 @@ describe('button stylesheet: shapes', () => {
     for (const [size, radius] of Object.entries({ xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' })) {
       expect(
         value(`.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square.mtrl-button--${size}`, 'border-radius')
-      ).toBe(selectedShape(radius));
+      ).toBe(selectedShape(`max(16px, ${radius} + 2px * var(--mtrl-density, 0))`));
     }
   });
 
@@ -248,7 +255,7 @@ describe('button stylesheet: toggle buttons (ToggleButtonDefaults)', () => {
     expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--m', 'border-radius')).toBe('var(--mtrl-button-shape-selected, var(--mtrl-sys-shape-corner-large, 16px))');
     expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--xl', 'border-radius')).toBe('var(--mtrl-button-shape-selected, var(--mtrl-sys-shape-corner-extra-large, 28px))');
     // A square toggle rounds off; the radius is per size, asserted above
-    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square.mtrl-button--s', 'border-radius')).toBe('var(--mtrl-button-shape-selected, 20px)');
+    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square.mtrl-button--s', 'border-radius')).toBe('var(--mtrl-button-shape-selected, max(16px, 20px + 2px * var(--mtrl-density, 0)))');
     expect(css.indexOf('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square')).toBeGreaterThan(
       css.indexOf('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--xl'),
     );

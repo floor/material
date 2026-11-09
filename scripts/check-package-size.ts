@@ -141,8 +141,11 @@ try {
       // follow the measurement.
       // The inline sheet drops the rules the rendered markup cannot match
       // (src/ssr/prune-styles.ts): 253,639 raw, 5,325 gzip, CI's package job on
-      // this branch. Measured plus 1% or 100, rounded up to 50, is 256,200 raw
-      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200.
+      // this branch. Measured plus 1% or 100, rounded up to 50, was 256,200 raw
+      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200. The density
+      // scale's rules then took the raw row past that ceiling: 261,329 raw,
+      // 5,407 gzip in CI. Owner decision 2026-11-05: the raw ceiling is 263,950,
+      // the measured row plus 1% rounded up to 50, and the gzip row still fits.
       inline: { options: {}, ...SSR_PAGE.inline },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
