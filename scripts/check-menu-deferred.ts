@@ -2,7 +2,7 @@
 /** Packed public entries, styled input, deterministic network gates. Build in CI first. */
 import assert from "node:assert/strict";
 import { copyFile, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { build } from "vite";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { chromium, type Page, type Route } from "playwright";
@@ -30,6 +30,11 @@ await writeFile(join(scratch, "package.json"), JSON.stringify({ type: "module", 
 await mkdir(join(scratch, "node_modules"));
 await symlink(fixture.installed, join(scratch, "node_modules/material"), "dir");
 const sources = resolve("scripts/fixtures/menu-deferred");
+const packedManifest = JSON.parse(await readFile(join(fixture.installed, "package.json"), "utf8")) as {
+  exports: Record<string, { import: string }>;
+};
+const packedMenu = resolve(fixture.installed, packedManifest.exports["./components/menu"].import);
+const baselineHelper = join(dirname(packedMenu), "on-demand.js");
 const cases = ["factory", "eager", "element", "diagnostic"] as const;
 const outputs = new Map<string, { directory: string; gates: string[]; initial: string[] }>();
 const artifacts = resolve("analysis/browser/menu-deferred");
@@ -58,7 +63,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
     await mkdir(directory);
     for (const name of [kind, "broker"]) await copyFile(join(sources, `${name}.js`), join(directory, `${name}.js`));
     if (kind === "diagnostic") await writeFile(join(directory, "baseline-helper.js"),
-      `export { createOnDemandMenu } from ${JSON.stringify(join(fixture.installed, "components/menu/on-demand.js"))};`);
+      `export { createOnDemandMenu } from ${JSON.stringify(baselineHelper)};`);
     const style = kind === "element" ? 'material/elements/preupgrade/menu.css' : 'material/styles/menu';
     await writeFile(join(directory, "index.html"), `<!doctype html><html data-theme="baseline" data-theme-mode="light"><head>
 <script>window.defined=[]; const define=customElements.define.bind(customElements);customElements.define=(name,...args)=>{window.defined.push(name);return define(name,...args)};</script>
