@@ -1,0 +1,85 @@
+{
+  "main": "dc522a69ac5a89eeea241388465306c017d8d27d",
+  "ci": 42698596936,
+  "normalization": "remove only a leading material version banner",
+  "groups": {
+    ".": {
+      "count": 2,
+      "sha256": "d942da0a501ce08dc69228be8bbf9b0a6e863ae2640242d1279deb06f548ded4"
+    },
+    "components": {
+      "count": 283,
+      "sha256": "de61d4a5f96161b809a5c2a62cee52cecc5ec1fc4565196b5f79c3a73319cc7c"
+    },
+    "core": {
+      "count": 74,
+      "sha256": "a926ddea88723b1eff95b270facfa8df30e4972174cb0e59dc33969c83b9b74d"
+    },
+    "elements": {
+      "count": 199,
+      "sha256": "02ea99ceb6c565c1b4767db03c67dbf9ea9f26ebc03a18feb4f022462540f5fa"
+    },
+    "react": {
+      "count": 53,
+      "sha256": "33403734184ae411fc3c1f4673d83db85ba02dece0524581263e87a732728959"
+    },
+    "solid": {
+      "count": 53,
+      "sha256": "2e7b4259abe9a21a07fb143b1b99eaee421c4812c05fe284b62c597448e721db"
+    },
+    "ssr": {
+      "count": 6,
+      "sha256": "296998af1e4cb1c9e0d85176a8e7ee6edfa65630ff7ee50730e5ebfd00464650"
+    },
+    "styles": {
+      "count": 86,
+      "sha256": "4c3986d69bb5b6768993a39b414a3ccb3e644aa42c2049666be294b68ea38c5f"
+    },
+    "svelte": {
+      "count": 2,
+      "sha256": "e142398bae8efc1b193fdd3de59a2723b5db68c6a184c2d5fe3b4d86db229e5c"
+    },
+    "theme": {
+      "count": 33,
+      "sha256": "a9d60369ddfd42654302644ba05b890bdadf81394f640ddbcef011679b11636e"
+    },
+    "themes": {
+      "count": 40,
+      "sha256": "64e7676e5e8c7ff3e71dfef4b2699e4a4abd94e4acd03d009353f8abc9855263"
+    },
+    "vue": {
+      "count": 53,
+      "sha256": "895606f6045bca041da7ac2123501fe71abb5f4dcd0bb0927e85da923a62090e"
+    }
+  },
+  "ssr": {
+    "rows": [
+      {
+        "tag": "m-button",
+        "attributes": {},
+        "children": "Sentinel"
+      },
+      {
+        "tag": "m-text-field",
+        "attributes": {
+          "label": "Name",
+          "value": "Ada",
+          "supporting-text": "Support"
+        },
+        "children": ""
+      },
+      {
+        "tag": "m-badge",
+        "attributes": {
+          "label": "5"
+        },
+        "children": ""
+      }
+    ],
+    "modes": {
+      "inline": "b0e1c3f15c76d1110eb6edf178a13c7bd7bbb527ce3ea0208fb814d320523d3d",
+      "link": "260113e4ea7cbea6618cfb46f54f9dc82441bdd1eb1c4497da92a451604869f7"
+    },
+    "random": "constant 0.123456 during the synthetic render fixture only"
+  }
+}

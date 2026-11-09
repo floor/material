@@ -2,6 +2,8 @@
 @use 'sass:map';
 @use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../config' as emit;
 @use 'config' as c;
 
 $sizes: (
@@ -17,17 +19,21 @@ $icon-first: ':has(> [icon]:empty:first-child)';
 @mixin item($size, $font: true, $letter: true, $weight: true) {
   $t: map.get($sizes, $size);
   $type: map.get(v.$typescale, list.nth($t, 4));
+  $role: list.nth($t, 4);
   // As components/_button-group.scss: 4dp a step, floored at 32dp. Reading
   // the property keeps a denser container's items the right height before
   // and after upgrade; the density attributes below are the option's own.
   height: f.density(list.nth($t, 1), 32px);
   padding: 0 list.nth($t, 3);
   @if $font {
-    font-size: map.get($type, 'font-size');
-    line-height: map.get($type, 'line-height');
-    @if $letter { letter-spacing: map.get($type, 'letter-spacing'); }
+    @if emit.$typography-tokens {
+      font-family: m.typography-value($role, 'font', var(--mtrl-ref-typeface-plain,Roboto,sans-serif));
+    }
+    font-size: m.typography-value($role, 'font-size', map.get($type, 'font-size'));
+    line-height: m.typography-value($role, 'line-height', map.get($type, 'line-height'));
+    @if $letter { letter-spacing: m.typography-value($role, 'letter-spacing', map.get($type, 'letter-spacing')); }
   }
-  @if $weight { font-weight: map.get($type, 'font-weight'); }
+  @if $weight { font-weight: m.typography-value($role, 'font-weight', map.get($type, 'font-weight')); }
 }
 
 @include c.host('button-group') {

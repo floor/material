@@ -6,6 +6,7 @@
 @use 'variables' as v;
 @use 'functions' as f;
 @use 'emit' as emit;
+@use '../config' as config;
 
 // Common icons map
 $icons: (
@@ -29,15 +30,24 @@ $icons: (
 }
 
 // Typography
+// Only the selected profile reads role tokens. Keep the caller's exact value
+// as fallback, including direct component adjustments and family lists.
+@function typography-value($role, $property, $fallback) {
+  @if config.$typography-tokens {
+    @return var(--#{base.$prefix}-sys-typescale-#{$role}-#{$property}, #{$fallback});
+  }
+  @return $fallback;
+}
+
 @mixin typography($scale) {
   $styles: f.get-typography($scale);
   // The role's face as its reference token, the compiled family as the fallback
   // An app or theme sets --{prefix}-ref-typeface-brand or -plain
-  font-family: var(--#{base.$prefix}-ref-typeface-#{f.typeface($scale)}, #{map.get($styles, 'font-family')});
-  font-size: map.get($styles, 'font-size');
-  line-height: map.get($styles, 'line-height');
-  letter-spacing: map.get($styles, 'letter-spacing');
-  font-weight: map.get($styles, 'font-weight');
+  font-family: typography-value($scale, 'font', var(--#{base.$prefix}-ref-typeface-#{f.typeface($scale)}, #{map.get($styles, 'font-family')}));
+  font-size: typography-value($scale, 'font-size', map.get($styles, 'font-size'));
+  line-height: typography-value($scale, 'line-height', map.get($styles, 'line-height'));
+  letter-spacing: typography-value($scale, 'letter-spacing', map.get($styles, 'letter-spacing'));
+  font-weight: typography-value($scale, 'font-weight', map.get($styles, 'font-weight'));
 }
 
 /// A typescale role through its custom properties: the

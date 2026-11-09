@@ -197,6 +197,7 @@ export async function buildStyles(outdir: string, banner: string) {
     await emitExplicit(`themes/${name}-contrast`, name, false);
   }
   await emitElementStyles(outdir, options, banner);
+  await emitTypescaleStyles(outdir, options, banner);
 }
 
 /**
@@ -275,18 +276,63 @@ const SHARED_PREUPGRADE = ["config", "field", "index"];
  * Each element's pre-upgrade rules (src/styles/elements/_<name>.scss), by
  * name. Every element has them, and every partial is an element's or shared.
  */
-export async function preupgradeStyles(names: string[], options: sass.StringOptions<"sync">): Promise<Map<string, string>> {
+export async function preupgradeStyles(names: string[], options: sass.StringOptions<"sync">, typographyTokens = false): Promise<Map<string, string>> {
   const partials = (await readdir("src/styles/elements"))
     .map(file => /^_(.+)\.scss$/.exec(file)?.[1])
     .filter((name): name is string => !!name && !SHARED_PREUPGRADE.includes(name));
   assert.deepEqual([...partials].sort(), [...names].sort(), "Pre-upgrade partials differ from the elements");
   const rules = new Map<string, string>();
   for (const name of names) {
-    const css = sass.compileString(`@use "elements/${name}";`, options).css;
+    const css = sass.compileString((typographyTokens ? typographyPrelude() : "") + `@use "elements/${name}";`, options).css;
     // Non-ASCII output would start with a byte order mark, which breaks the
     // first selector once the rules are concatenated.
     assert(/^[\x20-\x7e\n]*$/.test(css), `Pre-upgrade CSS for ${name} is not printable ASCII`);
     rules.set(name, css);
   }
   return rules;
+}
+
+/** Configuration in a fresh Sass compilation, before any dependent module. */
+export function typographyPrelude(): string {
+  return '@use "config" as typography-config with ($typography-tokens: true);\n';
+}
+
+/** Optional profiles never append strings or imports to a default module. */
+async function emitTypescaleStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string) {
+  const light = `${outdir}/styles/typescale`;
+  const shadow = `${outdir}/elements/css/typescale`;
+  const preupgrade = `${outdir}/elements/typescale`;
+  await Promise.all([mkdir(light, { recursive: true }), mkdir(`${shadow}/hosts`, { recursive: true }), mkdir(`${preupgrade}/preupgrade`, { recursive: true })]);
+  const compile = (source: string, arms = false) => sass.compileString(
+    typographyPrelude() + (arms ? directionArmsPrelude() : "") + `@use "${source}";`, options,
+  ).css;
+  for (const [name, entry] of Object.entries(componentStyles)) {
+    const css = compile(entry.source, true);
+    await writeFile(`${light}/${name}.css`, `${banner}\n${styleLayerOrder()}@layer mtrl.${name}{${css}}\n`);
+    await writeFile(`${light}/${name}.js`, entry.dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") +
+      `\nimport "./${name}.css";\n`);
+  }
+  await writeFile(`${light}/index.js`, Object.keys(componentStyles).map(name => `import "./${name}.js";`).join("\n") + "\n");
+
+  const { elements } = await import("../src/elements");
+  const { hostStyleText } = await import("../src/elements/define");
+  const names = resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]));
+  await writeFile(`${shadow}/ripple.css`, compile("utilities/ripple"));
+  await writeFile(`${shadow}/ripple.js`, 'import "../ripple.js";\n');
+  for (const name of names) {
+    const entry = componentStyles[name];
+    const css = compile(entry.source);
+    await writeFile(`${shadow}/${name}.css`, css);
+    await writeFile(`${shadow}/${name}.js`, ["ripple", ...entry.dependencies].map(dependency => `import "./${dependency}.js";`).join("\n") +
+      `\nimport { registerStyles } from "../../styles.js";\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`);
+  }
+  await writeFile(`${shadow}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
+  for (const element of Object.values(elements)) await writeFile(`${shadow}/hosts/${element.spec.name}.css`, hostStyleText(element.spec));
+  const rules = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options, true);
+  const all = [...rules.values()].join("");
+  for (const [name, css] of rules) await writeFile(`${preupgrade}/preupgrade/${name}.css`, preupgradeStylesheet(css, banner));
+  await writeFile(`${preupgrade}/preupgrade.css`, preupgradeStylesheet(all, banner));
+  await writeFile(`${preupgrade}/preupgrade.js`, 'import { DEFAULT_PREFIX, preupgradeSheet } from "../styles.js";\n' +
+    `const css = ${JSON.stringify(all)};\nexport const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(css, [prefix]);\n`);
+  await writeFile(`${preupgrade}/preupgrade.d.ts`, "export declare const preupgradeStyles: (prefix?: string) => string;\n");
 }

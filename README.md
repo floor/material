@@ -211,6 +211,50 @@ Element applications can use `material/styles/base-elements` to keep the base's 
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
+Components can opt into the existing type-scale role properties. Compile Sass with the configuration loaded first:
+
+```scss
+@use "material/src/styles/config" with ($typography-tokens: true);
+@use "material/src/styles/main";
+```
+
+The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any component or element Sass module is loaded. The same flag applies when compiling `material/src/styles/elements`, including its existing `$tag-prefix` option. It changes how component text consumes tokens; the existing typography classes already consume them.
+
+For prebuilt factory styles, select the role-aware component sheet:
+
+```typescript
+import 'material/styles/base';
+import 'material/styles/typescale/button';
+```
+
+For custom elements, select both the shadow CSS and the matching pre-upgrade CSS before defining elements:
+
+```typescript
+import 'material/styles/base-elements';
+import 'material/elements/css/typescale/button';
+import 'material/elements/typescale/preupgrade.css';
+import { defineButton } from 'material/elements';
+
+defineButton();
+```
+
+`material/styles/typescale` loads all role-aware factory component sheets; `material/elements/css/typescale` registers all matching shadow sheets. Each selective entry includes its component dependencies. Choose one component-style profile for the page and register it before creation; registering another profile does not replace sheets already adopted by existing roots. The normal framework adapter entries keep their default CSS imports and do not provide this opt-in profile.
+
+Set only the role properties the application wants to customize:
+
+```css
+.application {
+  --mtrl-sys-typescale-label-large-font-size: 18px;
+  --mtrl-sys-typescale-label-large-font-weight: 600;
+}
+```
+
+Role properties inherit through element hosts into their shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled font family. No complete token sheet is required. Badge text consumes its existing size, line-height and weight properties; hidden text and dot badges keep their zero font size. Component adjustments, such as the button group's large-size weight and tracking, keep their existing priority.
+
+A provided role value wins over the fallback. An inherited role font resolved on an ancestor keeps that ancestor's value; set the role font on the intended scope when changing its reference face. A missing token can use a fallback, but a supplied value of the wrong CSS type follows normal CSS invalid-value behavior.
+
+The matching pre-upgrade helper is `preupgradeStyles` from `material/elements/typescale/preupgrade`; it accepts a custom tag prefix. Linked SSR can point its existing `cssBase` option at the distributed `dist/elements/css/typescale` directory, serving the complete directory including host and ripple sheets. Use the same profile on the client. Default inline SSR continues to emit the default CSS.
+
 From 3.1.0, Sass consumers can choose which contrast rules to compile with `$contrast-emit`. Configure the public themes entry in your application stylesheet:
 
 ```scss

@@ -31,6 +31,7 @@ const CHECKOUT_ENTRIES = [
   "main",
   "themes",
   "elements",
+  "config",
   // The M3 scheme variants, read by path: the themes entry forwards the twelve
   // built-in themes, not these, and md3.io loads them this way.
   ...VARIANTS.map(name => `themes/${name}`),
@@ -70,6 +71,17 @@ try {
       checkout,
       `${specifier} compiles differently from the checkout's ${CHECKOUT_ENTRIES[index]}: the packed Sass normalization changed what a consumer sees`,
     );
+  }
+  // The public configuration and all three consumers must work from normalized
+  // packed Sass, including the first-use and false/default contracts.
+  for (const name of ["main", "elements"]) {
+    for (const value of ["true", "false"]) {
+      const compileProfile = (prefix: string, paths: string[]) => sass.compileString(
+        `@use "${prefix}config" with ($typography-tokens: ${value}); @use "${prefix}${name}";`,
+        { loadPaths: paths, style: "compressed", logger: sass.Logger.silent },
+      ).css;
+      assert.equal(compileProfile("material/src/styles/", loadPaths), compileProfile("", ["src/styles"]), `${name}/${value}: packed configuration differs`);
+    }
   }
   // The positive control: the packed entries are the normalized copies, not
   // the checkout's own files. The compile above is the safety contract; this
