@@ -515,6 +515,8 @@ try {
     // modes. It has no `.mtrl-` class of its own, so its side-effect
     // assertions are in the block below.
     { name: "base-lite-css", code: "import 'material/styles/base-lite';", gzip: PACKAGE_GZIP["base-lite-css"] },
+    // The element base must fit the existing full-base ceiling; no budget increase.
+    { name: "base-elements-css", code: "import 'material/styles/base-elements';", gzip: PACKAGE_GZIP["base-css"] },
     // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
     // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
     { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: PACKAGE_GZIP["button-css"] },
@@ -623,6 +625,10 @@ try {
         assert(text.includes("prefers-reduced-motion"), "base-lite lost the global reduced-motion switch");
         assert(!text.includes(".mtrl-ripple") && !text.includes("prefers-contrast") && !text.includes("box-sizing"),
           "base-lite carries a group it promises to drop");
+      } else if (fixture.name === "base-elements-css") {
+        assert(text.includes("prefers-contrast") && text.includes("box-sizing"), "element base lost contrast or reset");
+        assert(!text.includes(".mtrl-ripple") && !text.includes("[data-ripple"), "element base retains global ripple rules");
+        assert(sizes[fixture.name].gzip < sizes["base-css"].gzip, "element base is not smaller than the full base");
       } else {
         assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
       }

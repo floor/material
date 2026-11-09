@@ -5,7 +5,7 @@ import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as sass from "sass";
 import {
-  componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, baseLiteStyles, typographyStyles, typographyDependencies, utilityStyles,
+  componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, baseElementsStyles, baseLiteStyles, typographyStyles, typographyDependencies, utilityStyles,
   contrastStyle, resolveStyleDependencies,
 } from "./style-manifest";
 import { preupgradeSheet } from "../src/elements/styles";
@@ -152,7 +152,7 @@ export async function buildStyles(outdir: string, banner: string) {
       // order and emits into mtrl.base, so it can load before or after the
       // base without moving either sheet's rules.
       // Contrast is emitted separately, in that same layer (`emitExplicit`).
-      const layer = name === "typography" || name === "base-lite" ? "base" : name;
+      const layer = name === "typography" || name === "base-lite" || name === "base-elements" ? "base" : name;
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
@@ -182,6 +182,7 @@ export async function buildStyles(outdir: string, banner: string) {
   // as the per-component entries do
   await writeFile(`${outdir}/styles.d.ts`, "export {};\n");
   await emit("styles/base", baseStyles, [], "preference");
+  await emit("styles/base-elements", baseElementsStyles, [], "preference");
   // The opt-in theme-only base: no contrast modes, reset or ripple. It emits
   // the reduced-motion switch explicitly, because that part is not optional.
   await emit("styles/base-lite", baseLiteStyles, [], "none");
