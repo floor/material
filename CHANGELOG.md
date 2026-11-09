@@ -147,6 +147,13 @@ Selection actions, slide images, active destinations, one density scale and a lo
   density in focused tasks such as selecting from a menu. The option still
   renders the dense variant exactly as before and is removed in 4.0.
 
+- **The tabs responsive helper (#293).**
+  `setupResponsiveBehavior` from `material/components/tabs` is deprecated:
+  pass `tabsResponsive(config)` from `material/components/tabs/responsive`
+  as `createTabs`'s `responsive` option instead — the same configuration,
+  the same behaviour, applied while the group is built. The helper keeps
+  working throughout 3.x and is removed in 4.0.
+
 ### Fixed
 
 - **The Material 3 corner for time picker actions and list media (#290).**
@@ -181,16 +188,18 @@ Selection actions, slide images, active destinations, one density scale and a lo
 
 ### Internal
 
-- **Raised size ceilings for this group (#334, and the `all` cap).** By
-  the owner decision of 2026-11-09, making room for this group: all-js
-  130,050 → 130,650 B, button CSS 5,300 → 5,550 B, slider CSS 4,850 →
-  5,050 B; with this release the every-component scenario cap follows:
-  `all` 127,200 → 127,500 B, and #294 carries base-css 3,050 →
-  3,150 B and the inline-page raw band 256,200 → 263,950 B. The
-  release's final all-js figure, 130,618 B, is measured on main
-  a79665f2 (push run 42586777996), the tree the release ships. The
-  `all` cap figure is 127,500 B by the owner decision of 2026-11-09 —
-  the measured stack end 127,475 leaves 25 B under it.
+- **Raised size ceilings for this group (#334 and #336, with #283, #294
+  and #296).** By the owner decision of 2026-11-08, making room for this
+  group: text-field 9,550 → 9,600 B and form 20,450 → 20,500 B (#283),
+  base-css 3,050 → 3,150 B (#294), and the datepicker scenario ceiling
+  13,209 → 13,250 B (#296). By the owner decision of 2026-11-09: all-js
+  130,050 → 130,650 B, button CSS 5,300 → 5,550 B and slider CSS
+  4,850 → 5,050 B (#334), the every-component scenario cap `all`
+  127,200 → 127,500 B (#336), and #294's inline-page raw band
+  256,200 → 263,950 B. The release's final all-js figure, 130,618 B, is
+  measured on main a79665f2 (push run 42586777996), the tree the release
+  ships; the measured stack end `all` 127,475 leaves 25 B under the new
+  cap.
 
 - **Folded type declarations (#314).**
   The package's TypeScript declarations are consolidated: 313 declaration
