@@ -2,6 +2,7 @@
 import { BaseComponent, CardComponent, ApiOptions, CardConfig, CardEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import { warnDev } from '../../core/utils/warn';
+import { NESTED_ACTION_SELECTOR } from './content';
 
 /**
  * Enhances a card component with API methods.
@@ -23,15 +24,6 @@ type ComponentWithElements = Omit<BaseComponent, 'config' | 'addClass'> & {
   on: (event: string, handler: EventCallback) => unknown;
   off: (event: string, handler: EventCallback) => unknown;
 };
-
-/**
- * Controls inside a clickable card. One string, shared with the click guard.
- * Identifier values need no quotes. The card template's action slots are
- * `actions` and `header-action`, both matched by `name*=action`.
- * @see https://m3.material.io/components/cards/accessibility
- */
-export const NESTED_ACTION_SELECTOR =
-  "button,a[href],input,select,textarea,m-button,m-icon-button,[role=button],[role=link],slot[name*=action]";
 
 /**
  * Opt-in: a clickable card with nested actions becomes an article and drops

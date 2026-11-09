@@ -13,7 +13,7 @@ import type { ElementComponent } from "../../core/compose/component";
 import type { EventComponent } from "../../core/compose/features";
 import { CardComponent, CardComponentConfig, CardConfig } from "./types";
 import { CARD_VARIANTS, CARD_ELEVATIONS } from "./constants";
-import { NESTED_ACTION_SELECTOR } from "./api";
+import { NESTED_ACTION_SELECTOR } from "./content";
 
 /**
  * Default configuration for the Card component.

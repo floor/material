@@ -198,6 +198,15 @@ export const createCardHeader = (config: CardHeaderConfig = {}): HTMLElement => 
 };
 
 /**
+ * Controls inside a clickable card. One string, shared with the click guard.
+ * Exact slot names: `actions` and `header-action`.
+ * Stays next to the header-action class string; moving it copies those names.
+ * @see https://m3.material.io/components/cards/accessibility
+ */
+export const NESTED_ACTION_SELECTOR =
+  "button,a[href],input,select,textarea,m-button,m-icon-button,[role=button],[role=link],slot[name=actions],slot[name=header-action]";
+
+/**
  * Creates a card actions component
  * 
  * @param {CardActionsConfig} config - Actions configuration
