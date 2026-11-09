@@ -370,3 +370,29 @@ export declare const registry: { run: (value: number) => number };
     await rm(packed, { recursive: true, force: true });
   }
 });
+
+
+test("JavaScript namespace assignments are checked against emitted declaration docs, not raw JS comments", async () => {
+  const source = await makeTree({
+    "index.ts": 'import { Palette } from "./vendor.js";\n/** Public colors. */ export const colors = Palette;\n',
+    "vendor.js": 'export class Palette {}\n/** @deprecated Use its instance. */ Palette.legacy = 1;\n',
+  });
+  const declarations = {
+    "package.json": JSON.stringify({ exports: { ".": { types: "./index.d.ts" } } }),
+    "index.d.ts": '/** Public colors. */ export declare const colors: typeof import("./vendor.js").Palette;\n',
+    "vendor.d.ts": 'export class Palette {}\nexport namespace Palette { let legacy: number; }\n',
+  };
+  const packed = await makeTree(declarations);
+  const before = await makeTree(declarations);
+  try {
+    expect(await assertImportableDeclarationDocs(packed, source, { ".": { types: "./index.d.ts" } })).toEqual([]);
+    await stripInternalDeclarationDocs(packed, { ".": { types: "./index.d.ts" } });
+    expect(compareDeclarationIdentity(before, packed).exports).toBe(1);
+    await writeFile(join(packed, "index.d.ts"), declarations["index.d.ts"].replace("Public colors.", ""));
+    expect((await assertImportableDeclarationDocs(packed, source, { ".": { types: "./index.d.ts" } })).some(message => message.includes("colors"))).toBe(true);
+  } finally {
+    await rm(source, { recursive: true, force: true });
+    await rm(packed, { recursive: true, force: true });
+    await rm(before, { recursive: true, force: true });
+  }
+});

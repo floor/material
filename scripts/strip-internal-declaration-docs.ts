@@ -423,6 +423,11 @@ export async function assertImportableDeclarationDocs(
   };
   const docsOf = (declaration: ts.Declaration): string[] => {
     const sf = declaration.getSourceFile();
+    // This source audit checks handwritten TypeScript's hover cut. TypeScript
+    // does not emit JSDoc on inferred JavaScript namespace assignments; raw JS
+    // comments are not a declaration-doc oracle. The mandatory build identity
+    // proof instead protects every doc/tag in their unstripped emitted .d.ts.
+    if (/\.[cm]?jsx?$/.test(sf.fileName)) return [];
     // A variable's JSDoc belongs to its VariableStatement, not its name node.
     let node: ts.Node = declaration;
     if (ts.isVariableDeclaration(node) && ts.isVariableDeclarationList(node.parent) && ts.isVariableStatement(node.parent.parent)) node = node.parent.parent;
