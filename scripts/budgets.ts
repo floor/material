@@ -24,7 +24,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_600,
   form: 20_500,
-  "all-js": 130_650,
+  "all-js": 130_800, // 130,650 by the owner decision of 2026-11-09; 130,800 on this measurement branch only, to measure the stacked 3.10.0 group with headroom
   "base-css": 3_150,
   "base-lite-css": 1_750,
   "button-css": 5_550,
