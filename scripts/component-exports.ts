@@ -41,7 +41,7 @@ export const constantsNames = (): string[] =>
  * imports on purpose, which the component's index does not re-export, so
  * their bytes stay out of that component's own graph.
  */
-export const extraSubpaths = (): string[] => ["tabs/responsive"];
+export const extraSubpaths = (): string[] => ["menu/deferred", "tabs/responsive"];
 
 export function readComponentExports(): ComponentExports {
   const extra = extraSubpaths();

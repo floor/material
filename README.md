@@ -487,14 +487,17 @@ await menu.preload();    // joins the request; does not open or focus by itself
 const surface = menu.element; // real HTMLElement after readiness, otherwise null
 ```
 
-The handle supports the menu's non-DOM operations, including queued setters,
-`on`/`off`, `toggle`, `getOpener` and selection. Fluent methods always return the
-handle, and event payloads identify that handle. It is not a `MenuComponent`:
-`element` is nullable, `isReady()` reports construction, and `preload()` returns a
-Promise. `isOpen()` reports the accepted request before a cold popup exists;
-`aria-expanded` stays false and the opener is busy during that interval. Closing
-cancels presentation without pretending to abort a module fetch. Destroying is
-terminal and rejects outstanding and future preload calls with `AbortError`.
+The handle mirrors the menu's non-DOM operations: queued setters, event
+subscriptions, toggling, and access to opener and selection state. Fluent methods
+and event payloads identify the same handle.
+
+It is not a synchronous `MenuComponent`. The `element` property is nullable.
+Readiness is reported by `isReady()`, while `preload()` returns a Promise.
+
+The requested state from `isOpen()` precedes the cold popup. During that interval,
+`aria-expanded` stays false and the opener is busy. Closing cancels presentation
+without pretending to abort a module fetch. Destroying is terminal and rejects
+outstanding and future preload calls with `AbortError`.
 
 A failed import or construction closes the request, emits `loaderror` and rejects
 `preload()`. Explicit subsequent requests may retry; a browser-cached module
@@ -503,19 +506,24 @@ Register an error handler before opening and handle the Promise when awaiting
 preload. Existing eager menus remain appropriate when DOM access or initially
 open content must be usable immediately.
 
-For elements, `material/elements/menu` is a dedicated registration boundary for
-the existing `defineMenu`, `menuElement` and `menuItemDeclaration`. Importing it
-registers nothing. Delay both that entry and `material/elements/css/menu`, then
-call `defineMenu` only after both resolve. Import
-`material/elements/preupgrade/menu.css` with the page's normal base/theme styles.
+For elements, `material/elements/menu` is the existing menu's dedicated
+registration boundary. It exports `defineMenu` plus the menu and item declaration
+definitions. Importing it registers nothing.
+
+Delay both that entry and `material/elements/css/menu`. Call `defineMenu` after
+both resolve. Import `material/elements/preupgrade/menu.css` with the page's
+normal base/theme styles.
+
 The [checked application recipe](scripts/fixtures/menu-deferred/broker.js) keeps
 one registration Promise, records cold input once, cancels stale intent and
-handles failures. Its call to `toggle(originalEvent)` happens after registration;
-it never redispatches the gesture. The [element fixture](scripts/fixtures/menu-deferred/element.js)
-shows the recipe with authored items and early host listeners. Methods such as
-`show`, `hide` and `toggle` do not exist before upgrade: application callers must
-await registration. Custom prefixes register their item declarations first; supply matching pre-upgrade
-CSS with `preupgradeStyles(prefix)` from `material/elements/preupgrade`.
+handles failures. It calls `toggle(originalEvent)` after registration and never
+redispatches the gesture. The [element fixture](scripts/fixtures/menu-deferred/element.js)
+shows authored items and early host listeners.
+
+Element methods do not exist before upgrade: application callers must await
+registration. Custom prefixes register their item declarations first. Supply
+matching pre-upgrade CSS with `preupgradeStyles(prefix)` from
+`material/elements/preupgrade`.
 
 Closed SSR content can defer client registration while keeping its declarative
 shadow root and styles. Initially open attributes/properties use eager

@@ -61,18 +61,21 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
 <script>window.defined=[]; const define=customElements.define.bind(customElements);customElements.define=(name,...args)=>{window.defined.push(name);return define(name,...args)};</script>
 </head><body><button id="opener">Actions</button><button id="other">Outside</button>
 <script type="module">import 'material/styles/base'; import '${style}'; import './${kind}.js';</script></body></html>`);
-    const result = await build({ root: directory, configFile: false, envFile: false, logLevel: "error",
-      build: { outDir: join(directory, "out"), minify: true, cssMinify: true, modulePreload: { polyfill: false } } });
+    const result = await build({ root: directory, base: "./", configFile: false, envFile: false, logLevel: "error",
+      build: { outDir: join(directory, "out"), sourcemap: "hidden", minify: true, cssMinify: true, modulePreload: { polyfill: false } } });
     assert(!Array.isArray(result) && "output" in result);
     const chunks = result.output.filter(item => item.type === "chunk");
-    const gates = chunks.filter(chunk => Object.keys(chunk.modules).some(id =>
-      /components\/menu\/features\/controller\.js$/.test(id))).map(chunk => chunk.fileName);
+    const chunkInventory = chunks.map(chunk => ({ file: chunk.fileName,
+      modules: [...new Set([...Object.keys(chunk.modules), ...chunk.moduleIds])], sources: chunk.map?.sources ?? [] }));
+    await writeFile(join(artifacts, `chunks-${kind}.json`), JSON.stringify(chunkInventory, null, 2));
+    const gates = chunkInventory.filter(chunk => [...chunk.modules, ...chunk.sources].some(id =>
+      /components\/menu\/features\/controller(?:\.[cm]?[jt]s)?(?:\?.*)?$/.test(id))).map(chunk => chunk.file);
     assert(gates.length, `${kind}: menu controller chunk missing`);
     const initial = new Set<string>();
     const htmlAsset = result.output.find(item => item.fileName === "index.html");
     assert(htmlAsset?.type === "asset");
     const html = String(htmlAsset.source);
-    for (const match of html.matchAll(/(?:src|href)="\/?(assets\/[^"]+)"/g)) initial.add(match[1]);
+    for (const match of html.matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+)"/g)) initial.add(match[1]);
     const visit = (file: string): void => {
       const chunk = chunks.find(item => item.fileName === file);
       for (const imported of chunk?.imports ?? []) if (!initial.has(imported)) { initial.add(imported); visit(imported); }
@@ -415,7 +418,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       assert(!Array.isArray(measured) && "output" in measured);
       const html = measured.output.find(file => file.fileName === "index.html");
       assert(html?.type === "asset");
-      const initial = new Set([...String(html.source).matchAll(/(?:src|href)="\/?(assets\/[^"]+)"/g)].map(match => match[1]));
+      const initial = new Set([...String(html.source).matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+)"/g)].map(match => match[1]));
       const visit = (name: string): void => {
         const chunk = measured.output.find(file => file.fileName === name);
         if (chunk?.type !== "chunk") return;
