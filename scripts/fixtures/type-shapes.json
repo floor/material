@@ -186,6 +186,13 @@
       "string"
     ]
   },
+  "ButtonFilledSmallRoundElement.component": {
+    "kind": "union",
+    "members": [
+      "ButtonFilledSmallRoundComponent",
+      "null"
+    ]
+  },
   "ButtonGroupChangeEvent.value": {
     "kind": "union",
     "members": [
