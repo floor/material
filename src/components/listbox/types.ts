@@ -76,7 +76,7 @@ export type ListboxEventHandlers<T = unknown> = {
 };
 
 /**
- * Configuration for {@link createListbox}.
+ * Configuration for `createListbox`.
  *
  * @category Components
  */
@@ -104,7 +104,7 @@ export interface ListboxConfig<T = unknown> {
 }
 
 /**
- * The handle {@link createListbox} returns. Focus stays on the control while
+ * The handle `createListbox` returns. Focus stays on the control while
  * the popup is explored.
  *
  * @category Components
