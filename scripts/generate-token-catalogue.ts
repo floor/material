@@ -105,7 +105,7 @@ const buildRow = (
     m3Id: input.m3Id ?? null,
     source: input.source ?? null,
     emissions,
-    consumers: inventory.consumers.get(cssName) ?? { kind: "declaration-only", selectors: [], exports: [] },
+    consumers: inventory.consumers.get(cssName) ?? { kind: "declaration-only", references: [] },
     support: input.support,
     supportReason: input.supportReason,
     verification: input.verification,
@@ -143,7 +143,7 @@ export function buildCatalogue(
       ...inventory,
       emissions: new Map([[cssName, emissionsReferenced]]),
     });
-    row.consumers = { kind: "consumer-provided", selectors: inventory.external.get(cssName)!.selectors, exports: inventory.external.get(cssName)!.exports };
+    row.consumers = { kind: "consumer-provided", references: inventory.external.get(cssName)!.references };
     rows.push(row);
   }
   rows.sort((a, b) => a.id.localeCompare(b.id));

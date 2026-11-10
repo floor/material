@@ -28,8 +28,9 @@ export interface Inventory {
   consumers: Map<string, Consumers>;
   /** Distinct referenced names. */
   referencedNames: string[];
-  /** Referenced but declared nowhere: consumer-provided, with the fallback. */
-  external: Map<string, { fallback: string | null; exports: string[]; selectors: string[] }>;
+  /** Referenced but declared nowhere: consumer-provided, with the recorded
+   * fallback and every complete reference. */
+  external: Map<string, { fallback: string | null; references: CssReference[] }>;
   declarationCount: number;
   referenceCount: number;
   /** sha256 over the sorted (file, content) pairs: the built-input identity. */
@@ -40,18 +41,17 @@ const key = (emission: Emission): string =>
   `${emission.conditions.join(" ")}|${emission.selector}`;
 
 const classifyConsumer = (references: CssReference[]): Consumers => {
-  const selectors = [...new Set(references.map(reference => reference.selector))].sort();
-  const exports = [...new Set(references.map(reference => reference.file))].sort();
   // Utility classes (`mtrl-display-large`) and components (`mtrl-card`) both
   // read tokens; a name referenced only inside another declaration, or not at
   // all, is declaration-only on these outputs.
-  const reads = selectors.filter(selector => /[.:#[]/.test(selector));
+  const reads = references.map(reference => reference.selector).filter(selector => /[.:#[]/.test(selector));
   const kind = reads.some(selector => /^\.mtrl-(display|headline|title|body|label)-/.test(selector.trim()))
     ? "utility"
     : reads.length ? "component" : "declaration-only";
-  // The complete wiring: nothing is bounded or sampled, because the inventory
-  // feeds the full review document, not the shipped one.
-  return { kind, selectors, exports };
+  // The complete wiring: every reference retained whole — export, selector,
+  // at-rule contexts, property, value, fallback — because the inventory feeds
+  // the full review document, not the shipped one.
+  return { kind, references };
 };
 
 /** Build the inventory from the declared final outputs. */
@@ -103,14 +103,13 @@ export function buildInventory(outputs: OutputFile[]): Inventory {
 
   const declaredNames = [...emissions.keys()].sort();
   const consumers = new Map<string, Consumers>();
-  const external = new Map<string, { fallback: string | null; exports: string[]; selectors: string[] }>();
+  const external = new Map<string, { fallback: string | null; references: CssReference[] }>();
   for (const [name, list] of referencesByName) {
     consumers.set(name, classifyConsumer(list));
     if (!emissions.has(name)) {
       external.set(name, {
         fallback: list.find(reference => reference.fallback !== null)?.fallback ?? null,
-        exports: [...new Set(list.map(reference => reference.file))].sort(),
-        selectors: [...new Set(list.map(reference => reference.selector))].sort(),
+        references: list,
       });
     }
   }

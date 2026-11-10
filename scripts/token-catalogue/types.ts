@@ -7,6 +7,7 @@
  * classes; `ref`/`sys`/`comp` prefixes) is the design tokens overview,
  * scripts/token-catalogue/sources.ts `m3-tokens-overview`, read 2026-11-10.
  */
+import type { CssReference } from "./css";
 
 /** A reviewed Material source the ledger retains a factual digest for. */
 export interface SourceRecord {
@@ -64,10 +65,12 @@ export interface Consumers {
    * does. `declaration-only`: nothing references it in the scanned outputs.
    * `consumer-provided`: referenced with a fallback, never declared in CSS. */
   kind: "component" | "utility" | "declaration-only" | "consumer-provided";
-  /** Selector contexts that reference it (bounded sample, deterministic). */
-  selectors: string[];
-  /** Export surfaces whose rules reference it. */
-  exports: string[];
+  /** Every reference to the name, complete: the export it appeared in, the
+   * selector with its enclosing at-rule contexts, the property it was read
+   * in, the declaration's value, and the fallback when the var() carried
+   * one. Nothing is sampled, split or paired down — two different property,
+   * condition or export mappings cannot collapse to the same record. */
+  references: CssReference[];
 }
 
 /** A catalogue row: one stable token identity across its emission contexts. */

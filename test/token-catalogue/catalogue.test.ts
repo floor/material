@@ -107,17 +107,31 @@ describe("the catalogue generator", () => {
   });
 
   test("enumerates every row's emission contexts and the complete consumer wiring", () => {
-    // Ten consumers on one step: the previous caps kept eight selectors and
-    // six exports; the full document is the review surface, so it truncates
-    // nothing. Every row carries its emission contexts enumerated, with no
-    // summary standing in for them.
+    // Ten consumers on one step: the full document is the review surface, so
+    // it truncates nothing. Every row carries its emission contexts
+    // enumerated, with no summary standing in for them, and every consumer
+    // reference whole: export, selector, at-rule context, the property it
+    // reads, the value and the fallback — the relationships a selector/export
+    // list would collapse.
     const tenMore = Array.from({ length: 10 }, (_, index) =>
       `.mtrl-extra-${index}{border-radius:var(--mtrl-sys-shape-corner-small)}`).join("\n");
     const full = catalogueOf(`${fixtureCss}\n${tenMore}`);
     expect(full.tokens.every(row => Array.isArray(row.emissions) && row.emissions.length > 0)).toBe(true);
     expect(full.tokens.every(row => !("emissionSummary" in row))).toBe(true);
     const small = full.tokens.find(row => row.cssName === "--mtrl-sys-shape-corner-small")!;
-    expect(small.consumers.selectors.filter(selector => selector.startsWith(".mtrl-extra-")).length).toBe(10);
+    const renderedSmall = (JSON.parse(renderFullCatalogue(full)) as { tokens: Array<Record<string, unknown>> })
+      .tokens.find(row => row.cssName === "--mtrl-sys-shape-corner-small")!.consumers as Record<string, unknown>;
+    expect(renderedSmall).not.toHaveProperty("selectors");
+    expect(renderedSmall).not.toHaveProperty("exports");
+    const extras = small.consumers.references.filter(reference => reference.selector.startsWith(".mtrl-extra-"));
+    expect(extras.length).toBe(10);
+    for (const reference of extras) {
+      expect(reference.file).toBe("styles.css");
+      expect(reference.within).toBe("border-radius");
+      expect(reference.value).toBe("var(--mtrl-sys-shape-corner-small)");
+      expect(reference.fallback).toBeNull();
+      expect(reference.at).toEqual([]);
+    }
   });
 });
 
