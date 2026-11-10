@@ -111,3 +111,6 @@ AGENTS.md
 
 # The publish staging copy (scripts/stage-package.ts)
 .package-stage/
+
+# CI-only comparator builds
+scripts/fixtures/comparators/.generated/

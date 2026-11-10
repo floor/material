@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.12.0",
+  "version": "3.13.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -614,6 +614,7 @@
     "svelte-types:floor": "bun run scripts/check-at-peer-floor.ts svelte -- svelte-types:check",
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
     "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
+    "comparators:check": "bun run scripts/check-comparators.ts",
     "button-profile:check": "bun run scripts/check-button-profile.ts"
   },
   "repository": {

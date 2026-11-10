@@ -81,4 +81,7 @@ test("the migration guide permits named historical spellings without exempting o
   expect(lineKept("MIGRATING.md", mapping, false)).toBe(true);
   expect(lineKept("MIGRATING.md", "unlisted text" + "field prose", false)).toBe(false);
   expect(lineKept("src/example.ts", mapping, false)).toBe(false);
+  expect(lineKept("scripts/fixtures/comparators/adapters/micl.js", '<div class="micl-textfield-filled">', false)).toBe(true);
+  expect(lineKept("scripts/fixtures/comparators/adapters/micl.js", "unlisted text" + "field prose", false)).toBe(false);
+  expect(lineKept("scripts/fixtures/comparators/legacy-import-closure/results/app-material-web.json", "unlisted text" + "field prose", false)).toBe(false);
 });
