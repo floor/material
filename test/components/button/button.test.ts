@@ -277,6 +277,19 @@ describe('button', () => {
     button.destroy();
   });
 
+  test('custom progress values and event handlers survive lazy initialization', async () => {
+    let changes = 0;
+    const progress = { size: 18, value: 30, indeterminate: false, on: { change: () => changes++ } };
+    const button = mount({ text: 'Save', progress });
+    await button.showProgress();
+    const indicator = button.element.querySelector('[role="progressbar"]')!;
+    expect(indicator.getAttribute('aria-valuenow')).toBe('30');
+    await button.setProgress(60);
+    expect(indicator.getAttribute('aria-valuenow')).toBe('60');
+    expect(changes).toBe(1);
+    button.destroy();
+  });
+
   test('omitting loading or setting it false leaves the default button unchanged', () => {
     const plain = mount({ text: 'Save' });
     const explicit = mount({ text: 'Save', loading: false });

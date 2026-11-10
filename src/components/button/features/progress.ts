@@ -72,29 +72,14 @@ export const withProgress =
       return component;
     }
 
-    // Extract event handlers if present
-    let progressEventHandlers: Partial<ProgressEvents> = {};
-
-    // Determine progress configuration
-    const progressConfig: ProgressConfig =
-      typeof config.progress !== "object"
-        ? { variant: "circular", size: 20, thickness: 2, indeterminate: true }
-        : (() => {
-            // Event handlers may ride along with the progress config
-            const { on, ...restConfig } = config.progress as ProgressConfig & {
-              on?: Partial<ProgressEvents>;
-            };
-            if (on) {
-              progressEventHandlers = on;
-            }
-            return {
-              variant: "circular",
-              size: 20,
-              thickness: 2,
-              indeterminate: true,
-              ...restConfig,
-            };
-          })();
+    const { on, ...restConfig } = (
+      typeof config.progress === "object" ? config.progress : {}
+    ) as ProgressConfig & { on?: Partial<ProgressEvents> };
+    const progressEventHandlers = on ?? {};
+    const progressConfig: ProgressConfig = {
+      variant: "circular", size: 20, thickness: 2, indeterminate: true,
+      ...restConfig,
+    };
 
     // Progress will be created lazily
     let progress: ProgressComponent | null = null;
