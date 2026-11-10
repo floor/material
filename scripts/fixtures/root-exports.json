@@ -563,6 +563,11 @@
     "status": "public"
   },
   {
+    "name": "getIcon",
+    "kind": "value",
+    "status": "public"
+  },
+  {
     "name": "HTMLInput",
     "kind": "type",
     "status": "public"
@@ -584,6 +589,16 @@
   },
   {
     "name": "IconButtonVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "IconName",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "IconOverrides",
     "kind": "type",
     "status": "public"
   },
@@ -814,6 +829,11 @@
   },
   {
     "name": "setGlobalDefaults",
+    "kind": "value",
+    "status": "public"
+  },
+  {
+    "name": "setIcons",
     "kind": "value",
     "status": "public"
   },

@@ -428,6 +428,10 @@
       "types": "./dist/core/dom/index.d.ts",
       "import": "./dist/core/dom/index.js"
     },
+    "./core/icons": {
+      "types": "./dist/core/icons/index.d.ts",
+      "import": "./dist/core/icons/index.js"
+    },
     "./core/shapes": {
       "types": "./dist/core/shapes/index.d.ts",
       "import": "./dist/core/shapes/index.js"

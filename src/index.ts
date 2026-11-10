@@ -14,8 +14,8 @@
 export * from "./components";
 
 // The public root beyond the components
-export { setComponentDefaults, getComponentDefaults, setGlobalDefaults, clearGlobalDefaults, schemeToTokens, THEME_ROLES, configureHTML } from "./core";
-export type { ThemeRole, SchemeRoles, SchemeToTokensOptions, ThemeTokens, ComponentConfigMap, HTMLPolicy, HTMLInput, TrustedHTMLLike } from "./core";
+export { setComponentDefaults, getComponentDefaults, setGlobalDefaults, clearGlobalDefaults, setIcons, getIcon, schemeToTokens, THEME_ROLES, configureHTML } from "./core";
+export type { ThemeRole, SchemeRoles, SchemeToTokensOptions, ThemeTokens, ComponentConfigMap, HTMLPolicy, HTMLInput, TrustedHTMLLike, IconName, IconOverrides } from "./core";
 
 // NOTE: Constants are no longer exported from the main entry point
 // to enable proper tree-shaking. Import constants directly from
