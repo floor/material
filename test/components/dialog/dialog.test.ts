@@ -467,3 +467,45 @@ describe('dialog: the icon registry', () => {
     expect(closeGlyph(make())).toBe('<i>later</i>');
   });
 });
+
+
+describe('dialog footer and header state', () => {
+  test('numeric and text removals preserve bounds, duplicate order and footer recreation', () => {
+    const dialog = createDialog({ buttons: [{ text: 'First' }, { text: 'Second' }, { text: 'First' }] });
+    try {
+      const controls = Array.from(dialog.element.querySelectorAll('.mtrl-dialog__footer button'));
+      for (const missing of [-1, 3, NaN, Infinity, 'Missing']) dialog.removeButton(missing);
+      expect(dialog.getButtons().map(button => button.text)).toEqual(['First', 'Second', 'First']);
+      // Keep the existing numeric lookup contract; do not round fractional indices.
+      expect(() => dialog.removeButton(0.5)).toThrow(TypeError);
+      expect(dialog.getButtons()).toHaveLength(3);
+      dialog.removeButton(1);
+      expect(controls[1].isConnected).toBe(false);
+      dialog.removeButton('First');
+      expect(dialog.getButtons().map(button => button.text)).toEqual(['First']);
+      expect(dialog.element.querySelector('.mtrl-dialog__footer button')).toBe(controls[2]);
+      dialog.removeButton(0);
+      expect(dialog.element.querySelector('.mtrl-dialog__footer')).toBeNull();
+      dialog.addButton({ text: 'Again' });
+      expect(dialog.getButtons().map(button => button.text)).toEqual(['Again']);
+      expect(dialog.element.querySelector('.mtrl-dialog__footer')?.textContent).toBe('Again');
+    } finally { dialog.destroy(); }
+  });
+
+  test('empty header getters and footer alignment resets retain their defaults', () => {
+    const dialog = createDialog({ buttons: [{ text: 'Action' }] });
+    try {
+      expect([dialog.getTitle(), dialog.getSubtitle()]).toEqual(['', '']);
+      dialog.setTitle('Title'); dialog.setSubtitle('Subtitle');
+      expect([dialog.getTitle(), dialog.getSubtitle()]).toEqual(['Title', 'Subtitle']);
+      dialog.setTitle(''); dialog.setSubtitle('');
+      expect([dialog.getTitle(), dialog.getSubtitle()]).toEqual(['', '']);
+      const footer = dialog.element.querySelector('.mtrl-dialog__footer')!;
+      for (const alignment of ['left', 'center', 'space-between', 'right']) {
+        dialog.setFooterAlignment(alignment);
+        const modifiers = Array.from(footer.classList).filter(name => name.startsWith('mtrl-dialog__footer--'));
+        expect(modifiers).toEqual(alignment === 'right' ? [] : [`mtrl-dialog__footer--${alignment}`]);
+      }
+    } finally { dialog.destroy(); }
+  });
+});

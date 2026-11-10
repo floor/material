@@ -100,9 +100,7 @@ export const withStructure =
         e.stopPropagation();
 
         // Use the dialog:close custom event which will be listened for in withVisibility
-        if (component && component.emit) {
-          component.emit("dialog:close", { source: "closeButton" });
-        }
+        component.emit("dialog:close", { source: "closeButton" });
       });
 
       header.appendChild(closeButton);
@@ -390,9 +388,7 @@ const addButton = (
 
     // Close dialog if needed - using event-based communication
     if (shouldClose) {
-      if (component && component.emit) {
-        component.emit("dialog:close", { source: "button", text });
-      }
+      component.emit("dialog:close", { source: "button", text });
     }
   });
 
@@ -880,11 +876,9 @@ export const withVisibility =
   };
 
   // Set up event listener for the dialog:close event
-  if (component && component.on) {
-    component.on("dialog:close", () => {
-      visibility.close();
-    });
-  }
+  component.on("dialog:close", () => {
+    visibility.close();
+  });
 
   // A close the browser made on its own (a form's dialog method, a close
   // request it would not let the dialog refuse a third time): the <dialog> is
@@ -951,7 +945,7 @@ export const withContent =
         const titleElement = headerElement.querySelector(
           `.${component.getClass("dialog__header-title")}`,
         );
-        return titleElement ? titleElement.textContent || "" : "";
+        return titleElement?.textContent || "";
       },
 
       /**
@@ -987,7 +981,7 @@ export const withContent =
         const subtitleElement = headerElement.querySelector(
           `.${component.getClass("dialog__header-subtitle")}`,
         );
-        return subtitleElement ? subtitleElement.textContent || "" : "";
+        return subtitleElement?.textContent || "";
       },
 
       /**
@@ -1088,24 +1082,14 @@ export const withButtons =
        * @param indexOrText Button index or text
        */
       removeButton(indexOrText: number | string) {
-        if (typeof indexOrText === "number") {
-          // Remove by index
-          if (indexOrText >= 0 && indexOrText < buttonRecords.length) {
-            const button = buttonRecords[indexOrText];
-            button.instance.destroy();
-            buttonRecords.splice(indexOrText, 1);
-          }
-        } else {
-          // Remove by text
-          const index = buttonRecords.findIndex(
-            (button) => button.config.text === indexOrText,
-          );
-
-          if (index !== -1) {
-            const button = buttonRecords[index];
-            button.instance.destroy();
-            buttonRecords.splice(index, 1);
-          }
+        const numeric = typeof indexOrText === "number";
+        const index = numeric ? indexOrText : buttonRecords.findIndex(
+          (button) => button.config.text === indexOrText,
+        );
+        if (numeric ? index >= 0 && index < buttonRecords.length : index !== -1) {
+          const button = buttonRecords[index];
+          button.instance.destroy();
+          buttonRecords.splice(index, 1);
         }
 
         // If no buttons left, remove footer
@@ -1133,17 +1117,15 @@ export const withButtons =
         // not reach inside the callbacks that follow.
         if (!footer) return;
 
-        // Define all possible alignments
-        const ALL_ALIGNMENTS = ["right", "left", "center", "space-between"];
+        // Only non-default alignments have modifier classes
+        const ALL_ALIGNMENTS = ["left", "center", "space-between"];
 
         // Remove existing alignment classes
         ALL_ALIGNMENTS.forEach((align) => {
-          if (align !== "right") {
-            removeClass(
-              footer,
-              `${component.getClass("dialog__footer")}--${align}`,
-            );
-          }
+          removeClass(
+            footer,
+            `${component.getClass("dialog__footer")}--${align}`,
+          );
         });
 
         // Add new alignment class if not right (default)
