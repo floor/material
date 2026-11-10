@@ -509,9 +509,13 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     if (event.pointerType === "mouse" || event.button !== 0) return;
     const index = rowAt(event);
     if (onlyEnabled(index)) {
-      tapActivation = true;
       activeIndex = index;
       commit(event);
+      // The click this tap synthesizes can reach this popup only while it
+      // stayed open: a commit that closed it retargets that click outside, and
+      // an armed suppression would then discard the next click-only activation
+      // — an assistive row.click() after a keyboard reopen, for one
+      tapActivation = isOpen;
     }
   };
   const onPointerMove = (event: PointerEvent): void => {

@@ -1226,6 +1226,32 @@ async function touchBehaviour(page: Page): Promise<void> {
     "B: the tap's click neither chooses nor closes the reopened popup");
   ok("B: a tap's click does not close a reopened popup");
 
+  // A completed tap whose own trailing click lands outside the closed popup
+  // must not leave suppression armed: the next click-only activation — an
+  // assistive row.click() after a keyboard reopen — commits normally.
+  await mount(page, "listbox");
+  await page.locator("#control").tap();
+  await waitVisible(page);
+  await page.locator('[role="option"]', { hasText: "Banana" }).tap();
+  const finishedTap = await state(page);
+  assert.equal(finishedTap.text, "Banana", "B: the tap commits");
+  assert.equal(finishedTap.attrs.expanded, "false", "B: the tap closes the popup");
+  await page.keyboard.press("Enter");
+  await waitVisible(page);
+  const clicked = await page.evaluate(() => {
+    const row = [...document.querySelectorAll('[role="option"]')].find(node => node.textContent?.trim() === "Apple");
+    if (!row) return false;
+    (row as HTMLElement).click();
+    return true;
+  });
+  assert.ok(clicked, "B: the Apple row is present after the keyboard reopen");
+  const clickOnly = await state(page);
+  assert.equal(clickOnly.text, "Apple", "B: a click-only activation after a finished tap commits");
+  assert.equal(clickOnly.attrs.expanded, "false", "B: the click-only activation closes the popup");
+  assert.deepEqual(clickOnly.events.filter(event => event.type === "change").map(event => event.value), ["banana", "apple"],
+    "B: the click-only activation emits its own change");
+  ok("B: a finished tap does not discard a later click-only activation");
+
   // A pan over a longer list scrolls it. The browser cancels the gesture when
   // the scroll takes over, so the pan reaches no pointerup and chooses nothing.
   await page.setViewportSize({ width: 900, height: 400 });
