@@ -5,7 +5,22 @@
  * neither the full stylesheet nor the shared layer order, so no default asset's
  * bytes move. The catalogue still parses it like every other declared output.
  */
-export const componentStyles: Record<string, { source: string; dependencies: string[]; optIn?: boolean }> = {
+export const componentStyles: Record<
+  string,
+  {
+    source: string;
+    dependencies: string[];
+    optIn?: boolean;
+    /**
+     * Modules of another component this entry may retain at runtime without
+     * that component's sheet (`<name>/<path>`, no extension). Each one must be
+     * a leaf that carries no styles; the build fails on any other retained
+     * module under `components/<other>`, so an implementation import cannot
+     * hide behind a declared leaf.
+     */
+    sharedLeaves?: string[];
+  }
+> = {
   "text-field": { source: "components/text-field", dependencies: [] },
   badge: { source: "components/badge", dependencies: [] },
   "bottom-app-bar": { source: "components/bottom-app-bar", dependencies: [] },
@@ -45,7 +60,9 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   toolbar: { source: "components/toolbar", dependencies: ["button", "icon-button"] },
   // The lean selection popup: `material/styles/listbox` is the only sheet that
   // carries it. It is not in main.scss, so it never reaches `material/styles`.
-  listbox: { source: "components/listbox", dependencies: [], optIn: true },
+  // It claims the root-menu registry slot so a popup and a menu never share the
+  // page, but it imports that leaf only: the menu sheet stays out of its CSS.
+  listbox: { source: "components/listbox", dependencies: [], optIn: true, sharedLeaves: ["menu/features/registry"] },
 };
 
 // All shipped components have selective CSS entries.

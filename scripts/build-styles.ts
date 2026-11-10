@@ -117,9 +117,14 @@ async function validateRuntimeDependencies(outdir: string) {
     assert(map, `Missing dependency information for ${name}`);
     const { sources } = await map.json() as { sources: string[] };
     const provided = new Set(resolveStyleDependencies([name]));
+    const sharedLeaves = new Set(componentStyles[name].sharedLeaves ?? []);
     for (const source of sources) {
       const parts = relative(resolve(outdir), resolve(source)).split(sep);
       if (parts[0] === "components" && parts[1] !== name) {
+        // A declared leaf is an explicit exception to the CSS obligation; every
+        // other retained module still needs its component's sheet, and a leaf
+        // that imports its own component's implementation shows up here too.
+        if (sharedLeaves.has(parts.slice(1).join("/").replace(/\.[cm]?[jt]s$/, ""))) continue;
         if (!provided.has(parts[1])) missing.add(`${name} uses ${parts[1]} at runtime but its CSS dependency is missing`);
       }
     }
