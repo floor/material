@@ -477,7 +477,10 @@ async function assertPage(page: Page, mode: "off" | "on"): Promise<void> {
   const switchAnims = await animate(page, "#switch", "class", "mtrl-switch--checked");
   durationOf(switchAnims, "width", spatial, `${mode} switch`);
   const checkAnims = await animate(page, "#checkbox", "checked", "true");
-  durationOf(checkAnims, "background-color", effects, `${mode} checkbox`);
+  // The default box and the opt-in box use the same empty colour roles, so
+  // checking either one changes no paint and runs no background-color
+  // animation. Opt-in changes only the declared duration, read above.
+  assert.equal(checkAnims.some(item => item.property === "background-color"), false, `${mode} checkbox animated background-color`);
   const buttonAnims = await animate(page, "#quiet-button", "border-radius", "4px");
   durationOf(buttonAnims, "border-radius", spatial, `${mode} button`);
   const buttonEasing = buttonAnims.find(item => item.property === "border-radius")?.easing ?? "";
