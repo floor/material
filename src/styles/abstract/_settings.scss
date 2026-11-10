@@ -1,0 +1,10 @@
+// src/styles/abstract/_settings.scss
+//
+// CSS-free. Configured once, through src/styles/config.scss, on the first
+// load of this file. A later `@use ... with` fails: Sass locks the value.
+// Component sheets load this module by way of abstract/_variables.scss, so
+// the public config entry has to be loaded before them.
+
+// Component CSS reads spring durations and easings as inherited custom
+// properties. False (the default) keeps the literal map values.
+$spring-tokens: false !default;

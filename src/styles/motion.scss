@@ -1,0 +1,22 @@
+// src/styles/motion.scss
+//
+// Loading this module emits no CSS. `spring-tokens` emits the raw $motion
+// spring values where it is included. It must not call the token-aware
+// accessor: `--x: var(--x)` would cycle. Include it once at the scope that
+// should own the defaults (`:root`, or a theme root).
+@use "sass:string";
+@use "abstract/base" as base;
+@use "abstract/settings";
+@use "abstract/variables" as v;
+
+@mixin spring-tokens {
+  @if settings.$spring-tokens != true {
+    @error 'motion.spring-tokens needs spring-token mode. Load it first: '
+      + '@use "material/src/styles/config" with ($spring-tokens: true);';
+  }
+  @each $key, $value in v.$motion {
+    @if string.index($key, "spring-") == 1 {
+      --#{base.$prefix}-sys-motion-#{$key}: #{$value};
+    }
+  }
+}
