@@ -16,7 +16,7 @@ export async function mount(scenario) {
       select: m.createSelect({ label: 'Destination', options: [{ id: 'paris', text: 'Paris' }, { id: 'rome', text: 'Rome' }] }),
       dialog: m.createDialog({ title: 'Confirm', content: 'Continue?' }), menu: m.createMenu({ opener, items: [{ id: 'one', text: 'One' }, { id: 'two', text: 'Two' }] }),
       tabs: m.createTabs({ tabs: [{ text: 'Overview', value: 'overview' }, { text: 'Details', value: 'details' }] }), list: m.createList({ items: [{ id: 'item', headline: 'Item' }] }),
-      chips: m.createChips({ chips: [{ label: 'Filter', value: 'filter', variant: 'filter' }] }), progress: m.createProgress({ value: 50 }),
+      chips: m.createChips({ chips: [{ label: 'Filter', value: 'filter', type: 'filter' }] }), progress: m.createProgress({ value: 50 }),
       'icon-button': m.createIconButton({ icon, ariaLabel: 'Add' }), fab: m.createFab({ icon, ariaLabel: 'Add' }), slider: m.createSlider({ value: 50 }), divider: m.createDivider({}),
     });
     for (const [role, instance] of Object.entries(instances)) if (role !== 'button') c[role] = attach(role, instance.element);

@@ -47,7 +47,10 @@ closure. A missing JavaScript dependency is never discarded by that rule.
 External requests fail. Beer CSS's pinned CDN font URLs are relocated to its own
 installed assets with hashes; they are not removed. Included SVG/data assets
 count in the file carrying them. The primary Beer entry includes global CSS/JS;
-MICL uses published UMD modules and distributed CSS, not assumed tree-shaking.
+MICL uses published UMD modules, distributed CSS and the packaged Peri light
+scheme with a `light` body class; the required theme counts in both cases.
+A filled-surface paint assertion prevents a missing theme from passing as styled.
+No tree-shaking of its UMD runtime is assumed.
 M3E includes its theme initialization and peers; its app explicitly loads the
 pinned Material Symbols font distributed by Beer CSS for internal icon fallbacks. Dynamic theme generation is not
 part of these static light-theme cases; any retained chunks still appear.

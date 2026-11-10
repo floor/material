@@ -107,6 +107,7 @@ for (const scenario of ['button', 'app']) {
       // Closed surfaces have zero geometry until they open. Their actual paint is checked below.
       check(`${role}: mounted`, !!measured?.defined, measured);
       if (!['menu', 'dialog'].includes(role)) check(`${role}: rendered box`, measured.width > 0 && measured.height > 0, measured);
+      if (role === 'button') check('button: filled surface paints', !['transparent', 'rgba(0, 0, 0, 0)'].includes(measured.background), measured);
       result.outcomes[role] = { status: 'pass', rendered: measured, interaction: 'not-claimed' };
     }
     const button = page.locator('[data-fixture="button"]').locator(':scope > :last-child');
@@ -151,7 +152,7 @@ for (const scenario of ['button', 'app']) {
           if (role === 'switch' && await target.count() === 0) target = section.getByRole('checkbox');
           if (['beercss','micl'].includes(adapter) && ['checkbox','switch','chips'].includes(role)) target = section.locator('label').first();
           if (role === 'radios') target = ['m3e','material-web'].includes(adapter) ? section.locator(adapter === 'm3e' ? 'm3e-radio[value="b"]' : 'md-radio[value="b"]') : section.locator('label').filter({ hasText: 'B' }).last();
-          if (role === 'chips' && ['material-elements','material-factories'].includes(adapter)) target = section.getByRole('button').first();
+          if (role === 'chips' && ['material-elements','material-factories'].includes(adapter)) target = section.getByRole('gridcell').first();
           if (role === 'tabs' && adapter === 'beercss') target = section.locator('a').filter({ hasText: 'Details' });
           if (role === 'tabs' && adapter === 'material-web') target = section.locator('md-primary-tab').nth(1);
           await target.click({ timeout: 3000 });
@@ -162,10 +163,12 @@ for (const scenario of ['button', 'app']) {
         const before = await readState('tabs'); await page.keyboard.press('ArrowRight');
         const after = await readState('tabs'); return { status: JSON.stringify(before) !== JSON.stringify(after) ? 'observed-change' : 'gap', before, after };
       });
-      const listLabel = page.locator('[data-fixture="list"]').getByText('Item', { exact: true }).last();
-      check('list: label paints', await listLabel.evaluate(node => {
-        const range = document.createRange(); range.selectNodeContents(node); const r = range.getBoundingClientRect(); return r.width > 0 && r.height > 0;
-      }));
+      for (const [role, text] of [['list', 'Item'], ['chips', 'Filter']]) {
+        const label = page.locator(`[data-fixture="${role}"]`).getByText(text, { exact: true }).last();
+        check(`${role}: label paints`, await label.evaluate(node => {
+          const range = document.createRange(); range.selectNodeContents(node); const r = range.getBoundingClientRect(); return r.width > 0 && r.height > 0;
+        }));
+      }
       const field = page.locator('[data-fixture="text-field"]').getByRole('textbox'); await field.fill('Ada');
       check('text-field: user typing', await page.evaluate(() => window.fixture.api.getValue('text-field')) === 'Ada');
       for (const [role, value] of [ ['select', 'rome'], ['slider', 70], ['progress', 70]]) {

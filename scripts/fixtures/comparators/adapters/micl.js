@@ -1,9 +1,10 @@
+import 'material-inspired-component-library/themes/peri/light.css';
 import 'material-inspired-component-library/dist/base.css';
 import 'material-inspired-component-library/dist/button.css';
 import 'material-inspired-component-library/dist/button.js';
 import { attach, element, finish, icon } from '../shared.js';
 export async function mount(scenario) {
-  document.body.innerHTML = '<main></main>';
+  document.body.className = 'light'; document.body.innerHTML = '<main></main>';
   const c = { button: attach('button', element('<button type="button" class="micl-button-filled-s">Save</button>')) };
   if (__COMPARATOR_APP__) {
     await Promise.all([import('material-inspired-component-library/dist/micl.css'), import('material-inspired-component-library')]);
