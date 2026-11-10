@@ -260,8 +260,10 @@ function assertSass(): { off: string; on: string } {
   const badAlone = compileError(`@use "config" with ($spring-tokens: "yes");`);
   assert.match(badAlone, /must be a boolean \(true or false\)/);
 
+  // The gateway loads emit and the tag prefix together. A later
+  // `@use "elements" with` is rejected once that module is loaded.
   const elementsOff = compile(`@use "elements" with ($tag-prefix: "x");`);
-  const elementsOn = compile(`@use "config" with ($spring-tokens: true);\n@use "elements" with ($tag-prefix: "x");`);
+  const elementsOn = compile(`@use "config" with ($spring-tokens: true, $tag-prefix: "x");\n@use "elements";`);
   assert.equal(elementsOn, elementsOff, "spring tokens changed pre-upgrade CSS");
   assert.match(elementsOff, /x-switch:not\(:defined\)/);
   assert.doesNotMatch(elementsOff, /--mtrl-sys-motion-spring/);
