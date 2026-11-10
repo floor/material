@@ -57,6 +57,8 @@ describe("comparator accounting and fixture contract", () => {
     expect(() => coverage(["button"], [], { button: { status: "fail" } })).toThrow("did not pass");
   });
   test("freezes accepted identities and the complete app denominator", () => {
+    expect(contract.version).toBe(3);
+    expect(contract.toolchain.vite).toBe("8.2.4");
     expect(contract.roles).toHaveLength(16);
     expect(contract.adapters.m3e.package).toBe("@m3e/web");
     expect(contract.adapters.m3e.version).toBe("2.12.0");
@@ -65,8 +67,10 @@ describe("comparator accounting and fixture contract", () => {
     expect(contract.adapters.micl.missing).toEqual(["tabs", "fab"]);
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
     expect(pkg.private).toBe(true);
+    expect(pkg.dependencies.vite).toBe(contract.toolchain.vite);
     const lock = JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8"));
     expect(lock.packages[""].dependencies).toEqual(pkg.dependencies);
+    expect(lock.packages["node_modules/vite"].version).toBe(contract.toolchain.vite);
     for (const [name, version] of Object.entries(pkg.dependencies)) expect(version).toMatch(/^\d+\.\d+\.\d+$/);
     const publicPkg = JSON.parse(readFileSync("package.json", "utf8"));
     for (const field of ["dependencies", "peerDependencies", "optionalDependencies"]) {

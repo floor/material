@@ -360,11 +360,10 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22.23.3"
-      - name: Generate reviewed comparator lock (temporary CI bootstrap)
+      - name: Install locked comparator tooling (CI only)
         run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --save-exact vite@8.2.4 --prefix scripts/fixtures/comparators
-          echo "::error::Commit the CI-generated lock and restore frozen installation before measuring."
-          exit 1
+          npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
+          scripts/fixtures/comparators/node_modules/.bin/playwright install --with-deps chromium
       - name: Rendered fixture and per-asset comparison
         timeout-minutes: 10
         run: bun run comparators:check
