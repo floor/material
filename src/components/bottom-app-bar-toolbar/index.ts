@@ -3,12 +3,12 @@ import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
 import { createConfig } from "../bottom-app-bar/config";
 import type { BottomAppBarConfig, BottomAppBarComponent } from "../bottom-app-bar/types";
-import { createToolbarStructure, createToolbarFab } from "../toolbar/structure";
+import { createToolbarStructure, createToolbarFab } from "./structure";
 
 export type { BottomAppBarConfig as BottomAppBarToolbarConfig, BottomAppBarComponent as BottomAppBarToolbarComponent } from "../bottom-app-bar/types";
 
 /**
- * Opt-in bottom app bar using the toolbar's construction core and legacy policy.
+ * Self-contained opt-in bottom app bar with docked styling and legacy policy.
  * Import material/styles/bottom-app-bar-toolbar explicitly with this entry.
  * @param config - Legacy bottom app bar options
  * @returns A facade retaining the bottom app bar's chaining and live containers

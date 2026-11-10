@@ -1,5 +1,5 @@
-// Shared construction primitives. Policy (focus, scrolling, ownership) belongs
-// to each caller, so a compatibility facade never starts the toolbar policy.
+// Private opt-in construction. Keep this module out of the shipped toolbar
+// and all default entries; its policy belongs only to the compatibility facade.
 import { pipe } from "../../core/compose/pipe";
 import { createBase, withElement, type BaseConfig, type WithElementOptions } from "../../core/compose/component";
 import { withEvents, withLifecycle } from "../../core/compose/features";

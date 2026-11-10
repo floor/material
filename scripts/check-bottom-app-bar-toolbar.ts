@@ -35,14 +35,14 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   } });
 } });
 try {
-  // Compare all existing default payloads independently, allowing only the
-  // toolbar's deliberate shared-core extraction and catalogue provenance.
+  // Every existing default payload remains frozen, including the toolbar.
+  // Only generated catalogue provenance/new opt-in style data can differ.
   const unchanged: string[] = [], changed: string[] = [];
   const walk = async (dir = ""): Promise<void> => {
     for (const entry of await readdir(join(baseline.installed, "dist", dir), { withFileTypes: true })) {
       const path = dir ? `${dir}/${entry.name}` : entry.name;
       if (entry.isDirectory()) { await walk(path); continue; }
-      if (path === "tokens/catalogue.json" || path === "package.json" || path.startsWith("components/toolbar/")) continue;
+      if (path === "tokens/catalogue.json" || path === "package.json") continue;
       const before = await readFile(join(baseline.installed, "dist", path));
       const after = await readFile(join(candidate.installed, "dist", path));
       (before.equals(after) ? unchanged : changed).push(path);
@@ -70,7 +70,7 @@ try {
   const rootEqual = Buffer.from(rootBefore).equals(Buffer.from(rootAfter));
   report.graphs = { root: { baseline: metrics(rootBefore), candidate: metrics(rootAfter), identical: rootEqual },
     legacy: { baseline: metrics(legacyBefore), candidate: metrics(legacyAfter) }, optIn: metrics(optIn) };
-  check(rootEqual, "root retained JS bytes changed during shared-core factoring");
+  check(rootEqual, "root retained JS bytes changed despite opt-in isolation");
   check(Buffer.from(legacyBefore).equals(Buffer.from(legacyAfter)), "legacy entry retained JS bytes changed");
   check(!Buffer.from(rootAfter).includes("createBottomAppBarToolbar"), "opt-in marker leaked into root");
   check(Buffer.from(optIn).includes("createBottomAppBarToolbar"), "positive opt-in graph control is missing");
