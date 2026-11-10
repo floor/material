@@ -5,11 +5,9 @@ import { createBase, withElement } from '../../core/compose/component';
 import { withLifecycle } from '../../core/compose/features/lifecycle';
 import { createElementConfig } from '../../core/config/component';
 import { createEmitter } from '../../core/state/emitter';
-import { activeElementOf } from '../../core/dom/focus';
 import { mountRailRipple } from '../../core/navigation/ripple';
-import {
-    copyDestinations, createDestination, moveDestinationFocus, updateBadge, updateSelection,
-} from '../../core/navigation/destinations';
+import { moveDestinationFocus } from '../../core/navigation/destinations';
+import { createDestinationCollection } from '../../core/navigation/collection';
 import { createBaseConfig } from './config';
 import type { NavigationBarComponent, NavigationBarConfig, NavigationBarItemConfig } from './types';
 
@@ -25,7 +23,6 @@ const SCROLL_THRESHOLD = 10;
  */
 export default function createNavigationBar(config: NavigationBarConfig = {}): NavigationBarComponent {
     const options = createBaseConfig(config);
-    let items = copyDestinations(options.items || [], 'NavigationBar');
     const component = pipe(
         createBase,
         withElement(createElementConfig(options, { tag: 'nav', attributes: { 'aria-label': options.ariaLabel || 'Primary navigation' } })),
@@ -40,29 +37,14 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
 
     // The item layout's modifier, written as cls() literals as the rail's
     root.classList.add(options.itemLayout === 'vertical' ? cls('--vertical') : options.itemLayout === 'horizontal' ? cls('--horizontal') : cls('--auto'));
-    const nodes = new Map<string, HTMLElement>();
-    const destinations = document.createElement('div');
-    destinations.className = cls('__items');
+    // The centred arrangement of horizontal items depends on how many there are,
+    // so the count is repainted on every render (a setItems included).
+    const collection = createDestinationCollection({
+        cls, name: 'NavigationBar', items: options.items || [],
+        count: (count) => root.style.setProperty(`--${PREFIX}-navigation-bar-count`, String(count)),
+    });
+    const destinations = collection.container;
     root.append(destinations);
-
-    const render = (): void => {
-        const focusedId = [...nodes].find(([, element]) => element === activeElementOf(destinations))?.[0];
-        nodes.clear();
-        destinations.replaceChildren();
-        for (const item of items) {
-            const element = createDestination(item, cls);
-            nodes.set(item.id, element);
-            destinations.append(element);
-        }
-        updateSelection(items, nodes, cls);
-        // The centred arrangement of horizontal items depends on how many there are
-        root.style.setProperty(`--${PREFIX}-navigation-bar-count`, String(items.length));
-        if (focusedId) {
-            const previous = nodes.get(focusedId);
-            const target = previous && !previous.hasAttribute('aria-disabled') ? previous : [...nodes.values()].find((element) => !element.hasAttribute('aria-disabled'));
-            target?.focus();
-        }
-    };
 
     const setHidden = (value: boolean): void => {
         if (destroyed || hidden === value) return;
@@ -73,23 +55,16 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
 
     const handleClick = (event: MouseEvent): void => {
         if (destroyed || event.defaultPrevented) return;
-        const element = (event.target as Element).closest<HTMLElement>(`.${cls('__item')}`);
-        if (!element || !destinations.contains(element)) return;
-        const index = items.findIndex((item) => nodes.get(item.id) === element), item = items[index];
-        if (!item || item.disabled) {
-            event.preventDefault();
-            return;
-        }
-        if (item.href && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)) return;
-        api.setActive(item.id);
-        const detail = { id: item.id, value: item.id, index, originalEvent: event };
+        const detail = collection.selectDetail(event);
+        if (!detail) return;
+        collection.setActive(detail.id);
         emitter.emit('select', detail);
     };
 
     // Left and right along the bar, mirrored under RTL; direction read when the key is pressed
     const handleKeydown = (event: KeyboardEvent): void => {
         const rtl = getComputedStyle(root).direction === 'rtl';
-        moveDestinationFocus(event, nodes, destinations, rtl ? { next: 'ArrowLeft', previous: 'ArrowRight' } : { next: 'ArrowRight', previous: 'ArrowLeft' });
+        moveDestinationFocus(event, collection.nodes, destinations, rtl ? { next: 'ArrowLeft', previous: 'ArrowRight' } : { next: 'ArrowRight', previous: 'ArrowLeft' });
     };
 
     // A hidden bar comes back when something in it takes focus: a keyboard user is never left on an invisible item
@@ -129,7 +104,7 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
         root.removeEventListener('focusin', handleFocus);
         scrollTarget?.removeEventListener('scroll', handleScroll);
         removeRipple?.();
-        nodes.clear();
+        collection.destroy();
         emitter.clear();
         originalDestroy();
     };
@@ -137,30 +112,19 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
 
     const api: NavigationBarComponent = {
         element: root, getClass, lifecycle: component.lifecycle, destroy,
-        getActive: () => items.find((item) => item.active)?.id || null,
+        getActive: () => collection.activeId(),
         getValue: () => api.getActive(),
         setActive(id) {
-            if (destroyed || (id !== null && !items.some((item) => item.id === id && !item.disabled))) return api;
-            items = items.map((item) => ({ ...item, active: item.id === id }));
-            updateSelection(items, nodes, cls);
+            collection.setActive(id);
             return api;
         },
-        getItems: () => items.map((item) => ({ ...item })),
+        getItems: () => collection.snapshot(),
         setItems(value: NavigationBarItemConfig[]) {
-            if (!destroyed) {
-                items = copyDestinations(value, 'NavigationBar');
-                render();
-            }
+            collection.replace(value);
             return api;
         },
         setBadge(id, badge, label) {
-            if (destroyed) return api;
-            const item = items.find((entry) => entry.id === id);
-            if (item) {
-                item.badge = badge;
-                item.badgeLabel = label;
-                updateBadge(item, nodes.get(id)!, cls);
-            }
+            collection.setBadge(id, badge, label);
             return api;
         },
         hide: () => { setHidden(true); return api; },
@@ -169,7 +133,7 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
         on(event, handler) { if (!destroyed) emitter.on(event, handler as never); return api; },
         off(event, handler) { emitter.off(event, handler as never); return api; },
     };
-    render();
+    collection.render();
     // A config option is the listener registered at creation, ahead of any
     // listener the caller adds afterwards. A listener that destroys the bar
     // during emit no longer skips it: it has already run.
