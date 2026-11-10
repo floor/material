@@ -7,6 +7,7 @@ import { MENU } from "../menu/inner";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";
 import { warnUnknownValue } from "../../core/utils/warn";
 import { activeElementOf } from "../../core/dom/focus";
+import { getIcon } from "../../core/icons/registry";
 
 /**
  * Creates a text field for the select component
@@ -29,9 +30,9 @@ export const withTextField =
       }
     }
 
-    // Create dropdown icon for the text field
-    const dropdownIcon =
-      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7 10l5 5 5-5H7z"/></svg>';
+    // The field's own triangle, not SELECT_ICONS.DROPDOWN. Resolved once, here.
+    const dropdownIcon = getIcon("expand-more",
+      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7 10l5 5 5-5H7z"/></svg>');
 
     // Create text field component
     const textField = createTextField({

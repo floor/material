@@ -272,3 +272,45 @@ describe("chip: the icon registry", () => {
     expect(removeGlyph(mount(createInputChip({ label: "Bea", ripple: false })))).toBe("<i>later</i>");
   });
 });
+
+// The trailing menu's own triangle, distinct from the remove glyph and from
+// the select field's triangle. trailingIcon stays above expand-more.
+const MENU_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10l5 5 5-5z"></path></svg>';
+const menuGlyphOf = (chip: ChipComponent) => chip.trailingAction!.innerHTML;
+
+describe("chip: the expand-more registry", () => {
+  afterEach(() => {
+    setIcons({ "expand-more": null, close: null });
+    clearGlobalDefaults();
+  });
+
+  test("a trailing menu draws the exact built-in triangle while the registry is empty", () => {
+    const chip = mount(createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {}, ripple: false }));
+    expect(menuGlyphOf(chip)).toBe(MENU_GLYPH);
+  });
+
+  test("an icon comes from the instance, then component defaults, then the registry, then the built-in", () => {
+    setIcons({ "expand-more": "<i>registry</i>" });
+    expect(menuGlyphOf(mount(createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {}, ripple: false })))).toBe("<i>registry</i>");
+    setComponentDefaults("chip", { trailingIcon: "<i>component</i>" });
+    expect(menuGlyphOf(mount(createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {}, ripple: false })))).toBe("<i>component</i>");
+    expect(menuGlyphOf(mount(createFilterChip({ label: "Price", trailingMenu: true, trailingIcon: "<i>instance</i>", onTrailingClick: () => {}, ripple: false })))).toBe("<i>instance</i>");
+    setIcons({ "expand-more": null });
+    clearGlobalDefaults();
+    expect(menuGlyphOf(mount(createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {}, ripple: false })))).toBe(MENU_GLYPH);
+  });
+
+  test("expand-more does not replace the remove glyph", () => {
+    setIcons({ "expand-more": "<i>registry</i>" });
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false })))).toBe(CLOSE_GLYPH);
+  });
+
+  test("clearing the trailing icon restores the menu glyph captured at creation", () => {
+    setIcons({ "expand-more": "<i>registry</i>" });
+    const chip = mount(createFilterChip({ label: "Price", trailingMenu: true, trailingIcon: "<i>instance</i>", onTrailingClick: () => {}, ripple: false }));
+    setIcons({ "expand-more": "<i>later</i>" });
+    chip.setTrailingIcon("");
+    expect(menuGlyphOf(chip)).toBe("<i>registry</i>");
+    expect(menuGlyphOf(mount(createFilterChip({ label: "Size", trailingMenu: true, onTrailingClick: () => {}, ripple: false })))).toBe("<i>later</i>");
+  });
+});

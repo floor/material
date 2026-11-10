@@ -2,7 +2,7 @@
 //
 // The real select in a JSDOM document: choosing through its menu, and menu
 // items whose data is not a select option.
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -23,6 +23,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createSelect from '../../../src/components/select';
+import { setIcons } from '../../../src/core/icons/registry';
 
 const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -89,4 +90,44 @@ test('select.textField is the text field; 3.0.0 keeps no textfield alias, which 
   expect((select as unknown as Record<string, unknown>).textfield).toBeUndefined();
   expect('textfield' in select).toBe(false);
   select.destroy();
+});
+
+// The field triangle, as the DOM serializes it. Select has no glyph option.
+// Opening the menu does not read the registry again.
+const DROPDOWN_GLYPH = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M7 10l5 5 5-5H7z"></path></svg>';
+const dropdownGlyph = (select: ReturnType<typeof createSelect>) =>
+  select.element.querySelector('.mtrl-text-field__trailing-icon')!.innerHTML;
+
+describe('select: the icon registry', () => {
+  afterEach(() => setIcons({ 'expand-more': null }));
+
+  test('the field draws the exact built-in triangle while the registry is empty', () => {
+    const select = createSelect({ label: 'Fruit', options });
+    expect(dropdownGlyph(select)).toBe(DROPDOWN_GLYPH);
+    select.destroy();
+  });
+
+  test('setIcons replaces the triangle and clearing restores the built-in', () => {
+    setIcons({ 'expand-more': '<i>more</i>' });
+    const replaced = createSelect({ label: 'Fruit', options });
+    expect(dropdownGlyph(replaced)).toBe('<i>more</i>');
+    replaced.destroy();
+    setIcons({ 'expand-more': null });
+    const restored = createSelect({ label: 'Fruit', options });
+    expect(dropdownGlyph(restored)).toBe(DROPDOWN_GLYPH);
+    restored.destroy();
+  });
+
+  test('a select reads the registry when it is created, not when it opens', async () => {
+    const created = createSelect({ label: 'Fruit', options });
+    document.body.appendChild(created.element);
+    setIcons({ 'expand-more': '<i>later</i>' });
+    created.open();
+    await after(200);
+    expect(dropdownGlyph(created)).toBe(DROPDOWN_GLYPH);
+    const next = createSelect({ label: 'Fruit', options });
+    expect(dropdownGlyph(next)).toBe('<i>later</i>');
+    created.destroy();
+    next.destroy();
+  });
 });

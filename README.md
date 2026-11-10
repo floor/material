@@ -835,6 +835,7 @@ Some components draw a built-in glyph of their own. `setIcons` replaces those gl
 | `menu` | the navigation rail's menu button, while collapsed |
 | `menu-open` | the same button, while the rail is expanded |
 | `close` | the side sheet and dialog close buttons, FAB-menu close icon, input-chip remove and filter-chip non-menu trailing action |
+| `expand-more` | the select field's dropdown and a filter chip's trailing menu |
 
 ```typescript
 import { setIcons } from 'material';
@@ -849,9 +850,9 @@ Call it once at start-up, before you create components or hydrate: a component r
 
 The registry is a fallback below the component's own options. The navigation rail's `expandIcon` and `collapseIcon` win over it. So does a value from `setComponentDefaults('navigation-rail', …)`. The same functions are at `material/core/icons`.
 
-The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the registry, including values supplied through component defaults. The dialog has no separate glyph option.
+The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the registry, including values supplied through component defaults. The dialog and the select field have no separate glyph option.
 
-A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. Menu triangles, selection checks and other icon slots keep their existing behavior.
+A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. The split button's chevron, selection checks and other icon slots keep their existing behavior.
 
 ## Bottom app bar compatibility entry
 
