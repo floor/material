@@ -181,9 +181,6 @@ jobs:
   # package.json allows, and put the installed version back before they return
   # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
-    permissions:
-      contents: read
-      actions: read
     needs: build
     runs-on: ubuntu-24.04
     # A group takes about four minutes. A runner that stalls fails here, and is
@@ -260,14 +257,14 @@ jobs:
           ref: 17612ca276f7e46db7fe948441174402ff795688
           path: .prototype-baseline
           persist-credentials: false
-      - name: Pinned baseline distribution (built independently on main)
+      - name: Build the pinned baseline fixture independently
         if: matrix.group == 'bottom-app-bar-toolbar'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: dist
-          path: .prototype-baseline/dist
-          run-id: 42899828774
-          github-token: ${{ github.token }}
+        working-directory: .prototype-baseline
+        # Fixture setup uses its own pinned lock and sources. Cross-run dist
+        # artifacts expire after a day; this proof must keep working afterwards.
+        run: |
+          bun install --frozen-lockfile
+          bun run scripts/build.ts
       - name: Checks (${{ matrix.checks }})
         # A check that hangs must fail on its own, and name itself. On
         # 2026-11-03 this step held the adapters job for 30 minutes until the

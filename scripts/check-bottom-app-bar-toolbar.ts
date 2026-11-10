@@ -11,6 +11,7 @@ import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./botto
 import { profileStyleModule } from "./optional-style-profiles";
 
 const receipt = { commit: "17612ca276f7e46db7fe948441174402ff795688", run: 42899828774,
+  delivery: "built independently from pinned sources and lock in this CI run",
   rootAnchor: { commit: "88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9", sha256: "614d297421a44f27d5f18eddaa6547787f61cfc90d95572c478cc09b10ad9a5f" } };
 const cwd = process.cwd();
 const candidate = await createPackageFixture();
