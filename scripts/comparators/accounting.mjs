@@ -11,6 +11,10 @@ export function assetRecord(file, bytes, imports = [], dynamicImports = []) {
     brotli: text ? brotliCompressSync(content, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length : null,
     sha256: digest(content), imports: [...new Set(imports)], dynamicImports: [...new Set(dynamicImports)] };
 }
+export function isCssImportBridge(code) {
+  const withoutComments = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  return /^(?:\s*import\s*["'][^"']+\.css(?:\?[^"']*)?["']\s*;?\s*)+$/.test(withoutComments);
+}
 // Vite removes CSS-only JS placeholders after Rolldown fills dynamicImports.
 // Resolve only proven CSS-only placeholders captured before that removal.
 export function resolveCssChunks(records, aliases) {
@@ -18,7 +22,7 @@ export function resolveCssChunks(records, aliases) {
   const expand = (file, trail = new Set()) => {
     if (emitted.has(file)) return [file];
     const alias = aliases.get(file);
-    assert.ok(alias?.modules.length && alias.modules.every(id => /\.css(?:$|\?)/.test(id)), `unaccounted emitted reference ${file}`);
+    assert.ok(alias?.modules.length && alias.modules.every(id => /\.css(?:$|\?)/.test(id) || isCssImportBridge(alias.cssImportBridges?.[id] ?? '')), `unaccounted emitted reference ${file}`);
     assert.ok(!trail.has(file), `cyclic removed CSS chunk ${file}`);
     collapsed.add(file); const next = new Set([...trail, file]);
     return [...alias.imports, ...alias.dynamicImports].flatMap(name => expand(name, next));

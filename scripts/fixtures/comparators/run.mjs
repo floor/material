@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { build, preview } from 'vite';
 import { chromium } from 'playwright';
-import { assetRecord, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
+import { assetRecord, isCssImportBridge, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Comparator installs/builds/browser probes run in GitHub CI only');
 const root = dirname(fileURLToPath(import.meta.url));
@@ -44,8 +44,13 @@ for (const scenario of ['button', 'app']) {
     const built = await build({ root: generated, configFile: false, envDir: false, logLevel: 'warn',
       define: { __COMPARATOR_APP__: JSON.stringify(scenario === 'app') },
       plugins: [{ name: 'capture-css-chunk-references', generateBundle: { order: 'pre', handler(_options, bundle) {
-        for (const item of Object.values(bundle)) if (item.type === 'chunk') cssChunks.set(item.fileName, {
-          modules: [...item.moduleIds], imports: [...item.imports, ...(item.viteMetadata?.importedCss ?? []), ...(item.viteMetadata?.importedAssets ?? [])], dynamicImports: [...item.dynamicImports] });
+        for (const item of Object.values(bundle)) if (item.type === 'chunk') {
+          const modules = [...item.moduleIds];
+          const cssImportBridges = Object.fromEntries(modules.map(id => [id,
+            /\/material\/dist\/styles\/[^/]+\.js$/.test(id) ? readFileSync(id, 'utf8') : this.getModuleInfo(id)?.code ?? '',
+          ]).filter(([, code]) => isCssImportBridge(code)));
+          cssChunks.set(item.fileName, { modules, cssImportBridges, imports: [...item.imports, ...(item.viteMetadata?.importedCss ?? []), ...(item.viteMetadata?.importedAssets ?? [])], dynamicImports: [...item.dynamicImports] });
+        }
       }} }, { name: 'self-host-pinned-beer-assets', enforce: 'pre', transform(code, id) {
         if (!id.endsWith('.css') || !id.includes('/beercss/')) return null;
         return code.replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/beercss@5\.0\.3\/dist\/cdn\/([^"')\s]+)/g, (url, file) => {
@@ -69,7 +74,7 @@ for (const scenario of ['button', 'app']) {
       return { ...assetRecord(item.fileName, bytes, imports, item.type === 'chunk' ? item.dynamicImports : []),
         modules: item.type === 'chunk' ? Object.keys(item.modules).map(id => id.replace(root, '$FIXTURE')) : [] };
     });
-    result.assets = rawRecords;
+    result.assets = rawRecords; result.cssChunkSnapshot = [...cssChunks].map(([file, row]) => ({ file, ...row }));
     const { records, collapsedCssChunks } = resolveCssChunks(rawRecords, cssChunks);
     result.assets = records; result.collapsedCssChunks = collapsedCssChunks; result.relocations = relocations;
     result.declaredStaticAssets = staticClosure(records, ['index.html']);

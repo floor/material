@@ -41,7 +41,8 @@ before readiness are also initial; post-readiness requests have their own phase.
 Full declared dynamic closure and all emitted files are separate bounds, never mislabeled as a measured download.
 Hashes and duplicate-free final asset names make the accounting auditable.
 Vite's removed CSS-only JavaScript placeholders are resolved from a pre-removal
-snapshot only when every module is CSS; their emitted styles remain in the
+snapshot only when every module is CSS or a source-verified CSS-import-only
+JavaScript bridge (as Material publishes for its style entries); their emitted styles remain in the
 closure. A missing JavaScript dependency is never discarded by that rule.
 
 External requests fail. Beer CSS's pinned CDN font URLs are relocated to its own

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assetRecord, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
+import { assetRecord, isCssImportBridge, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
 
 const root = "scripts/fixtures/comparators";
 const contract = JSON.parse(readFileSync(join(root, "contract.json"), "utf8"));
@@ -28,6 +28,10 @@ describe("comparator accounting and fixture contract", () => {
     expect(declaredClosure(resolved.records, ["main.js"])).toEqual(["main.js", "style.css"]);
     expect(resolved.collapsedCssChunks.map(row => row.file)).toEqual(["style-placeholder.js"]);
     expect(() => resolveCssChunks(rows, new Map())).toThrow("unaccounted emitted reference");
+    const bridge = new Map([["style-placeholder.js", { modules: ["/installed/style.js"], cssImportBridges: { "/installed/style.js": 'import "./style.css";' }, imports: ["style.css"], dynamicImports: [] }]]);
+    expect(declaredClosure(resolveCssChunks(rows, bridge).records, ["main.js"])).toEqual(["main.js", "style.css"]);
+    expect(isCssImportBridge('/* public CSS entry */\nimport "./style.css";')).toBe(true);
+    expect(isCssImportBridge('import "./style.css"; console.log("not a CSS bridge");')).toBe(false);
     aliases.get("style-placeholder.js")!.modules = ["/installed/missing.js"];
     expect(() => resolveCssChunks(rows, aliases)).toThrow("unaccounted emitted reference");
   });
