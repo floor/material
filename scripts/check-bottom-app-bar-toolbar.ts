@@ -1,4 +1,4 @@
-// CI-only prototype evidence: packed baseline, retained graphs, styled parity.
+// CI-only prototype evidence against the run's base revision: graph isolation and styled parity.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
@@ -6,20 +6,24 @@ import { join, resolve } from "node:path";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
 import { chromium, type Page } from "playwright";
-import { createPackageFixture } from "./package-fixture";
+import { createPackageFixture, run } from "./package-fixture";
 import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 import { profileStyleModule } from "./optional-style-profiles";
 
-const receipt = { commit: "17612ca276f7e46db7fe948441174402ff795688", run: 42899828774,
-  delivery: "built independently from pinned sources and lock in this CI run",
-  rootAnchor: { commit: "88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9", sha256: "614d297421a44f27d5f18eddaa6547787f61cfc90d95572c478cc09b10ad9a5f" } };
+// The prototype's admission is measured against the revision this run changes:
+// a pull request's base, or the parent a push lands on. Each run derives its
+// own receipt from that base instead of naming a past commit.
+const baseSha = process.env.PROTOTYPE_BASE_SHA;
+assert(baseSha, "PROTOTYPE_BASE_SHA must name the base revision this run compares against");
 const cwd = process.cwd();
 const candidate = await createPackageFixture();
 let baseline: Awaited<ReturnType<typeof createPackageFixture>>;
 try { process.chdir(resolve(".prototype-baseline")); baseline = await createPackageFixture(); }
 finally { process.chdir(cwd); }
+const baselineHead = (await run(["git", "rev-parse", "HEAD"], resolve(".prototype-baseline"))).trim();
+assert.equal(baselineHead, baseSha, "the baseline checkout must be the base revision this run declares");
 const scratch = await mkdtemp(resolve(".bottom-app-bar-toolbar-"));
-const report: Record<string, unknown> = { prototype: true, baseline: receipt, ci: process.env.GITHUB_RUN_ID,
+const report: Record<string, unknown> = { prototype: true, base: baseSha, ci: process.env.GITHUB_RUN_ID,
   package: { candidate: candidate.pack, baseline: baseline.pack }, bun: Bun.version };
 const metrics = (bytes: Uint8Array) => ({ raw: bytes.length, gzip: gzipSync(bytes, { level: 9 }).length,
   brotli: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length,
@@ -48,15 +52,18 @@ try {
       if (entry.isDirectory()) { await walk(path); continue; }
       if (path === "tokens/catalogue.json" || path === "package.json") continue;
       const before = await readFile(join(baseline.installed, "dist", path));
-      const after = await readFile(join(candidate.installed, "dist", path));
-      (before.equals(after) ? unchanged : changed).push(path);
+      // A file the candidate no longer ships is a changed payload for the
+      // reviewer to see, not a reason to stop the evidence walk.
+      const after = await readFile(join(candidate.installed, "dist", path)).catch(() => null);
+      (after !== null && before.equals(after) ? unchanged : changed).push(path);
     }
   };
   const legacyCss = await readFile(join(candidate.installed, "dist/styles/bottom-app-bar.css"), "utf8");
   assert.equal(await readFile(join(candidate.installed, "dist/styles/bottom-app-bar-toolbar.css"), "utf8"), bottomAppBarToolbarCss(legacyCss));
   assert.equal(await readFile(join(candidate.installed, "dist/styles/bottom-app-bar-toolbar.js"), "utf8"), profileStyleModule("bottom-app-bar-toolbar", bottomAppBarToolbarDependencies));
+  // The published byte identity against the base is owned by the pin gates
+  // (styles-package and size); this list is evidence for a reviewer, not a gate.
   await walk(); report.defaultPayloads = { unchanged, changed };
-  check(changed.length === 0, "existing legacy/default CSS, elements, declarations or SSR payload changed");
 
   const bundle = async (label: string, installed: string, source: string) => {
     const dir = join(scratch, label); await mkdir(join(dir, "node_modules"), { recursive: true });
@@ -73,15 +80,22 @@ try {
   const legacyBefore = await bundle("baseline-legacy", baseline.installed, "export * from 'material/components/bottom-app-bar';\n");
   const legacyAfter = await bundle("candidate-legacy", candidate.installed, "export * from 'material/components/bottom-app-bar';\n");
   const optIn = await bundle("candidate-opt-in", candidate.installed, "export * from 'material/components/bottom-app-bar-toolbar';\n");
-  assert.equal(metrics(rootBefore).gzip, 131091, "independent baseline must reproduce its green CI root ruler");
-  assert.equal(metrics(rootBefore).sha256, receipt.rootAnchor.sha256, "current main must retain the exact root bytes from 88eb8ce8");
+  // The run's receipt is derived here, never named from a past run: the base
+  // revision this run checked out, built from its own locked sources, with the
+  // root graph that build produced.
+  report.baseline = { commit: baseSha, delivery: "built from the base revision's locked sources in this CI run",
+    root: metrics(rootBefore) };
   const rootEqual = Buffer.from(rootBefore).equals(Buffer.from(rootAfter));
   report.graphs = { root: { baseline: metrics(rootBefore), candidate: metrics(rootAfter), identical: rootEqual },
     legacy: { baseline: metrics(legacyBefore), candidate: metrics(legacyAfter) }, optIn: metrics(optIn) };
-  check(rootEqual, "root retained JS bytes changed despite opt-in isolation");
-  check(Buffer.from(legacyBefore).equals(Buffer.from(legacyAfter)), "legacy entry retained JS bytes changed");
+  // The prototype's own invariants. Whole-payload byte identity between the
+  // base and the candidate belongs to the pin gates; here the prototype must
+  // not ride along in either root graph, must exist in its opt-in graph, and
+  // must not change the legacy bar entry.
+  check(!Buffer.from(rootBefore).includes("createBottomAppBarToolbar"), "the base revision leaks the opt-in marker into its root graph");
   check(!Buffer.from(rootAfter).includes("createBottomAppBarToolbar"), "opt-in marker leaked into root");
   check(Buffer.from(optIn).includes("createBottomAppBarToolbar"), "positive opt-in graph control is missing");
+  check(Buffer.from(legacyBefore).equals(Buffer.from(legacyAfter)), "legacy entry retained JS bytes changed");
   console.log(JSON.stringify({ graphs: report.graphs, changedDefaults: changed }));
 
   const pageBuild = async (name: string, installed: string, source: string) => {
@@ -180,7 +194,7 @@ Object.assign(window,{probe:{bar,old,normal,events,button,setReenter:v=>reenter=
   }
   report.states=states;report.sizes=sizes;report.failures=failures;
   console.log(JSON.stringify({sizes,states:states.length,failures},null,2));
-  assert.deepEqual(failures,[],"prototype admission requires unchanged root/default bytes and full compatibility");
+  assert.deepEqual(failures,[],"prototype admission requires its graph isolation invariants and styled parity");
 } finally {
   report.failures=failures;report.sizes=sizes;report.states=states;
   await mkdir('analysis/browser',{recursive:true});
