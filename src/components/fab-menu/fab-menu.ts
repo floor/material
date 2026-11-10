@@ -320,7 +320,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     else setOpened(false);
   };
 
-  button.addEventListener("click", (event) => (opened ? close() : open(event)));
+  const toggle = (event?: Event) => opened ? close() : open(event);
+  button.addEventListener("click", toggle);
 
   // The FAB, now the close button, keeps focus; the keys go into the list.
   button.addEventListener("keydown", (event) => {
@@ -396,8 +397,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     },
 
     toggle(event?: Event) {
-      if (opened) close();
-      else open(event);
+      toggle(event);
       return this;
     },
 

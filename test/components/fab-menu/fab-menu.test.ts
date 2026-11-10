@@ -326,6 +326,31 @@ describe("fab menu presentation", () => {
     return created;
   };
 
+  describe("shared FAB activation", () => {
+    test("click and public toggle alternate the same state and preserve the opener event", async () => {
+      for (const presentation of ["list", "menu"] as const) {
+        const app = fakeMenu();
+        const m = make({ presentation, menu: () => app });
+        const seen: string[] = [];
+        m.on("open", () => seen.push("open"));
+        m.on("close", () => seen.push("close"));
+        const pointer = () => new dom.window.MouseEvent("click", { detail: 1, bubbles: true });
+        expect(m.toggle(pointer())).toBe(m);
+        await Promise.resolve();
+        expect(m.isOpen()).toBe(true);
+        m.fab.click();
+        expect(m.isOpen()).toBe(false);
+        m.fab.dispatchEvent(pointer());
+        await Promise.resolve();
+        expect(m.isOpen()).toBe(true);
+        expect(m.toggle()).toBe(m);
+        expect(m.isOpen()).toBe(false);
+        expect(seen).toEqual(["open", "close", "open", "close"]);
+        expect(app.calls).toEqual(presentation === "menu" ? ["open:mouse", "close", "open:mouse", "close"] : []);
+      }
+    });
+  });
+
   test("auto: the list below 600px, the menu from 600px", () => {
     setMedia(() => false);
     expect(make({ presentation: "auto" }).getPresentation()).toBe("list");
@@ -355,7 +380,7 @@ describe("fab menu presentation", () => {
     const app = fakeMenu();
     let opener: HTMLElement | null = null;
     const m = make({ presentation: "menu", menu: (button) => { opener = button; return app; } });
-    expect(opener).toBe(m.fab);
+    expect(opener as HTMLElement | null).toBe(m.fab);
     expect(m.fab.getAttribute("aria-controls")).toBe("app-menu");
     m.fab.click();
     await Promise.resolve();
