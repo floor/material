@@ -73,7 +73,7 @@ ${reverse ? extra + style : style + extra}
 import {${fixed ? "defineButtonFilledSmallRound" : "defineButton"} as defineProfile} from 'material/${fixed ? 'elements/button-filled-small-round' : 'elements'}';
 const button=document.querySelector('#button'),toggle=document.querySelector('#toggle');
 // Own properties before definition must be replayed, and slot nodes preserved.
-toggle.selected=true;button.value='early';${fixed ? "button.variant='outlined';button.size='xl';button.shape='square';" : ""}const original=document.querySelector('#slot');
+toggle.selected=true;button.value='early';button.variant='filled';button.size='s';button.shape='round';const original=document.querySelector('#slot');
 let submits=0,changes=0;document.querySelector('form').addEventListener('submit',event=>{event.preventDefault();submits++});toggle.addEventListener('change',()=>changes++);
 window.upgrade=async()=>{${mixed && reverse ? "defineGeneral();" : ""}defineProfile();${mixed && !reverse ? "defineGeneral();" : ""}await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));};
 window.state=()=>({submits,changes,sameSlot:document.querySelector('#slot')===original});
@@ -146,6 +146,12 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
         requests[key] = []; page.on("request", request => requests[key].push(new URL(request.url()).pathname));
         await page.goto(`${server.url}${name}/`);
         await page.waitForFunction(() => document.documentElement.dataset.ready === "true");
+        if (name.endsWith("-fixed")) await page.evaluate(() => {
+          for (const id of ["button", "toggle"]) {
+            const host = document.getElementById(id)!;
+            host.setAttribute("variant", "outlined"); host.setAttribute("size", "xl"); host.setAttribute("shape", "square");
+          }
+        });
         pages.push(page);
       }
       const sample = async (page: Page) => page.evaluate(async () => {
@@ -153,7 +159,7 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
         const animations = [...document.getAnimations(), ...[...document.querySelectorAll("#button,#toggle,#general")].flatMap(host =>
           host.shadowRoot?.querySelector("button")?.getAnimations({ subtree: true }) ?? [])];
         await Promise.all(animations.filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})));
-        const properties = ["display", "height", "min-width", "gap", "padding-inline-start", "padding-inline-end", "border-radius", "background-color", "color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "box-shadow", "outline", "border-width", "border-style", "opacity"];
+        const properties = ["display", "height", "min-width", "gap", "padding-inline-start", "padding-inline-end", "border-radius", "background-color", "color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "box-shadow", "outline", "border-width", "border-style", "opacity", "transition-property", "transition-duration", "transition-timing-function"];
         const values = (element: Element, pseudo?: string) => { const style = getComputedStyle(element, pseudo); return Object.fromEntries(properties.map(key => [key, style.getPropertyValue(key)])); };
         return Object.fromEntries(["button", "toggle", "general"].map(id => {
           const host = document.getElementById(id); if (!host) return [id, null];
@@ -165,9 +171,15 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
             label: host.textContent, busy: control?.getAttribute("aria-busy") ?? null }];
         }));
       });
+      const geometry: Record<string, unknown> = {};
+      report[`${fallback ? "fallback" : "adopted"}Geometry`] = geometry;
       const compare = async (label: string) => {
         for (let i = 0; i < pages.length; i += 2) {
           const general = await sample(pages[i]), fixed = await sample(pages[i + 1]);
+          if (label === "before delayed definition" || label === "after upgrade, early property and original slot") {
+            geometry[`${label}/${names[i]}`] = general;
+            geometry[`${label}/${names[i + 1]}`] = fixed;
+          }
           try { assert.deepEqual(fixed, general, `${label} ${names[i]} fallback=${fallback}`); }
           catch (error) { report.failure = { label, scenario: names[i], fallback, general, fixed }; throw error; }
         }
@@ -209,9 +221,18 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
       await compare("disabled");
       for (const page of pages) assert(await page.locator("#button button").isDisabled(), "disabled attribute must reach native control");
       for (const page of pages) await page.evaluate(async () => {
-        const host = document.querySelector("#button") as HTMLElement & { component: { setLoading(v: boolean, text: string): Promise<void> } };
-        host.removeAttribute("disabled"); host.setAttribute("loading", ""); await host.component.setLoading(true, "Working");
+        const host = document.querySelector("#button") as HTMLElement;
+        host.removeAttribute("disabled"); host.setAttribute("loading", "");
       });
+      await compare("initial busy state before lazy indicator");
+      for (const page of pages) {
+        assert.equal(await page.locator("#button button").getAttribute("aria-busy"), "true");
+        assert(await page.locator("#button button").isDisabled());
+        await page.evaluate(async () => {
+          const host = document.querySelector("#button") as HTMLElement & { component: { showProgress(): Promise<void> } };
+          await host.component.showProgress();
+        });
+      }
       await compare("real lazy progress and busy transition");
       for (const page of pages) {
         assert(await page.locator("#button .mtrl-button__progress").isVisible(), "actual lazy progress is visible");
@@ -220,11 +241,16 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
       }
       for (const page of pages) await page.evaluate(async () => {
         const host = document.querySelector("#button") as HTMLElement & { component: { setLoading(v: boolean, text: string): Promise<void> } };
-        await host.component.setLoading(false, "Continue");
+        await host.component.setLoading(false, "Continue"); host.removeAttribute("loading");
         host.setAttribute("icon", '<svg viewBox="0 0 24 24"><path d="M4 12h16"/></svg>'); host.setAttribute("icon-position", "end");
         document.documentElement.dir = "rtl"; document.documentElement.style.setProperty("--mtrl-density", "-1"); host.style.setProperty("--mtrl-button-shape", "9px");
       });
       await compare("attribute rebuild, trailing icon, RTL, density, container override");
+      for (const page of pages) {
+        assert.equal(await page.locator("#button button").getAttribute("aria-busy"), null);
+        assert(!(await page.locator("#button button").isDisabled()), "leaving loading must enable the native control");
+        assert.equal(await page.evaluate(() => (window as unknown as { state(): { sameSlot: boolean } }).state().sameSlot), true);
+      }
       for (const page of pages) await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
       await compare("dark and reduced motion");
       for (let i = 1; i < pages.length; i += 2) await pages[i].evaluate(() => {
