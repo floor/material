@@ -1,6 +1,6 @@
 {
-  "main": "5184946483526fc560e631d4d7f0641c92399f1a",
-  "ci": 42817796983,
+  "main": "6b21083995ad5a6c84f90badba16228fa016bed0",
+  "ci": 42836805872,
   "bun": "1.4.2",
   "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
   "sourceOptions": {
@@ -37,8 +37,8 @@
       "sha256": "162c1f0a5635f84b26581006ca01d15a6f827c2d2f3b82c5d1fd7c3e9697fd87"
     },
     "components": {
-      "count": 283,
-      "sha256": "2ca872f058065a556a15d72dea5b9eed37bbd49ec7035f01ab667fad53fbaeee"
+      "count": 285,
+      "sha256": "f780e4cf928a3f433b2a6e6f0bd852217926458abbbe6ea6fddd2ce9e20743a6"
     },
     "core": {
       "count": 76,
@@ -61,8 +61,8 @@
       "sha256": "296998af1e4cb1c9e0d85176a8e7ee6edfa65630ff7ee50730e5ebfd00464650"
     },
     "styles": {
-      "count": 86,
-      "sha256": "4c3986d69bb5b6768993a39b414a3ccb3e644aa42c2049666be294b68ea38c5f"
+      "count": 88,
+      "sha256": "195ca64c33b38393f7e8d901d1d9abe0221690abba71fd043ebc328e5d755920"
     },
     "svelte": {
       "count": 2,
