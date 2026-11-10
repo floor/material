@@ -162,6 +162,64 @@ describe('slider value', () => {
   });
 });
 
+describe('slider parity after the shared snap and bound helpers', () => {
+  // Literal results of these calls on 17612ca2, before setValue and
+  // setSecondValue shared one snap and setMin and setMax one bound writer:
+  // each step's values, bounds and handles' ARIA. A pin, not a new contract.
+  const state = (slider: ReturnType<typeof createSlider>) => [
+    slider.getValue(), slider.getSecondValue(), slider.getMin(), slider.getMax(),
+    handles(slider).map((handle) => [
+      handle.getAttribute('aria-valuemin'), handle.getAttribute('aria-valuemax'), handle.getAttribute('aria-valuenow'),
+    ]),
+  ];
+
+  test('a single slider follows the states main produced', async () => {
+    const slider = await mount({ min: 0, max: 100, step: 10, value: 50 });
+    const rows = [state(slider)];
+    slider.setValue(150); rows.push(state(slider));
+    slider.setValue(-5); rows.push(state(slider));
+    slider.setValue(37.5); rows.push(state(slider));
+    slider.setMin(60); rows.push(state(slider));
+    slider.setMax(70); rows.push(state(slider));
+    slider.setValue(65.5); rows.push(state(slider));
+    slider.setMin(-20); rows.push(state(slider));
+    expect(rows).toEqual([
+      [50, null, 0, 100, [['0', '100', '50']]],
+      [100, null, 0, 100, [['0', '100', '100']]],
+      [0, null, 0, 100, [['0', '100', '0']]],
+      [40, null, 0, 100, [['0', '100', '40']]],
+      [60, null, 60, 100, [['60', '100', '60']]],
+      [60, null, 60, 70, [['60', '70', '60']]],
+      [70, null, 60, 70, [['60', '70', '70']]],
+      [70, null, -20, 70, [['-20', '70', '70']]],
+    ]);
+  });
+
+  test('a range slider follows the states main produced', async () => {
+    const slider = await mount({ min: 0, max: 100, step: 5, value: 20, secondValue: 80, range: true });
+    const rows = [state(slider)];
+    slider.setSecondValue(10); rows.push(state(slider));
+    slider.setValue(90); rows.push(state(slider));
+    slider.setMin(15); rows.push(state(slider));
+    slider.setMax(75); rows.push(state(slider));
+    slider.setValue(12.3); rows.push(state(slider));
+    slider.setSecondValue(70.5); rows.push(state(slider));
+    slider.setMin(60); rows.push(state(slider));
+    slider.setMax(40); rows.push(state(slider));
+    expect(rows).toEqual([
+      [20, 80, 0, 100, [['0', '80', '20'], ['20', '100', '80']]],
+      [20, 20, 0, 100, [['0', '20', '20'], ['20', '100', '20']]],
+      [20, 20, 0, 100, [['0', '20', '20'], ['20', '100', '20']]],
+      [20, 20, 15, 100, [['15', '20', '20'], ['20', '100', '20']]],
+      [20, 20, 15, 75, [['15', '20', '20'], ['20', '75', '20']]],
+      [15, 20, 15, 75, [['15', '20', '15'], ['15', '75', '20']]],
+      [15, 70, 15, 75, [['15', '70', '15'], ['15', '75', '70']]],
+      [60, 70, 60, 75, [['60', '70', '60'], ['60', '75', '70']]],
+      [40, 40, 60, 40, [['60', '40', '40'], ['40', '40', '40']]],
+    ]);
+  });
+});
+
 describe('slider keyboard', () => {
   test('arrows step the value and report input then change', async () => {
     const slider = await mount({ value: 50, step: 5 });
