@@ -67,7 +67,7 @@ try {
     const dir = join(scratch, name); await mkdir(dir);
     const profile = fixed ? "button-filled-small-round" : "button";
     const style = `import 'material/elements/css/${profile}';`;
-    const extra = mixed ? `import 'material/elements/css/button';import 'material/styles/tabs';import createTabs from 'material/components/tabs';import {defineButton} from 'material/elements';defineButton({prefix:'general'});const tabs=createTabs({tabs:[{text:'One',value:'one'},{text:'Two',value:'two'}]});document.body.append(tabs.element);` : "";
+    const extra = mixed ? `import 'material/elements/css/button';import 'material/styles/tabs';import createTabs from 'material/components/tabs';import 'material/elements/preupgrade/button.css';import {defineButton as defineGeneral} from 'material/elements';const tabs=createTabs({tabs:[{text:'One',value:'one'},{text:'Two',value:'two'}]});document.body.append(tabs.element);` : "";
     const entry = `import 'material/styles/base-elements';import 'material/elements/preupgrade/${profile}.css';
 ${reverse ? extra + style : style + extra}
 import {${fixed ? "defineButtonFilledSmallRound" : "defineButton"} as defineProfile} from 'material/${fixed ? 'elements/button-filled-small-round' : 'elements'}';
@@ -75,12 +75,12 @@ const button=document.querySelector('#button'),toggle=document.querySelector('#t
 // Own properties before definition must be replayed, and slot nodes preserved.
 toggle.selected=true;button.value='early';${fixed ? "button.variant='outlined';button.size='xl';button.shape='square';" : ""}const original=document.querySelector('#slot');
 let submits=0,changes=0;document.querySelector('form').addEventListener('submit',event=>{event.preventDefault();submits++});toggle.addEventListener('change',()=>changes++);
-window.upgrade=async()=>{defineProfile();await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));};
+window.upgrade=async()=>{${mixed && reverse ? "defineGeneral();" : ""}defineProfile();${mixed && !reverse ? "defineGeneral();" : ""}await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));};
 window.state=()=>({submits,changes,sameSlot:document.querySelector('#slot')===original});
 Object.assign(window,{button,toggle});document.documentElement.dataset.ready='true';`;
     await writeFile(join(dir, "entry.js"), entry);
     const tag = `m-${profile}`;
-    const html = `<!doctype html><html data-theme="baseline"><head><meta charset="utf-8"><style>body{padding:40px}form{display:flex;gap:20px;align-items:start}</style></head><body><form><${tag} id="button" type="submit" name="action"><span id="slot">Continue</span></${tag}><${tag} id="toggle" toggle name="choice" value="yes">Selected</${tag}></form>${mixed ? '<general-button id="general" variant="outlined" size="m" shape="square" toggle selected>General</general-button>' : ''}<script type="module" src="./entry.js"></script></body></html>`;
+    const html = `<!doctype html><html data-theme="baseline"><head><meta charset="utf-8"><style>body{padding:40px}form{display:flex;gap:20px;align-items:start}</style></head><body><form><${tag} id="button" type="submit" name="action"><span id="slot">Continue</span></${tag}><${tag} id="toggle" toggle name="choice" value="yes">Selected</${tag}></form>${mixed ? '<m-button id="general" variant="outlined" size="m" shape="square" toggle selected>General</m-button>' : ''}<script type="module" src="./entry.js"></script></body></html>`;
     await writeFile(join(dir, "index.html"), html);
     const built = await build({ root: dir, base: `/${name}/`, configFile: false, envFile: false, logLevel: "error", build: {
       write: false, minify: true, cssMinify: true, modulePreload: { polyfill: false },
@@ -132,6 +132,7 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
   } });
   const comparisons: string[] = [];
   const requests: Record<string, string[]> = {};
+  report.comparisons = comparisons; report.requests = requests;
   try {
     for (const fallback of [false, true]) {
       const pages: Page[] = [];
@@ -149,7 +150,9 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
       }
       const sample = async (page: Page) => page.evaluate(async () => {
         await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-        await Promise.all(document.getAnimations().filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})));
+        const animations = [...document.getAnimations(), ...[...document.querySelectorAll("#button,#toggle,#general")].flatMap(host =>
+          host.shadowRoot?.querySelector("button")?.getAnimations({ subtree: true }) ?? [])];
+        await Promise.all(animations.filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})));
         const properties = ["display", "height", "min-width", "gap", "padding-inline-start", "padding-inline-end", "border-radius", "background-color", "color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "box-shadow", "outline", "border-width", "border-style", "opacity"];
         const values = (element: Element, pseudo?: string) => { const style = getComputedStyle(element, pseudo); return Object.fromEntries(properties.map(key => [key, style.getPropertyValue(key)])); };
         return Object.fromEntries(["button", "toggle", "general"].map(id => {
@@ -163,12 +166,19 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
         }));
       });
       const compare = async (label: string) => {
-        for (let i = 0; i < pages.length; i += 2) assert.deepEqual(await sample(pages[i + 1]), await sample(pages[i]), `${label} ${names[i]} fallback=${fallback}`);
+        for (let i = 0; i < pages.length; i += 2) {
+          const general = await sample(pages[i]), fixed = await sample(pages[i + 1]);
+          try { assert.deepEqual(fixed, general, `${label} ${names[i]} fallback=${fallback}`); }
+          catch (error) { report.failure = { label, scenario: names[i], fallback, general, fixed }; throw error; }
+        }
         comparisons.push(`${fallback ? "fallback" : "adopted"}: ${label}`);
       };
       await compare("before delayed definition");
       for (const page of pages) {
         const box = await page.locator("#button").boundingBox(); assert(box && box.height === 40 && box.width > 0, "pre-upgrade geometry must be styled");
+        if (await page.locator("#general").count()) {
+          const generalBox = await page.locator("#general").boundingBox(); assert(generalBox && generalBox.height === 56 && generalBox.width > 0, "general pre-upgrade control must be styled");
+        }
         await page.evaluate(async () => { await (window as unknown as { upgrade(): Promise<void> }).upgrade(); });
         assert.equal(await page.evaluate(() => (window as unknown as { state(): { sameSlot: boolean } }).state().sameSlot), true);
       }
@@ -179,10 +189,13 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
         assert.equal(styleCount > 0, fallback, "actual stylesheet delivery path");
         assert.equal(await page.locator("#toggle").evaluate(el => (el as HTMLElement & { selected: boolean }).selected), true);
       }
+      for (const page of pages) assert.notEqual(await page.locator("#button button").evaluate(el => getComputedStyle(el).backgroundColor), "rgba(0, 0, 0, 0)", "filled control must paint");
+      const restRadius = await pages[0].locator("#button button").evaluate(el => getComputedStyle(el).borderRadius);
       for (const page of pages) await page.locator("#button button").hover();
       await compare("hover");
       for (const page of pages) await page.mouse.down();
       await compare("native press");
+      for (const page of pages) assert.notEqual(await page.locator("#button button").evaluate(el => getComputedStyle(el).borderRadius), restRadius, "native press must change shape");
       for (const page of pages) { await page.mouse.up(); await page.mouse.move(0, 0); await page.evaluate(() => { document.body.tabIndex = -1; document.body.focus(); }); await page.keyboard.press("Tab"); }
       await compare("focus ring");
       for (const page of pages) assert((await page.locator("#button button").evaluate(el => getComputedStyle(el).outline)).includes("3px"), "keyboard focus must paint its ring");
@@ -194,12 +207,17 @@ Object.assign(window,{button,toggle});document.documentElement.dataset.ready='tr
       await compare("form reset");
       for (const page of pages) await page.evaluate(() => { document.querySelector("#button")!.setAttribute("disabled", ""); });
       await compare("disabled");
+      for (const page of pages) assert(await page.locator("#button button").isDisabled(), "disabled attribute must reach native control");
       for (const page of pages) await page.evaluate(async () => {
         const host = document.querySelector("#button") as HTMLElement & { component: { setLoading(v: boolean, text: string): Promise<void> } };
         host.removeAttribute("disabled"); host.setAttribute("loading", ""); await host.component.setLoading(true, "Working");
       });
       await compare("real lazy progress and busy transition");
-      for (const page of pages) assert(await page.locator("#button .mtrl-button__progress").isVisible(), "actual lazy progress is visible");
+      for (const page of pages) {
+        assert(await page.locator("#button .mtrl-button__progress").isVisible(), "actual lazy progress is visible");
+        assert.equal(await page.locator("#button button").getAttribute("aria-busy"), "true");
+        assert(await page.locator("#button button").isDisabled(), "loading must disable the native control");
+      }
       for (const page of pages) await page.evaluate(async () => {
         const host = document.querySelector("#button") as HTMLElement & { component: { setLoading(v: boolean, text: string): Promise<void> } };
         await host.component.setLoading(false, "Continue");
