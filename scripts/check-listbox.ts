@@ -837,6 +837,9 @@ async function factoryBehaviour(page: Page): Promise<void> {
   });
   await page.waitForFunction(() => document.getElementById("dialog-control")!.getAttribute("aria-expanded") === "true");
   await page.evaluate(() => (document.getElementById("d") as HTMLDialogElement).close());
+  // A dialog's close event fires in a later task: an immediate read still
+  // reports the popup open, so wait for the owned handle to settle to closed.
+  await page.waitForFunction(() => (window as unknown as { __dialogHandle: { isOpen: () => boolean } }).__dialogHandle.isOpen() === false);
   assert.equal(await page.evaluate(() => (window as unknown as { __dialogHandle: { isOpen: () => boolean } }).__dialogHandle.isOpen()), false, "B: closing the modal dialog closes the popup");
   await page.evaluate(() => {
     (window as unknown as { __dialogHandle: { destroy: () => void } }).__dialogHandle.destroy();
