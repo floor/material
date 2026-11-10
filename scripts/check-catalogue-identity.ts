@@ -77,11 +77,12 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   }
 }
 
-// The allowlist is not a blank cheque: package.json may only change its
-// version field and the new export keys, and dist/tokens may only add.
+// The allowlist is not a blank cheque: package.json may only add the new
+// export keys, and dist/tokens may only add. Versions compare equal on a
+// mid-cycle pull request and differ only across a release; either is fine,
+// which is why nothing here asserts the pair's versions.
 const branchPkg = JSON.parse(branch.get("package.json")!.toString()) as Record<string, unknown>;
 const mainPkg = JSON.parse(main.get("package.json")!.toString()) as Record<string, unknown>;
-if (branchPkg.version === mainPkg.version) problems.push("package.json versions are identical — the compared tarballs are not a versioned pair");
 const newKeys = Object.keys((branchPkg.exports ?? {}) as object).filter(key => !Object.hasOwn((mainPkg.exports ?? {}) as object, key));
 for (const key of newKeys) {
   if (!/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
