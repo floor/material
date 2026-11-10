@@ -827,13 +827,13 @@ The `icon` of the FAB menu and of its items is markup too. The menu opts out of 
 
 ## Icons
 
-A few components draw a Material Symbols glyph of their own. `setIcons` replaces those glyphs app-wide, by semantic name:
+Some components draw a built-in glyph of their own. `setIcons` replaces those glyphs app-wide, by semantic name:
 
 | Name | Where it draws |
 |------|----------------|
 | `menu` | the navigation rail's menu button, while collapsed |
 | `menu-open` | the same button, while the rail is expanded |
-| `close` | the side sheet's close button |
+| `close` | the side sheet and dialog close buttons, FAB-menu close icon, input-chip remove and filter-chip non-menu trailing action |
 
 ```typescript
 import { setIcons } from 'material';
@@ -847,6 +847,10 @@ setIcons({
 Call it once at start-up, before you create components or hydrate: a component reads the registry when it is created, so a later change reaches the next one, not the one on the page. Pass `null`, `undefined` or an empty string for a name to restore its built-in glyph.
 
 The registry is a fallback below the component's own options. The navigation rail's `expandIcon` and `collapseIcon` win over it. So does a value from `setComponentDefaults('navigation-rail', …)`. The same functions are at `material/core/icons`.
+
+The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the registry, including values supplied through component defaults. The dialog has no separate glyph option.
+
+A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. Menu triangles, selection checks and other icon slots keep their existing behavior.
 
 ## Sizes
 

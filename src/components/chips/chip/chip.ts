@@ -5,6 +5,7 @@ import { withEvents, withLifecycle } from "../../../core/compose/features";
 import { createRipple } from "../../../core/compose/features/ripple";
 import { createComponentConfig, createElementConfig } from "../../../core/config/component";
 import { setHTML } from "../../../core/dom/html";
+import { getIcon } from "../../../core/icons/registry";
 import type { ChipOptions, ChipComponent, ChipEvents } from "../types";
 
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
@@ -14,6 +15,8 @@ const CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentCo
 /** Shared internal implementation for the four Material chip factories. */
 const createChip = (config: ChipOptions = {}): ChipComponent => {
   const options = createComponentConfig<ChipOptions>({ type: "filter", ripple: true }, config, "chip");
+  // Once, at creation. An empty trailing icon restores this, not a later setIcons.
+  const closeGlyph = getIcon("close", CLOSE);
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
   const elementConfig = createElementConfig(options, { tag: "div" });
@@ -69,7 +72,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     remove = document.createElement("button");
     remove.type = "button";
     remove.className = base.getClass("chip__remove");
-    setHTML(remove, trailingIcon || CLOSE);
+    setHTML(remove, trailingIcon || closeGlyph);
     root.append(remove);
     root.setAttribute("role", "group");
   }
@@ -85,7 +88,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       trailingAction.setAttribute("aria-haspopup", "menu");
       trailingAction.setAttribute("aria-expanded", "false");
     }
-    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
+    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : closeGlyph));
     root.append(trailingAction);
     root.setAttribute("role", "group");
   }
@@ -176,8 +179,8 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     setLeadingIcon,
     setTrailingIcon(icon) {
       trailingIcon = type === "suggestion" ? "" : icon;
-      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
-      else setHTML(remove ?? trailing, trailingIcon || (remove ? CLOSE : ""));
+      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : closeGlyph));
+      else setHTML(remove ?? trailing, trailingIcon || (remove ? closeGlyph : ""));
       render();
       return api;
     },
