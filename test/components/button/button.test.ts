@@ -153,6 +153,17 @@ describe('button', () => {
     expect(has(button, 'filled') || has(button, 's') || has(button, 'round')).toBe(false);
   });
 
+  test('an untyped non-string still writes its class, as the code before the shared engine did', () => {
+    // Not a contract for typed callers: this pins parity for a JavaScript
+    // caller who passes null, undefined or a number anyway. The template
+    // literal turned each into a class, so the shared engine must not read
+    // null as the omit token and silently drop the write.
+    const button = mount({ text: 'x' });
+    button.setVariant(null as never).setSize(undefined as never).setShape(0 as never);
+    expect(button.element.className).toBe('mtrl-button mtrl-button--null mtrl-button--undefined mtrl-button--0');
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 's', 'round']);
+  });
+
   test('a same-value call keeps one token of each family and the same component', () => {
     const button = mount({ text: 'x' });
     expect(button.setVariant('filled').setSize('s').setShape('round')).toBe(button);

@@ -84,6 +84,15 @@ test('an unrecognised size removes the whole known family and reads back as the 
   expect(button.getSize()).toBe('s');
 });
 
+test('an untyped non-string size or shape still writes its class, as before the shared engine', () => {
+  // Parity for an untyped caller, not a typed contract: null reaches
+  // classList.add through the template literal exactly as it did before.
+  const button = make({ size: 'l', shape: 'square' });
+  button.setSize(null as never).setShape(undefined as never);
+  expect(button.element.className).toBe('mtrl-icon-button mtrl-interactive mtrl-icon-button--standard mtrl-icon-button--null mtrl-icon-button--undefined');
+  expect([button.getSize(), button.getShape()]).toEqual(['s', 'round']);
+});
+
 test('setting the default size or shape omits its class rather than adding it', () => {
   const button = make({ size: 'l', shape: 'square' });
   button.setSize('s').setShape('round');
