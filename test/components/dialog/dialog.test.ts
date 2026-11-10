@@ -26,6 +26,7 @@ Object.defineProperty(dom.window.HTMLElement.prototype, 'offsetWidth', { get: ()
 Object.defineProperty(dom.window.HTMLElement.prototype, 'offsetHeight', { get: () => 40, configurable: true });
 
 import createDialog from '../../../src/components/dialog';
+import { setIcons } from '../../../src/core/icons/registry';
 
 const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /** open() shows the dialog on a 10ms timer */
@@ -426,5 +427,43 @@ describe('dialog confirm()', () => {
     expect(content.querySelector('img')).toBeNull();
     expect(content.textContent).toBe('<img src=x onerror="alert(1)"> & more');
     dialog.destroy();
+  });
+});
+
+// The close affordance's built-in glyph, as the DOM serializes the string
+// the dialog already passed to setHTML. A registry value replaces it; a
+// dialog created earlier keeps the glyph it captured.
+const CLOSE_GLYPH = '\n        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">\n          <line x1="18" y1="6" x2="6" y2="18"></line>\n          <line x1="6" y1="6" x2="18" y2="18"></line>\n        </svg>\n      ';
+const closeGlyph = (dialog: { element: HTMLElement }) =>
+  dialog.element.querySelector('.mtrl-dialog__header-close')!.innerHTML;
+
+describe('dialog: the icon registry', () => {
+  const dialogs: ReturnType<typeof createDialog>[] = [];
+  const make = () => {
+    const dialog = createDialog({ title: 'x', closeButton: true });
+    dialogs.push(dialog);
+    return dialog;
+  };
+  afterEach(() => {
+    setIcons({ close: null });
+    for (const dialog of dialogs.splice(0)) dialog.destroy();
+  });
+
+  test('the close button draws the exact built-in glyph while the registry is empty', () => {
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test('setIcons replaces the glyph and clearing restores the built-in', () => {
+    setIcons({ close: '<i>dismiss</i>' });
+    expect(closeGlyph(make())).toBe('<i>dismiss</i>');
+    setIcons({ close: null });
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test('a dialog reads the registry when it is created', () => {
+    const created = make();
+    setIcons({ close: '<i>later</i>' });
+    expect(closeGlyph(created)).toBe(CLOSE_GLYPH);
+    expect(closeGlyph(make())).toBe('<i>later</i>');
   });
 });

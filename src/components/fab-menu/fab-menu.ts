@@ -7,6 +7,7 @@ import { withEvents, withLifecycle } from "../../core/compose/features";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
 import { setHTML } from "../../core/dom/html";
+import { getIcon } from "../../core/icons/registry";
 import { warnDev } from "../../core/utils/warn";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
@@ -111,7 +112,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   const closeIcon = document.createElement("span");
   closeIcon.className = `${block}__close`;
   closeIcon.setAttribute("aria-hidden", "true");
-  setHTML(closeIcon, settings.closeIcon || CLOSE_ICON);
+  setHTML(closeIcon, settings.closeIcon || getIcon("close", CLOSE_ICON));
   button.appendChild(closeIcon);
   root.appendChild(button);
 

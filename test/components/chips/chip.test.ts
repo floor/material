@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import { createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, type ChipComponent, type ChipConfig } from "../../../src/components/chips";
+import { setIcons } from "../../../src/core/icons/registry";
+import { clearGlobalDefaults, setComponentDefaults } from "../../../src/core/config/global";
 import * as publicAPI from "../../../src";
 
 let dom: JSDOM;
@@ -222,4 +224,51 @@ test("explicit names stay on every chip's primary focus target after label edits
       expect(document.activeElement?.getAttribute("aria-label")).toBe("Chip details");
     }
   }
+});
+
+// The remove glyph, as the DOM serializes it. A trailing menu keeps its own
+// triangle. trailingIcon and component defaults stay above the registry, and
+// clearing the trailing icon restores the glyph captured at creation.
+const CLOSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>';
+const removeGlyph = (chip: ChipComponent) => chip.element.querySelector(".mtrl-chip__remove")!.innerHTML;
+
+describe("chip: the icon registry", () => {
+  afterEach(() => {
+    setIcons({ close: null });
+    clearGlobalDefaults();
+  });
+
+  test("the remove button draws the exact built-in glyph while the registry is empty", () => {
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false })))).toBe(CLOSE_GLYPH);
+  });
+
+  test("an icon comes from the instance, then component defaults, then the registry, then the built-in", () => {
+    setIcons({ close: "<i>registry</i>" });
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false })))).toBe("<i>registry</i>");
+    setComponentDefaults("chip", { trailingIcon: "<i>component</i>" });
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false })))).toBe("<i>component</i>");
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false, trailingIcon: "<i>instance</i>" })))).toBe("<i>instance</i>");
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false, trailingIcon: "" })))).toBe("<i>registry</i>");
+    setIcons({ close: null });
+    clearGlobalDefaults();
+    expect(removeGlyph(mount(createInputChip({ label: "Ada", ripple: false })))).toBe(CLOSE_GLYPH);
+  });
+
+  test("a trailing menu keeps its triangle when close is overridden", () => {
+    setIcons({ close: "<i>registry</i>" });
+    const menu = mount(createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {}, ripple: false }));
+    expect(menu.trailingAction!.innerHTML).toContain("M7 10l5 5 5-5z");
+    expect(menu.trailingAction!.innerHTML).not.toContain("registry");
+    const remove = mount(createFilterChip({ label: "Red", onTrailingClick: () => {}, ripple: false }));
+    expect(remove.trailingAction!.innerHTML).toBe("<i>registry</i>");
+  });
+
+  test("clearing the trailing icon restores the glyph captured at creation", () => {
+    setIcons({ close: "<i>registry</i>" });
+    const chip = mount(createInputChip({ label: "Ada", ripple: false, trailingIcon: "<i>instance</i>" }));
+    setIcons({ close: "<i>later</i>" });
+    chip.setTrailingIcon("");
+    expect(removeGlyph(chip)).toBe("<i>registry</i>");
+    expect(removeGlyph(mount(createInputChip({ label: "Bea", ripple: false })))).toBe("<i>later</i>");
+  });
 });
