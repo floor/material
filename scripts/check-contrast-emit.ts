@@ -5,13 +5,14 @@ import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
 import * as sass from "sass";
 
+const stylesRoot = process.env.MATERIAL_SASS_ROOT ?? "src/styles";
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
   const measurements = new Map<string, { bytes: number; gzip: number; explicit: number; preference: number }>();
   for (const emit of ["all", "explicit", "preference", "none"] as const) {
     const css = sass.compileString(`@use "themes" with ($contrast-emit: ${emit});`, {
-      loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
+      loadPaths: [stylesRoot], style: "compressed", logger: sass.Logger.silent,
     }).css;
     await page.setContent(`<style>${css}</style><div data-theme="ocean"></div>`);
     const rules = await page.evaluate(() => {
@@ -49,6 +50,29 @@ try {
     }
   }
   console.log(`none saves ${measurements.get("all")!.gzip - measurements.get("none")!.gzip} gzip bytes (level 9)`);
+
+  // One public configuration reaches both entries in a real blank document.
+  // The two new flags store values; the existing prefix/contrast/direction
+  // switches prove the shared module instances are the consumers' instances.
+  const configured = sass.compileString(`
+    @use "config" with ($typescale-tokens: true, $spring-tokens: true,
+      $direction-arms: true, $contrast-emit: preference, $tag-prefix: "x");
+    @use "main"; @use "elements";
+    .probe { --type: #{config.$typescale-tokens}; --spring: #{config.$spring-tokens};
+      --direction: #{config.$direction-arms}; --contrast: #{config.$contrast-emit}; }
+  `, { loadPaths: [stylesRoot], style: "compressed", logger: sass.Logger.silent }).css;
+  await page.setContent(`<style>${configured}</style><div class="probe"><x-button>Save</x-button><m-button>Save</m-button></div>`);
+  const gateway = await page.locator(".probe").evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      type: style.getPropertyValue("--type").trim(), spring: style.getPropertyValue("--spring").trim(),
+      direction: style.getPropertyValue("--direction").trim(), contrast: style.getPropertyValue("--contrast").trim(),
+      custom: getComputedStyle(el.querySelector("x-button")!).display,
+      original: getComputedStyle(el.querySelector("m-button")!).display,
+    };
+  });
+  assert.deepEqual(gateway, { type: "true", spring: "true", direction: "true", contrast: "preference", custom: "inline-flex", original: "inline" });
+  console.log(`configure-once main + elements: ${JSON.stringify(gateway)}`);
 } finally {
   await browser.close();
 }

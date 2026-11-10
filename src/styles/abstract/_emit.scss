@@ -1,16 +1,22 @@
 // src/styles/abstract/_emit.scss
+@use 'sass:meta';
 //
 // Which direction form this compile emits: logical by default; the artefacts
 // a consumer's bundler takes through a CSS pipeline compile once more with
 // $direction-arms: true (scripts/build-styles.ts, test/styles/direction.md). The
 // entry configures this module; every @use after it reads the same value.
-@use 'sass:meta';
-
 $direction-arms: false !default;
+
+// Typography consumers read the shared flag. Spring emission is reserved
+// for its feature implementation; both modes default to literal output.
 $typescale-tokens: false !default;
+$spring-tokens: false !default;
 
 @if meta.type-of($typescale-tokens) != 'bool' {
-  @error '$typescale-tokens must be true or false';
+  @error '$typescale-tokens must be a boolean (true or false), got #{meta.inspect($typescale-tokens)}.';
+}
+@if meta.type-of($spring-tokens) != 'bool' {
+  @error '$spring-tokens must be a boolean (true or false), got #{meta.inspect($spring-tokens)}.';
 }
 
 /// The property names a transition needs in this form: an inline inset is two

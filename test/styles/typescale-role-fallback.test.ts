@@ -13,8 +13,8 @@ describe("opt-in typography consumers", () => {
     expect(compile('@use "config";')).toBe("");
     expect(compile(config("false"))).toBe("");
     expect(compile(config("true"))).toBe("");
-    expect(() => compile(config('"true"'))).toThrow("must be true or false");
-    expect(() => compile(config("1"))).toThrow("must be true or false");
+    expect(() => compile(config('"true"'))).toThrow("must be a boolean (true or false)");
+    expect(() => compile(config("1"))).toThrow("must be a boolean (true or false)");
     // Sass treats null configuration as omitted for a !default variable.
     expect(compile(config("null"))).toBe("");
   });
@@ -50,7 +50,7 @@ describe("opt-in typography consumers", () => {
     expect(compile('@use "config" with ($typescale-tokens: true, $tag-prefix: "x"); @use "components/button"; @use "elements";')).toContain("x-button:not(:defined)");
   });
 
-  test("shared configuration forwards flags, contrast, tag prefix and fallback maps without CSS", () => {
+  test("shared configuration forwards flags, contrast and tag prefix without exposing fallback maps", () => {
     const shared = '@use "config" with ($typescale-tokens: true, $direction-arms: true, $contrast-emit: none, $tag-prefix: "x");';
     expect(compile(shared)).toBe("");
     const css = compile(shared + '@use "main"; @use "elements";');
@@ -58,14 +58,13 @@ describe("opt-in typography consumers", () => {
     expect(css).not.toContain("m-button:not(:defined)");
     expect(css).not.toContain("data-theme-contrast");
     expect(css).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
-    const maps = compile('@use "config" with ($state: (hover: 0.123)); @use "abstract/variables" as v; @use "sass:map"; .probe { opacity: map.get(v.$state, hover); }');
-    expect(maps).toBe(".probe{opacity:.123}");
+    expect(() => compile('@use "config" with ($state: (hover: 0.123));')).toThrow("not declared with !default");
   });
 
   test("entry forwards support one-entry configuration and preserve omitted defaults", () => {
     for (const entry of ["main", "elements"]) {
       expect(compile(config("false") + `@use "${entry}";`)).toBe(compile(`@use "${entry}";`));
-      expect(() => compile(`@use "${entry}" with ($typescale-tokens: "true");`)).toThrow("$typescale-tokens must be true or false");
+      expect(() => compile(`@use "${entry}" with ($typescale-tokens: "true");`)).toThrow("$typescale-tokens must be a boolean (true or false)");
     }
     const main = compile('@use "main" with ($typescale-tokens: true, $contrast-emit: none);');
     expect(main).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");

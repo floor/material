@@ -1,0 +1,3 @@
+// The configure-once gateway must load the prefix without emitting the
+// documentation comments in elements/config, even in expanded Sass output.
+$tag-prefix: 'm' !default;
