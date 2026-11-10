@@ -7,8 +7,10 @@
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
  * identical member lists, identical bytes everywhere, except the explicit
- * allowlist (the version fields of package.json and the new dist/tokens data
- * files). Anything else — a moved byte, a renamed file, a shifted bundle —
+ * allowlist (the version fields of package.json, the new dist/tokens data
+ * files, and whole-line additions to README.md — documentation of the new
+ * data may be added, existing documentation may not be rewritten). Anything
+ * else — a moved byte, a renamed file, a shifted bundle —
  * fails with the member named, because a data-only change has no business
  * touching a single default byte.
  *
@@ -60,16 +62,31 @@ const readTarball = (tgz: string): Map<string, Buffer> => {
 const branch = readTarball(branchTgz);
 const main = readTarball(mainTgz);
 
-/** The only differences a data-only change may introduce. */
+/** The only differences a data-only change may introduce. README.md is
+ * documentation every consumer downloads and none loads; it is held to
+ * whole-line additions below, so the allowance documents the new data without
+ * opening the door to rewriting what a consumer reads. */
 const allowed = (member: string): boolean =>
-  member === "package.json" || member.startsWith("dist/tokens/");
+  member === "package.json" || member === "README.md" || member.startsWith("dist/tokens/");
+
+/** README.md may change only by whole-line additions: every line of the base
+ * document appears in the branch document, in order. */
+const additionsOnly = (before: Buffer, after: Buffer): boolean => {
+  const remaining = after.toString().split("\n");
+  for (const line of before.toString().split("\n")) {
+    const at = remaining.indexOf(line);
+    if (at === -1) return false;
+    remaining.splice(0, at + 1);
+  }
+  return true;
+};
 
 const problems: string[] = [];
 for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   const inMain = main.get(member);
   const inBranch = branch.get(member);
   if (inMain === undefined) {
-    if (!allowed(member)) problems.push(`added member ${member} outside the allowlist (package.json, dist/tokens/*)`);
+    if (!allowed(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*)`);
     continue;
   }
   if (inBranch === undefined) {
@@ -79,6 +96,8 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   if (inMain.equals(inBranch)) continue;
   if (!allowed(member)) {
     problems.push(`changed member ${member} (${inMain.length} -> ${inBranch.length} bytes): a data-only change must not touch the default surface`);
+  } else if (member === "README.md" && !additionsOnly(inMain, inBranch)) {
+    problems.push("changed member README.md beyond whole-line additions: the new data may be documented, existing documentation may not be rewritten");
   }
 }
 
