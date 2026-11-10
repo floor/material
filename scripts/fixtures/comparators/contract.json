@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "profile": "rendered-styled",
+  "toolchain": { "node": "v22.23.3", "npm": "10.9.9", "vite": "8.2.2", "playwright": "1.63.0" },
+  "build": { "target": "es2022", "assetsInlineLimit": 0, "modulePreloadPolyfill": false },
+  "compression": { "gzipLevel": 9, "brotliQuality": 11, "unit": "bytes-per-emitted-asset" },
+  "roles": ["button", "text-field", "checkbox", "switch", "radios", "select", "dialog", "menu", "tabs", "list", "chips", "progress", "icon-button", "fab", "slider", "divider"],
+  "adapters": {
+    "material-factories": { "package": "material", "version": "candidate-artifact", "missing": [], "notes": "General factory entries and complete component styles; candidate CI package." },
+    "material-elements": { "package": "material", "version": "candidate-artifact", "missing": [], "notes": "Existing eager elements with their distributed shadow styles and base-elements." },
+    "material-web": { "package": "@material/web", "version": "2.5.0", "missing": [], "notes": "Existing explicit registration imports; new mounted fixtures are independent of legacy import-only rows." },
+    "m3e": { "package": "@m3e/web", "version": "2.12.0", "missing": [], "notes": "matraic/m3e, individual public entries including theme; not another similarly named project." },
+    "beercss": { "package": "beercss", "version": "5.0.3", "missing": [], "notes": "Normal root entry with global CSS/JS. Native select and authored tabs differ from custom widgets; keyboard coverage reported separately." },
+    "micl": { "package": "material-inspired-component-library", "version": "10.0.0", "missing": ["tabs", "fab"], "notes": "henkpb/micl; no supported tabs or FAB recipe found in this pinned distribution. No substitute controls." }
+  }
+}

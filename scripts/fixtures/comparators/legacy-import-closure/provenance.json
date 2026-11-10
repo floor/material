@@ -1,0 +1,22 @@
+{
+  "head": "a99486250a38f94905ebd138488cafdb1634cf3d",
+  "ciRun": 42660160103,
+  "distArtifact": 13693344277,
+  "packageJob": 129309692805,
+  "sourceHarness": "material/scripts/check-consumer.ts",
+  "sourceLibraryBuiltLocally": false,
+  "materialVersion": "3.10.1",
+  "materialWebVersion": "2.5.0",
+  "viteVersion": "8.2.2",
+  "node": "v26.8.1",
+  "gzipLevel": 9,
+  "brotliQuality": 11,
+  "files": {
+    "package.json": "41e4e0f553f236252a68fef9c0ae3b06bb7d2c0e9a44796c4232d611cc83af9f",
+    "index.js": "878b39f7972b33456a9a143f4fcb3c4273f5d8fa714928d4e500c8f9be5a21c2",
+    "elements/define.js": "9cd6fd8820c4d42c86d30b43fa1c8ea03e79cc7af052cd2926dd24d9da4411a8",
+    "elements/styles.js": "716e33d1f3342cf669fbfb8fa0dc8fd98e55f97429054de9a041afdd7e1da427",
+    "components/button/api.js": "13c64c2116a353fcbec2d39029032b88055c7b61da3d690831e9adb7cd217f56",
+    "components/menu/on-demand.js": "89629bb4163e4c06bfa0f386ba3c3d2d971c04347b6b1bd1c8acb4fa32553060"
+  }
+}
