@@ -675,7 +675,7 @@ async function sharedBehaviour(page: Page, kind: "menu" | "listbox"): Promise<vo
   s = await state(page);
   assert.equal(s.attrs.expanded, "true", `${label}: a disabled row does not close the popup`);
   assert.equal(s.text, "Cherry", `${label}: the disabled row does not commit`);
-  assert.equal(s.attrs.active, "Cherry", `${label}: the disabled row does not become active`);
+  assert.equal(s.active, "Cherry", `${label}: the disabled row does not become active`);
   assert.equal(s.events.filter(event => event.type === "change").length, 0, `${label}: no change from a disabled row`);
   await page.keyboard.press("Escape");
   ok(`${label}: disabled options never commit or become active`);
