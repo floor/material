@@ -2,6 +2,9 @@
 import { FabComponent, FabEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { IconManager } from '../../core/compose/features/icon';
+import { readModifier, writeModifier } from '../../core/dom/modifier';
+
+const POSITIONS = ['top-right', 'top-left', 'bottom-right', 'bottom-left'] as const;
 
 /**
  * API configuration options for the FAB component
@@ -126,25 +129,12 @@ export const withAPI = ({ disabled, lifecycle, className }: ApiOptions) =>
     },
     
     setPosition(position: string) {
-      // First remove any existing position classes
-      const positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
-      positions.forEach(pos => {
-        component.element.classList.remove(`${className}--${pos}`);
-      });
-      
-      // Add new position class
-      component.element.classList.add(`${className}--${position}`);
+      writeModifier(component.element, className, POSITIONS, position, null);
       return this;
     },
     
     getPosition() {
-      const positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
-      for (const pos of positions) {
-        if (component.element.classList.contains(`${className}--${pos}`)) {
-          return pos;
-        }
-      }
-      return null;
+      return readModifier(component.element, className, POSITIONS, null);
     },
     
     lower() {
