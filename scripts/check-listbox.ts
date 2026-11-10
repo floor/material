@@ -1209,7 +1209,8 @@ async function touchBehaviour(page: Page): Promise<void> {
 
   // A change handler may close and reopen during the tap's pointerup. The
   // click the same tap synthesizes afterwards must neither choose again nor
-  // close the popup the handler reopened.
+  // close the popup the handler reopened. The handler's own close and reopen
+  // emit close then open; the tap's click adds nothing after them.
   await mount(page, "listbox");
   await page.evaluate(() => {
     const view = window as unknown as { __h: { on: (type: string, handler: () => void) => void; close: () => void; open: () => void } };
@@ -1221,7 +1222,7 @@ async function touchBehaviour(page: Page): Promise<void> {
   const reopened = await state(page);
   assert.equal(reopened.text, "Cherry", "B: the tapped change lands before the click");
   assert.equal(reopened.attrs.expanded, "true", "B: a change handler's reopening survives the tap's click");
-  assert.deepEqual(reopened.events.map(event => event.type), ["open", "change", "open"],
+  assert.deepEqual(reopened.events.map(event => event.type), ["open", "change", "close", "open"],
     "B: the tap's click neither chooses nor closes the reopened popup");
   ok("B: a tap's click does not close a reopened popup");
 
