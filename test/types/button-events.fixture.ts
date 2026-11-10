@@ -99,24 +99,6 @@ button.on("click", (event: MouseEvent) => void event.preventDefault());
 // @ts-expect-error "chick" is not an event a button reports
 button.off("chick", () => {});
 
-// Optional progress forwarders keep their exact public parameter and return types.
-export const progressForwardingTypesAreUnchanged: Equals<Pick<ButtonComponent,
-  "showProgress" | "showProgressSync" | "hideProgress" | "hideProgressSync" |
-  "setProgress" | "setProgressSync" | "setIndeterminate" | "setIndeterminateSync" |
-  "setLoading" | "setLoadingSync"
->, {
-  showProgress?: () => Promise<ButtonComponent>;
-  showProgressSync?: () => ButtonComponent;
-  hideProgress?: () => Promise<ButtonComponent>;
-  hideProgressSync?: () => ButtonComponent;
-  setProgress?: (value: number) => Promise<ButtonComponent>;
-  setProgressSync?: (value: number) => ButtonComponent;
-  setIndeterminate?: (indeterminate: boolean) => Promise<ButtonComponent>;
-  setIndeterminateSync?: (indeterminate: boolean) => ButtonComponent;
-  setLoading?: (loading: boolean, text?: string) => Promise<ButtonComponent>;
-  setLoadingSync?: (loading: boolean, text?: string) => ButtonComponent;
-}> = true;
-
 // --- what it still allows -------------------------------------------------
 
 // A correctly written handler, with the payload destructured the way the

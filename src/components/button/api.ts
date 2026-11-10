@@ -80,29 +80,6 @@ interface ComponentWithElements {
   setLoadingSync?: (loading: boolean, text?: string) => ComponentWithElements;
 }
 
-// Shared metadata, not rebuilt for each button. The paired methods retain
-// their original public order and their zero-, one- or two-argument calls.
-const progressMethods = [
-  ["showProgress", 0], ["showProgressSync", 0],
-  ["hideProgress", 0], ["hideProgressSync", 0],
-  ["setProgress", 1], ["setProgressSync", 1],
-  ["setIndeterminate", 1], ["setIndeterminateSync", 1],
-  ["setLoading", 2], ["setLoadingSync", 2],
-] as const;
-
-type ProgressMethod = typeof progressMethods[number][0];
-const callProgress = (
-  component: ComponentWithElements, name: ProgressMethod, arity: number,
-  value?: number | boolean, text?: string,
-): unknown => {
-  // Read at call time so replacing a delegate still takes effect. The indexed
-  // signatures differ, but the metadata supplies each method's exact call shape.
-  const target = component as unknown as Record<ProgressMethod,
-    (value?: number | boolean, text?: string) => unknown>;
-  return arity === 0 ? target[name]()
-    : arity === 1 ? target[name](value) : target[name](value, text);
-};
-
 /**
  * Enhances a button component with API methods.
  * This follows the higher-order function pattern to add public API methods
@@ -420,19 +397,74 @@ export const withAPI =
       buttonComponent.progress = component.progress;
     }
 
-    for (const [name, arity] of progressMethods) {
-      if (!component[name]) continue;
-      const forward = name.endsWith("Sync")
-        ? (value?: number | boolean, text?: string) => {
-          callProgress(component, name, arity, value, text);
-          return buttonComponent;
-        }
-        : async (value?: number | boolean, text?: string) => {
-          await callProgress(component, name, arity, value, text);
-          return buttonComponent;
-        };
-      Object.defineProperty(forward, "length", { value: arity });
-      (buttonComponent as unknown as Record<typeof name, typeof forward>)[name] = forward;
+    if (component.showProgress) {
+      buttonComponent.showProgress = async () => {
+        await component.showProgress!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.showProgressSync) {
+      buttonComponent.showProgressSync = () => {
+        component.showProgressSync!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.hideProgress) {
+      buttonComponent.hideProgress = async () => {
+        await component.hideProgress!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.hideProgressSync) {
+      buttonComponent.hideProgressSync = () => {
+        component.hideProgressSync!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.setProgress) {
+      buttonComponent.setProgress = async (value: number) => {
+        await component.setProgress!(value);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setProgressSync) {
+      buttonComponent.setProgressSync = (value: number) => {
+        component.setProgressSync!(value);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setIndeterminate) {
+      buttonComponent.setIndeterminate = async (indeterminate: boolean) => {
+        await component.setIndeterminate!(indeterminate);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setIndeterminateSync) {
+      buttonComponent.setIndeterminateSync = (indeterminate: boolean) => {
+        component.setIndeterminateSync!(indeterminate);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setLoading) {
+      buttonComponent.setLoading = async (loading: boolean, text?: string) => {
+        await component.setLoading!(loading, text);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setLoadingSync) {
+      buttonComponent.setLoadingSync = (loading: boolean, text?: string) => {
+        component.setLoadingSync!(loading, text);
+        return buttonComponent;
+      };
     }
 
     return buttonComponent;
