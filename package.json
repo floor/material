@@ -196,6 +196,10 @@
       "types": "./dist/components/list/index.d.ts",
       "import": "./dist/components/list/index.js"
     },
+    "./components/listbox": {
+      "types": "./dist/components/listbox/index.d.ts",
+      "import": "./dist/components/listbox/index.js"
+    },
     "./components/list/constants": {
       "types": "./dist/components/list/constants.d.ts",
       "import": "./dist/components/list/constants.js"

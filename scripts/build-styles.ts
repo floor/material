@@ -192,6 +192,10 @@ export async function buildStyles(outdir: string, banner: string) {
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
+  // The lean selection popup's sheet is opt-in: `material/styles/listbox`
+  // ships, but the sheet joins neither the full stylesheet nor the component
+  // manifest, so no default asset's layer order or bytes change.
+  await emit("styles/listbox", ["components/listbox"]);
   for (const name of [...themeStyles, ...standaloneThemes]) {
     await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
     await emitExplicit(`themes/${name}-contrast`, name, false);
