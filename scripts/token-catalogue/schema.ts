@@ -25,7 +25,7 @@ export function catalogueSchema(): Record<string, unknown> {
     properties: {
       schemaVersion: { type: "integer", enum: [2] },
       catalogueRevision: { type: "integer", minimum: 1 },
-      packageVersion: { type: "string", pattern: "^\\d+\\.\\d+\\.\\d+$" },
+      packageVersion: { type: "string", pattern: "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$" },
       sourceCommit: { type: "string", pattern: "^[0-9a-f]{40}$" },
       inputsDigest: { type: "string", pattern: "^[0-9a-f]{64}$" },
       emissionsDigest: { type: "string", pattern: "^[0-9a-f]{64}$" },
