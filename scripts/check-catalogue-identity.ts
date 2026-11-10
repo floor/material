@@ -13,7 +13,10 @@
  * data may be added, existing documentation may not be rewritten). A new
  * optional profile pair must exactly project its unchanged parent stylesheet
  * and import its declared dependencies; once on main its bytes are frozen too.
- * Anything
+ * A declared opt-in entry (`material/components/listbox` with
+ * `material/styles/listbox`) ships at its own subpath and joins no barrel, root
+ * export or default sheet, so it may add exactly its own files, export key and
+ * check script without moving a default byte. Anything
  * else — a moved byte, a renamed file, a shifted bundle —
  * fails with the member named, because a data-only change has no business
  * touching a single default byte.
@@ -27,6 +30,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
+import { componentStyles } from "./style-manifest";
 
 const sole = (directory: string): string => {
   const tarballs = readdirSync(directory).filter(name => name.endsWith(".tgz"));
@@ -92,6 +96,27 @@ const problems: string[] = [];
 // imports. Once present on main, even these files are byte-frozen below.
 const optionalAdditions = new Set(optionalStyleFiles.map(path => `dist/${path}`));
 const addsProfile = [...optionalAdditions].some(path => branch.has(path) && !main.has(path));
+// A declared opt-in entry is a new component shipped at its own subpath: the
+// manifest marks it `optIn`, the build gives it its own style pair, and it
+// joins no barrel, root export or default stylesheet. The allowance admits
+// exactly what that entry produces — its component modules, its stylesheet
+// pair, the Sass partial the sheet compiles from, its export key and its check
+// script. An entry already packed on main is not new, so the member loop freezes
+// it byte for byte like every other member.
+const partialPath = (source: string): string => `src/styles/${source.replace(/\/([^/]+)$/, "/_$1.scss")}`;
+const optInEntries = Object.entries(componentStyles).filter(([, entry]) => entry.optIn);
+const newOptIn = new Set(optInEntries
+  .filter(([name]) => !main.has(`dist/components/${name}/index.js`))
+  .map(([name]) => name));
+const optInStyleMembers = new Map(optInEntries.flatMap(([name, entry]) =>
+  [[`dist/styles/${name}.js`, name], [`dist/styles/${name}.css`, name], [partialPath(entry.source), name]] as [string, string][]));
+/** The declared opt-in entry a new member belongs to, when it is one it produces. */
+const optInMember = (member: string): string | undefined => {
+  const style = optInStyleMembers.get(member);
+  if (style !== undefined) return newOptIn.has(style) ? style : undefined;
+  const component = /^dist\/components\/([\w-]+)\/(?:[\w.-]+\.js|[\w.-]+\.d\.ts)$/.exec(member);
+  return component && newOptIn.has(component[1]!) ? component[1] : undefined;
+};
 try {
   validateOptionalStyleProfiles(new Map([...branch]
     .filter(([path]) => path.startsWith("dist/styles/"))
@@ -103,7 +128,7 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   const inMain = main.get(member);
   const inBranch = branch.get(member);
   if (inMain === undefined) {
-    if (!allowed(member) && !optionalAdditions.has(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles)`);
+    if (!allowed(member) && !optionalAdditions.has(member) && !optInMember(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles, declared opt-in entries)`);
     continue;
   }
   if (inBranch === undefined) {
@@ -141,7 +166,13 @@ for (const key of Object.keys(mainExports)) {
 }
 for (const key of Object.keys(branchExports)) {
   if (Object.hasOwn(mainExports, key)) continue;
-  if (!/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
+  const componentKey = /^\.\/components\/([\w-]+)$/.exec(key);
+  const optInExport = componentKey !== null && newOptIn.has(componentKey[1]!)
+    && JSON.stringify(branchExports[key]) === JSON.stringify({
+      types: `./dist/components/${componentKey[1]}/index.d.ts`,
+      import: `./dist/components/${componentKey[1]}/index.js`,
+    });
+  if (!optInExport && !/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
 }
 const branchScripts = (branchPkg.scripts ?? {}) as Record<string, unknown>;
 const mainScripts = (mainPkg.scripts ?? {}) as Record<string, unknown>;
@@ -155,7 +186,9 @@ for (const key of Object.keys(mainScripts)) {
 for (const key of Object.keys(branchScripts)) {
   if (Object.hasOwn(mainScripts, key)) continue;
   const profileCheck = addsProfile && key === "button-profile:check" && branchScripts[key] === "bun run scripts/check-button-profile.ts";
-  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key) && !profileCheck) problems.push(`new script ${key} outside the catalogue gate allowlist`);
+  const checkKey = /^([\w-]+):check$/.exec(key);
+  const optInCheck = checkKey !== null && newOptIn.has(checkKey[1]!) && branchScripts[key] === `bun run scripts/check-${checkKey[1]}.ts`;
+  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key) && !profileCheck && !optInCheck) problems.push(`new script ${key} outside the catalogue gate allowlist`);
 }
 for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)])) {
   if (key === "exports" || key === "scripts") continue;
@@ -172,6 +205,25 @@ for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)]))
   } else if (JSON.stringify(mainPkg[key]) !== JSON.stringify(branchPkg[key])) {
     problems.push(`package.json field ${key} changed: type, sideEffects and every field outside the catalogue additions are frozen by this change`);
   }
+}
+// A declared opt-in entry ships complete and exact: its component entry, both
+// style files and the Sass partial its sheet compiles from. The style module
+// must import exactly the dependencies the manifest declares and its own CSS —
+// the build writes that string (scripts/build-styles.ts, `emit`) — so a hidden
+// stylesheet dependency cannot ride in behind the new subpath. The entry is
+// reachable only through its own export key and is checked by its own script.
+for (const [name, entry] of optInEntries) {
+  if (!newOptIn.has(name)) continue;
+  for (const member of [`dist/components/${name}/index.js`, `dist/styles/${name}.js`, `dist/styles/${name}.css`, partialPath(entry.source)]) {
+    if (!branch.has(member)) problems.push(`declared opt-in entry ${name} does not ship ${member}`);
+  }
+  const expected = entry.dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") + `\nimport "./${name}.css";\n`;
+  const shipped = branch.get(`dist/styles/${name}.js`)?.toString();
+  if (shipped !== undefined && shipped !== expected) {
+    problems.push(`opt-in style entry ${name}: its JS module must import exactly its declared dependencies and its own CSS, found ${JSON.stringify(shipped)}`);
+  }
+  if (!Object.hasOwn(branchExports, `./components/${name}`)) problems.push(`declared opt-in entry ${name} has no ./components/${name} export key`);
+  if (!Object.hasOwn(branchScripts, `${name}:check`)) problems.push(`declared opt-in entry ${name} has no ${name}:check script`);
 }
 // Since the catalogue merged into main, dist/tokens members exist on both
 // sides of the comparison: their presence is the merged state, not a
