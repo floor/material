@@ -27,7 +27,10 @@ export type CarouselVariant =
  */
 export interface CarouselSlide {
   image?: string;
-  /** Alternative text for the image; empty when the image is decorative */
+  /**
+   * Alternative text for the image; empty when the image is decorative.
+   * Non-empty alt text is the slide's accessible name when it has no title.
+   */
   alt?: string;
   /**
    * Intrinsic width of the image in pixels, the `img`'s `width` attribute:
@@ -44,6 +47,7 @@ export interface CarouselSlide {
   loading?: "eager" | "lazy";
   /** How the browser decodes the image; the browser decides when unset */
   decoding?: "sync" | "async" | "auto";
+  /** Visible label. When set, it is the slide's accessible name. */
   title?: string;
   description?: string;
   buttonText?: string;
