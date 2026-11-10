@@ -9,7 +9,9 @@
 //   and the items are pinned to the inline start instead, so they open into
 //   the page; bottom-end keeps the end
 // - menu: the FAB stays; the baseline menu opens from it
+@use 'sass:string';
 @use '../../styles/abstract/base' as base;
+@use '../../styles/abstract/emit' as emit;
 @use '../../styles/abstract/variables' as v;
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
@@ -24,8 +26,9 @@ $spatial: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial
 $spatial-colour: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-clamped-easing');
 $effects: v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing');
 // Where spring-fast-spatial crosses half its progress: the icon swaps there
-// (the Compose sample swaps it at checkedProgress 0.5)
-$swap: 48ms;
+// (the Compose sample swaps it at checkedProgress 0.5). Off, this is 48ms.
+// On, it is that same fraction of the fast-spatial duration.
+$swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
 
 .#{$component} {
   position: relative;
@@ -162,8 +165,15 @@ $swap: 48ms;
     gap: 4px;
     overflow-y: auto;
     visibility: hidden;
-    // Hidden once the last item has left
-    transition: visibility 0s linear var(--#{$component}-exit, 0ms);
+    // Hidden once the last item has left. Off, the runtime delay stands.
+    // On, JS still adds its literal 425ms (FAB_MENU_ITEM_EXIT); the token
+    // replaces that addend so a longer fast-spatial duration is not cut off.
+    @if emit.$spring-tokens {
+      $duration: v.motion('spring-fast-spatial-duration');
+      transition: visibility 0s linear #{string.unquote('calc(var(--#{$component}-exit, 425ms) - 425ms + #{$duration})')};
+    } @else {
+      transition: visibility 0s linear var(--#{$component}-exit, 0ms);
+    }
 
   }
 

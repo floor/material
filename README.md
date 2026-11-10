@@ -296,6 +296,28 @@ For the full stylesheet, use this entry instead:
 
 Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Theme with CSS custom properties.
 
+Spring durations and easings can be inherited custom properties. Prebuilt stylesheets keep the literal values. Set `$spring-tokens` on the public config gateway before any component sheet. That gateway forwards the shared flag on `abstract/emit`. Then emit the defaults where the application wants them:
+
+```scss
+@use "material/src/styles/config" with ($spring-tokens: true);
+@use "material/src/styles/motion" as motion;
+@use "material/src/styles/components/switch";
+
+:root {
+  @include motion.spring-tokens;
+}
+```
+
+`motion.spring-tokens` emits thirteen `--mtrl-sys-motion-spring-*` properties from the library motion map. They include `--mtrl-sys-motion-spring-fast-spatial-clamped-easing`.
+
+Component CSS reads those properties and keeps today's literal as the fallback. `$spring-tokens: false`, or leaving it unset, leaves that CSS unchanged. Loading `motion` by itself emits no CSS.
+
+[Motion physics](https://m3.material.io/styles/motion/overview/how-it-works) separates spatial motion from effects; these names follow that split, and the numbers stay the library's.
+
+JavaScript deadlines do not follow an override: the navigation rail removes its switching state after 450ms, the slider removes its settling state after 450ms, and a snackbar leaves on its opacity transition or after 425ms.
+
+The FAB menu's list visibility delay does follow the fast-spatial duration when the flag is on. Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in.
+
 Material describes [three contrast levels](https://m3.material.io/styles/color/system/how-the-system-works) to accommodate different vision needs. Its [color contrast guidance](https://m3.material.io/foundations/designing/color-contrast) explains the role of contrast in readability. Choosing `none` keeps standard colors but removes responses to both explicit contrast choices and the system preference.
 
 The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
@@ -329,9 +351,9 @@ The gateway emits zero CSS. Its five supported switches are:
 | `$tag-prefix` | `"m"` | Sets the undefined custom-element tag prefix |
 | `$direction-arms` | `false` | Compiles physical direction arms for a bundler's CSS pipeline when truthy |
 | `$typescale-tokens` | `false` | Enables role-token typography with the existing literal fallbacks |
-| `$spring-tokens` | `false` | Boolean configuration reserved for opt-in spring emission; currently stores the value only |
+| `$spring-tokens` | `false` | Enables inherited spring duration/easing references with the existing literal fallbacks |
 
-Both token switches are also configurable directly on the full stylesheet or elements entry. The spring switch currently stores configuration only; typography emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
+Both token switches are also configurable directly on the full stylesheet or elements entry. Spring emission and typography are described above; include the motion mixin explicitly to emit the default spring declarations. Token maps are not a supported configuration surface; use CSS custom properties for token values.
 
 Sass [configures a module on its first load](https://sass-lang.com/documentation/at-rules/use/#configuration). Put the gateway before every other material import, including selective sheets. Then load the other entries without `with (...)`. Configuring both the gateway and another entry with `with (...)`, or loading a component before configuring the gateway, produces Sass's standard “already loaded” error. The direct contrast and tag-prefix examples above continue to work when used on their own.
 

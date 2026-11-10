@@ -34,6 +34,7 @@ const VARIANTS = ["neutral", "vibrant", "expressive", "fidelity", "content", "mo
 // consumer writes them (load path `node_modules`, the README's).
 const CHECKOUT_ENTRIES = [
   "config",
+  "motion",
   "main",
   "themes",
   "elements",

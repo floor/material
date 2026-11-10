@@ -3,6 +3,8 @@
 @use 'sass:math';
 @use 'sass:string';
 @use 'base' as *;
+// The public config gateway (src/styles/_config.scss) configures this flag.
+@use 'emit' as emit;
 
 // The fast spatial spring (Compose FastSpatial: damping 0.6, stiffness 800),
 // sampled at 25 even steps. Both of its easings below come from these points,
@@ -378,8 +380,48 @@ $spacing-scale: (
   @return map.get($state, $key);
 }
 
+// The raw spring value as an inherited custom property, with the map value
+// as the fallback. Callers that need a Sass number use the helpers below:
+// a var() string cannot be divided.
+@function _spring-var($key) {
+  @return string.unquote('var(--#{$prefix}-sys-motion-#{$key}, #{map.get($motion, $key)})');
+}
+
+// Off, the map value unchanged. On, spring keys only: other durations and
+// easings stay literals, and the $motion map itself stays literal.
 @function motion($key) {
-  @return map.get($motion, $key);
+  $value: map.get($motion, $key);
+  @if emit.$spring-tokens and $value != null and string.index($key, 'spring-') == 1 {
+    @return _spring-var($key);
+  }
+  @return $value;
+}
+
+// `$value / $by` for a spring duration. Off, the Sass number (450ms / 2 is
+// 225ms). On, calc(var(--…, <literal>) / $by).
+@function spring-duration-div($key, $by) {
+  $value: map.get($motion, $key);
+  @if not emit.$spring-tokens {
+    @return math.div($value, $by);
+  }
+  @if $value == null {
+    @error 'No motion token "#{$key}".';
+  }
+  @return string.unquote('calc(#{_spring-var($key)} / #{$by})');
+}
+
+// A delay that is `$amount` of a spring duration. Off, `$amount` exactly
+// (the FAB icon swap stays 48ms). On, the same fraction of the custom
+// property: calc(var(--…, 425ms) * (48 / 425)).
+@function spring-delay-scale($key, $amount) {
+  @if not emit.$spring-tokens {
+    @return $amount;
+  }
+  $basis: map.get($motion, $key);
+  @if $basis == null {
+    @error 'No motion token "#{$key}".';
+  }
+  @return string.unquote('calc(#{_spring-var($key)} * (#{math.div($amount, 1ms)} / #{math.div($basis, 1ms)}))');
 }
 
 @function elevation($level) {

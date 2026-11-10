@@ -214,7 +214,7 @@ jobs:
             checks: menu-deferred:check
           - group: styles
             browsers: chromium
-            checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
+            checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check spring-tokens:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
           - group: ssr-a
             browsers: chromium
             checks: ssr:check:a
