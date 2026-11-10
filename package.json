@@ -432,6 +432,10 @@
       "types": "./dist/core/dom/index.d.ts",
       "import": "./dist/core/dom/index.js"
     },
+    "./core/icons": {
+      "types": "./dist/core/icons/index.d.ts",
+      "import": "./dist/core/icons/index.js"
+    },
     "./core/shapes": {
       "types": "./dist/core/shapes/index.d.ts",
       "import": "./dist/core/shapes/index.js"
@@ -614,7 +618,8 @@
     "solid-types:floor": "bun run scripts/check-at-peer-floor.ts solid-js -- solid-types:check",
     "svelte-types:floor": "bun run scripts/check-at-peer-floor.ts svelte -- svelte-types:check",
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
-    "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts"
+    "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
+    "button-profile:check": "bun run scripts/check-button-profile.ts"
   },
   "repository": {
     "type": "git",
@@ -661,6 +666,7 @@
     "jsdom": "^26.0.0",
     "linkedom": "^0.18.13",
     "playwright": "^1.63.0",
+    "postcss": "8.5.28",
     "react": "^19",
     "react-18": "npm:react@^18.3.1",
     "react-dom": "^19",

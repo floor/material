@@ -1,6 +1,8 @@
 import { beforeEach, afterEach, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import createNavigationRail from '../../../src/components/navigation-rail';
+import { clearGlobalDefaults, setComponentDefaults } from '../../../src/core/config/global';
+import { setIcons } from '../../../src/core/icons/registry';
 let dom: JSDOM;
 let rails: ReturnType<typeof createNavigationRail>[];
 beforeEach(() => {
@@ -9,7 +11,12 @@ beforeEach(() => {
         Object.defineProperty(globalThis, name, { configurable: true, writable: true, value: name === 'window' ? dom.window : Reflect.get(dom.window, name) });
     rails = [];
 });
-afterEach(() => { rails.forEach(rail => rail.destroy()); dom.window.close(); });
+afterEach(() => {
+    rails.forEach(rail => rail.destroy());
+    dom.window.close();
+    setIcons({ menu: null, 'menu-open': null });
+    clearGlobalDefaults();
+});
 const make = (config: Parameters<typeof createNavigationRail>[0] = {}) => {
     const rail = createNavigationRail({ items: [{ id: 'home', label: 'Home', icon: '<svg></svg>', active: true }, { id: 'mail', label: 'Mail', icon: '<svg></svg>', href: '/mail' }], ...config });
     document.body.append(rail.element);
@@ -171,4 +178,47 @@ test('a badge says what it shows: capped at 999+, empty or zero cleared, the dot
     expect(item.getAttribute('aria-label')).toBe('Home, New notification');
     rail.setBadge('home', 12);
     expect([item.querySelector('.mtrl-navigation-rail__badge')?.textContent, item.getAttribute('aria-label')]).toEqual(['12', 'Home, 12']);
+});
+
+// The Material Symbols strings the rail draws with no override, as the DOM
+// serializes them (a self-closing `path` comes back closed). A changed
+// built-in fails here instead of shipping silently.
+const MENU_GLYPH = '<svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"></path></svg>';
+const MENU_OPEN_GLYPH = '<svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><path d="M120-240v-80h520v80H120Zm664-40L584-480l200-200 56 56-144 144 144 144-56 56ZM120-440v-80h400v80H120Zm0-200v-80h520v80H120Z"></path></svg>';
+const toggleOf = (rail: ReturnType<typeof make>) => rail.element.querySelector<HTMLElement>('.mtrl-navigation-rail__toggle')!;
+
+test('the toggle draws the exact built-in glyphs while the registry is empty', () => {
+    const rail = make();
+    expect(toggleOf(rail).innerHTML).toBe(MENU_GLYPH);
+    rail.expand();
+    expect(toggleOf(rail).innerHTML).toBe(MENU_OPEN_GLYPH);
+});
+
+test('an icon comes from the instance, then component defaults, then the registry, then the built-in', () => {
+    setIcons({ menu: '<i>registry-menu</i>', 'menu-open': '<i>registry-open</i>' });
+    const fromRegistry = make();
+    expect(toggleOf(fromRegistry).innerHTML).toBe('<i>registry-menu</i>');
+    fromRegistry.expand();
+    expect(toggleOf(fromRegistry).innerHTML).toBe('<i>registry-open</i>');
+
+    setComponentDefaults('navigation-rail', { expandIcon: '<i>component-menu</i>', collapseIcon: '<i>component-open</i>' });
+    const fromDefaults = make();
+    expect(toggleOf(fromDefaults).innerHTML).toBe('<i>component-menu</i>');
+    fromDefaults.expand();
+    expect(toggleOf(fromDefaults).innerHTML).toBe('<i>component-open</i>');
+
+    const fromInstance = make({ expandIcon: '<i>instance-menu</i>', collapseIcon: '<i>instance-open</i>' });
+    expect(toggleOf(fromInstance).innerHTML).toBe('<i>instance-menu</i>');
+    fromInstance.expand();
+    expect(toggleOf(fromInstance).innerHTML).toBe('<i>instance-open</i>');
+});
+
+test('a rail reads the registry when it is created, not when it draws', () => {
+    const created = make();
+    setIcons({ menu: '<i>later</i>' });
+    expect(toggleOf(created).innerHTML).toBe(MENU_GLYPH);
+    created.expand();
+    created.collapse();
+    expect(toggleOf(created).innerHTML).toBe(MENU_GLYPH);
+    expect(toggleOf(make()).innerHTML).toBe('<i>later</i>');
 });

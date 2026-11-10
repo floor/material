@@ -39,6 +39,21 @@ document.body.append(name.element, save.element);
 
 `material/styles` is a stylesheet, so this needs a bundler that handles CSS imports (Vite, webpack, Bun, …). Each factory returns a DOM element and a small API; call `destroy()` when the view goes away.
 
+For a factory page whose buttons stay filled, small and round, use the optional fixed-profile sheet:
+
+```typescript
+import 'material/styles/base';
+import 'material/styles/button-filled-small-round';
+import createButton from 'material/components/button';
+
+const save = createButton({ text: 'Save', variant: 'filled', size: 's', shape: 'round' });
+document.body.append(save.element);
+```
+
+Progress styles are included. Hover, keyboard focus, press, disabled, selected toggle and loading states, icons, density, RTL and CSS custom-property overrides remain available. This styles factory buttons in the page; elements and framework components keep their shadow styles.
+
+Import `material/styles/button` for any other variant, size or shape. This includes changes through the variant, size and shape setters. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
+
 ## Components
 
 | Group | Components |
@@ -96,7 +111,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 131.0 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 131.1 kB |
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |

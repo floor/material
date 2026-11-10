@@ -20,7 +20,7 @@ these rows drift from a fresh measurement.
 | badge | 15.4 KB | 5.3 KB | +2.2 KB |  |
 | bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
 | bottom-sheet | 19.4 KB | 7.1 KB | +4.0 KB |  |
-| side-sheet | 17.8 KB | 6.5 KB | +3.5 KB |  |
+| side-sheet | 17.8 KB | 6.6 KB | +3.5 KB |  |
 | button | 21.9 KB | 7.4 KB | +4.4 KB | +6.9 KB |
 | button-group | 36.6 KB | 11.8 KB | +8.8 KB | +6.9 KB |
 | card | 19.9 KB | 6.8 KB | +3.7 KB | +9.7 KB |
@@ -38,7 +38,7 @@ these rows drift from a fresh measurement.
 | list | 19.9 KB | 7.0 KB | +3.9 KB |  |
 | menu | 38.6 KB | 12.5 KB | +9.4 KB | +2.1 KB |
 | navigation-bar | 16.1 KB | 6.0 KB | +2.9 KB |  |
-| navigation-rail | 18.5 KB | 6.8 KB | +3.7 KB |  |
+| navigation-rail | 18.6 KB | 6.8 KB | +3.8 KB |  |
 | progress | 28.9 KB | 10.5 KB | +7.5 KB |  |
 | loading-indicator | 22.8 KB | 9.3 KB | +6.3 KB |  |
 | split-button | 27.5 KB | 9.5 KB | +6.4 KB | +17.0 KB |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 17.4 KB | 6.2 KB | +3.1 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 395.7 KB | 124.9 KB | +121.9 KB | +2.1 KB |
+| all | 395.8 KB | 124.9 KB | +121.9 KB | +2.1 KB |
 <!-- /size-table -->

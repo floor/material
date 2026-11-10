@@ -1248,6 +1248,14 @@
       "BaseComponent"
     ]
   },
+  "IconName": {
+    "kind": "union",
+    "members": [
+      "\"close\"",
+      "\"menu\"",
+      "\"menu-open\""
+    ]
+  },
   "IndicatorConfig.widthStrategy": {
     "kind": "union",
     "members": [

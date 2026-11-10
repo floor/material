@@ -27,6 +27,7 @@ import { pathToFileURL } from "node:url";
 import * as sass from "sass";
 import { createPackageFixture } from "./package-fixture";
 import baseline from "./fixtures/sass-config-baseline.json";
+import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 
 const VARIANTS = ["neutral", "vibrant", "expressive", "fidelity", "content", "monochrome", "rainbow", "fruit-salad"];
 
@@ -149,13 +150,21 @@ try {
   assert.throws(() => compileSource(`${config} @use "material/src/styles/main" with ($typescale-tokens: true);`), /already loaded/);
 
   // Independent pre-change payloads from main's CI artifact, not candidate-vs-
-  // candidate comparisons. The inventory is exact: added default files fail too.
+  // candidate comparisons. Only the declared, independently validated optional
+  // profile pair is additive; every pre-existing default payload stays frozen.
+  const optionalFiles = new Set(optionalStyleFiles);
+  const profileInputs = new Map<string, string>();
+  for (const path of files.filter(path => /^dist\/styles\/[^/]+\.(?:css|js)$/.test(path))) {
+    profileInputs.set(path.slice("dist/".length), await readFile(join(fixture.installed, path), "utf8"));
+  }
+  validateOptionalStyleProfiles(profileInputs);
   const groups = new Map<string, string[]>();
   const walk = async (relative = ""): Promise<void> => {
     for (const entry of await readdir(join(fixture.installed, "dist", relative), { withFileTypes: true })) {
       const path = relative ? `${relative}/${entry.name}` : entry.name;
       if (entry.isDirectory()) await walk(path);
       else if (/\.(?:js|css)$/.test(path)) {
+        if (optionalFiles.has(path)) continue;
         const group = path.includes("/") ? path.split("/")[0] : ".";
         const paths = groups.get(group) ?? [];
         paths.push(path);

@@ -6,9 +6,11 @@ import { fileURLToPath } from "node:url";
 import * as sass from "sass";
 import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, baseElementsStyles, baseLiteStyles, typographyStyles, typographyDependencies, utilityStyles,
-  contrastStyle, resolveStyleDependencies,
+  contrastStyle, resolveStyleDependencies, optionalStyleProfiles,
 } from "./style-manifest";
 import { preupgradeSheet } from "../src/elements/styles";
+import { filledSmallRoundCss } from "./button-style-profile";
+import { profileStyleModule } from "./optional-style-profiles";
 
 /** Same string as `styleLayerOrder`. The pre-upgrade check and its test name this. */
 export function cascadeLayerOrder(): string {
@@ -200,6 +202,11 @@ export async function buildStyles(outdir: string, banner: string) {
   await emit("styles/utilities", utilityStyles);
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
+  }
+  for (const [name, entry] of Object.entries(optionalStyleProfiles)) {
+    const general = await readFile(`${outdir}/styles/${entry.parent}.css`, "utf8");
+    await writeFile(`${outdir}/styles/${name}.css`, filledSmallRoundCss(general));
+    await writeFile(`${outdir}/styles/${name}.js`, profileStyleModule(name, entry.dependencies));
   }
   for (const name of [...themeStyles, ...standaloneThemes]) {
     await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
