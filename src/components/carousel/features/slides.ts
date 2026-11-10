@@ -1,8 +1,9 @@
 // src/components/carousel/features/slides.ts
 //
-// Builds and maintains the carousel items. Each item is a focusable group
-// labelled "n of total" (m3.material.io carousel accessibility); sizes and
-// positions are set by the scroll feature.
+// Builds and maintains the carousel items. Each item is a focusable group.
+// The author's label (the slide title, or alt text when there is no title)
+// is the accessible name. "n of total" is only for a slide with neither.
+// Sizes and positions are set by the scroll feature.
 
 import { CarouselConfig, CarouselSlide, SlidesAPI } from "../types";
 import { safeUrl } from "../../../core/utils/url";
@@ -37,11 +38,16 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
   const enhanced = component as C & SlidesComponent;
   let slidesChanged: (() => void) | undefined;
 
+  // Title names the item. Non-empty alt text does, when the item has no title.
+  // Empty alt is decorative. Anything else keeps the positional name.
+  const authoredName = (slide: CarouselSlide | undefined): string =>
+    slide?.title?.trim() || slide?.alt?.trim() || "";
+
   const relabel = (): void => {
     const total = slideElements.length;
     slideElements.forEach((el, i) => {
       el.dataset.index = String(i);
-      el.setAttribute("aria-label", `${i + 1} of ${total}`);
+      el.setAttribute("aria-label", authoredName(slideData[i]) || `${i + 1} of ${total}`);
       // The loading default follows the position: the opening slide is eager,
       // every other slide lazy. An explicit per-slide value wins.
       const img = el.querySelector(`.${prefix}__image`);
@@ -138,6 +144,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
       if (index < 0 || index >= slideElements.length) return slides;
       slideData[index] = slide;
       fill(slideElements[index]!, slide, index);
+      relabel();
       return slides;
     },
     getSlide: (index) => slideData[index] ?? null,
