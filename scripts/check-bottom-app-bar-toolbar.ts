@@ -52,8 +52,10 @@ try {
       if (entry.isDirectory()) { await walk(path); continue; }
       if (path === "tokens/catalogue.json" || path === "package.json") continue;
       const before = await readFile(join(baseline.installed, "dist", path));
-      const after = await readFile(join(candidate.installed, "dist", path));
-      (before.equals(after) ? unchanged : changed).push(path);
+      // A file the candidate no longer ships is a changed payload for the
+      // reviewer to see, not a reason to stop the evidence walk.
+      const after = await readFile(join(candidate.installed, "dist", path)).catch(() => null);
+      (after !== null && before.equals(after) ? unchanged : changed).push(path);
     }
   };
   const legacyCss = await readFile(join(candidate.installed, "dist/styles/bottom-app-bar.css"), "utf8");
