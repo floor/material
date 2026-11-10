@@ -93,7 +93,7 @@ try {
     const entry = CHECKOUT_ENTRIES[index];
     if (entry in baseline.sources) {
       assert.equal(digest(packed), baseline.sources[entry as keyof typeof baseline.sources],
-        `${specifier}: default source output differs from frozen main ${baseline.main}`);
+        `${specifier}: default source output differs from the frozen baseline ${baseline.tested}`);
     }
     if (entry !== "config") {
       assert.equal(compileSource(`@use "material/src/styles/config"; @use "${specifier}";`), packed,
@@ -149,9 +149,13 @@ try {
   assert.throws(() => compileSource(`@use "material/src/styles/components/button"; ${config}`), /already loaded/);
   assert.throws(() => compileSource(`${config} @use "material/src/styles/main" with ($typescale-tokens: true);`), /already loaded/);
 
-  // Independent pre-change payloads from main's CI artifact, not candidate-vs-
-  // candidate comparisons. Only the declared, independently validated optional
-  // profile pair is additive; every pre-existing default payload stays frozen.
+  // The frozen payloads were captured from the CI artifact of the run named in
+  // the baseline, at its own head 14c332c9 on feat/listbox (main 6b210839
+  // merged in), not from main's artifact: the components and styles groups
+  // already hold this branch's additive entry files. Every other group is
+  // main's own output. The opt-in sheet pair is validated independently below,
+  // and the entry's component modules are covered by the listbox check; this
+  // comparison freezes the inventory it was captured from.
   const optionalFiles = new Set(optionalStyleFiles);
   const profileInputs = new Map<string, string>();
   for (const path of files.filter(path => /^dist\/styles\/[^/]+\.(?:css|js)$/.test(path))) {
@@ -181,7 +185,7 @@ try {
       .update("\0");
     payloads[group] = { count: paths.length, sha256: hash.digest("hex") };
   }
-  assert.deepEqual(payloads, baseline.payloads, `Published default JS/CSS differs from main ${baseline.main}, CI ${baseline.ci}`);
+  assert.deepEqual(payloads, baseline.payloads, `Published default JS/CSS differs from the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci})`);
   const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as typeof import("../src/ssr");
   const random = Math.random;
   Math.random = () => 0.123456;
@@ -193,7 +197,7 @@ try {
       assert.equal(hash.digest("hex"), baseline.ssr.modes[mode], `${mode}: published default SSR HTML changed`);
     }
   } finally { Math.random = random; }
-  console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match ${baseline.main} (CI ${baseline.ci}).`);
+  console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
   // The public configuration and all three consumers must work from normalized
   // packed Sass, including the first-use and false/default contracts.
   for (const name of ["main", "elements"]) {
