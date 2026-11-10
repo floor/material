@@ -3,4 +3,4 @@
 // This gateway emits no CSS. Forward flags before modules that may read them.
 @forward 'abstract/emit' show $typescale-tokens, $spring-tokens, $direction-arms;
 @forward 'themes/base-theme' show $contrast-emit;
-@forward 'elements/prefix' show $tag-prefix;
+@forward 'abstract/element-prefix' show $tag-prefix;
