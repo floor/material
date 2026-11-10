@@ -74,6 +74,23 @@ for (const width of ['narrow', 'default', 'wide'] as const) {
   });
 }
 
+test('an unrecognised size removes the whole known family and reads back as the default', () => {
+  // The written class itself stays unasserted: what an unknown value turns
+  // into is open, but the setter must still replace every known token and the
+  // getter must fall back, as before.
+  const button = make({ size: 'l' });
+  button.setSize('huge');
+  expect(['xs', 's', 'm', 'l', 'xl'].some((size) => button.element.classList.contains(`${root}--${size}`))).toBe(false);
+  expect(button.getSize()).toBe('s');
+});
+
+test('setting the default size or shape omits its class rather than adding it', () => {
+  const button = make({ size: 'l', shape: 'square' });
+  button.setSize('s').setShape('round');
+  expect([button.element.classList.contains(`${root}--s`), button.element.classList.contains(`${root}--square`)]).toEqual([false, false]);
+  expect([button.getSize(), button.getShape()]).toEqual(['s', 'round']);
+});
+
 test('a plain button has no pressed state and clicking does not select it', () => {
   const button = make();
   expect(button.isToggle()).toBe(false);

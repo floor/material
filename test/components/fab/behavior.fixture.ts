@@ -108,6 +108,15 @@ for (const component of ['fab', 'extended-fab'] as const) {
     expect(b.raise()).toBe(b);
     expect(b.element.classList.contains(`${root}--lowered`)).toBe(false);
   });
+  test(`${component}: an unrecognised position removes the whole known family and reads back as none`, () => {
+    // The written class itself stays unasserted: what an unknown value turns
+    // into is open, but the setter must still replace every known token and
+    // the getter must fall back, as before.
+    const b = make({ position: 'bottom-right' });
+    b.setPosition('sideways');
+    expect(['top-right', 'top-left', 'bottom-right', 'bottom-left'].some((position) => b.element.classList.contains(`${root}--${position}`))).toBe(false);
+    expect(b.getPosition()).toBeNull();
+  });
   test(`${component}: disabled clicks are suppressed; enable and disable update DOM`, () => {
     const b = make({ disabled: true });
     let clicks = 0;
