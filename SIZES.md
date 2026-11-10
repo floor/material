@@ -52,7 +52,7 @@ these rows drift from a fresh measurement.
 | text-field | 27.9 KB | 8.7 KB | +5.7 KB |  |
 | timepicker | 32.8 KB | 11.3 KB | +8.3 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
-| tooltip | 16.8 KB | 6.0 KB | +3.0 KB |  |
+| tooltip | 17.4 KB | 6.2 KB | +3.1 KB |  |
 | toolbar | 33.3 KB | 11.1 KB | +8.0 KB | +6.9 KB |
-| all | 395.1 KB | 124.8 KB | +121.7 KB | +2.1 KB |
+| all | 395.7 KB | 124.9 KB | +121.9 KB | +2.1 KB |
 <!-- /size-table -->
