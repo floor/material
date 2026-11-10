@@ -26,6 +26,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import * as sass from "sass";
 import { createPackageFixture } from "./package-fixture";
+import { optionalElementFiles, validateOptionalElementProfiles } from "./optional-element-profiles";
 import baseline from "./fixtures/sass-config-baseline.json";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 
@@ -152,12 +153,17 @@ try {
   // Independent pre-change payloads from main's CI artifact, not candidate-vs-
   // candidate comparisons. Only the declared, independently validated optional
   // profile pair is additive; every pre-existing default payload stays frozen.
-  const optionalFiles = new Set(optionalStyleFiles);
+  const optionalFiles = new Set([...optionalStyleFiles, ...optionalElementFiles]);
   const profileInputs = new Map<string, string>();
   for (const path of files.filter(path => /^dist\/styles\/[^/]+\.(?:css|js)$/.test(path))) {
     profileInputs.set(path.slice("dist/".length), await readFile(join(fixture.installed, path), "utf8"));
   }
   validateOptionalStyleProfiles(profileInputs);
+  const elementInputs = new Map<string, string>();
+  for (const path of files.filter(path => /^dist\/elements\/.+\.(?:js|css|d\.ts)$/.test(path))) {
+    elementInputs.set(path.slice("dist/".length), await readFile(join(fixture.installed, path), "utf8"));
+  }
+  validateOptionalElementProfiles(elementInputs);
   const groups = new Map<string, string[]>();
   const walk = async (relative = ""): Promise<void> => {
     for (const entry of await readdir(join(fixture.installed, "dist", relative), { withFileTypes: true })) {

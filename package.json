@@ -494,6 +494,10 @@
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/solid.js",
       "default": "./dist/ssr/solid.js"
+    },
+    "./elements/button-filled-small-round": {
+      "types": "./dist/elements/button-filled-small-round.d.ts",
+      "import": "./dist/elements/button-filled-small-round.js"
     }
   },
   "files": [
@@ -615,7 +619,8 @@
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
     "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
     "comparators:check": "bun run scripts/check-comparators.ts",
-    "button-profile:check": "bun run scripts/check-button-profile.ts"
+    "button-profile:check": "bun run scripts/check-button-profile.ts",
+    "button-element-profile:check": "bun run scripts/check-button-element-profile.ts"
   },
   "repository": {
     "type": "git",

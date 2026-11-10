@@ -54,6 +54,10 @@ Progress styles are included. Hover, keyboard focus, press, disabled, selected t
 
 Import `material/styles/button` for any other variant, size or shape. This includes changes through the variant, size and shape setters. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
 
+For the client-only fixed element, import `material/elements/css/button-filled-small-round`, `material/elements/preupgrade/button-filled-small-round.css` and `defineButtonFilledSmallRound` from `material/elements/button-filled-small-round`, then call that function to register `<m-button-filled-small-round>`. Include `material/styles/base-elements` as for other elements.
+
+Its variant/size/shape attributes are inert. Those properties always read `filled`/`s`/`round`; writes and the component's corresponding setters are inert and chainable. Other profiles require `<m-button>` and its general styles. The fixed entry is separate from the default registry and has no SSR renderer; it establishes no SSR saving.
+
 ## Components
 
 | Group | Components |

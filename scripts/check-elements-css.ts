@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServer } from "vite";
+import { fixedButtonName } from "./optional-element-profiles";
 import { elements } from "../src/elements";
 import { hostStyleText } from "../src/elements/define";
 import { cascadeLayerOrder, styleIdentifier } from "./build-styles";
@@ -19,7 +20,7 @@ const dir = "dist/elements/css";
 const names = ["ripple", ...resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]))];
 const files = await readdir(dir);
 assert.deepEqual(
-  files.filter(file => file.endsWith(".js") && file !== "index.js").sort(),
+  files.filter(file => file.endsWith(".js") && file !== "index.js" && file !== `${fixedButtonName}.js`).sort(),
   names.map(name => `${name}.js`).sort(),
   "Every element style and dependency must have a JS module",
 );

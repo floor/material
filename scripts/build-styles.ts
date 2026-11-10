@@ -10,6 +10,7 @@ import {
 } from "./style-manifest";
 import { preupgradeSheet } from "../src/elements/styles";
 import { filledSmallRoundCss } from "./button-style-profile";
+import { fixedButtonName, fixedButtonStyleModule, fixedButtonPreupgrade } from "./optional-element-profiles";
 import { profileStyleModule } from "./optional-style-profiles";
 
 /** Same string as `styleLayerOrder`. The pre-upgrade check and its test name this. */
@@ -273,6 +274,10 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   // declaration follows the same rule as the compiler-emitted ones.
   await writeFile(`${outdir}/elements/preupgrade.d.ts`,
     `export declare const preupgradeStyles: (prefix?: string) => string;\n`);
+  // Additive opt-in assets; default registries and shared strings stay untouched.
+  await writeFile(`${dir}/${fixedButtonName}.js`, fixedButtonStyleModule(await readFile(`${dir}/button.css`, "utf8")));
+  await writeFile(`${outdir}/elements/preupgrade/${fixedButtonName}.css`,
+    fixedButtonPreupgrade(await readFile(`${outdir}/elements/preupgrade/button.css`, "utf8")));
 }
 
 /** Partials in src/styles/elements that are shared, not an element's. */
