@@ -906,3 +906,23 @@ Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the
 MIT, see [LICENSE](LICENSE).
 
 Third-party notices: the package ships Material Symbols and Material Icons glyphs, copyright Google LLC, under the Apache License 2.0; [NOTICE](NOTICE) includes the licence text and lists the files that declare them.
+
+## Bottom app bar toolbar prototype
+
+The experimental factory is an explicit entry, separate from the shipped legacy bottom app bar:
+
+```js
+import createBottomAppBarToolbar from 'material/components/bottom-app-bar-toolbar';
+import 'material/styles/base';
+import 'material/styles/bottom-app-bar-toolbar';
+
+const bar = createBottomAppBarToolbar({ autoHide: true, fabPosition: 'center' });
+bar.addAction(actionButton).addFab(fabButton);
+document.body.append(bar.element);
+```
+
+It retains the legacy facade's geometry, native Tab order, live actions/FAB containers and visibility/scroll contract using self-contained construction and docked-toolbar styles.
+
+Existing `createBottomAppBar`, element/framework registrations and SSR mappings retain their shipped implementation. The prototype has no new element or framework/SSR registration.
+
+Import its component and styles entries explicitly; the root entry does not export it. Admission requires CI proof of unchanged root bytes, compatibility and measured complete entry cost.

@@ -61,8 +61,13 @@ try {
   const digest = (text: string | Buffer) => createHash("sha256").update(text).digest("hex");
   assert.equal(Bun.version, baseline.bun, "The frozen baseline uses the CI Bun version");
   assert.equal(sass.info, baseline.sass, "The frozen baseline uses the locked Sass compiler");
+  const buildInputIdentity = Object.fromEntries(await Promise.all(Object.keys(baseline.buildInputs)
+    .map(async path => [path, digest(await readFile(path))])));
+  // CI is the measuring source for a reviewed repin. Print the complete input
+  // receipt before the first mismatch, retaining every assertion below.
+  console.log(`Build input identity (CI ${process.env.GITHUB_RUN_ID ?? "local"}): ${JSON.stringify(buildInputIdentity)}`);
   for (const [path, expected] of Object.entries(baseline.buildInputs)) {
-    assert.equal(digest(await readFile(path)), expected, `${path}: baseline build inputs changed; re-establish the independent baseline`);
+    assert.equal(buildInputIdentity[path], expected, `${path}: baseline build inputs changed; re-establish the independent baseline`);
   }
   const files = (pack.files as { path: string }[]).map(file => file.path);
   assert(files.includes("src/styles/_config.scss"), "The public gateway must ship");
