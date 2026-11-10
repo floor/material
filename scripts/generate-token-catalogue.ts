@@ -32,7 +32,8 @@ import { classify, consumerProvidedInput, minimumVerified } from "./token-catalo
 import { gaps } from "./token-catalogue/gaps";
 import { sha256 } from "./token-catalogue/css";
 import { catalogueSchema } from "./token-catalogue/schema";
-import type { Catalogue, Emission, TokenRow } from "./token-catalogue/types";
+import { REASONS } from "./token-catalogue/types";
+import type { Catalogue, Emission, PackedCatalogue, TokenRow } from "./token-catalogue/types";
 
 /** The committed input files whose contents the inputs digest covers. */
 export const INPUT_FILES = [
@@ -211,8 +212,49 @@ export function buildCatalogue(
   };
 }
 
-/** The generated catalogue as the exact bytes written to disk. */
+/** The stable code for one verification reason; generation fails on a reason
+ * outside the closed set, never ships a sentence without its legend entry. */
+const reasonCode = (text: string): string => {
+  const entry = REASONS.find(reason => reason.text === text);
+  if (!entry) throw new Error(`verification reason "${text}" has no stable code: add it to REASONS in token-catalogue/types.ts`);
+  return entry.code;
+};
+
+/** The packed projection: the versioned mapping and the verification states,
+ * with the reason sentences gathered into one legend. The emission contexts,
+ * consumer attribution and assertion citations stay in the full document the
+ * build writes to the analysis directory, so the review loses nothing while
+ * the tarball carries only what a consumer of the data needs. */
+export function projectLean(catalogue: Catalogue): PackedCatalogue {
+  return {
+    schemaVersion: 2,
+    catalogueRevision: catalogue.catalogueRevision,
+    packageVersion: catalogue.packageVersion,
+    sourceCommit: catalogue.sourceCommit,
+    inputsDigest: catalogue.inputsDigest,
+    emissionsDigest: catalogue.emissionsDigest,
+    reasons: REASONS.map(reason => ({ ...reason })),
+    sources: catalogue.sources,
+    tokens: catalogue.tokens.map(row => ({
+      cssName: row.cssName,
+      m3Id: row.m3Id,
+      family: row.family,
+      group: row.group,
+      verification: row.verification,
+      reason: reasonCode(row.verificationReason),
+      source: row.source,
+    })),
+    gaps: catalogue.gaps,
+  };
+}
+
+/** The packed catalogue as the exact bytes written to disk. */
 export function renderCatalogue(catalogue: Catalogue): string {
+  return `${JSON.stringify(projectLean(catalogue), null, 1)}\n`;
+}
+
+/** The full document with its wiring, as the analysis review surface. */
+export function renderFullCatalogue(catalogue: Catalogue): string {
   return `${JSON.stringify(catalogue, null, 1)}\n`;
 }
 
@@ -269,11 +311,12 @@ export function renderCompleteView(catalogue: Catalogue): string {
 }
 
 /**
- * Generate the catalogue. The packed artefacts are `catalogue.json` and
- * `catalogue.schema.json` in `<outdir>/tokens`; the two markdown views are
- * review surfaces, not data — `viewsDir` (the CI analysis upload) receives
- * them when given, otherwise they land beside the JSON for local inspection
- * and never cost the tarball a byte.
+ * Generate the catalogue. The packed artefacts are `catalogue.json` (the lean
+ * projection) and `catalogue.schema.json` in `<outdir>/tokens`; the full
+ * document and the two markdown views are review surfaces, not data —
+ * `viewsDir` (the CI analysis upload) receives them when given, otherwise
+ * they land beside the JSON for local inspection and never cost the tarball
+ * a byte.
  */
 export async function generateTokenCatalogue(
   outdir: string,
@@ -291,6 +334,7 @@ export async function generateTokenCatalogue(
   await Bun.$`mkdir -p ${target} ${views}`;
   await Bun.write(`${target}/catalogue.json`, document);
   await Bun.write(`${target}/catalogue.schema.json`, `${JSON.stringify(catalogueSchema(), null, 1)}\n`);
+  await Bun.write(`${views}/catalogue-full.json`, renderFullCatalogue(catalogue));
   await Bun.write(`${views}/catalogue.md`, renderCompleteView(catalogue));
   await Bun.write(`${views}/verified.md`, renderVerifiedView(catalogue));
   const gzip = Bun.gzipSync(new Uint8Array(await Bun.file(`${target}/catalogue.json`).bytes()));

@@ -26,7 +26,7 @@ import { createPackageFixture } from "./package-fixture";
 import {
   buildCatalogue, renderCatalogue, inputsDigest, INPUT_FILES,
 } from "./generate-token-catalogue";
-import type { Catalogue } from "./token-catalogue/types";
+import type { PackedCatalogue } from "./token-catalogue/types";
 
 const problems: string[] = [];
 const fail = (message: string): void => {
@@ -43,9 +43,13 @@ if (!sourceCommit || !/^[0-9a-f]{40}$/.test(sourceCommit)) {
 for (const problem of outputsComplete(outdir)) fail(problem);
 
 // 2. Regenerate from the committed inputs; the shipped document must match.
+// The shipped catalogue is the lean projection; `full` below is the same
+// generation with its wiring intact, which is what the row-level honesty
+// assertions read — the shipped document is held to its schema and digests.
 const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
 const inventory = buildInventory(readOutputs(outdir));
-const regenerated = renderCatalogue(buildCatalogue(inventory, pkg.version, sourceCommit ?? "0".repeat(40)));
+const full = buildCatalogue(inventory, pkg.version, sourceCommit ?? "0".repeat(40));
+const regenerated = renderCatalogue(full);
 const shippedPath = join(outdir, "tokens/catalogue.json");
 if (!existsSync(shippedPath)) {
   fail(`${shippedPath} is missing: the build did not generate the catalogue`);
@@ -65,8 +69,8 @@ if (!existsSync(shippedPath)) {
   const again = renderCatalogue(buildCatalogue(buildInventory(readOutputs(outdir)), pkg.version, sourceCommit ?? "0".repeat(40)));
   if (again !== regenerated) fail("catalogue generation is not deterministic: the same inputs produced different bytes");
 
-  // 4. Strict schema validation, exact enums, honest denominators.
-  const document = JSON.parse(shipped) as Catalogue;
+  // 4. Strict schema validation, exact enums.
+  const document = JSON.parse(shipped) as PackedCatalogue;
   const failures = validateAgainst(document as unknown as Json, catalogueSchema() as unknown as Json);
   if (failures.length) fail(`the catalogue does not validate against its own schema:\n${failures.join("\n")}`);
 
@@ -75,7 +79,7 @@ if (!existsSync(shippedPath)) {
   const verifiedNames = document.tokens.filter(row => row.verification === "verified").map(row => row.cssName);
 
   // 5. Verified rows prove themselves: retained source, registered assertions.
-  for (const row of document.tokens) {
+  for (const row of full.tokens) {
     if (row.verification !== "verified") continue;
     if (!row.source || !sourceIds.has(row.source)) fail(`${row.id}: verified without a retained source`);
     if (!row.verificationEvidence?.assertions.length) fail(`${row.id}: verified without assertions from the check registry`);
@@ -92,7 +96,7 @@ if (!existsSync(shippedPath)) {
   if (missing.length) fail(`the minimum verified set is not met by the shipped document: ${missing.join(", ")}`);
 
   // 7. Honest denominators: the coverage counts match the inventory.
-  const counts = document.coverage.counts;
+  const counts = full.coverage.counts;
   const recount = {
     rows: document.tokens.length,
     verified: document.tokens.filter(row => row.verification === "verified").length,
@@ -106,8 +110,8 @@ if (!existsSync(shippedPath)) {
   if (counts.rows !== inventory.declaredNames.length + inventory.external.size) {
     fail(`coverage.counts.rows says ${counts.rows}, the inventory holds ${inventory.declaredNames.length} declared and ${inventory.external.size} consumer-provided names`);
   }
-  if (document.coverage.declarations !== inventory.declarationCount) fail("coverage.declarations does not match the parsed inventory");
-  if (document.coverage.references !== inventory.referenceCount) fail("coverage.references does not match the parsed inventory");
+  if (full.coverage.declarations !== inventory.declarationCount) fail("coverage.declarations does not match the parsed inventory");
+  if (full.coverage.references !== inventory.referenceCount) fail("coverage.references does not match the parsed inventory");
 
   // 8. Every emitted row maps to a name the inventory saw, and vice versa.
   const names = new Set(document.tokens.map(row => row.cssName));

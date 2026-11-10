@@ -270,6 +270,7 @@ jobs:
             analysis/drawer
             analysis/navigation-rail
             analysis/core
+            analysis/catalogue-full.json
             analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json
             analysis/ssr-upgrade

@@ -23,7 +23,7 @@ import { shapeScale, typescale, typefaceDefault } from "./token-catalogue/expect
 import { UNCONSUMED_STEPS } from "./token-catalogue/rows";
 import { checks } from "./token-catalogue/checks";
 import { inputsDigest, INPUT_FILES } from "./generate-token-catalogue";
-import type { EvidenceRecord, Catalogue } from "./token-catalogue/types";
+import type { EvidenceRecord, Catalogue, PackedCatalogue } from "./token-catalogue/types";
 
 const outdir = process.argv[2] ?? "dist";
 const EVIDENCE = "analysis/token-catalogue-evidence.json";
@@ -318,12 +318,18 @@ try {
 }
 
 // --- the evidence file, and the refusal of any unproven verified row -------
-const catalogue = JSON.parse(catalogueBytes) as Catalogue;
+// The packed catalogue is the lean projection; the assertion wiring this
+// cross-check reads stays in the full document the build writes to the
+// analysis directory, which must be the same generation as the packed one.
+const catalogue = JSON.parse(catalogueBytes) as PackedCatalogue;
 assert(catalogue.inputsDigest === inputsDigest(), "the catalogue's inputs digest does not match the committed input files");
 assert(sha256(catalogueBytes) === catalogueSha, "the catalogue digest changed during the run");
+const full = JSON.parse(readFileSync("analysis/catalogue-full.json", "utf8")) as Catalogue;
+assert(full.inputsDigest === catalogue.inputsDigest && full.sourceCommit === catalogue.sourceCommit,
+  "the full catalogue beside the build is not the same generation as the packed one");
 const records = new Map(evidence.map(record => [record.assertion, record]));
 const proven = new Set(checks.filter(check => check.file === PROBE_FILE).map(check => check.id));
-for (const row of catalogue.tokens) {
+for (const row of full.tokens) {
   if (row.verification !== "verified") continue;
   for (const assertion of row.verificationEvidence?.assertions ?? []) {
     if (!proven.has(assertion)) continue;

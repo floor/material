@@ -11,7 +11,8 @@ import { buildInventory, type OutputFile } from "../../scripts/token-catalogue/i
 import { shapeScale, typescale, typefaceDefault } from "../../scripts/token-catalogue/expected";
 import { UNCONSUMED_STEPS } from "../../scripts/token-catalogue/rows";
 import { catalogueSchema, validateAgainst, type Json } from "../../scripts/token-catalogue/schema";
-import { buildCatalogue, renderCatalogue, valueMatches } from "../../scripts/generate-token-catalogue";
+import { buildCatalogue, projectLean, renderCatalogue, renderFullCatalogue, valueMatches } from "../../scripts/generate-token-catalogue";
+import { REASONS } from "../../scripts/token-catalogue/types";
 import type { Catalogue } from "../../scripts/token-catalogue/types";
 
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
@@ -44,7 +45,7 @@ const catalogueOf = (css?: string): Catalogue => buildCatalogue(buildInventory(f
 describe("the catalogue generator", () => {
   test("accepts a ledger-matching fixture, schema-valid and deterministic", () => {
     const catalogue = catalogueOf();
-    expect(validateAgainst(catalogue as unknown as Json, catalogueSchema() as unknown as Json)).toEqual([]);
+    expect(validateAgainst(JSON.parse(renderCatalogue(catalogue)) as unknown as Json, catalogueSchema() as unknown as Json)).toEqual([]);
     // 10 shape steps, 2 typefaces, 15 roles x 5 axes; every row verified.
     expect(catalogue.coverage.counts).toMatchObject({ rows: 87, verified: 87, unverified: 0, notApplicable: 0 });
     expect(catalogue.tokens.every(row => row.verification === "verified")).toBe(true);
@@ -96,7 +97,7 @@ describe("valueMatches", () => {
 });
 
 describe("the catalogue schema", () => {
-  const valid = catalogueOf() as unknown as Json;
+  const valid = JSON.parse(renderCatalogue(catalogueOf())) as unknown as Json;
   const errorsOf = (mutate: (document: Json) => void): string[] => {
     const document = structuredClone(valid) as Json;
     mutate(document);
@@ -112,6 +113,18 @@ describe("the catalogue schema", () => {
     expect(errorsOf(document => {
       ((document as { tokens: Json[] }).tokens[0] as Record<string, unknown>).verification = "Verified";
     }).join("\n")).toContain("verification");
+  });
+
+  test("rejects a reason code outside the legend's closed set", () => {
+    expect(errorsOf(document => {
+      ((document as { tokens: Json[] }).tokens[0] as Record<string, unknown>).reason = "close-enough";
+    }).join("\n")).toContain("reason");
+  });
+
+  test("rejects a row missing its reason code", () => {
+    expect(errorsOf(document => {
+      delete ((document as { tokens: Json[] }).tokens[0] as Record<string, unknown>).reason;
+    }).join("\n")).toContain("reason");
   });
 
   test("rejects a misspelled source status", () => {
@@ -137,21 +150,37 @@ describe("the catalogue schema", () => {
       ((document as { tokens: Record<string, unknown>[] }).tokens[0] as Record<string, unknown>).cssName = "--other-library-primary";
     }).join("\n")).toContain("cssName");
   });
+});
 
-  test("rejects evidence whose outcome is not a pass", () => {
-    // Evidence exists to state a pass with its digests; anything else is a
-    // failure record and belongs in a build error, not the shipped data.
-    expect(errorsOf(document => {
-      const row = (document as { tokens: Record<string, unknown>[] }).tokens
-        .find(entry => (entry as Record<string, unknown>).verificationEvidence !== undefined) as Record<string, unknown>;
-      ((row.verificationEvidence as Record<string, unknown>) as Record<string, unknown>).mapping = "close-enough";
-    }).join("\n")).toContain("mapping");
+describe("the packed projection", () => {
+  test("ships the mapping, states and reason codes, and no wiring", () => {
+    const packed = projectLean(catalogueOf()) as unknown as Record<string, unknown>;
+    expect(packed.schemaVersion).toBe(2);
+    // The heavy wiring stays in the analysis document, not the tarball.
+    for (const absent of ["checks", "coverage", "emissions", "emissionSummary", "consumers", "support", "supportReason", "verificationReason", "verificationEvidence", "prefix"]) {
+      expect(packed).not.toHaveProperty(absent);
+      for (const row of packed.tokens as Array<Record<string, unknown>>) expect(row).not.toHaveProperty(absent);
+    }
+    expect((packed.tokens as Array<Record<string, unknown>>)[0]).not.toHaveProperty("id");
   });
 
-  test("rejects a verified row with no assertions cited", () => {
-    expect(errorsOf(document => {
-      const row = (document as { tokens: Record<string, unknown>[] }).tokens[0] as Record<string, unknown>;
-      ((row.verificationEvidence as Record<string, unknown>) as Record<string, unknown>).assertions = [];
-    }).join("\n")).toContain("assertions");
+  test("carries the full reason legend, and every row resolves through it", () => {
+    const packed = projectLean(catalogueOf());
+    expect(packed.reasons).toEqual(REASONS.map(reason => ({ ...reason })));
+    const codes = new Set(packed.reasons.map(reason => reason.code));
+    for (const row of packed.tokens) expect(codes.has(row.reason)).toBe(true);
+  });
+
+  test("fails generation on a verification reason outside the closed set", () => {
+    const bogus = catalogueOf();
+    (bogus.tokens[0] as { verificationReason: string }).verificationReason = "an unreviewed sentence";
+    expect(() => projectLean(bogus)).toThrow(/no stable code/);
+  });
+
+  test("keeps the full wiring in the analysis document", () => {
+    const full = JSON.parse(renderFullCatalogue(catalogueOf())) as { tokens: Array<Record<string, unknown>> };
+    expect(full.tokens.every(row => Array.isArray(row.emissions) && "consumers" in row)).toBe(true);
+    const verified = full.tokens.find(row => row.verification === "verified")!;
+    expect(verified.verificationEvidence).toBeDefined();
   });
 });

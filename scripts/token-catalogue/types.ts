@@ -187,6 +187,65 @@ export interface Catalogue {
   gaps: GapRow[];
 }
 
+/** The stable codes for the closed set of verification reasons. The packed
+ * document carries the code per row and the full sentence once, in its legend;
+ * a reason without a code fails generation rather than shipping unlegendend. */
+export const REASONS: ReadonlyArray<{ code: string; text: string }> = [
+  { code: "color-context-only", text: "role semantics retained from the color system page (context-only source); values are generated per theme, so no universal value is claimed and none is verified" },
+  { code: "library-internal", text: "library-internal property; no Material claim is made about it" },
+  { code: "runtime-provided", text: "library-specific property provided at runtime; no Material claim is made about it" },
+  { code: "shape-full-realization", text: "the page defines Full as fully rounded corners, no dp value; 9999px is the library's CSS realization, recorded as a transformation" },
+  { code: "shape-step-dp", text: "the step's dp value read from the corner radius scale page, realized 1dp = 1px" },
+  { code: "state-source-unread", text: "no specification page for the state-layer opacities has been read; recorded emitted, not verified" },
+  { code: "typeface-assignment", text: "the role's face assignment read from the type-scale page's face guidance" },
+  { code: "typescale-line-height", text: "the role's line height read from the expanded token module" },
+  { code: "typescale-role-semantics", text: "value and role semantics read from the type-scale page" },
+  { code: "typescale-size", text: "the role's size read from the expanded token module" },
+  { code: "typescale-tracking", text: "the role's tracking read from the expanded token module" },
+  { code: "typescale-weight", text: "the role's weight read from the expanded token module" },
+];
+
+/** One row of the packed document: the versioned mapping and the verification
+ * state with its reason code. The emission contexts, consumer attribution and
+ * assertion citations stay in the full document the build writes to the
+ * analysis directory, where the review views read them. */
+export interface PackedTokenRow {
+  /** The exact emitted custom property name. */
+  cssName: string;
+  /** Material's own identifier, only where a retained source shows it. */
+  m3Id: string | null;
+  family: TokenFamily;
+  group: TokenGroup;
+  verification: Verification;
+  /** A REASONS code; the legend at the document root carries the sentence. */
+  reason: string;
+  /** Ledger source this row's Material claim rests on, if any. */
+  source: string | null;
+}
+
+/** The packed catalogue document (schema version 2): the lean projection of
+ * the full Catalogue. Same identity and provenance fields; the reason
+ * sentences gather into one legend; the heavy per-row wiring does not ship.
+ * The full document is generated beside the build as a review surface and
+ * never costs the tarball a byte. */
+export interface PackedCatalogue {
+  schemaVersion: 2;
+  /** Revision of the reviewed input data; a correction is a new revision. */
+  catalogueRevision: number;
+  packageVersion: string;
+  /** Full SHA of the implementation the catalogue was generated from. */
+  sourceCommit: string;
+  /** sha256 over the committed input files, attested by the checks. */
+  inputsDigest: string;
+  /** sha256 over the normalized built CSS the inventory parsed. */
+  emissionsDigest: string;
+  /** The legend every token's `reason` code resolves through. */
+  reasons: ReadonlyArray<{ code: string; text: string }>;
+  sources: Array<SourceRecord & { digestSha256: string }>;
+  tokens: PackedTokenRow[];
+  gaps: GapRow[];
+}
+
 /** What a classification entry in the committed row data can pin down. */
 export interface RowInput {
   /** An exact cssName, or the pattern a family of names shares. */
