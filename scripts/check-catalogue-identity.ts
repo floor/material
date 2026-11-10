@@ -71,6 +71,14 @@ const readTarball = (tgz: string): Map<string, Buffer> => {
 const branch = readTarball(branchTgz);
 const main = readTarball(mainTgz);
 
+// package.json is read here because the opt-in allowance below needs the export
+// keys it ships: an entry is new only when the branch adds its
+// `./components/<name>` key over the base.
+const branchPkg = JSON.parse(branch.get("package.json")!.toString()) as Record<string, unknown>;
+const mainPkg = JSON.parse(main.get("package.json")!.toString()) as Record<string, unknown>;
+const branchExports = (branchPkg.exports ?? {}) as Record<string, unknown>;
+const mainExports = (mainPkg.exports ?? {}) as Record<string, unknown>;
+
 /** The only differences a data-only change may introduce. README.md is
  * documentation every consumer downloads and none loads; it is held to
  * whole-line additions below, so the allowance documents the new data without
@@ -101,12 +109,14 @@ const addsProfile = [...optionalAdditions].some(path => branch.has(path) && !mai
 // joins no barrel, root export or default stylesheet. The allowance admits
 // exactly what that entry produces — its component modules, its stylesheet
 // pair, the Sass partial the sheet compiles from, its export key and its check
-// script. An entry already packed on main is not new, so the member loop freezes
-// it byte for byte like every other member.
+// script. It is new only when the branch adds that entry's
+// `./components/<name>` export key over the base, so the comparison itself
+// decides — an entry already packed on main, or a pair of tarballs that ships
+// no such key, gets no allowance and every member stays frozen byte for byte.
 const partialPath = (source: string): string => `src/styles/${source.replace(/\/([^/]+)$/, "/_$1.scss")}`;
 const optInEntries = Object.entries(componentStyles).filter(([, entry]) => entry.optIn);
 const newOptIn = new Set(optInEntries
-  .filter(([name]) => !main.has(`dist/components/${name}/index.js`))
+  .filter(([name]) => Object.hasOwn(branchExports, `./components/${name}`) && !Object.hasOwn(mainExports, `./components/${name}`))
   .map(([name]) => name));
 const optInStyleMembers = new Map(optInEntries.flatMap(([name, entry]) =>
   [[`dist/styles/${name}.js`, name], [`dist/styles/${name}.css`, name], [partialPath(entry.source), name]] as [string, string][]));
@@ -153,10 +163,6 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
 // the base is the main tip the merge was computed from: only this pull
 // request's own delta reaches the comparison, and a data-only change never
 // bumps a version.
-const branchPkg = JSON.parse(branch.get("package.json")!.toString()) as Record<string, unknown>;
-const mainPkg = JSON.parse(main.get("package.json")!.toString()) as Record<string, unknown>;
-const branchExports = (branchPkg.exports ?? {}) as Record<string, unknown>;
-const mainExports = (mainPkg.exports ?? {}) as Record<string, unknown>;
 for (const key of Object.keys(mainExports)) {
   if (!Object.hasOwn(branchExports, key)) {
     problems.push(`export key ${key} was removed: existing export targets are frozen by this change`);
@@ -222,7 +228,6 @@ for (const [name, entry] of optInEntries) {
   if (shipped !== undefined && shipped !== expected) {
     problems.push(`opt-in style entry ${name}: its JS module must import exactly its declared dependencies and its own CSS, found ${JSON.stringify(shipped)}`);
   }
-  if (!Object.hasOwn(branchExports, `./components/${name}`)) problems.push(`declared opt-in entry ${name} has no ./components/${name} export key`);
   if (!Object.hasOwn(branchScripts, `${name}:check`)) problems.push(`declared opt-in entry ${name} has no ${name}:check script`);
 }
 // Since the catalogue merged into main, dist/tokens members exist on both
