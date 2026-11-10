@@ -89,7 +89,7 @@ console.log(JSON.stringify(out));
   console.log(`Component subpaths: ${componentSubpaths.length} resolve to files in the packed package, ${nestedSubpaths.length} nested ones do not`);
 
   // The core subpaths are an explicit list too: `material/core` and
-  // its seven areas resolve, and no path under an area does. The old
+  // its eight areas resolve, and no path under an area does. The old
   // `./core/*` pattern matched across slashes, so `core/compose/features`
   // resolved, and the README taught it; it is closed with the rest, and what
   // the README imported from it is asserted to come from `core/compose`.
@@ -100,7 +100,7 @@ console.log(JSON.stringify(out));
   await writeFile(coreProbe, (await readFile(probe, "utf8")).replace(/for \(const specifier of \[[^\n]*\]\) \{/,
     `for (const specifier of ${JSON.stringify([...coreSubpaths, ...closedCorePaths])}) {`));
   const core: Record<string, string> = JSON.parse(Bun.spawnSync(["node", coreProbe], { cwd: directory }).stdout.toString());
-  assert.equal(coreSubpaths.length, 8, "material/core and its seven areas");
+  assert.equal(coreSubpaths.length, 9, "material/core and its eight areas");
   assert.deepEqual(coreSubpaths.filter(specifier => core[specifier] !== "ok"), [],
     "core subpaths that do not resolve to a file (and its .d.ts) in the packed package");
   assert.deepEqual(closedCorePaths.filter(specifier => core[specifier] !== "ERR_PACKAGE_PATH_NOT_EXPORTED"), [],

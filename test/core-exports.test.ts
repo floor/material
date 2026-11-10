@@ -4,7 +4,7 @@
 // component subpaths are since. The `./core/*` pattern it replaces
 // matched across slashes, so `material/core/compose/features` resolved, and the
 // README's "Building your own components" imported `withLifecycle()` from it
-// (as the 0.10.x README did). The contract is the seven areas and no path
+// (as the 0.10.x README did). The contract is the eight areas and no path
 // under them: the README imports from `material/core/compose`, which exports
 // the same name. The list is pinned here: an area joining or leaving the
 // public set fails until this file, package.json and scripts/root-exports.ts
@@ -19,10 +19,10 @@ const pkg = await Bun.file(join(ROOT, "package.json")).json();
 const exported = Object.keys(pkg.exports as Record<string, unknown>);
 
 /** The documented core areas: README, the root-exports migration table, md3.io */
-const AREAS = ["canvas", "compose", "dom", "shapes", "state", "theme", "utils"];
+const AREAS = ["canvas", "compose", "dom", "icons", "shapes", "state", "theme", "utils"];
 
 describe("the core subpaths", () => {
-  test("the export map lists material/core and its seven areas, one by one", () => {
+  test("the export map lists material/core and its eight areas, one by one", () => {
     expect(exported.filter((key) => key === "./core" || key.startsWith("./core/")).sort())
       .toEqual(["./core", ...AREAS.map((area) => `./core/${area}`)].sort());
   });
