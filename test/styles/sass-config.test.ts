@@ -42,8 +42,8 @@ describe("public configure-once Sass", () => {
     expect(selective).toContain("x-button:not(:defined)");
     expect(selective.includes("[data-theme-contrast=medium]")).toBe(false);
     expect(selective.includes("[data-theme-contrast=high]")).toBe(false);
-    // The flags store configuration here; their feature PRs implement token emission.
-    expect(selective).not.toContain("var(--mtrl-sys-typescale-");
+    // Typography emission is now implemented; spring configuration remains reserved.
+    expect(selective).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
     expect(selective).not.toContain("--mtrl-sys-motion-spring-");
   });
 

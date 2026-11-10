@@ -7,8 +7,8 @@
 // entry configures this module; every @use after it reads the same value.
 $direction-arms: false !default;
 
-// Reserved emission switches. Their feature implementations consume these
-// shared values; configuring them alone currently emits no additional CSS.
+// Typography consumers read the shared flag. Spring emission is reserved
+// for its feature implementation; both modes default to literal output.
 $typescale-tokens: false !default;
 $spring-tokens: false !default;
 

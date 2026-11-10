@@ -1,0 +1,17 @@
+// Experimental Sass companion to the element authoring API.
+// Compile one file per key in the element's styles and SHADOW_BASE_STYLES.
+// Configure the public config module first. Omitted $name emits no CSS.
+@use 'sass:meta';
+
+$name: null !default;
+
+@if $name != null {
+  @if meta.type-of($name) != 'string' {
+    @error '$name must be a style key string';
+  }
+  @if $name == 'ripple' {
+    @include meta.load-css('utilities/ripple');
+  } @else {
+    @include meta.load-css('components/#{$name}');
+  }
+}

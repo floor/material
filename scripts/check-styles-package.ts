@@ -37,6 +37,8 @@ const CHECKOUT_ENTRIES = [
   "main",
   "themes",
   "elements",
+  "element-styles",
+  "preupgrade",
   // The M3 scheme variants, read by path: the themes entry forwards the twelve
   // built-in themes, not these, and md3.io loads them this way.
   ...VARIANTS.map(name => `themes/${name}`),
@@ -88,9 +90,11 @@ try {
       `${specifier} compiles differently from the checkout's ${CHECKOUT_ENTRIES[index]}: the packed Sass normalization changed what a consumer sees`,
     );
     const entry = CHECKOUT_ENTRIES[index];
-    if (entry !== "config") {
+    if (entry in baseline.sources) {
       assert.equal(digest(packed), baseline.sources[entry as keyof typeof baseline.sources],
         `${specifier}: default source output differs from frozen main ${baseline.main}`);
+    }
+    if (entry !== "config") {
       assert.equal(compileSource(`@use "material/src/styles/config"; @use "${specifier}";`), packed,
         `${specifier}: loading the default gateway changes CSS`);
     }
@@ -181,6 +185,38 @@ try {
     }
   } finally { Math.random = random; }
   console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match ${baseline.main} (CI ${baseline.ci}).`);
+  // The public configuration and all three consumers must work from normalized
+  // packed Sass, including the first-use and false/default contracts.
+  for (const name of ["main", "elements"]) {
+    for (const value of ["true", "false"]) {
+      const compileProfile = (prefix: string, paths: string[]) => sass.compileString(
+        `@use "${prefix}config" with ($typescale-tokens: ${value}); @use "${prefix}${name}";`,
+        { loadPaths: paths, style: "compressed", logger: sass.Logger.silent },
+      ).css;
+      assert.equal(compileProfile("material/src/styles/", loadPaths), compileProfile("", ["src/styles"]), `${name}/${value}: packed configuration differs`);
+    }
+  }
+  const contract = (source: string, packed: boolean) => sass.compileString(
+    source.replaceAll("PUBLIC/", packed ? "material/src/styles/" : ""),
+    { loadPaths: packed ? loadPaths : ["src/styles"], style: "compressed", logger: sass.Logger.silent },
+  ).css;
+  const shared = '@use "PUBLIC/config" with ($typescale-tokens: true, $direction-arms: true, $contrast-emit: none, $tag-prefix: "x");';
+  assert.equal(contract(shared, true), "", "configured public entry emits CSS");
+  const typographyCombined = contract(shared + '@use "PUBLIC/main"; @use "PUBLIC/elements";', true);
+  assert.equal(typographyCombined, contract(shared + '@use "PUBLIC/main"; @use "PUBLIC/elements";', false));
+  assert(typographyCombined.includes("x-button:not(:defined)") && !typographyCombined.includes("m-button:not(:defined)"), "shared tag prefix did not propagate");
+  assert(!typographyCombined.includes("data-theme-contrast"), "shared contrast configuration did not propagate");
+  assert(typographyCombined.includes("var(--mtrl-sys-typescale-label-large-font-size, 14px)"), "shared role emission did not propagate");
+  for (const source of [
+    '@use "PUBLIC/main" with ($typescale-tokens: true, $contrast-emit: none);',
+    '@use "PUBLIC/elements" with ($typescale-tokens: true, $tag-prefix: "x");',
+  ]) assert.equal(contract(source, true), contract(source, false), "public forwards differ after packing");
+  for (const key of ["button", "progress", "ripple", "text-field", "badge", "button-group", "icon-button", "card", "tabs"]) {
+    const source = `@use "PUBLIC/config" with ($typescale-tokens: true); @use "PUBLIC/element-styles" with ($name: "${key}");`;
+    assert.equal(contract(source, true), contract(source, false), `${key}: app stylesheet differs after packing`);
+  }
+  const layered = '@use "PUBLIC/preupgrade" with ($typescale-tokens: true, $tag-prefix: "x");';
+  assert.equal(contract(layered, true), contract(layered, false), "layered app preupgrade differs after packing");
   // The positive control: the packed entries are the normalized copies, not
   // the checkout's own files. The compile above is the safety contract; this
   // fails if the normalization quietly stops running (every shipped source is

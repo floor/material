@@ -134,6 +134,8 @@ jobs:
         run: bun run dist-modules:check
       - name: Every dist JS file parses at the package's ES2022 syntax floor
         run: bun run syntax:check
+      - name: Default JS and CSS remain byte-identical to the typography baseline
+        run: bun run typescale-defaults:check
       - name: Element CSS files and exports
         run: bun run elements-css:check
       - name: Build and consumer tooling types
@@ -206,7 +208,7 @@ jobs:
             checks: menu-deferred:check
           - group: styles
             browsers: chromium
-            checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check component-sheets:check density:check
+            checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
           - group: ssr-a
             browsers: chromium
             checks: ssr:check:a
