@@ -1,7 +1,0 @@
-// src/styles/config.scss
-//
-// Public compilation switches. Configure this on the first `@use` of any
-// material Sass, before a component sheet loads the same settings module:
-//
-//   @use "material/src/styles/config" with ($spring-tokens: true);
-@forward "abstract/settings" show $spring-tokens;

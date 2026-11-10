@@ -2,6 +2,9 @@
 /**
  * Opt-in spring custom properties.
  *
+ * `$spring-tokens` is the shared flag on abstract/emit. Authors set it
+ * through the public gateway src/styles/_config.scss (`@use "config"`).
+ * A second src/styles/config.scss collides with that partial.
  * Off, omitted, and `$spring-tokens: false` keep the literal durations and
  * easings. An author property then has no effect: that page is the red
  * control. On, the same components read `var(--mtrl-sys-motion-spring-…)`,
@@ -22,7 +25,7 @@
  * separates spatial motion from effects. The numbers are the library's.
  */
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { chromium, type Page } from "playwright";
 import * as sass from "sass";
@@ -253,9 +256,9 @@ function assertSass(): { off: string; on: string } {
   const onMotion = compileError(`@use "motion" with ($spring-tokens: true);`);
   assert.notEqual(onMotion, "");
   const bad = compileError(`@use "config" with ($spring-tokens: "yes");\n@use "components/button";`);
-  assert.match(bad, /true or false/);
+  assert.match(bad, /must be a boolean \(true or false\)/);
   const badAlone = compileError(`@use "config" with ($spring-tokens: "yes");`);
-  assert.match(badAlone, /true or false/);
+  assert.match(badAlone, /must be a boolean \(true or false\)/);
 
   const elementsOff = compile(`@use "elements" with ($tag-prefix: "x");`);
   const elementsOn = compile(`@use "config" with ($spring-tokens: true);\n@use "elements" with ($tag-prefix: "x");`);
@@ -306,6 +309,15 @@ async function assertInventory(): Promise<void> {
   assert.match(fab, /FAB_MENU_ITEM_EXIT = 425/);
   assert.match(snackbar, /ANIMATION_DURATION: 425/);
   assert.match(slider, /const SETTLE_MS = 450/);
+  const gateway = await readFile("src/styles/_config.scss", "utf8");
+  assert.match(gateway, /@forward 'abstract\/emit' show \$typescale-tokens, \$spring-tokens, \$direction-arms;/);
+  const variables = await readFile("src/styles/abstract/_variables.scss", "utf8");
+  const motion = await readFile("src/styles/motion.scss", "utf8");
+  assert.match(variables, /emit\.\$spring-tokens/);
+  assert.doesNotMatch(variables, /settings\.\$spring-tokens/);
+  assert.match(motion, /emit\.\$spring-tokens/);
+  await assert.rejects(access("src/styles/config.scss"), "config.scss collides with the gateway partial");
+  await assert.rejects(access("src/styles/abstract/_settings.scss"), "spring flag lives on abstract/emit");
   console.log("JS deadlines stay literal: rail 450, slider settle 450, snackbar 425, FAB exit addend 425. Only the FAB list visibility delay follows the fast-spatial token.");
 }
 
@@ -541,9 +553,11 @@ async function assertPacked(): Promise<void> {
   const fixture = await createPackageFixture();
   try {
     const files = (fixture.pack.files as { path: string }[]).map(file => file.path);
-    for (const path of ["src/styles/config.scss", "src/styles/motion.scss", "src/styles/abstract/_settings.scss"]) {
+    for (const path of ["src/styles/_config.scss", "src/styles/motion.scss"]) {
       assert.ok(files.includes(path), `${path} is not in the packed package`);
     }
+    assert.equal(files.includes("src/styles/config.scss"), false, "config.scss collides with _config.scss");
+    assert.equal(files.includes("src/styles/abstract/_settings.scss"), false);
     assert.equal(files.includes("src/styles/abstract/_config.scss"), false);
     const loadPaths = [join(fixture.directory, "node_modules")];
     const packedOff = compile(`@use "material/src/styles/components/switch";`, loadPaths);

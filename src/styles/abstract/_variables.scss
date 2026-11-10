@@ -3,7 +3,8 @@
 @use 'sass:math';
 @use 'sass:string';
 @use 'base' as *;
-@use 'settings';
+// The public config gateway (src/styles/_config.scss) configures this flag.
+@use 'emit' as emit;
 
 // The fast spatial spring (Compose FastSpatial: damping 0.6, stiffness 800),
 // sampled at 25 even steps. Both of its easings below come from these points,
@@ -390,7 +391,7 @@ $spacing-scale: (
 // easings stay literals, and the $motion map itself stays literal.
 @function motion($key) {
   $value: map.get($motion, $key);
-  @if settings.$spring-tokens and $value != null and string.index($key, 'spring-') == 1 {
+  @if emit.$spring-tokens and $value != null and string.index($key, 'spring-') == 1 {
     @return _spring-var($key);
   }
   @return $value;
@@ -400,7 +401,7 @@ $spacing-scale: (
 // 225ms). On, calc(var(--…, <literal>) / $by).
 @function spring-duration-div($key, $by) {
   $value: map.get($motion, $key);
-  @if not settings.$spring-tokens {
+  @if not emit.$spring-tokens {
     @return math.div($value, $by);
   }
   @if $value == null {
@@ -413,7 +414,7 @@ $spacing-scale: (
 // (the FAB icon swap stays 48ms). On, the same fraction of the custom
 // property: calc(var(--…, 425ms) * (48 / 425)).
 @function spring-delay-scale($key, $amount) {
-  @if not settings.$spring-tokens {
+  @if not emit.$spring-tokens {
     @return $amount;
   }
   $basis: map.get($motion, $key);

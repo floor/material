@@ -296,7 +296,7 @@ For the full stylesheet, use this entry instead:
 
 Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Theme with CSS custom properties.
 
-Spring durations and easings can be inherited custom properties. Prebuilt stylesheets keep the literal values. Configure the shared settings leaf before any component sheet, then emit the defaults where the application wants them:
+Spring durations and easings can be inherited custom properties. Prebuilt stylesheets keep the literal values. Set `$spring-tokens` on the public config gateway before any component sheet. That gateway forwards the shared flag on `abstract/emit`. Then emit the defaults where the application wants them:
 
 ```scss
 @use "material/src/styles/config" with ($spring-tokens: true);
@@ -345,9 +345,9 @@ The gateway emits zero CSS. Its five supported switches are:
 | `$tag-prefix` | `"m"` | Sets the undefined custom-element tag prefix |
 | `$direction-arms` | `false` | Compiles physical direction arms for a bundler's CSS pipeline when truthy |
 | `$typescale-tokens` | `false` | Enables role-token typography with the existing literal fallbacks |
-| `$spring-tokens` | `false` | Boolean configuration reserved for opt-in spring emission; currently stores the value only |
+| `$spring-tokens` | `false` | Enables inherited spring duration/easing references with the existing literal fallbacks |
 
-Both token switches are also configurable directly on the full stylesheet or elements entry. The spring switch currently stores configuration only; typography emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
+Both token switches are also configurable directly on the full stylesheet or elements entry. Spring emission and typography are described above; include the motion mixin explicitly to emit the default spring declarations. Token maps are not a supported configuration surface; use CSS custom properties for token values.
 
 Sass [configures a module on its first load](https://sass-lang.com/documentation/at-rules/use/#configuration). Put the gateway before every other material import, including selective sheets. Then load the other entries without `with (...)`. Configuring both the gateway and another entry with `with (...)`, or loading a component before configuring the gateway, produces Sass's standard “already loaded” error. The direct contrast and tag-prefix examples above continue to work when used on their own.
 

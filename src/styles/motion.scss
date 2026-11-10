@@ -6,11 +6,11 @@
 // should own the defaults (`:root`, or a theme root).
 @use "sass:string";
 @use "abstract/base" as base;
-@use "abstract/settings";
+@use "abstract/emit" as emit;
 @use "abstract/variables" as v;
 
 @mixin spring-tokens {
-  @if settings.$spring-tokens != true {
+  @if emit.$spring-tokens != true {
     @error 'motion.spring-tokens needs spring-token mode. Load it first: '
       + '@use "material/src/styles/config" with ($spring-tokens: true);';
   }

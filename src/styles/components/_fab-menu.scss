@@ -11,7 +11,7 @@
 // - menu: the FAB stays; the baseline menu opens from it
 @use 'sass:string';
 @use '../../styles/abstract/base' as base;
-@use '../../styles/abstract/settings';
+@use '../../styles/abstract/emit' as emit;
 @use '../../styles/abstract/variables' as v;
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
@@ -168,7 +168,7 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
     // Hidden once the last item has left. Off, the runtime delay stands.
     // On, JS still adds its literal 425ms (FAB_MENU_ITEM_EXIT); the token
     // replaces that addend so a longer fast-spatial duration is not cut off.
-    @if settings.$spring-tokens {
+    @if emit.$spring-tokens {
       $duration: v.motion('spring-fast-spatial-duration');
       transition: visibility 0s linear #{string.unquote('calc(var(--#{$component}-exit, 425ms) - 425ms + #{$duration})')};
     } @else {

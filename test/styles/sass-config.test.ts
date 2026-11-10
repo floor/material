@@ -42,9 +42,9 @@ describe("public configure-once Sass", () => {
     expect(selective).toContain("x-button:not(:defined)");
     expect(selective.includes("[data-theme-contrast=medium]")).toBe(false);
     expect(selective.includes("[data-theme-contrast=high]")).toBe(false);
-    // Typography emission is now implemented; spring configuration remains reserved.
+    // Both feature implementations now consume the shared token flags.
     expect(selective).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
-    expect(selective).not.toContain("--mtrl-sys-motion-spring-");
+    expect(selective).toContain("var(--mtrl-sys-motion-spring-fast-spatial-duration, 425ms)");
   });
 
   for (const entry of ["main", "elements"]) {
