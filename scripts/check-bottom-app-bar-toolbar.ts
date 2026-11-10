@@ -54,6 +54,7 @@ try {
   const bundle = async (label: string, installed: string, source: string) => {
     const dir = join(scratch, label); await mkdir(join(dir, "node_modules"), { recursive: true });
     await symlink(installed, join(dir, "node_modules/material"), "dir");
+    await writeFile(join(dir, "package.json"), '{"type":"module"}');
     const entry = join(dir, "all-js.ts"); await writeFile(entry, source);
     const result = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
     assert(result.success, String(result.logs));
@@ -65,16 +66,17 @@ try {
   const legacyBefore = await bundle("baseline-legacy", baseline.installed, "export * from 'material/components/bottom-app-bar';\n");
   const legacyAfter = await bundle("candidate-legacy", candidate.installed, "export * from 'material/components/bottom-app-bar';\n");
   const optIn = await bundle("candidate-opt-in", candidate.installed, "export * from 'material/components/bottom-app-bar-toolbar';\n");
+  assert.equal(metrics(rootBefore).gzip, 131091, "independent baseline must reproduce its green CI root ruler");
   const rootEqual = Buffer.from(rootBefore).equals(Buffer.from(rootAfter));
   report.graphs = { root: { baseline: metrics(rootBefore), candidate: metrics(rootAfter), identical: rootEqual },
     legacy: { baseline: metrics(legacyBefore), candidate: metrics(legacyAfter) }, optIn: metrics(optIn) };
   check(rootEqual, "root retained JS bytes changed during shared-core factoring");
   check(Buffer.from(legacyBefore).equals(Buffer.from(legacyAfter)), "legacy entry retained JS bytes changed");
-  check(!Buffer.from(rootAfter).includes("bottom-app-bar-toolbar"), "opt-in marker leaked into root");
-  check(Buffer.from(optIn).includes("bottom-app-bar-toolbar"), "positive opt-in graph control is missing");
+  check(!Buffer.from(rootAfter).includes("createBottomAppBarToolbar"), "opt-in marker leaked into root");
+  check(Buffer.from(optIn).includes("createBottomAppBarToolbar"), "positive opt-in graph control is missing");
   console.log(JSON.stringify({ graphs: report.graphs, changedDefaults: changed }));
 
-  async function pageBuild(name: string, installed: string, source: string) {
+  const pageBuild = async (name: string, installed: string, source: string) => {
     const dir = join(scratch, name); await mkdir(join(dir, "node_modules"), { recursive: true });
     await symlink(installed, join(dir, "node_modules/material"), "dir");
     await writeFile(join(dir, "package.json"), '{"type":"module","sideEffects":true}');
@@ -106,7 +108,7 @@ try {
       initial: assets.filter(a => a.initial).reduce((n, a) => n + a.gzip, 0),
       deferred: assets.filter(a => !a.initial).reduce((n, a) => n + a.gzip, 0), assets };
     output.set(name, { html, files });
-  }
+  };
   // Separate standalone styled consumers: mixed parity pages below are not
   // mistaken for the standalone delivery cost of either entry.
   for (const opt of [false, true]) await pageBuild(`cost-${opt ? "opt-in" : "legacy"}`, candidate.installed,

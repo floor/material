@@ -21,14 +21,14 @@ export function bottomAppBarToolbarCss(legacy: string): string {
   root.walkAtRules("layer", rule => {
     if (rule.nodes) {
       assert.equal(rule.params, "mtrl.bottom-app-bar");
-      rule.params = "mtrl.bottom-app-bar-toolbar";
+      rule.replaceWith(...rule.nodes);
     }
   });
   // Existing toolbar layers remain intact. Only the explicitly marked facade
   // cancels the toolbar's density floor, item distribution and content color.
-  root.append(postcss.parse("@layer mtrl.bottom-app-bar-toolbar{" +
+  root.append(postcss.parse(
     ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar{min-height:0;gap:0;width:auto;max-width:none;margin:0;border-radius:0}" +
-    ".mtrl-bottom-app-bar-toolbar>.mtrl-toolbar__bar{min-height:0;flex:0 1 auto;justify-content:normal;color:inherit;transition:none}" +
-    "}"));
+    ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar>.mtrl-toolbar__bar{min-height:0;flex:0 1 auto;justify-content:normal;color:inherit;transition:none}",
+  ));
   return root.toString();
 }

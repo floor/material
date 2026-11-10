@@ -308,7 +308,12 @@ try {
       const namedExports = Object.keys(module).filter(k => k !== "default" && module[k] === module.default);
       assert.equal(namedExports.length, 1, \`\${key} must have exactly one named export equal to default, found \${namedExports.join(',')}\`);
       const k = namedExports[0];
-      assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
+      if (key === './components/bottom-app-bar-toolbar') {
+        assert.equal(k, 'createBottomAppBarToolbar', 'the opt-in entry exports its named factory');
+        assert.equal(esm[k], undefined, 'the opt-in factory must stay out of root exports');
+      } else {
+        assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
+      }
     }
 
     const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
@@ -389,7 +394,7 @@ try {
     assert(resolvedExportCount >= 240, \`Expected at least 240 resolved export specifiers, got \${resolvedExportCount}\`);
   `);
   await run(["node", smoke], temporary);
-  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name; all package.json exports resolve from the packed tarball`);
+  console.log(`component entries: ${componentKeys.length} default exports, regular entries match root and the opt-in entry stays isolated; all package.json exports resolve from the packed tarball`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");
