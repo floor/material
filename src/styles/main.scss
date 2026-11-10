@@ -1,6 +1,7 @@
 // src/styles/main.scss
 
 // Configure before any theme module is loaded.
+@forward "abstract/emit" show $typescale-tokens;
 @forward "themes/base-theme" show $contrast-emit;
 
 // Import Sass modules
