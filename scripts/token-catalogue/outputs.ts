@@ -15,14 +15,12 @@ import {
   componentStyles, themeStyles, standaloneThemes, contrastStyle, optionalStyleProfiles,
 } from "../style-manifest";
 import type { OutputFile } from "./inventory";
-import { bottomAppBarToolbarStyle } from "../bottom-app-bar-toolbar-style";
 
 /** The selective `styles/*` entries, in manifest order. */
 export const styleEntries = [
   "base", "base-elements", "base-lite", "typography", contrastStyle, "utilities",
   ...Object.keys(componentStyles),
   ...Object.keys(optionalStyleProfiles),
-  bottomAppBarToolbarStyle,
 ];
 
 const cssNames = (directory: string): string[] => {

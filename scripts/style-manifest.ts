@@ -24,6 +24,10 @@ export const componentStyles: Record<
   "text-field": { source: "components/text-field", dependencies: [] },
   badge: { source: "components/badge", dependencies: [] },
   "bottom-app-bar": { source: "components/bottom-app-bar", dependencies: [] },
+  "bottom-app-bar-toolbar": {
+    source: "components/bottom-app-bar", dependencies: ["toolbar"], optIn: true,
+    sharedLeaves: ["bottom-app-bar/config", "bottom-app-bar/constants"],
+  },
   "bottom-sheet": { source: "components/bottom-sheet", dependencies: [] },
   "side-sheet": { source: "components/side-sheet", dependencies: [] },
   menu: { source: "components/menu", dependencies: [] },

@@ -257,7 +257,7 @@ jobs:
         if: matrix.group == 'bottom-app-bar-toolbar'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9
+          ref: 17612ca276f7e46db7fe948441174402ff795688
           path: .prototype-baseline
           persist-credentials: false
       - name: Pinned baseline distribution (built independently on main)
@@ -266,7 +266,7 @@ jobs:
         with:
           name: dist
           path: .prototype-baseline/dist
-          run-id: 42894840574
+          run-id: 42899828774
           github-token: ${{ github.token }}
       - name: Checks (${{ matrix.checks }})
         # A check that hangs must fail on its own, and name itself. On

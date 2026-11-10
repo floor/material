@@ -7,8 +7,11 @@ import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
 import { chromium, type Page } from "playwright";
 import { createPackageFixture } from "./package-fixture";
+import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
+import { profileStyleModule } from "./optional-style-profiles";
 
-const receipt = { commit: "88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9", run: 42894840574 };
+const receipt = { commit: "17612ca276f7e46db7fe948441174402ff795688", run: 42899828774,
+  rootAnchor: { commit: "88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9", sha256: "614d297421a44f27d5f18eddaa6547787f61cfc90d95572c478cc09b10ad9a5f" } };
 const cwd = process.cwd();
 const candidate = await createPackageFixture();
 let baseline: Awaited<ReturnType<typeof createPackageFixture>>;
@@ -48,6 +51,9 @@ try {
       (before.equals(after) ? unchanged : changed).push(path);
     }
   };
+  const legacyCss = await readFile(join(candidate.installed, "dist/styles/bottom-app-bar.css"), "utf8");
+  assert.equal(await readFile(join(candidate.installed, "dist/styles/bottom-app-bar-toolbar.css"), "utf8"), bottomAppBarToolbarCss(legacyCss));
+  assert.equal(await readFile(join(candidate.installed, "dist/styles/bottom-app-bar-toolbar.js"), "utf8"), profileStyleModule("bottom-app-bar-toolbar", bottomAppBarToolbarDependencies));
   await walk(); report.defaultPayloads = { unchanged, changed };
   check(changed.length === 0, "existing legacy/default CSS, elements, declarations or SSR payload changed");
 
@@ -67,6 +73,7 @@ try {
   const legacyAfter = await bundle("candidate-legacy", candidate.installed, "export * from 'material/components/bottom-app-bar';\n");
   const optIn = await bundle("candidate-opt-in", candidate.installed, "export * from 'material/components/bottom-app-bar-toolbar';\n");
   assert.equal(metrics(rootBefore).gzip, 131091, "independent baseline must reproduce its green CI root ruler");
+  assert.equal(metrics(rootBefore).sha256, receipt.rootAnchor.sha256, "current main must retain the exact root bytes from 88eb8ce8");
   const rootEqual = Buffer.from(rootBefore).equals(Buffer.from(rootAfter));
   report.graphs = { root: { baseline: metrics(rootBefore), candidate: metrics(rootAfter), identical: rootEqual },
     legacy: { baseline: metrics(legacyBefore), candidate: metrics(legacyAfter) }, optIn: metrics(optIn) };

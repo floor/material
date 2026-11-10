@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { optionalStyleProfiles } from "./style-manifest";
 import { filledSmallRoundCss } from "./button-style-profile";
-import { bottomAppBarToolbarCss, bottomAppBarToolbarStyle, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 
-export const optionalStyleFiles = [...Object.keys(optionalStyleProfiles), bottomAppBarToolbarStyle]
+export const optionalStyleFiles = Object.keys(optionalStyleProfiles)
   .flatMap(name => [`styles/${name}.js`, `styles/${name}.css`]);
 
 export function profileStyleModule(name: string, dependencies: string[]): string {
@@ -13,15 +12,6 @@ export function profileStyleModule(name: string, dependencies: string[]): string
 
 /** Check the new pair independently of the frozen general-asset inventory. */
 export function validateOptionalStyleProfiles(files: Map<string, string>, required = true): void {
-  const css = files.get(`styles/${bottomAppBarToolbarStyle}.css`);
-  const js = files.get(`styles/${bottomAppBarToolbarStyle}.js`);
-  if (required || css !== undefined || js !== undefined) {
-    const legacy = files.get("styles/bottom-app-bar.css");
-    assert(legacy !== undefined && css !== undefined && js !== undefined, "Incomplete opt-in bottom app bar styles");
-    assert.equal(css, bottomAppBarToolbarCss(legacy), "Opt-in compatibility styles differ from the scoped legacy projection");
-    assert.equal(js, profileStyleModule(bottomAppBarToolbarStyle, bottomAppBarToolbarDependencies));
-    for (const dependency of bottomAppBarToolbarDependencies) assert(files.has(`styles/${dependency}.css`) && files.has(`styles/${dependency}.js`));
-  }
   for (const [name, entry] of Object.entries(optionalStyleProfiles)) {
     const css = files.get(`styles/${name}.css`), js = files.get(`styles/${name}.js`);
     if (!required && css === undefined && js === undefined) continue;
