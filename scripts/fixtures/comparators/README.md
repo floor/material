@@ -11,8 +11,10 @@ private lock, and runs a matrix of six adapters (the three libraries and materia
 factory/element/Material Web controls). Each builds a button and an app page.
 There is no competitive byte budget or automatic ranking.
 
-The rendered contract is version 2. Markup, setup, styles and public interaction
-wiring count. Reports distinguish **rendered roles** from **behavior checked**;
+The rendered contract is version 3. It re-pins Vite from 8.2.2 to 8.2.4; all
+other toolchain, fixture, build and accounting controls remain the same. Version 2
+results retain their original 8.2.2 ruler and must not be relabeled as version 3.
+Markup, setup, styles and public interaction wiring count. Reports distinguish **rendered roles** from **behavior checked**;
 pointer state observations, public value changes, menu selection, Escape/focus
 observations and open/close checks are not complete keyboard or focus parity.
 Every attempted capability probe records its state change or gap. No full-app ranking is allowed without that evidence. MICL does not gain
@@ -27,7 +29,7 @@ rows with the versioned rendered contract. Unit checks pin their bytes.
 
 ## Accounting
 
-Vite 8.2.2, ES2022 production HTML builds, extracted CSS, zero asset inlining,
+Vite 8.2.4, ES2022 production HTML builds, extracted CSS, zero asset inlining,
 no module-preload polyfill, and hidden source maps. Text files are compressed
 individually at gzip 9 / Brotli 11. JavaScript is minified; CSS minification is
 uniformly disabled for all six adapters. The pinned Vite/Lightning CSS minifier
