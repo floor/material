@@ -2,6 +2,9 @@
 // Private scan and write for one BEM modifier family. Not a public export.
 // Each caller keeps its own token table, prefix resolution and omit policy:
 // a null omit always writes the value, including a family's default token.
+// Only a string value equal to the omit token is left unwritten. A non-string
+// reaches here only from an untyped caller, and writes its class as the
+// template literal did before the shared engine, so `--null` still appears.
 
 export function readModifier<T extends string>(
   element: Element,
@@ -38,5 +41,7 @@ export const writeModifier = (
   for (let i = 0; i < tokens.length; i++) {
     element.classList.remove(`${prefix}--${tokens[i]}`);
   }
-  if (value !== omit) element.classList.add(`${prefix}--${value}`);
+  if (typeof value !== "string" || value !== omit) {
+    element.classList.add(`${prefix}--${value}`);
+  }
 };
