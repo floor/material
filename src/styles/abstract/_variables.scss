@@ -5,10 +5,6 @@
 @use 'base' as *;
 @use 'settings';
 
-@if type-of(settings.$spring-tokens) != 'bool' {
-  @error '$spring-tokens must be true or false.';
-}
-
 // The fast spatial spring (Compose FastSpatial: damping 0.6, stiffness 800),
 // sampled at 25 even steps. Both of its easings below come from these points,
 // so they cannot drift apart.

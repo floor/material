@@ -7,4 +7,10 @@
 
 // Component CSS reads spring durations and easings as inherited custom
 // properties. False (the default) keeps the literal map values.
+@use "sass:meta";
+
 $spring-tokens: false !default;
+
+@if meta.type-of($spring-tokens) != "bool" {
+  @error "$spring-tokens must be true or false, got #{meta.inspect($spring-tokens)}.";
+}

@@ -7,8 +7,16 @@
  * control. On, the same components read `var(--mtrl-sys-motion-spring-…)`,
  * fall back to those literals when the property is missing, and follow an
  * ancestor override. The rail's midpoint and the FAB icon delay are derived
- * from the duration. JS physics (FAB stagger, the rail's SWITCH_DURATION,
- * the snackbar's ANIMATION_DURATION) is outside this CSS contract.
+ * from the duration. JS deadlines stay literal: the rail removes
+ * `--switching` after SWITCH_DURATION (450), the slider removes `--settling`
+ * after SETTLE_MS (450), and the snackbar leaves on the opacity
+ * `transitionend` or ANIMATION_DURATION (425). Those cut off a longer
+ * override; moving them is runtime growth and is not part of this CSS
+ * contract. The FAB list's visibility delay does follow the fast-spatial
+ * token when the flag is on, while FAB_MENU_ITEM_EXIT stays 425 in JS.
+ * Reduced motion stays the existing component and global rules. There is no
+ * token reset under `prefers-reduced-motion`. Inline SSR still drops
+ * selectors that are absent from the host, including slider `--settling`.
  *
  * https://m3.material.io/styles/motion/overview/how-it-works (2026-11-09)
  * separates spatial motion from effects. The numbers are the library's.
@@ -31,6 +39,17 @@ const DURATIONS = {
   "default-effects": "250ms",
   "slow-effects": "350ms",
 } as const;
+
+// Emitted for app use. No component sheet reads slow-spatial, so its 625ms
+// fallback is not in the selected component CSS. The mixin and the explicit
+// `.slow` probe cover it.
+const CONSUMED_DURATIONS = [
+  "fast-spatial",
+  "default-spatial",
+  "fast-effects",
+  "default-effects",
+  "slow-effects",
+] as const;
 
 const EASING_MARK: Record<string, string> = {
   "default-spatial": "0.055",
@@ -141,21 +160,30 @@ function assertLiterals(css: string, label: string): void {
   assert.match(flat(css), /linear 225ms/);
   assert.doesNotMatch(css, /48 \/ 425/);
   assert.doesNotMatch(css, /calc\(var\(--mtrl-sys-motion-spring/);
+  assert.match(css, /var\(--mtrl-fab-menu-exit, 0ms\)/);
+  assert.doesNotMatch(css, /- 425ms \+/);
 }
 
 function assertTokenCss(css: string): void {
   const fallbacks = varFallbacks(css);
-  for (const [role, duration] of Object.entries(DURATIONS)) {
-    assert.equal(fallbacks.get(property(role, "duration")), duration, role);
+  for (const role of CONSUMED_DURATIONS) {
+    assert.equal(fallbacks.get(property(role, "duration")), DURATIONS[role], role);
   }
+  assert.equal(fallbacks.has(property("slow-spatial", "duration")), false, "slow-spatial duration is not a component fallback");
+  assert.equal(fallbacks.has(property("slow-spatial", "easing")), false, "slow-spatial easing is not a component fallback");
   assert.match(fallbacks.get(property("fast-spatial", "easing")) ?? "", /1\.094/);
   const clamped = fallbacks.get("--mtrl-sys-motion-spring-fast-spatial-clamped-easing") ?? "";
   assert.match(clamped, /linear\(/);
   assert.doesNotMatch(clamped, /1\.094/);
   assert.notEqual(clamped, fallbacks.get(property("fast-spatial", "easing")));
   for (const [role, mark] of Object.entries(EASING_MARK)) {
+    if (role === "slow-spatial") continue;
     assert.match(fallbacks.get(property(role, "easing")) ?? "", new RegExp(mark), role);
   }
+  assert.match(
+    flat(css),
+    /calc\(var\(--mtrl-fab-menu-exit, 425ms\) - 425ms \+ var\(--mtrl-sys-motion-spring-fast-spatial-duration, 425ms\)\)/,
+  );
   assert.match(flat(css), /calc\(var\(--mtrl-sys-motion-spring-default-spatial-duration, 450ms\) \/ 2\)/);
   assert.match(
     flat(css),
@@ -226,6 +254,8 @@ function assertSass(): { off: string; on: string } {
   assert.notEqual(onMotion, "");
   const bad = compileError(`@use "config" with ($spring-tokens: "yes");\n@use "components/button";`);
   assert.match(bad, /true or false/);
+  const badAlone = compileError(`@use "config" with ($spring-tokens: "yes");`);
+  assert.match(badAlone, /true or false/);
 
   const elementsOff = compile(`@use "elements" with ($tag-prefix: "x");`);
   const elementsOn = compile(`@use "config" with ($spring-tokens: true);\n@use "elements" with ($tag-prefix: "x");`);
@@ -271,10 +301,12 @@ async function assertInventory(): Promise<void> {
   const rail = await readFile("src/components/navigation-rail/navigation-rail.ts", "utf8");
   const fab = await readFile("src/components/fab-menu/constants.ts", "utf8");
   const snackbar = await readFile("src/components/snackbar/constants.ts", "utf8");
+  const slider = await readFile("src/components/slider/features/controller.ts", "utf8");
   assert.match(rail, /SWITCH_DURATION = 450/);
   assert.match(fab, /FAB_MENU_ITEM_EXIT = 425/);
   assert.match(snackbar, /ANIMATION_DURATION: 425/);
-  console.log("JS deadlines stay literal (rail 450, FAB exit 425, snackbar 425) and do not follow the CSS tokens.");
+  assert.match(slider, /const SETTLE_MS = 450/);
+  console.log("JS deadlines stay literal: rail 450, slider settle 450, snackbar 425, FAB exit addend 425. Only the FAB list visibility delay follows the fast-spatial token.");
 }
 
 type Row = { property: string; duration: string; delay: string };
@@ -521,6 +553,7 @@ async function assertPacked(): Promise<void> {
     assert.match(packedOn, /var\(--mtrl-sys-motion-spring-fast-spatial-duration, 425ms\)/);
     assert.match(flat(packedOn), /calc\(var\(--mtrl-sys-motion-spring-default-spatial-duration, 450ms\) \/ 2\)/);
     assert.match(flat(packedOn), /\* \(48 \/ 425\)/);
+    assert.match(flat(packedOn), /calc\(var\(--mtrl-fab-menu-exit, 425ms\) - 425ms \+ var\(--mtrl-sys-motion-spring-fast-spatial-duration, 425ms\)\)/);
     assert.equal(declarations(packedOn).size, 13);
     assert.equal(packedOn, compile(`@use "config" with ($spring-tokens: true);\n@use "motion" as motion;\n@use "components/navigation-rail";\n@use "components/fab-menu";\n:root { @include motion.spring-tokens; }\n`));
     const late = compileError(`@use "material/src/styles/components/switch";\n@use "material/src/styles/config" with ($spring-tokens: true);`, loadPaths);
