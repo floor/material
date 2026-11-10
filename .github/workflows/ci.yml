@@ -208,7 +208,7 @@ jobs:
             checks: core:check carousel:check a11y-svg:check
           - group: components-b
             browsers: chromium
-            checks: consumer:check tabs:check slider:check tooltip:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check switch-transition:check
+            checks: consumer:check tabs:check slider:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check switch-transition:check
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check
