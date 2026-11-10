@@ -17,6 +17,35 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-11-10
+
+Load date-picker calendars and menus on demand, lighter element application styles, and child-action containers for cards.
+
+### Added
+
+- **Card child-action containers.** Set `promoteChildActions: true`, or add `promote-child-actions` to `<m-card>`, to let a clickable card containing child actions become an article container. The card leaves the tab order, its child controls remain keyboard reachable, and activating a child does not also activate the card. The option is off by default; existing cards retain their behavior and development diagnostic.
+- **A deferred date-picker entry.** Import `createDeferredDatePicker` from `material/components/datepicker/deferred` to create the field and trigger immediately while loading the calendar on the first open. Pointer or focus intent on the trigger can start loading earlier. Open and close state and events remain synchronous, including a close while loading; the calendar receives focus only after it is ready. The default date-picker entry is unchanged. Enable code splitting to defer the calendar download.
+- **Deferred menu delivery.** Import `createDeferredMenu` from `material/components/menu/deferred` for a menu handle that loads its implementation on demand. Open and close requests, queued setters and event subscriptions work before the surface is ready; `isReady()` reports readiness and `preload()` returns a Promise without opening the menu. The handle's `element` is `null` until ready. Load failures emit `loaderror` and reject `preload()`; later explicit requests can retry, while destruction is terminal. Factory styles remain loaded normally.
+- **A dedicated menu-element registration entry.** `material/elements/menu` exports `defineMenu` without registering elements on import. Applications can defer registration together with `material/elements/css/menu`, using `material/elements/preupgrade/menu.css` before upgrade. Await registration before calling element methods. Existing eager entries, server rendering and framework adapters retain their synchronous behavior; initially open menus should use eager registration and ready styles.
+- **An element-application base stylesheet.** `material/styles/base-elements` keeps the base theme, reset, system contrast response and cascade order while omitting the global light-DOM ripple rules each element shadow root already carries. Element applications load **293 B** less gzip (970 B raw) than with `material/styles/base`; explicit contrast attributes still use `material/styles/contrast`. Existing entries are unchanged.
+
+### Performance
+
+- **Smaller initial downloads for applications opting into deferred menus.** In the checked, styled 16-component application fixtures, initial gzip-compressed JavaScript and CSS decrease by **5.2 kB** for the factory recipe (**5,189 B**) and **7.5 kB** for the element recipe (**7,501 B**). These savings depend on code splitting and the import graph; another eager menu import can remove them. Deferral moves work to later requests and adds delivery code: fully loaded gzip cost increases by **3,201 B** and **2,736 B**, respectively.
+
+### Documentation
+
+- Document the shared density scale and its utility classes, height floors and preserved typography, icons and touch targets. Clarify the drawer's `dense` alias.
+- Add migration guidance for the menu's `dense` option and the legacy tabs responsive helper, both deprecated since **3.10.0** and retained until **4.0**.
+- Explain the existing time-picker hand spring, immediate input-field updates, digit transitions and reduced-motion behavior.
+- Correct the earlier snackbar shortcut wording: changing `<m-snackbar focus-shortcut>` recreates the component; it does not update an open snackbar in place.
+
+### Size
+
+- Set the deferred date-picker calendar payload budget to **6,451 B gzip**, approved on **2026-11-09**, after separating the synchronous field-format path from the calendar helpers. The initial deferred entry keeps its **9,369 B gzip** ceiling; the default date-picker entry keeps its existing ceiling. At integration, CI measured **9,366 B** for the initial deferred entry and **6,315 B** for its calendar payload. These are integration measurements, not final release-package totals.
+- The element base stylesheet adds **1,098 B** to the compressed package and two files, measured on #348's CI.
+- Release measurements: **130,849 B** of gzip-compressed root JavaScript and **883,320 B** in the compressed npm package, measured by the release branch's CI package job.
+
 ## [3.10.1] - 2026-11-09
 
 Continuous date ranges, smoother time selection, and smaller downloads.
@@ -111,8 +140,9 @@ Selection actions, slide images, active destinations, one density scale and a lo
   disturb typing. Focus returns to where it was when the key was pressed,
   a running auto-dismiss countdown pauses while focus is inside the
   snackbar, and the `focus` event fires when the shortcut moves focus.
-  On `<m-snackbar>` the attribute is `focus-shortcut`, and changing it
-  takes effect at once.
+  On `<m-snackbar>` the attribute is `focus-shortcut`. Changing it after
+  upgrade recreates the component rather than updating an open snackbar
+  in place.
 
 - **Keyboard hints on text fields (#283).**
   `inputMode` (`none | text | decimal | numeric | tel | search | email |
@@ -160,11 +190,10 @@ Selection actions, slide images, active destinations, one density scale and a lo
 ### Deprecated
 
 - **The menu `dense` option (#287).**
-  `MenuConfig.dense` and the `dense` attribute on `<m-menu>` are deprecated.
-  The library moves to one density scale, `--mtrl-density`, in 3.11.0, which
-  leaves menus at their default density: Material advises against increasing
-  density in focused tasks such as selecting from a menu. The option still
-  renders the dense variant exactly as before and is removed in 4.0.
+  `MenuConfig.dense` and the `dense` attribute on `<m-menu>` are deprecated
+  since 3.10.0. The library moved to one density scale, `--mtrl-density`,
+  in 3.10.0, with menus kept at their default density. The option still
+  renders the dense variant in 3.x and is removed in 4.0.
 
 - **The tabs responsive helper (#293).**
   `setupResponsiveBehavior` from `material/components/tabs` is deprecated:
