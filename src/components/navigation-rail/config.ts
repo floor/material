@@ -1,4 +1,5 @@
 import { createComponentConfig } from '../../core/config/component';
+import { getIcon } from '../../core/icons/registry';
 import { NAVIGATION_RAIL_DEFAULTS as defaults, NAVIGATION_RAIL_ICONS as icons } from './constants';
 import type { NavigationRailConfig } from './types';
 export const createBaseConfig = (config: NavigationRailConfig): NavigationRailConfig => {
@@ -6,7 +7,7 @@ export const createBaseConfig = (config: NavigationRailConfig): NavigationRailCo
         expanded: defaults.EXPANDED, expandedWidth: defaults.EXPANDED_WIDTH,
         showToggle: defaults.SHOW_TOGGLE, ripple: true, items: [],
         expandLabel: 'Expand navigation', collapseLabel: 'Collapse navigation',
-        expandIcon: icons.EXPAND, collapseIcon: icons.COLLAPSE,
+        expandIcon: getIcon('menu', icons.EXPAND), collapseIcon: getIcon('menu-open', icons.COLLAPSE),
     } as NavigationRailConfig, config, 'navigation-rail') as NavigationRailConfig;
     const width = result.expandedWidth;
     result.expandedWidth = Number.isFinite(width)

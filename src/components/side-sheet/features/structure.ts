@@ -4,6 +4,7 @@ import { SideSheetConfig } from "../types";
 import { SIDE_SHEET_CLASSES, SIDE_SHEET_VARIANTS } from "../constants";
 
 import { setHTML } from "../../../core/dom/html";
+import { getIcon } from "../../../core/icons/registry";
 /** The close affordance: an icon button that needs a name, not just a glyph */
 const CLOSE_ICON = `<svg viewBox="0 -960 960 960" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>`;
 
@@ -68,7 +69,7 @@ export const withStructure =
         closeButton = document.createElement("button");
         closeButton.type = "button";
         closeButton.className = getClass(SIDE_SHEET_CLASSES.CLOSE);
-        setHTML(closeButton, CLOSE_ICON);
+        setHTML(closeButton, getIcon("close", CLOSE_ICON));
         // the glyph is decorative, so the button carries the name itself
         closeButton.setAttribute("aria-label", "Close");
         header.appendChild(closeButton);

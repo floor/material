@@ -44,9 +44,9 @@ export interface NavigationRailConfig extends BaseComponentConfig {
     showToggle?: boolean;
     expandLabel?: string;
     collapseLabel?: string;
-    /** Menu button icon while collapsed. Default: Material Symbols `menu`. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
+    /** Menu button icon while collapsed. Default: the `setIcons` override for `menu`, else Material Symbols `menu`; a `setComponentDefaults` value overrides the registry, and an `expandIcon` passed to this rail overrides both. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     expandIcon?: string;
-    /** Menu button icon while expanded. Default: Material Symbols `menu_open`. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
+    /** Menu button icon while expanded. Default: the `setIcons` override for `menu-open`, else Material Symbols `menu_open`; a `setComponentDefaults` value overrides the registry, and a `collapseIcon` passed to this rail overrides both. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     collapseIcon?: string;
     /** Optional application-owned header, such as a FAB. Its lifecycle stays with its owner. */
     header?: HTMLElement;

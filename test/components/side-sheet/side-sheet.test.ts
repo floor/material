@@ -20,6 +20,7 @@ g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 
 import createSideSheet from '../../../src/components/side-sheet';
+import { setIcons } from '../../../src/core/icons/registry';
 
 let sheets: Array<{ destroy: () => void }> = [];
 const make = (config = {}) => {
@@ -256,5 +257,42 @@ describe('side sheet: Escape on a standard sheet', () => {
     sheet.open();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(sheet.isOpen()).toBe(false);
+  });
+});
+
+// The close affordance's built-in glyph: the exact string the sheet draws with
+// no override, as the DOM serializes it (a self-closing `path` comes back
+// closed). It carries no `xmlns`, and a shared glyph module that added one
+// would fail here.
+const CLOSE_GLYPH = '<svg viewBox="0 -960 960 960" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path></svg>';
+const closeGlyph = (sheet: { element: HTMLElement }) =>
+  sheet.element.querySelector('.mtrl-side-sheet__close')!.innerHTML;
+
+describe('side sheet: the icon registry', () => {
+  test('the close button draws the exact built-in glyph while the registry is empty', () => {
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test('setIcons replaces the glyph and clearing restores the built-in', () => {
+    setIcons({ close: '<i>dismiss</i>' });
+    try {
+      expect(closeGlyph(make())).toBe('<i>dismiss</i>');
+    } finally {
+      setIcons({ close: null });
+    }
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test('a sheet reads the registry when it is created, not when it draws', () => {
+    const created = make();
+    setIcons({ close: '<i>later</i>' });
+    try {
+      created.open();
+      created.close();
+      expect(closeGlyph(created)).toBe(CLOSE_GLYPH);
+      expect(closeGlyph(make())).toBe('<i>later</i>');
+    } finally {
+      setIcons({ close: null });
+    }
   });
 });

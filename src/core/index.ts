@@ -18,6 +18,9 @@ export * from "./compose";
 // 2. DOM manipulation utilities
 export * from "./dom";
 
+// Icon overrides for the glyphs components render
+export * from "./icons";
+
 // Colour roles to theme tokens
 export { schemeToTokens, THEME_ROLES } from "./theme";
 export type { ThemeRole, SchemeRoles, SchemeToTokensOptions, ThemeTokens } from "./theme";
