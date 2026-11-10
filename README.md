@@ -192,6 +192,21 @@ import 'material/styles/utilities';
 
 Choose one or the other, not both. Each selective entry imports what it depends on (the select brings the text field and the menu), so a CSS-capable bundler resolves and deduplicates them. These entries import CSS, so they do not load in plain Node.
 
+For a factory page whose buttons stay filled, small and round, an optional sheet omits the other visual profiles:
+
+```typescript
+import 'material/styles/base';
+import 'material/styles/button-filled-small-round';
+import createButton from 'material/components/button';
+
+const save = createButton({ text: 'Save', variant: 'filled', size: 's', shape: 'round' });
+document.body.append(save.element);
+```
+
+This entry includes progress styles and keeps hover, keyboard focus, press, disabled, selected toggle and loading states, icons, density, RTL and CSS custom-property overrides. It styles factory buttons in the page. Elements and framework components keep their shadow styles.
+
+Import `material/styles/button` when any button uses another variant, size or shape. This includes changes through the variant, size and shape setters. The general sheet takes precedence in either import order. Tabs, cards and other components can already bring that general sheet; adding the fixed sheet then increases CSS rather than saving it.
+
 What each stylesheet holds:
 
 | Import | Holds |
