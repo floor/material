@@ -38,20 +38,16 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
   const enhanced = component as C & SlidesComponent;
   let slidesChanged: (() => void) | undefined;
 
-  // Title names the item. Non-empty alt text does, when the item has no title.
-  // Empty alt is decorative. Anything else keeps the positional name.
-  const authoredName = (slide: CarouselSlide | undefined): string =>
-    slide?.title?.trim() || slide?.alt?.trim() || "";
-
   const relabel = (): void => {
     const total = slideElements.length;
     slideElements.forEach((el, i) => {
+      const slide = slideData[i]!;
       el.dataset.index = String(i);
-      el.setAttribute("aria-label", authoredName(slideData[i]) || `${i + 1} of ${total}`);
+      el.setAttribute("aria-label", slide.title?.trim() || slide.alt?.trim() || `${i + 1} of ${total}`);
       // The loading default follows the position: the opening slide is eager,
       // every other slide lazy. An explicit per-slide value wins.
       const img = el.querySelector(`.${prefix}__image`);
-      if (img && !slideData[i]?.loading) img.setAttribute("loading", i === 0 ? "eager" : "lazy");
+      if (img && !slide.loading) img.setAttribute("loading", i === 0 ? "eager" : "lazy");
     });
   };
 

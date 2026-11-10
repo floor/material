@@ -219,12 +219,17 @@ describe('button', () => {
 
   test('setLoading disables the button and swaps its label, and undoing it restores both', async () => {
     const button = mount({ text: 'Save', progress: true });
-    await button.setLoading(true, 'Saving');
+    const pending = button.setLoading(true, 'Saving');
+    expect(button.element.disabled).toBe(true);
+    expect(button.element.getAttribute('aria-busy')).toBe('true');
+    await pending;
     expect(button.element.disabled).toBe(true);
     expect(has(button, 'progress')).toBe(true);
     expect(button.getText()).toBe('Saving');
 
-    await button.setLoading(false);
+    const cleared = button.setLoading(false);
+    expect(button.element.hasAttribute('aria-busy')).toBe(false);
+    await cleared;
     expect(button.element.disabled).toBe(false);
     expect(button.getText()).toBe('Save');
   });
