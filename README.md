@@ -23,7 +23,7 @@ Once the elements are registered ([below](#use-it-your-way)), these controls tak
 - **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
 - **One implementation, every stack.** The same component is a custom element, a React, Vue, Svelte or Solid component, and a factory, so it looks and behaves the same in each.
 - **Measured sizes.** Every component has a gzip budget that CI enforces on each pull request, and bundlers keep only what you import. The numbers are under [Sizes](#sizes).
-- **Rootless entries.** `material/components/listbox` ships at its own subpath, outside the root entry and the size budgets; its stylesheet is `material/styles/listbox`.
+- **Rootless entries.** `material/components/listbox` and `material/components/bottom-app-bar-toolbar` ship only at their own subpaths. Import their styles explicitly.
 - **Zero dependencies.** Installing `material` installs nothing else. React, Vue, Svelte and Solid are optional peers: material uses the one your app has.
 - **Server rendering.** Elements and framework components render to declarative shadow DOM on Node and Bun, styled at first paint, and hydrate. See [Server rendering](#server-rendering).
 - **Native behaviour.** Form controls are form-associated, and overlays open in the browser's top layer, trap focus and make the page inert where M3 says so.
@@ -217,7 +217,8 @@ What each stylesheet holds:
 | `material/styles/base-lite` | The baseline theme in light and dark, the colour, shape and typeface tokens, the body theme and the reduced-motion switch; no reset, ripple or contrast modes |
 | `material/styles/typography` | The type scale, the type classes (`.mtrl-display-large` to `.mtrl-label-small`), the text utilities, and the styles for headings and paragraphs |
 | `material/styles/<component>` | One component, with what it depends on |
-| `material/styles` | Every component, the typography, and the twelve themes with their contrast levels |
+| `material/styles/bottom-app-bar-toolbar` | The opt-in bottom app bar compatibility styles and their toolbar dependency |
+| `material/styles` | The standard components, typography, and twelve themes with their contrast levels; opt-in entries need their own styles |
 
 Import the typography stylesheet when the page uses the type classes, relies on material's heading styles, or reads a `--mtrl-sys-typescale-*` token in its own CSS. It has to load after the base; the import takes care of that.
 
@@ -852,6 +853,61 @@ The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the regis
 
 A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. Menu triangles, selection checks and other icon slots keep their existing behavior.
 
+## Bottom app bar compatibility entry
+
+The experimental `material/components/bottom-app-bar-toolbar` entry provides a bottom app bar factory with docked-toolbar styling and the legacy bar's API. Import `material/styles/bottom-app-bar-toolbar` alongside the base stylesheet, even when the page already loads the full stylesheet.
+
+```typescript
+import createBottomAppBarToolbar from 'material/components/bottom-app-bar-toolbar';
+import 'material/styles/base';
+import 'material/styles/bottom-app-bar-toolbar';
+
+const save = document.createElement('button');
+save.type = 'button';
+save.textContent = 'Save';
+
+const bar = createBottomAppBarToolbar({ autoHide: true });
+bar.addAction(save);
+document.body.append(bar.element);
+```
+
+Choose the entry according to the API your screen needs:
+
+| Need | Entry |
+| --- | --- |
+| A new screen using the docked toolbar API | `material/components/toolbar`, configured with `variant: 'docked'` and `placement: 'bottom'` |
+| A factory screen retaining legacy chaining, native Tab order, live action containers, a centred or late-added FAB, or custom transition duration | `material/components/bottom-app-bar-toolbar` with its explicit stylesheet |
+| An existing bottom app bar using elements, framework adapters or SSR | Keep the legacy bottom app bar; the experimental entry is a browser factory only |
+
+The compatibility factory is absent from the root export. It preserves the legacy geometry and visibility callbacks, including auto-hide after a single scroll event moves more than 10px. It has no element, framework adapter or SSR registration of its own.
+
+The legacy `createBottomAppBar` is deprecated in 3.x in favour of the docked toolbar. It remains available with its existing behaviour; nothing is removed. The [migration note](MIGRATING.md#bottom-app-bar-in-3x) explains the API differences and the compatibility option.
+
+### Measured entry cost
+
+These are the implementation's [measurement snapshot](https://github.com/floor/material/actions/runs/42904182249) at [6c14334e](https://github.com/floor/material/commit/6c14334e79827660bc5b688004f2b2410941cfd9), compared with main at 17612ca2. Gzip values are bytes, not rounded kB. The root export and all 1,132 pre-existing default files were byte-identical.
+
+| Public export graph, minified gzip B | Legacy | Compatibility entry |
+| --- | ---: | ---: |
+| JavaScript only, retained by Bun | 4,248 | 4,386 |
+
+| Standalone Vite page, gzip B | Legacy + base/selective styles | Compatibility + base/complete entry styles |
+| --- | ---: | ---: |
+| Initial JavaScript | 4,092 | 4,228 |
+| Initial CSS | 3,266 | 6,929 |
+| Initial total | 7,358 | 11,157 |
+| Deferred | 0 | 0 |
+
+The styled compatibility page costs **3,799 B more** initially. The Vite pages and Bun export graphs are separate measurements. Caller-owned controls, fonts, external icons and HTML are outside these entry costs.
+
+| Package snapshot | Baseline | With compatibility entry | Added |
+| --- | ---: | ---: | ---: |
+| Compressed tarball, B | 900,439 | 902,094 | 1,655 |
+| Unpacked package, B | 5,136,578 | 5,143,736 | 7,158 |
+| Files | 1,267 | 1,272 | 5 |
+
+The root remained 131,091 B gzip; the opt-in entry provides no root or default-bundle saving. Package totals describe that snapshot and can change with later releases or documentation updates.
+
 ## Sizes
 
 What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
@@ -906,23 +962,3 @@ Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the
 MIT, see [LICENSE](LICENSE).
 
 Third-party notices: the package ships Material Symbols and Material Icons glyphs, copyright Google LLC, under the Apache License 2.0; [NOTICE](NOTICE) includes the licence text and lists the files that declare them.
-
-## Bottom app bar toolbar prototype
-
-The experimental factory is an explicit entry, separate from the shipped legacy bottom app bar:
-
-```js
-import createBottomAppBarToolbar from 'material/components/bottom-app-bar-toolbar';
-import 'material/styles/base';
-import 'material/styles/bottom-app-bar-toolbar';
-
-const bar = createBottomAppBarToolbar({ autoHide: true, fabPosition: 'center' });
-bar.addAction(actionButton).addFab(fabButton);
-document.body.append(bar.element);
-```
-
-It retains the legacy facade's geometry, native Tab order, live actions/FAB containers and visibility/scroll contract using self-contained construction and docked-toolbar styles.
-
-Existing `createBottomAppBar`, element/framework registrations and SSR mappings retain their shipped implementation. The prototype has no new element or framework/SSR registration.
-
-Import its component and styles entries explicitly; the root entry does not export it. Admission requires CI proof of unchanged root bytes, compatibility and measured complete entry cost.
