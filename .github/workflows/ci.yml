@@ -134,7 +134,7 @@ jobs:
         run: bun run dist-modules:check
       - name: Every dist JS file parses at the package's ES2022 syntax floor
         run: bun run syntax:check
-      - name: Default JS and CSS remain byte-identical to the typography baseline
+      - name: Typography role defaults and opt-in fallbacks remain unchanged
         run: bun run typescale-defaults:check
       - name: Element CSS files and exports
         run: bun run elements-css:check
