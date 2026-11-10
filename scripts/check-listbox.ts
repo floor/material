@@ -1207,6 +1207,24 @@ async function touchBehaviour(page: Page): Promise<void> {
     [{ type: "change", value: "cherry", previousValue: null, option: "Cherry" }], "B: the tap emits one change");
   ok("B: a real touch tap selects and closes");
 
+  // A change handler may close and reopen during the tap's pointerup. The
+  // click the same tap synthesizes afterwards must neither choose again nor
+  // close the popup the handler reopened.
+  await mount(page, "listbox");
+  await page.evaluate(() => {
+    const view = window as unknown as { __h: { on: (type: string, handler: () => void) => void; close: () => void; open: () => void } };
+    view.__h.on("change", () => { view.__h.close(); view.__h.open(); });
+  });
+  await page.locator("#control").tap();
+  await waitVisible(page);
+  await page.locator('[role="option"]', { hasText: "Cherry" }).tap();
+  const reopened = await state(page);
+  assert.equal(reopened.text, "Cherry", "B: the tapped change lands before the click");
+  assert.equal(reopened.attrs.expanded, "true", "B: a change handler's reopening survives the tap's click");
+  assert.deepEqual(reopened.events.map(event => event.type), ["open", "change", "open"],
+    "B: the tap's click neither chooses nor closes the reopened popup");
+  ok("B: a tap's click does not close a reopened popup");
+
   // A pan over a longer list scrolls it. The browser cancels the gesture when
   // the scroll takes over, so the pan reaches no pointerup and chooses nothing.
   await page.setViewportSize({ width: 900, height: 400 });

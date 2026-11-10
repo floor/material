@@ -112,6 +112,7 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
   let generation = 0;
   let buffer = "";
   let bufferAt = 0;
+  let tapActivation = false;
   let observer: MutationObserver | null = null;
 
   const listeners = new Map<string, Set<(detail: never) => void>>();
@@ -489,6 +490,9 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     return row ? rows.indexOf(row as HTMLElement) : -1;
   };
   const onPointerDown = (event: PointerEvent): void => {
+    // There is no gesture in flight while a new one starts: the click that
+    // completes it is not a follow-up to an earlier tap
+    tapActivation = false;
     // Keep the control focused: a press on a plain row would move focus off it
     // for every pointer type, and the control's focusout would close the popup
     // before the choice lands. Canceling also suppresses the compatibility
@@ -505,6 +509,7 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     if (event.pointerType === "mouse" || event.button !== 0) return;
     const index = rowAt(event);
     if (onlyEnabled(index)) {
+      tapActivation = true;
       activeIndex = index;
       commit(event);
     }
@@ -514,6 +519,13 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     if (onlyEnabled(index)) setActive(index);
   };
   const onClick = (event: Event): void => {
+    // A tap's pointerup is followed by a click for the same gesture. That click
+    // must not choose again, nor close a popup a change handler reopened after
+    // the pointerup's commit; a mouse or assistive click never sets the flag
+    if (tapActivation) {
+      tapActivation = false;
+      return;
+    }
     const index = rowAt(event);
     if (onlyEnabled(index)) {
       activeIndex = index;
