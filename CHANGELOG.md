@@ -17,6 +17,35 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-11-10
+
+Bring your own design tokens.
+
+### Added
+
+- **Built-in theme origins.** `material/core/theme` now exports `THEME_ORIGINS`, `BASELINE_SEED` and readonly origin types for every built-in theme. Generated palettes record their seed, variant, nominal contrast input and any secondary seed. The baseline records its documented seed association; authored palettes retain documented source seeds and use `null` where provenance or a generation recipe is not recorded. The map and its records are frozen, and bundlers can remove them when unused. Existing palette values are unchanged. These records describe palette origins; they do not detect the active theme or promise that every palette can be regenerated from its record.
+- **Opt-in type-scale role fallbacks.** Application Sass builds can set `$typescale-tokens: true` to make component typography consume the existing role custom properties for font, size, line height, letter spacing and weight. Omitted properties retain today's values; role fonts fall back through the existing brand/plain typeface property to the compiled family. Applications can override only the properties they need, without supplying a complete token sheet.
+
+  ```scss
+  @use "material/src/styles/config" with ($typescale-tokens: true);
+  @use "material/src/styles/main";
+  ```
+
+  The flag defaults to `false`. Prebuilt styles, normal framework adapter entries and default inline server rendering keep their existing profile. Applications using custom elements compile matching shadow and pre-upgrade styles, register every required style key before element definition, and use the same app-built styles for linked server rendering. The element style-authoring route is experimental. Applications own the compiled files and their loading; later style registration does not replace sheets already adopted by existing roots. Missing values use fallbacks; values of the wrong CSS type follow normal CSS invalid-value behavior.
+- **A configure-once Sass gateway.** Load `material/src/styles/config` before every other Material Sass module in a compilation, then load themes, full styles, elements and selective sheets without another `with (...)` clause. The gateway emits no CSS. Its five switches are `$contrast-emit`, `$tag-prefix`, `$direction-arms`, `$typescale-tokens` and `$spring-tokens`; both token flags default to `false`. Typography consumption is available; the spring flag currently stores configuration only. Token maps are not a supported Sass configuration surface; use CSS custom properties for application token values. Existing direct contrast and tag-prefix configuration remains available when used on its own. Configuring a module after it has loaded produces Sass's standard already-loaded error.
+- **A versioned token catalogue.** `material/tokens/catalogue.json` is a generated, opt-in mapping of every custom property the stylesheets emit: its cssName, Material's own identifier where a retained source shows one, family, group, and one of three honest verification states with a stable reason code resolved through the legend at the document root. 258 rows — 87 verified against same-day retained Material source reads (10 shape steps, 2 typefaces, 75 typescale role×axis), 56 unverified with the reason stated, 115 not-applicable library-internal — plus 6 recorded gaps of what is deliberately not emitted. A JSON Schema ships beside it (`material/tokens/catalogue.schema.json`); the full review document with every emission and consumer context is a CI artifact, never a tarball file. The catalogue is generated while the package packs, never committed, and nothing in the default surface reads it: no runtime byte moves, and a CI identity gate holds the default surface byte-identical through the change.
+
+### Fixed
+
+- **Tooltip:** A tooltip whose anchor opens a menu no longer covers it. Press, and Enter or Space, hide the tooltip at once; it stays hidden while the anchor's menu is open, and returns only on a hover or focus after the menu closes.
+
+### Size
+
+- The typography profile is compiled by the application rather than shipped as a duplicate prebuilt stylesheet family. In the checked application fixture, opting in increases initial gzip-compressed JavaScript and CSS from **53,334 B to 54,766 B**, and complete loading from **60,058 B to 61,490 B**: **1,432 B** more in each case. These are integration fixture measurements, not a forecast for every application or final release-package totals. Default output remains on its existing profile.
+- The catalogue's two data files add **5,975 B gzip** to the compressed package (69,975 B + 4,190 B raw); every default import and stylesheet row is byte-identical to **3.11.0**.
+- Raise the gzip budgets for the tooltip (**6,300 B → 6,400 B**), every component (**127,850 B → 128,000 B**) and all JavaScript (**130,950 B → 131,100 B**), approved on **2026-11-10**. The raise changes budget constants only; no shipped bytes come from it.
+- Release measurements: [filled from this release branch's CI package job before merge].
+
 ## [3.11.0] - 2026-11-10
 
 Load date-picker calendars and menus on demand, lighter element application styles, and child-action containers for cards.
