@@ -241,7 +241,7 @@ function assertSass(): { off: string; on: string } {
   return { off: omitted, on };
 }
 
-async function assertInventory(): void {
+async function assertInventory(): Promise<void> {
   assert.equal(CONSUMERS.length, 20);
   const styles = await walk("src/styles", ".scss");
   for (const file of CONSUMERS) {
@@ -337,7 +337,7 @@ async function readRows(page: Page, selector: string): Promise<Row[]> {
 
 async function animate(page: Page, selector: string, propertyName: string, next: string): Promise<{ property: string; duration: number; easing: string }[]> {
   return page.evaluate(async probe => {
-    const el = document.querySelector(probe.selector);
+    const el = document.querySelector<HTMLElement>(probe.selector);
     if (!el) return [];
     await new Promise<void>(resolve => { requestAnimationFrame(() => requestAnimationFrame(() => resolve())); });
     if (probe.propertyName === "class") el.classList.add(probe.next);
