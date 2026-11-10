@@ -7,6 +7,13 @@
       "\"string\""
     ]
   },
+  "AuthoredThemeOrigin.seed": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
   "BadgeColor": {
     "kind": "union",
     "members": [
@@ -103,6 +110,31 @@
     "members": [
       "\"modal\"",
       "\"standard\""
+    ]
+  },
+  "BuiltInThemeName": {
+    "kind": "union",
+    "members": [
+      "\"autumn\"",
+      "\"baseline\"",
+      "\"brownbeige\"",
+      "\"content\"",
+      "\"desert\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"forest\"",
+      "\"fruit-salad\"",
+      "\"highcontrast\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"ocean\"",
+      "\"rainbow\"",
+      "\"sageivory\"",
+      "\"spring\"",
+      "\"summer\"",
+      "\"sunset\"",
+      "\"tealcaramel\"",
+      "\"vibrant\""
     ]
   },
   "ButtonConfig": {
@@ -2038,6 +2070,28 @@
     "kind": "extends",
     "bases": [
       "ComponentConfig"
+    ]
+  },
+  "ThemeOrigin": {
+    "kind": "union",
+    "members": [
+      "AuthoredThemeOrigin",
+      "BaselineThemeOrigin",
+      "GeneratedThemeOrigin"
+    ]
+  },
+  "ThemeOriginVariant": {
+    "kind": "union",
+    "members": [
+      "\"content\"",
+      "\"expressive\"",
+      "\"fidelity\"",
+      "\"fruit-salad\"",
+      "\"monochrome\"",
+      "\"neutral\"",
+      "\"rainbow\"",
+      "\"tonal-spot\"",
+      "\"vibrant\""
     ]
   },
   "ThemeRole": {

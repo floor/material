@@ -211,6 +211,64 @@ Element applications can use `material/styles/base-elements` to keep the base's 
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
+Components can opt into the existing type-scale role properties through an application Sass build. Prebuilt CSS keeps the default profile. Load configuration first, then compile the factory stylesheet:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/main";
+```
+
+The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any dependent Sass module. The shared entry also forwards contrast, direction, tag-prefix and design-token map options. Subsequent entries inherit that configuration without another configuration clause.
+
+For custom elements, compile matching pre-upgrade CSS separately. This entry includes the pre-upgrade layer and the linked-SSR rollback:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true, $tag-prefix: "x");
+@use "material/src/styles/preupgrade";
+```
+
+App-compiled shadow CSS uses the experimental element authoring API. Compile one file for each key in the element definition's styles, plus the shared shadow styles. This Sass entry emits the configured key; each file must be registered under that key:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/element-styles" with ($name: "button");
+```
+
+For a button, compile the ripple, progress and button keys into the three files below. Load and register every file before defining the element:
+
+```typescript
+import 'material/styles/base-elements';
+import { defineButton, registerStyles } from 'material/elements';
+
+const names = ['ripple', 'progress', 'button'];
+const sheets = await Promise.all(names.map(async name => {
+  const response = await fetch(`/app-css/${name}.css`);
+  if (!response.ok) throw new Error(`Cannot load ${name} styles`);
+  return [name, await response.text()];
+}));
+registerStyles(Object.fromEntries(sheets));
+defineButton();
+```
+
+The application owns these compiled files and their loading. Include every style key its elements require. Choose the profile before creation; later registration does not replace sheets already adopted by roots. The normal framework adapter entries keep their default CSS imports and do not provide this opt-in profile.
+
+Set only the role properties the application wants to customize:
+
+```css
+.application {
+  --mtrl-sys-typescale-label-large-font-size: 18px;
+  --mtrl-sys-typescale-label-large-font-weight: 600;
+}
+```
+
+Role properties inherit through element hosts into shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled family. No complete token sheet is required.
+
+Badge text consumes its existing size, line-height and weight properties; hidden text and dots keep zero font size. Button-group pre-upgrade items use the same size role as their upgraded buttons; the large-size declarations keep their existing priority.
+
+A provided role value wins over the fallback. An inherited role font resolved on an ancestor keeps that ancestor's value; set the role font on the intended scope when changing its reference face. A missing token can use a fallback, but a supplied value of the wrong CSS type follows normal CSS invalid-value behavior.
+
+For linked SSR, point the renderer's cssBase option at the app-compiled shadow CSS directory. Supply the component dependencies and the unchanged host sheets from the distributed element CSS directory. The client uses the same app build. Default inline SSR retains its default CSS.
+
 From 3.1.0, Sass consumers can choose which contrast rules to compile with `$contrast-emit`. Configure the public themes entry in your application stylesheet:
 
 ```scss
@@ -236,7 +294,7 @@ For the full stylesheet, use this entry instead:
 | `preference` | The system contrast preference only |
 | `none` | Standard roles only; no contrast attributes or preference rules |
 
-Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Other Sass configuration remains unsupported. Theme with CSS custom properties.
+Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Theme with CSS custom properties.
 
 Material describes [three contrast levels](https://m3.material.io/styles/color/system/how-the-system-works) to accommodate different vision needs. Its [color contrast guidance](https://m3.material.io/foundations/designing/color-contrast) explains the role of contrast in readability. Choosing `none` keeps standard colors but removes responses to both explicit contrast choices and the system preference.
 
@@ -249,6 +307,33 @@ The elements' pre-upgrade rules are a third Sass entry. Until its script defines
 ```
 
 The prefix defaults to `m`. The build emits the same rules, at the default prefix, as `material/elements/preupgrade.css`.
+
+When an application compiles several Sass entries, configure the shared gateway first:
+
+```scss
+@use "material/src/styles/config" with (
+  $contrast-emit: preference,
+  $tag-prefix: "app",
+  $direction-arms: true
+);
+@use "material/src/styles/themes/ocean";
+@use "material/src/styles/main";
+@use "material/src/styles/elements";
+```
+
+The gateway emits zero CSS. Its five supported switches are:
+
+| Switch | Default | Effect |
+|--------|---------|--------|
+| `$contrast-emit` | `all` | Chooses the contrast families above |
+| `$tag-prefix` | `"m"` | Sets the undefined custom-element tag prefix |
+| `$direction-arms` | `false` | Compiles physical direction arms for a bundler's CSS pipeline when truthy |
+| `$typescale-tokens` | `false` | Enables role-token typography with the existing literal fallbacks |
+| `$spring-tokens` | `false` | Boolean configuration reserved for opt-in spring emission; currently stores the value only |
+
+Both token switches are also configurable directly on the full stylesheet or elements entry. The spring switch currently stores configuration only; typography emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
+
+Sass [configures a module on its first load](https://sass-lang.com/documentation/at-rules/use/#configuration). Put the gateway before every other material import, including selective sheets. Then load the other entries without `with (...)`. Configuring both the gateway and another entry with `with (...)`, or loading a component before configuring the gateway, produces Sass's standard “already loaded” error. The direct contrast and tag-prefix examples above continue to work when used on their own.
 
 ### Themes
 
@@ -293,6 +378,21 @@ The attribute is opt-in: the full stylesheet includes it, and selective styles a
 
 How contrast resolves on nested themes, and how each level is derived, is in the [Theming guide](https://md3.io/docs/theming/#contrast).
 
+#### Theme origins
+
+Every built-in theme's standard palette has a record of where it came from, as data — not a recipe to regenerate a palette, not an active-theme detector:
+
+```typescript
+import { BASELINE_SEED, THEME_ORIGINS, type BuiltInThemeName } from 'material/core/theme';
+
+const origin = THEME_ORIGINS['desert' as BuiltInThemeName];
+// { kind: 'generated', seed: '#9a7a3e', variant: 'tonal-spot', contrast: 0, secondary: '#4a87c4' }
+```
+
+A generated theme carries its seed, variant and the generator's nominal contrast input (`highcontrast` is `1`; a user's contrast preference does not change the record). The baseline's record describes its documented seed association — its palette is maintained as published tokens.
+
+An authored theme carries its documented source seed where its source records one, and `null` where it does not: `autumn` has no recorded seed, and none is invented. Its variant and contrast are `null` too, no recipe being verified for it. The map and its records are frozen, and a bundler removes the whole block from consumers that never read it.
+
 ### Custom properties
 
 Components read the theme's colour roles, so overriding a role restyles every component that uses it:
@@ -324,6 +424,30 @@ Density is a custom property as well: `--mtrl-density` steps from 0 to -5 on a c
 Typography, icons and touch targets keep their size; each component stops at its own height floor, and fixed-height surfaces such as menus and dialogs do not take part. The [Theming guide](https://md3.io/docs/theming/#density) lists the floors.
 
 The [Theming guide](https://md3.io/docs/theming/#the-other-tokens) lists the type, shape and state tokens.
+
+### Token catalogue
+
+`material/tokens/catalogue.json` is a versioned record of every custom property the stylesheets emit: its family in Material's taxonomy, and a verification state with the reason for it. The data is generated while the package is packed, so the copy you install describes the exact build it came with — and importing it is the only way it costs a byte, because nothing in the runtime reads it.
+
+Verification states are honest rather than flattering. A row is `verified` only when a retained Material source was read for its value, the emitted CSS matches that read in every emission context, and CI browser assertions probe the built stylesheets.
+
+Rows without a same-day source read say `unverified` with why, library-internal properties say `not-applicable`, and what the library does not emit at all is listed as gaps rather than fudged into either state. The reason sentences gather into one legend at the root, so a row carries its reason as a stable code:
+
+```json
+{
+  "cssName": "--mtrl-sys-shape-corner-large",
+  "m3Id": null,
+  "family": "system",
+  "group": "shape",
+  "verification": "verified",
+  "reason": "shape-step-dp",
+  "source": "m3-shape-scale"
+}
+```
+
+`material/tokens/catalogue.schema.json` ships beside the data, so tooling can validate a document before consuming it. Every document also records what it was built from — the digests of the reviewed input files and of the emitted CSS, and the implementation commit — which is what makes two catalogues with equal content but different provenance distinguishable.
+
+The full wiring behind each row — every emission context, consumer attribution and assertion citation — is generated beside the build as a review artifact, and ships nowhere.
 
 ## Web components
 

@@ -1,0 +1,6 @@
+// Configure once, before any other material stylesheet in this compilation.
+// Subsequent main, themes, elements and selective imports must omit `with`.
+// This gateway emits no CSS. Forward flags before modules that may read them.
+@forward 'abstract/emit' show $typescale-tokens, $spring-tokens, $direction-arms;
+@forward 'themes/base-theme' show $contrast-emit;
+@forward 'abstract/element-prefix' show $tag-prefix;

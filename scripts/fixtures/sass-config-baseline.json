@@ -1,0 +1,113 @@
+{
+  "main": "d1bf02cab53e6215355464fcecc85338e20c0398",
+  "ci": 42735350596,
+  "bun": "1.4.2",
+  "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
+  "sourceOptions": {
+    "style": "expanded",
+    "prelude": "none",
+    "loadPaths": [
+      "src/styles"
+    ]
+  },
+  "buildInputs": {
+    "bun.lock": "1344d0443f629092f1e685442735db71c0f6d7d8cfae9084b092986cb4c27672",
+    "scripts/build.ts": "233ee6873f77cdae1347b4a1007fcfa757cc305291a5f833c0f9b02ab97af45c",
+    "scripts/build-styles.ts": "436421a05684485bbb5ccb62cf8c5ef0c8e2c6ada5b33f874e69507aa221d73e",
+    "scripts/style-manifest.ts": "217f29e46afe35e6bacd237a1b47e3a8d7e7475315442eab3d0316b199c3e869"
+  },
+  "sources": {
+    "main": "c13295f2781baafed5b5858d38a081de3ffe9c4eb0fee318ff0497e390218caa",
+    "themes": "e4e33bb1bc5de1d3da2670b0596996d2dd20f0b7844bdf96b9b9a777df454ede",
+    "elements": "8c065cab3f4ce4498f42c911036c2645ad9d81ca9a760c0561882354afb1e7c8",
+    "themes/neutral": "7260a3aa568672a5dd208884bc17e773e601215e8e1075b4a053c48bd6b31cf6",
+    "themes/vibrant": "1bde5130698d2bdd97d772b9bc1da51adc50028cb5562c8069b09fb71134ea9d",
+    "themes/expressive": "a5f2ea3e5250bce151fa93904e1b2f54ddee2b2c40d6427b88843be4e625f437",
+    "themes/fidelity": "c4030b5f2de0015393214598105b7c7566c7e856dc64c830852e3a8bbffb1448",
+    "themes/content": "c118d2b4d9b4e7a9aebc1799ea07fbc2fc34eae949cc4758227776509745ad32",
+    "themes/monochrome": "0a47c2093cb3e6daa6320b7c746f8f1bd161b23561969c5b8013fa073b3acc10",
+    "themes/rainbow": "b4042c145e48951ef22ca8e5c95c599bb4e74717ffcf956293fedf6d0d45e1eb",
+    "themes/fruit-salad": "faefc2b35e06174409ca487d4ef0ad3d0d6721980e5f7345099498cbb3cf7b7a"
+  },
+  "payloads": {
+    ".": {
+      "count": 2,
+      "sha256": "d942da0a501ce08dc69228be8bbf9b0a6e863ae2640242d1279deb06f548ded4"
+    },
+    "components": {
+      "count": 283,
+      "sha256": "de61d4a5f96161b809a5c2a62cee52cecc5ec1fc4565196b5f79c3a73319cc7c"
+    },
+    "core": {
+      "count": 74,
+      "sha256": "cf6b4e49e12201a03d9df5acc2874494b84305c71ef427a4854d4f2a5b5218f2"
+    },
+    "elements": {
+      "count": 199,
+      "sha256": "02ea99ceb6c565c1b4767db03c67dbf9ea9f26ebc03a18feb4f022462540f5fa"
+    },
+    "react": {
+      "count": 53,
+      "sha256": "33403734184ae411fc3c1f4673d83db85ba02dece0524581263e87a732728959"
+    },
+    "solid": {
+      "count": 53,
+      "sha256": "2e7b4259abe9a21a07fb143b1b99eaee421c4812c05fe284b62c597448e721db"
+    },
+    "ssr": {
+      "count": 6,
+      "sha256": "296998af1e4cb1c9e0d85176a8e7ee6edfa65630ff7ee50730e5ebfd00464650"
+    },
+    "styles": {
+      "count": 86,
+      "sha256": "4c3986d69bb5b6768993a39b414a3ccb3e644aa42c2049666be294b68ea38c5f"
+    },
+    "svelte": {
+      "count": 2,
+      "sha256": "e142398bae8efc1b193fdd3de59a2723b5db68c6a184c2d5fe3b4d86db229e5c"
+    },
+    "theme": {
+      "count": 33,
+      "sha256": "a9d60369ddfd42654302644ba05b890bdadf81394f640ddbcef011679b11636e"
+    },
+    "themes": {
+      "count": 40,
+      "sha256": "64e7676e5e8c7ff3e71dfef4b2699e4a4abd94e4acd03d009353f8abc9855263"
+    },
+    "vue": {
+      "count": 53,
+      "sha256": "895606f6045bca041da7ac2123501fe71abb5f4dcd0bb0927e85da923a62090e"
+    }
+  },
+  "normalization": "remove only a leading material version banner",
+  "ssr": {
+    "rows": [
+      {
+        "tag": "m-button",
+        "attributes": {},
+        "children": "Sentinel"
+      },
+      {
+        "tag": "m-text-field",
+        "attributes": {
+          "label": "Name",
+          "value": "Ada",
+          "supporting-text": "Support"
+        },
+        "children": ""
+      },
+      {
+        "tag": "m-badge",
+        "attributes": {
+          "label": "5"
+        },
+        "children": ""
+      }
+    ],
+    "modes": {
+      "inline": "b0e1c3f15c76d1110eb6edf178a13c7bd7bbb527ce3ea0208fb814d320523d3d",
+      "link": "260113e4ea7cbea6618cfb46f54f9dc82441bdd1eb1c4497da92a451604869f7"
+    },
+    "random": "constant 0.123456 during the synthetic render fixture only"
+  }
+}

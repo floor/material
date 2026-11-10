@@ -1,0 +1,13 @@
+// Layered pre-upgrade Sass, including the linked-SSR rollback.
+@forward 'abstract/emit' show $typescale-tokens;
+@forward 'elements/config' show $tag-prefix;
+@use 'sass:meta';
+
+@layer mtrl.preupgrade {
+  @include meta.load-css('elements');
+  // Keep the same host/pseudo/direct-child rollback as preupgradeSheet.
+  $rendered: '[data-mtrl-ssr]:not(:defined):not(#\\0)';
+  #{$rendered}, #{$rendered}::before, #{$rendered}::after, #{$rendered} > :defined {
+    all: revert-layer;
+  }
+}
