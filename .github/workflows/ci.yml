@@ -212,6 +212,9 @@ jobs:
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check
+          - group: button-profile
+            browsers: chromium
+            checks: button-profile:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
