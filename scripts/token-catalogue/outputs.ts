@@ -12,7 +12,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
-  componentStyles, themeStyles, standaloneThemes, contrastStyle,
+  componentStyles, themeStyles, standaloneThemes, contrastStyle, optionalStyleProfiles,
 } from "../style-manifest";
 import type { OutputFile } from "./inventory";
 
@@ -20,6 +20,7 @@ import type { OutputFile } from "./inventory";
 export const styleEntries = [
   "base", "base-elements", "base-lite", "typography", contrastStyle, "utilities",
   ...Object.keys(componentStyles),
+  ...Object.keys(optionalStyleProfiles),
 ];
 
 const cssNames = (directory: string): string[] => {

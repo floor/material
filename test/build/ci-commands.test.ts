@@ -25,7 +25,7 @@ const COMMANDS = [
   "solid-ssr:floor", "vue-ssr:floor",
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
-  "consumer:check", "menu-deferred:check", "tabs:check", "slider:check", "tooltip:check", "tooltip-menu:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check",
+  "consumer:check", "menu-deferred:check", "button-profile:check", "tabs:check", "slider:check", "tooltip:check", "tooltip-menu:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check",
   "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "tokens:catalogue-browser:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "theme-origins:check", "base-lite:check", "base-elements:check", "typescale-consumers:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
 ];
 

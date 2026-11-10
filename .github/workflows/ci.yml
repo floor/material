@@ -212,6 +212,9 @@ jobs:
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check
+          - group: button-profile
+            browsers: chromium
+            checks: button-profile:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
@@ -317,11 +320,11 @@ jobs:
       - name: Catalogue identity, when a catalogue input changed
         run: |
           base="$(git rev-parse origin/main)"
-          if ! git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts | grep -q .; then
+          if ! git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts scripts/style-manifest.ts scripts/optional-style-profiles.ts scripts/button-style-profile.ts | grep -q .; then
             echo "no catalogue input changed against main $base; the identity gate does not apply"
             exit 0
           fi
-          echo "catalogue inputs changed against main $base; proving data-only identity"
+          echo "catalogue inputs changed against main $base; proving existing-member identity and validated additions"
           npm pack --silent
           git worktree add ../material-base "$base"
           cd ../material-base

@@ -42,6 +42,12 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 // All shipped components have selective CSS entries.
 export const fullOnlyStyles: string[] = [];
 
+// Optional factory profiles never enter the full sheet, layer order, or shadow
+// stylesheet family. Each is projected from its unchanged general stylesheet.
+export const optionalStyleProfiles = {
+  "button-filled-small-round": { parent: "button", dependencies: ["progress"] },
+};
+
 // Themes in the full stylesheet, each also shipped as `material/themes/<name>`.
 // 3.0.0 removed the material, winter, browngreen and legacy themes.
 export const themeStyles = [
