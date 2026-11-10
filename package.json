@@ -196,6 +196,10 @@
       "types": "./dist/components/list/index.d.ts",
       "import": "./dist/components/list/index.js"
     },
+    "./components/listbox": {
+      "types": "./dist/components/listbox/index.d.ts",
+      "import": "./dist/components/listbox/index.js"
+    },
     "./components/list/constants": {
       "types": "./dist/components/list/constants.d.ts",
       "import": "./dist/components/list/constants.js"
@@ -566,6 +570,7 @@
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts",
+    "listbox:check": "bun run scripts/check-listbox.ts",
     "datepicker-deferred:check": "bun run scripts/check-datepicker-deferred.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",
     "dialog-afteropen:check": "bun run scripts/check-dialog-afteropen.ts && bun run scripts/check-a11y-name-role-d.ts && bun run scripts/check-icon-registry-close.ts",

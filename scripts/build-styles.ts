@@ -67,7 +67,11 @@ export function directionArmsPrelude(): string {
  * another layer ahead of pre-upgrade.
  */
 export function styleLayerOrder(): string {
-  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
+  // Opt-in entries (`material/styles/listbox`) are selective-only: they are not
+  // in the full stylesheet, so their layer joins the order only when their own
+  // sheet is loaded, and no default asset's declared order moves.
+  const selective = Object.keys(componentStyles).filter(name => !componentStyles[name].optIn);
+  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(selective)];
   return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
 }
 
@@ -115,9 +119,14 @@ async function validateRuntimeDependencies(outdir: string) {
     assert(map, `Missing dependency information for ${name}`);
     const { sources } = await map.json() as { sources: string[] };
     const provided = new Set(resolveStyleDependencies([name]));
+    const sharedLeaves = new Set(componentStyles[name].sharedLeaves ?? []);
     for (const source of sources) {
       const parts = relative(resolve(outdir), resolve(source)).split(sep);
       if (parts[0] === "components" && parts[1] !== name) {
+        // A declared leaf is an explicit exception to the CSS obligation; every
+        // other retained module still needs its component's sheet, and a leaf
+        // that imports its own component's implementation shows up here too.
+        if (sharedLeaves.has(parts.slice(1).join("/").replace(/\.[cm]?[jt]s$/, ""))) continue;
         if (!provided.has(parts[1])) missing.add(`${name} uses ${parts[1]} at runtime but its CSS dependency is missing`);
       }
     }
@@ -134,7 +143,7 @@ export async function buildStyles(outdir: string, banner: string) {
   // Use Sass's parsed dependency graph, not text matching, to detect manifest drift.
   const loaded = full.loadedUrls.map(url => relative(resolve("src/styles"), fileURLToPath(url)).split(sep).join("/"));
   const components = loaded.filter(path => path.startsWith("components/")).sort();
-  const declared = [...Object.values(componentStyles).map(entry => entry.source), ...fullOnlyStyles]
+  const declared = [...Object.values(componentStyles).filter(entry => !entry.optIn).map(entry => entry.source), ...fullOnlyStyles]
     .map(source => source.replace(/\/([^/]+)$/, "/_$1.scss")).sort();
   assert.deepEqual(components, declared, "Component CSS manifest differs from the full stylesheet");
   const themes = loaded.filter(path => path.startsWith("themes/") && !["themes/_index.scss", "themes/_base-theme.scss"].includes(path)).sort();

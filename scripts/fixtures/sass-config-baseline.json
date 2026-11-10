@@ -1,6 +1,8 @@
 {
-  "main": "8e009521cf2b0e30a333eab273e295b5b16191b4",
-  "ci": 42846339326,
+  "tested": "3c5b1a695fc9898b00ce0009f961ee524de19f96",
+  "branch": "feat/listbox",
+  "mainRevision": "88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9",
+  "ci": 42895259672,
   "bun": "1.4.2",
   "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
   "sourceOptions": {
@@ -13,8 +15,8 @@
   "buildInputs": {
     "bun.lock": "d63d551eed6a4274aaa03d9874f8e1dff63506411f706206787dcb381fd180b1",
     "scripts/build.ts": "233ee6873f77cdae1347b4a1007fcfa757cc305291a5f833c0f9b02ab97af45c",
-    "scripts/build-styles.ts": "b1e96d188f66590c46861180122837d62dc860a9094cc538876543665876b7c8",
-    "scripts/style-manifest.ts": "82bebd4658aefff86164810105ef3a77835eb3cddd12e18215304082c4364858",
+    "scripts/build-styles.ts": "4dd9fb9ee55f25830e776fca502bf1defab61f6dcba0f7a5dececea87d10e146",
+    "scripts/style-manifest.ts": "b564f70aab62f3decab284dadb0aa28a5bddf8f1d9ce5bdcfddc74efb377cce3",
     "scripts/button-style-profile.ts": "c4af25cc9327089aeb229dd0e260a452d97736376b99cd8ef8f7c575eb31fb9b",
     "scripts/optional-style-profiles.ts": "001b3cb27a2fa887b73962d06891e1dac67dfe16412a7a9fb4157f834937e5ec"
   },
@@ -37,8 +39,8 @@
       "sha256": "162c1f0a5635f84b26581006ca01d15a6f827c2d2f3b82c5d1fd7c3e9697fd87"
     },
     "components": {
-      "count": 283,
-      "sha256": "848d233700feabaef071b2b584e9706bf82a752aabe050e08d1aaf3f1a5c7c68"
+      "count": 285,
+      "sha256": "1f632890e1efdf45a539a41061e07ba099e8947b19553a1954b44fe2bd768a02"
     },
     "core": {
       "count": 76,
@@ -61,8 +63,8 @@
       "sha256": "296998af1e4cb1c9e0d85176a8e7ee6edfa65630ff7ee50730e5ebfd00464650"
     },
     "styles": {
-      "count": 86,
-      "sha256": "4c3986d69bb5b6768993a39b414a3ccb3e644aa42c2049666be294b68ea38c5f"
+      "count": 88,
+      "sha256": "195ca64c33b38393f7e8d901d1d9abe0221690abba71fd043ebc328e5d755920"
     },
     "svelte": {
       "count": 2,

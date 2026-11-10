@@ -60,8 +60,10 @@ export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, soli
 export const TARBALL_BYTES = 920_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
-// and the rule figure are in check-package-size.ts.
-export const UNPACKED_BYTES = 5_119_000;
+// and the rule figure are in check-package-size.ts. The lean listbox entry's six
+// files measure 5,127,470 B in CI, 1,265 files; measured + 1%, up to the next 1,000,
+// is 5,179,000. Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
+export const UNPACKED_BYTES = 5_179_000;
 
 /** check-slider.ts: its own build of the slider element entry. */
 export const SLIDER_INLINE_GZIP = 13_400;

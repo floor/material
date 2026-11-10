@@ -1284,6 +1284,26 @@
       "BaseComponent"
     ]
   },
+  "ListboxChangeDetail": {
+    "kind": "extends",
+    "bases": [
+      "ListboxEventDetail<T>"
+    ]
+  },
+  "ListboxChangeDetail.previousValue": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
+  "ListboxConfig.value": {
+    "kind": "union",
+    "members": [
+      "null",
+      "string"
+    ]
+  },
   "ListConfig.initialSelection[]": {
     "kind": "union",
     "members": [

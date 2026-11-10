@@ -93,7 +93,7 @@ try {
     const entry = CHECKOUT_ENTRIES[index];
     if (entry in baseline.sources) {
       assert.equal(digest(packed), baseline.sources[entry as keyof typeof baseline.sources],
-        `${specifier}: default source output differs from frozen main ${baseline.main}`);
+        `${specifier}: default source output differs from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the packed entry compiled to ${digest(packed)}`);
     }
     if (entry !== "config") {
       assert.equal(compileSource(`@use "material/src/styles/config"; @use "${specifier}";`), packed,
@@ -149,9 +149,15 @@ try {
   assert.throws(() => compileSource(`@use "material/src/styles/components/button"; ${config}`), /already loaded/);
   assert.throws(() => compileSource(`${config} @use "material/src/styles/main" with ($typescale-tokens: true);`), /already loaded/);
 
-  // Independent pre-change payloads from main's CI artifact, not candidate-vs-
-  // candidate comparisons. Only the declared, independently validated optional
-  // profile pair is additive; every pre-existing default payload stays frozen.
+  // The payload identity is taken from a CI artifact, never from a local
+  // build: baseline.tested names the head and baseline.ci the run whose package
+  // job packed this branch — its merge ref, main included — and hashed the
+  // installed dist. The components and styles groups therefore hold this
+  // branch's additive entry files; the opt-in sheet pair is validated
+  // independently below. When a run reports a drift, its failure prints the
+  // identity that artifact actually produced; that printed value, together with
+  // the run number and head, is the pin, so the next test re-verifies those
+  // bytes against the same declared source.
   const optionalFiles = new Set(optionalStyleFiles);
   const profileInputs = new Map<string, string>();
   for (const path of files.filter(path => /^dist\/styles\/[^/]+\.(?:css|js)$/.test(path))) {
@@ -181,19 +187,26 @@ try {
       .update("\0");
     payloads[group] = { count: paths.length, sha256: hash.digest("hex") };
   }
-  assert.deepEqual(payloads, baseline.payloads, `Published default JS/CSS differs from main ${baseline.main}, CI ${baseline.ci}`);
   const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as typeof import("../src/ssr");
   const random = Math.random;
   Math.random = () => 0.123456;
+  const ssrModes: Record<string, string> = {};
   try {
     for (const mode of ["inline", "link"] as const) {
       const hash = createHash("sha256");
       for (const row of baseline.ssr.rows) hash.update(row.tag + "\0").update(renderElement(row.tag, row.attributes, row.children,
         mode === "link" ? { styles: "link", cssBase: "/assets/css" } : {})).update("\0");
-      assert.equal(hash.digest("hex"), baseline.ssr.modes[mode], `${mode}: published default SSR HTML changed`);
+      ssrModes[mode] = hash.digest("hex");
     }
   } finally { Math.random = random; }
-  console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match ${baseline.main} (CI ${baseline.ci}).`);
+  const identity = JSON.stringify({ payloads, ssr: { modes: ssrModes } });
+  assert.deepEqual(payloads, baseline.payloads,
+    `Published default JS/CSS differs from the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}); the checked artifact produced ${identity}`);
+  for (const mode of ["inline", "link"] as const) {
+    assert.equal(ssrModes[mode], baseline.ssr.modes[mode],
+      `${mode}: published default SSR HTML changed from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the checked artifact produced ${identity}`);
+  }
+  console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
   // The public configuration and all three consumers must work from normalized
   // packed Sass, including the first-use and false/default contracts.
   for (const name of ["main", "elements"]) {
