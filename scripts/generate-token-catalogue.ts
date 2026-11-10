@@ -74,17 +74,17 @@ const buildRow = (
   inventory: Inventory,
 ): TokenRow => {
   const emissions = inventory.emissions.get(cssName) ?? [];
-  // Only the two small verified families enumerate their emission contexts —
-  // their per-context match is the verification story. Every other group
-  // (colour, typescale, state, density, library hooks) carries an honest
-  // summary with its denominators: counts plus bounded value samples, the
-  // complete inventory staying in the build, not the shipped document.
-  const summarized = input.group !== "shape" && input.group !== "typeface";
-  const distinctSelectors = [...new Set(emissions.map(emission => emission.selector))].sort();
-  const distinctValues = [...new Set(emissions.map(emission => emission.value))].sort();
 
   if (input.verification === "verified") {
     if (!input.source) throw new Error(`${cssName}: a verified row must cite a ledger source`);
+    const cited = sources.find(source => source.id === input.source);
+    if (!cited) throw new Error(`${cssName}: verified citing unknown ledger source ${input.source}`);
+    if (cited.status !== "read") {
+      throw new Error(`${cssName}: verified citing source ${input.source} with status ${cited.status} — only a source read on its ledger date can back a verified row`);
+    }
+    if (!cited.digest.trim()) {
+      throw new Error(`${cssName}: verified citing source ${input.source} whose retained digest is empty — an unverifiable read cannot back a verified row`);
+    }
     if (typeof input.expected !== "string") throw new Error(`${cssName}: a verified row must carry an independent expected value`);
     for (const emission of emissions) {
       if (!valueMatches(emission.value, input.expected)) {
@@ -104,7 +104,7 @@ const buildRow = (
     prefix: "mtrl",
     m3Id: input.m3Id ?? null,
     source: input.source ?? null,
-    emissions: summarized ? [] : emissions,
+    emissions,
     consumers: inventory.consumers.get(cssName) ?? { kind: "declaration-only", selectors: [], exports: [] },
     support: input.support,
     supportReason: input.supportReason,
@@ -113,14 +113,6 @@ const buildRow = (
     checks: input.assertions ?? [],
   };
   if (input.introduced != null) row.lifecycle = { introduced: input.introduced, deprecated: null, replacedBy: null };
-  if (summarized) {
-    row.emissionSummary = {
-      surfaces: [...new Set(emissions.map(emission => emission.export))].length,
-      selectors: distinctSelectors.length,
-      values: distinctValues.length,
-      valueSamples: distinctValues.slice(0, 4),
-    };
-  }
   if (input.verification === "verified") {
     const surfaces = [...new Set(emissions.map(emission => emission.export))].length;
     row.verificationEvidence = {
@@ -281,7 +273,7 @@ export function renderVerifiedView(catalogue: Catalogue): string {
     const source = bySource.get(row.verificationEvidence!.source);
     // Summarized verified rows carry their emitted value as a sample; every
     // verified row has exactly one distinct value, so the sample is the match.
-    const expected = row.emissionSummary?.valueSamples[0] ?? row.emissions[0]?.value ?? "";
+    const expected = row.emissions[0]?.value ?? "";
     lines.push(`| \`${row.cssName}\` | \`${expected}\` | ${source?.id ?? ""} | ${source?.readDate ?? ""} | ${row.checks.join(", ")} |`);
   }
   return `${lines.join("\n")}\n`;

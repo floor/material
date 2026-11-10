@@ -10,6 +10,7 @@ import { describe, expect, test } from "bun:test";
 import { buildInventory, type OutputFile } from "../../scripts/token-catalogue/inventory";
 import { shapeScale, typescale, typefaceDefault } from "../../scripts/token-catalogue/expected";
 import { UNCONSUMED_STEPS } from "../../scripts/token-catalogue/rows";
+import { sources } from "../../scripts/token-catalogue/sources";
 import { catalogueSchema, validateAgainst, type Json } from "../../scripts/token-catalogue/schema";
 import { buildCatalogue, projectLean, renderCatalogue, renderFullCatalogue, valueMatches } from "../../scripts/generate-token-catalogue";
 import { REASONS } from "../../scripts/token-catalogue/types";
@@ -80,6 +81,44 @@ describe("the catalogue generator", () => {
     // claim the row may not make — generation fails, the row is corrected.
     expect(() => catalogueOf(`:root{${rootDeclarations}}`)).toThrow(/shape\.corner\.consumer-attribution/);
   });
+
+  test("rejects a verified row whose cited source was not read", () => {
+    // The ledger entry exists, but its status says the page was unavailable:
+    // no verified claim may rest on a source that was not read that day.
+    const shape = sources.find(source => source.id === "m3-shape-scale")!;
+    const saved = shape.status;
+    shape.status = "unavailable";
+    try {
+      expect(() => catalogueOf()).toThrow(/status unavailable .* only a source read on its ledger date/);
+    } finally {
+      shape.status = saved;
+    }
+  });
+
+  test("rejects a verified row whose cited source retained no digest", () => {
+    const shape = sources.find(source => source.id === "m3-shape-scale")!;
+    const saved = shape.digest;
+    shape.digest = "";
+    try {
+      expect(() => catalogueOf()).toThrow(/digest is empty .* an unverifiable read/);
+    } finally {
+      shape.digest = saved;
+    }
+  });
+
+  test("enumerates every row's emission contexts and the complete consumer wiring", () => {
+    // Ten consumers on one step: the previous caps kept eight selectors and
+    // six exports; the full document is the review surface, so it truncates
+    // nothing. Every row carries its emission contexts enumerated, with no
+    // summary standing in for them.
+    const tenMore = Array.from({ length: 10 }, (_, index) =>
+      `.mtrl-extra-${index}{border-radius:var(--mtrl-sys-shape-corner-small)}`).join("\n");
+    const full = catalogueOf(`${fixtureCss}\n${tenMore}`);
+    expect(full.tokens.every(row => Array.isArray(row.emissions) && row.emissions.length > 0)).toBe(true);
+    expect(full.tokens.every(row => !("emissionSummary" in row))).toBe(true);
+    const small = full.tokens.find(row => row.cssName === "--mtrl-sys-shape-corner-small")!;
+    expect(small.consumers.selectors.filter(selector => selector.startsWith(".mtrl-extra-")).length).toBe(10);
+  });
 });
 
 describe("valueMatches", () => {
@@ -137,6 +176,16 @@ describe("the catalogue schema", () => {
     expect(errorsOf(document => {
       (document as Record<string, unknown>).sourceCommit = "abc123";
     }).join("\n")).toContain("sourceCommit");
+  });
+
+  test("accepts prerelease and build package versions", () => {
+    expect(errorsOf(document => { (document as Record<string, unknown>).packageVersion = "3.12.0-beta.1"; })).toEqual([]);
+    expect(errorsOf(document => { (document as Record<string, unknown>).packageVersion = "3.12.0-rc.3+build.7"; })).toEqual([]);
+  });
+
+  test("still rejects malformed package versions", () => {
+    expect(errorsOf(document => { (document as Record<string, unknown>).packageVersion = "3.12"; }).join("\n")).toContain("packageVersion");
+    expect(errorsOf(document => { (document as Record<string, unknown>).packageVersion = "v3.12.0"; }).join("\n")).toContain("packageVersion");
   });
 
   test("rejects a gap that claims emissions", () => {
