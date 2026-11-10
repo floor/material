@@ -325,6 +325,29 @@ Typography, icons and touch targets keep their size; each component stops at its
 
 The [Theming guide](https://md3.io/docs/theming/#the-other-tokens) lists the type, shape and state tokens.
 
+### Token catalogue
+
+`material/tokens/catalogue.json` is a versioned record of every custom property the stylesheets emit: its family in Material's taxonomy, its support state, and a verification state with the reason for it. The data is generated while the package is packed, so the copy you install describes the exact build it came with — and importing it is the only way it costs a byte, because nothing in the runtime reads it.
+
+Verification states are honest rather than flattering. A row is `verified` only when a retained Material source was read for its value, the emitted CSS matches that read in every emission context, and CI browser assertions probe the built stylesheets. Rows without a same-day source read say `unverified` with why, library-internal properties say `not-applicable`, and what the library does not emit at all is listed as gaps rather than fudged into either state:
+
+```json
+{
+  "cssName": "--mtrl-sys-shape-corner-large",
+  "m3Id": null,
+  "family": "system",
+  "group": "shape",
+  "verification": "verified",
+  "verificationEvidence": {
+    "source": "m3-shape-scale",
+    "mapping": "matched",
+    "assertions": ["shape.corner.root-defaults", "shape.corner.consumer-attribution"]
+  }
+}
+```
+
+`material/tokens/catalogue.schema.json` ships beside the data, so tooling can validate a document before consuming it. Every document also records what it was built from — the digests of the reviewed input files and of the emitted CSS, and the implementation commit — which is what makes two catalogues with equal content but different provenance distinguishable.
+
 ## Web components
 
 Overlays open in the browser's top layer from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so.
