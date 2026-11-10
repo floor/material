@@ -1286,6 +1286,44 @@ async function chromiumBehaviour(page: Page): Promise<void> {
   ok("AT: disabled state");
 }
 
+/**
+ * A pen's primary contact chooses; its barrel/secondary button is a context
+ * gesture and chooses nothing. CDP is the only way to send a real pen
+ * sequence: Playwright's mouse API reports pointerType mouse.
+ */
+async function penBehaviour(page: Page): Promise<void> {
+  const client = await page.context().newCDPSession(page);
+  const press = async (button: "left" | "right", text: string): Promise<void> => {
+    const box = await page.locator('[role="option"]', { hasText: text }).boundingBox();
+    assert.ok(box, `B: the ${text} row has a box`);
+    const x = Math.round(box.x + box.width / 2);
+    const y = Math.round(box.y + box.height / 2);
+    const buttons = button === "left" ? 1 : 2;
+    const shared = { x, y, button, clickCount: 1, pointerType: "pen" };
+    await client.send("Input.dispatchMouseEvent", { ...shared, type: "mousePressed", buttons });
+    await client.send("Input.dispatchMouseEvent", { ...shared, type: "mouseReleased", buttons: 0 });
+  };
+
+  await mount(page, "listbox");
+  await page.locator("#control").click();
+  await waitVisible(page);
+  await press("right", "Banana");
+  const secondary = await state(page);
+  assert.equal(secondary.text, "Choose fruit", "B: a pen secondary-button release chooses nothing");
+  assert.equal(secondary.attrs.expanded, "true", "B: the pen secondary button leaves the popup open");
+  assert.deepEqual(secondary.events.filter(event => event.type === "change"), [], "B: the pen secondary button emits no change");
+  ok("B: a pen secondary-button release does not choose");
+
+  await press("left", "Banana");
+  const primary = await state(page);
+  assert.equal(primary.text, "Banana", "B: a pen primary release chooses");
+  assert.equal(primary.attrs.expanded, "false", "B: the pen primary choice closes the popup");
+  assert.deepEqual(primary.events.filter(event => event.type === "change").map(event => event.value), ["banana"],
+    "B: the pen primary release emits one change");
+  ok("B: a pen primary release selects and closes");
+  await client.detach();
+}
+
 type AxNode = { name: string; expanded: string; disabled: string; value: string };
 async function axNode(session: CDPSession, role: string): Promise<AxNode> {
   const nodes = await axNodes(session, role);
@@ -1432,6 +1470,7 @@ try {
   await chromiumPage.page.addScriptTag({ content: builtB.text });
   await chromiumPage.page.addScriptTag({ content: HARNESS });
   await chromiumBehaviour(chromiumPage.page);
+  await penBehaviour(chromiumPage.page);
   await chromiumPage.page.close();
 
   // The real tap and pan run in a touch context of the same engine.

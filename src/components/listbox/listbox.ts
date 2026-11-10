@@ -499,8 +499,10 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
   };
   const onPointerUp = (event: PointerEvent): void => {
     // Touch and pen select here: after the canceled pointerdown there is no
-    // compatibility mousedown, and the row's click is not guaranteed to land
-    if (event.pointerType === "mouse") return;
+    // compatibility mousedown, and the row's click is not guaranteed to land.
+    // Only a primary activation chooses: a pen's barrel or secondary button
+    // (button 2) is a context gesture and commits nothing
+    if (event.pointerType === "mouse" || event.button !== 0) return;
     const index = rowAt(event);
     if (onlyEnabled(index)) {
       activeIndex = index;
