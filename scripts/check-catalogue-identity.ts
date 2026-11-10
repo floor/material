@@ -2,14 +2,18 @@
 /**
  * scripts/check-catalogue-identity.ts
  *
- * The identity gate: the opt-in token catalogue must be the only change the
- * package's default surface sees. Two packed tarballs — the main tip this tree
+ * The identity gate preserves the package's existing default surface while
+ * allowing catalogue data and explicitly validated optional style additions.
+ * Two packed tarballs — the main tip this tree
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
- * identical member lists, identical bytes everywhere, except the explicit
+ * identical bytes in existing members everywhere, except the explicit
  * allowlist (the version fields of package.json, the dist/tokens catalogue
  * data files, and whole-line additions to README.md — documentation of the new
- * data may be added, existing documentation may not be rewritten). Anything
+ * data may be added, existing documentation may not be rewritten). A new
+ * optional profile pair must exactly project its unchanged parent stylesheet
+ * and import its declared dependencies; once on main its bytes are frozen too.
+ * Anything
  * else — a moved byte, a renamed file, a shifted bundle —
  * fails with the member named, because a data-only change has no business
  * touching a single default byte.
@@ -22,6 +26,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 
 const sole = (directory: string): string => {
   const tarballs = readdirSync(directory).filter(name => name.endsWith(".tgz"));
@@ -82,11 +87,22 @@ const additionsOnly = (before: Buffer, after: Buffer): boolean => {
 };
 
 const problems: string[] = [];
+// A new optional stylesheet adds catalogue references. Permit only its exact
+// declared pair, validated against the unchanged parent sheet and dependency
+// imports. Once present on main, even these files are byte-frozen below.
+const optionalAdditions = new Set(optionalStyleFiles.map(path => `dist/${path}`));
+try {
+  validateOptionalStyleProfiles(new Map([...branch]
+    .filter(([path]) => path.startsWith("dist/styles/"))
+    .map(([path, bytes]) => [path.slice("dist/".length), bytes.toString()])), false);
+} catch (error) {
+  problems.push(String(error));
+}
 for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   const inMain = main.get(member);
   const inBranch = branch.get(member);
   if (inMain === undefined) {
-    if (!allowed(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*)`);
+    if (!allowed(member) && !optionalAdditions.has(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles)`);
     continue;
   }
   if (inBranch === undefined) {

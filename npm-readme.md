@@ -39,6 +39,19 @@ document.body.append(name.element, save.element);
 
 `material/styles` is a stylesheet, so this needs a bundler that handles CSS imports (Vite, webpack, Bun, …). Each factory returns a DOM element and a small API; call `destroy()` when the view goes away.
 
+For a factory page whose buttons stay filled, small and round, use the optional fixed-profile sheet:
+
+```typescript
+import 'material/styles/base';
+import 'material/styles/button-filled-small-round';
+import createButton from 'material/components/button';
+
+const save = createButton({ text: 'Save', variant: 'filled', size: 's', shape: 'round' });
+document.body.append(save.element);
+```
+
+Progress styles are included. Hover, keyboard focus, press, disabled, selected toggle and loading states, icons, density, RTL and CSS custom-property overrides remain available. This styles factory buttons in the page; elements and framework components keep their shadow styles. Import `material/styles/button` for any other variant, size or shape, including changes through `setVariant`, `setSize` or `setShape`. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
+
 ## Components
 
 | Group | Components |

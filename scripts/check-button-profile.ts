@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-// Prototype first: use the downloaded CI dist artifact, not a local build.
-// Full and projected consumers share the real factory, base and progress CSS.
+// Measure the public entry from the CI package, including its real imports.
+// Full and narrow consumers share the real factory, base and progress CSS.
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, writeFile, symlink, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -16,8 +16,9 @@ const metrics = (text: string) => ({ raw: Buffer.byteLength(text), gzip: gzipSyn
   brotli: brotliCompressSync(text, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length });
 const fullCss = await Bun.file(join(fixture.installed, "dist/styles/button.css")).text();
 const projected = filledSmallRoundCss(fullCss);
+assert.equal(await Bun.file(join(fixture.installed, "dist/styles/button-filled-small-round.css")).text(), projected);
 const report: Record<string, unknown> = {
-  prototype: true, source: "CI dist artifact staged exactly like publish", version: fixture.pack.version,
+  prototype: false, source: "public entry from CI package staged exactly like publish", version: fixture.pack.version,
   commit: Bun.spawnSync(["git", "rev-parse", "HEAD"]).stdout.toString().trim(),
   ciRun: process.env.GITHUB_RUN_ID ?? null,
   bun: Bun.version, nodeForPacking: Bun.spawnSync(["node", "--version"]).stdout.toString().trim(),
@@ -43,8 +44,7 @@ try {
   for (const mixed of [false, true]) for (const narrow of [false, true]) {
     const name = `${mixed ? "mixed" : "button"}-${narrow ? "narrow" : "full"}`;
     const dir = join(scratch, name); await mkdir(dir);
-    await writeFile(join(dir, "profile.css"), projected);
-    const styles = narrow ? "import 'material/styles/progress';import './profile.css';" : "import 'material/styles/button';";
+    const styles = narrow ? "import 'material/styles/button-filled-small-round';" : "import 'material/styles/button';";
     const tabs = mixed ? "import 'material/styles/tabs';import createTabs from 'material/components/tabs';const tabs=createTabs({tabs:[{text:'One',value:'one'},{text:'Two',value:'two'}]});document.body.append(tabs.element);const general=createButton({text:'General',variant:'outlined',size:'m',shape:'square',toggle:true,selected:true});general.element.id='general';document.body.append(general.element);" : "";
     await writeFile(join(dir, "entry.js"), `import 'material/styles/base';${styles}\n${app}\n${tabs}\ndocument.documentElement.dataset.ready="true";`);
     await writeFile(join(dir, "index.html"), '<!doctype html><html data-theme="baseline"><head><meta charset="utf-8"><style>body{padding:40px}button{margin:8px}</style></head><body><script type="module" src="./entry.js"></script></body></html>');
@@ -131,6 +131,10 @@ try {
     assert.equal(rest.after.height, "48px", "small button retains its touch target");
     for (const page of pages) await page.locator("#button").hover();
     await compare("hover");
+    for (const page of pages) await page.mouse.down();
+    await compare("native pointer press");
+    assert.notEqual(snapshots["native pointer press"]["#button"].main["border-radius"], rest.main["border-radius"], "native press must change shape");
+    for (const page of pages) await page.mouse.up();
     for (const page of pages) { await page.mouse.move(0, 0); await page.evaluate(() => { document.body.tabIndex = -1; document.body.focus(); }); await page.keyboard.press("Tab"); }
     await compare("keyboard focus");
     assert.equal(snapshots["keyboard focus"]["#button"].main.outline.includes("3px"), true, "keyboard focus ring must be visible");
@@ -150,9 +154,25 @@ try {
     await compare("dark theme");
     for (const page of pages) await page.emulateMedia({ reducedMotion: "reduce" });
     await compare("reduced motion");
+    // Exercise both file orders directly as well as Vite's bundled cascade.
+    // The general sheet must keep restoring the complete setter contract.
+    for (const reverse of [false, true]) {
+      await pages[3].evaluate(({ fullCss, projected, reverse }) => {
+        document.querySelectorAll("[data-profile-order]").forEach(el => el.remove());
+        for (const css of reverse ? [projected, fullCss] : [fullCss, projected]) {
+          const style = document.createElement("style"); style.dataset.profileOrder = "true";
+          style.textContent = css; document.head.append(style);
+        }
+      }, { fullCss, projected, reverse });
+      for (const page of pages.slice(2)) await page.evaluate(() => {
+        const button = (window as unknown as {button:{setVariant(v:string):void;setSize(v:string):void;setShape(v:string):void}}).button;
+        button.setVariant("outlined"); button.setSize("l"); button.setShape("square");
+      });
+      await compare(`mixed general setter contract, ${reverse ? "profile first" : "general first"}`);
+    }
     for (const [name, errors] of Object.entries(pageErrors)) assert.deepEqual(errors, [], `${name}: browser errors`);
     report.states = outcomes; report.stateSnapshots = snapshots; report.pageErrors = pageErrors;
-    console.log(`Button profile prototype: ${outcomes.length} state comparisons pass`);
+    console.log(`Public button profile: ${outcomes.length} state comparisons pass`);
   } finally { await browser.close(); server.stop(true); }
 } finally {
   await mkdir("analysis/browser", { recursive: true });
