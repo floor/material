@@ -308,9 +308,15 @@ Spring durations and easings can be inherited custom properties. Prebuilt styles
 }
 ```
 
-`motion.spring-tokens` emits thirteen `--mtrl-sys-motion-spring-*` properties from the library motion map, including `--mtrl-sys-motion-spring-fast-spatial-clamped-easing`. Component CSS reads those properties and keeps today's literal as the fallback. `$spring-tokens: false`, or leaving it unset, leaves that CSS unchanged. Loading `motion` by itself emits no CSS. [Motion physics](https://m3.material.io/styles/motion/overview/how-it-works) separates spatial motion from effects; these names follow that split, and the numbers stay the library's.
+`motion.spring-tokens` emits thirteen `--mtrl-sys-motion-spring-*` properties from the library motion map. They include `--mtrl-sys-motion-spring-fast-spatial-clamped-easing`.
 
-JavaScript deadlines do not follow an override: the navigation rail removes its switching state after 450ms, the slider removes its settling state after 450ms, and a snackbar leaves on its opacity transition or after 425ms. The FAB menu's list visibility delay does follow the fast-spatial duration when the flag is on. Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in.
+Component CSS reads those properties and keeps today's literal as the fallback. `$spring-tokens: false`, or leaving it unset, leaves that CSS unchanged. Loading `motion` by itself emits no CSS.
+
+[Motion physics](https://m3.material.io/styles/motion/overview/how-it-works) separates spatial motion from effects; these names follow that split, and the numbers stay the library's.
+
+JavaScript deadlines do not follow an override: the navigation rail removes its switching state after 450ms, the slider removes its settling state after 450ms, and a snackbar leaves on its opacity transition or after 425ms.
+
+The FAB menu's list visibility delay does follow the fast-spatial duration when the flag is on. Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in.
 
 Material describes [three contrast levels](https://m3.material.io/styles/color/system/how-the-system-works) to accommodate different vision needs. Its [color contrast guidance](https://m3.material.io/foundations/designing/color-contrast) explains the role of contrast in readability. Choosing `none` keeps standard colors but removes responses to both explicit contrast choices and the system preference.
 
