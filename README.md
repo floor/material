@@ -576,9 +576,11 @@ Each root carries its styles one of two ways:
 - **Inline, the default.** The root's whole CSS is in a `<style>`: styled at first paint in every engine, with no extra request. The HTML is large before compression, so serve it with brotli.
 - **Link mode.** The root has `<link>` tags in place of the style text: small HTML, and stylesheets fetched once and cached. WebKit paints the roots unstyled until they arrive.
 
-Node and Bun use the server entries. `material/ssr` and the four bridges also select their server entries under the `workerd` and `worker` export conditions, ahead of `browser`. Enabling `worker` therefore selects server code even for a client worker. A browser-only build keeps the safe-to-import stub; calling its retained `renderElement` throws "material/ssr is server-only".
+Node and Bun use the server entries. Under the `workerd` and `worker` export conditions, the SSR entry and all four bridges also resolve to their server entries ahead of browser. Enabling `worker` therefore selects server code even for a client worker. A browser-only build keeps the safe-to-import stub; calling its retained `renderElement` throws "material/ssr is server-only".
 
-Wrangler selects `workerd`. Vite webworker SSR defaults to browser conditions: set `ssr.target: "webworker"`, `ssr.noExternal: ["material"]` and `ssr.resolve.conditions: ["workerd", "worker", "browser"]` to bundle the server entries. Those Vite conditions apply to bundled dependencies; externalized imports follow the runtime's own resolver. CI checks the packed package in pinned workerd without Node compatibility, including the four framework renders and native-global rollback. This does not establish support for every edge runtime.
+Wrangler selects `workerd`. Vite webworker SSR defaults to browser conditions, so set `ssr.target: "webworker"` and `ssr.noExternal: ["material"]`. Also set `ssr.resolve.conditions: ["workerd", "worker", "browser"]` to bundle the server entries, while externalized imports follow the runtime's own resolver.
+
+CI checks the packed package in pinned workerd without Node compatibility, including the four framework renders and native-global rollback. This does not establish support for every edge runtime.
 
 The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to the server entry and the four bridges.
 

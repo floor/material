@@ -196,6 +196,7 @@ try {
 
   // Framework peers stay external. This check does not install them.
   const frameworkPeers = ["react", "react-dom", "vue", "svelte", "solid-js"];
+  const externalFrameworkPeers = /^(?:react|react-dom|vue|svelte|solid-js)(?:\/.*)?$/;
   const bundleSsr = async (
     name: string,
     code: string,
@@ -227,7 +228,7 @@ try {
         external: frameworkPeers,
         ...(conditions ? { resolve: { conditions } } : {}),
       },
-      build: { ssr: entry, write: false, minify: false },
+      build: { ssr: entry, write: false, minify: false, rollupOptions: { external: externalFrameworkPeers } },
     });
     assert(!("on" in result));
     const chunks = (Array.isArray(result) ? result : [result]).flatMap(item => item.output)
@@ -290,7 +291,10 @@ try {
     ["workerd", "worker", "browser"],
   );
   assert.doesNotMatch(adapterBundle, /material\/ssr is server-only/);
-  assert.match(adapterBundle, /react-dom\/server|svelte\/server|vue\/server-renderer|solid-js\/web/);
+  assert.doesNotMatch(adapterBundle, /__vite-optional-peer-dep:/);
+  for (const peer of ["react-dom/server", "svelte/server", "vue/server-renderer", "solid-js/web"]) {
+    assert.match(adapterBundle, new RegExp(peer), `adapterBundle retains external ${peer}`);
+  }
 
   // An unknown condition falls through to default, which is the server entry.
   for (const condition of ["workerd", "worker", "not-a-real-runtime"]) {

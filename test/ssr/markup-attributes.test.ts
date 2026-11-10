@@ -196,8 +196,10 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
   const react = readFileSync("src/ssr/react.ts", "utf8");
   const svelte = readFileSync("src/ssr/svelte.ts", "utf8");
   const release = changelogSection(changelog, "3.0.0");
+  expect(release).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
+  expect(readme).toContain("Under the `workerd` and `worker` export conditions, the SSR entry and all four bridges also resolve to their server entries ahead of browser.");
+  expect(readme).toContain("This does not establish support for every edge runtime.");
   for (const text of [readme, release]) {
-    expect(text).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
     expect(text).toContain("material/ssr is server-only");
   }
   expect(readme).toContain("https://md3.io/docs/server-rendering/");
