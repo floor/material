@@ -23,6 +23,7 @@ const artifact = resolve('analysis/comparators', adapter);
 await mkdir(artifact, { recursive: true });
 const provenance = { adapter, package: spec.package, version: installed(spec.package).version, contract: contract.version,
   head: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), candidateSourceHead: process.env.COMPARATOR_HEAD,
+  reviewHead: process.env.COMPARATOR_REVIEW_HEAD, packedCandidate: JSON.parse(process.env.COMPARATOR_PACK),
   run: process.env.GITHUB_RUN_ID, node: process.version, npm: execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim(),
   vite: installed('vite').version, playwright: installed('playwright').version,
   lockSha256: digest(await readFile(join(root, 'package-lock.json'))), notes: spec.notes };
