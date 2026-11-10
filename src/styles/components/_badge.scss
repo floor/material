@@ -38,7 +38,7 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
+  font-weight: m.typography-value('label-small', 'font-weight', 500);
   box-sizing: border-box;
   overflow: hidden;
   transition: all 200ms ease;
@@ -65,8 +65,8 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
     min-width: 16px;
     border-radius: v.shape('full'); // BadgeTokens large-shape: corner-full
     padding: 0 4px;
-    font-size: 11px;
-    line-height: 16px;
+    font-size: m.typography-value('label-small', 'font-size', 11px);
+    line-height: m.typography-value('label-small', 'line-height', 16px);
     padding-top: 0.5px; // for some reason, we need this to be properly vertically centered
     
     // Handle max character count container (16dp x 34dp)

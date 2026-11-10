@@ -7,6 +7,7 @@
 // box before it either.
 @use '../abstract/variables' as v;
 @use '../abstract/theme' as t;
+@use '../abstract/mixins' as m;
 @use 'config' as c;
 
 // As components/_badge.scss: the badge's colours, the default error above.
@@ -24,9 +25,9 @@ $colors: ('primary', 'secondary', 'tertiary', 'success', 'warning', 'info');
   max-width: 34px; // the overflow badge's 16x34dp
   padding: 0 4px;
   border-radius: v.shape('full');
-  font-weight: 500;
-  font-size: 11px;
-  line-height: 16px;
+  font-weight: m.typography-value('label-small', 'font-weight', 500);
+  font-size: m.typography-value('label-small', 'font-size', 11px);
+  line-height: m.typography-value('label-small', 'line-height', 16px);
   background-color: t.color('error');
   color: t.color('on-error');
 
