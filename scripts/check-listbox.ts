@@ -716,7 +716,10 @@ async function sharedBehaviour(page: Page, kind: "menu" | "listbox"): Promise<vo
     return { is: view.__h.isDisabled(), attr: document.getElementById("control")!.getAttribute("aria-disabled"), events: view.__events.length };
   });
   assert.deepEqual(disabled, { is: true, attr: "true", events: 0 }, `${label}: setDisabled marks the control`);
-  await page.locator("#control").click();
+  // aria-disabled makes Playwright treat the control as not enabled and retry
+  // the click until it times out; the measure here is the library's own guard,
+  // so the click is sent past the actionability check and must not open.
+  await page.locator("#control").click({ force: true });
   await page.keyboard.press("ArrowDown");
   assert.equal((await page.evaluate(() => (window as unknown as { __h: { isOpen: () => boolean } }).__h.isOpen())), false, `${label}: a disabled control does not open`);
   await page.evaluate(() => (window as unknown as { __h: { setDisabled: (value: boolean) => void } }).__h.setDisabled(false));
