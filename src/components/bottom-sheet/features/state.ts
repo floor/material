@@ -7,8 +7,15 @@ import {
   BOTTOM_SHEET_STATES,
   BOTTOM_SHEET_VARIANTS,
 } from "../constants";
-import { onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
-import { createSheetModal } from "../../../core/dom/sheet-modal";
+import { deepActiveElement, wrapTab } from "../../../core/dom/focus";
+import {
+  hideFromTopLayer,
+  inertOutside,
+  onModalEscape,
+  onTopLayerClose,
+  showInTopLayer,
+  type ModalEscape,
+} from "../../../core/dom/layer";
 
 interface StateComponent {
   element: HTMLElement;
@@ -38,8 +45,34 @@ export const withState =
 
     let state: BottomSheetState =
       config.initialState ?? BOTTOM_SHEET_STATES.HIDDEN;
-    const { onStack, trap, captureFocus, restoreFocus, enterTopLayer, leaveTopLayer, handleTab } =
-      createSheetModal(element, isModal, top, config, close);
+    /** What had focus before a modal sheet took it */
+    let previouslyFocused: HTMLElement | null = null;
+    /** Undoes the inert page of a modal sheet outside the top layer */
+    let restorePage: (() => void) | undefined;
+    let escape: ModalEscape | undefined;
+
+    // A modal sheet's place among the open modals, while it is open: Escape
+    // is a key press handled there, for the topmost one, in both layers
+    const onStack = (on: boolean): void => {
+      escape?.stop();
+      escape =
+        on && isModal
+          ? onModalEscape(element, () => {
+              if (config.closeOnEscape) close();
+            })
+          : undefined;
+    };
+
+    // A modal sheet outside the top layer does what showModal() does for one
+    // inside it: the page goes inert and Tab stays in the sheet.
+    const trap = (on: boolean): void => {
+      onStack(on);
+      if (!isModal || top) return;
+      restorePage?.();
+      restorePage = on ? inertOutside(element) : undefined;
+      if (on) element.addEventListener("keydown", handleTab);
+      else element.removeEventListener("keydown", handleTab);
+    };
 
     const applyState = (next: BottomSheetState): void => {
       for (const name of Object.values(BOTTOM_SHEET_STATES)) {
@@ -76,13 +109,23 @@ export const withState =
         close();
     };
 
+    // showModal() keeps focus off the page; Tab wraps at the ends rather than
+    // leaving for the browser's own controls
+    const handleTab = (event: KeyboardEvent): void => wrapTab(element, event);
+
     function open(to: BottomSheetState = BOTTOM_SHEET_STATES.PARTIAL): void {
       if (state === to) return;
       const wasHidden = state === BOTTOM_SHEET_STATES.HIDDEN;
 
-      if (wasHidden && isModal) captureFocus();
+      if (wasHidden && isModal) {
+        previouslyFocused = deepActiveElement() as HTMLElement | null;
+      }
 
-      if (wasHidden && top) enterTopLayer();
+      if (wasHidden && top) {
+        if (!showInTopLayer(element, { kind: "modal" })) element.setAttribute("open", "");
+        // styled closed first, so the sheet slides and the backdrop fades in
+        void element.offsetWidth;
+      }
 
       setState(to);
 
@@ -99,11 +142,14 @@ export const withState =
       trap(false);
       // out of the top layer first: the page is inert until then. The
       // stylesheet keeps it in the top layer while it slides out.
-      if (top) leaveTopLayer();
+      if (top) hideFromTopLayer(element);
 
       // focus goes back where it came from, so a keyboard user is not dropped
       // at the top of the page
-      restoreFocus();
+      if (isModal && previouslyFocused?.isConnected) {
+        previouslyFocused.focus();
+        previouslyFocused = null;
+      }
 
       component.emit(BOTTOM_SHEET_EVENTS.CLOSE);
     }
@@ -142,7 +188,7 @@ export const withState =
           element.removeEventListener("keydown", handleTab);
           trap(false);
           stopCloses?.();
-          if (top) leaveTopLayer();
+          if (top) hideFromTopLayer(element);
         },
       },
     };
