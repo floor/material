@@ -80,6 +80,12 @@
       "status": "deprecated"
     }
   ],
+  "bottom-app-bar-toolbar": [
+    { "name": "BottomAppBarToolbarComponent", "kind": "type", "status": "deprecated" },
+    { "name": "BottomAppBarToolbarConfig", "kind": "type", "status": "deprecated" },
+    { "name": "createBottomAppBarToolbar", "kind": "value", "status": "public" },
+    { "name": "default", "kind": "value", "status": "public" }
+  ],
   "bottom-app-bar/constants": [
     {
       "name": "BOTTOM_APP_BAR_CLASSES",

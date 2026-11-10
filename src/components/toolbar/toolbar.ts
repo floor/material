@@ -1,9 +1,7 @@
 // src/components/toolbar/toolbar.ts
 import { processClassNames } from "../../core/config/component";
 
-import { pipe } from "../../core/compose/pipe";
-import { createBase, withElement } from "../../core/compose/component";
-import { withEvents, withLifecycle } from "../../core/compose/features";
+import { createToolbarStructure, createToolbarFab } from "./structure";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
 import { createRoving } from "../../core/dom/roving";
@@ -61,33 +59,25 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
   const vertical = orientation === "vertical";
   let color: ToolbarColor = settings.color;
 
-  const component = pipe(
-    createBase,
-    withEvents(),
-    withElement({
-      tag: "div",
-      componentName: "toolbar",
-      className: [
-        `${block}--${variant}`,
-        `${block}--${color}`,
-        vertical ? `${block}--vertical` : "",
-        placement !== TOOLBAR_PLACEMENTS.NONE ? `${block}--${placement}` : "",
-        variant === TOOLBAR_VARIANTS.DOCKED ? `${block}--${settings.arrangement}` : "",
-        settings.elevated ? `${block}--elevated` : "",
-        processClassNames(settings.className || ""),
-      ].filter(Boolean),
-    }),
-    withLifecycle()
-  )(settings);
+  const { component, bar } = createToolbarStructure(settings, {
+    tag: "div",
+    componentName: "toolbar",
+    className: [
+      `${block}--${variant}`,
+      `${block}--${color}`,
+      vertical ? `${block}--vertical` : "",
+      placement !== TOOLBAR_PLACEMENTS.NONE ? `${block}--${placement}` : "",
+      variant === TOOLBAR_VARIANTS.DOCKED ? `${block}--${settings.arrangement}` : "",
+      settings.elevated ? `${block}--elevated` : "",
+      processClassNames(settings.className || ""),
+    ].filter(Boolean),
+  }, `${block}__bar`, {
+    role: "toolbar",
+    "aria-label": settings.ariaLabel || "Toolbar",
+    ...(vertical ? { "aria-orientation": "vertical" } : {}),
+  });
   const resources = getCleanup(component);
   const root = component.element;
-
-  const bar = document.createElement("div");
-  bar.className = `${block}__bar`;
-  bar.setAttribute("role", "toolbar");
-  bar.setAttribute("aria-label", settings.ariaLabel || "Toolbar");
-  if (vertical) bar.setAttribute("aria-orientation", "vertical");
-  root.appendChild(bar);
 
   // Items the toolbar created, destroyed with it or when removed
   const created = new Map<HTMLElement, { destroy(): void }>();
@@ -159,17 +149,10 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
   (settings.items ?? []).forEach(add);
 
   if (settings.fab) {
-    const fab = document.createElement("div");
-    fab.className = `${block}__fab`;
+    const fab = createToolbarFab(root, `${block}__fab`, settings.fabPosition === "start" ? bar : null);
     fab.appendChild(elementOf(settings.fab));
     root.classList.add(`${block}--with-fab`);
-    // The FAB's side along the layout; the DOM order keeps the focus order visual.
-    if (settings.fabPosition === "start") {
-      root.classList.add(`${block}--fab-start`);
-      root.insertBefore(fab, bar);
-    } else {
-      root.appendChild(fab);
-    }
+    if (settings.fabPosition === "start") root.classList.add(`${block}--fab-start`);
   }
 
   let visible = true;

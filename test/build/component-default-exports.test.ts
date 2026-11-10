@@ -23,6 +23,7 @@ const factories: Record<string, string> = {
   'fab-menu': 'createFabMenu',
   'checkbox': 'createCheckbox',
   'bottom-app-bar': 'createBottomAppBar',
+  'bottom-app-bar-toolbar': 'createBottomAppBarToolbar',
   'slider': 'createSlider',
   'carousel': 'createCarousel',
   'top-app-bar': 'createTopAppBar',

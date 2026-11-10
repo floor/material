@@ -11,6 +11,7 @@ import {
 import { preupgradeSheet } from "../src/elements/styles";
 import { filledSmallRoundCss } from "./button-style-profile";
 import { profileStyleModule } from "./optional-style-profiles";
+import { bottomAppBarToolbarCss, bottomAppBarToolbarStyle, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 
 /** Same string as `styleLayerOrder`. The pre-upgrade check and its test name this. */
 export function cascadeLayerOrder(): string {
@@ -199,6 +200,9 @@ export async function buildStyles(outdir: string, banner: string) {
     await writeFile(`${outdir}/styles/${name}.css`, filledSmallRoundCss(general));
     await writeFile(`${outdir}/styles/${name}.js`, profileStyleModule(name, entry.dependencies));
   }
+  const compatibilityCss = bottomAppBarToolbarCss(await readFile(`${outdir}/styles/bottom-app-bar.css`, "utf8"));
+  await writeFile(`${outdir}/styles/${bottomAppBarToolbarStyle}.css`, compatibilityCss);
+  await writeFile(`${outdir}/styles/${bottomAppBarToolbarStyle}.js`, profileStyleModule(bottomAppBarToolbarStyle, bottomAppBarToolbarDependencies));
   for (const name of [...themeStyles, ...standaloneThemes]) {
     await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
     await emitExplicit(`themes/${name}-contrast`, name, false);

@@ -181,6 +181,9 @@ jobs:
   # package.json allows, and put the installed version back before they return
   # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
+    permissions:
+      contents: read
+      actions: read
     needs: build
     runs-on: ubuntu-24.04
     # A group takes about four minutes. A runner that stalls fails here, and is
@@ -211,6 +214,9 @@ jobs:
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check
+          - group: bottom-app-bar-toolbar
+            browsers: chromium
+            checks: bottom-app-bar-toolbar:check
           - group: button-profile
             browsers: chromium
             checks: button-profile:check
@@ -244,6 +250,21 @@ jobs:
       - uses: ./.github/actions/browsers
         with:
           browsers: ${{ matrix.browsers }}
+      - name: Pinned green baseline sources for the opt-in bar prototype
+        if: matrix.group == 'bottom-app-bar-toolbar'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9
+          path: .prototype-baseline
+          persist-credentials: false
+      - name: Pinned baseline distribution (built independently on main)
+        if: matrix.group == 'bottom-app-bar-toolbar'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: .prototype-baseline/dist
+          run-id: 42894840574
+          github-token: ${{ github.token }}
       - name: Checks (${{ matrix.checks }})
         # A check that hangs must fail on its own, and name itself. On
         # 2026-11-03 this step held the adapters job for 30 minutes until the
