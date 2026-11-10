@@ -22,7 +22,8 @@ Once the elements are registered ([below](#use-it-your-way)), these controls tak
 
 - **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
 - **One implementation, every stack.** The same component is a custom element, a React, Vue, Svelte or Solid component, and a factory, so it looks and behaves the same in each.
-- **Measured sizes.** Every component the root entry exports has a gzip budget that CI enforces on each pull request, and bundlers keep only what you import. The numbers are under [Sizes](#sizes).
+- **Measured sizes.** Every component has a gzip budget that CI enforces on each pull request, and bundlers keep only what you import. The numbers are under [Sizes](#sizes).
+- **Rootless entries.** `material/components/listbox` ships at its own subpath, outside the root entry and the size budgets; its stylesheet is `material/styles/listbox`.
 - **Zero dependencies.** Installing `material` installs nothing else. React, Vue, Svelte and Solid are optional peers: material uses the one your app has.
 - **Server rendering.** Elements and framework components render to declarative shadow DOM on Node and Bun, styled at first paint, and hydrate. See [Server rendering](#server-rendering).
 - **Native behaviour.** Form controls are form-associated, and overlays open in the browser's top layer, trap focus and make the page inert where M3 says so.
@@ -864,7 +865,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `material/styles`, the full stylesheet | 59.6 kB |
 <!-- /sizes -->
 
-`bun run size` measures the initial JavaScript of each component the root entry exports, and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
+`bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
 
 ## Browser support
 
