@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { build, preview } from 'vite';
 import { chromium } from 'playwright';
-import { assetRecord, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
+import { assetRecord, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Comparator installs/builds/browser probes run in GitHub CI only');
 const root = dirname(fileURLToPath(import.meta.url));
@@ -39,10 +39,13 @@ for (const scenario of ['button', 'app']) {
     // The common layout is deliberate fixture cost. It does not replace component styling.
     await writeFile(join(generated, 'main.js'), `import { mount } from ${JSON.stringify(join(root, 'adapters', adapter + '.js'))};\n` +
       `await mount(${JSON.stringify(scenario)});\nconst style=document.createElement('style');style.textContent='body{margin:24px}main{display:block;max-width:900px}section{margin-block:24px;min-width:260px}h2{font:12px sans-serif}';document.head.append(style);\nawait document.fonts.ready;await new Promise(requestAnimationFrame);window.comparatorReady=true;`);
-    const relocations = [];
+    const relocations = [], cssChunks = new Map();
     const built = await build({ root: generated, configFile: false, envDir: false, logLevel: 'warn',
       define: { __COMPARATOR_APP__: JSON.stringify(scenario === 'app') },
-      plugins: [{ name: 'self-host-pinned-beer-assets', enforce: 'pre', transform(code, id) {
+      plugins: [{ name: 'capture-css-chunk-references', generateBundle: { order: 'pre', handler(_options, bundle) {
+        for (const item of Object.values(bundle)) if (item.type === 'chunk') cssChunks.set(item.fileName, {
+          modules: [...item.moduleIds], imports: [...item.imports, ...(item.viteMetadata?.importedCss ?? []), ...(item.viteMetadata?.importedAssets ?? [])], dynamicImports: [...item.dynamicImports] });
+      }} }, { name: 'self-host-pinned-beer-assets', enforce: 'pre', transform(code, id) {
         if (!id.endsWith('.css') || !id.includes('/beercss/')) return null;
         return code.replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/beercss@5\.0\.3\/dist\/cdn\/([^"')\s]+)/g, (url, file) => {
           const target = join(root, 'node_modules/beercss/dist/cdn', file);
@@ -53,9 +56,9 @@ for (const scenario of ['button', 'app']) {
       build: { outDir: join(directory, 'dist'), emptyOutDir: true, target: contract.build.target, minify: true, cssMinify: contract.build.cssMinify,
         assetsInlineLimit: contract.build.assetsInlineLimit, modulePreload: { polyfill: false }, sourcemap: 'hidden' } });
     const output = built.output;
-    const records = output.filter(item => !item.fileName.endsWith('.map')).map(item => {
+    const rawRecords = output.filter(item => !item.fileName.endsWith('.map')).map(item => {
       const bytes = item.type === 'chunk' ? item.code : item.source;
-      const imports = item.type === 'chunk' ? [...item.imports, ...(item.viteMetadata?.importedCss ?? [])] : [];
+      const imports = item.type === 'chunk' ? [...item.imports, ...(item.viteMetadata?.importedCss ?? []), ...(item.viteMetadata?.importedAssets ?? [])] : [];
       if (item.fileName.endsWith('.html')) for (const m of String(bytes).matchAll(/(?:src|href)="\/?(assets\/[^"?#]+)"/g)) imports.push(m[1]);
       if (item.fileName.endsWith('.css')) for (const m of String(bytes).matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
         if (m[1].startsWith('data:')) continue;
@@ -65,7 +68,9 @@ for (const scenario of ['button', 'app']) {
       return { ...assetRecord(item.fileName, bytes, imports, item.type === 'chunk' ? item.dynamicImports : []),
         modules: item.type === 'chunk' ? Object.keys(item.modules).map(id => id.replace(root, '$FIXTURE')) : [] };
     });
-    result.assets = records; result.relocations = relocations;
+    result.assets = rawRecords;
+    const { records, collapsedCssChunks } = resolveCssChunks(rawRecords, cssChunks);
+    result.assets = records; result.collapsedCssChunks = collapsedCssChunks; result.relocations = relocations;
     result.declaredStaticAssets = staticClosure(records, ['index.html']);
     result.fullDeclaredAssets = declaredClosure(records, ['index.html']);
     const closure = startupClosure(records, ['index.html']);
@@ -144,6 +149,11 @@ for (const scenario of ['button', 'app']) {
           const section = page.locator(`[data-fixture="${role}"]`);
           let target = query ? section.getByRole(query).nth(index) : section.getByText('Filter', { exact: true });
           if (role === 'switch' && await target.count() === 0) target = section.getByRole('checkbox');
+          if (['beercss','micl'].includes(adapter) && ['checkbox','switch','chips'].includes(role)) target = section.locator('label').first();
+          if (role === 'radios') target = ['m3e','material-web'].includes(adapter) ? section.locator(adapter === 'm3e' ? 'm3e-radio[value="b"]' : 'md-radio[value="b"]') : section.locator('label').filter({ hasText: 'B' }).last();
+          if (role === 'chips' && ['material-elements','material-factories'].includes(adapter)) target = section.getByRole('button').first();
+          if (role === 'tabs' && adapter === 'beercss') target = section.locator('a').filter({ hasText: 'Details' });
+          if (role === 'tabs' && adapter === 'material-web') target = section.locator('md-primary-tab').nth(1);
           await target.click({ timeout: 3000 });
           const after = await readState(role); return { status: JSON.stringify(before) !== JSON.stringify(after) ? 'observed-change' : 'gap', before, after };
         });
@@ -152,6 +162,10 @@ for (const scenario of ['button', 'app']) {
         const before = await readState('tabs'); await page.keyboard.press('ArrowRight');
         const after = await readState('tabs'); return { status: JSON.stringify(before) !== JSON.stringify(after) ? 'observed-change' : 'gap', before, after };
       });
+      const listLabel = page.locator('[data-fixture="list"]').getByText('Item', { exact: true }).last();
+      check('list: label paints', await listLabel.evaluate(node => {
+        const range = document.createRange(); range.selectNodeContents(node); const r = range.getBoundingClientRect(); return r.width > 0 && r.height > 0;
+      }));
       const field = page.locator('[data-fixture="text-field"]').getByRole('textbox'); await field.fill('Ada');
       check('text-field: user typing', await page.evaluate(() => window.fixture.api.getValue('text-field')) === 'Ada');
       for (const [role, value] of [ ['select', 'rome'], ['slider', 70], ['progress', 70]]) {
@@ -162,10 +176,7 @@ for (const scenario of ['button', 'app']) {
       }
       for (const kind of ['Dialog', 'Menu']) {
         const role = kind.toLowerCase();
-        await page.evaluate(async kind => {
-          const trigger = document.createElement('button'); trigger.id = 'probe-trigger'; trigger.textContent = `Open ${kind}`; document.body.append(trigger); trigger.focus();
-          await window.fixture.api[`open${kind}`](trigger);
-        }, kind);
+        await page.locator(`#fixture-${role}-trigger`).click();
         await page.waitForFunction(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind);
         // Open state can be synchronous while lazy modules and entrance animations
         // are still pending. Wait for paint without altering upstream motion.
@@ -181,16 +192,22 @@ for (const scenario of ['button', 'app']) {
         await observe(`${role}: Escape and focus return`, async () => {
           await page.keyboard.press('Escape');
           await page.waitForFunction(kind => !window.fixture.api[kind.toLowerCase() + 'Open'](), kind, { timeout: 3000 });
-          return { status: 'closed', focusReturned: await page.evaluate(() => document.activeElement?.id === 'probe-trigger') };
+          return { status: 'closed', focusReturned: await page.evaluate(role => document.activeElement === window.fixture.triggers[role], role) };
         });
-        if (!await page.evaluate(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind)) await page.evaluate(kind => window.fixture.api[`open${kind}`](document.getElementById('probe-trigger')), kind);
+        if (!await page.evaluate(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind)) await page.evaluate(kind => window.fixture.api[`open${kind}`](window.fixture.triggers[kind.toLowerCase()]), kind);
         if (kind === 'Menu') await observe('menu: pointer selection', async () => {
-          const item = page.getByRole('menuitem').filter({ hasText: 'One' }).first();
+          const item = adapter === 'beercss' ? page.locator('#beer-menu li').first() : adapter === 'micl' ? page.locator('#micl-menu li').first() : adapter === 'material-web' ? page.locator('md-menu-item').first() : adapter === 'm3e' ? page.locator('m3e-menu-item').first() : page.getByRole('menuitem').filter({ hasText: 'One' }).first();
           await item.click({ timeout: 3000 });
           return { status: 'activated', closed: !await page.evaluate(() => window.fixture.api.menuOpen()) };
         });
-        await page.evaluate(async kind => { await window.fixture.api[`close${kind}`](); document.getElementById('probe-trigger')?.remove(); }, kind);
+        await page.evaluate(async kind => { if (window.fixture.api[kind.toLowerCase() + 'Open']()) await window.fixture.api[`close${kind}`](); }, kind);
         await page.waitForFunction(kind => !window.fixture.api[kind.toLowerCase() + 'Open'](), kind);
+        await page.waitForFunction(role => {
+          const n = window.fixture.controls[role], nodes = [n];
+          const walk = root => { for (const child of root.children) { nodes.push(child); walk(child); if (child.shadowRoot) walk(child.shadowRoot); } };
+          walk(n); if(n.shadowRoot) walk(n.shadowRoot);
+          return !nodes.some(el => { const r = el.getBoundingClientRect(), s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility === 'visible' && s.display !== 'none'; });
+        }, role);
         result.outcomes[role].interaction = 'public-open-close';
       }
     }

@@ -23,6 +23,6 @@ export async function mount(scenario) {
   }
   finish(c, { disabled: v => { v ? instances.button.disable() : instances.button.enable(); },
     openDialog: () => instances.dialog.open(), closeDialog: () => instances.dialog.close(), dialogOpen: () => instances.dialog.isOpen(),
-    openMenu: () => instances.menu.open(), closeMenu: () => instances.menu.close(), menuOpen: () => instances.menu.isOpen(),
+    openMenu: trigger => { instances.menu.setOpener(trigger); instances.menu.open(); }, closeMenu: () => instances.menu.close(), menuOpen: () => instances.menu.isOpen(),
     setValue: (role, value) => instances[role].setValue(value), getValue: role => instances[role].getValue() });
 }

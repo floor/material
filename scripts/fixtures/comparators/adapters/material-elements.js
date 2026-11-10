@@ -21,7 +21,7 @@ export async function mount(scenario) {
     for (const [role, markup] of Object.entries(html)) c[role] = attach(role, element(markup));
   }
   finish(c, { disabled: v => { c.button.disabled = v; }, openDialog: () => c.dialog.show(), closeDialog: () => c.dialog.close(), dialogOpen: () => c.dialog.open,
-    openMenu: () => c.menu.show(), closeMenu: () => c.menu.hide(), menuOpen: () => c.menu.open,
+    openMenu: trigger => { c.menu.anchor = trigger; c.menu.show(); }, closeMenu: () => c.menu.hide(), menuOpen: () => c.menu.open,
     setValue: (role, value) => { c[role].value = value; }, getValue: role => c[role].value });
   await new Promise(requestAnimationFrame);
 }

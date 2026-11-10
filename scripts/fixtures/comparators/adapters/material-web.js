@@ -16,7 +16,7 @@ export async function mount(scenario) {
     c.dialog = attach('dialog', element('<md-dialog aria-label="Confirm"><div slot="headline">Confirm</div><div slot="content">Continue?</div><md-filled-button slot="actions">Close</md-filled-button></md-dialog>'));
     c.menu = attach('menu', element('<md-menu><md-menu-item><div slot="headline">One</div></md-menu-item><md-menu-item><div slot="headline">Two</div></md-menu-item></md-menu>'));
     c.tabs = attach('tabs', element('<md-tabs><md-primary-tab>Overview</md-primary-tab><md-primary-tab>Details</md-primary-tab></md-tabs>'));
-    c.list = attach('list', element('<md-list><md-list-item>Item</md-list-item></md-list>'));
+    c.list = attach('list', element('<md-list><md-list-item><div slot="headline">Item</div></md-list-item></md-list>'));
     c.chips = attach('chips', element('<md-chip-set><md-filter-chip label="Filter"></md-filter-chip></md-chip-set>'));
     c.progress = attach('progress', element('<md-linear-progress value="0.5" aria-label="Progress"></md-linear-progress>'));
     c['icon-button'] = attach('icon-button', element(`<md-icon-button aria-label="Add">${icon}</md-icon-button>`));

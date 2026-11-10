@@ -9,7 +9,14 @@ export function finish(controls, api = {}) {
   const button = controls.button;
   const state = { clicks: 0 };
   button.addEventListener('click', () => state.clicks++);
-  window.fixture = { controls, api, state };
+  const triggers = {};
+  for (const kind of ['Dialog', 'Menu']) {
+    const role = kind.toLowerCase(); if (!controls[role]) continue;
+    const trigger = document.createElement('button'); trigger.id = `fixture-${role}-trigger`; trigger.textContent = `Open ${kind}`;
+    trigger.addEventListener('click', () => api[`open${kind}`](trigger));
+    document.querySelector(`[data-fixture="${role}"]`).append(trigger); triggers[role] = trigger;
+  }
+  window.fixture = { controls, api, state, triggers };
 }
 export async function settle() {
   // Await public component update promises, including dependencies created in shadow roots.

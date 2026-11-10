@@ -11,6 +11,22 @@ export function assetRecord(file, bytes, imports = [], dynamicImports = []) {
     brotli: text ? brotliCompressSync(content, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length : null,
     sha256: digest(content), imports: [...new Set(imports)], dynamicImports: [...new Set(dynamicImports)] };
 }
+// Vite removes CSS-only JS placeholders after Rolldown fills dynamicImports.
+// Resolve only proven CSS-only placeholders captured before that removal.
+export function resolveCssChunks(records, aliases) {
+  const emitted = new Set(records.map(row => row.file)); const collapsed = new Set();
+  const expand = (file, trail = new Set()) => {
+    if (emitted.has(file)) return [file];
+    const alias = aliases.get(file);
+    assert.ok(alias?.modules.length && alias.modules.every(id => /\.css(?:$|\?)/.test(id)), `unaccounted emitted reference ${file}`);
+    assert.ok(!trail.has(file), `cyclic removed CSS chunk ${file}`);
+    collapsed.add(file); const next = new Set([...trail, file]);
+    return [...alias.imports, ...alias.dynamicImports].flatMap(name => expand(name, next));
+  };
+  return { records: records.map(row => ({ ...row, imports: [...new Set(row.imports.flatMap(name => expand(name)))],
+    dynamicImports: [...new Set(row.dynamicImports.flatMap(name => expand(name)))] })),
+    collapsedCssChunks: [...collapsed].sort().map(file => ({ file, ...aliases.get(file) })) };
+}
 export function staticClosure(records, roots) {
   const lookup = new Map(records.map(record => [record.file, record]));
   assert.equal(lookup.size, records.length, 'duplicate emitted asset name');

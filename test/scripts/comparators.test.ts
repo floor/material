@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assetRecord, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
+import { assetRecord, resolveCssChunks, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
 
 const root = "scripts/fixtures/comparators";
 const contract = JSON.parse(readFileSync(join(root, "contract.json"), "utf8"));
@@ -20,6 +20,16 @@ describe("comparator accounting and fixture contract", () => {
     expect(() => staticClosure([assetRecord("a.js", "a", ["missing.css"])], ["a.js"])).toThrow("unaccounted static");
     expect(() => phaseSets(["a.js"], ["font.woff2"], [], ["a.js"])).toThrow("unaccounted request");
     expect(() => staticClosure([assetRecord("a.js", "a"), assetRecord("a.js", "b")], ["a.js"])).toThrow("duplicate");
+  });
+  test("reconciles removed CSS-only placeholders without dropping missing JavaScript", () => {
+    const rows = [assetRecord("main.js", "entry", [], ["style-placeholder.js"]), assetRecord("style.css", "style")];
+    const aliases = new Map([["style-placeholder.js", { modules: ["/installed/style.css"], imports: ["style.css"], dynamicImports: [] }]]);
+    const resolved = resolveCssChunks(rows, aliases);
+    expect(declaredClosure(resolved.records, ["main.js"])).toEqual(["main.js", "style.css"]);
+    expect(resolved.collapsedCssChunks.map(row => row.file)).toEqual(["style-placeholder.js"]);
+    expect(() => resolveCssChunks(rows, new Map())).toThrow("unaccounted emitted reference");
+    aliases.get("style-placeholder.js")!.modules = ["/installed/missing.js"];
+    expect(() => resolveCssChunks(rows, aliases)).toThrow("unaccounted emitted reference");
   });
   test("full declared closure follows lazy edges and their shared styles once", () => {
     const rows = [assetRecord("main.js", "entry", [], ["lazy.js"]), assetRecord("lazy.js", "lazy", ["shared.css"]), assetRecord("shared.css", "style"), assetRecord("unused.js", "unreachable")];
