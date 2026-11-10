@@ -141,6 +141,12 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22.23.3"
+      # Runs after Node is pinned: this check also packs the tarball and reads
+      # it the way a consumer does.
+      - name: Token catalogue is fresh, deterministic, packed and schema-valid
+        env:
+          MTRL_CATALOGUE_COMMIT: ${{ github.sha }}
+        run: bun run tokens:catalogue:check
       - name: Component classes match the stylesheets
         run: bun run classes:check
       - name: SSR adapter entries are minified
@@ -206,7 +212,7 @@ jobs:
             checks: menu-deferred:check
           - group: styles
             browsers: chromium
-            checks: preupgrade:check tokens:check contrast-emit:check theme-root-scope:check theme-runtime:check base-lite:check base-elements:check component-sheets:check density:check
+            checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check base-lite:check base-elements:check component-sheets:check density:check
           - group: ssr-a
             browsers: chromium
             checks: ssr:check:a
@@ -262,6 +268,7 @@ jobs:
             analysis/drawer
             analysis/navigation-rail
             analysis/core
+            analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json
             analysis/ssr-upgrade
             analysis/react-ssr/summary.json
@@ -272,15 +279,65 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # The identity gate of the token catalogue: a data-only change may not move a
+  # single byte of the default surface. The step no-ops itself when no
+  # catalogue input changed (the scope test is inside the step, not an `if`, so
+  # the gate can never be silently skipped by the workflow). On a pull request
+  # the checkout is the merge commit, so the base it compares against is the
+  # main tip that merge was computed from: bytes main itself moved since the
+  # branch started are not this change's to answer for, and the comparison sees
+  # exactly this pull request's delta. On a main push HEAD is that tip, the
+  # scope test is empty, and the step rests.
+  identity:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410b181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/cache@55cc8345863c7cc4c663329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22.23.3"
+      - name: Catalogue identity, when a catalogue input changed
+        run: |
+          base="$(git rev-parse origin/main)"
+          if ! git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts | grep -q .; then
+            echo "no catalogue input changed against main $base; the identity gate does not apply"
+            exit 0
+          fi
+          echo "catalogue inputs changed against main $base; proving data-only identity"
+          npm pack --silent
+          git worktree add ../material-base "$base"
+          cd ../material-base
+          bun install --frozen-lockfile
+          bun run build
+          npm pack --silent
+          cd "$GITHUB_WORKSPACE"
+          bun run catalogue:identity:check
+
   # The status the main ruleset requires: green only when every job above is.
   check:
     if: always()
-    needs: [static, tests, build, package, browser]
+    needs: [static, tests, build, package, browser, identity]
     runs-on: ubuntu-24.04
     steps:
       - name: Every job passed
         run: |
-          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }}'
+          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }}'
           [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
             && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.package.result }}' = success ] \
-            && [ '${{ needs.browser.result }}' = success ]
+            && [ '${{ needs.browser.result }}' = success ] \
+            && [ '${{ needs.identity.result }}' = success ]
