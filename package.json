@@ -573,7 +573,7 @@
     "carousel:check": "bun run scripts/check-carousel.ts",
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts",
-    "select:check": "bun run scripts/check-select-on-demand.ts",
+    "select:check": "bun run scripts/check-select-on-demand.ts && bun run scripts/check-icon-registry-expand-more.ts",
     "listbox:check": "bun run scripts/check-listbox.ts",
     "datepicker-deferred:check": "bun run scripts/check-datepicker-deferred.ts",
     "progress:check": "bun run scripts/check-progress-dpr.ts",

@@ -12,7 +12,7 @@ const MENU_PATH = 'd="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h7
 const MENU_OPEN_PATH = 'd="M120-240v-80h520v80H120Zm664-40L584-480l200-200 56 56-144 144 144 144-56 56ZM120-440v-80h400v80H120Zm0-200v-80h520v80H120Z"';
 const CLOSE_PATH = 'd="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"';
 
-afterEach(() => setIcons({ menu: null, "menu-open": null, close: null }));
+afterEach(() => setIcons({ menu: null, "menu-open": null, close: null, "expand-more": null }));
 
 test("the server renders the registry's glyph", () => {
   setIcons({ menu: "<i>server-menu</i>", "menu-open": "<i>server-open</i>", close: "<i>server-close</i>" });
@@ -73,4 +73,21 @@ test("FAB-menu server opt-out is preserved with a close override", () => {
   setIcons({ close: "<i>not rendered on the server</i>" });
   expect(render()).toBe(builtin);
   expect(builtin).not.toContain("shadowrootmode");
+});
+
+test("the select field's expand-more glyph follows the registry and clears to its own built-in", () => {
+  const render = () => renderElement("m-select", { label: "Fruit", "aria-label": "Fruit" }, '<m-select-option value="one">One</m-select-option>');
+  const builtin = render();
+  expect(builtin).toContain('M7 10l5 5 5-5H7z');
+  setIcons({ "expand-more": '<i data-registry="expand-more">Open</i>' });
+  const override = render();
+  expect(override).toContain('<i data-registry="expand-more">Open</i>');
+  expect(override).not.toContain('M7 10l5 5 5-5H7z');
+  expect(override).toContain('aria-haspopup="listbox"');
+  for (const clear of [null, undefined, ""] as const) {
+    setIcons({ "expand-more": clear });
+    const restored = render();
+    expect(restored).not.toContain('data-registry="expand-more"');
+    expect(restored).toContain('M7 10l5 5 5-5H7z');
+  }
 });
