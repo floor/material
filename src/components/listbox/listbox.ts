@@ -319,10 +319,16 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
       isOpen = true;
       syncActive();
       element.focus({ preventScroll: true });
+      // A focus handler may close or destroy the control synchronously: stop
+      // before rewriting the state it cleared, and never announce a dead surface
+      if (destroyed || !isOpen || generation !== before) return handle;
       setAttr("aria-expanded", "true");
       setAttr("aria-controls", popup.id);
       menuOpened(handle, event);
     } catch (error) {
+      // A destroyed factory has already restored its control; the cleanup below
+      // would write the opening state back onto it
+      if (destroyed) throw error;
       unbind(temporary);
       observer?.disconnect();
       observer = null;

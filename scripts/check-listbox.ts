@@ -893,6 +893,83 @@ async function factoryBehaviour(page: Page): Promise<void> {
   assert.equal(await page.evaluate(() => document.querySelector('[role="listbox"]') === null), true, "B: destroying from a change handler leaves no popup");
   ok("B: destroy from a change handler");
 
+  // The open path focuses the control synchronously, so a focus handler can
+  // destroy, close or close-and-reopen it while the open is still running.
+  await mount(page, "listbox");
+  const focusDestroy = await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { open: () => void; destroy: () => void; isOpen: () => boolean };
+      __events: { type: string }[];
+    };
+    const control = document.getElementById("control")!;
+    control.addEventListener("focus", () => { view.__h.destroy(); }, { once: true });
+    view.__h.open();
+    return {
+      open: view.__h.isOpen(),
+      popup: document.querySelector('[role="listbox"]') !== null,
+      expanded: control.getAttribute("aria-expanded"),
+      controls: control.getAttribute("aria-controls"),
+      events: view.__events.map(event => event.type),
+    };
+  });
+  assert.equal(focusDestroy.open, false, "B: a focus handler's destroy leaves the popup closed");
+  assert.equal(focusDestroy.popup, false, "B: a focus handler's destroy removes the popup");
+  assert.equal(focusDestroy.expanded, null, "B: a focus handler's destroy leaves no expanded state");
+  assert.equal(focusDestroy.controls, null, "B: a focus handler's destroy leaves no aria-controls");
+  assert.deepEqual(focusDestroy.events, [], "B: a destroyed open announces nothing");
+  ok("B: destroy from the focus callback");
+
+  await mount(page, "listbox");
+  const focusClose = await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { open: () => void; close: () => void; isOpen: () => boolean };
+      __events: { type: string }[];
+    };
+    const control = document.getElementById("control")!;
+    control.addEventListener("focus", () => { view.__h.close(); }, { once: true });
+    view.__h.open();
+    const popup = document.querySelector('[role="listbox"]') as HTMLElement;
+    return {
+      open: view.__h.isOpen(),
+      expanded: control.getAttribute("aria-expanded"),
+      controls: control.getAttribute("aria-controls"),
+      shown: popup.matches(":popover-open"),
+      events: view.__events.map(event => event.type),
+    };
+  });
+  assert.equal(focusClose.open, false, "B: a focus handler's close stays closed");
+  assert.equal(focusClose.expanded, "false", "B: the focus handler's close leaves aria-expanded false");
+  assert.equal(focusClose.controls, null, "B: the focus handler's close leaves no aria-controls");
+  assert.equal(focusClose.shown, false, "B: the focus handler's close hides the popover");
+  assert.deepEqual(focusClose.events, ["close"], "B: the focus handler's close announces close, never open");
+  ok("B: close from the focus callback");
+
+  await mount(page, "listbox");
+  const focusReopen = await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { open: () => void; close: () => void; isOpen: () => boolean };
+      __events: { type: string }[];
+    };
+    const control = document.getElementById("control")!;
+    control.addEventListener("focus", () => { view.__h.close(); view.__h.open(); }, { once: true });
+    view.__h.open();
+    const popup = document.querySelector('[role="listbox"]') as HTMLElement;
+    return {
+      open: view.__h.isOpen(),
+      expanded: control.getAttribute("aria-expanded"),
+      controls: control.getAttribute("aria-controls"),
+      id: popup.id,
+      shown: popup.matches(":popover-open"),
+      opens: view.__events.filter(event => event.type === "open").length,
+    };
+  });
+  assert.equal(focusReopen.open, true, "B: a focus handler's close-reopen leaves the popup open");
+  assert.equal(focusReopen.expanded, "true", "B: the focus handler's close-reopen leaves aria-expanded true");
+  assert.equal(focusReopen.controls, focusReopen.id, "B: the focus handler's close-reopen names the popup");
+  assert.equal(focusReopen.shown, true, "B: the focus handler's close-reopen shows the popover");
+  assert.equal(focusReopen.opens, 1, "B: the focus handler's close-reopen announces one open");
+  ok("B: close and reopen from the focus callback");
+
   await mount(page, "listbox");
   await page.locator("#control").click();
   await waitVisible(page);
