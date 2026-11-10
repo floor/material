@@ -406,10 +406,21 @@ async function animate(page: Page, selector: string, propertyName: string, next:
   }, { selector, propertyName, next });
 }
 
+// Chromium's animation list expands border-radius into the four corners.
+const RADIUS_CORNERS = [
+  "border-bottom-left-radius",
+  "border-bottom-right-radius",
+  "border-top-left-radius",
+  "border-top-right-radius",
+];
+
 function durationOf(anims: { property: string; duration: number; easing: string }[], name: string, expected: number, label: string): void {
-  const found = anims.find(item => item.property === name);
-  assert(found, `${label} did not animate ${name}: ${JSON.stringify(anims)}`);
-  assert.ok(Math.abs(found.duration - expected) < 0.5, `${label} ${name} ran for ${found.duration}ms`);
+  const names = name === "border-radius" ? RADIUS_CORNERS : [name];
+  for (const property of names) {
+    const found = anims.find(item => item.property === property);
+    assert(found, `${label} did not animate ${property}: ${JSON.stringify(anims)}`);
+    assert.ok(Math.abs(found.duration - expected) < 0.5, `${label} ${property} ran for ${found.duration}ms`);
+  }
 }
 
 async function assertPage(page: Page, mode: "off" | "on"): Promise<void> {
@@ -483,9 +494,11 @@ async function assertPage(page: Page, mode: "off" | "on"): Promise<void> {
   assert.equal(checkAnims.some(item => item.property === "background-color"), false, `${mode} checkbox animated background-color`);
   const buttonAnims = await animate(page, "#quiet-button", "border-radius", "4px");
   durationOf(buttonAnims, "border-radius", spatial, `${mode} button`);
-  const buttonEasing = buttonAnims.find(item => item.property === "border-radius")?.easing ?? "";
-  if (mode === "on") assert.match(buttonEasing, /ease-in|cubic-bezier\(0\.42,\s*0,\s*1,\s*1\)/);
-  else assert.match(buttonEasing, /linear/);
+  for (const corner of RADIUS_CORNERS) {
+    const buttonEasing = buttonAnims.find(item => item.property === corner)?.easing ?? "";
+    if (mode === "on") assert.match(buttonEasing, /ease-in|cubic-bezier\(0\.42,\s*0,\s*1,\s*1\)/, `${mode} button ${corner}`);
+    else assert.match(buttonEasing, /linear/, `${mode} button ${corner}`);
+  }
   const menuAnims = await animate(page, "#menu-item", "border-radius", "12px");
   durationOf(menuAnims, "border-radius", spatial, `${mode} menu`);
 
