@@ -28,7 +28,8 @@ const pack = (root: string, name: string, files: Record<string, string>): string
 /** The gate's verdict on one tarball pair: exit code and combined output. */
 const runGate = (branch: string, base: string): { code: number; out: string } => {
   const proc = Bun.spawnSync(["bun", "run", script, branch, base]);
-  return { code: proc.exitCode, out: `${proc.stdout.toString()}${proc.stderr.toString()}` };
+  const text = (bytes: Uint8Array | undefined): string => (bytes ?? new Uint8Array()).toString();
+  return { code: proc.exitCode, out: text(proc.stdout) + text(proc.stderr) };
 };
 
 const readMe = ["# Fixture", "", "Docs.", ""].join("\n");
