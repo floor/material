@@ -152,3 +152,14 @@ export interface FabMenuComponent extends ElementComponent {
   /** Removes the FAB menu, its listeners and its menu */
   destroy(): void;
 }
+
+/**
+ * Registers FabMenuConfig with the global defaults map, so
+ * `setComponentDefaults("fab-menu", ...)` is typed without core
+ * importing anything from this component.
+ */
+declare module "../../core/config/global" {
+  interface ComponentConfigMap {
+    "fab-menu"?: Partial<FabMenuConfig>;
+  }
+}

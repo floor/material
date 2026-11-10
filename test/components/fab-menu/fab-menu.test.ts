@@ -22,10 +22,13 @@ g.KeyboardEvent = dom.window.KeyboardEvent;
 g.FocusEvent = dom.window.FocusEvent;
 g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
+g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
 
 import createFabMenu from "../../../src/components/fab-menu";
+import { setIcons } from "../../../src/core/icons/registry";
+import { clearGlobalDefaults, setComponentDefaults } from "../../../src/core/config/global";
 import type { FabMenuComponent, FabMenuConfig, FabMenuMenu } from "../../../src/components/fab-menu";
 import { staggerDelays } from "../../../src/components/fab-menu/stagger";
 
@@ -37,9 +40,11 @@ const ITEMS = [
 ];
 
 let menu: FabMenuComponent | null = null;
+const createdMenus: FabMenuComponent[] = [];
 const make = (config: Partial<FabMenuConfig> = {}) => {
   menu = createFabMenu({ icon: ICON, ariaLabel: "Compose", items: ITEMS, presentation: "list", ...config });
   document.body.appendChild(menu.element);
+  createdMenus.push(menu);
   return menu;
 };
 const items = (m: FabMenuComponent) => Array.from(m.list.querySelectorAll<HTMLElement>("[role=menuitem]"));
@@ -54,7 +59,7 @@ const setMedia = (matches: (query: string) => boolean) => {
 };
 
 afterEach(() => {
-  menu?.destroy();
+  for (const created of createdMenus.splice(0)) created.destroy();
   menu = null;
   document.body.replaceChildren();
   delete g.window.matchMedia;
@@ -321,6 +326,31 @@ describe("fab menu presentation", () => {
     return created;
   };
 
+  describe("shared FAB activation", () => {
+    test("click and public toggle alternate the same state and preserve the opener event", async () => {
+      for (const presentation of ["list", "menu"] as const) {
+        const app = fakeMenu();
+        const m = make({ presentation, menu: () => app });
+        const seen: string[] = [];
+        m.on("open", () => seen.push("open"));
+        m.on("close", () => seen.push("close"));
+        const pointer = () => new dom.window.MouseEvent("click", { detail: 1, bubbles: true });
+        expect(m.toggle(pointer())).toBe(m);
+        await Promise.resolve();
+        expect(m.isOpen()).toBe(true);
+        m.fab.click();
+        expect(m.isOpen()).toBe(false);
+        m.fab.dispatchEvent(pointer());
+        await Promise.resolve();
+        expect(m.isOpen()).toBe(true);
+        expect(m.toggle()).toBe(m);
+        expect(m.isOpen()).toBe(false);
+        expect(seen).toEqual(["open", "close", "open", "close"]);
+        expect(app.calls).toEqual(presentation === "menu" ? ["open:mouse", "close", "open:mouse", "close"] : []);
+      }
+    });
+  });
+
   test("auto: the list below 600px, the menu from 600px", () => {
     setMedia(() => false);
     expect(make({ presentation: "auto" }).getPresentation()).toBe("list");
@@ -350,7 +380,7 @@ describe("fab menu presentation", () => {
     const app = fakeMenu();
     let opener: HTMLElement | null = null;
     const m = make({ presentation: "menu", menu: (button) => { opener = button; return app; } });
-    expect(opener).toBe(m.fab);
+    expect(opener as HTMLElement | null).toBe(m.fab);
     expect(m.fab.getAttribute("aria-controls")).toBe("app-menu");
     m.fab.click();
     await Promise.resolve();
@@ -534,5 +564,43 @@ describe("fab menu cleanup", () => {
   test("the chain returns the FAB menu", () => {
     const m = make();
     expect(m.addClass("extra")).toBe(m);
+  });
+});
+
+// The close control's built-in glyph, as the DOM serializes it (a
+// self-closing path comes back closed). closeIcon and component defaults
+// stay above the registry.
+const CLOSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>';
+const closeGlyph = (m: FabMenuComponent) => m.fab.querySelector(".mtrl-fab-menu__close")!.innerHTML;
+
+describe("fab menu: the icon registry", () => {
+  afterEach(() => {
+    setIcons({ close: null });
+    clearGlobalDefaults();
+  });
+
+  test("the close control draws the exact built-in glyph while the registry is empty", () => {
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test("an icon comes from the instance, then component defaults, then the registry, then the built-in", () => {
+    setIcons({ close: "<i>registry</i>" });
+    expect(closeGlyph(make())).toBe("<i>registry</i>");
+    setComponentDefaults("fab-menu", { closeIcon: "<i>component</i>" });
+    expect(closeGlyph(make())).toBe("<i>component</i>");
+    expect(closeGlyph(make({ closeIcon: "<i>instance</i>" }))).toBe("<i>instance</i>");
+    expect(closeGlyph(make({ closeIcon: "" }))).toBe("<i>registry</i>");
+    setIcons({ close: null });
+    clearGlobalDefaults();
+    expect(closeGlyph(make())).toBe(CLOSE_GLYPH);
+  });
+
+  test("a menu reads the registry when it is created, not when it opens", () => {
+    const created = make();
+    setIcons({ close: "<i>later</i>" });
+    created.open();
+    created.close();
+    expect(closeGlyph(created)).toBe(CLOSE_GLYPH);
+    expect(closeGlyph(make())).toBe("<i>later</i>");
   });
 });
