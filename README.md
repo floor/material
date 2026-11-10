@@ -211,6 +211,64 @@ Element applications can use `material/styles/base-elements` to keep the base's 
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
+Components can opt into the existing type-scale role properties through an application Sass build. Prebuilt CSS keeps the default profile. Load configuration first, then compile the factory stylesheet:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/main";
+```
+
+The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any dependent Sass module. The shared entry also forwards contrast, direction, tag-prefix and design-token map options. Subsequent entries inherit that configuration without another configuration clause.
+
+For custom elements, compile matching pre-upgrade CSS separately. This entry includes the pre-upgrade layer and the linked-SSR rollback:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true, $tag-prefix: "x");
+@use "material/src/styles/preupgrade";
+```
+
+App-compiled shadow CSS uses the experimental element authoring API. Compile one file for each key in the element definition's styles, plus the shared shadow styles. This Sass entry emits the configured key; each file must be registered under that key:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/element-styles" with ($name: "button");
+```
+
+For a button, compile the ripple, progress and button keys into the three files below. Load and register every file before defining the element:
+
+```typescript
+import 'material/styles/base-elements';
+import { defineButton, registerStyles } from 'material/elements';
+
+const names = ['ripple', 'progress', 'button'];
+const sheets = await Promise.all(names.map(async name => {
+  const response = await fetch(`/app-css/${name}.css`);
+  if (!response.ok) throw new Error(`Cannot load ${name} styles`);
+  return [name, await response.text()];
+}));
+registerStyles(Object.fromEntries(sheets));
+defineButton();
+```
+
+The application owns these compiled files and their loading. Include every style key its elements require. Choose the profile before creation; later registration does not replace sheets already adopted by roots. The normal framework adapter entries keep their default CSS imports and do not provide this opt-in profile.
+
+Set only the role properties the application wants to customize:
+
+```css
+.application {
+  --mtrl-sys-typescale-label-large-font-size: 18px;
+  --mtrl-sys-typescale-label-large-font-weight: 600;
+}
+```
+
+Role properties inherit through element hosts into shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled family. No complete token sheet is required.
+
+Badge text consumes its existing size, line-height and weight properties; hidden text and dots keep zero font size. Button-group pre-upgrade items use the same size role as their upgraded buttons; the large-size declarations keep their existing priority.
+
+A provided role value wins over the fallback. An inherited role font resolved on an ancestor keeps that ancestor's value; set the role font on the intended scope when changing its reference face. A missing token can use a fallback, but a supplied value of the wrong CSS type follows normal CSS invalid-value behavior.
+
+For linked SSR, point the renderer's cssBase option at the app-compiled shadow CSS directory. Supply the component dependencies and the unchanged host sheets from the distributed element CSS directory. The client uses the same app build. Default inline SSR retains its default CSS.
+
 From 3.1.0, Sass consumers can choose which contrast rules to compile with `$contrast-emit`. Configure the public themes entry in your application stylesheet:
 
 ```scss

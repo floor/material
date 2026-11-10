@@ -2,6 +2,7 @@
 // Every element's pre-upgrade rules, for a page that compiles mtrl's SCSS:
 //   @use 'material/src/styles/elements' with ($tag-prefix: 'x');
 // The build emits the same rules as material/elements/preupgrade.css.
+@forward '../abstract/emit' show $typescale-tokens;
 @forward 'config';
 @use 'badge';
 @use 'bottom-app-bar';

@@ -11,7 +11,7 @@ const COMMANDS = [
   // tests
   "bun test",
   // build, and the checks that read the built package
-  "build", "dist-modules:check", "syntax:check", "elements-css:check", "tokens:catalogue:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "declaration-exports:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
+  "build", "dist-modules:check", "syntax:check", "typescale-defaults:check", "elements-css:check", "tokens:catalogue:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "declaration-exports:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
   "adapters:size",
   // the catalogue identity gate builds the merge base beside this tree, so
   // `build` runs a second time there (the step no-ops before it reaches the
@@ -25,7 +25,7 @@ const COMMANDS = [
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "menu-deferred:check", "tabs:check", "slider:check", "tooltip:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check",
-  "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "tokens:catalogue-browser:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "theme-origins:check", "base-lite:check", "base-elements:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
+  "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "tokens:catalogue-browser:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "theme-origins:check", "base-lite:check", "base-elements:check", "typescale-consumers:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
 ];
 
 interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
