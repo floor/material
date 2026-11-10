@@ -67,40 +67,34 @@ const createProgressLazy = async (
 export const withProgress =
   (config: ButtonConfig) =>
   <C extends ProgressEnhancedComponent>(component: C): C => {
-    // Skip if no progress config
-    if (!config.progress) {
+    // Keep the feature absent unless progress or an initial loading state needs it.
+    if (!config.progress && !config.loading) {
       return component;
     }
 
-    // Extract event handlers if present
-    let progressEventHandlers: Partial<ProgressEvents> = {};
-
-    // Determine progress configuration
-    const progressConfig: ProgressConfig =
-      typeof config.progress === "boolean"
-        ? { variant: "circular", size: 20, thickness: 2, indeterminate: true }
-        : (() => {
-            // Event handlers may ride along with the progress config
-            const { on, ...restConfig } = config.progress as ProgressConfig & {
-              on?: Partial<ProgressEvents>;
-            };
-            if (on) {
-              progressEventHandlers = on;
-            }
-            return {
-              variant: "circular",
-              size: 20,
-              thickness: 2,
-              indeterminate: true,
-              ...restConfig,
-            };
-          })();
+    const { on, ...restConfig } = (
+      typeof config.progress === "object" ? config.progress : {}
+    ) as ProgressConfig & { on?: Partial<ProgressEvents> };
+    const progressEventHandlers = on ?? {};
+    const progressConfig: ProgressConfig = {
+      variant: "circular", size: 20, thickness: 2, indeterminate: true,
+      ...restConfig,
+    };
 
     // Progress will be created lazily
     let progress: ProgressComponent | null = null;
     let progressPromise: Promise<ProgressComponent> | null = null;
-    let isLoading = false;
+    let isLoading = !!config.loading;
     let originalText = "";
+    const markLoading = (): void => {
+      component.element.setAttribute("aria-busy", "true");
+      component.disabled?.disable();
+    };
+    // Initial semantics do not start lazy work during synchronous SSR rendering.
+    // showProgress remains the explicit initial-indicator option below.
+    if (isLoading) {
+      markLoading();
+    }
 
     // Helper to ensure progress is loaded
     const ensureProgress = async (): Promise<ProgressComponent> => {
@@ -255,27 +249,19 @@ export const withProgress =
     };
 
     const setLoading = async (loading: boolean, text?: string): Promise<C> => {
-      if (loading && !isLoading) {
-        originalText = readLabel() ?? "";
-        isLoading = true;
-        // Tell assistive technology the button is working, not merely disabled
-        component.element.setAttribute("aria-busy", "true");
-        await showProgress();
-        // Call disable on the internal disabled manager
-        if (component.disabled?.disable) {
-          component.disabled.disable();
+      if (loading !== isLoading) {
+        isLoading = loading;
+        if (loading) {
+          originalText = readLabel() ?? "";
+          markLoading();
+          await showProgress();
+        } else {
+          component.element.removeAttribute("aria-busy");
+          await hideProgress();
+          component.disabled?.enable();
         }
+        if (!loading) text ||= originalText;
         if (text) writeLabel(text);
-      } else if (!loading && isLoading) {
-        isLoading = false;
-        component.element.removeAttribute("aria-busy");
-        await hideProgress();
-        // Call enable on the internal disabled manager
-        if (component.disabled?.enable) {
-          component.disabled.enable();
-        }
-        if (text) writeLabel(text);
-        else if (originalText) writeLabel(originalText);
       }
       return component;
     };

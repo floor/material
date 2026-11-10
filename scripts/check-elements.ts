@@ -7077,7 +7077,7 @@ try {
     assert.equal(await photos.count(), 1);
     assert.equal(await photos.getAttribute("aria-roledescription"), "carousel");
     assert.equal(await photos.getByRole("group").count(), 5);
-    assert.equal(await photos.getByRole("group", { name: "2 of 5" }).getByText("Beta", { exact: true }).count(), 1);
+    assert.equal(await photos.getByRole("group", { name: "Beta" }).getByText("Beta", { exact: true }).count(), 1);
     assert.equal(await photos.getByRole("img", { name: "Photo Beta" }).count(), 1);
     assert.equal(await page.evaluate(() => (document.getElementById("r") as Carousel).index), 1);
     check("carousel: a region named by aria-label; children declare the items, index sets the current one");
@@ -7089,7 +7089,7 @@ try {
         (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
       });
     });
-    await photos.getByRole("group", { name: "2 of 5" }).focus();
+    await photos.getByRole("group", { name: "Beta" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
     // Value is the model (the index). 3.0.0 dropped the doubled detail.index.
@@ -7097,7 +7097,7 @@ try {
     check("carousel: an arrow key moves to the next item and dispatches change");
 
     await page.evaluate(() => ((window as unknown as Win).events = []));
-    await photos.getByRole("group", { name: "4 of 5" }).click();
+    await photos.getByRole("group", { name: "Delta" }).click();
     state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
     assert.deepEqual(state, { events: [{ detail: { value: 3 }, target: "r" }], index: 3 });
     check("carousel: a click on an item makes it current and dispatches change");
@@ -7134,7 +7134,7 @@ try {
     assert.deepEqual(updated, {
       same: true,
       titles: ["Epsilon", "Alpha", "Gamma ray", "Delta", "Zeta"],
-      labels: ["1 of 5", "2 of 5", "3 of 5", "4 of 5", "5 of 5"],
+      labels: ["Epsilon", "Alpha", "Gamma ray", "Delta", "Zeta"],
     });
     check("carousel: items added, removed, moved and changed update in place");
 
@@ -7254,7 +7254,7 @@ try {
     assert.equal(await attribute(2), 2);
     check("carousel: before any interaction, the index attribute moves the current item");
 
-    await page.getByRole("group", { name: "3 of 4" }).focus();
+    await page.getByRole("group", { name: "Gamma" }).focus();
     await page.keyboard.press("ArrowLeft");
     assert.equal(await live(), 1);
     assert.equal(await attribute(3), 1);

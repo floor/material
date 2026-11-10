@@ -3,8 +3,9 @@
  * `<m-carousel>` with `<m-carousel-item>` children.
  *
  * Each `<m-carousel-item>` declares one item (`src`, `alt`, `description`,
- * `button-text`, `button-url`, `value`, and its text as the label). The
- * carousel reads them into the factory's config and updates in place when
+ * `button-text`, `button-url`, `value`, and its name). `label` names the
+ * item. `title` does when `label` is absent. Otherwise its text is the name.
+ * The carousel reads them into the factory's config and updates in place when
  * they change; the children stay where the framework put them.
  *
  * `variant` and the sizing attributes have no setter on the carousel:
@@ -39,12 +40,21 @@ type CarouselElementConfig = Omit<CarouselConfig, "slides"> & { slides?: Declare
 /** The value of each item, in order: the slides API knows items by index only. */
 const itemValues = new WeakMap<CarouselComponent, string[]>();
 
+/** `label` wins. `title` is the fallback. Text is the name only when neither is set. */
+const itemName = (child: Element): string => {
+  const label = child.getAttribute("label");
+  if (label !== null) return label;
+  const title = child.getAttribute("title")?.trim();
+  if (title) return title;
+  return (child.textContent ?? "").trim();
+};
+
 const declaredItems = (host: HTMLElement): DeclaredItem[] => {
   const itemTag = `${host.localName}-item`;
   const items: DeclaredItem[] = [];
   for (const child of Array.from(host.children)) {
     if (child.localName !== itemTag) continue;
-    const title = child.getAttribute("label") ?? (child.textContent ?? "").trim();
+    const title = itemName(child);
     const slide: CarouselSlide = {
       image: child.getAttribute("src") ?? undefined,
       alt: child.getAttribute("alt") ?? undefined,
@@ -154,8 +164,8 @@ export type CarouselSpec = typeof carouselSpec;
 export type CarouselElement = ElementInstance<CarouselSpec, CarouselComponent>;
 
 /**
- * `<m-carousel-item>` declares one item and renders nothing. Its text
- * content is the label unless `label` is set.
+ * `<m-carousel-item>` declares one item and renders nothing. `label` names
+ * it. `title` does when `label` is absent. Otherwise its text is the name.
  */
 export const carouselItemDeclaration = {
   name: "carousel-item",
@@ -164,6 +174,7 @@ export const carouselItemDeclaration = {
     src: { type: "string" },
     alt: { type: "string" },
     label: { type: "string" },
+    title: { type: "string" },
     description: { type: "string" },
     "button-text": { type: "string" },
     "button-url": { type: "string" },
