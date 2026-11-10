@@ -194,7 +194,12 @@ for (const scenario of ['button', 'app']) {
           await page.waitForFunction(kind => !window.fixture.api[kind.toLowerCase() + 'Open'](), kind, { timeout: 3000 });
           return { status: 'closed', focusReturned: await page.evaluate(role => document.activeElement === window.fixture.triggers[role], role) };
         });
-        if (!await page.evaluate(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind)) await page.evaluate(kind => window.fixture.api[`open${kind}`](window.fixture.triggers[kind.toLowerCase()]), kind);
+        if (kind === 'Menu' && !await page.evaluate(() => window.fixture.api.menuOpen())) {
+          await page.evaluate(() => window.fixture.api.openMenu(window.fixture.triggers.menu));
+          // Some public APIs enqueue the open for the next animation frame.
+          // Do not race a scheduled reopen against the final close.
+          await page.waitForFunction(() => window.fixture.api.menuOpen());
+        }
         if (kind === 'Menu') await observe('menu: pointer selection', async () => {
           const item = adapter === 'beercss' ? page.locator('#beer-menu li').first() : adapter === 'micl' ? page.locator('#micl-menu li').first() : adapter === 'material-web' ? page.locator('md-menu-item').first() : adapter === 'm3e' ? page.locator('m3e-menu-item').first() : page.getByRole('menuitem').filter({ hasText: 'One' }).first();
           await item.click({ timeout: 3000 });
