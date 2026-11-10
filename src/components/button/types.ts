@@ -130,6 +130,9 @@ export interface ButtonConfig extends BaseComponentConfig {
    */
   showProgress?: boolean;
 
+  /** Initial busy and disabled state. Use showProgress to display the indicator initially. */
+  loading?: boolean;
+
   /**
    * Makes the button a toggle button: a click flips its selected state,
    * the element carries aria-pressed, and the selected state uses the M3

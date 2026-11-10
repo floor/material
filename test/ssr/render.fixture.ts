@@ -13,6 +13,21 @@ const { renderElement } = await import("../../src/ssr");
 const containerSpec = cardElement.spec as ElementSpec<ElementComponent>;
 const optedOut = new Set(["carousel", "fab-menu"]);
 const parsed = (html: string) => parseHTML(`<html><body>${html}</body></html>`).document.body.firstElementChild!;
+test("initial loading renders busy and disabled without starting late progress work", async () => {
+  const errors: unknown[] = [];
+  const onError = (error: unknown) => errors.push(error);
+  process.on("unhandledRejection", onError);
+  try {
+    const html = renderElement("m-button", { loading: true }, "Save");
+    const control=parsed(html).querySelector('template')!.content.querySelector('button')!;
+    expect(control.getAttribute('aria-busy')).toBe('true');
+    expect(control.hasAttribute('disabled')).toBe(true);
+    expect(html).toContain('Save');
+    expect(html).toContain('shadowrootmode');
+    await new Promise(resolve=>setTimeout(resolve,30));
+    expect(errors).toEqual([]);
+  } finally { process.off("unhandledRejection", onError); }
+});
 test("all 36 default fixtures render repeatedly, without late work", async () => {
   const errors: unknown[] = [];
   const onError = (error: unknown) => errors.push(error);

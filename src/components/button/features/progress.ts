@@ -67,8 +67,8 @@ const createProgressLazy = async (
 export const withProgress =
   (config: ButtonConfig) =>
   <C extends ProgressEnhancedComponent>(component: C): C => {
-    // Skip if no progress config
-    if (!config.progress) {
+    // Keep the feature absent unless progress or an initial loading state needs it.
+    if (!config.progress && !config.loading) {
       return component;
     }
 
@@ -77,7 +77,7 @@ export const withProgress =
 
     // Determine progress configuration
     const progressConfig: ProgressConfig =
-      typeof config.progress === "boolean"
+      typeof config.progress !== "object"
         ? { variant: "circular", size: 20, thickness: 2, indeterminate: true }
         : (() => {
             // Event handlers may ride along with the progress config
@@ -99,8 +99,14 @@ export const withProgress =
     // Progress will be created lazily
     let progress: ProgressComponent | null = null;
     let progressPromise: Promise<ProgressComponent> | null = null;
-    let isLoading = false;
+    let isLoading = Boolean(config.loading);
     let originalText = "";
+    // Initial semantics do not start lazy work during synchronous SSR rendering.
+    // showProgress remains the explicit initial-indicator option below.
+    if (isLoading) {
+      component.element.setAttribute("aria-busy", "true");
+      component.disabled?.disable();
+    }
 
     // Helper to ensure progress is loaded
     const ensureProgress = async (): Promise<ProgressComponent> => {

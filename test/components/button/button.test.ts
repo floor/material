@@ -239,6 +239,49 @@ describe('button', () => {
     expect(button.element.hasAttribute('aria-busy')).toBe(false);
   });
 
+  test('initial loading is busy and disabled before the indicator arrives', async () => {
+    for (const progress of [undefined,true,{ variant: 'circular' as const, size: 18 }]) {
+      const button = mount({ text: 'Save', loading: true, progress });
+      expect(button.element.getAttribute('aria-busy')).toBe('true');
+      expect(button.element.disabled).toBe(true);
+      expect(button.element.querySelector('.mtrl-button__progress')).toBeNull();
+      let clicks = 0;
+      button.on('click',()=>clicks++);
+      button.element.click();
+      expect(clicks).toBe(0);
+      await button.showProgress();
+      expect(has(button,'progress')).toBe(true);
+      await button.setLoading(false);
+      expect(button.element.hasAttribute('aria-busy')).toBe(false);
+      expect(button.element.disabled).toBe(false);
+      expect(has(button,'progress')).toBe(false);
+      expect(button.getText()).toBe('Save');
+      button.destroy();
+    }
+  });
+
+  test('clearing initial loading leaves subsequently prepared progress hidden', async () => {
+    const button = mount({ text: 'Save', loading: true });
+    await button.setLoading(false);
+    await button.setProgress(25);
+    await Promise.resolve();
+    expect(button.element.hasAttribute('aria-busy')).toBe(false);
+    expect(button.element.disabled).toBe(false);
+    expect(has(button,'progress')).toBe(false);
+    expect(button.getText()).toBe('Save');
+    button.destroy();
+  });
+
+  test('omitting loading or setting it false leaves the default button unchanged', () => {
+    const plain = mount({ text: 'Save' });
+    const explicit = mount({ text: 'Save', loading: false });
+    expect(explicit.element.outerHTML).toBe(plain.element.outerHTML);
+    expect(plain.setLoading).toBeUndefined();
+    expect(explicit.setLoading).toBeUndefined();
+    expect(explicit.element.disabled).toBe(false);
+    expect(explicit.element.hasAttribute('aria-busy')).toBe(false);
+  });
+
   test('destroy removes the element', () => {
     const button = mount({ text: 'x' });
     button.destroy();
