@@ -50,7 +50,9 @@ const save = createButton({ text: 'Save', variant: 'filled', size: 's', shape: '
 document.body.append(save.element);
 ```
 
-Progress styles are included. Hover, keyboard focus, press, disabled, selected toggle and loading states, icons, density, RTL and CSS custom-property overrides remain available. This styles factory buttons in the page; elements and framework components keep their shadow styles. Import `material/styles/button` for any other variant, size or shape, including changes through `setVariant`, `setSize` or `setShape`. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
+Progress styles are included. Hover, keyboard focus, press, disabled, selected toggle and loading states, icons, density, RTL and CSS custom-property overrides remain available. This styles factory buttons in the page; elements and framework components keep their shadow styles.
+
+Import `material/styles/button` for any other variant, size or shape. This includes changes through the variant, size and shape setters. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
 
 ## Components
 

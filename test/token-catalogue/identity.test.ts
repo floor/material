@@ -45,6 +45,29 @@ const optionalPair = { "dist/styles/button-filled-small-round.css": filledSmallR
   "dist/styles/button-filled-small-round.js": profileStyleModule("button-filled-small-round", ["progress"]) };
 
 describe("catalogue identity gate", () => {
+  test("only the new validated profile may add its exact build parser and check script", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const devDependencies = { sass: "1.85.1" };
+      const base = pack(root, "base", { ...withButton, "package.json": manifest({ devDependencies }) });
+      const additions = { devDependencies: { ...devDependencies, postcss: "8.5.28" },
+        scripts: { "button-profile:check": "bun run scripts/check-button-profile.ts" } };
+      expect(runGate(pack(root, "valid", { ...withButton, ...optionalPair, "package.json": manifest(additions) }), base).code).toBe(0);
+      expect(runGate(pack(root, "no-profile", { ...withButton, "package.json": manifest(additions) }), base).code).toBe(1);
+      const wrongParser = runGate(pack(root, "parser", { ...withButton, ...optionalPair,
+        "package.json": manifest({ ...additions, devDependencies: { ...devDependencies, postcss: "9.0.0" } }) }), base);
+      expect(wrongParser.code).toBe(1);
+      expect(wrongParser.out).toContain("package.json field devDependencies changed");
+      const compiler = runGate(pack(root, "compiler", { ...withButton, ...optionalPair,
+        "package.json": manifest({ ...additions, devDependencies: { sass: "2.0.0", postcss: "8.5.28" } }) }), base);
+      expect(compiler.code).toBe(1);
+      const script = runGate(pack(root, "script", { ...withButton, ...optionalPair,
+        "package.json": manifest({ ...additions, scripts: { "button-profile:check": "bun run unrelated.ts" } }) }), base);
+      expect(script.code).toBe(1);
+      expect(script.out).toContain("new script button-profile:check outside the catalogue gate allowlist");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
   test("only the validated additive optional stylesheet pair passes", () => {
     const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
     try {

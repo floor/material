@@ -91,6 +91,7 @@ const problems: string[] = [];
 // declared pair, validated against the unchanged parent sheet and dependency
 // imports. Once present on main, even these files are byte-frozen below.
 const optionalAdditions = new Set(optionalStyleFiles.map(path => `dist/${path}`));
+const addsProfile = [...optionalAdditions].some(path => branch.has(path) && !main.has(path));
 try {
   validateOptionalStyleProfiles(new Map([...branch]
     .filter(([path]) => path.startsWith("dist/styles/"))
@@ -119,6 +120,8 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
 
 // The allowlist is not a blank cheque: package.json may only add the two
 // catalogue export keys and the script entries that run the catalogue gates.
+// Adding the validated optional profile also permits its exact check script
+// and its pinned build-time parser; neither allowance changes existing keys.
 // Every other field — type, sideEffects, dependencies, main, existing export
 // targets, existing script entries, version — is frozen by name and value,
 // and nothing anywhere in it may be removed. Version compares equal because
@@ -151,10 +154,17 @@ for (const key of Object.keys(mainScripts)) {
 }
 for (const key of Object.keys(branchScripts)) {
   if (Object.hasOwn(mainScripts, key)) continue;
-  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key)) problems.push(`new script ${key} outside the catalogue gate allowlist`);
+  const profileCheck = addsProfile && key === "button-profile:check" && branchScripts[key] === "bun run scripts/check-button-profile.ts";
+  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key) && !profileCheck) problems.push(`new script ${key} outside the catalogue gate allowlist`);
 }
 for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)])) {
   if (key === "exports" || key === "scripts") continue;
+  if (key === "devDependencies" && addsProfile) {
+    const before = (mainPkg[key] ?? {}) as Record<string, unknown>;
+    const after = (branchPkg[key] ?? {}) as Record<string, unknown>;
+    const { postcss, ...unchanged } = after;
+    if (!Object.hasOwn(before, "postcss") && postcss === "8.5.28" && JSON.stringify(before) === JSON.stringify(unchanged)) continue;
+  }
   if (!Object.hasOwn(branchPkg, key)) {
     problems.push(`package.json field ${key} was removed: a data-only change may not`);
   } else if (!Object.hasOwn(mainPkg, key)) {
