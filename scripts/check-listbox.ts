@@ -1127,6 +1127,33 @@ async function factoryBehaviour(page: Page): Promise<void> {
   assert.ok(placement.clamped.left >= -1 && placement.clamped.right <= placement.clamped.width + 1, "B: it clamps inside the viewport");
   ok("B: placement below, block flip and inline clamp");
 
+  // A control wider than its viewport must not drag the popup past the edge:
+  // the control's width is a floor for the popup, and the viewport bounds it.
+  await page.setViewportSize({ width: 360, height: 600 });
+  await mount(page, "listbox");
+  const oversized = await page.evaluate(() => {
+    const control = document.getElementById("control")!;
+    control.style.width = "600px";
+    const view = window as unknown as { __h: { open: () => void; close: () => void } };
+    view.__h.open();
+    const popup = document.querySelector('[role="listbox"]') as HTMLElement;
+    const rect = popup.getBoundingClientRect();
+    const result = {
+      controlWidth: control.getBoundingClientRect().width,
+      viewport: document.documentElement.clientWidth,
+      left: rect.left,
+      right: rect.right,
+      width: rect.width,
+    };
+    view.__h.close();
+    return result;
+  });
+  await page.setViewportSize({ width: 900, height: 600 });
+  assert.ok(oversized.controlWidth > oversized.viewport, `B: the control (${oversized.controlWidth}px) is wider than the viewport (${oversized.viewport}px)`);
+  assert.ok(oversized.width <= oversized.viewport + 1, `B: an oversized control's popup (${oversized.width}px) stays within the viewport (${oversized.viewport}px)`);
+  assert.ok(oversized.left >= -1 && oversized.right <= oversized.viewport + 1, `B: the oversized popup stays inside the viewport (${oversized.left}..${oversized.right})`);
+  ok("B: an oversized control cannot push the popup past the viewport");
+
   await mount(page, "listbox");
   const rtl = await page.evaluate(() => {
     document.body.dir = "rtl";

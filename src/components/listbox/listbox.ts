@@ -271,7 +271,10 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     const height = viewport.clientHeight;
     const rect = element.getBoundingClientRect();
     const rtl = getComputedStyle(element).direction === "rtl";
-    popup.style.minWidth = `${rect.width}px`;
+    // A control wider than the viewport must not push the popup past it: the
+    // viewport bound wins over the control's width, so the inline clamp below
+    // can still place the surface
+    popup.style.minWidth = `${Math.min(rect.width, width)}px`;
     popup.style.maxWidth = `${width}px`;
     popup.style.maxHeight = "";
     popup.style.left = `${rtl ? rect.right : rect.left}px`;
