@@ -56,7 +56,7 @@ Import `material/styles/button` for any other variant, size or shape. This inclu
 
 For the client-only fixed element, import `material/elements/css/button-filled-small-round`, `material/elements/preupgrade/button-filled-small-round.css` and `defineButtonFilledSmallRound` from `material/elements/button-filled-small-round`, then call that function to register `<m-button-filled-small-round>`. Include `material/styles/base-elements` as for other elements.
 
-Its variant/size/shape attributes are inert. Those properties always read `filled`/`s`/`round`; writes and the component's corresponding setters are inert and chainable. Other profiles require `<m-button>` and its general styles. The fixed entry is separate from the default registry and has no SSR renderer; it establishes no SSR saving.
+Its variant/size/shape attributes are inert. While connected, those properties read `filled`/`s`/`round`; writes and the component's corresponding setters are inert and chainable. Other profiles require `<m-button>` and its general styles. The fixed entry is separate from the default registry and has no SSR renderer; it establishes no SSR saving.
 
 ## Components
 

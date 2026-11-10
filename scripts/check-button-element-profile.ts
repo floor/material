@@ -29,6 +29,13 @@ const walk = async (dir: string, prefix = ""): Promise<Map<string, string>> => {
 const current = await walk(join(fixture.installed, "dist"));
 const baseline = await walk("analysis/fixed-baseline-dist");
 validateOptionalElementProfiles(current);
+const baseManifest = JSON.parse(await readFile("analysis/fixed-baseline-dist/package.json", "utf8"));
+const manifest = JSON.parse(await readFile(join(fixture.installed, "package.json"), "utf8"));
+const relocated = (value: unknown): unknown => typeof value === "string" ? value.replace(/^\.\/dist\//, "./") :
+  value && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, relocated(item)])) : value;
+for (const [key, target] of Object.entries(baseManifest.exports)) assert.deepEqual(relocated(manifest.exports[key]), target, `Existing export ${key} changed`);
+assert.deepEqual(Object.keys(manifest.exports).filter(key => !(key in baseManifest.exports)), ["./elements/button-filled-small-round"]);
+
 const identity: Record<string, string> = {};
 for (const [path, text] of baseline) {
   assert.equal(current.get(path), text, `${path}: existing output changed against fresh green main`);
@@ -60,10 +67,10 @@ try {
     const dir = join(scratch, name); await mkdir(dir);
     const profile = fixed ? "button-filled-small-round" : "button";
     const style = `import 'material/elements/css/${profile}';`;
-    const extra = mixed ? `import 'material/elements/css/button';import 'material/styles/tabs';import createTabs from 'material/components/tabs';import {defineButton} from 'material/elements/button';defineButton({prefix:'general'});const tabs=createTabs({tabs:[{text:'One',value:'one'},{text:'Two',value:'two'}]});document.body.append(tabs.element);` : "";
+    const extra = mixed ? `import 'material/elements/css/button';import 'material/styles/tabs';import createTabs from 'material/components/tabs';import {defineButton} from 'material/elements';defineButton({prefix:'general'});const tabs=createTabs({tabs:[{text:'One',value:'one'},{text:'Two',value:'two'}]});document.body.append(tabs.element);` : "";
     const entry = `import 'material/styles/base-elements';import 'material/elements/preupgrade/${profile}.css';
 ${reverse ? extra + style : style + extra}
-import {${fixed ? "defineButtonFilledSmallRound" : "defineButton"} as defineProfile} from 'material/elements/${profile}';
+import {${fixed ? "defineButtonFilledSmallRound" : "defineButton"} as defineProfile} from 'material/${fixed ? 'elements/button-filled-small-round' : 'elements'}';
 const button=document.querySelector('#button'),toggle=document.querySelector('#toggle');
 // Own properties before definition must be replayed, and slot nodes preserved.
 toggle.selected=true;button.value='early';${fixed ? "button.variant='outlined';button.size='xl';button.shape='square';" : ""}const original=document.querySelector('#slot');

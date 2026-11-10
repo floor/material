@@ -1,7 +1,7 @@
 /**
  * Opt-in client-only fixed filled/small/round button. Import its shadow and
  * pre-upgrade styles separately. Visual attributes are inert; visual properties
- * always read the fixed value, and visual setter calls are inert and chainable.
+ * read the fixed value while connected, and visual setter calls are inert and chainable.
  * Use the general button definition for a mutable visual profile.
  */
 import type { ButtonComponent } from "../components/button/types";
