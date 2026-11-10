@@ -49,8 +49,9 @@ const classifyConsumer = (references: CssReference[]): Consumers => {
   const kind = reads.some(selector => /^\.mtrl-(display|headline|title|body|label)-/.test(selector.trim()))
     ? "utility"
     : reads.length ? "component" : "declaration-only";
-  // Both samples are bounded; the inventory the checker validates is complete.
-  return { kind, selectors: selectors.slice(0, 8), exports: exports.slice(0, 6) };
+  // The complete wiring: nothing is bounded or sampled, because the inventory
+  // feeds the full review document, not the shipped one.
+  return { kind, selectors, exports };
 };
 
 /** Build the inventory from the declared final outputs. */
@@ -108,8 +109,8 @@ export function buildInventory(outputs: OutputFile[]): Inventory {
     if (!emissions.has(name)) {
       external.set(name, {
         fallback: list.find(reference => reference.fallback !== null)?.fallback ?? null,
-        exports: [...new Set(list.map(reference => reference.file))].sort().slice(0, 6),
-        selectors: [...new Set(list.map(reference => reference.selector))].sort().slice(0, 6),
+        exports: [...new Set(list.map(reference => reference.file))].sort(),
+        selectors: [...new Set(list.map(reference => reference.selector))].sort(),
       });
     }
   }

@@ -87,7 +87,7 @@ if (!existsSync(shippedPath)) {
       if (!checkIds.has(assertion)) fail(`${row.id}: cites unknown assertion ${assertion}`);
     }
     if (row.support !== "supported") fail(`${row.id}: verified but not supported — the states disagree`);
-    if (!row.emissions.length && !row.emissionSummary) fail(`${row.id}: verified with neither emissions nor a summary`);
+    if (!row.emissions.length) fail(`${row.id}: verified with no emission context — the mapping it claims verified was never emitted`);
   }
 
   // 6. The minimum verified set, re-derived from the document itself.

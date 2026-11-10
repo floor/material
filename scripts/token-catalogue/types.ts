@@ -85,9 +85,6 @@ export interface TokenRow {
   /** Ledger source this row's Material claim rests on, if any. */
   source: string | null;
   emissions: Emission[];
-  /** For rows whose emission contexts are the theme machinery (colour), the
-   * contexts are summarised with their denominators instead of enumerated. */
-  emissionSummary?: { surfaces: number; selectors: number; values: number; valueSamples: string[] };
   consumers: Consumers;
   support: Support;
   supportReason: string;
