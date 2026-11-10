@@ -893,6 +893,85 @@ async function factoryBehaviour(page: Page): Promise<void> {
   assert.equal(await page.evaluate(() => document.querySelector('[role="listbox"]') === null), true, "B: destroying from a change handler leaves no popup");
   ok("B: destroy from a change handler");
 
+  // A destroy ends the dispatch it happened in: the handlers after it belong to
+  // a control that no longer exists, for every announced event.
+  await mount(page, "listbox");
+  await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { on: (type: string, handler: () => void) => void; destroy: () => void };
+      __after: number;
+    };
+    view.__after = 0;
+    view.__h.on("change", () => { view.__h.destroy(); });
+    view.__h.on("change", () => { view.__after++; });
+  });
+  await page.locator("#control").click();
+  await waitVisible(page);
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  const changeDispatch = await page.evaluate(() => {
+    const view = window as unknown as { __after: number; __events: { type: string }[] };
+    return {
+      after: view.__after,
+      events: view.__events.map(event => event.type),
+      popup: document.querySelector('[role="listbox"]') !== null,
+      expanded: document.getElementById("control")!.getAttribute("aria-expanded"),
+    };
+  });
+  assert.equal(changeDispatch.after, 0, "B: a change handler's destroy stops the remaining change handlers");
+  assert.deepEqual(changeDispatch.events, ["open", "change"], "B: no close follows the destroying change");
+  assert.equal(changeDispatch.popup, false, "B: the destroying change leaves no popup");
+  assert.equal(changeDispatch.expanded, null, "B: the destroyed control keeps no expanded state");
+  ok("B: destroy ends a change dispatch");
+
+  await mount(page, "listbox");
+  await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { on: (type: string, handler: () => void) => void; destroy: () => void };
+      __after: number;
+    };
+    view.__after = 0;
+    view.__h.on("open", () => { view.__h.destroy(); });
+    view.__h.on("open", () => { view.__after++; });
+  });
+  await page.locator("#control").click();
+  const openDispatch = await page.evaluate(() => {
+    const view = window as unknown as { __after: number };
+    const control = document.getElementById("control")!;
+    return {
+      after: view.__after,
+      popup: document.querySelector('[role="listbox"]') !== null,
+      expanded: control.getAttribute("aria-expanded"),
+      controls: control.getAttribute("aria-controls"),
+    };
+  });
+  assert.equal(openDispatch.after, 0, "B: an open handler's destroy stops the remaining open handlers");
+  assert.equal(openDispatch.popup, false, "B: the destroying open leaves no popup");
+  assert.equal(openDispatch.expanded, null, "B: a destroyed open leaves no expanded state");
+  assert.equal(openDispatch.controls, null, "B: a destroyed open leaves no aria-controls");
+  ok("B: destroy ends an open dispatch");
+
+  await mount(page, "listbox");
+  await page.locator("#control").click();
+  await waitVisible(page);
+  await page.evaluate(() => {
+    const view = window as unknown as {
+      __h: { on: (type: string, handler: () => void) => void; destroy: () => void };
+      __after: number;
+    };
+    view.__after = 0;
+    view.__h.on("close", () => { view.__h.destroy(); });
+    view.__h.on("close", () => { view.__after++; });
+  });
+  await page.keyboard.press("Escape");
+  const closeDispatch = await page.evaluate(() => {
+    const view = window as unknown as { __after: number };
+    return { after: view.__after, popup: document.querySelector('[role="listbox"]') !== null };
+  });
+  assert.equal(closeDispatch.after, 0, "B: a close handler's destroy stops the remaining close handlers");
+  assert.equal(closeDispatch.popup, false, "B: the destroying close leaves no popup");
+  ok("B: destroy ends a close dispatch");
+
   // The open path focuses the control synchronously, so a focus handler can
   // destroy, close or close-and-reopen it while the open is still running.
   await mount(page, "listbox");

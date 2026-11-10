@@ -238,7 +238,12 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
   };
 
   const emit = <K extends keyof ListboxEvents<T>>(type: K, detail: ListboxEvents<T>[K]): void => {
-    for (const handler of [...(listeners.get(type) ?? [])]) (handler as (value: ListboxEvents<T>[K]) => void)(detail);
+    for (const handler of [...(listeners.get(type) ?? [])]) {
+      // A handler that destroys the factory ends the dispatch: the remaining
+      // handlers belong to a control that no longer exists
+      if (destroyed) return;
+      (handler as (value: ListboxEvents<T>[K]) => void)(detail);
+    }
   };
 
   const hide = (): void => {
