@@ -33,7 +33,9 @@ const mainTgz = process.argv[3] ?? sole("../material-base");
 const readTarball = (tgz: string): Map<string, Buffer> => {
   const dir = mkdtempSync("./.mtrl-identity-");
   try {
-    execFileSync("tar", ["-xzf", tgz, "-C", dir]);
+    // --strip-components=1 drops npm's package/ folder so member files land
+    // at the paths the normalized listing names them by.
+    execFileSync("tar", ["-xzf", tgz, "-C", dir, "--strip-components=1"]);
     const listing = execFileSync("tar", ["-tzf", tgz]).toString().trim().split("\n");
     const members = new Map<string, Buffer>();
     for (const member of listing) {
@@ -45,6 +47,9 @@ const readTarball = (tgz: string): Map<string, Buffer> => {
       } catch {
         // A directory entry; its children carry the content.
       }
+    }
+    if (!members.has("package.json")) {
+      throw new Error(`${tgz}: no package.json member after extraction (found ${members.size} file members) — refusing to compare an unread tarball`);
     }
     return members;
   } finally {

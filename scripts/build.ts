@@ -29,8 +29,10 @@ try {
     // The versioned token catalogue is generated from the final CSS outputs
     // while packing, never committed: nothing generated enters git, and the
     // build supplies the implementation commit the data records (see
-    // scripts/generate-token-catalogue.ts for the provenance rule).
-    const catalogue = await generateTokenCatalogue(staging, pkg.version);
+    // scripts/generate-token-catalogue.ts for the provenance rule). The
+    // markdown views are review surfaces, not data, so they are written to
+    // the (gitignored) analysis directory and never cost the tarball a byte.
+    const catalogue = await generateTokenCatalogue(staging, pkg.version, "analysis");
     console.log(`Generated the token catalogue (${catalogue.raw} B raw, ${catalogue.gzip} B gzip)`);
     console.log("Bundling the server-only SSR entry...");
     await buildSSR(staging);
