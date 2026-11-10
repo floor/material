@@ -49,6 +49,7 @@ import * as sass from "sass";
 import { createPackageFixture, run } from "./package-fixture";
 import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
 import { classifyLink } from "./readme-links";
+import { COMPONENTS } from "./size";
 
 const REPOSITORY = "https://github.com/floor/material";
 const online = process.argv.includes("--online");
@@ -213,11 +214,16 @@ try {
   for (const peer of Object.keys(published.peerDependencies)) {
     assert(published.peerDependenciesMeta[peer]?.optional, `${peer} is not an optional peer: both READMEs say each framework is`);
   }
-  // "the 37 components": one `./components/<name>` entry each.
-  const components = Object.keys(published.exports).filter(key => /^\.\/components\/[\w-]+$/.test(key)).length;
+  // "the 37 components": the components `bun run size` measures (scripts/size.ts),
+  // one `./components/<name>` entry each. A rootless entry ships at its subpath
+  // but not from the root, so it has no root-import size budget and is not one
+  // of the measured components the number counts.
+  const measured = COMPONENTS.map(component => `./components/${component.name}`);
+  for (const key of measured) assert(Object.hasOwn(published.exports, key), `${key} is measured by bun run size but the package does not export it`);
+  const components = COMPONENTS.length;
   for (const doc of docs) {
     for (const match of doc.prose.matchAll(/\bthe (\d+) components\b/g)) {
-      if (Number(match[1]) !== components) fail(`${doc.file}: "${match[0]}"; the package has ${components}`);
+      if (Number(match[1]) !== components) fail(`${doc.file}: "${match[0]}"; the package measures ${components}`);
     }
   }
 

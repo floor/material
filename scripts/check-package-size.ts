@@ -269,6 +269,9 @@ try {
   // the next 1,000, is 5,908,000.
   // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
   // the next 1,000, is 5,119,000.
+  // The lean listbox entry adds six files: 5,127,470 in CI over main's
+  // 5,099,705, 1,265 files. Measured + 1%, up to the next 1,000, is 5,179,000.
+  // Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
   assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,
@@ -301,6 +304,10 @@ try {
     const componentKeys = ${JSON.stringify(componentKeys)};
     // A filter that matches nothing would loop over nothing and pass
     assert.equal(componentKeys.length, ${componentEntryCount}, 'the component entries checked are not the component entries package.json exports');
+    // The entries the design ships rootless: public at their subpath only, kept
+    // out of every barrel. The assertion below still holds each one out of the
+    // root, so a stray root export fails rather than riding the exception.
+    const rootless = new Set(['listbox', 'bottom-app-bar-toolbar']);
     for (const key of componentKeys) {
       const name = key.slice(13); // remove "./components/"
       const module = await import(\`material/components/\${name}\`);
@@ -308,9 +315,8 @@ try {
       const namedExports = Object.keys(module).filter(k => k !== "default" && module[k] === module.default);
       assert.equal(namedExports.length, 1, \`\${key} must have exactly one named export equal to default, found \${namedExports.join(',')}\`);
       const k = namedExports[0];
-      if (key === './components/bottom-app-bar-toolbar') {
-        assert.equal(k, 'createBottomAppBarToolbar', 'the opt-in entry exports its named factory');
-        assert.equal(esm[k], undefined, 'the opt-in factory must stay out of root exports');
+      if (rootless.has(name)) {
+        assert.equal(esm[k], undefined, \`\${key} is rootless by design but the root exports \${k}\`);
       } else {
         assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
       }
@@ -394,7 +400,7 @@ try {
     assert(resolvedExportCount >= 240, \`Expected at least 240 resolved export specifiers, got \${resolvedExportCount}\`);
   `);
   await run(["node", smoke], temporary);
-  console.log(`component entries: ${componentKeys.length} default exports, regular entries match root and the opt-in entry stays isolated; all package.json exports resolve from the packed tarball`);
+  console.log(`component entries: ${componentKeys.length} default exports, each name matched to the root except the declared rootless entries; all package.json exports resolve from the packed tarball`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");

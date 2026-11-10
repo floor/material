@@ -1949,6 +1949,53 @@
       "status": "public"
     }
   ],
+  "listbox": [
+    {
+      "name": "createListbox",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ListboxChangeDetail",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxEventDetail",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxEventHandlers",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListboxOption",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
   "loading-indicator": [
     {
       "name": "createLoadingIndicator",

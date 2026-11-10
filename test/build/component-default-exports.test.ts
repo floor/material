@@ -38,6 +38,7 @@ const factories: Record<string, string> = {
   'navigation-bar': 'createNavigationBar',
   'text-field': 'createTextField',
   'select': 'createSelect',
+  'listbox': 'createListbox',
   'icon-button': 'createIconButton',
   'button-group': 'createButtonGroup',
   'badge': 'createBadge'

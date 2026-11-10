@@ -220,6 +220,9 @@ jobs:
           - group: button-profile
             browsers: chromium
             checks: button-profile:check
+          - group: listbox
+            browsers: chromium firefox webkit
+            checks: listbox:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-origins:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
@@ -293,6 +296,7 @@ jobs:
             analysis/drawer
             analysis/navigation-rail
             analysis/core
+            analysis/listbox
             analysis/catalogue-full.json
             analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json

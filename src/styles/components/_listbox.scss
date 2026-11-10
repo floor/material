@@ -1,0 +1,121 @@
+// src/styles/components/_listbox.scss
+//
+// The lean selection popup's optional stylesheet, `material/styles/listbox`.
+// It reads the same Material values the menu item sheet reads, and only that
+// subset: one vertical surface, text rows, and the active, selected, hover,
+// pressed and disabled states. It is not part of the full stylesheet and
+// imports neither the menu nor the list.
+//
+// Read on 2026-11-10:
+//   https://m3.material.io/components/menus/specs
+//     "Baseline menu padding and size measurements": corner radius 4dp, list
+//     item height 48dp, left/right padding 12dp, padding between elements
+//     within a list item 12dp; the container's own 8dp top and bottom padding
+//     is the menu sheet's (`_menu.scss`, `padding: 8px 0`).
+//   https://m3.material.io/components/menus/accessibility
+//     "Menu items need certain cues to clearly show when they're selected":
+//     selected and unselected menu items keep 3:1; targets are 48x48dp or
+//     larger. Selection is also `aria-selected`, and the active row's ring is
+//     the keyboard focus indicator because focus stays on the control.
+@use "../../styles/abstract/base" as base;
+@use "../../styles/abstract/variables" as v;
+@use "../../styles/abstract/mixins" as m;
+@use "../../styles/abstract/theme" as t;
+
+$component: "#{base.$prefix}-listbox";
+
+.#{$component} {
+    @include m.typography("body-medium");
+    @include m.shape("extra-small");
+
+    // A top-layer popover is centred in the viewport inside a border by the
+    // browser's own defaults; the controller places it, so they are cleared.
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    border: 0;
+    padding: 8px 0;
+    box-sizing: border-box;
+    background-color: t.color("surface-container");
+    color: t.color("on-surface");
+    @include m.elevation(2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    &__option {
+        @include m.typography("label-large");
+        @include m.flex-row;
+
+        position: relative;
+        min-height: 48px;
+        padding: 12px;
+        width: 100%;
+        box-sizing: border-box;
+        cursor: pointer;
+        user-select: none;
+        color: t.color("on-surface");
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+
+        &:hover {
+            @include m.state-layer(t.color("on-surface"), "hover");
+        }
+
+        // Focus stays on the control, so the row the keyboard is on carries
+        // the focus layer and ring: md.comp.focus-ring, 3dp in secondary, drawn
+        // inward inside the scroll container.
+        &--active {
+            @include m.state-layer(t.color("on-surface"), "focus");
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
+        }
+
+        &:active {
+            @include m.state-layer(t.color("on-surface"), "pressed");
+        }
+
+        &[aria-selected="true"] {
+            background-color: t.color("secondary-container");
+            color: t.color("on-secondary-container");
+
+            &:hover {
+                @include m.state-layer(t.color("on-secondary-container"), "hover");
+            }
+
+            &.#{$component}__option--active {
+                @include m.state-layer(t.color("on-secondary-container"), "focus");
+            }
+
+            &:active {
+                @include m.state-layer(t.color("on-secondary-container"), "pressed");
+            }
+
+            // Selected and disabled: the selection's colours at the disabled
+            // opacity, and no state layer for a row that cannot be chosen.
+            &[aria-disabled="true"] {
+                background-color: t.alpha("secondary-container", 0.38);
+                color: t.alpha("on-secondary-container", 0.38);
+
+                &:hover,
+                &:active {
+                    &::before {
+                        opacity: 0;
+                    }
+                }
+            }
+        }
+
+        &[aria-disabled="true"] {
+            cursor: default;
+            color: t.alpha("on-surface", 0.38);
+
+            &:hover,
+            &:active {
+                &::before {
+                    opacity: 0;
+                }
+            }
+        }
+    }
+}
