@@ -5,6 +5,11 @@ import { addClass } from "../../core";
 import { ProgressComponent } from "../progress/types";
 
 import { setHTML } from "../../core/dom/html";
+import { readModifier, writeModifier } from "../../core/dom/modifier";
+
+const VARIANTS = ["filled", "tonal", "outlined", "elevated", "text"] as const;
+const SIZES = ["xs", "s", "m", "l", "xl"] as const;
+const SHAPES = ["round", "square"] as const;
 /**
  * API configuration options for button component
  * @category Components
@@ -275,21 +280,7 @@ export const withAPI =
       setVariant(variant: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-
-        // First remove all existing variant classes
-        const variantClasses = [
-          "filled",
-          "tonal",
-          "outlined",
-          "elevated",
-          "text",
-        ].map((v) => `${buttonClass}--${v}`);
-
-        variantClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
-
-        component.element.classList.add(`${buttonClass}--${variant}`);
+        writeModifier(component.element, buttonClass, VARIANTS, variant, null);
         return buttonComponent;
       },
 
@@ -300,19 +291,7 @@ export const withAPI =
       getVariant() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        const variants = ["filled", "tonal", "outlined", "elevated", "text"];
-
-        // Check which variant class is present on the element
-        for (const variant of variants) {
-          if (
-            component.element.classList.contains(`${buttonClass}--${variant}`)
-          ) {
-            return variant;
-          }
-        }
-
-        // If no variant class is found, return the default variant
-        return "filled";
+        return readModifier(component.element, buttonClass, VARIANTS, "filled");
       },
 
       /**
@@ -322,17 +301,7 @@ export const withAPI =
       getSize() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        const sizes = ["xs", "s", "m", "l", "xl"];
-
-        // Check which size class is present on the element
-        for (const size of sizes) {
-          if (component.element.classList.contains(`${buttonClass}--${size}`)) {
-            return size;
-          }
-        }
-
-        // If no size class is found, return the default size
-        return "s";
+        return readModifier(component.element, buttonClass, SIZES, "s");
       },
 
       /**
@@ -343,17 +312,7 @@ export const withAPI =
       setSize(size: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-
-        // First remove all existing size classes
-        const sizeClasses = ["xs", "s", "m", "l", "xl"].map(
-          (s) => `${buttonClass}--${s}`,
-        );
-
-        sizeClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
-
-        component.element.classList.add(`${buttonClass}--${size}`);
+        writeModifier(component.element, buttonClass, SIZES, size, null);
         return buttonComponent;
       },
 
@@ -364,19 +323,7 @@ export const withAPI =
       getShape() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        const shapes = ["round", "square"];
-
-        // Check which shape class is present on the element
-        for (const shape of shapes) {
-          if (
-            component.element.classList.contains(`${buttonClass}--${shape}`)
-          ) {
-            return shape;
-          }
-        }
-
-        // If no shape class is found, return the default shape
-        return "round";
+        return readModifier(component.element, buttonClass, SHAPES, "round");
       },
 
       /**
@@ -387,17 +334,7 @@ export const withAPI =
       setShape(shape: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-
-        // First remove all existing shape classes
-        const shapeClasses = ["round", "square"].map(
-          (s) => `${buttonClass}--${s}`,
-        );
-
-        shapeClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
-
-        component.element.classList.add(`${buttonClass}--${shape}`);
+        writeModifier(component.element, buttonClass, SHAPES, shape, null);
         return buttonComponent;
       },
 

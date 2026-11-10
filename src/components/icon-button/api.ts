@@ -8,6 +8,12 @@ import {
   IconButtonShape,
   IconButtonWidth,
 } from "./constants";
+import { readModifier, writeModifier } from "../../core/dom/modifier";
+
+const VARIANTS = ["filled", "tonal", "outlined", "standard"] as const;
+const SIZES = ["xs", "s", "m", "l", "xl"] as const;
+const SHAPES = ["round", "square"] as const;
+const WIDTHS = ["narrow", "default", "wide"] as const;
 
 /**
  * API configuration options for the IconButton component
@@ -139,91 +145,38 @@ export const withAPI =
       },
 
       getVariant() {
-        const variants: IconButtonVariant[] = [
-          "filled",
-          "tonal",
-          "outlined",
-          "standard",
-        ];
-        for (const variant of variants) {
-          if (
-            component.element.classList.contains(`${baseClass}--${variant}`)
-          ) {
-            return variant;
-          }
-        }
-        return "standard";
+        return readModifier(component.element, baseClass, VARIANTS, "standard");
       },
 
       setVariant(variant: IconButtonVariant | string) {
-        const variants = ["filled", "tonal", "outlined", "standard"];
-        variants.forEach((v) => {
-          component.element.classList.remove(`${baseClass}--${v}`);
-        });
-        component.element.classList.add(`${baseClass}--${variant}`);
+        writeModifier(component.element, baseClass, VARIANTS, variant, null);
         return iconButtonComponent;
       },
 
       getSize() {
-        const sizes: IconButtonSize[] = ["xs", "s", "m", "l", "xl"];
-        for (const size of sizes) {
-          if (component.element.classList.contains(`${baseClass}--${size}`)) {
-            return size;
-          }
-        }
-        return "s";
+        return readModifier(component.element, baseClass, SIZES, "s");
       },
 
       setSize(size: IconButtonSize | string) {
-        const sizes = ["xs", "s", "m", "l", "xl"];
-        sizes.forEach((s) => {
-          component.element.classList.remove(`${baseClass}--${s}`);
-        });
-        if (size !== "s") {
-          component.element.classList.add(`${baseClass}--${size}`);
-        }
+        writeModifier(component.element, baseClass, SIZES, size, "s");
         return iconButtonComponent;
       },
 
       getShape() {
-        const shapes: IconButtonShape[] = ["round", "square"];
-        for (const shape of shapes) {
-          if (component.element.classList.contains(`${baseClass}--${shape}`)) {
-            return shape;
-          }
-        }
-        return "round";
+        return readModifier(component.element, baseClass, SHAPES, "round");
       },
 
       setShape(shape: IconButtonShape | string) {
-        const shapes = ["round", "square"];
-        shapes.forEach((s) => {
-          component.element.classList.remove(`${baseClass}--${s}`);
-        });
-        if (shape !== "round") {
-          component.element.classList.add(`${baseClass}--${shape}`);
-        }
+        writeModifier(component.element, baseClass, SHAPES, shape, "round");
         return iconButtonComponent;
       },
 
       getWidth() {
-        const widths: IconButtonWidth[] = ["narrow", "default", "wide"];
-        for (const width of widths) {
-          if (component.element.classList.contains(`${baseClass}--${width}`)) {
-            return width;
-          }
-        }
-        return "default";
+        return readModifier(component.element, baseClass, WIDTHS, "default");
       },
 
       setWidth(width: IconButtonWidth | string) {
-        const widths = ["narrow", "default", "wide"];
-        widths.forEach((w) => {
-          component.element.classList.remove(`${baseClass}--${w}`);
-        });
-        if (width !== "default") {
-          component.element.classList.add(`${baseClass}--${width}`);
-        }
+        writeModifier(component.element, baseClass, WIDTHS, width, "default");
         return iconButtonComponent;
       },
 
