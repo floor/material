@@ -1,5 +1,11 @@
-/** Public selective CSS entries. Keep dependency order consistent with main.scss. */
-export const componentStyles: Record<string, { source: string; dependencies: string[] }> = {
+/**
+ * Public selective CSS entries. Keep dependency order consistent with main.scss.
+ *
+ * An `optIn` entry ships as `material/styles/<name>` and nothing else: it joins
+ * neither the full stylesheet nor the shared layer order, so no default asset's
+ * bytes move. The catalogue still parses it like every other declared output.
+ */
+export const componentStyles: Record<string, { source: string; dependencies: string[]; optIn?: boolean }> = {
   "text-field": { source: "components/text-field", dependencies: [] },
   badge: { source: "components/badge", dependencies: [] },
   "bottom-app-bar": { source: "components/bottom-app-bar", dependencies: [] },
@@ -37,6 +43,9 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   list: { source: "components/list", dependencies: [] },
   tooltip: { source: "components/tooltip", dependencies: [] },
   toolbar: { source: "components/toolbar", dependencies: ["button", "icon-button"] },
+  // The lean selection popup: `material/styles/listbox` is the only sheet that
+  // carries it. It is not in main.scss, so it never reaches `material/styles`.
+  listbox: { source: "components/listbox", dependencies: [], optIn: true },
 };
 
 // All shipped components have selective CSS entries.

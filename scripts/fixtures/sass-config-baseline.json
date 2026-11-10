@@ -13,8 +13,8 @@
   "buildInputs": {
     "bun.lock": "1344d0443f629092f1e685442735db71c0f6d7d8cfae9084b092986cb4c27672",
     "scripts/build.ts": "233ee6873f77cdae1347b4a1007fcfa757cc305291a5f833c0f9b02ab97af45c",
-    "scripts/build-styles.ts": "a4d74840507b2d93c4c8f736821e6c3882c85a6821da8f7228e7526175357139",
-    "scripts/style-manifest.ts": "217f29e46afe35e6bacd237a1b47e3a8d7e7475315442eab3d0316b199c3e869"
+    "scripts/build-styles.ts": "24c1f5e266ffb5e8b0cfa9cfe24db6b50ed76b502056aadfe626e6a22d1ef20c",
+    "scripts/style-manifest.ts": "99d2ecad9fe2d1210206abeffd18e5d5af204a20bb7ea6b551ff37b6c6556674"
   },
   "sources": {
     "main": "c13295f2781baafed5b5858d38a081de3ffe9c4eb0fee318ff0497e390218caa",

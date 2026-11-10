@@ -65,7 +65,11 @@ export function directionArmsPrelude(): string {
  * another layer ahead of pre-upgrade.
  */
 export function styleLayerOrder(): string {
-  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
+  // Opt-in entries (`material/styles/listbox`) are selective-only: they are not
+  // in the full stylesheet, so their layer joins the order only when their own
+  // sheet is loaded, and no default asset's declared order moves.
+  const selective = Object.keys(componentStyles).filter(name => !componentStyles[name].optIn);
+  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(selective)];
   return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
 }
 
@@ -132,7 +136,7 @@ export async function buildStyles(outdir: string, banner: string) {
   // Use Sass's parsed dependency graph, not text matching, to detect manifest drift.
   const loaded = full.loadedUrls.map(url => relative(resolve("src/styles"), fileURLToPath(url)).split(sep).join("/"));
   const components = loaded.filter(path => path.startsWith("components/")).sort();
-  const declared = [...Object.values(componentStyles).map(entry => entry.source), ...fullOnlyStyles]
+  const declared = [...Object.values(componentStyles).filter(entry => !entry.optIn).map(entry => entry.source), ...fullOnlyStyles]
     .map(source => source.replace(/\/([^/]+)$/, "/_$1.scss")).sort();
   assert.deepEqual(components, declared, "Component CSS manifest differs from the full stylesheet");
   const themes = loaded.filter(path => path.startsWith("themes/") && !["themes/_index.scss", "themes/_base-theme.scss"].includes(path)).sort();
@@ -192,10 +196,6 @@ export async function buildStyles(outdir: string, banner: string) {
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
-  // The lean selection popup's sheet is opt-in: `material/styles/listbox`
-  // ships, but the sheet joins neither the full stylesheet nor the component
-  // manifest, so no default asset's layer order or bytes change.
-  await emit("styles/listbox", ["components/listbox"]);
   for (const name of [...themeStyles, ...standaloneThemes]) {
     await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
     await emitExplicit(`themes/${name}-contrast`, name, false);
