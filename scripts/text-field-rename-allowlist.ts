@@ -43,6 +43,24 @@ export const patternProtections: Array<{ file: string; snippet: string; reason: 
 /** A line may keep a one-word hit only when every hit sits inside one of these snippets. */
 export const keeps: Array<{ file: string; snippets: string[]; reason: string }> = [
   {
+    file: "scripts/fixtures/comparators/adapters/material-web.js",
+    snippets: ["/textfield/"],
+    reason: "the pinned third-party package's public import path",
+  },
+  {
+    file: "scripts/fixtures/comparators/adapters/micl.js",
+    snippets: ["micl-textfield-"],
+    reason: "the pinned third-party package's public CSS class",
+  },
+  ...[
+    "app-material-web/main.js",
+    "results/app-material-web.json",
+  ].map(file => ({
+    file: `scripts/fixtures/comparators/legacy-import-closure/${file}`,
+    snippets: ["/textfield/"],
+    reason: "immutable, hash-checked historical third-party import evidence",
+  })),
+  {
     file: "MIGRATING.md",
     snippets: ["Textfield", "TEXTFIELD", "textfieldElement", "$textfield", "textfield()",
       "'textfield'", "{ textfield:", "select.textfield", "<m-textfield>", "mtrl-textfield", "::part(textfield)", "/textfield"],
@@ -60,7 +78,7 @@ export const keeps: Array<{ file: string; snippets: string[]; reason: string }> 
   },
   {
     file: "test/canonical-text-field.test.ts",
-    snippets: ["Textfield", "TEXTFIELD", "textfieldElement", "textfield[A-Z]"],
+    snippets: ["Textfield", "TEXTFIELD", "textfieldElement", "textfield[A-Z]", "micl-textfield-"],
     reason: "pins that the removed 0.10 identifier spellings are gone",
   },
   {

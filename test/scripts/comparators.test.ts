@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assetRecord, staticClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
+import { assetRecord, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
 
 const root = "scripts/fixtures/comparators";
 const contract = JSON.parse(readFileSync(join(root, "contract.json"), "utf8"));
@@ -20,6 +20,11 @@ describe("comparator accounting and fixture contract", () => {
     expect(() => staticClosure([assetRecord("a.js", "a", ["missing.css"])], ["a.js"])).toThrow("unaccounted static");
     expect(() => phaseSets(["a.js"], ["font.woff2"], [], ["a.js"])).toThrow("unaccounted request");
     expect(() => staticClosure([assetRecord("a.js", "a"), assetRecord("a.js", "b")], ["a.js"])).toThrow("duplicate");
+  });
+  test("full declared closure follows lazy edges and their shared styles once", () => {
+    const rows = [assetRecord("main.js", "entry", [], ["lazy.js"]), assetRecord("lazy.js", "lazy", ["shared.css"]), assetRecord("shared.css", "style"), assetRecord("unused.js", "unreachable")];
+    expect(declaredClosure(rows, ["main.js"])).toEqual(["lazy.js", "main.js", "shared.css"]);
+    expect(() => declaredClosure([assetRecord("main.js", "entry", [], ["absent.js"])], ["main.js"])).toThrow("unaccounted static");
   });
   test("does not pretend every declared font-face is fetched before readiness", () => {
     const rows = [assetRecord("index.html", "page", ["style.css"]), assetRecord("style.css", "font-face", ["unused.woff2"]), assetRecord("unused.woff2", new Uint8Array([1]))];

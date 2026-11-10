@@ -6,7 +6,7 @@ export async function mount(scenario) {
   document.body.innerHTML = '<main></main>';
   const instances = { button: createButton({ text: 'Save', variant: 'filled', size: 's', shape: 'round' }) };
   const c = { button: attach('button', instances.button.element) };
-  if (scenario === 'app') {
+  if (__COMPARATOR_APP__) {
     await Promise.all([import('material/styles/text-field'), import('material/styles/checkbox'), import('material/styles/switch'), import('material/styles/radios'), import('material/styles/select'), import('material/styles/dialog'), import('material/styles/menu'), import('material/styles/tabs'), import('material/styles/list'), import('material/styles/chips'), import('material/styles/progress'), import('material/styles/icon-button'), import('material/styles/fab'), import('material/styles/slider'), import('material/styles/divider')]);
     const m = await import('material');
     const opener = element('<button id="factory-menu-opener">Menu</button>'); document.querySelector('main').append(opener);

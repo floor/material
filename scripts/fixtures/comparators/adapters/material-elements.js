@@ -5,7 +5,7 @@ import { attach, element, finish, icon } from '../shared.js';
 export async function mount(scenario) {
   document.body.innerHTML = '<main></main>'; defineButton();
   const c = { button: attach('button', element('<m-button variant="filled" size="s">Save</m-button>')) };
-  if (scenario === 'app') {
+  if (__COMPARATOR_APP__) {
     await Promise.all([import('material/elements/css/text-field'), import('material/elements/css/checkbox'), import('material/elements/css/switch'), import('material/elements/css/radios'), import('material/elements/css/select'), import('material/elements/css/dialog'), import('material/elements/css/menu'), import('material/elements/css/tabs'), import('material/elements/css/list'), import('material/elements/css/chips'), import('material/elements/css/progress'), import('material/elements/css/icon-button'), import('material/elements/css/fab'), import('material/elements/css/slider'), import('material/elements/css/divider')]);
     const m = await import('material/elements');
     for (const fn of ['defineTextField','defineCheckbox','defineSwitch','defineRadios','defineSelect','defineDialog','defineMenu','defineTabs','defineList','defineChips','defineProgress','defineIconButton','defineFab','defineSlider','defineDivider']) m[fn]();

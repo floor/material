@@ -3,7 +3,7 @@ import { attach, element, finish, icon, settle } from '../shared.js';
 export async function mount(scenario) {
   document.body.innerHTML = '<main></main>';
   const c = { button: attach('button', element('<md-filled-button>Save</md-filled-button>')) };
-  if (scenario === 'app') {
+  if (__COMPARATOR_APP__) {
     await Promise.all([import('@material/web/textfield/filled-text-field.js'), import('@material/web/checkbox/checkbox.js'), import('@material/web/switch/switch.js'), import('@material/web/radio/radio.js'),
       import('@material/web/select/filled-select.js'), import('@material/web/select/select-option.js'), import('@material/web/dialog/dialog.js'), import('@material/web/menu/menu.js'), import('@material/web/menu/menu-item.js'),
       import('@material/web/tabs/tabs.js'), import('@material/web/tabs/primary-tab.js'), import('@material/web/list/list.js'), import('@material/web/list/list-item.js'), import('@material/web/chips/chip-set.js'), import('@material/web/chips/filter-chip.js'),

@@ -18,6 +18,9 @@ export function staticClosure(records, roots) {
   const visit = file => { if (seen.has(file)) return; assert.ok(lookup.has(file), `unaccounted static asset ${file}`); seen.add(file); lookup.get(file).imports.forEach(visit); };
   roots.forEach(visit); return [...seen].sort();
 }
+export function declaredClosure(records, roots) {
+  return staticClosure(records.map(row => ({ ...row, imports: [...row.imports, ...row.dynamicImports] })), roots);
+}
 export function startupClosure(records, roots) {
   const kinds = new Map(records.map(row => [row.file, row.kind]));
   return staticClosure(records.map(row => ({ ...row, imports: row.imports.filter(file => kinds.get(file) !== 'binary') })), roots);

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { build, preview } from 'vite';
 import { chromium } from 'playwright';
-import { assetRecord, staticClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
+import { assetRecord, staticClosure, declaredClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Comparator installs/builds/browser probes run in GitHub CI only');
 const root = dirname(fileURLToPath(import.meta.url));
@@ -40,7 +40,8 @@ for (const scenario of ['button', 'app']) {
     await writeFile(join(generated, 'main.js'), `import { mount } from ${JSON.stringify(join(root, 'adapters', adapter + '.js'))};\n` +
       `await mount(${JSON.stringify(scenario)});\nconst style=document.createElement('style');style.textContent='body{margin:24px}main{display:block;max-width:900px}section{margin-block:24px;min-width:260px}h2{font:12px sans-serif}';document.head.append(style);\nawait document.fonts.ready;await new Promise(requestAnimationFrame);window.comparatorReady=true;`);
     const relocations = [];
-    const built = await build({ root: generated, configFile: false, envFile: false, logLevel: 'warn',
+    const built = await build({ root: generated, configFile: false, envDir: false, logLevel: 'warn',
+      define: { __COMPARATOR_APP__: JSON.stringify(scenario === 'app') },
       plugins: [{ name: 'self-host-pinned-beer-assets', enforce: 'pre', transform(code, id) {
         if (!id.endsWith('.css') || !id.includes('/beercss/')) return null;
         return code.replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/beercss@5\.0\.3\/dist\/cdn\/([^"')\s]+)/g, (url, file) => {
@@ -49,7 +50,7 @@ for (const scenario of ['button', 'app']) {
           relocations.push({ url, file: `beercss/dist/cdn/${file}`, sha256: digest(readFileSync(target)) }); return target;
         });
       }}],
-      build: { outDir: join(directory, 'dist'), emptyOutDir: true, target: contract.build.target, minify: true, cssMinify: true,
+      build: { outDir: join(directory, 'dist'), emptyOutDir: true, target: contract.build.target, minify: true, cssMinify: contract.build.cssMinify,
         assetsInlineLimit: contract.build.assetsInlineLimit, modulePreload: { polyfill: false }, sourcemap: 'hidden' } });
     const output = built.output;
     const records = output.filter(item => !item.fileName.endsWith('.map')).map(item => {
@@ -66,14 +67,15 @@ for (const scenario of ['button', 'app']) {
     });
     result.assets = records; result.relocations = relocations;
     result.declaredStaticAssets = staticClosure(records, ['index.html']);
+    result.fullDeclaredAssets = declaredClosure(records, ['index.html']);
     const closure = startupClosure(records, ['index.html']);
-    server = await preview({ root: generated, configFile: false, envFile: false, logLevel: 'error', build: { outDir: join(directory, 'dist') }, preview: { host: '127.0.0.1', port: 0, strictPort: false } });
+    server = await preview({ root: generated, configFile: false, envDir: false, logLevel: 'error', build: { outDir: join(directory, 'dist') }, preview: { host: '127.0.0.1', port: 0, strictPort: false } });
     const address = server.httpServer.address(); const origin = `http://127.0.0.1:${address.port}`;
     browser = await chromium.launch({ headless: true }); result.browser = browser.version();
     context = await browser.newContext({ viewport: { width: 1100, height: 900 }, reducedMotion: 'no-preference', locale: 'en-US', colorScheme: 'light' });
     await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
     const page = await context.newPage(); page.setDefaultTimeout(10000);
-    const errors = [], startup = new Set(), interaction = new Set(); let phase = 'startup';
+    const errors = [], startup = new Set(), interaction = new Set(); result.errors = errors; let phase = 'startup';
     await context.route('**/*', route => { const url = route.request().url();
       if (!url.startsWith(origin + '/') && !url.startsWith('data:') && !url.startsWith('blob:')) { errors.push(`external request ${url}`); return route.abort(); } return route.continue(); });
     page.on('pageerror', error => errors.push(error.message));
@@ -107,13 +109,49 @@ for (const scenario of ['button', 'app']) {
     await button.hover(); await page.screenshot({ path: join(directory, 'button-hover.png') });
     await page.evaluate(() => window.fixture.controls.button.focus());
     await page.keyboard.press('Enter'); check('button: keyboard activation', await page.evaluate(() => window.fixture.state.clicks >= 2));
+    await page.screenshot({ path: join(directory, 'button-keyboard-focus.png') });
+    const beforeSpace = await page.evaluate(() => window.fixture.state.clicks);
+    await page.keyboard.press('Space');
+    check('button: Space activates once', await page.evaluate(() => window.fixture.state.clicks) === beforeSpace + 1);
+    const pressBox = await button.boundingBox();
+    await page.mouse.move(pressBox.x + pressBox.width / 2, pressBox.y + pressBox.height / 2);
+    await page.mouse.down(); await page.screenshot({ path: join(directory, 'button-pressed.png') }); await page.mouse.up();
     const clicks = await page.evaluate(() => window.fixture.state.clicks);
     await page.evaluate(() => window.fixture.api.disabled(true));
     const box = await button.boundingBox(); await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     check('button: disabled suppresses activation', await page.evaluate(() => window.fixture.state.clicks) === clicks);
     await page.evaluate(() => window.fixture.api.disabled(false));
     result.outcomes.button.interaction = 'pointer-keyboard-disabled';
+    result.behaviorProbes = [];
+    // Capability observations are evidence, not a claim that unequal libraries
+    // provide every widget interaction. Failed probes keep the row unrankable.
+    const observe = async (name, action) => {
+      try { result.behaviorProbes.push({ name, ...await action() }); }
+      catch (error) { result.behaviorProbes.push({ name, status: 'gap', error: String(error.message) }); }
+    };
+    const readState = role => page.evaluate(role => {
+      const nodes = []; const walk = root => { nodes.push(root); for (const child of root.children) { walk(child); if (child.shadowRoot) for (const n of child.shadowRoot.children) walk(n); } };
+      const root = window.fixture.controls[role]; walk(root); if(root.shadowRoot) for(const n of root.shadowRoot.children) walk(n);
+      return nodes.map(n => ({ tag: n.localName, checked: n.checked, selected: n.selected, active: n.active, value: n.value,
+        ariaChecked: n.getAttribute('aria-checked'), ariaSelected: n.getAttribute('aria-selected'), ariaPressed: n.getAttribute('aria-pressed'),
+        stateClasses: [...n.classList].filter(c => /(?:^|--)(?:active|selected|checked)$/.test(c)) }));
+    }, role);
     if (scenario === 'app') {
+      for (const [role, query, index] of [['checkbox','checkbox',0], ['switch','switch',0], ['radios','radio',1], ['chips',null,0], ['tabs','tab',1]]) {
+        if (result.missing.includes(role)) { result.behaviorProbes.push({ name: `${role}: pointer state`, status: 'unsupported' }); continue; }
+        await observe(`${role}: pointer state`, async () => {
+          const before = await readState(role);
+          const section = page.locator(`[data-fixture="${role}"]`);
+          let target = query ? section.getByRole(query).nth(index) : section.getByText('Filter', { exact: true });
+          if (role === 'switch' && await target.count() === 0) target = section.getByRole('checkbox');
+          await target.click({ timeout: 3000 });
+          const after = await readState(role); return { status: JSON.stringify(before) !== JSON.stringify(after) ? 'observed-change' : 'gap', before, after };
+        });
+      }
+      if (!result.missing.includes('tabs')) await observe('tabs: ArrowRight navigation', async () => {
+        const before = await readState('tabs'); await page.keyboard.press('ArrowRight');
+        const after = await readState('tabs'); return { status: JSON.stringify(before) !== JSON.stringify(after) ? 'observed-change' : 'gap', before, after };
+      });
       const field = page.locator('[data-fixture="text-field"]').getByRole('textbox'); await field.fill('Ada');
       check('text-field: user typing', await page.evaluate(() => window.fixture.api.getValue('text-field')) === 'Ada');
       for (const [role, value] of [ ['select', 'rome'], ['slider', 70], ['progress', 70]]) {
@@ -129,18 +167,37 @@ for (const scenario of ['button', 'app']) {
           await window.fixture.api[`open${kind}`](trigger);
         }, kind);
         await page.waitForFunction(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind);
+        // Open state can be synchronous while lazy modules and entrance animations
+        // are still pending. Wait for paint without altering upstream motion.
+        await page.waitForFunction(role => {
+          const n = window.fixture.controls[role]; const nodes = [n];
+          const walk = root => { for (const child of root.children) { nodes.push(child); walk(child); if (child.shadowRoot) walk(child.shadowRoot); } };
+          walk(n); if (n.shadowRoot) walk(n.shadowRoot);
+          return nodes.some(el => { const r = el.getBoundingClientRect(), s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility === 'visible' && s.display !== 'none'; });
+        }, role);
         const visible = await page.evaluate(role => { const n = window.fixture.controls[role]; const nodes = [n]; const walk = root => { for(const child of root.children){ nodes.push(child); walk(child); if(child.shadowRoot) walk(child.shadowRoot); } }; walk(n); if(n.shadowRoot) walk(n.shadowRoot); const r = nodes.map(el => el.getBoundingClientRect()).find(r => r.width > 0 && r.height > 0) || n.getBoundingClientRect(); return { width:r.width,height:r.height,display:getComputedStyle(n).display }; }, role);
         check(`${role}: open paints`, visible.width > 0 && visible.height > 0, visible);
         await page.screenshot({ path: join(directory, `${role}-open.png`) });
+        await observe(`${role}: Escape and focus return`, async () => {
+          await page.keyboard.press('Escape');
+          await page.waitForFunction(kind => !window.fixture.api[kind.toLowerCase() + 'Open'](), kind, { timeout: 3000 });
+          return { status: 'closed', focusReturned: await page.evaluate(() => document.activeElement?.id === 'probe-trigger') };
+        });
+        if (!await page.evaluate(kind => window.fixture.api[kind.toLowerCase() + 'Open'](), kind)) await page.evaluate(kind => window.fixture.api[`open${kind}`](document.getElementById('probe-trigger')), kind);
+        if (kind === 'Menu') await observe('menu: pointer selection', async () => {
+          const item = page.getByRole('menuitem').filter({ hasText: 'One' }).first();
+          await item.click({ timeout: 3000 });
+          return { status: 'activated', closed: !await page.evaluate(() => window.fixture.api.menuOpen()) };
+        });
         await page.evaluate(async kind => { await window.fixture.api[`close${kind}`](); document.getElementById('probe-trigger')?.remove(); }, kind);
         await page.waitForFunction(kind => !window.fixture.api[kind.toLowerCase() + 'Open'](), kind);
         result.outcomes[role].interaction = 'public-open-close';
       }
     }
     // Explicit boundaries: values/open-close do not stand in for a full keyboard/widget audit.
-    result.behaviorCoverage = { button: ['rest', 'hover', 'Enter', 'pointer', 'disabled'],
+    result.behaviorCoverage = { button: ['rest', 'hover', 'keyboard focus', 'Enter', 'Space', 'pointer', 'pressed screenshot', 'disabled'],
       app: scenario === 'app' ? ['public value updates', 'dialog/menu public open-close'] : [],
-      unverified: ['selected/toggle', 'loading composition', 'Space activation', 'pressed paint', 'reduced-motion animation', 'widget keyboard navigation', 'focus return', 'pointer select choice', 'tabs panel wiring'],
+      unverified: ['separate toggle/loading button profiles', 'reduced-motion animation equivalence', 'complete widget keyboard navigation', 'pointer select choice', 'tabs panel wiring'],
       fullBehaviorParity: false };
     result.coverage = coverage(roles, result.missing, result.outcomes);
     result.coverage.comparableFullApp = false; // Never rank this bounded probe as full behavioral parity.
@@ -148,6 +205,7 @@ for (const scenario of ['button', 'app']) {
     await page.screenshot({ path: join(directory, 'reduced-motion.png'), fullPage: true });
     await page.waitForLoadState('networkidle'); check('no page/resource errors', errors.length === 0, errors);
     result.phases = phaseSets(closure, [...startup], [...interaction], records.map(r => r.file));
+    result.phases.fullDeclared = result.fullDeclaredAssets;
     result.sizes = Object.fromEntries(Object.entries(result.phases).map(([phaseName, names]) => [phaseName, {
       inclusive: totals(records, names), js: totals(records, names.filter(n => records.find(r => r.file === n)?.kind === 'js')),
       css: totals(records, names.filter(n => records.find(r => r.file === n)?.kind === 'css')),

@@ -1,8 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "profile": "rendered-styled",
   "toolchain": { "node": "v22.23.3", "npm": "10.9.9", "vite": "8.2.2", "playwright": "1.63.0" },
-  "build": { "target": "es2022", "assetsInlineLimit": 0, "modulePreloadPolyfill": false },
+  "build": { "target": "es2022", "assetsInlineLimit": 0, "modulePreloadPolyfill": false, "cssMinify": false },
   "compression": { "gzipLevel": 9, "brotliQuality": 11, "unit": "bytes-per-emitted-asset" },
   "roles": ["button", "text-field", "checkbox", "switch", "radios", "select", "dialog", "menu", "tabs", "list", "chips", "progress", "icon-button", "fab", "slider", "divider"],
   "adapters": {

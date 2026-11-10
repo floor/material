@@ -4,7 +4,7 @@ import { attach, element, finish, icon, settle } from '../shared.js';
 export async function mount(scenario) {
   const theme = element('<m3e-theme scheme="light"><main></main></m3e-theme>'); document.body.replaceChildren(theme);
   const c = { button: attach('button', element('<m3e-button variant="filled" shape="rounded" size="small">Save</m3e-button>')) };
-  if (scenario === 'app') {
+  if (__COMPARATOR_APP__) {
     // Public M3E icon fallback requires Material Symbols. Use pinned, self-hosted
     // upstream font bytes; this request and its wrapper count in startup.
     const { default: symbols } = await import('beercss/dist/cdn/material-symbols-outlined.woff2?url');
@@ -30,7 +30,7 @@ export async function mount(scenario) {
   }
   finish(c, {
     disabled: value => { c.button.disabled = value; },
-    openDialog: () => c.dialog.show(), closeDialog: () => c.dialog.hide(), dialogOpen: () => c.dialog.open,
+    openDialog: () => { c.dialog.open = true; }, closeDialog: () => c.dialog.hide(), dialogOpen: () => c.dialog.open,
     openMenu: trigger => c.menu.show(trigger), closeMenu: () => c.menu.hide(), menuOpen: () => c.menu.isOpen,
     setValue: (role, value) => { const node = role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]; node.value = role === 'progress' ? value / 100 : value; },
     getValue: role => { const node = role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]; return role === 'progress' ? node.value * 100 : node.value; },
