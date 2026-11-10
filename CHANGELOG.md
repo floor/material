@@ -17,6 +17,34 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.13.1] - 2026-11-10
+
+Loading buttons report their state immediately, and carousel slides keep their names.
+
+### Fixed
+
+- **Buttons start busy and disabled when created loading ([#363](https://github.com/floor/material/pull/363)).** `createButton({ loading: true })` and `<m-button loading>` now expose the loading state from the start, including server-rendered buttons. Calling `setLoading(true)` also disables the button synchronously, before waiting for progress to load. Progress remains lazy, and `showProgress` controls the initial indicator. Removing the element's `loading` attribute preserves an authored `disabled` attribute. Buttons without loading keep their existing default output.
+- **Carousel slides retain an authored accessible name ([#363](https://github.com/floor/material/pull/363)).** A nonempty slide title names the slide, with image alt text next and `n of total` used only when neither supplies a name. `<m-carousel-item>` accepts `title` when `label` is absent; a declared `label` takes precedence. Names update when slide content or the slide collection changes, instead of reverting to position-only labels.
+
+### Internal
+
+- **Comparator fixtures use Vite 8.2.4 ([#366](https://github.com/floor/material/pull/366)).** Re-pin the private comparator toolchain to address a High-severity advisory. Every measurement in the controlled Vite-only comparison is identical. This is CI-only tooling; the root toolchain, consumer code and published package are unchanged by the re-pin.
+
+### Size
+
+Measurements after #363, from the [push-to-main CI package job](https://github.com/floor/material/actions/runs/42860248258/job/129984867053):
+
+| Measurement | Bytes / count |
+| --- | ---: |
+| Root JavaScript, gzip | 131,098 B |
+| Every-component scenario, gzip | 127,928 B |
+| Full stylesheet scenario, gzip | 59,596 B |
+| npm package, compressed | 894,229 B |
+| npm package, unpacked | 5,108,056 B |
+| Package files | 1,261 |
+
+No size budget changes. These are push-to-main integration measurements, before the release version bump.
+
 ## [3.13.0] - 2026-11-10
 
 Choose application icons and load only the button styles you use.
@@ -7167,7 +7195,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.10.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.13.1...HEAD
+[3.13.1]: https://github.com/floor/material/compare/v3.13.0...v3.13.1
 [3.10.1]: https://github.com/floor/material/compare/v3.10.0...v3.10.1
 [3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
 [3.8.2]: https://github.com/floor/material/compare/v3.8.1...v3.8.2

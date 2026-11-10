@@ -13,6 +13,6 @@
     "material-inspired-component-library": "10.0.0",
     "playwright": "1.63.0",
     "tslib": "2.9.1",
-    "vite": "8.2.2"
+    "vite": "8.2.4"
   }
 }
