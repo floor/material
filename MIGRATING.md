@@ -27,6 +27,40 @@ The menu's `dense` option and the `<m-menu dense>` attribute are deprecated. The
 
 `setupResponsiveBehavior` from `material/components/tabs` is deprecated. Pass `tabsResponsive(config)` from `material/components/tabs/responsive` as `createTabs`'s `responsive` option instead — the same configuration, the same behaviour, applied while the group is built.
 
+## Bottom app bar in 3.x
+
+`createBottomAppBar` is deprecated in 3.x in favour of the docked toolbar. The factory, its types, elements and framework adapters remain available with their existing behaviour. This is a deprecation only: nothing is removed, and removal is parked until Material Design v4.
+
+For a new screen, use the toolbar API:
+
+```typescript
+import createToolbar from 'material/components/toolbar';
+import 'material/styles/base';
+import 'material/styles/toolbar';
+
+const save = document.createElement('button');
+save.type = 'button';
+save.textContent = 'Save';
+
+const toolbar = createToolbar({
+  variant: 'docked',
+  placement: 'bottom',
+  ariaLabel: 'Page actions',
+  items: [save],
+  scrollBehavior: 'exit',
+  scrollThreshold: 10,
+});
+document.body.append(toolbar.element);
+```
+
+The docked toolbar has its own focus and scroll policy. It accepts a FAB at creation, at the start or end; it does not yet support a centred FAB, adding one after creation, a custom transition duration or a custom tag. Its add method returns the added element, rather than the toolbar for legacy chaining. Do not treat it as a drop-in rename.
+
+For a browser factory screen that needs the legacy contract, the experimental `material/components/bottom-app-bar-toolbar` entry keeps the legacy API and geometry with docked-toolbar styling. Load `material/styles/bottom-app-bar-toolbar` explicitly alongside the base stylesheet, including when the page uses the full stylesheet.
+
+This compatibility entry preserves native Tab order, live action/FAB containers, chaining, visibility callbacks and the strict per-event auto-hide threshold. It is absent from the root export and has no element, framework adapter or SSR registration. Existing applications can keep the legacy entry while migrating.
+
+See the [usage example and measured costs](README.md#bottom-app-bar-compatibility-entry). The compatibility entry costs more than the legacy bar; it does not reduce the root or default bundle.
+
 ## 1. Replace retired themes first
 
 | Retired name in 3.0.0 | Replacement |
