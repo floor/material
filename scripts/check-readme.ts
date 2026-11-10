@@ -226,6 +226,7 @@ try {
   await writeFile(probe, `
     import * as root from 'material';
     import { elements, declarations } from 'material/elements';
+    import { buttonFilledSmallRoundElement } from 'material/elements/button-filled-small-round';
     import { existsSync } from 'node:fs';
     import { fileURLToPath } from 'node:url';
     const specifiers = JSON.parse(process.argv[2]);
@@ -243,7 +244,7 @@ try {
       root: Object.keys(root),
       resolved,
       tags: Object.fromEntries([
-        ...Object.values(elements).map(entry => [entry.spec.name, attributes(entry.spec)]),
+        ...[...Object.values(elements), buttonFilledSmallRoundElement].map(entry => [entry.spec.name, attributes(entry.spec)]),
         ...Object.values(declarations).map(spec => [spec.name, attributes(spec)]),
       ]),
     }));

@@ -54,9 +54,17 @@ Progress styles are included. Hover, keyboard focus, press, disabled, selected t
 
 Import `material/styles/button` for any other variant, size or shape. This includes changes through the variant, size and shape setters. The general sheet wins in either import order. Components such as tabs can bring that sheet already, in which case adding the fixed sheet costs more CSS.
 
-For the client-only fixed element, import `material/elements/css/button-filled-small-round`, `material/elements/preupgrade/button-filled-small-round.css` and `defineButtonFilledSmallRound` from `material/elements/button-filled-small-round`, then call that function to register `<m-button-filled-small-round>`. Include `material/styles/base-elements` as for other elements.
+The client-only fixed element uses these opt-in imports:
 
-Its variant/size/shape attributes are inert. While connected, those properties read `filled`/`s`/`round`; writes and the component's corresponding setters are inert and chainable. Other profiles require `<m-button>` and its general styles. The fixed entry is separate from the default registry and has no SSR renderer; it establishes no SSR saving.
+```typescript
+import 'material/styles/base-elements';
+import 'material/elements/css/button-filled-small-round';
+import 'material/elements/preupgrade/button-filled-small-round.css';
+import { defineButtonFilledSmallRound } from 'material/elements/button-filled-small-round';
+defineButtonFilledSmallRound();
+```
+
+This registers `<m-button-filled-small-round>`. While connected, visual properties read filled/s/round. Visual attributes, property writes and component setters are inert; setters remain chainable. Other profiles require `<m-button>` and its general styles. The fixed entry is absent from default and SSR registries; it establishes no SSR saving.
 
 ## Components
 
