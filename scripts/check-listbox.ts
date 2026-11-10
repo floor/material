@@ -1317,7 +1317,7 @@ async function penBehaviour(page: Page): Promise<void> {
     const x = Math.round(box.x + box.width / 2);
     const y = Math.round(box.y + box.height / 2);
     const buttons = button === "left" ? 1 : 2;
-    const shared = { x, y, button, clickCount: 1, pointerType: "pen" };
+    const shared = { x, y, button, clickCount: 1, pointerType: "pen" as const };
     await client.send("Input.dispatchMouseEvent", { ...shared, type: "mousePressed", buttons });
     await client.send("Input.dispatchMouseEvent", { ...shared, type: "mouseReleased", buttons: 0 });
   };
