@@ -269,6 +269,9 @@ try {
   // the next 1,000, is 5,908,000.
   // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
   // the next 1,000, is 5,119,000.
+  // The lean listbox entry adds six files: 5,127,470 in CI over main's
+  // 5,099,705, 1,265 files. Measured + 1%, up to the next 1,000, is 5,179,000.
+  // Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
   assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,
