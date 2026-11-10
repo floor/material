@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { build, preview } from 'vite';
 import { chromium } from 'playwright';
-import { assetRecord, staticClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
+import { assetRecord, staticClosure, startupClosure, totals, phaseSets, coverage, digest } from '../../comparators/accounting.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Comparator installs/builds/browser probes run in GitHub CI only');
 const root = dirname(fileURLToPath(import.meta.url));
@@ -65,7 +65,8 @@ for (const scenario of ['button', 'app']) {
         modules: item.type === 'chunk' ? Object.keys(item.modules).map(id => id.replace(root, '$FIXTURE')) : [] };
     });
     result.assets = records; result.relocations = relocations;
-    const closure = staticClosure(records, ['index.html']);
+    result.declaredStaticAssets = staticClosure(records, ['index.html']);
+    const closure = startupClosure(records, ['index.html']);
     server = await preview({ root: generated, configFile: false, envFile: false, logLevel: 'error', build: { outDir: join(directory, 'dist') }, preview: { host: '127.0.0.1', port: 0, strictPort: false } });
     const address = server.httpServer.address(); const origin = `http://127.0.0.1:${address.port}`;
     browser = await chromium.launch({ headless: true }); result.browser = browser.version();
@@ -113,7 +114,9 @@ for (const scenario of ['button', 'app']) {
     await page.evaluate(() => window.fixture.api.disabled(false));
     result.outcomes.button.interaction = 'pointer-keyboard-disabled';
     if (scenario === 'app') {
-      for (const [role, value] of [['text-field', 'Ada'], ['select', 'rome'], ['slider', 70], ['progress', 0.7]]) {
+      const field = page.locator('[data-fixture="text-field"]').getByRole('textbox'); await field.fill('Ada');
+      check('text-field: user typing', await page.evaluate(() => window.fixture.api.getValue('text-field')) === 'Ada');
+      for (const [role, value] of [ ['select', 'rome'], ['slider', 70], ['progress', 70]]) {
         await page.evaluate(({ role, value }) => window.fixture.api.setValue(role, value), { role, value });
         const actual = await page.evaluate(role => window.fixture.api.getValue(role), role);
         check(`${role}: public value update`, String(actual) === String(value), { expected: value, actual });

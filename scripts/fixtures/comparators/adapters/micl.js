@@ -23,7 +23,7 @@ export async function mount(scenario) {
   }
   finish(c, { disabled: v => { c.button.disabled = v; }, openDialog: () => c.dialog.showModal(), closeDialog: () => c.dialog.close(), dialogOpen: () => c.dialog.open,
     openMenu: () => c.menu.showPopover(), closeMenu: () => c.menu.hidePopover(), menuOpen: () => c.menu.matches(':popover-open'),
-    setValue: (role, value) => { const node = c[role].matches('input,select,progress') ? c[role] : c[role].querySelector('input,select'); node.value = value; node.dispatchEvent(new Event('input', { bubbles: true })); },
-    getValue: role => (c[role].matches('input,select,progress') ? c[role] : c[role].querySelector('input,select')).value });
+    setValue: (role, value) => { const node = c[role].matches('input,select,progress') ? c[role] : c[role].querySelector('input,select'); node.value = role === 'progress' ? value / 100 : value; node.dispatchEvent(new Event('input', { bubbles: true })); },
+    getValue: role => { const node = c[role].matches('input,select,progress') ? c[role] : c[role].querySelector('input,select'); return role === 'progress' ? node.value * 100 : node.value; } });
   await new Promise(requestAnimationFrame);
 }

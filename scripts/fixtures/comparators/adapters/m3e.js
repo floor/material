@@ -5,6 +5,10 @@ export async function mount(scenario) {
   const theme = element('<m3e-theme scheme="light"><main></main></m3e-theme>'); document.body.replaceChildren(theme);
   const c = { button: attach('button', element('<m3e-button variant="filled" shape="rounded" size="small">Save</m3e-button>')) };
   if (scenario === 'app') {
+    // Public M3E icon fallback requires Material Symbols. Use pinned, self-hosted
+    // upstream font bytes; this request and its wrapper count in startup.
+    const { default: symbols } = await import('beercss/dist/cdn/material-symbols-outlined.woff2?url');
+    const font = new FontFace('Material Symbols Outlined', `url(${symbols})`); await font.load(); document.fonts.add(font);
     await Promise.all([import('@m3e/web/form-field'), import('@m3e/web/checkbox'), import('@m3e/web/switch'), import('@m3e/web/radio-group'),
       import('@m3e/web/select'), import('@m3e/web/option'), import('@m3e/web/dialog'), import('@m3e/web/menu'), import('@m3e/web/tabs'),
       import('@m3e/web/list'), import('@m3e/web/chips'), import('@m3e/web/progress-indicator'), import('@m3e/web/icon-button'), import('@m3e/web/fab'), import('@m3e/web/slider'), import('@m3e/web/divider')]);
@@ -28,8 +32,8 @@ export async function mount(scenario) {
     disabled: value => { c.button.disabled = value; },
     openDialog: () => c.dialog.show(), closeDialog: () => c.dialog.hide(), dialogOpen: () => c.dialog.open,
     openMenu: trigger => c.menu.show(trigger), closeMenu: () => c.menu.hide(), menuOpen: () => c.menu.isOpen,
-    setValue: (role, value) => { const node = role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]; node.value = value; },
-    getValue: role => (role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]).value,
+    setValue: (role, value) => { const node = role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]; node.value = role === 'progress' ? value / 100 : value; },
+    getValue: role => { const node = role === 'select' ? c.select.querySelector('m3e-select') : role === 'text-field' ? c[role].querySelector('input') : c[role]; return role === 'progress' ? node.value * 100 : node.value; },
   });
   await settle();
 }

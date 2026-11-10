@@ -358,11 +358,6 @@ jobs:
           node-version: "22.23.3"
       - name: Install locked comparator tooling (CI only)
         run: |
-          if [ ! -f scripts/fixtures/comparators/package-lock.json ]; then
-            npm install --package-lock-only --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
-            echo "::error::Commit the CI-generated lockfile before running comparisons"
-            exit 1
-          fi
           npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
           scripts/fixtures/comparators/node_modules/.bin/playwright install --with-deps chromium
       - name: Rendered fixture and per-asset comparison

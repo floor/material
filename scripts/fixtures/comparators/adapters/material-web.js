@@ -26,6 +26,6 @@ export async function mount(scenario) {
   }
   finish(c, { disabled: v => { c.button.disabled = v; }, openDialog: () => c.dialog.show(), closeDialog: () => c.dialog.close(), dialogOpen: () => c.dialog.open,
     openMenu: trigger => { trigger.id = 'menu-anchor'; c.menu.anchor = trigger.id; c.menu.open = true; }, closeMenu: () => { c.menu.open = false; }, menuOpen: () => c.menu.open,
-    setValue: (role, value) => { c[role].value = value; }, getValue: role => c[role].value });
+    setValue: (role, value) => { c[role].value = role === 'progress' ? value / 100 : value; }, getValue: role => role === 'progress' ? c[role].value * 100 : c[role].value });
   await settle();
 }

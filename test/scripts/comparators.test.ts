@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assetRecord, staticClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
+import { assetRecord, staticClosure, startupClosure, totals, phaseSets, coverage, digest } from "../../scripts/comparators/accounting.mjs";
 
 const root = "scripts/fixtures/comparators";
 const contract = JSON.parse(readFileSync(join(root, "contract.json"), "utf8"));
@@ -20,6 +20,12 @@ describe("comparator accounting and fixture contract", () => {
     expect(() => staticClosure([assetRecord("a.js", "a", ["missing.css"])], ["a.js"])).toThrow("unaccounted static");
     expect(() => phaseSets(["a.js"], ["font.woff2"], [], ["a.js"])).toThrow("unaccounted request");
     expect(() => staticClosure([assetRecord("a.js", "a"), assetRecord("a.js", "b")], ["a.js"])).toThrow("duplicate");
+  });
+  test("does not pretend every declared font-face is fetched before readiness", () => {
+    const rows = [assetRecord("index.html", "page", ["style.css"]), assetRecord("style.css", "font-face", ["unused.woff2"]), assetRecord("unused.woff2", new Uint8Array([1]))];
+    expect(staticClosure(rows, ["index.html"])).toContain("unused.woff2");
+    expect(startupClosure(rows, ["index.html"])).not.toContain("unused.woff2");
+    expect(phaseSets(startupClosure(rows, ["index.html"]), ["unused.woff2"], [], rows.map(row => row.file)).initial).toContain("unused.woff2");
   });
   test("counts binary transfers as raw bytes, not a fictional gzip text gain", () => {
     const font = assetRecord("font.woff2", new Uint8Array([1, 2, 3, 4]));
@@ -40,6 +46,8 @@ describe("comparator accounting and fixture contract", () => {
     expect(contract.adapters.micl.missing).toEqual(["tabs", "fab"]);
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
     expect(pkg.private).toBe(true);
+    const lock = JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8"));
+    expect(lock.packages[""].dependencies).toEqual(pkg.dependencies);
     for (const [name, version] of Object.entries(pkg.dependencies)) expect(version).toMatch(/^\d+\.\d+\.\d+$/);
     const publicPkg = JSON.parse(readFileSync("package.json", "utf8"));
     for (const field of ["dependencies", "peerDependencies", "optionalDependencies"]) {
@@ -48,7 +56,7 @@ describe("comparator accounting and fixture contract", () => {
   });
   test("keeps every historical input and result byte-identical", () => {
     const legacy = join(root, "legacy-import-closure");
-    const frozen = JSON.parse(readFileSync(join(legacy, "sha256.json"), "utf8"));
+    const frozen = JSON.parse(readFileSync(join(legacy, "sha256.json"), "utf8")) as Record<string, string>;
     expect(Object.keys(frozen)).toHaveLength(19);
     for (const [file, expected] of Object.entries(frozen)) expect(digest(readFileSync(join(legacy, file)))).toBe(expected);
     // Independent identity pin: changing the legacy hash manifest is also a review-visible failure.

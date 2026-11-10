@@ -30,7 +30,9 @@ Vite 8.2.2, ES2022 production HTML builds, extracted CSS, zero asset inlining,
 no module-preload polyfill, and hidden source maps. Text files are compressed
 individually at gzip 9 / Brotli 11. Binary assets count as raw transfer bytes.
 The ledger includes the HTML/inline artwork and separate JS/CSS/binary totals.
-Static imports and CSS URLs form the initial closure. Observed dynamic requests
+Static JS/CSS imports form the initial closure. CSS URL assets are inventoried,
+but a font-face declaration alone is not a network fetch; binary resources join
+initial totals only when observed before readiness. Observed dynamic requests
 before readiness are also initial; post-readiness requests have their own phase.
 All emitted files are a separate bound, never mislabeled as a measured download.
 Hashes and duplicate-free final asset names make the accounting auditable.
@@ -39,7 +41,8 @@ External requests fail. Beer CSS's pinned CDN font URLs are relocated to its own
 installed assets with hashes; they are not removed. Included SVG/data assets
 count in the file carrying them. The primary Beer entry includes global CSS/JS;
 MICL uses published UMD modules and distributed CSS, not assumed tree-shaking.
-M3E includes its theme initialization and peers. Dynamic theme generation is not
+M3E includes its theme initialization and peers; its app explicitly loads the
+pinned Material Symbols font distributed by Beer CSS for internal icon fallbacks. Dynamic theme generation is not
 part of these static light-theme cases; any retained chunks still appear.
 
 Artifacts retain exact versions, candidate/checkout SHA, lock digest, browser
