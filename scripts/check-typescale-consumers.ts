@@ -5,9 +5,15 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { chromium } from "playwright";
+import * as sass from "sass";
 
 const defaults = process.argv.includes("--default-profile");
-const profile = defaults ? "" : "typescale/";
+const compile = (source: string) => sass.compileString(
+  '@use "config" with ($typescale-tokens: true);' + source,
+  { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent },
+).css;
+const styles = defaults ? undefined : Object.fromEntries(["ripple", "progress", "button"].map(name =>
+  [name, compile(`@use "element-styles" with ($name: "${name}");`)]));
 const scratch = await mkdtemp(resolve(".typescale-check-"));
 const report: Record<string, unknown> = { defaults };
 const browser = await chromium.launch();
@@ -16,7 +22,8 @@ try {
   await writeFile(entry, `
 import createButton from ${JSON.stringify(resolve("dist/components/button/index.js"))};
 import { defineButton } from ${JSON.stringify(resolve("dist/elements/index.js"))};
-import ${JSON.stringify(resolve(`dist/elements/css/${profile}button.js`))};
+${defaults ? `import ${JSON.stringify(resolve("dist/elements/css/button.js"))};` :
+`import { registerStyles } from ${JSON.stringify(resolve("dist/elements/index.js"))};\nregisterStyles(${JSON.stringify(styles)});`}
 const button = createButton({text:"Factory"});
 button.element.id="factory";
 document.body.append(button.element);
@@ -28,8 +35,8 @@ Object.assign(window, { defineButton });
   const page = await browser.newPage();
   await page.setContent("<!doctype html><html><head></head><body></body></html>");
   const css = (await Bun.file("dist/styles/base.css").text()) +
-    (await Bun.file(`dist/styles/${profile}button.css`).text()) +
-    (await Bun.file(defaults ? "dist/elements/preupgrade.css" : "dist/elements/typescale/preupgrade.css").text());
+    (defaults ? await Bun.file("dist/styles/button.css").text() : styles!.button) +
+    (defaults ? await Bun.file("dist/elements/preupgrade.css").text() : compile('@use "preupgrade";'));
   await page.addStyleTag({ content: css });
   await page.addStyleTag({ content: ":root{--mtrl-sys-typescale-label-large-font-size:19px}" });
   await page.addScriptTag({ content: await built.outputs[0].text() });

@@ -12,7 +12,7 @@ async function walk(dir: string, relative = ""): Promise<void> {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const path = relative ? `${relative}/${entry.name}` : entry.name;
     if (entry.isDirectory()) await walk(join(dir, entry.name), path);
-    else if (/\.(?:js|css)$/.test(path) && !/^(?:styles\/typescale\/|elements\/(?:css\/)?typescale\/)/.test(path)) {
+    else if (/\.(?:js|css)$/.test(path)) {
       const group = path.includes("/") ? path.split("/")[0] : ".";
       const paths = groups.get(group) ?? [];
       paths.push(path);

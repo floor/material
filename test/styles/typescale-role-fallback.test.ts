@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import * as sass from "sass";
+import { preupgradeRollback } from "../../src/elements/styles";
 import { compileThemeSources } from "../../scripts/build-styles";
 
 const options: sass.StringOptions<"sync"> = { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent };
@@ -71,6 +72,23 @@ describe("opt-in typography consumers", () => {
     expect(main).not.toContain("data-theme-contrast");
     expect(compile('@use "elements" with ($typescale-tokens: true, $tag-prefix: "x");')).toContain("x-button:not(:defined)");
     expect(() => compile(config("true") + '@use "main" with ($typescale-tokens: true);')).toThrow("already loaded");
+  });
+
+  test("app stylesheet entry emits one registry key and keeps literal output when disabled", () => {
+    expect(compile('@use "element-styles";')).toBe("");
+    for (const key of ["button", "progress", "ripple"]) {
+      const source = key === "ripple" ? "utilities/ripple" : `components/${key}`;
+      expect(compile(`@use "element-styles" with ($name: "${key}");`)).toBe(compile(`@use "${source}";`));
+    }
+    expect(compile(config("true") + '@use "element-styles" with ($name: "button");')).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
+  });
+
+  test("layered app pre-upgrade entry retains the canonical SSR rollback with custom prefixes", () => {
+    const css = compile('@use "preupgrade" with ($typescale-tokens: true, $tag-prefix: "x");');
+    expect(css).toStartWith("@layer mtrl.preupgrade{");
+    expect(css).toContain("x-button:not(:defined)");
+    expect(css).not.toContain("m-button:not(:defined)");
+    expect(css.replace(/\s/g, "")).toEndWith(preupgradeRollback().replace(/\s/g, "") + "}");
   });
 
   test("badge text consumes its three existing properties; dots remain zero sized text", () => {

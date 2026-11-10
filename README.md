@@ -211,45 +211,46 @@ Element applications can use `material/styles/base-elements` to keep the base's 
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
-Components can opt into the existing type-scale role properties. Compile Sass with the configuration loaded first:
+Components can opt into the existing type-scale role properties through an application Sass build. Prebuilt CSS keeps the default profile. Load configuration first, then compile the factory stylesheet:
 
 ```scss
 @use "material/src/styles/config" with ($typescale-tokens: true);
 @use "material/src/styles/main";
 ```
 
-The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any component or element Sass module is loaded. It changes how component text consumes tokens; the existing typography classes already consume them.
+The flag defaults to `false`; omitted and false keep the current CSS. Configure it before any dependent Sass module. The shared entry also forwards contrast, direction, tag-prefix and design-token map options. Subsequent entries inherit that configuration without another configuration clause.
 
-Compile pre-upgrade Sass separately with the same configuration. Set its tag prefix on the shared entry:
+For custom elements, compile matching pre-upgrade CSS separately. This entry includes the pre-upgrade layer and the linked-SSR rollback:
 
 ```scss
 @use "material/src/styles/config" with ($typescale-tokens: true, $tag-prefix: "x");
-@use "material/src/styles/elements";
+@use "material/src/styles/preupgrade";
 ```
 
-The shared configuration also forwards the existing contrast, direction and design-token map options. Once configured, load subsequent entries without another configuration clause. For a single-entry build, the main and pre-upgrade entries also accept the type-scale flag directly.
+App-compiled shadow CSS uses the experimental element authoring API. Compile one file for each key in the element definition's styles, plus the shared shadow styles. This Sass entry emits the configured key; each file must be registered under that key:
 
-For prebuilt factory styles, select the role-aware component sheet:
-
-```typescript
-import 'material/styles/base';
-import 'material/styles/typescale/button';
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/element-styles" with ($name: "button");
 ```
 
-For custom elements, select both the shadow CSS and the matching pre-upgrade CSS before defining elements:
+For a button, compile the ripple, progress and button keys into the three files below. Load and register every file before defining the element:
 
 ```typescript
 import 'material/styles/base-elements';
-import 'material/elements/css/typescale/button';
-import 'material/elements/typescale/preupgrade.css';
-import { defineButton } from 'material/elements';
+import { defineButton, registerStyles } from 'material/elements';
 
+const names = ['ripple', 'progress', 'button'];
+const sheets = await Promise.all(names.map(async name => {
+  const response = await fetch(`/app-css/${name}.css`);
+  if (!response.ok) throw new Error(`Cannot load ${name} styles`);
+  return [name, await response.text()];
+}));
+registerStyles(Object.fromEntries(sheets));
 defineButton();
 ```
 
-`material/styles/typescale` loads all role-aware factory component sheets; `material/elements/css/typescale` registers all matching shadow sheets. Each selective entry includes its component dependencies.
-
-Choose one component-style profile for the page and register it before creation; registering another profile does not replace sheets already adopted by existing roots. The normal framework adapter entries keep their default CSS imports and do not provide this opt-in profile.
+The application owns these compiled files and their loading. Include every style key its elements require. Choose the profile before creation; later registration does not replace sheets already adopted by roots. The normal framework adapter entries keep their default CSS imports and do not provide this opt-in profile.
 
 Set only the role properties the application wants to customize:
 
@@ -260,13 +261,13 @@ Set only the role properties the application wants to customize:
 }
 ```
 
-Role properties inherit through element hosts into their shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled font family. No complete token sheet is required.
+Role properties inherit through element hosts into shadow roots. Each consumed property keeps its current value as fallback; role fonts fall back through the existing brand/plain typeface property and then the compiled family. No complete token sheet is required.
 
-Badge text consumes its existing size, line-height and weight properties; hidden text and dot badges keep their zero font size. Button-group pre-upgrade items use the same size-specific role weight, tracking and reference face as their upgraded buttons; the large-size declarations keep their existing priority.
+Badge text consumes its existing size, line-height and weight properties; hidden text and dots keep zero font size. Button-group pre-upgrade items use the same size role as their upgraded buttons; the large-size declarations keep their existing priority.
 
 A provided role value wins over the fallback. An inherited role font resolved on an ancestor keeps that ancestor's value; set the role font on the intended scope when changing its reference face. A missing token can use a fallback, but a supplied value of the wrong CSS type follows normal CSS invalid-value behavior.
 
-The matching pre-upgrade helper is `preupgradeStyles` from `material/elements/typescale/preupgrade`; it accepts a custom tag prefix. Linked SSR can point its existing `cssBase` option at the distributed `dist/elements/css/typescale` directory, serving the complete directory including host and ripple sheets. Use the same profile on the client. Default inline SSR continues to emit the default CSS.
+For linked SSR, point the renderer's cssBase option at the app-compiled shadow CSS directory. Supply the component dependencies and the unchanged host sheets from the distributed element CSS directory. The client uses the same app build. Default inline SSR retains its default CSS.
 
 From 3.1.0, Sass consumers can choose which contrast rules to compile with `$contrast-emit`. Configure the public themes entry in your application stylesheet:
 

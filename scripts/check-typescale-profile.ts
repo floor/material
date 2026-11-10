@@ -49,16 +49,52 @@ try {
   await mkdir(join(scratch, "node_modules"));
   await symlink(fixture.installed, join(scratch, "node_modules/material"), "dir");
   await writeFile(join(scratch, "package.json"), '{"type":"module","sideEffects":true}');
+  const { elements } = await import(pathToFileURL(join(fixture.installed, "dist/elements/index.js")).href) as typeof import("../src/elements");
+  const keys = [...new Set(["ripple", ...family.flatMap(name => {
+    const definition = Object.values(elements).find(element => element.spec.name === name);
+    assert(definition, `missing public element definition ${name}`);
+    return [...definition.spec.styles] as string[];
+  })])];
+  const compileApp = (source: string, selected: boolean, prefix = "m", arms = false) => sass.compileString(
+    `@use "material/src/styles/config" with ($typescale-tokens: ${selected}, $tag-prefix: "${prefix}", $direction-arms: ${arms});\n` + source,
+    { loadPaths: [join(fixture.directory, "node_modules")], style: "compressed", logger: sass.Logger.silent },
+  ).css;
+  const appShadow = new Map<string, string>();
+  const appFactory = new Map<string, string>();
+  for (const key of keys) {
+    const source = `@use "material/src/styles/element-styles" with ($name: "${key}");`;
+    // An unselected app build must produce the current raw shadow sheet.
+    assert.equal(compileApp(source, false), await Bun.file(join(fixture.installed, `dist/elements/css/${key}.css`)).text(), `${key}: app literal compilation differs`);
+    appShadow.set(`${key}.css`, compileApp(source, true));
+    if (key !== "ripple") appFactory.set(key, `@layer mtrl.${key}{${compileApp(source, true, "m", true)}}`);
+  }
+  const appPreupgrade = compileApp('@use "material/src/styles/preupgrade";', true);
+  const appCustom = compileApp('@use "material/src/styles/preupgrade";', true, "x");
+  report.appBuild = { registryKeys: keys, customPrefix: "x" };
   const sizes: Record<string, unknown> = {};
   for (const selected of [false, true]) {
     const name = selected ? "selected" : "default";
     const dir = join(scratch, name);
     await mkdir(dir);
-    const prefix = selected ? "typescale/" : "";
-    const preupgrade = `material/elements/${prefix}preupgrade`;
-    let entry = `import 'material/styles/base';\n` + family.map(component => `import 'material/styles/${prefix}${component}';`).join("\n");
-    entry += "\n" + family.map(component => `import 'material/elements/css/${prefix}${component}';`).join("\n");
-    entry += `\nimport '${preupgrade}.css';\n` + js.replace("PROFILE_PREUPGRADE", preupgrade);
+    let entry = `import 'material/styles/base';\n`;
+    let preupgrade: string;
+    if (selected) {
+      for (const [key, css] of appFactory) {
+        await writeFile(join(dir, `factory-${key}.css`), css);
+        entry += `import './factory-${key}.css';\n`;
+      }
+      await writeFile(join(dir, "shadow.js"), `import {registerStyles} from 'material/elements';\nregisterStyles(${JSON.stringify(Object.fromEntries([...appShadow].map(([name, css]) => [name.slice(0, -4), css])))});\n`);
+      await writeFile(join(dir, "preupgrade.css"), appPreupgrade);
+      await writeFile(join(dir, "preupgrade.js"), `export const preupgradeStyles = (prefix = "x") => { if (prefix !== "x") throw new Error("app fixture compiles prefix x"); return ${JSON.stringify(appCustom)}; };\n`);
+      entry += "import './shadow.js';\nimport './preupgrade.css';\n";
+      preupgrade = "./preupgrade.js";
+    } else {
+      entry += family.map(component => `import 'material/styles/${component}';`).join("\n");
+      entry += "\n" + family.map(component => `import 'material/elements/css/${component}';`).join("\n");
+      entry += "\nimport 'material/elements/preupgrade.css';\n";
+      preupgrade = "material/elements/preupgrade";
+    }
+    entry += js.replace("PROFILE_PREUPGRADE", preupgrade);
     await writeFile(join(dir, "entry.js"), entry);
     await writeFile(join(dir, "index.html"), '<!doctype html><html data-theme="baseline"><head><style>:root{--mtrl-sys-typescale-label-large-font-size:19px}</style></head><body><script type="module" src="./entry.js"></script></body></html>');
     const result = await build({ root: dir, base: `/${name}/`, configFile: false, envFile: false, logLevel: "error", build: {
@@ -90,15 +126,18 @@ try {
     output.set(name, { files, html });
   }
   report.sizes = sizes;
-  const direct: Record<string, unknown> = {};
-  for (const selected of [false, true]) {
-    const prefix = selected ? "typescale/" : "";
-    const paths = family.flatMap(name => [`styles/${prefix}${name}.css`, `elements/css/${prefix}${name}.css`]);
-    paths.push(`elements/${prefix}preupgrade.css`);
-    direct[selected ? "selected" : "default"] = Object.fromEntries(await Promise.all(paths.map(async path =>
-      [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, "dist", path)).arrayBuffer()))])));
-  }
-  report.direct = direct;
+  const defaultPaths = family.flatMap(name => [`styles/${name}.css`, `elements/css/${name}.css`]);
+  defaultPaths.push("elements/preupgrade.css");
+  report.direct = {
+    default: Object.fromEntries(await Promise.all(defaultPaths.map(async path =>
+      [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, "dist", path)).arrayBuffer()))]))),
+    selected: Object.fromEntries([
+      ...[...appFactory].map(([key, css]) => [`app/factory/${key}.css`, metrics(Buffer.from(css))]),
+      ...[...appShadow].map(([key, css]) => [`app/shadow/${key}`, metrics(Buffer.from(css))]),
+      ["app/preupgrade.css", metrics(Buffer.from(appPreupgrade))],
+      ["app/preupgrade-x.css", metrics(Buffer.from(appCustom))],
+    ]),
+  };
   console.log(JSON.stringify({ package: report.package, sizes }));
   // Same packed public-root import and Bun ruler as the package gate, kept
   // observable here even when optional package growth blocks that job early.
@@ -128,11 +167,17 @@ try {
   const linkedAssets: Record<string, unknown> = {};
   const linkedPaths = [...new Set([...ssr.matchAll(/href="\/element-css\/([^"?#]+)"/g)].map(match => match[1]))];
   assert.equal(linkedPaths.length, 4, "SSR button must retain its host, ripple and component dependency sheets");
-  for (const selected of [false, true]) {
-    const prefix = selected ? "typescale/" : "";
-    linkedAssets[selected ? "selected" : "default"] = Object.fromEntries(await Promise.all(linkedPaths.map(async path =>
-      [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, `dist/elements/css/${prefix}`, path)).arrayBuffer()))])));
+  const linkedCss = new Map<string, string>();
+  for (const path of linkedPaths) {
+    if (path.startsWith("hosts/")) linkedCss.set(path, await Bun.file(join(fixture.installed, "dist/elements/css", path)).text());
+    else {
+      assert(appShadow.has(path), `app did not compile linked SSR dependency ${path}`);
+      linkedCss.set(path, appShadow.get(path)!);
+    }
   }
+  linkedAssets.default = Object.fromEntries(await Promise.all(linkedPaths.map(async path =>
+    [path, metrics(new Uint8Array(await Bun.file(join(fixture.installed, "dist/elements/css", path)).arrayBuffer()))])));
+  linkedAssets.selected = Object.fromEntries([...linkedCss].map(([path, css]) => [path, metrics(Buffer.from(css))]));
   report.ssr = { defaultInline: metrics(Buffer.from(renderElement("m-button", {}, "SSR"))),
     linkedHtml: metrics(Buffer.from(ssr)), linked: ssr, external: linkedAssets };
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
@@ -140,7 +185,8 @@ try {
     if (path.startsWith("/element-css/")) {
       const name = path.slice("/element-css/".length);
       if (name.includes("..")) return new Response("bad path", { status: 400 });
-      return new Response(Bun.file(join(fixture.installed, "dist/elements/css/typescale", name)), { headers: { "Content-Type": "text/css" } });
+      const css = linkedCss.get(name);
+      return new Response(css ?? "missing", { status: css ? 200 : 404, headers: { "Content-Type": "text/css" } });
     }
     const [, profile, ...parts] = path.split("/");
     const result = output.get(profile);
@@ -208,21 +254,20 @@ try {
       await page.evaluate(() => { (window as unknown as ProfileWindow).profile.badge.setVariant("small"); document.querySelector("m-badge")!.setAttribute("variant", "small"); });
       assert.equal(await sizeOf(page, "#badge"), "0px");
       assert.equal(await sizeOf(page, "m-badge .mtrl-badge"), "0px");
-      const groups = [];
-      for (const [size, role, fontSize, spacing, weight, font] of [
-        ["m", "title-medium", "27px", "1px", "630", "monospace"],
-        ["l", "headline-small", "31px", "2px", "650", "monospace"],
-        ["xl", "headline-large", "37px", "3px", "670", "monospace"],
-      ]) {
-        const group = await page.evaluate(async ({ size, role, spacing, weight }) => {
-          const prefix = `tg-${size}`;
-          const style = document.createElement("style");
-          style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles(prefix);
-          document.head.append(style);
-          const group = document.createElement(`${prefix}-button-group`);
+      const groups = await page.evaluate(async () => {
+        const cases = [
+          ["m", "title-medium", "1px", "630"],
+          ["l", "headline-small", "2px", "650"],
+          ["xl", "headline-large", "3px", "670"],
+        ];
+        const style = document.createElement("style");
+        style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles("x");
+        document.head.append(style);
+        const values = (el: Element) => { const s = getComputedStyle(el); return { size: s.fontSize, spacing: s.letterSpacing, weight: s.fontWeight, font: s.fontFamily }; };
+        const targets = cases.map(([size, role, spacing, weight]) => {
+          const group = document.createElement("x-button-group");
           group.setAttribute("size", size);
-          // The group API parses item children into owned buttons on upgrade.
-          const child = document.createElement(`${prefix}-button-group-item`);
+          const child = document.createElement("x-button-group-item");
           child.textContent = "Group";
           group.append(child);
           group.style.setProperty(`--mtrl-sys-typescale-${role}-letter-spacing`, spacing);
@@ -230,21 +275,24 @@ try {
           group.style.setProperty("--mtrl-ref-typeface-brand", "monospace");
           group.style.setProperty("--mtrl-ref-typeface-plain", "serif");
           document.body.append(group);
-          const values = (el: Element) => { const s = getComputedStyle(el); return { size: s.fontSize, spacing: s.letterSpacing, weight: s.fontWeight, font: s.fontFamily }; };
-          const before = values(child);
-          (window as unknown as ProfileWindow).profile.defineButtonGroup({ prefix });
+          return { group, size, before: values(child) };
+        });
+        (window as unknown as ProfileWindow).profile.defineButtonGroup({ prefix: "x" });
+        return Promise.all(targets.map(async ({ group, size, before }) => {
           const button = group.shadowRoot!.querySelector("button")!;
           void getComputedStyle(button).fontSize;
           await Promise.all(button.getAnimations().filter(a => a.effect?.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {})));
           const result = { size, before, after: values(button) };
           group.remove();
           return result;
-        }, { size, role, spacing, weight });
-        groups.push(group);
-        assert.deepEqual(group.before, group.after, `button-group ${size} role typography must agree before and after upgrade`);
-        assert.deepEqual(group.after, { size: fontSize, spacing, weight, font });
-      }
+        }));
+      });
       report.groups = groups;
+      for (const [index, [fontSize, spacing, weight]] of [["27px", "1px", "630"], ["31px", "2px", "650"], ["37px", "3px", "670"]].entries()) {
+        const group = groups[index];
+        assert.deepEqual(group.before, group.after, `button-group ${group.size} role typography must agree before and after upgrade`);
+        assert.deepEqual(group.after, { size: fontSize, spacing, weight, font: "monospace" });
+      }
       const custom = await page.evaluate(() => {
         const style = document.createElement("style"); style.textContent = (window as unknown as ProfileWindow).profile.preupgradeStyles("x"); document.head.append(style);
         const host = document.createElement("x-button"); host.textContent = "Custom"; host.setAttribute("size", "m"); document.body.append(host);

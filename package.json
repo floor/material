@@ -37,9 +37,7 @@
     "**/ssr/react.js",
     "**/ssr/svelte.js",
     "**/ssr/vue.js",
-    "**/ssr/solid.js",
-    "**/styles/typescale/*.js",
-    "**/elements/css/typescale/*.js"
+    "**/ssr/solid.js"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -490,33 +488,7 @@
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/solid.js",
       "default": "./dist/ssr/solid.js"
-    },
-    "./styles/typescale": {
-      "types": "./dist/styles.d.ts",
-      "import": "./dist/styles/typescale/index.js"
-    },
-    "./styles/typescale/*": {
-      "types": "./dist/styles.d.ts",
-      "import": "./dist/styles/typescale/*.js"
-    },
-    "./elements/css/typescale": {
-      "types": "./dist/elements/css/index.d.ts",
-      "import": "./dist/elements/css/typescale/index.js"
-    },
-    "./elements/css/typescale/*": {
-      "types": "./dist/elements/css/index.d.ts",
-      "import": "./dist/elements/css/typescale/*.js"
-    },
-    "./elements/typescale/preupgrade": {
-      "types": "./dist/elements/typescale/preupgrade.d.ts",
-      "import": "./dist/elements/typescale/preupgrade.js"
-    },
-    "./elements/css/typescale/*.css": "./dist/elements/css/typescale/*.css",
-    "./elements/typescale/preupgrade.css": {
-      "types": "./dist/elements/preupgrade.css.d.ts",
-      "default": "./dist/elements/typescale/preupgrade.css"
-    },
-    "./elements/typescale/preupgrade/*.css": "./dist/elements/typescale/preupgrade/*.css"
+    }
   },
   "files": [
     "dist",

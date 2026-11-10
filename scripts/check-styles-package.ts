@@ -32,6 +32,8 @@ const CHECKOUT_ENTRIES = [
   "themes",
   "elements",
   "config",
+  "element-styles",
+  "preupgrade",
   // The M3 scheme variants, read by path: the themes entry forwards the twelve
   // built-in themes, not these, and md3.io loads them this way.
   ...VARIANTS.map(name => `themes/${name}`),
@@ -99,6 +101,12 @@ try {
     '@use "PUBLIC/elements" with ($typescale-tokens: true, $tag-prefix: "x");',
     '@use "PUBLIC/config" with ($state: (hover: 0.123)); @use "PUBLIC/abstract/variables" as v; @use "sass:map"; .probe { opacity: map.get(v.$state, hover); }',
   ]) assert.equal(contract(source, true), contract(source, false), "public forwards differ after packing");
+  for (const key of ["button", "progress", "ripple", "text-field", "badge", "button-group", "icon-button", "card", "tabs"]) {
+    const source = `@use "PUBLIC/config" with ($typescale-tokens: true); @use "PUBLIC/element-styles" with ($name: "${key}");`;
+    assert.equal(contract(source, true), contract(source, false), `${key}: app stylesheet differs after packing`);
+  }
+  const layered = '@use "PUBLIC/preupgrade" with ($typescale-tokens: true, $tag-prefix: "x");';
+  assert.equal(contract(layered, true), contract(layered, false), "layered app preupgrade differs after packing");
   // The positive control: the packed entries are the normalized copies, not
   // the checkout's own files. The compile above is the safety contract; this
   // fails if the normalization quietly stops running (every shipped source is

@@ -228,7 +228,7 @@ try {
   // This job self-checks it: a real figure above the ceiling fails here, and the
   // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
-  // Enforce the package limits after writing every consumer measurement.
+  assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -269,6 +269,7 @@ try {
   // the next 1,000, is 5,908,000.
   // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
   // the next 1,000, is 5,119,000.
+  assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
 
   // The component entries the probe imports, and how many package.json exports,
   // counted another way: every "./components/<name>" key. Which keys those must
@@ -692,11 +693,7 @@ try {
   assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
 
   console.table(sizes);
-  await mkdir("analysis", { recursive: true });
-  await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
-    size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
-  } }, null, 2) + "\n");
-  if (overBudget.length || !(pack.size < TARBALL_BYTES && pack.unpackedSize < UNPACKED_BYTES)) {
+  if (overBudget.length) {
     // The normal component step is downstream of this gate. Keep its canonical
     // rows available for review even when a packed fixture needs an owner decision.
     console.error("Collecting canonical component rows before reporting packed budget failures.");
@@ -705,9 +702,11 @@ try {
     });
     console.error(`Component size diagnostic exited ${await report.exited}.`);
   }
-  assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
-  assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
   assert.equal(overBudget.length, 0, overBudget.join("\n"));
+  await mkdir("analysis", { recursive: true });
+  await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
+    size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
+  } }, null, 2) + "\n");
 } finally {
   await fixture.cleanup();
 }
