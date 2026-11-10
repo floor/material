@@ -614,6 +614,7 @@
     "svelte-types:floor": "bun run scripts/check-at-peer-floor.ts svelte -- svelte-types:check",
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
     "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
+    "comparators:check": "bun run scripts/check-comparators.ts",
     "button-profile:check": "bun run scripts/check-button-profile.ts"
   },
   "repository": {

@@ -1,0 +1,21 @@
+{
+  "button-material-factories/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "button-material-factories/main.js": "fff1187a0b3d0b9a179a5da900fd0b33371bf2a85efd428084722ee94417e042",
+  "results/button-material-factories.json": "0e778dbc59ada7ea1dd15a15f2c1611d833e7d33d86b016c54b279027b01db98",
+  "button-material-elements/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "button-material-elements/main.js": "f45287261636fd8c5da16ffcd2e56c3c2085f02fb9063a49535628e374cf576f",
+  "results/button-material-elements.json": "b72d608b774905d5ed4da8408b155c40f997f5039f3497b188b739ee9cc0293b",
+  "button-material-web/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "button-material-web/main.js": "877da2e06d4f198b2958ff3e2718c5fe08ff2bd7b30aeef90111029b5f55c698",
+  "results/button-material-web.json": "9beb1ec59b0a313a028c12b97d1e860046c93a503dd1882f7d379be07cb9937b",
+  "app-material-factories/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "app-material-factories/main.js": "194b7b8c1fb4b96086bbd16387c3a0436481036b1bd937287b790a62ad087668",
+  "results/app-material-factories.json": "2d9f88561c8803761bed4417398c32bec3ca61775c1b426666f186cc1aaaea84",
+  "app-material-elements/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "app-material-elements/main.js": "4ac0c21ba9a97d4328e2c2aba2f60546474ed2f21a7dfcebb7043ba82066569f",
+  "results/app-material-elements.json": "8bd467ed756920d4fd913abc418624f93eecd32741e2b05bec940a2955efdecc",
+  "app-material-web/index.html": "1841e3ca861cef0bf3903f44fb9bac8733688a5c43c63f1f645722ac062cf773",
+  "app-material-web/main.js": "ff01184b6f2d7379a3a5b79bd1cc11ccb92fb04ab3a9afd2419a42b15bae3814",
+  "results/app-material-web.json": "f4c7151bd66b270e9f1af40398bd3d0141d79a5ee9b4dbd18b8a69bf4159733d",
+  "provenance.json": "5eb3c2bc445c69adbb15106b97057856134705702b27b4d0d201ffce9c0575b2"
+}
