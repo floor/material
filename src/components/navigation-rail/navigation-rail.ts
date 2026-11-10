@@ -6,11 +6,11 @@ import { createElementConfig } from '../../core/config/component';
 import { createEmitter } from '../../core/state/emitter';
 import { mountRailRipple } from '../../core/navigation/ripple';
 import { createBaseConfig } from './config';
-import type { NavigationRailConfig, NavigationRailComponent } from './types';
+import type { NavigationRailConfig, NavigationRailComponent, NavigationRailItemConfig } from './types';
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf } from "../../core/dom/focus";
-import { moveDestinationFocus } from '../../core/navigation/destinations';
-import { createDestinationCollection } from '../../core/navigation/collection';
+import { copyDestinations, createDestination, moveDestinationFocus, updateBadge as updateDestinationBadge, updateSelection as updateDestinations } from '../../core/navigation/destinations';
+const copyItems = (items: NavigationRailItemConfig[]): NavigationRailItemConfig[] => copyDestinations(items, 'NavigationRail');
 /**
  * Creates an M3 Expressive navigation rail with stable destinations during expansion.
  * Import its styles separately with `material/styles/navigation-rail`.
@@ -18,6 +18,7 @@ import { createDestinationCollection } from '../../core/navigation/collection';
  */
 export default function createNavigationRail(config: NavigationRailConfig = {}): NavigationRailComponent {
     const options = createBaseConfig(config);
+    let items = copyItems(options.items || []);
     const component = pipe(createBase, withElement(createElementConfig(options, { tag: options.layout === 'modal' ? 'dialog' : 'nav', attributes: { 'aria-label': options.ariaLabel || 'Primary navigation' } })), withLifecycle())(options);
     const root: HTMLElement = component.element;
     const getClass: (name: string) => string = component.getClass;
@@ -45,11 +46,9 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         root.classList.add(cls('--modal'));
     if (options.hideWhenCollapsed)
         root.classList.add(cls('--hide-collapsed'));
-    const collection = createDestinationCollection({
-        cls, name: 'NavigationRail', items: options.items || [],
-        // With no enabled destination left, the rail falls back to its toggle; the bar has none.
-        fallbackFocus: () => toggle,
-    });
+    const nodes = new Map<string, HTMLElement>();
+    const destinations = document.createElement('div');
+    destinations.className = cls('__items');
     const header = document.createElement('div');
     header.className = cls('__header');
     let toggle: HTMLButtonElement | null = null;
@@ -63,9 +62,26 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         header.append(options.header);
     if (header.childElementCount)
         root.append(header);
-    const destinations = collection.container;
     root.append(destinations);
     root.style.setProperty(`--${PREFIX}-navigation-rail-expanded-width`, `${options.expandedWidth}px`);
+    const updateBadge = (item: NavigationRailItemConfig, element: HTMLElement): void => updateDestinationBadge(item, element, cls);
+    const updateSelection = (): void => updateDestinations(items, nodes, cls);
+    const render = (): void => {
+        const focusedId = [...nodes].find(([, element]) => element === activeElementOf(destinations))?.[0];
+        nodes.clear();
+        destinations.replaceChildren();
+        for (const item of items) {
+            const element = createDestination(item, cls);
+            nodes.set(item.id, element);
+            destinations.append(element);
+        }
+        updateSelection();
+        if (focusedId) {
+            const previous = nodes.get(focusedId);
+            const target = previous && !previous.hasAttribute('aria-disabled') ? previous : [...nodes.values()].find(element => !element.hasAttribute('aria-disabled')) || toggle;
+            target?.focus();
+        }
+    };
     const showModal = (): void => {
         if (!dialog || destroyed || !expanded)
             return;
@@ -124,15 +140,23 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
             api.toggle();
             return;
         }
-        // `value`: the id, as the <m-navigation-rail> element's `change` carries it.
-        const detail = collection.selectDetail(event);
-        if (!detail)
+        const element = target.closest<HTMLElement>(`.${cls('__item')}`);
+        if (!element || !destinations.contains(element))
             return;
-        collection.setActive(detail.id);
+        const index = items.findIndex(item => nodes.get(item.id) === element), item = items[index];
+        if (!item || item.disabled) {
+            event.preventDefault();
+            return;
+        }
+        if (item.href && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0))
+            return;
+        api.setActive(item.id);
+        // `value`: the id, as the <m-navigation-rail> element's `change` carries it.
+        const detail = { id: item.id, value: item.id, index, originalEvent: event };
         emitter.emit('select', detail);
     };
     const handleKeydown = (event: KeyboardEvent): void => {
-        moveDestinationFocus(event, collection.nodes, destinations, { next: 'ArrowDown', previous: 'ArrowUp' });
+        moveDestinationFocus(event, nodes, destinations, { next: 'ArrowDown', previous: 'ArrowUp' });
     };
     const modalTab = (event: KeyboardEvent): void => {
         if (event.key !== 'Tab' || event.defaultPrevented)
@@ -177,7 +201,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         root.removeEventListener('click', handleClick);
         destinations.removeEventListener('keydown', handleKeydown);
         removeRipple?.();
-        collection.destroy();
+        nodes.clear();
         emitter.clear();
         originalDestroy();
     };
@@ -186,25 +210,36 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         element: root, getClass, lifecycle: component.lifecycle, destroy,
         expand: () => setExpanded(true), collapse: () => setExpanded(false), toggle: () => setExpanded(!expanded), isExpanded: () => expanded,
         getValue: () => api.getActive(),
-        getActive: () => collection.activeId(),
+        getActive: () => items.find(item => item.active)?.id || null,
         setActive(id) {
-            collection.setActive(id);
+            if (destroyed || (id !== null && !items.some(item => item.id === id && !item.disabled)))
+                return api;
+            items = items.map(item => ({ ...item, active: item.id === id }));
+            updateSelection();
             return api;
         },
-        getItems: () => collection.snapshot(),
-        setItems(value) {
-            collection.replace(value);
-            return api;
-        },
+        getItems: () => items.map(item => ({ ...item })),
+        setItems(value) { if (!destroyed) {
+            const next = copyItems(value);
+            items = next;
+            render();
+        } return api; },
         setBadge(id, badge, label) {
-            collection.setBadge(id, badge, label);
+            if (destroyed)
+                return api;
+            const item = items.find(item => item.id === id);
+            if (item) {
+                item.badge = badge;
+                item.badgeLabel = label;
+                updateBadge(item, nodes.get(id)!);
+            }
             return api;
         },
         on(event, handler) { if (!destroyed)
             emitter.on(event, handler); return api; },
         off(event, handler) { emitter.off(event, handler); return api; },
     };
-    collection.render();
+    render();
     synchronize();
     // A config option is the listener registered at creation, ahead of any
     // listener the caller adds afterwards. A listener that destroys the rail

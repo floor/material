@@ -1329,29 +1329,6 @@ export const withController =
   // Each method returns the object it was called on, so calls chain. The same
   // function objects sit on the component and on the legacy `slider` object
   // below: one door, not three.
-  // One snap for both thumbs. The caller picks the floor and ceiling.
-  const snapThumb = (value: number, floor: number, ceiling: number): number =>
-    clamp(roundToStep(clamp(value, state.min, state.max)), floor, ceiling);
-
-  // One bound write. Min clamps upward and sets aria-valuemin; max clamps downward and sets aria-valuemax.
-  const writeBound = (kind: "min" | "max", bound: number): void => {
-    const below = kind === "min";
-    if (below) state.min = bound;
-    else state.max = bound;
-    const attr = below ? "aria-valuemin" : "aria-valuemax";
-    if (handle) handle.setAttribute(attr, String(bound));
-    if (config.range && secondHandle) secondHandle.setAttribute(attr, String(bound));
-    if (below ? state.value < bound : state.value > bound) state.value = bound;
-    if (
-      config.range &&
-      state.secondValue !== null &&
-      (below ? state.secondValue < bound : state.secondValue > bound)
-    ) {
-      state.secondValue = bound;
-    }
-    render();
-  };
-
   const api: SliderComponent = {
     element: component.element,
 
@@ -1363,11 +1340,13 @@ export const withController =
      */
     setValue(value: number, triggerEvent = false) {
       // A range slider's first value stops at its second, as Compose's
-      // RangeSliderState coerces activeRangeStart. Snapped to the step, as
-      // keys and the pointer are and as Compose's SliderState snaps a value
-      // it is given (shouldAutoSnap).
+      // RangeSliderState coerces activeRangeStart.
       const ceiling = config.range && state.secondValue !== null ? state.secondValue : state.max;
-      state.value = snapThumb(value, state.min, ceiling);
+      // Snapped to the step, as keys and the pointer are and as Compose's
+      // SliderState snaps a value it is given (shouldAutoSnap).
+      const newValue = clamp(roundToStep(clamp(value, state.min, state.max)), state.min, ceiling);
+
+      state.value = newValue;
       render();
 
       if (triggerEvent) {
@@ -1391,7 +1370,8 @@ export const withController =
       if (!config.range) return this;
 
       // ...and the second at the first (activeRangeEnd).
-      state.secondValue = snapThumb(value, state.value, state.max);
+      const newValue = clamp(roundToStep(clamp(value, state.min, state.max)), state.value, state.max);
+      state.secondValue = newValue;
       render();
 
       if (triggerEvent) {
@@ -1411,7 +1391,28 @@ export const withController =
      * @returns Slider component for chaining
      */
     setMin(min: number) {
-      writeBound("min", min);
+      state.min = min;
+
+      // Update ARIA attributes on handles
+      if (handle) {
+        handle.setAttribute("aria-valuemin", String(min));
+      }
+
+      if (config.range && secondHandle) {
+        secondHandle.setAttribute("aria-valuemin", String(min));
+      }
+
+      // Clamp values to new min
+      if (state.value < min) state.value = min;
+      if (
+        config.range &&
+        state.secondValue !== null &&
+        state.secondValue < min
+      ) {
+        state.secondValue = min;
+      }
+
+      render();
       return this;
     },
 
@@ -1425,7 +1426,28 @@ export const withController =
      * @returns Slider component for chaining
      */
     setMax(max: number) {
-      writeBound("max", max);
+      state.max = max;
+
+      // Update ARIA attributes on handles
+      if (handle) {
+        handle.setAttribute("aria-valuemax", String(max));
+      }
+
+      if (config.range && secondHandle) {
+        secondHandle.setAttribute("aria-valuemax", String(max));
+      }
+
+      // Clamp values to new max
+      if (state.value > max) state.value = max;
+      if (
+        config.range &&
+        state.secondValue !== null &&
+        state.secondValue > max
+      ) {
+        state.secondValue = max;
+      }
+
+      render();
       return this;
     },
 

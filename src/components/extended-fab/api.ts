@@ -3,9 +3,6 @@ import { ExtendedFabComponent, ExtendedFabEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { IconManager } from '../../core/compose/features/icon';
 import type { TextManager } from '../../core/compose/features/text';
-import { readModifier, writeModifier } from '../../core/dom/modifier';
-
-const POSITIONS = ['top-right', 'top-left', 'bottom-right', 'bottom-left'] as const;
 
 /**
  * API configuration options for the Extended FAB component
@@ -158,12 +155,25 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
     },
     
     setPosition(position: string) {
-      writeModifier(component.element, className, POSITIONS, position, null);
+      // First remove any existing position classes
+      const positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
+      positions.forEach(pos => {
+        component.element.classList.remove(`${className}--${pos}`);
+      });
+      
+      // Add new position class
+      component.element.classList.add(`${className}--${position}`);
       return this;
     },
     
     getPosition() {
-      return readModifier(component.element, className, POSITIONS, null);
+      const positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
+      for (const pos of positions) {
+        if (component.element.classList.contains(`${className}--${pos}`)) {
+          return pos;
+        }
+      }
+      return null;
     },
     
     lower() {

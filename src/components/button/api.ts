@@ -5,11 +5,6 @@ import { addClass } from "../../core";
 import { ProgressComponent } from "../progress/types";
 
 import { setHTML } from "../../core/dom/html";
-import { readModifier, writeModifier } from "../../core/dom/modifier";
-
-const VARIANTS = ["filled", "tonal", "outlined", "elevated", "text"] as const;
-const SIZES = ["xs", "s", "m", "l", "xl"] as const;
-const SHAPES = ["round", "square"] as const;
 /**
  * API configuration options for button component
  * @category Components
@@ -79,29 +74,6 @@ interface ComponentWithElements {
   ) => Promise<ComponentWithElements>;
   setLoadingSync?: (loading: boolean, text?: string) => ComponentWithElements;
 }
-
-// Shared metadata, not rebuilt for each button. The paired methods retain
-// their original public order and their zero-, one- or two-argument calls.
-const progressMethods = [
-  ["showProgress", 0], ["showProgressSync", 0],
-  ["hideProgress", 0], ["hideProgressSync", 0],
-  ["setProgress", 1], ["setProgressSync", 1],
-  ["setIndeterminate", 1], ["setIndeterminateSync", 1],
-  ["setLoading", 2], ["setLoadingSync", 2],
-] as const;
-
-type ProgressMethod = typeof progressMethods[number][0];
-const callProgress = (
-  component: ComponentWithElements, name: ProgressMethod, arity: number,
-  value?: number | boolean, text?: string,
-): unknown => {
-  // Read at call time so replacing a delegate still takes effect. The indexed
-  // signatures differ, but the metadata supplies each method's exact call shape.
-  const target = component as unknown as Record<ProgressMethod,
-    (value?: number | boolean, text?: string) => unknown>;
-  return arity === 0 ? target[name]()
-    : arity === 1 ? target[name](value) : target[name](value, text);
-};
 
 /**
  * Enhances a button component with API methods.
@@ -303,7 +275,21 @@ export const withAPI =
       setVariant(variant: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        writeModifier(component.element, buttonClass, VARIANTS, variant, null);
+
+        // First remove all existing variant classes
+        const variantClasses = [
+          "filled",
+          "tonal",
+          "outlined",
+          "elevated",
+          "text",
+        ].map((v) => `${buttonClass}--${v}`);
+
+        variantClasses.forEach((cls) => {
+          component.element.classList.remove(cls);
+        });
+
+        component.element.classList.add(`${buttonClass}--${variant}`);
         return buttonComponent;
       },
 
@@ -314,7 +300,19 @@ export const withAPI =
       getVariant() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        return readModifier(component.element, buttonClass, VARIANTS, "filled");
+        const variants = ["filled", "tonal", "outlined", "elevated", "text"];
+
+        // Check which variant class is present on the element
+        for (const variant of variants) {
+          if (
+            component.element.classList.contains(`${buttonClass}--${variant}`)
+          ) {
+            return variant;
+          }
+        }
+
+        // If no variant class is found, return the default variant
+        return "filled";
       },
 
       /**
@@ -324,7 +322,17 @@ export const withAPI =
       getSize() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        return readModifier(component.element, buttonClass, SIZES, "s");
+        const sizes = ["xs", "s", "m", "l", "xl"];
+
+        // Check which size class is present on the element
+        for (const size of sizes) {
+          if (component.element.classList.contains(`${buttonClass}--${size}`)) {
+            return size;
+          }
+        }
+
+        // If no size class is found, return the default size
+        return "s";
       },
 
       /**
@@ -335,7 +343,17 @@ export const withAPI =
       setSize(size: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        writeModifier(component.element, buttonClass, SIZES, size, null);
+
+        // First remove all existing size classes
+        const sizeClasses = ["xs", "s", "m", "l", "xl"].map(
+          (s) => `${buttonClass}--${s}`,
+        );
+
+        sizeClasses.forEach((cls) => {
+          component.element.classList.remove(cls);
+        });
+
+        component.element.classList.add(`${buttonClass}--${size}`);
         return buttonComponent;
       },
 
@@ -346,7 +364,19 @@ export const withAPI =
       getShape() {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        return readModifier(component.element, buttonClass, SHAPES, "round");
+        const shapes = ["round", "square"];
+
+        // Check which shape class is present on the element
+        for (const shape of shapes) {
+          if (
+            component.element.classList.contains(`${buttonClass}--${shape}`)
+          ) {
+            return shape;
+          }
+        }
+
+        // If no shape class is found, return the default shape
+        return "round";
       },
 
       /**
@@ -357,7 +387,17 @@ export const withAPI =
       setShape(shape: string) {
         const compName = component.componentName || "button";
         const buttonClass = component.getClass(compName);
-        writeModifier(component.element, buttonClass, SHAPES, shape, null);
+
+        // First remove all existing shape classes
+        const shapeClasses = ["round", "square"].map(
+          (s) => `${buttonClass}--${s}`,
+        );
+
+        shapeClasses.forEach((cls) => {
+          component.element.classList.remove(cls);
+        });
+
+        component.element.classList.add(`${buttonClass}--${shape}`);
         return buttonComponent;
       },
 
@@ -420,19 +460,74 @@ export const withAPI =
       buttonComponent.progress = component.progress;
     }
 
-    for (const [name, arity] of progressMethods) {
-      if (!component[name]) continue;
-      const forward = name.endsWith("Sync")
-        ? (value?: number | boolean, text?: string) => {
-          callProgress(component, name, arity, value, text);
-          return buttonComponent;
-        }
-        : async (value?: number | boolean, text?: string) => {
-          await callProgress(component, name, arity, value, text);
-          return buttonComponent;
-        };
-      Object.defineProperty(forward, "length", { value: arity });
-      (buttonComponent as unknown as Record<typeof name, typeof forward>)[name] = forward;
+    if (component.showProgress) {
+      buttonComponent.showProgress = async () => {
+        await component.showProgress!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.showProgressSync) {
+      buttonComponent.showProgressSync = () => {
+        component.showProgressSync!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.hideProgress) {
+      buttonComponent.hideProgress = async () => {
+        await component.hideProgress!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.hideProgressSync) {
+      buttonComponent.hideProgressSync = () => {
+        component.hideProgressSync!();
+        return buttonComponent;
+      };
+    }
+
+    if (component.setProgress) {
+      buttonComponent.setProgress = async (value: number) => {
+        await component.setProgress!(value);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setProgressSync) {
+      buttonComponent.setProgressSync = (value: number) => {
+        component.setProgressSync!(value);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setIndeterminate) {
+      buttonComponent.setIndeterminate = async (indeterminate: boolean) => {
+        await component.setIndeterminate!(indeterminate);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setIndeterminateSync) {
+      buttonComponent.setIndeterminateSync = (indeterminate: boolean) => {
+        component.setIndeterminateSync!(indeterminate);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setLoading) {
+      buttonComponent.setLoading = async (loading: boolean, text?: string) => {
+        await component.setLoading!(loading, text);
+        return buttonComponent;
+      };
+    }
+
+    if (component.setLoadingSync) {
+      buttonComponent.setLoadingSync = (loading: boolean, text?: string) => {
+        component.setLoadingSync!(loading, text);
+        return buttonComponent;
+      };
     }
 
     return buttonComponent;

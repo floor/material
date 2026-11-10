@@ -108,31 +108,6 @@ for (const component of ['fab', 'extended-fab'] as const) {
     expect(b.raise()).toBe(b);
     expect(b.element.classList.contains(`${root}--lowered`)).toBe(false);
   });
-  test(`${component}: an unrecognised position removes the whole known family and reads back as none`, () => {
-    // The written class itself stays unasserted: what an unknown value turns
-    // into is open, but the setter must still replace every known token and
-    // the getter must fall back, as before.
-    const b = make({ position: 'bottom-right' });
-    b.setPosition('sideways');
-    expect(['top-right', 'top-left', 'bottom-right', 'bottom-left'].some((position) => b.element.classList.contains(`${root}--${position}`))).toBe(false);
-    expect(b.getPosition()).toBeNull();
-  });
-  test(`${component}: an untyped position still writes its class, as before the shared engine`, () => {
-    // Parity for an untyped caller, not a typed contract: the template
-    // literal wrote a class for null and undefined, and the shared engine
-    // must not read null as the omit token.
-    const prefix = component === 'fab' ? 'mtrl-fab' : 'mtrl-extended-fab';
-    const head = component === 'fab'
-      ? 'mtrl-fab mtrl-interactive mtrl-fab--default mtrl-fab--primary-container'
-      : 'mtrl-extended-fab mtrl-interactive mtrl-extended-fab--primary-container mtrl-extended-fab--small mtrl-extended-fab--fixed';
-    const b = make();
-    expect(b.element.className).toBe(head);
-    b.setPosition(null as never);
-    expect(b.element.className).toBe(`${head} ${prefix}--null`);
-    b.setPosition(undefined as never);
-    expect(b.element.className).toBe(`${head} ${prefix}--null ${prefix}--undefined`);
-    expect(b.getPosition()).toBeNull();
-  });
   test(`${component}: disabled clicks are suppressed; enable and disable update DOM`, () => {
     const b = make({ disabled: true });
     let clicks = 0;
