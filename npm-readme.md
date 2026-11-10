@@ -66,6 +66,31 @@ Import `material/styles/button` for any other variant, size or shape. This inclu
 
 Every component comes three ways: a factory, a custom element and a framework component. Each has a page with a playground on [md3.io/components](https://md3.io/components/).
 
+## Bottom app bar compatibility entry
+
+The experimental `material/components/bottom-app-bar-toolbar` factory keeps the legacy bottom app bar API with docked-toolbar styling. Import its stylesheet explicitly, including on pages using the full stylesheet:
+
+```typescript
+import createBottomAppBarToolbar from 'material/components/bottom-app-bar-toolbar';
+import 'material/styles/base';
+import 'material/styles/bottom-app-bar-toolbar';
+
+const save = document.createElement('button');
+save.type = 'button';
+save.textContent = 'Save';
+const bar = createBottomAppBarToolbar({ autoHide: true });
+bar.addAction(save);
+document.body.append(bar.element);
+```
+
+Use it when a factory screen needs legacy chaining, native Tab order, live action containers, a centred or late-added FAB, or custom transition duration. It is absent from the root export and has no element, framework adapter or SSR registration.
+
+For new screens, use the docked toolbar from `material/components/toolbar`. The legacy `createBottomAppBar` is deprecated in 3.x but remains available with its existing behaviour. See the [migration note](https://github.com/floor/material/blob/main/MIGRATING.md#bottom-app-bar-in-3x).
+
+The [implementation measurements](https://github.com/floor/material#measured-entry-cost) record 4,386 B gzip for the compatibility JavaScript graph versus 4,248 B for the legacy graph. A standalone styled Vite page needs 11,157 B initially versus 7,358 B, with no deferred bytes; caller-owned controls, fonts, external icons and HTML are outside those costs.
+
+That snapshot added 1,655 B compressed, 7,158 B unpacked and five package files. Root and existing default payloads were byte-identical; the entry provides no root or default-bundle saving.
+
 ## Web components
 
 A page imports the base stylesheet and the elements' CSS once, then registers the elements with `defineAll()`. After that `<m-button>` and the rest are HTML, in plain pages, server templates and any framework.
