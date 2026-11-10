@@ -12,7 +12,7 @@ import { shapeScale, typescale, typefaceDefault } from "../../scripts/token-cata
 import { UNCONSUMED_STEPS } from "../../scripts/token-catalogue/rows";
 import { sources } from "../../scripts/token-catalogue/sources";
 import { catalogueSchema, validateAgainst, type Json } from "../../scripts/token-catalogue/schema";
-import { buildCatalogue, projectLean, renderCatalogue, renderFullCatalogue, valueMatches } from "../../scripts/generate-token-catalogue";
+import { buildCatalogue, documentBytes, projectLean, renderCatalogue, renderFullCatalogue, valueMatches } from "../../scripts/generate-token-catalogue";
 import { REASONS } from "../../scripts/token-catalogue/types";
 import type { Catalogue } from "../../scripts/token-catalogue/types";
 
@@ -146,6 +146,18 @@ describe("valueMatches", () => {
     expect(valueMatches("#ffffff", "0px")).toBe(false);
     expect(valueMatches("Roboto", "Roboto, sans-serif")).toBe(false);
     expect(valueMatches("var(--mtrl-ref-typeface-brand)", "var(--mtrl-ref-typeface-brand)")).toBe(true);
+  });
+});
+
+describe("documentBytes", () => {
+  test("counts the UTF-8 bytes that ship, not JS characters", () => {
+    // The raw size label must match the packed file's byte length; the
+    // catalogue text carries multi-byte characters, where `.length`
+    // under-counts (the 69,971-vs-69,975 discrepancy on 6fce9833).
+    expect("—".length).toBe(1);
+    expect(documentBytes("—")).toBe(3);
+    const ascii = "258 rows, all ascii";
+    expect(documentBytes(ascii)).toBe(ascii.length);
   });
 });
 

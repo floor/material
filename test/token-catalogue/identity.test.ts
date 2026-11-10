@@ -112,6 +112,30 @@ describe("catalogue identity gate", () => {
     }
   });
 
+  test("catalogue data already in main is the merged state, not a violation", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      // Since the catalogue merged, both sides of the comparison carry the
+      // data files and their export keys: identical tarballs must pass, and a
+      // regenerated catalogue document is the sanctioned data change — while
+      // a moved byte in any default member still fails.
+      const merged = {
+        ...defaults,
+        "package.json": manifest({ exports: { ".": "./index.js", "./tokens/catalogue.json": "./dist/tokens/catalogue.json", "./tokens/catalogue.schema.json": "./dist/tokens/catalogue.schema.json" } }),
+        "dist/tokens/catalogue.json": '{"rows":[]}\n',
+        "dist/tokens/catalogue.schema.json": '{"type":"object"}\n',
+      };
+      const base = pack(root, "base", merged);
+      expect(runGate(pack(root, "identical", merged), base).code).toBe(0);
+      expect(runGate(pack(root, "regenerated", { ...merged, "dist/tokens/catalogue.json": '{"rows":[1]}\n' }), base).code).toBe(0);
+      const touched = pack(root, "touched", { ...merged, "dist/module.js": "export { y };\n" });
+      expect(runGate(touched, base).out).toContain("changed member dist/module.js");
+      expect(runGate(touched, base).code).toBe(1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("a removed export key fails", () => {
     const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
     try {

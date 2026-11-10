@@ -7,8 +7,8 @@
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
  * identical member lists, identical bytes everywhere, except the explicit
- * allowlist (the version fields of package.json, the new dist/tokens data
- * files, and whole-line additions to README.md — documentation of the new
+ * allowlist (the version fields of package.json, the dist/tokens catalogue
+ * data files, and whole-line additions to README.md — documentation of the new
  * data may be added, existing documentation may not be rewritten). Anything
  * else — a moved byte, a renamed file, a shifted bundle —
  * fails with the member named, because a data-only change has no business
@@ -147,9 +147,14 @@ for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)]))
     problems.push(`package.json field ${key} changed: type, sideEffects and every field outside the catalogue additions are frozen by this change`);
   }
 }
-for (const member of branch.keys()) {
-  if (main.has(member) && member.startsWith("dist/tokens/")) problems.push(`dist/tokens/${member.slice("dist/tokens/".length)} exists in main: the catalogue data is not new there`);
-}
+// Since the catalogue merged into main, dist/tokens members exist on both
+// sides of the comparison: their presence is the merged state, not a
+// violation — the pre-merge invariant that the catalogue data must be new
+// there is retired with this block. The member loop above already governs
+// these files: byte-identical members pass, and a regenerated catalogue
+// document or schema is the sanctioned data change this gate exists to
+// allow, while every default member and the whole manifest stay frozen
+// exactly as before.
 
 if (problems.length) {
   console.error(`catalogue identity check failed (${problems.length} problem(s)):`);
