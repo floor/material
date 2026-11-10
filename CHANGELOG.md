@@ -17,6 +17,45 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.13.0] - 2026-11-10
+
+Choose application icons and load only the button styles you use.
+
+### Added
+
+- **An application icon registry ([#359](https://github.com/floor/material/pull/359)).** `setIcons` replaces the navigation rail's `menu` and `menu-open` glyphs and the side sheet's `close` glyph by semantic name. `getIcon(name, fallback)` resolves a registered value against a fallback. Both functions are exported from `material`, `material/core` and `material/core/icons`. Set icons before creating components or hydrating: components read the registry at creation, and existing components do not update when it changes. Calls merge the supplied names; `null`, `undefined` or an empty string clears that name and restores its built-in glyph. The rail's per-instance icon options take precedence over component defaults, then the registry, then built-ins. Without overrides, browser and server markup retain the existing glyphs. The snackbar and split button keep their existing built-ins.
+- **An optional stylesheet for filled, small, round factory buttons ([#360](https://github.com/floor/material/pull/360)).** Import `material/styles/button-filled-small-round` for buttons configured with `variant: 'filled'`, `size: 's'` and `shape: 'round'`. The sheet includes progress styles and preserves interaction, disabled, selected toggle and loading states, icons, density, RTL and custom-property overrides. Other variants, sizes or shapes, including changes through setters, require `material/styles/button`; the general sheet takes precedence in either import order. Elements and framework components retain their existing shadow styles. Components such as tabs can already retain the general sheet, so adding this optional sheet can increase an application's download.
+- **A CI-only comparator harness ([#361](https://github.com/floor/material/pull/361)).** A pinned, reproducible size harness compares the styled application fixtures against M3E, Beer CSS and MICL. Nothing in it enters the published package.
+
+### Size
+
+- In the styled button consumer measured after #360, the optional sheet saves **774 B** of initial gzip-compressed JavaScript and CSS, and **775 B** when fully loaded. The mixed tabs consumer retains the general sheet and instead costs **108 B** more in both cases. These are fixture measurements; savings depend on the application's import graph.
+
+  | Styled production consumer, JS + CSS gzip | General sheet | Optional sheet | Change |
+  | --- | ---: | ---: | ---: |
+  | Button fixture, initial | 12,539 B | 11,765 B | −774 B |
+  | Button fixture, fully loaded | 19,263 B | 18,488 B | −775 B |
+  | Mixed tabs fixture, initial | 19,911 B | 20,019 B | +108 B |
+  | Mixed tabs fixture, fully loaded | 26,635 B | 26,743 B | +108 B |
+
+  Source: the [push-to-main button profile job after #360](https://github.com/floor/material/actions/runs/42833972163/job/129891770296). Initial totals include referenced JavaScript and CSS and recursive static imports; fully loaded totals include deferred assets. Files are compressed separately with gzip level 9. HTML, fonts, external icons and source maps are excluded.
+
+- Push-to-main package measurements at the two merged checkpoints:
+
+  | Measurement | After #359 | After #360 |
+  | --- | ---: | ---: |
+  | Root JavaScript, gzip | 131,082 B | 131,082 B |
+  | Every-component scenario, gzip | 127,938 B | 127,938 B |
+  | Navigation rail scenario, gzip | 6,970 B | 6,970 B |
+  | Side sheet scenario, gzip | 6,724 B | 6,724 B |
+  | Full stylesheet scenario, gzip | 59,596 B | 59,596 B |
+  | npm package, compressed | 893,734 B | 894,155 B |
+  | npm package, unpacked | 5,099,705 B | 5,107,617 B |
+  | Package files | 1,259 | 1,261 |
+
+  Sources: [package job after #359](https://github.com/floor/material/actions/runs/42825117381/job/129860709685) and [package job after #360](https://github.com/floor/material/actions/runs/42833972163/job/129891769698), packed with Node 22.23.3 and npm 10.9.9. The optional stylesheet adds **421 B** compressed, **7,912 B** unpacked and two files between these checkpoints. Neither #359 nor #360 changes existing size budgets.
+- Release measurements: the [push-to-main package job after #361](https://github.com/floor/material/actions/runs/42839732104/job/129912057465) measures **894,155 B** compressed, **5,107,617 B** unpacked and **1,261 files**, unchanged from the [#360 checkpoint](https://github.com/floor/material/actions/runs/42833972163/job/129891769698), with **131,082 B** of gzip-compressed root JavaScript and **127,938 B** for the every-component scenario. No size budget moves in this release.
+
 ## [3.12.0] - 2026-11-10
 
 Bring your own design tokens.

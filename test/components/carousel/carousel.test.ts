@@ -58,7 +58,7 @@ describe('carousel', () => {
     expect(items.length).toBe(4);
     expect(items[0]!.getAttribute('role')).toBe('group');
     expect(items[0]!.getAttribute('aria-roledescription')).toBe('slide');
-    expect(items[0]!.getAttribute('aria-label')).toBe('1 of 4');
+    expect(items[0]!.getAttribute('aria-label')).toBe('Alpha');
     expect(items[3]!.getAttribute('aria-label')).toBe('4 of 4');
     expect(items[0]!.getAttribute('tabindex')).toBe('0');
     expect(items[0]!.getAttribute('style') ?? '').not.toContain('position');
@@ -187,9 +187,11 @@ describe('carousel', () => {
     carousel.removeSlide(0);
     const items = carousel.element.querySelectorAll('.mtrl-carousel__item');
     expect(items.length).toBe(3);
-    expect(items[0]!.getAttribute('aria-label')).toBe('1 of 3');
+    expect(items[0]!.getAttribute('aria-label')).toBe('Beta');
+    expect(items[2]!.getAttribute('aria-label')).toBe('3 of 3');
     carousel.slides.updateSlide(0, { image: 'z.jpg', title: 'Zeta' });
     expect(items[0]!.querySelector('.mtrl-carousel__title')!.textContent).toBe('Zeta');
+    expect(items[0]!.getAttribute('aria-label')).toBe('Zeta');
     expect(carousel.slides.getSlide(0)?.title).toBe('Zeta');
   });
 

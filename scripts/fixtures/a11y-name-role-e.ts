@@ -23,8 +23,17 @@ const chip = mount('chip-factory', createInputChip({label:'React'}));
 mount('chip-explicit', createInputChip({label:'Visible',ariaLabel:'Framework'}));
 mount('chip-set-factory', createChips({chips:[{type:'input',label:'Vue',value:'vue'}]}));
 const loading = mount('button-loading-api', createButton({text:'Submit API',progress:true}));
+const initialLoading = mount('button-loading-initial', createButton({text:'Submit initial',loading:true}));
+const initialProgress = mount('button-loading-progress', createButton({text:'Submit progress',progress:true,loading:true}));
+const plainButton = mount('button-default', createButton({text:'Submit default'}));
+const initialButtonStates = [initialLoading,initialProgress,plainButton].map(button=>({
+  id:button.element.id,busy:button.element.getAttribute('aria-busy'),disabled:(button.element as HTMLButtonElement).disabled,
+}));
 mount('carousel-factory', createCarousel({ariaLabel:'Featured factory',slides:[
   {title:'Mountain',content:'<p>Slide one content</p>'},{title:'Ocean',content:'<p>Slide two content</p>'}
+]}));
+mount('carousel-plain', createCarousel({ariaLabel:'Plain',slides:[
+  {content:'<p>One</p>'},{image:'b.jpg',alt:''},{image:'c.jpg',alt:'Harbor'}
 ]}));
 mount('card-header', createCard({header:{title:'Project Alpha'},content:{text:'Summary'}}));
 mount('card-interactive', createCard({interactive:true,header:{title:'Hover card'}}));
@@ -37,8 +46,9 @@ const withActions=mount('card-actions', createCard({clickable:true,header:{title
 withActions.on('click',()=>activation.card++);
 mount('card-buttons', createCard({clickable:true,header:{title:'Button shorthand card'},buttons:[{text:'Shorthand detail'}]}));
 const html = `<m-chips id="chip-element" aria-label="Skills"><m-chip variant="input" value="react">React element</m-chip></m-chips>
-<m-button id="button-element">Submit element</m-button>
+<m-button id="button-element" loading>Submit element</m-button>
 <m-carousel id="carousel-element" aria-label="Featured element" style="width:600px;height:220px"><m-carousel-item label="Mountain">Slide one</m-carousel-item><m-carousel-item label="Ocean">Slide two</m-carousel-item></m-carousel>
+<m-carousel id="carousel-element-title" aria-label="Title fallback" style="width:600px;height:220px"><m-carousel-item title="Harbor"></m-carousel-item><m-carousel-item label="Mountain" title="Ocean">Slide</m-carousel-item><m-carousel-item label="  Cove  " title="Other"></m-carousel-item></m-carousel>
 <m-card id="card-element-header" headline="Element headline">Summary</m-card>
 <m-card id="card-element-clickable" clickable headline="Clickable attribute">Summary</m-card>
 <m-card id="card-element-actions" clickable headline="Actions card"><m-button slot="actions">Details element</m-button></m-card>`;
@@ -57,4 +67,4 @@ const exerciseWarning = (part:string,clickable=true) => {
   card.destroy();
   return result;
 };
-Object.assign(window, {mtrlE:{chip,loading,activation,exerciseWarning,cssNames:Object.keys(css)},ready:true});
+Object.assign(window, {mtrlE:{chip,loading,initialLoading,initialProgress,initialButtonStates,activation,exerciseWarning,cssNames:Object.keys(css)},ready:true});
