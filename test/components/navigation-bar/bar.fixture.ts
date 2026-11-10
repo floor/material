@@ -6,9 +6,11 @@ import { beforeEach, afterEach, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import createNavigationBar from '../../../src/components/navigation-bar';
 import type { NavigationBarConfig } from '../../../src/components/navigation-bar';
+import createNavigationRail from '../../../src/components/navigation-rail';
 
 let dom: JSDOM;
 let bars: ReturnType<typeof createNavigationBar>[];
+let rails: ReturnType<typeof createNavigationRail>[];
 let windowListeners: string[];
 beforeEach(() => {
     dom = new JSDOM('<!doctype html><body></body>', { pretendToBeVisual: true, url: 'https://example.test' });
@@ -18,8 +20,9 @@ beforeEach(() => {
     const add = dom.window.addEventListener.bind(dom.window);
     dom.window.addEventListener = ((type: string, ...rest: unknown[]) => { windowListeners.push(type); return (add as (...a: unknown[]) => void)(type, ...rest); }) as typeof dom.window.addEventListener;
     bars = [];
+    rails = [];
 });
-afterEach(() => { bars.forEach(bar => bar.destroy()); dom.window.close(); });
+afterEach(() => { bars.forEach(bar => bar.destroy()); rails.forEach(rail => rail.destroy()); dom.window.close(); });
 
 const icon = '<svg></svg>';
 const make = (config: NavigationBarConfig = {}) => {
@@ -80,6 +83,54 @@ test('a modified click on a link keeps native navigation and selects nothing', (
     const bar = make();
     item(bar, 'library').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
     expect(bar.getActive()).toBe('home');
+});
+
+test('select carries the exact detail: the id as value, its index, and the click itself', () => {
+    const details: Record<string, unknown>[] = [];
+    const bar = make({ items: [{ id: 'a', label: 'A', icon, active: true }, { id: 'b', label: 'B', icon }] });
+    bar.on('select', (event) => details.push(event as unknown as Record<string, unknown>));
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    item(bar, 'b').dispatchEvent(click);
+    expect(Object.keys(details[0]!)).toEqual(['id', 'value', 'index', 'originalEvent']);
+    expect([details[0]!.id, details[0]!.value, details[0]!.index]).toEqual(['b', 'b', 1]);
+    expect(details[0]!.originalEvent).toBe(click);
+});
+
+test('a select listener can replace the items or destroy the bar during the emit', () => {
+    const bar = make({ items: [{ id: 'a', label: 'A', icon, active: true }, { id: 'b', label: 'B', icon }] });
+    bar.on('select', () => bar.setItems([{ id: 'next', label: 'Next', icon }]));
+    item(bar, 'b').click();
+    expect(bar.getItems().map((entry) => entry.id)).toEqual(['next']);
+    expect([...bar.element.querySelectorAll<HTMLElement>('.mtrl-navigation-bar__item')].map((element) => element.dataset.id)).toEqual(['next']);
+    const doomed = make({ items: [{ id: 'a', label: 'A', icon, active: true }] });
+    let destroyed = 0;
+    doomed.on('select', () => { doomed.destroy(); destroyed++; });
+    expect(() => item(doomed, 'a').click()).not.toThrow();
+    expect([destroyed, doomed.element.isConnected]).toEqual([1, false]);
+});
+
+test('with no enabled destination left after a replacement, focus is not restored', () => {
+    const bar = make({ items: [{ id: 'a', label: 'A', icon, active: true }, { id: 'b', label: 'B', icon }] });
+    item(bar, 'b').focus();
+    expect(document.activeElement).toBe(item(bar, 'b'));
+    bar.setItems([{ id: 'off', label: 'Off', icon, disabled: true }]);
+    expect(bar.element.contains(document.activeElement)).toBe(false);
+});
+
+test('a bar and a rail in one page keep their own selection and listeners', () => {
+    const rail = createNavigationRail({ items: [{ id: 'home', label: 'Home', icon, active: true }, { id: 'mail', label: 'Mail', icon }] });
+    document.body.append(rail.element);
+    rails.push(rail);
+    const seen: string[] = [];
+    const bar = make({ items: [{ id: 'home', label: 'Home', icon, active: true }, { id: 'other', label: 'Other', icon }] });
+    bar.on('select', (event) => seen.push(`bar:${event.value}`));
+    rail.on('select', (event) => seen.push(`rail:${event.value}`));
+    item(bar, 'other').click();
+    expect(seen).toEqual(['bar:other']);
+    expect([bar.getActive(), rail.getActive()]).toEqual(['other', 'home']);
+    rail.element.querySelector<HTMLElement>('[data-id="mail"]')!.click();
+    expect(seen).toEqual(['bar:other', 'rail:mail']);
+    expect([bar.getActive(), rail.getActive()]).toEqual(['other', 'mail']);
 });
 
 test('badges: a count or text, the dot, folded into the name, updated in place', () => {

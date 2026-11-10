@@ -66,6 +66,17 @@ test('select carries value, the id, as the element change does', () => {
     (rail.element.querySelector('[data-id="b"]') as HTMLElement).click();
     expect(selected).toEqual([['b', 'b', 'b']]);
 });
+test('select carries the exact detail: the id as value, its index, and the click itself', () => {
+    const details: Record<string, unknown>[] = [];
+    const rail = make();
+    rail.on('select', (event) => details.push(event as unknown as Record<string, unknown>));
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    rail.element.querySelector<HTMLElement>('[data-id="home"]')!.dispatchEvent(click);
+    expect(Object.keys(details[0]!)).toEqual(['id', 'value', 'index', 'originalEvent']);
+    expect([details[0]!.id, details[0]!.value, details[0]!.index]).toEqual(['home', 'home', 0]);
+    expect(details[0]!.originalEvent).toBe(click);
+});
+
 test('items are copied, badges update without losing focus, invalid IDs preserve selection', () => {
     const items = [{ id: 'a"b', label: 'Home', icon: 'H', active: true }];
     const rail = make({ items });
@@ -100,6 +111,26 @@ test('replacing items normalizes selection and moves focus away from a newly dis
     expect(rail.getActive()).toBe('next');
     expect((document.activeElement as HTMLElement).dataset.id).toBe('next');
     expect(rail.element.querySelectorAll('[aria-current="page"]').length).toBe(1);
+});
+
+test('with no enabled destination left after a replacement, focus falls back to the toggle', () => {
+    const rail = make();
+    rail.element.querySelector<HTMLElement>('[data-id="mail"]')!.focus();
+    rail.setItems([{ id: 'home', label: 'Home', icon: 'H', active: true, disabled: true }]);
+    expect(document.activeElement).toBe(rail.element.querySelector('.mtrl-navigation-rail__toggle'));
+});
+
+test('a select listener can replace the items or destroy the rail during the emit', () => {
+    const rail = make();
+    rail.on('select', () => rail.setItems([{ id: 'next', label: 'Next', icon: 'N' }]));
+    rail.element.querySelector<HTMLElement>('[data-id="home"]')!.click();
+    expect(rail.getItems().map((entry) => entry.id)).toEqual(['next']);
+    expect([...rail.element.querySelectorAll<HTMLElement>('.mtrl-navigation-rail__item')].map((element) => element.dataset.id)).toEqual(['next']);
+    const doomed = make();
+    let destroyed = 0;
+    doomed.on('select', () => { doomed.destroy(); destroyed++; });
+    expect(() => doomed.element.querySelector<HTMLElement>('[data-id="home"]')!.click()).not.toThrow();
+    expect([destroyed, doomed.element.isConnected]).toEqual([1, false]);
 });
 test('hidden collapsed rails are inert and show their optional header on expansion', () => {
     const header = document.createElement('button');
