@@ -143,6 +143,24 @@ describe('button', () => {
     expect(has(button, 'filled') || has(button, 's') || has(button, 'round')).toBe(false);
   });
 
+  test('an unrecognised modifier removes the whole known family and reads back as the fallback', () => {
+    // The written class itself stays unasserted: what an unknown value turns
+    // into is open (see the file header), but the setter must still replace
+    // every known token and the getter must fall back, as before.
+    const button = mount({ text: 'x' });
+    button.setVariant('bogus').setSize('huge').setShape('pill');
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 's', 'round']);
+    expect(has(button, 'filled') || has(button, 's') || has(button, 'round')).toBe(false);
+  });
+
+  test('a same-value call keeps one token of each family and the same component', () => {
+    const button = mount({ text: 'x' });
+    expect(button.setVariant('filled').setSize('s').setShape('round')).toBe(button);
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 's', 'round']);
+    const tokens = button.element.className.split(' ');
+    expect(['filled', 's', 'round'].map((name) => tokens.filter((token) => token === `mtrl-button--${name}`).length)).toEqual([1, 1, 1]);
+  });
+
   test('setText replaces the label', () => {
     const button = mount({ text: 'Save' });
     button.setText('Saved');
