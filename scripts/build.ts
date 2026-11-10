@@ -8,6 +8,7 @@ import { pruneUnreachableModules } from "./dist-modules";
 import { pruneDeclarations } from "./prune-declarations";
 import { stripInternalDeclarationDocs } from "./strip-internal-declaration-docs";
 import { emitSvelte } from "./svelte-package";
+import { generateTokenCatalogue } from "./generate-token-catalogue";
 
 const outdir = "./dist";
 const pkg = await Bun.file("package.json").json();
@@ -25,6 +26,12 @@ try {
     await emitSvelte(staging);
     console.log("Building full and optional stylesheets...");
     await buildStyles(staging, banner);
+    // The versioned token catalogue is generated from the final CSS outputs
+    // while packing, never committed: nothing generated enters git, and the
+    // build supplies the implementation commit the data records (see
+    // scripts/generate-token-catalogue.ts for the provenance rule).
+    const catalogue = await generateTokenCatalogue(staging, pkg.version);
+    console.log(`Generated the token catalogue (${catalogue.raw} B raw, ${catalogue.gzip} B gzip)`);
     console.log("Bundling the server-only SSR entry...");
     await buildSSR(staging);
 
