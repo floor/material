@@ -44,7 +44,7 @@ Bring your own design tokens.
 - The typography profile is compiled by the application rather than shipped as a duplicate prebuilt stylesheet family. In the checked application fixture, opting in increases initial gzip-compressed JavaScript and CSS from **53,334 B to 54,766 B**, and complete loading from **60,058 B to 61,490 B**: **1,432 B** more in each case. These are integration fixture measurements, not a forecast for every application or final release-package totals. Default output remains on its existing profile.
 - The catalogue's two data files add **5,975 B gzip** to the compressed package (69,975 B + 4,190 B raw); the catalogue itself adds **0 B** to any JavaScript or CSS import.
 - Raise the gzip budgets for the tooltip (**6,300 B → 6,400 B**), every component (**127,850 B → 128,000 B**) and all JavaScript (**130,950 B → 131,100 B**), approved on **2026-11-10**. The raise changes budget constants only; no shipped bytes come from it.
-- Release measurements: [filled from this release branch's CI package job before merge].
+- Release measurements: **130,963 B** of gzip-compressed root JavaScript and **893,227 B** in the compressed npm package, measured by the release branch's CI package job.
 
 ## [3.11.0] - 2026-11-10
 
