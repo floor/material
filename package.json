@@ -465,6 +465,8 @@
       "import": "./dist/styles/*.js"
     },
     "./themes/*": "./dist/themes/*.css",
+    "./tokens/catalogue.json": "./dist/tokens/catalogue.json",
+    "./tokens/catalogue.schema.json": "./dist/tokens/catalogue.schema.json",
     "./ssr/react": {
       "types": "./dist/ssr/react.d.ts",
       "browser": "./dist/ssr/browser.js",
@@ -525,6 +527,10 @@
     "declaration-exports:check": "bun run scripts/check-declaration-exports.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
+    "tokens:catalogue:generate": "bun run scripts/generate-token-catalogue.ts",
+    "tokens:catalogue:check": "bun run scripts/check-token-catalogue.ts",
+    "tokens:catalogue-browser:check": "bun run scripts/check-token-catalogue-browser.ts",
+    "catalogue:identity:check": "bun run scripts/check-catalogue-identity.ts",
     "contrast-emit:check": "bun run scripts/check-contrast-emit.ts",
     "base-lite:check": "bun run scripts/check-base-lite.ts",
     "base-elements:check": "bun run scripts/check-base-elements.ts",
