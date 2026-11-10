@@ -250,6 +250,11 @@ export function renderFullCatalogue(catalogue: Catalogue): string {
   return `${JSON.stringify(catalogue, null, 1)}\n`;
 }
 
+/** A generated document's on-disk size: UTF-8 bytes, not JS characters. The
+ * packed text contains multi-byte characters, so `string.length` under-counts
+ * the bytes that actually ship (69,971 characters vs 69,975 bytes on 6fce9833). */
+export const documentBytes = (document: string): number => Buffer.byteLength(document, "utf8");
+
 /** The verified-only view: every verified claim with its statement. */
 export function renderVerifiedView(catalogue: Catalogue): string {
   const lines = [
@@ -330,7 +335,7 @@ export async function generateTokenCatalogue(
   await Bun.write(`${views}/catalogue.md`, renderCompleteView(catalogue));
   await Bun.write(`${views}/verified.md`, renderVerifiedView(catalogue));
   const gzip = Bun.gzipSync(new Uint8Array(await Bun.file(`${target}/catalogue.json`).bytes()));
-  return { raw: document.length, gzip: gzip.length };
+  return { raw: documentBytes(document), gzip: gzip.length };
 }
 
 if (import.meta.main) {
