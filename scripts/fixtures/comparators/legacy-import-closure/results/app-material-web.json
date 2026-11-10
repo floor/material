@@ -1,0 +1,1304 @@
+{
+  "name": "app-material-web",
+  "measuredAt": "2026-11-09T17:51:54.897Z",
+  "node": "v26.8.1",
+  "material": "3.10.1",
+  "commit": "a99486250a38f94905ebd138488cafdb1634cf3d",
+  "ciRun": 42660160103,
+  "vite": "8.2.2",
+  "materialWeb": "2.5.0",
+  "initial": {
+    "raw": 330525,
+    "gzip": 64425,
+    "brotli": 51826
+  },
+  "lazy": {
+    "raw": 0,
+    "gzip": 0,
+    "brotli": 0
+  },
+  "initialJS": {
+    "raw": 330525,
+    "gzip": 64425,
+    "brotli": 51826
+  },
+  "initialCSS": {
+    "raw": 0,
+    "gzip": 0,
+    "brotli": 0
+  },
+  "directInitial": [
+    "assets/index-b74ntBWW.js"
+  ],
+  "staticClosure": [
+    "assets/index-b74ntBWW.js"
+  ],
+  "files": [
+    {
+      "file": "assets/index-b74ntBWW.js",
+      "type": "js",
+      "initial": true,
+      "raw": 330525,
+      "gzip": 64425,
+      "brotli": 51826,
+      "imports": [],
+      "dynamicImports": [],
+      "modules": [
+        {
+          "source": "@material/web/select/internal/filled-select-styles.cssresult.js",
+          "renderedLength": 18897
+        },
+        {
+          "source": "@material/web/textfield/internal/filled-styles.cssresult.js",
+          "renderedLength": 18519
+        },
+        {
+          "source": "@material/web/menu/internal/menu.js",
+          "renderedLength": 17067
+        },
+        {
+          "source": "@material/web/slider/internal/slider.js",
+          "renderedLength": 15188
+        },
+        {
+          "source": "@material/web/select/internal/select.js",
+          "renderedLength": 14024
+        },
+        {
+          "source": "@material/web/field/internal/filled-styles.cssresult.js",
+          "renderedLength": 13450
+        },
+        {
+          "source": "@material/web/slider/internal/slider-styles.cssresult.js",
+          "renderedLength": 13217
+        },
+        {
+          "source": "@material/web/fab/internal/fab-styles.cssresult.js",
+          "renderedLength": 12785
+        },
+        {
+          "source": "@material/web/textfield/internal/text-field.js",
+          "renderedLength": 11854
+        },
+        {
+          "source": "@material/web/switch/internal/switch-styles.cssresult.js",
+          "renderedLength": 11727
+        },
+        {
+          "source": "@material/web/dialog/internal/dialog.js",
+          "renderedLength": 11174
+        },
+        {
+          "source": "lit-html/lit-html.js",
+          "renderedLength": 9713
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/surfacePositionController.js",
+          "renderedLength": 9037
+        },
+        {
+          "source": "@material/web/chips/internal/filter-styles.cssresult.js",
+          "renderedLength": 8872
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple.js",
+          "renderedLength": 7931
+        },
+        {
+          "source": "@material/web/field/internal/field.js",
+          "renderedLength": 7894
+        },
+        {
+          "source": "@lit/reactive-element/reactive-element.js",
+          "renderedLength": 7722
+        },
+        {
+          "source": "@material/web/checkbox/internal/checkbox-styles.cssresult.js",
+          "renderedLength": 6567
+        },
+        {
+          "source": "@material/web/field/internal/shared-styles.cssresult.js",
+          "renderedLength": 5913
+        },
+        {
+          "source": "@material/web/progress/internal/linear-progress-styles.cssresult.js",
+          "renderedLength": 5610
+        },
+        {
+          "source": "@material/web/tabs/internal/tabs.js",
+          "renderedLength": 4853
+        },
+        {
+          "source": "@material/web/tabs/internal/primary-tab-styles.cssresult.js",
+          "renderedLength": 4817
+        },
+        {
+          "source": "@material/web/button/internal/filled-styles.cssresult.js",
+          "renderedLength": 4499
+        },
+        {
+          "source": "@material/web/dialog/internal/dialog-styles.cssresult.js",
+          "renderedLength": 4406
+        },
+        {
+          "source": "@material/web/iconbutton/internal/standard-styles.cssresult.js",
+          "renderedLength": 4396
+        },
+        {
+          "source": "@material/web/iconbutton/internal/icon-button.js",
+          "renderedLength": 4314
+        },
+        {
+          "source": "@material/web/menu/internal/menuitem/menu-item-styles.cssresult.js",
+          "renderedLength": 4287
+        },
+        {
+          "source": "@material/web/button/internal/shared-styles.cssresult.js",
+          "renderedLength": 4176
+        },
+        {
+          "source": "@material/web/fab/internal/shared-styles.cssresult.js",
+          "renderedLength": 4095
+        },
+        {
+          "source": "@material/web/labs/behaviors/on-report-validity.js",
+          "renderedLength": 4074
+        },
+        {
+          "source": "@material/web/tabs/internal/tab.js",
+          "renderedLength": 4036
+        },
+        {
+          "source": "@material/web/switch/internal/switch.js",
+          "renderedLength": 3999
+        },
+        {
+          "source": "@material/web/list/internal/listitem/list-item-styles.cssresult.js",
+          "renderedLength": 3905
+        },
+        {
+          "source": "@material/web/menu/internal/menuitem/menu-item.js",
+          "renderedLength": 3883
+        },
+        {
+          "source": "@material/web/checkbox/internal/checkbox.js",
+          "renderedLength": 3880
+        },
+        {
+          "source": "@material/web/chips/internal/shared-styles.cssresult.js",
+          "renderedLength": 3865
+        },
+        {
+          "source": "@material/web/select/internal/selectoption/select-option.js",
+          "renderedLength": 3738
+        },
+        {
+          "source": "@material/web/list/internal/list-controller.js",
+          "renderedLength": 3650
+        },
+        {
+          "source": "@material/web/button/internal/button.js",
+          "renderedLength": 3437
+        },
+        {
+          "source": "@material/web/list/internal/listitem/list-item.js",
+          "renderedLength": 3400
+        },
+        {
+          "source": "@material/web/radio/internal/radio-styles.cssresult.js",
+          "renderedLength": 3399
+        },
+        {
+          "source": "@material/web/tabs/internal/tab-styles.cssresult.js",
+          "renderedLength": 3357
+        },
+        {
+          "source": "@material/web/radio/internal/single-selection-controller.js",
+          "renderedLength": 3156
+        },
+        {
+          "source": "@material/web/radio/internal/radio.js",
+          "renderedLength": 3154
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/typeaheadController.js",
+          "renderedLength": 3105
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring-styles.cssresult.js",
+          "renderedLength": 2808
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/text-field-validator.js",
+          "renderedLength": 2737
+        },
+        {
+          "source": "@material/web/chips/internal/chip.js",
+          "renderedLength": 2730
+        },
+        {
+          "source": "@material/web/list/internal/list-navigation-helpers.js",
+          "renderedLength": 2722
+        },
+        {
+          "source": "@material/web/internal/aria/delegate.js",
+          "renderedLength": 2633
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/menuItemController.js",
+          "renderedLength": 2573
+        },
+        {
+          "source": "@material/web/chips/internal/filter-chip.js",
+          "renderedLength": 2499
+        },
+        {
+          "source": "@material/web/chips/internal/chip-set.js",
+          "renderedLength": 2400
+        },
+        {
+          "source": "@material/web/labs/behaviors/constraint-validation.js",
+          "renderedLength": 2176
+        },
+        {
+          "source": "@material/web/labs/item/internal/item-styles.cssresult.js",
+          "renderedLength": 2154
+        },
+        {
+          "source": "@material/web/chips/internal/multi-action-chip.js",
+          "renderedLength": 2113
+        },
+        {
+          "source": "@material/web/iconbutton/internal/shared-styles.cssresult.js",
+          "renderedLength": 2063
+        },
+        {
+          "source": "@material/web/textfield/internal/shared-styles.cssresult.js",
+          "renderedLength": 2035
+        },
+        {
+          "source": "@material/web/dialog/internal/animations.js",
+          "renderedLength": 2013
+        },
+        {
+          "source": "@material/web/internal/events/dispatch-hooks.js",
+          "renderedLength": 1909
+        },
+        {
+          "source": "@lit/reactive-element/css-tag.js",
+          "renderedLength": 1810
+        },
+        {
+          "source": "@material/web/slider/internal/forced-colors-styles.cssresult.js",
+          "renderedLength": 1807
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring.js",
+          "renderedLength": 1750
+        },
+        {
+          "source": "@material/web/menu/internal/menu-styles.cssresult.js",
+          "renderedLength": 1749
+        },
+        {
+          "source": "@material/web/labs/behaviors/focusable.js",
+          "renderedLength": 1713
+        },
+        {
+          "source": "@material/web/select/internal/selectoption/selectOptionController.js",
+          "renderedLength": 1668
+        },
+        {
+          "source": "@material/web/internal/controller/attachable-controller.js",
+          "renderedLength": 1664
+        },
+        {
+          "source": "@material/web/fab/internal/shared.js",
+          "renderedLength": 1618
+        },
+        {
+          "source": "@material/web/labs/item/internal/item.js",
+          "renderedLength": 1603
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-associated.js",
+          "renderedLength": 1566
+        },
+        {
+          "source": "@material/web/chips/internal/selectable-styles.cssresult.js",
+          "renderedLength": 1552
+        },
+        {
+          "source": "@material/web/chips/internal/trailing-icon-styles.cssresult.js",
+          "renderedLength": 1516
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-submitter.js",
+          "renderedLength": 1402
+        },
+        {
+          "source": "@material/web/list/internal/list.js",
+          "renderedLength": 1379
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/shared.js",
+          "renderedLength": 1322
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation-styles.cssresult.js",
+          "renderedLength": 1246
+        },
+        {
+          "source": "@material/web/chips/internal/trailing-icons.js",
+          "renderedLength": 1209
+        },
+        {
+          "source": "lit-html/directive-helpers.js",
+          "renderedLength": 1206
+        },
+        {
+          "source": "@lit/reactive-element/decorators/property.js",
+          "renderedLength": 1174
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple-styles.cssresult.js",
+          "renderedLength": 1173
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/radio-validator.js",
+          "renderedLength": 1151
+        },
+        {
+          "source": "@material/web/progress/internal/progress.js",
+          "renderedLength": 1148
+        },
+        {
+          "source": "lit-html/directives/style-map.js",
+          "renderedLength": 1123
+        },
+        {
+          "source": "@material/web/progress/internal/linear-progress.js",
+          "renderedLength": 1071
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/validator.js",
+          "renderedLength": 1046
+        },
+        {
+          "source": "@material/web/internal/aria/aria.js",
+          "renderedLength": 1036
+        },
+        {
+          "source": "@material/web/select/internal/shared-styles.cssresult.js",
+          "renderedLength": 1030
+        },
+        {
+          "source": "lit-html/static.js",
+          "renderedLength": 1027
+        },
+        {
+          "source": "@material/web/chips/internal/elevated-styles.cssresult.js",
+          "renderedLength": 1007
+        },
+        {
+          "source": "lit-html/directives/class-map.js",
+          "renderedLength": 1000
+        },
+        {
+          "source": "lit-element/lit-element.js",
+          "renderedLength": 968
+        },
+        {
+          "source": "@material/web/internal/events/form-label-activation.js",
+          "renderedLength": 842
+        },
+        {
+          "source": "@material/web/button/internal/shared-elevation-styles.cssresult.js",
+          "renderedLength": 816
+        },
+        {
+          "source": "lit-html/directives/live.js",
+          "renderedLength": 792
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/checkbox-validator.js",
+          "renderedLength": 729
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/select-validator.js",
+          "renderedLength": 718
+        },
+        {
+          "source": "@material/web/internal/motion/animation.js",
+          "renderedLength": 689
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query.js",
+          "renderedLength": 646
+        },
+        {
+          "source": "@material/web/divider/internal/divider-styles.cssresult.js",
+          "renderedLength": 626
+        },
+        {
+          "source": "@material/web/tabs/internal/tabs-styles.cssresult.js",
+          "renderedLength": 599
+        },
+        {
+          "source": "tslib/tslib.es6.mjs",
+          "renderedLength": 598
+        },
+        {
+          "source": "@material/web/divider/internal/divider.js",
+          "renderedLength": 584
+        },
+        {
+          "source": "lit-html/directive.js",
+          "renderedLength": 485
+        },
+        {
+          "source": "@material/web/labs/behaviors/element-internals.js",
+          "renderedLength": 465
+        },
+        {
+          "source": "@material/web/fab/internal/fab.js",
+          "renderedLength": 458
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-elements.js",
+          "renderedLength": 428
+        },
+        {
+          "source": "@material/web/tabs/internal/primary-tab.js",
+          "renderedLength": 424
+        },
+        {
+          "source": "@material/web/internal/events/redispatch-event.js",
+          "renderedLength": 422
+        },
+        {
+          "source": "@material/web/textfield/filled-text-field.js",
+          "renderedLength": 393
+        },
+        {
+          "source": "@material/web/fab/internal/forced-colors-styles.cssresult.js",
+          "renderedLength": 385
+        },
+        {
+          "source": "@material/web/list/internal/list-styles.cssresult.js",
+          "renderedLength": 368
+        },
+        {
+          "source": "@material/web/field/internal/filled-field.js",
+          "renderedLength": 360
+        },
+        {
+          "source": "@material/web/iconbutton/icon-button.js",
+          "renderedLength": 360
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-nodes.js",
+          "renderedLength": 346
+        },
+        {
+          "source": "@material/web/select/internal/shared.js",
+          "renderedLength": 322
+        },
+        {
+          "source": "@material/web/chips/filter-chip.js",
+          "renderedLength": 301
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation.js",
+          "renderedLength": 296
+        },
+        {
+          "source": "@material/web/button/filled-button.js",
+          "renderedLength": 296
+        },
+        {
+          "source": "@material/web/progress/linear-progress.js",
+          "renderedLength": 286
+        },
+        {
+          "source": "@material/web/select/filled-select.js",
+          "renderedLength": 280
+        },
+        {
+          "source": "@material/web/field/filled-field.js",
+          "renderedLength": 271
+        },
+        {
+          "source": "@material/web/select/select-option.js",
+          "renderedLength": 271
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-all.js",
+          "renderedLength": 270
+        },
+        {
+          "source": "@material/web/tabs/primary-tab.js",
+          "renderedLength": 262
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-async.js",
+          "renderedLength": 253
+        },
+        {
+          "source": "@material/web/focus/md-focus-ring.js",
+          "renderedLength": 247
+        },
+        {
+          "source": "@material/web/elevation/elevation.js",
+          "renderedLength": 246
+        },
+        {
+          "source": "@lit/reactive-element/decorators/custom-element.js",
+          "renderedLength": 245
+        },
+        {
+          "source": "@material/web/textfield/internal/filled-text-field.js",
+          "renderedLength": 243
+        },
+        {
+          "source": "@material/web/chips/internal/chip-set-styles.cssresult.js",
+          "renderedLength": 241
+        },
+        {
+          "source": "@lit/reactive-element/decorators/base.js",
+          "renderedLength": 240
+        },
+        {
+          "source": "@material/web/button/internal/filled-button.js",
+          "renderedLength": 240
+        },
+        {
+          "source": "@material/web/checkbox/checkbox.js",
+          "renderedLength": 237
+        },
+        {
+          "source": "@material/web/menu/menu-item.js",
+          "renderedLength": 237
+        },
+        {
+          "source": "@material/web/list/list-item.js",
+          "renderedLength": 237
+        },
+        {
+          "source": "@material/web/internal/controller/string-converter.js",
+          "renderedLength": 235
+        },
+        {
+          "source": "@material/web/internal/controller/is-rtl.js",
+          "renderedLength": 234
+        },
+        {
+          "source": "@material/web/select/internal/filled-select.js",
+          "renderedLength": 230
+        },
+        {
+          "source": "@material/web/divider/divider.js",
+          "renderedLength": 228
+        },
+        {
+          "source": "@material/web/chips/chip-set.js",
+          "renderedLength": 228
+        },
+        {
+          "source": "@material/web/slider/slider.js",
+          "renderedLength": 226
+        },
+        {
+          "source": "@material/web/ripple/ripple.js",
+          "renderedLength": 219
+        },
+        {
+          "source": "@material/web/switch/switch.js",
+          "renderedLength": 219
+        },
+        {
+          "source": "@material/web/dialog/dialog.js",
+          "renderedLength": 219
+        },
+        {
+          "source": "@material/web/fab/fab.js",
+          "renderedLength": 216
+        },
+        {
+          "source": "@material/web/radio/radio.js",
+          "renderedLength": 210
+        },
+        {
+          "source": "@material/web/labs/item/item.js",
+          "renderedLength": 206
+        },
+        {
+          "source": "@material/web/menu/menu.js",
+          "renderedLength": 201
+        },
+        {
+          "source": "@material/web/tabs/tabs.js",
+          "renderedLength": 201
+        },
+        {
+          "source": "@material/web/list/list.js",
+          "renderedLength": 201
+        },
+        {
+          "source": "@lit/reactive-element/decorators/state.js",
+          "renderedLength": 173
+        },
+        {
+          "source": "lit-html/directives/when.js",
+          "renderedLength": 134
+        },
+        {
+          "source": "lit/decorators.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/index.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/directives/class-map.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/static-html.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/directives/live.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/directives/style-map.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/app-material-web/main.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/app-material-web/index.html",
+          "renderedLength": 0
+        }
+      ],
+      "mapped": [
+        {
+          "source": "@material/web/select/internal/filled-select-styles.cssresult.js",
+          "bytes": 18706
+        },
+        {
+          "source": "@material/web/textfield/internal/filled-styles.cssresult.js",
+          "bytes": 18339
+        },
+        {
+          "source": "[unmapped]",
+          "bytes": 17519
+        },
+        {
+          "source": "@material/web/field/internal/filled-styles.cssresult.js",
+          "bytes": 13272
+        },
+        {
+          "source": "@material/web/slider/internal/slider-styles.cssresult.js",
+          "bytes": 13050
+        },
+        {
+          "source": "@material/web/fab/internal/fab-styles.cssresult.js",
+          "bytes": 12623
+        },
+        {
+          "source": "@material/web/switch/internal/switch-styles.cssresult.js",
+          "bytes": 11554
+        },
+        {
+          "source": "@material/web/menu/internal/menu.js",
+          "bytes": 10768
+        },
+        {
+          "source": "@material/web/slider/internal/slider.js",
+          "bytes": 9758
+        },
+        {
+          "source": "@material/web/chips/internal/filter-styles.cssresult.js",
+          "bytes": 8700
+        },
+        {
+          "source": "@material/web/select/internal/select.js",
+          "bytes": 8198
+        },
+        {
+          "source": "lit-html/lit-html.js",
+          "bytes": 7139
+        },
+        {
+          "source": "@material/web/textfield/internal/text-field.js",
+          "bytes": 6892
+        },
+        {
+          "source": "@material/web/checkbox/internal/checkbox-styles.cssresult.js",
+          "bytes": 6388
+        },
+        {
+          "source": "@material/web/dialog/internal/dialog.js",
+          "bytes": 6289
+        },
+        {
+          "source": "@lit/reactive-element/reactive-element.js",
+          "bytes": 5875
+        },
+        {
+          "source": "@material/web/field/internal/shared-styles.cssresult.js",
+          "bytes": 5739
+        },
+        {
+          "source": "@material/web/progress/internal/linear-progress-styles.cssresult.js",
+          "bytes": 5419
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple.js",
+          "bytes": 4881
+        },
+        {
+          "source": "@material/web/tabs/internal/primary-tab-styles.cssresult.js",
+          "bytes": 4636
+        },
+        {
+          "source": "@material/web/field/internal/field.js",
+          "bytes": 4584
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/surfacePositionController.js",
+          "bytes": 4476
+        },
+        {
+          "source": "@material/web/button/internal/filled-styles.cssresult.js",
+          "bytes": 4320
+        },
+        {
+          "source": "@material/web/dialog/internal/dialog-styles.cssresult.js",
+          "bytes": 4233
+        },
+        {
+          "source": "@material/web/iconbutton/internal/standard-styles.cssresult.js",
+          "bytes": 4217
+        },
+        {
+          "source": "@material/web/menu/internal/menuitem/menu-item-styles.cssresult.js",
+          "bytes": 4101
+        },
+        {
+          "source": "@material/web/button/internal/shared-styles.cssresult.js",
+          "bytes": 4001
+        },
+        {
+          "source": "@material/web/fab/internal/shared-styles.cssresult.js",
+          "bytes": 3927
+        },
+        {
+          "source": "@material/web/list/internal/listitem/list-item-styles.cssresult.js",
+          "bytes": 3719
+        },
+        {
+          "source": "@material/web/chips/internal/shared-styles.cssresult.js",
+          "bytes": 3693
+        },
+        {
+          "source": "@material/web/radio/internal/radio-styles.cssresult.js",
+          "bytes": 3229
+        },
+        {
+          "source": "@material/web/tabs/internal/tab-styles.cssresult.js",
+          "bytes": 3192
+        },
+        {
+          "source": "@material/web/tabs/internal/tabs.js",
+          "bytes": 2821
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring-styles.cssresult.js",
+          "bytes": 2624
+        },
+        {
+          "source": "@material/web/iconbutton/internal/icon-button.js",
+          "bytes": 2504
+        },
+        {
+          "source": "@material/web/tabs/internal/tab.js",
+          "bytes": 2433
+        },
+        {
+          "source": "@material/web/menu/internal/menuitem/menu-item.js",
+          "bytes": 2035
+        },
+        {
+          "source": "@material/web/labs/item/internal/item-styles.cssresult.js",
+          "bytes": 1982
+        },
+        {
+          "source": "@material/web/select/internal/selectoption/select-option.js",
+          "bytes": 1978
+        },
+        {
+          "source": "@material/web/checkbox/internal/checkbox.js",
+          "bytes": 1920
+        },
+        {
+          "source": "@material/web/switch/internal/switch.js",
+          "bytes": 1911
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/typeaheadController.js",
+          "bytes": 1901
+        },
+        {
+          "source": "@material/web/iconbutton/internal/shared-styles.cssresult.js",
+          "bytes": 1886
+        },
+        {
+          "source": "@material/web/textfield/internal/shared-styles.cssresult.js",
+          "bytes": 1853
+        },
+        {
+          "source": "@material/web/radio/internal/single-selection-controller.js",
+          "bytes": 1849
+        },
+        {
+          "source": "@material/web/button/internal/button.js",
+          "bytes": 1814
+        },
+        {
+          "source": "@material/web/list/internal/list-controller.js",
+          "bytes": 1814
+        },
+        {
+          "source": "@material/web/labs/behaviors/on-report-validity.js",
+          "bytes": 1734
+        },
+        {
+          "source": "@material/web/chips/internal/chip.js",
+          "bytes": 1718
+        },
+        {
+          "source": "@material/web/list/internal/listitem/list-item.js",
+          "bytes": 1639
+        },
+        {
+          "source": "@material/web/slider/internal/forced-colors-styles.cssresult.js",
+          "bytes": 1622
+        },
+        {
+          "source": "@material/web/menu/internal/menu-styles.cssresult.js",
+          "bytes": 1582
+        },
+        {
+          "source": "@material/web/radio/internal/radio.js",
+          "bytes": 1578
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/menuItemController.js",
+          "bytes": 1551
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/text-field-validator.js",
+          "bytes": 1500
+        },
+        {
+          "source": "@material/web/chips/internal/filter-chip.js",
+          "bytes": 1386
+        },
+        {
+          "source": "@material/web/chips/internal/selectable-styles.cssresult.js",
+          "bytes": 1372
+        },
+        {
+          "source": "@material/web/dialog/internal/animations.js",
+          "bytes": 1362
+        },
+        {
+          "source": "@material/web/chips/internal/trailing-icon-styles.cssresult.js",
+          "bytes": 1332
+        },
+        {
+          "source": "@material/web/chips/internal/chip-set.js",
+          "bytes": 1311
+        },
+        {
+          "source": "@lit/reactive-element/css-tag.js",
+          "bytes": 1293
+        },
+        {
+          "source": "@material/web/chips/internal/multi-action-chip.js",
+          "bytes": 1278
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring.js",
+          "bytes": 1132
+        },
+        {
+          "source": "@material/web/select/internal/selectoption/selectOptionController.js",
+          "bytes": 1119
+        },
+        {
+          "source": "@material/web/internal/aria/delegate.js",
+          "bytes": 1085
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation-styles.cssresult.js",
+          "bytes": 1060
+        },
+        {
+          "source": "@material/web/list/internal/list-navigation-helpers.js",
+          "bytes": 1041
+        },
+        {
+          "source": "@material/web/internal/controller/attachable-controller.js",
+          "bytes": 1013
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple-styles.cssresult.js",
+          "bytes": 1000
+        },
+        {
+          "source": "@material/web/labs/behaviors/constraint-validation.js",
+          "bytes": 997
+        },
+        {
+          "source": "@material/web/list/internal/list.js",
+          "bytes": 872
+        },
+        {
+          "source": "@material/web/select/internal/shared-styles.cssresult.js",
+          "bytes": 855
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-associated.js",
+          "bytes": 848
+        },
+        {
+          "source": "@material/web/chips/internal/elevated-styles.cssresult.js",
+          "bytes": 831
+        },
+        {
+          "source": "lit-html/directives/style-map.js",
+          "bytes": 820
+        },
+        {
+          "source": "@material/web/fab/internal/shared.js",
+          "bytes": 819
+        },
+        {
+          "source": "@material/web/labs/behaviors/focusable.js",
+          "bytes": 803
+        },
+        {
+          "source": "@lit/reactive-element/decorators/property.js",
+          "bytes": 801
+        },
+        {
+          "source": "lit-element/lit-element.js",
+          "bytes": 738
+        },
+        {
+          "source": "lit-html/directives/class-map.js",
+          "bytes": 731
+        },
+        {
+          "source": "@material/web/internal/events/dispatch-hooks.js",
+          "bytes": 720
+        },
+        {
+          "source": "@material/web/menu/internal/controllers/shared.js",
+          "bytes": 687
+        },
+        {
+          "source": "lit-html/static.js",
+          "bytes": 672
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/validator.js",
+          "bytes": 663
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-submitter.js",
+          "bytes": 659
+        },
+        {
+          "source": "@material/web/labs/item/internal/item.js",
+          "bytes": 646
+        },
+        {
+          "source": "@material/web/internal/aria/aria.js",
+          "bytes": 642
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/radio-validator.js",
+          "bytes": 627
+        },
+        {
+          "source": "@material/web/button/internal/shared-elevation-styles.cssresult.js",
+          "bytes": 623
+        },
+        {
+          "source": "@material/web/progress/internal/progress.js",
+          "bytes": 599
+        },
+        {
+          "source": "lit-html/directives/live.js",
+          "bytes": 562
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/checkbox-validator.js",
+          "bytes": 468
+        },
+        {
+          "source": "@material/web/divider/internal/divider-styles.cssresult.js",
+          "bytes": 450
+        },
+        {
+          "source": "@material/web/labs/behaviors/validators/select-validator.js",
+          "bytes": 449
+        },
+        {
+          "source": "@material/web/tabs/internal/tabs-styles.cssresult.js",
+          "bytes": 432
+        },
+        {
+          "source": "@material/web/progress/internal/linear-progress.js",
+          "bytes": 410
+        },
+        {
+          "source": "@material/web/internal/motion/animation.js",
+          "bytes": 375
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query.js",
+          "bytes": 358
+        },
+        {
+          "source": "@material/web/divider/internal/divider.js",
+          "bytes": 349
+        },
+        {
+          "source": "@material/web/internal/events/form-label-activation.js",
+          "bytes": 340
+        },
+        {
+          "source": "tslib/tslib.es6.mjs",
+          "bytes": 325
+        },
+        {
+          "source": "lit-html/directive.js",
+          "bytes": 301
+        },
+        {
+          "source": "@material/web/fab/internal/fab.js",
+          "bytes": 282
+        },
+        {
+          "source": "@material/web/chips/internal/trailing-icons.js",
+          "bytes": 278
+        },
+        {
+          "source": "@material/web/tabs/internal/primary-tab.js",
+          "bytes": 240
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-elements.js",
+          "bytes": 237
+        },
+        {
+          "source": "@material/web/field/internal/filled-field.js",
+          "bytes": 215
+        },
+        {
+          "source": "@material/web/list/internal/list-styles.cssresult.js",
+          "bytes": 201
+        },
+        {
+          "source": "@material/web/fab/internal/forced-colors-styles.cssresult.js",
+          "bytes": 201
+        },
+        {
+          "source": "@material/web/internal/events/redispatch-event.js",
+          "bytes": 179
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-nodes.js",
+          "bytes": 178
+        },
+        {
+          "source": "@material/web/labs/behaviors/element-internals.js",
+          "bytes": 167
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation.js",
+          "bytes": 159
+        },
+        {
+          "source": "@material/web/textfield/filled-text-field.js",
+          "bytes": 148
+        },
+        {
+          "source": "@material/web/iconbutton/icon-button.js",
+          "bytes": 141
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-all.js",
+          "bytes": 138
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-async.js",
+          "bytes": 124
+        },
+        {
+          "source": "@lit/reactive-element/decorators/base.js",
+          "bytes": 121
+        },
+        {
+          "source": "@material/web/button/internal/filled-button.js",
+          "bytes": 109
+        },
+        {
+          "source": "@lit/reactive-element/decorators/custom-element.js",
+          "bytes": 107
+        },
+        {
+          "source": "@material/web/select/internal/shared.js",
+          "bytes": 98
+        },
+        {
+          "source": "@material/web/internal/controller/is-rtl.js",
+          "bytes": 95
+        },
+        {
+          "source": "@material/web/textfield/internal/filled-text-field.js",
+          "bytes": 92
+        },
+        {
+          "source": "@material/web/select/internal/filled-select.js",
+          "bytes": 92
+        },
+        {
+          "source": "@material/web/chips/filter-chip.js",
+          "bytes": 84
+        },
+        {
+          "source": "@material/web/button/filled-button.js",
+          "bytes": 80
+        },
+        {
+          "source": "@material/web/select/filled-select.js",
+          "bytes": 77
+        },
+        {
+          "source": "@material/web/field/filled-field.js",
+          "bytes": 76
+        },
+        {
+          "source": "@material/web/progress/linear-progress.js",
+          "bytes": 76
+        },
+        {
+          "source": "@material/web/tabs/primary-tab.js",
+          "bytes": 75
+        },
+        {
+          "source": "@material/web/select/select-option.js",
+          "bytes": 73
+        },
+        {
+          "source": "@material/web/focus/md-focus-ring.js",
+          "bytes": 71
+        },
+        {
+          "source": "@material/web/elevation/elevation.js",
+          "bytes": 70
+        },
+        {
+          "source": "@material/web/list/list-item.js",
+          "bytes": 70
+        },
+        {
+          "source": "@material/web/fab/fab.js",
+          "bytes": 70
+        },
+        {
+          "source": "@material/web/menu/menu-item.js",
+          "bytes": 69
+        },
+        {
+          "source": "@material/web/chips/chip-set.js",
+          "bytes": 69
+        },
+        {
+          "source": "@material/web/slider/slider.js",
+          "bytes": 69
+        },
+        {
+          "source": "@material/web/checkbox/checkbox.js",
+          "bytes": 68
+        },
+        {
+          "source": "@material/web/divider/divider.js",
+          "bytes": 68
+        },
+        {
+          "source": "@material/web/ripple/ripple.js",
+          "bytes": 67
+        },
+        {
+          "source": "@material/web/internal/controller/string-converter.js",
+          "bytes": 67
+        },
+        {
+          "source": "@material/web/switch/switch.js",
+          "bytes": 67
+        },
+        {
+          "source": "lit-html/directive-helpers.js",
+          "bytes": 66
+        },
+        {
+          "source": "@material/web/radio/radio.js",
+          "bytes": 66
+        },
+        {
+          "source": "@material/web/dialog/dialog.js",
+          "bytes": 66
+        },
+        {
+          "source": "@material/web/labs/item/item.js",
+          "bytes": 65
+        },
+        {
+          "source": "@material/web/tabs/tabs.js",
+          "bytes": 65
+        },
+        {
+          "source": "@material/web/list/list.js",
+          "bytes": 65
+        },
+        {
+          "source": "@material/web/chips/internal/chip-set-styles.cssresult.js",
+          "bytes": 65
+        },
+        {
+          "source": "@material/web/menu/menu.js",
+          "bytes": 64
+        },
+        {
+          "source": "@lit/reactive-element/decorators/state.js",
+          "bytes": 53
+        },
+        {
+          "source": "lit-html/directives/when.js",
+          "bytes": 40
+        }
+      ]
+    }
+  ]
+}

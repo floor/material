@@ -1,0 +1,1665 @@
+{
+  "name": "app-material-elements",
+  "measuredAt": "2026-11-09T17:51:53.841Z",
+  "node": "v26.8.1",
+  "material": "3.10.1",
+  "commit": "a99486250a38f94905ebd138488cafdb1634cf3d",
+  "ciRun": 42660160103,
+  "vite": "8.2.2",
+  "materialWeb": "2.5.0",
+  "initial": {
+    "raw": 424767,
+    "gzip": 93223,
+    "brotli": 77474
+  },
+  "lazy": {
+    "raw": 6685,
+    "gzip": 2082,
+    "brotli": 1858
+  },
+  "initialJS": {
+    "raw": 402230,
+    "gzip": 90370,
+    "brotli": 75189
+  },
+  "initialCSS": {
+    "raw": 22537,
+    "gzip": 2853,
+    "brotli": 2285
+  },
+  "directInitial": [
+    "assets/index-C4uWzG6k.js",
+    "assets/index-BE1NPc0k.css"
+  ],
+  "staticClosure": [
+    "assets/index-C4uWzG6k.js",
+    "assets/index-BE1NPc0k.css"
+  ],
+  "files": [
+    {
+      "file": "assets/index-C4uWzG6k.js",
+      "type": "js",
+      "initial": true,
+      "raw": 402230,
+      "gzip": 90370,
+      "brotli": 75189,
+      "imports": [],
+      "dynamicImports": [
+        "assets/index-C4uWzG6k.js",
+        "assets/submenu-6bZktCEg.js"
+      ],
+      "modules": [
+        {
+          "source": "material/elements/styles.js",
+          "renderedLength": 151148
+        },
+        {
+          "source": "material/components/slider/features/controller.js",
+          "renderedLength": 33337
+        },
+        {
+          "source": "material/components/dialog/features.js",
+          "renderedLength": 21132
+        },
+        {
+          "source": "material/elements/define.js",
+          "renderedLength": 16467
+        },
+        {
+          "source": "material/components/menu/features/controller.js",
+          "renderedLength": 15647
+        },
+        {
+          "source": "material/components/select/features.js",
+          "renderedLength": 13641
+        },
+        {
+          "source": "material/components/chips/chip/chip.js",
+          "renderedLength": 10457
+        },
+        {
+          "source": "material/components/chips/features/controller.js",
+          "renderedLength": 10044
+        },
+        {
+          "source": "material/components/menu/features/position.js",
+          "renderedLength": 9900
+        },
+        {
+          "source": "material/components/progress/features/canvas.js",
+          "renderedLength": 9815
+        },
+        {
+          "source": "material/components/menu/features/keyboard.js",
+          "renderedLength": 9281
+        },
+        {
+          "source": "material/components/menu/features/opener.js",
+          "renderedLength": 7758
+        },
+        {
+          "source": "material/elements/chips.js",
+          "renderedLength": 7668
+        },
+        {
+          "source": "material/components/button/api.js",
+          "renderedLength": 7168
+        },
+        {
+          "source": "material/elements/list.js",
+          "renderedLength": 6804
+        },
+        {
+          "source": "material/elements/menu.js",
+          "renderedLength": 6537
+        },
+        {
+          "source": "material/components/tabs/tab.js",
+          "renderedLength": 6504
+        },
+        {
+          "source": "material/elements/dialog.js",
+          "renderedLength": 5787
+        },
+        {
+          "source": "material/components/list/features/renderer.js",
+          "renderedLength": 5339
+        },
+        {
+          "source": "material/elements/slider.js",
+          "renderedLength": 5211
+        },
+        {
+          "source": "material/components/radios/radio.js",
+          "renderedLength": 5202
+        },
+        {
+          "source": "material/components/text-field/features/placement.js",
+          "renderedLength": 5198
+        },
+        {
+          "source": "material/components/list/features/selection.js",
+          "renderedLength": 5050
+        },
+        {
+          "source": "material/components/badge/api.js",
+          "renderedLength": 4937
+        },
+        {
+          "source": "material/components/button/features/progress.js",
+          "renderedLength": 4937
+        },
+        {
+          "source": "material/components/tabs/indicator.js",
+          "renderedLength": 4915
+        },
+        {
+          "source": "material/components/tabs/features.js",
+          "renderedLength": 4912
+        },
+        {
+          "source": "material/components/progress/api.js",
+          "renderedLength": 4778
+        },
+        {
+          "source": "material/elements/select.js",
+          "renderedLength": 4777
+        },
+        {
+          "source": "material/components/switch/features.js",
+          "renderedLength": 4717
+        },
+        {
+          "source": "material/elements/radios.js",
+          "renderedLength": 4707
+        },
+        {
+          "source": "material/components/text-field/api.js",
+          "renderedLength": 4663
+        },
+        {
+          "source": "material/components/icon-button/api.js",
+          "renderedLength": 4552
+        },
+        {
+          "source": "material/elements/text-field.js",
+          "renderedLength": 4527
+        },
+        {
+          "source": "material/components/tabs/utils.js",
+          "renderedLength": 4517
+        },
+        {
+          "source": "material/core/compose/component.js",
+          "renderedLength": 4481
+        },
+        {
+          "source": "material/core/compose/features/textinput.js",
+          "renderedLength": 4334
+        },
+        {
+          "source": "material/components/chips/api.js",
+          "renderedLength": 3985
+        },
+        {
+          "source": "material/core/dom/create.js",
+          "renderedLength": 3884
+        },
+        {
+          "source": "material/elements/tabs.js",
+          "renderedLength": 3864
+        },
+        {
+          "source": "material/components/menu/on-demand.js",
+          "renderedLength": 3690
+        },
+        {
+          "source": "material/components/progress/config.js",
+          "renderedLength": 3655
+        },
+        {
+          "source": "material/components/progress/features/linear.js",
+          "renderedLength": 3506
+        },
+        {
+          "source": "material/components/progress/features/motion.js",
+          "renderedLength": 3374
+        },
+        {
+          "source": "material/core/dom/layer.js",
+          "renderedLength": 3327
+        },
+        {
+          "source": "material/components/list/features/anatomy.js",
+          "renderedLength": 3159
+        },
+        {
+          "source": "material/components/slider/features/dom.js",
+          "renderedLength": 3091
+        },
+        {
+          "source": "material/components/badge/features.js",
+          "renderedLength": 3039
+        },
+        {
+          "source": "material/components/text-field/features/field.js",
+          "renderedLength": 2937
+        },
+        {
+          "source": "material/components/divider/features.js",
+          "renderedLength": 2760
+        },
+        {
+          "source": "material/components/progress/features/circular.js",
+          "renderedLength": 2742
+        },
+        {
+          "source": "material/components/menu/config.js",
+          "renderedLength": 2740
+        },
+        {
+          "source": "material/core/compose/features/icon-slot.js",
+          "renderedLength": 2735
+        },
+        {
+          "source": "material/components/dialog/api.js",
+          "renderedLength": 2689
+        },
+        {
+          "source": "material/components/text-field/features/supporting-text.js",
+          "renderedLength": 2674
+        },
+        {
+          "source": "material/components/chips/config.js",
+          "renderedLength": 2671
+        },
+        {
+          "source": "material/components/text-field/features/trailing-icon.js",
+          "renderedLength": 2651
+        },
+        {
+          "source": "material/components/tabs/api.js",
+          "renderedLength": 2627
+        },
+        {
+          "source": "material/components/icon-button/features/toggle.js",
+          "renderedLength": 2481
+        },
+        {
+          "source": "material/core/compose/features/ripple.js",
+          "renderedLength": 2459
+        },
+        {
+          "source": "material/components/slider/features/states.js",
+          "renderedLength": 2427
+        },
+        {
+          "source": "\u0000vite/preload-helper.js",
+          "renderedLength": 2373
+        },
+        {
+          "source": "material/components/menu/features/loader.js",
+          "renderedLength": 2235
+        },
+        {
+          "source": "material/components/icon-button/config.js",
+          "renderedLength": 2222
+        },
+        {
+          "source": "material/components/progress/constants.js",
+          "renderedLength": 2215
+        },
+        {
+          "source": "material/elements/icon-button.js",
+          "renderedLength": 2172
+        },
+        {
+          "source": "material/components/checkbox/checkbox.js",
+          "renderedLength": 2118
+        },
+        {
+          "source": "material/components/checkbox/config.js",
+          "renderedLength": 2096
+        },
+        {
+          "source": "material/elements/progress.js",
+          "renderedLength": 2060
+        },
+        {
+          "source": "material/components/slider/config.js",
+          "renderedLength": 2017
+        },
+        {
+          "source": "material/core/utils/theme.js",
+          "renderedLength": 1966
+        },
+        {
+          "source": "material/components/select/api.js",
+          "renderedLength": 1964
+        },
+        {
+          "source": "material/core/compose/features/lifecycle.js",
+          "renderedLength": 1955
+        },
+        {
+          "source": "material/core/config/component.js",
+          "renderedLength": 1939
+        },
+        {
+          "source": "material/elements/checkbox.js",
+          "renderedLength": 1927
+        },
+        {
+          "source": "material/core/compose/features/input.js",
+          "renderedLength": 1926
+        },
+        {
+          "source": "material/elements/switch.js",
+          "renderedLength": 1923
+        },
+        {
+          "source": "material/core/compose/features/icon.js",
+          "renderedLength": 1881
+        },
+        {
+          "source": "material/components/switch/api.js",
+          "renderedLength": 1860
+        },
+        {
+          "source": "material/elements/button.js",
+          "renderedLength": 1814
+        },
+        {
+          "source": "material/core/dom/classes.js",
+          "renderedLength": 1775
+        },
+        {
+          "source": "material/core/compose/features/disabled.js",
+          "renderedLength": 1750
+        },
+        {
+          "source": "material/components/list/config.js",
+          "renderedLength": 1742
+        },
+        {
+          "source": "material/components/chips/features/dom.js",
+          "renderedLength": 1726
+        },
+        {
+          "source": "material/components/badge/config.js",
+          "renderedLength": 1689
+        },
+        {
+          "source": "material/components/text-field/features/error.js",
+          "renderedLength": 1661
+        },
+        {
+          "source": "material/components/list/api.js",
+          "renderedLength": 1627
+        },
+        {
+          "source": "material/components/text-field/features/counter.js",
+          "renderedLength": 1602
+        },
+        {
+          "source": "material/components/menu/api.js",
+          "renderedLength": 1579
+        },
+        {
+          "source": "material/components/checkbox/api.js",
+          "renderedLength": 1552
+        },
+        {
+          "source": "material/components/fab/api.js",
+          "renderedLength": 1507
+        },
+        {
+          "source": "material/core/compose/features/track.js",
+          "renderedLength": 1480
+        },
+        {
+          "source": "material/components/fab/config.js",
+          "renderedLength": 1479
+        },
+        {
+          "source": "material/core/compose/features/textlabel.js",
+          "renderedLength": 1478
+        },
+        {
+          "source": "material/core/canvas/resize.js",
+          "renderedLength": 1424
+        },
+        {
+          "source": "material/core/dom/direction.js",
+          "renderedLength": 1411
+        },
+        {
+          "source": "material/components/progress/features/state.js",
+          "renderedLength": 1371
+        },
+        {
+          "source": "material/core/dom/focus.js",
+          "renderedLength": 1367
+        },
+        {
+          "source": "material/components/select/config.js",
+          "renderedLength": 1342
+        },
+        {
+          "source": "material/core/compose/features/text.js",
+          "renderedLength": 1278
+        },
+        {
+          "source": "material/components/text-field/features/required.js",
+          "renderedLength": 1271
+        },
+        {
+          "source": "material/components/text-field/features/density.js",
+          "renderedLength": 1265
+        },
+        {
+          "source": "material/components/slider/features/axis.js",
+          "renderedLength": 1259
+        },
+        {
+          "source": "material/components/tabs/tabs.js",
+          "renderedLength": 1248
+        },
+        {
+          "source": "material/components/menu/constants.js",
+          "renderedLength": 1209
+        },
+        {
+          "source": "material/components/progress/features/colors.js",
+          "renderedLength": 1195
+        },
+        {
+          "source": "material/components/radios/api.js",
+          "renderedLength": 1171
+        },
+        {
+          "source": "material/components/button/config.js",
+          "renderedLength": 1148
+        },
+        {
+          "source": "material/elements/divider.js",
+          "renderedLength": 1147
+        },
+        {
+          "source": "material/elements/fab.js",
+          "renderedLength": 1090
+        },
+        {
+          "source": "material/components/text-field/text-field.js",
+          "renderedLength": 1088
+        },
+        {
+          "source": "material/components/menu/features/tasks.js",
+          "renderedLength": 1076
+        },
+        {
+          "source": "material/components/chips/chips.js",
+          "renderedLength": 1059
+        },
+        {
+          "source": "material/components/chips/features/container.js",
+          "renderedLength": 1016
+        },
+        {
+          "source": "material/core/compose/cleanup.js",
+          "renderedLength": 1005
+        },
+        {
+          "source": "material/components/tabs/config.js",
+          "renderedLength": 984
+        },
+        {
+          "source": "material/core/compose/features/checkable.js",
+          "renderedLength": 981
+        },
+        {
+          "source": "material/core/utils/mobile.js",
+          "renderedLength": 915
+        },
+        {
+          "source": "material/components/switch/switch.js",
+          "renderedLength": 910
+        },
+        {
+          "source": "material/components/button/button.js",
+          "renderedLength": 908
+        },
+        {
+          "source": "material/components/dialog/config.js",
+          "renderedLength": 908
+        },
+        {
+          "source": "material/components/icon-button/icon-button.js",
+          "renderedLength": 907
+        },
+        {
+          "source": "material/components/slider/constants.js",
+          "renderedLength": 891
+        },
+        {
+          "source": "material/components/button/features/toggle.js",
+          "renderedLength": 887
+        },
+        {
+          "source": "material/components/switch/config.js",
+          "renderedLength": 831
+        },
+        {
+          "source": "material/core/state/emitter.js",
+          "renderedLength": 808
+        },
+        {
+          "source": "material/components/slider/slider.js",
+          "renderedLength": 797
+        },
+        {
+          "source": "material/core/dom/attributes.js",
+          "renderedLength": 773
+        },
+        {
+          "source": "material/components/menu/menu.js",
+          "renderedLength": 766
+        },
+        {
+          "source": "material/components/dialog/dialog.js",
+          "renderedLength": 758
+        },
+        {
+          "source": "material/components/select/select.js",
+          "renderedLength": 711
+        },
+        {
+          "source": "material/components/radios/config.js",
+          "renderedLength": 693
+        },
+        {
+          "source": "material/components/progress/progress.js",
+          "renderedLength": 685
+        },
+        {
+          "source": "material/components/text-field/config.js",
+          "renderedLength": 671
+        },
+        {
+          "source": "material/components/tabs/constants.js",
+          "renderedLength": 650
+        },
+        {
+          "source": "material/elements/form-button.js",
+          "renderedLength": 639
+        },
+        {
+          "source": "material/components/badge/badge.js",
+          "renderedLength": 612
+        },
+        {
+          "source": "material/components/radios/radios.js",
+          "renderedLength": 611
+        },
+        {
+          "source": "material/components/text-field/features/leading-icon.js",
+          "renderedLength": 569
+        },
+        {
+          "source": "material/core/utils/url.js",
+          "renderedLength": 566
+        },
+        {
+          "source": "material/components/list/list.js",
+          "renderedLength": 551
+        },
+        {
+          "source": "material/components/icon-button/constants.js",
+          "renderedLength": 549
+        },
+        {
+          "source": "material/components/fab/fab.js",
+          "renderedLength": 540
+        },
+        {
+          "source": "material/core/compose/features/events.js",
+          "renderedLength": 514
+        },
+        {
+          "source": "material/components/menu/features/layer.js",
+          "renderedLength": 513
+        },
+        {
+          "source": "material/components/select/constants.js",
+          "renderedLength": 512
+        },
+        {
+          "source": "material/components/text-field/features/prefix-text.js",
+          "renderedLength": 507
+        },
+        {
+          "source": "material/components/text-field/features/suffix-text.js",
+          "renderedLength": 507
+        },
+        {
+          "source": "material/components/button/constants.js",
+          "renderedLength": 457
+        },
+        {
+          "source": "material/components/chips/features/chip-items.js",
+          "renderedLength": 451
+        },
+        {
+          "source": "material/core/dom/form-value.js",
+          "renderedLength": 440
+        },
+        {
+          "source": "material/components/badge/constants.js",
+          "renderedLength": 433
+        },
+        {
+          "source": "material/components/divider/divider.js",
+          "renderedLength": 421
+        },
+        {
+          "source": "material/core/compose/utils/type-guards.js",
+          "renderedLength": 414
+        },
+        {
+          "source": "\u0000rolldown/runtime.js",
+          "renderedLength": 348
+        },
+        {
+          "source": "material/core/utils/warn.js",
+          "renderedLength": 341
+        },
+        {
+          "source": "material/core/compose/features/variant.js",
+          "renderedLength": 324
+        },
+        {
+          "source": "material/core/utils/attributes.js",
+          "renderedLength": 319
+        },
+        {
+          "source": "material/components/menu/features/registry.js",
+          "renderedLength": 319
+        },
+        {
+          "source": "cases/app-material-elements/main.js",
+          "renderedLength": 317
+        },
+        {
+          "source": "material/core/compose/features/size.js",
+          "renderedLength": 312
+        },
+        {
+          "source": "material/core/dom/html.js",
+          "renderedLength": 304
+        },
+        {
+          "source": "material/components/divider/config.js",
+          "renderedLength": 283
+        },
+        {
+          "source": "material/components/switch/constants.js",
+          "renderedLength": 278
+        },
+        {
+          "source": "material/elements/floating-placement.js",
+          "renderedLength": 231
+        },
+        {
+          "source": "material/components/list/constants.js",
+          "renderedLength": 220
+        },
+        {
+          "source": "material/core/config/control-label.js",
+          "renderedLength": 190
+        },
+        {
+          "source": "material/core/config/global.js",
+          "renderedLength": 171
+        },
+        {
+          "source": "material/core/theme/shape.js",
+          "renderedLength": 167
+        },
+        {
+          "source": "material/core/dom/utils.js",
+          "renderedLength": 160
+        },
+        {
+          "source": "material/components/chips/constants.js",
+          "renderedLength": 148
+        },
+        {
+          "source": "material/components/menu/index.js",
+          "renderedLength": 148
+        },
+        {
+          "source": "material/components/menu/inner.js",
+          "renderedLength": 141
+        },
+        {
+          "source": "material/core/compose/pipe.js",
+          "renderedLength": 137
+        },
+        {
+          "source": "material/elements/css/icon-button.js",
+          "renderedLength": 122
+        },
+        {
+          "source": "material/elements/css/text-field.js",
+          "renderedLength": 119
+        },
+        {
+          "source": "material/core/compose/features/constants.js",
+          "renderedLength": 118
+        },
+        {
+          "source": "material/elements/css/progress.js",
+          "renderedLength": 113
+        },
+        {
+          "source": "material/elements/css/checkbox.js",
+          "renderedLength": 113
+        },
+        {
+          "source": "material/elements/lifecycle.js",
+          "renderedLength": 112
+        },
+        {
+          "source": "material/elements/css/divider.js",
+          "renderedLength": 110
+        },
+        {
+          "source": "material/elements/css/ripple.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/button.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/switch.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/radios.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/select.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/dialog.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/slider.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/badge.js",
+          "renderedLength": 104
+        },
+        {
+          "source": "material/elements/css/chips.js",
+          "renderedLength": 104
+        },
+        {
+          "source": "material/elements/css/menu.js",
+          "renderedLength": 101
+        },
+        {
+          "source": "material/elements/css/tabs.js",
+          "renderedLength": 101
+        },
+        {
+          "source": "material/elements/css/list.js",
+          "renderedLength": 101
+        },
+        {
+          "source": "material/components/tabs/index.js",
+          "renderedLength": 100
+        },
+        {
+          "source": "material/elements/css/fab.js",
+          "renderedLength": 98
+        },
+        {
+          "source": "material/core/config.js",
+          "renderedLength": 80
+        },
+        {
+          "source": "material/styles/base.css",
+          "renderedLength": 0
+        },
+        {
+          "source": "material/styles/base.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/app-material-elements/index.html",
+          "renderedLength": 0
+        }
+      ],
+      "mapped": [
+        {
+          "source": "material/elements/css/text-field.js",
+          "bytes": 20572
+        },
+        {
+          "source": "material/components/slider/features/controller.js",
+          "bytes": 16045
+        },
+        {
+          "source": "material/elements/css/menu.js",
+          "bytes": 15993
+        },
+        {
+          "source": "material/elements/css/button.js",
+          "bytes": 15933
+        },
+        {
+          "source": "material/elements/css/icon-button.js",
+          "bytes": 12033
+        },
+        {
+          "source": "material/elements/css/slider.js",
+          "bytes": 11650
+        },
+        {
+          "source": "material/elements/css/chips.js",
+          "bytes": 11322
+        },
+        {
+          "source": "material/elements/css/tabs.js",
+          "bytes": 10815
+        },
+        {
+          "source": "material/components/dialog/features.js",
+          "bytes": 10527
+        },
+        {
+          "source": "material/elements/css/list.js",
+          "bytes": 9989
+        },
+        {
+          "source": "material/elements/define.js",
+          "bytes": 8954
+        },
+        {
+          "source": "material/elements/css/dialog.js",
+          "bytes": 8469
+        },
+        {
+          "source": "material/components/menu/features/controller.js",
+          "bytes": 8292
+        },
+        {
+          "source": "material/elements/css/switch.js",
+          "bytes": 7900
+        },
+        {
+          "source": "material/components/select/features.js",
+          "bytes": 7710
+        },
+        {
+          "source": "material/elements/css/checkbox.js",
+          "bytes": 6920
+        },
+        {
+          "source": "material/components/chips/chip/chip.js",
+          "bytes": 5853
+        },
+        {
+          "source": "material/elements/css/badge.js",
+          "bytes": 5110
+        },
+        {
+          "source": "material/elements/css/radios.js",
+          "bytes": 4900
+        },
+        {
+          "source": "material/elements/css/fab.js",
+          "bytes": 4614
+        },
+        {
+          "source": "material/components/chips/features/controller.js",
+          "bytes": 4527
+        },
+        {
+          "source": "material/components/menu/features/keyboard.js",
+          "bytes": 4515
+        },
+        {
+          "source": "material/elements/chips.js",
+          "bytes": 4468
+        },
+        {
+          "source": "material/components/menu/features/position.js",
+          "bytes": 4297
+        },
+        {
+          "source": "material/components/menu/features/opener.js",
+          "bytes": 4257
+        },
+        {
+          "source": "material/elements/menu.js",
+          "bytes": 3996
+        },
+        {
+          "source": "material/components/progress/features/canvas.js",
+          "bytes": 3969
+        },
+        {
+          "source": "material/elements/list.js",
+          "bytes": 3867
+        },
+        {
+          "source": "material/components/tabs/tab.js",
+          "bytes": 3813
+        },
+        {
+          "source": "material/components/button/api.js",
+          "bytes": 3602
+        },
+        {
+          "source": "material/elements/dialog.js",
+          "bytes": 3505
+        },
+        {
+          "source": "material/elements/slider.js",
+          "bytes": 3427
+        },
+        {
+          "source": "material/core/dom/layer.js",
+          "bytes": 3124
+        },
+        {
+          "source": "material/elements/text-field.js",
+          "bytes": 3094
+        },
+        {
+          "source": "material/components/list/features/renderer.js",
+          "bytes": 2955
+        },
+        {
+          "source": "material/elements/select.js",
+          "bytes": 2909
+        },
+        {
+          "source": "material/components/list/features/selection.js",
+          "bytes": 2828
+        },
+        {
+          "source": "material/components/radios/radio.js",
+          "bytes": 2802
+        },
+        {
+          "source": "material/components/progress/api.js",
+          "bytes": 2653
+        },
+        {
+          "source": "material/elements/radios.js",
+          "bytes": 2647
+        },
+        {
+          "source": "material/components/badge/api.js",
+          "bytes": 2635
+        },
+        {
+          "source": "material/components/tabs/indicator.js",
+          "bytes": 2610
+        },
+        {
+          "source": "material/components/tabs/features.js",
+          "bytes": 2586
+        },
+        {
+          "source": "material/components/text-field/api.js",
+          "bytes": 2544
+        },
+        {
+          "source": "material/core/compose/component.js",
+          "bytes": 2529
+        },
+        {
+          "source": "material/components/chips/api.js",
+          "bytes": 2439
+        },
+        {
+          "source": "material/components/icon-button/api.js",
+          "bytes": 2402
+        },
+        {
+          "source": "material/core/compose/features/textinput.js",
+          "bytes": 2378
+        },
+        {
+          "source": "material/components/text-field/features/placement.js",
+          "bytes": 2365
+        },
+        {
+          "source": "material/components/tabs/utils.js",
+          "bytes": 2355
+        },
+        {
+          "source": "material/components/switch/features.js",
+          "bytes": 2354
+        },
+        {
+          "source": "material/elements/tabs.js",
+          "bytes": 2346
+        },
+        {
+          "source": "material/components/button/features/progress.js",
+          "bytes": 2224
+        },
+        {
+          "source": "material/core/dom/create.js",
+          "bytes": 2027
+        },
+        {
+          "source": "material/components/progress/config.js",
+          "bytes": 2008
+        },
+        {
+          "source": "material/components/list/features/anatomy.js",
+          "bytes": 1820
+        },
+        {
+          "source": "material/components/chips/config.js",
+          "bytes": 1655
+        },
+        {
+          "source": "material/components/progress/features/linear.js",
+          "bytes": 1641
+        },
+        {
+          "source": "material/components/badge/features.js",
+          "bytes": 1631
+        },
+        {
+          "source": "material/components/menu/on-demand.js",
+          "bytes": 1620
+        },
+        {
+          "source": "material/components/progress/features/motion.js",
+          "bytes": 1578
+        },
+        {
+          "source": "material/components/menu/config.js",
+          "bytes": 1567
+        },
+        {
+          "source": "material/components/dialog/api.js",
+          "bytes": 1560
+        },
+        {
+          "source": "material/components/progress/constants.js",
+          "bytes": 1544
+        },
+        {
+          "source": "material/core/compose/features/icon-slot.js",
+          "bytes": 1533
+        },
+        {
+          "source": "material/components/slider/features/dom.js",
+          "bytes": 1526
+        },
+        {
+          "source": "material/components/text-field/features/field.js",
+          "bytes": 1503
+        },
+        {
+          "source": "material/elements/icon-button.js",
+          "bytes": 1491
+        },
+        {
+          "source": "material/components/text-field/features/trailing-icon.js",
+          "bytes": 1438
+        },
+        {
+          "source": "material/components/tabs/api.js",
+          "bytes": 1428
+        },
+        {
+          "source": "material/components/divider/features.js",
+          "bytes": 1386
+        },
+        {
+          "source": "material/elements/progress.js",
+          "bytes": 1364
+        },
+        {
+          "source": "material/elements/switch.js",
+          "bytes": 1327
+        },
+        {
+          "source": "material/components/slider/features/states.js",
+          "bytes": 1319
+        },
+        {
+          "source": "material/elements/checkbox.js",
+          "bytes": 1312
+        },
+        {
+          "source": "material/elements/button.js",
+          "bytes": 1209
+        },
+        {
+          "source": "material/core/compose/features/ripple.js",
+          "bytes": 1184
+        },
+        {
+          "source": "material/components/checkbox/config.js",
+          "bytes": 1177
+        },
+        {
+          "source": "material/components/select/api.js",
+          "bytes": 1149
+        },
+        {
+          "source": "material/components/icon-button/config.js",
+          "bytes": 1148
+        },
+        {
+          "source": "material/elements/css/select.js",
+          "bytes": 1141
+        },
+        {
+          "source": "material/components/icon-button/features/toggle.js",
+          "bytes": 1141
+        },
+        {
+          "source": "material/components/progress/features/circular.js",
+          "bytes": 1133
+        },
+        {
+          "source": "material/core/compose/features/input.js",
+          "bytes": 1131
+        },
+        {
+          "source": "material/components/text-field/features/supporting-text.js",
+          "bytes": 1100
+        },
+        {
+          "source": "material/components/slider/config.js",
+          "bytes": 1094
+        },
+        {
+          "source": "material/components/switch/api.js",
+          "bytes": 1086
+        },
+        {
+          "source": "material/elements/css/progress.js",
+          "bytes": 1067
+        },
+        {
+          "source": "material/elements/css/ripple.js",
+          "bytes": 1058
+        },
+        {
+          "source": "material/components/list/config.js",
+          "bytes": 1028
+        },
+        {
+          "source": "material/components/menu/features/loader.js",
+          "bytes": 1006
+        },
+        {
+          "source": "material/core/utils/theme.js",
+          "bytes": 991
+        },
+        {
+          "source": "material/core/compose/features/icon.js",
+          "bytes": 953
+        },
+        {
+          "source": "material/components/checkbox/checkbox.js",
+          "bytes": 941
+        },
+        {
+          "source": "material/core/compose/features/disabled.js",
+          "bytes": 930
+        },
+        {
+          "source": "material/components/fab/api.js",
+          "bytes": 907
+        },
+        {
+          "source": "material/components/list/api.js",
+          "bytes": 904
+        },
+        {
+          "source": "material/core/compose/features/lifecycle.js",
+          "bytes": 899
+        },
+        {
+          "source": "material/components/chips/features/dom.js",
+          "bytes": 885
+        },
+        {
+          "source": "material/components/checkbox/api.js",
+          "bytes": 874
+        },
+        {
+          "source": "material/components/menu/constants.js",
+          "bytes": 871
+        },
+        {
+          "source": "material/core/config/component.js",
+          "bytes": 866
+        },
+        {
+          "source": "material/components/text-field/features/counter.js",
+          "bytes": 834
+        },
+        {
+          "source": "material/components/select/config.js",
+          "bytes": 813
+        },
+        {
+          "source": "material/core/compose/features/textlabel.js",
+          "bytes": 801
+        },
+        {
+          "source": "material/core/compose/features/track.js",
+          "bytes": 800
+        },
+        {
+          "source": "material/components/fab/config.js",
+          "bytes": 798
+        },
+        {
+          "source": "material/core/dom/classes.js",
+          "bytes": 783
+        },
+        {
+          "source": "material/elements/fab.js",
+          "bytes": 783
+        },
+        {
+          "source": "[unmapped]",
+          "bytes": 771
+        },
+        {
+          "source": "material/components/text-field/features/error.js",
+          "bytes": 768
+        },
+        {
+          "source": "material/components/slider/features/axis.js",
+          "bytes": 753
+        },
+        {
+          "source": "material/components/menu/api.js",
+          "bytes": 751
+        },
+        {
+          "source": "material/elements/divider.js",
+          "bytes": 739
+        },
+        {
+          "source": "material/core/dom/focus.js",
+          "bytes": 724
+        },
+        {
+          "source": "material/components/badge/config.js",
+          "bytes": 723
+        },
+        {
+          "source": "material/components/progress/features/state.js",
+          "bytes": 713
+        },
+        {
+          "source": "material/core/dom/direction.js",
+          "bytes": 700
+        },
+        {
+          "source": "material/core/canvas/resize.js",
+          "bytes": 652
+        },
+        {
+          "source": "material/components/text-field/features/density.js",
+          "bytes": 638
+        },
+        {
+          "source": "material/components/text-field/features/required.js",
+          "bytes": 632
+        },
+        {
+          "source": "material/components/radios/api.js",
+          "bytes": 616
+        },
+        {
+          "source": "material/core/compose/features/text.js",
+          "bytes": 605
+        },
+        {
+          "source": "material/components/button/config.js",
+          "bytes": 589
+        },
+        {
+          "source": "material/elements/styles.js",
+          "bytes": 553
+        },
+        {
+          "source": "material/components/progress/features/colors.js",
+          "bytes": 532
+        },
+        {
+          "source": "material/components/chips/features/container.js",
+          "bytes": 529
+        },
+        {
+          "source": "material/components/slider/constants.js",
+          "bytes": 520
+        },
+        {
+          "source": "material/core/utils/mobile.js",
+          "bytes": 504
+        },
+        {
+          "source": "material/components/tabs/tabs.js",
+          "bytes": 504
+        },
+        {
+          "source": "material/components/dialog/config.js",
+          "bytes": 484
+        },
+        {
+          "source": "material/components/menu/features/tasks.js",
+          "bytes": 468
+        },
+        {
+          "source": "material/components/switch/config.js",
+          "bytes": 453
+        },
+        {
+          "source": "material/core/compose/features/checkable.js",
+          "bytes": 449
+        },
+        {
+          "source": "material/components/tabs/config.js",
+          "bytes": 448
+        },
+        {
+          "source": "material/components/chips/chips.js",
+          "bytes": 431
+        },
+        {
+          "source": "material/components/button/features/toggle.js",
+          "bytes": 411
+        },
+        {
+          "source": "material/components/text-field/text-field.js",
+          "bytes": 406
+        },
+        {
+          "source": "material/core/compose/cleanup.js",
+          "bytes": 394
+        },
+        {
+          "source": "material/components/tabs/constants.js",
+          "bytes": 372
+        },
+        {
+          "source": "material/components/switch/switch.js",
+          "bytes": 371
+        },
+        {
+          "source": "material/elements/css/divider.js",
+          "bytes": 358
+        },
+        {
+          "source": "material/components/icon-button/icon-button.js",
+          "bytes": 358
+        },
+        {
+          "source": "material/components/button/button.js",
+          "bytes": 345
+        },
+        {
+          "source": "material/elements/form-button.js",
+          "bytes": 340
+        },
+        {
+          "source": "material/core/state/emitter.js",
+          "bytes": 335
+        },
+        {
+          "source": "material/components/radios/config.js",
+          "bytes": 335
+        },
+        {
+          "source": "material/components/menu/menu.js",
+          "bytes": 333
+        },
+        {
+          "source": "material/components/slider/slider.js",
+          "bytes": 320
+        },
+        {
+          "source": "material/components/text-field/config.js",
+          "bytes": 311
+        },
+        {
+          "source": "material/core/dom/attributes.js",
+          "bytes": 309
+        },
+        {
+          "source": "material/components/select/select.js",
+          "bytes": 309
+        },
+        {
+          "source": "material/components/dialog/dialog.js",
+          "bytes": 308
+        },
+        {
+          "source": "material/components/text-field/features/leading-icon.js",
+          "bytes": 293
+        },
+        {
+          "source": "material/components/select/constants.js",
+          "bytes": 277
+        },
+        {
+          "source": "material/core/utils/url.js",
+          "bytes": 263
+        },
+        {
+          "source": "material/components/radios/radios.js",
+          "bytes": 262
+        },
+        {
+          "source": "material/components/menu/features/layer.js",
+          "bytes": 253
+        },
+        {
+          "source": "material/components/text-field/features/prefix-text.js",
+          "bytes": 249
+        },
+        {
+          "source": "material/components/text-field/features/suffix-text.js",
+          "bytes": 249
+        },
+        {
+          "source": "material/components/badge/constants.js",
+          "bytes": 243
+        },
+        {
+          "source": "material/components/icon-button/constants.js",
+          "bytes": 233
+        },
+        {
+          "source": "material/components/badge/badge.js",
+          "bytes": 215
+        },
+        {
+          "source": "material/core/compose/utils/type-guards.js",
+          "bytes": 211
+        },
+        {
+          "source": "material/components/progress/progress.js",
+          "bytes": 210
+        },
+        {
+          "source": "material/components/button/constants.js",
+          "bytes": 200
+        },
+        {
+          "source": "material/components/list/list.js",
+          "bytes": 198
+        },
+        {
+          "source": "material/components/chips/features/chip-items.js",
+          "bytes": 197
+        },
+        {
+          "source": "material/components/fab/fab.js",
+          "bytes": 195
+        },
+        {
+          "source": "material/core/dom/form-value.js",
+          "bytes": 186
+        },
+        {
+          "source": "material/core/compose/features/events.js",
+          "bytes": 176
+        },
+        {
+          "source": "material/core/utils/warn.js",
+          "bytes": 142
+        },
+        {
+          "source": "material/core/utils/attributes.js",
+          "bytes": 134
+        },
+        {
+          "source": "material/core/compose/features/variant.js",
+          "bytes": 125
+        },
+        {
+          "source": "material/components/divider/divider.js",
+          "bytes": 120
+        },
+        {
+          "source": "material/core/compose/features/size.js",
+          "bytes": 119
+        },
+        {
+          "source": "cases/app-material-elements/main.js",
+          "bytes": 119
+        },
+        {
+          "source": "material/components/list/constants.js",
+          "bytes": 96
+        },
+        {
+          "source": "material/components/switch/constants.js",
+          "bytes": 92
+        },
+        {
+          "source": "material/components/divider/config.js",
+          "bytes": 92
+        },
+        {
+          "source": "material/components/menu/features/registry.js",
+          "bytes": 81
+        },
+        {
+          "source": "material/core/dom/html.js",
+          "bytes": 72
+        },
+        {
+          "source": "material/core/theme/shape.js",
+          "bytes": 63
+        },
+        {
+          "source": "material/core/compose/pipe.js",
+          "bytes": 51
+        },
+        {
+          "source": "material/core/config/control-label.js",
+          "bytes": 50
+        },
+        {
+          "source": "material/components/chips/constants.js",
+          "bytes": 47
+        },
+        {
+          "source": "material/core/dom/utils.js",
+          "bytes": 39
+        },
+        {
+          "source": "material/core/config/global.js",
+          "bytes": 38
+        },
+        {
+          "source": "material/components/menu/inner.js",
+          "bytes": 35
+        },
+        {
+          "source": "material/elements/lifecycle.js",
+          "bytes": 24
+        },
+        {
+          "source": "material/core/compose/features/constants.js",
+          "bytes": 18
+        },
+        {
+          "source": "material/core/config.js",
+          "bytes": 9
+        },
+        {
+          "source": "material/components/tabs/index.js",
+          "bytes": 4
+        }
+      ]
+    },
+    {
+      "file": "assets/submenu-6bZktCEg.js",
+      "type": "js",
+      "initial": false,
+      "raw": 6685,
+      "gzip": 2082,
+      "brotli": 1858,
+      "imports": [
+        "assets/index-C4uWzG6k.js"
+      ],
+      "dynamicImports": [],
+      "modules": [
+        {
+          "source": "material/components/menu/features/submenu.js",
+          "renderedLength": 12366
+        }
+      ],
+      "mapped": [
+        {
+          "source": "material/components/menu/features/submenu.js",
+          "bytes": 6624
+        },
+        {
+          "source": "[unmapped]",
+          "bytes": 61
+        }
+      ]
+    },
+    {
+      "file": "assets/index-BE1NPc0k.css",
+      "type": "css",
+      "initial": true,
+      "raw": 22537,
+      "gzip": 2853,
+      "brotli": 2285,
+      "imports": [],
+      "dynamicImports": [],
+      "modules": [],
+      "mapped": []
+    }
+  ]
+}

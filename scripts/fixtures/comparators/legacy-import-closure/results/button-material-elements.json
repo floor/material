@@ -1,0 +1,520 @@
+{
+  "name": "button-material-elements",
+  "measuredAt": "2026-11-09T17:51:51.255Z",
+  "node": "v26.8.1",
+  "material": "3.10.1",
+  "commit": "a99486250a38f94905ebd138488cafdb1634cf3d",
+  "ciRun": 42660160103,
+  "vite": "8.2.2",
+  "materialWeb": "2.5.0",
+  "initial": {
+    "raw": 75524,
+    "gzip": 17084,
+    "brotli": 14918
+  },
+  "lazy": {
+    "raw": 17574,
+    "gzip": 6695,
+    "brotli": 6070
+  },
+  "initialJS": {
+    "raw": 52987,
+    "gzip": 14231,
+    "brotli": 12633
+  },
+  "initialCSS": {
+    "raw": 22537,
+    "gzip": 2853,
+    "brotli": 2285
+  },
+  "directInitial": [
+    "assets/index-DG5Dvw5m.js",
+    "assets/index-BE1NPc0k.css"
+  ],
+  "staticClosure": [
+    "assets/index-DG5Dvw5m.js",
+    "assets/index-BE1NPc0k.css"
+  ],
+  "files": [
+    {
+      "file": "assets/index-DG5Dvw5m.js",
+      "type": "js",
+      "initial": true,
+      "raw": 52987,
+      "gzip": 14231,
+      "brotli": 12633,
+      "imports": [],
+      "dynamicImports": [
+        "assets/progress-CDMGzypQ.js"
+      ],
+      "modules": [
+        {
+          "source": "material/elements/styles.js",
+          "renderedLength": 19214
+        },
+        {
+          "source": "material/elements/define.js",
+          "renderedLength": 15760
+        },
+        {
+          "source": "material/components/button/api.js",
+          "renderedLength": 7165
+        },
+        {
+          "source": "material/components/button/features/progress.js",
+          "renderedLength": 4923
+        },
+        {
+          "source": "material/core/compose/component.js",
+          "renderedLength": 4481
+        },
+        {
+          "source": "material/core/dom/create.js",
+          "renderedLength": 3884
+        },
+        {
+          "source": "material/core/compose/features/icon-slot.js",
+          "renderedLength": 2735
+        },
+        {
+          "source": "material/core/compose/features/ripple.js",
+          "renderedLength": 2459
+        },
+        {
+          "source": "\u0000vite/preload-helper.js",
+          "renderedLength": 2373
+        },
+        {
+          "source": "material/core/compose/features/lifecycle.js",
+          "renderedLength": 1955
+        },
+        {
+          "source": "material/core/compose/features/icon.js",
+          "renderedLength": 1881
+        },
+        {
+          "source": "material/elements/button.js",
+          "renderedLength": 1814
+        },
+        {
+          "source": "material/core/dom/classes.js",
+          "renderedLength": 1775
+        },
+        {
+          "source": "material/core/config/component.js",
+          "renderedLength": 1763
+        },
+        {
+          "source": "material/core/compose/features/disabled.js",
+          "renderedLength": 1750
+        },
+        {
+          "source": "material/core/dom/direction.js",
+          "renderedLength": 1411
+        },
+        {
+          "source": "material/core/compose/features/text.js",
+          "renderedLength": 1278
+        },
+        {
+          "source": "material/components/button/config.js",
+          "renderedLength": 1131
+        },
+        {
+          "source": "material/core/compose/cleanup.js",
+          "renderedLength": 1005
+        },
+        {
+          "source": "material/core/utils/mobile.js",
+          "renderedLength": 915
+        },
+        {
+          "source": "material/components/button/button.js",
+          "renderedLength": 890
+        },
+        {
+          "source": "material/components/button/features/toggle.js",
+          "renderedLength": 885
+        },
+        {
+          "source": "material/core/state/emitter.js",
+          "renderedLength": 808
+        },
+        {
+          "source": "material/core/dom/attributes.js",
+          "renderedLength": 773
+        },
+        {
+          "source": "material/elements/form-button.js",
+          "renderedLength": 639
+        },
+        {
+          "source": "material/core/utils/url.js",
+          "renderedLength": 566
+        },
+        {
+          "source": "material/core/compose/features/events.js",
+          "renderedLength": 514
+        },
+        {
+          "source": "material/components/button/constants.js",
+          "renderedLength": 455
+        },
+        {
+          "source": "material/core/compose/features/variant.js",
+          "renderedLength": 322
+        },
+        {
+          "source": "material/core/utils/attributes.js",
+          "renderedLength": 319
+        },
+        {
+          "source": "material/core/compose/features/size.js",
+          "renderedLength": 310
+        },
+        {
+          "source": "material/core/dom/html.js",
+          "renderedLength": 304
+        },
+        {
+          "source": "material/core/config/global.js",
+          "renderedLength": 171
+        },
+        {
+          "source": "material/core/compose/pipe.js",
+          "renderedLength": 137
+        },
+        {
+          "source": "material/core/compose/features/constants.js",
+          "renderedLength": 118
+        },
+        {
+          "source": "material/elements/css/progress.js",
+          "renderedLength": 113
+        },
+        {
+          "source": "material/elements/lifecycle.js",
+          "renderedLength": 112
+        },
+        {
+          "source": "material/elements/css/ripple.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/elements/css/button.js",
+          "renderedLength": 107
+        },
+        {
+          "source": "material/core/config.js",
+          "renderedLength": 80
+        },
+        {
+          "source": "cases/button-material-elements/main.js",
+          "renderedLength": 78
+        },
+        {
+          "source": "material/styles/base.css",
+          "renderedLength": 0
+        },
+        {
+          "source": "material/styles/base.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/button-material-elements/index.html",
+          "renderedLength": 0
+        }
+      ],
+      "mapped": [
+        {
+          "source": "material/elements/css/button.js",
+          "bytes": 15933
+        },
+        {
+          "source": "material/elements/define.js",
+          "bytes": 8558
+        },
+        {
+          "source": "material/components/button/api.js",
+          "bytes": 3598
+        },
+        {
+          "source": "material/core/compose/component.js",
+          "bytes": 2525
+        },
+        {
+          "source": "material/core/compose/features/lifecycle.js",
+          "bytes": 2226
+        },
+        {
+          "source": "material/components/button/features/progress.js",
+          "bytes": 2222
+        },
+        {
+          "source": "material/core/dom/create.js",
+          "bytes": 2040
+        },
+        {
+          "source": "material/core/compose/features/icon-slot.js",
+          "bytes": 1526
+        },
+        {
+          "source": "material/elements/button.js",
+          "bytes": 1200
+        },
+        {
+          "source": "material/core/compose/features/ripple.js",
+          "bytes": 1181
+        },
+        {
+          "source": "material/elements/css/progress.js",
+          "bytes": 1067
+        },
+        {
+          "source": "material/elements/css/ripple.js",
+          "bytes": 1058
+        },
+        {
+          "source": "material/core/compose/features/icon.js",
+          "bytes": 953
+        },
+        {
+          "source": "material/core/compose/features/disabled.js",
+          "bytes": 921
+        },
+        {
+          "source": "material/core/config/component.js",
+          "bytes": 806
+        },
+        {
+          "source": "material/core/dom/classes.js",
+          "bytes": 787
+        },
+        {
+          "source": "material/core/dom/direction.js",
+          "bytes": 697
+        },
+        {
+          "source": "material/core/compose/features/text.js",
+          "bytes": 607
+        },
+        {
+          "source": "material/components/button/config.js",
+          "bytes": 589
+        },
+        {
+          "source": "material/elements/styles.js",
+          "bytes": 557
+        },
+        {
+          "source": "material/core/utils/mobile.js",
+          "bytes": 501
+        },
+        {
+          "source": "material/components/button/features/toggle.js",
+          "bytes": 411
+        },
+        {
+          "source": "material/core/compose/cleanup.js",
+          "bytes": 394
+        },
+        {
+          "source": "material/components/button/button.js",
+          "bytes": 343
+        },
+        {
+          "source": "material/core/state/emitter.js",
+          "bytes": 334
+        },
+        {
+          "source": "material/elements/form-button.js",
+          "bytes": 321
+        },
+        {
+          "source": "material/core/dom/attributes.js",
+          "bytes": 310
+        },
+        {
+          "source": "material/core/utils/url.js",
+          "bytes": 263
+        },
+        {
+          "source": "material/components/button/constants.js",
+          "bytes": 200
+        },
+        {
+          "source": "material/core/compose/features/events.js",
+          "bytes": 175
+        },
+        {
+          "source": "material/core/utils/attributes.js",
+          "bytes": 134
+        },
+        {
+          "source": "material/core/compose/features/variant.js",
+          "bytes": 124
+        },
+        {
+          "source": "material/core/compose/features/size.js",
+          "bytes": 119
+        },
+        {
+          "source": "cases/button-material-elements/main.js",
+          "bytes": 95
+        },
+        {
+          "source": "material/core/dom/html.js",
+          "bytes": 72
+        },
+        {
+          "source": "material/core/compose/pipe.js",
+          "bytes": 51
+        },
+        {
+          "source": "material/core/config/global.js",
+          "bytes": 38
+        },
+        {
+          "source": "material/elements/lifecycle.js",
+          "bytes": 24
+        },
+        {
+          "source": "material/core/compose/features/constants.js",
+          "bytes": 18
+        },
+        {
+          "source": "material/core/config.js",
+          "bytes": 9
+        }
+      ]
+    },
+    {
+      "file": "assets/progress-CDMGzypQ.js",
+      "type": "js",
+      "initial": false,
+      "raw": 17574,
+      "gzip": 6695,
+      "brotli": 6070,
+      "imports": [
+        "assets/index-DG5Dvw5m.js"
+      ],
+      "dynamicImports": [],
+      "modules": [
+        {
+          "source": "material/components/progress/features/canvas.js",
+          "renderedLength": 9815
+        },
+        {
+          "source": "material/components/progress/api.js",
+          "renderedLength": 4775
+        },
+        {
+          "source": "material/components/progress/config.js",
+          "renderedLength": 3641
+        },
+        {
+          "source": "material/components/progress/features/linear.js",
+          "renderedLength": 3506
+        },
+        {
+          "source": "material/components/progress/features/motion.js",
+          "renderedLength": 3374
+        },
+        {
+          "source": "material/components/progress/features/circular.js",
+          "renderedLength": 2742
+        },
+        {
+          "source": "material/components/progress/constants.js",
+          "renderedLength": 2215
+        },
+        {
+          "source": "material/core/utils/theme.js",
+          "renderedLength": 1966
+        },
+        {
+          "source": "material/core/canvas/resize.js",
+          "renderedLength": 1424
+        },
+        {
+          "source": "material/components/progress/features/state.js",
+          "renderedLength": 1371
+        },
+        {
+          "source": "material/components/progress/features/colors.js",
+          "renderedLength": 1195
+        },
+        {
+          "source": "material/components/progress/progress.js",
+          "renderedLength": 585
+        }
+      ],
+      "mapped": [
+        {
+          "source": "material/components/progress/features/canvas.js",
+          "bytes": 3932
+        },
+        {
+          "source": "material/components/progress/api.js",
+          "bytes": 2648
+        },
+        {
+          "source": "material/components/progress/config.js",
+          "bytes": 1982
+        },
+        {
+          "source": "material/components/progress/features/linear.js",
+          "bytes": 1635
+        },
+        {
+          "source": "material/components/progress/features/motion.js",
+          "bytes": 1544
+        },
+        {
+          "source": "material/components/progress/constants.js",
+          "bytes": 1538
+        },
+        {
+          "source": "material/components/progress/features/circular.js",
+          "bytes": 1114
+        },
+        {
+          "source": "material/core/utils/theme.js",
+          "bytes": 963
+        },
+        {
+          "source": "material/components/progress/features/state.js",
+          "bytes": 707
+        },
+        {
+          "source": "material/core/canvas/resize.js",
+          "bytes": 655
+        },
+        {
+          "source": "material/components/progress/features/colors.js",
+          "bytes": 514
+        },
+        {
+          "source": "material/components/progress/progress.js",
+          "bytes": 230
+        },
+        {
+          "source": "[unmapped]",
+          "bytes": 112
+        }
+      ]
+    },
+    {
+      "file": "assets/index-BE1NPc0k.css",
+      "type": "css",
+      "initial": true,
+      "raw": 22537,
+      "gzip": 2853,
+      "brotli": 2285,
+      "imports": [],
+      "dynamicImports": [],
+      "modules": [],
+      "mapped": []
+    }
+  ]
+}

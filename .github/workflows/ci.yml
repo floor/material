@@ -338,16 +338,61 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           bun run catalogue:identity:check
 
+  # Tooling-only comparators. Dependencies and builds never enter the published package.
+  comparators:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        adapter: [material-factories, material-elements, material-web, m3e, beercss, micl]
+    name: comparator (${{ matrix.adapter }})
+    env:
+      COMPARATOR_ADAPTER: ${{ matrix.adapter }}
+      COMPARATOR_REVIEW_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22.23.3"
+      - name: Install locked comparator tooling (CI only)
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
+          scripts/fixtures/comparators/node_modules/.bin/playwright install --with-deps chromium
+      - name: Rendered fixture and per-asset comparison
+        timeout-minutes: 10
+        run: bun run comparators:check
+      - name: Comparator evidence (including failed setup)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: comparators-${{ matrix.adapter }}
+          path: |
+            analysis/comparators
+            scripts/fixtures/comparators/package-lock.json
+          retention-days: 7
+          if-no-files-found: error
+
   # The status the main ruleset requires: green only when every job above is.
   check:
     if: always()
-    needs: [static, tests, build, package, browser, identity]
+    needs: [static, tests, build, package, browser, identity, comparators]
     runs-on: ubuntu-24.04
     steps:
       - name: Every job passed
         run: |
-          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }}'
+          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }}'
           [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
             && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.package.result }}' = success ] \
             && [ '${{ needs.browser.result }}' = success ] \
-            && [ '${{ needs.identity.result }}' = success ]
+            && [ '${{ needs.identity.result }}' = success ] \
+            && [ '${{ needs.comparators.result }}' = success ]

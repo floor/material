@@ -1,0 +1,372 @@
+{
+  "name": "button-material-web",
+  "measuredAt": "2026-11-09T17:51:51.573Z",
+  "node": "v26.8.1",
+  "material": "3.10.1",
+  "commit": "a99486250a38f94905ebd138488cafdb1634cf3d",
+  "ciRun": 42660160103,
+  "vite": "8.2.2",
+  "materialWeb": "2.5.0",
+  "initial": {
+    "raw": 46379,
+    "gzip": 13667,
+    "brotli": 12285
+  },
+  "lazy": {
+    "raw": 0,
+    "gzip": 0,
+    "brotli": 0
+  },
+  "initialJS": {
+    "raw": 46379,
+    "gzip": 13667,
+    "brotli": 12285
+  },
+  "initialCSS": {
+    "raw": 0,
+    "gzip": 0,
+    "brotli": 0
+  },
+  "directInitial": [
+    "assets/index-Bm3HreUR.js"
+  ],
+  "staticClosure": [
+    "assets/index-Bm3HreUR.js"
+  ],
+  "files": [
+    {
+      "file": "assets/index-Bm3HreUR.js",
+      "type": "js",
+      "initial": true,
+      "raw": 46379,
+      "gzip": 13667,
+      "brotli": 12285,
+      "imports": [],
+      "dynamicImports": [],
+      "modules": [
+        {
+          "source": "lit-html/lit-html.js",
+          "renderedLength": 9467
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple.js",
+          "renderedLength": 7929
+        },
+        {
+          "source": "@lit/reactive-element/reactive-element.js",
+          "renderedLength": 7722
+        },
+        {
+          "source": "@material/web/button/internal/filled-styles.cssresult.js",
+          "renderedLength": 4495
+        },
+        {
+          "source": "@material/web/button/internal/shared-styles.cssresult.js",
+          "renderedLength": 4168
+        },
+        {
+          "source": "@material/web/button/internal/button.js",
+          "renderedLength": 3437
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring-styles.cssresult.js",
+          "renderedLength": 2806
+        },
+        {
+          "source": "@material/web/internal/aria/delegate.js",
+          "renderedLength": 2633
+        },
+        {
+          "source": "@material/web/internal/events/dispatch-hooks.js",
+          "renderedLength": 1909
+        },
+        {
+          "source": "@lit/reactive-element/css-tag.js",
+          "renderedLength": 1810
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring.js",
+          "renderedLength": 1750
+        },
+        {
+          "source": "@material/web/internal/controller/attachable-controller.js",
+          "renderedLength": 1664
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-associated.js",
+          "renderedLength": 1566
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-submitter.js",
+          "renderedLength": 1402
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation-styles.cssresult.js",
+          "renderedLength": 1244
+        },
+        {
+          "source": "@lit/reactive-element/decorators/property.js",
+          "renderedLength": 1174
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple-styles.cssresult.js",
+          "renderedLength": 1171
+        },
+        {
+          "source": "@material/web/internal/aria/aria.js",
+          "renderedLength": 1036
+        },
+        {
+          "source": "lit-html/directives/class-map.js",
+          "renderedLength": 1004
+        },
+        {
+          "source": "lit-element/lit-element.js",
+          "renderedLength": 956
+        },
+        {
+          "source": "@material/web/internal/events/form-label-activation.js",
+          "renderedLength": 842
+        },
+        {
+          "source": "@material/web/button/internal/shared-elevation-styles.cssresult.js",
+          "renderedLength": 814
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query.js",
+          "renderedLength": 646
+        },
+        {
+          "source": "tslib/tslib.es6.mjs",
+          "renderedLength": 598
+        },
+        {
+          "source": "lit-html/directive.js",
+          "renderedLength": 481
+        },
+        {
+          "source": "@material/web/labs/behaviors/element-internals.js",
+          "renderedLength": 465
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-elements.js",
+          "renderedLength": 428
+        },
+        {
+          "source": "@material/web/internal/motion/animation.js",
+          "renderedLength": 396
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation.js",
+          "renderedLength": 296
+        },
+        {
+          "source": "@material/web/button/filled-button.js",
+          "renderedLength": 291
+        },
+        {
+          "source": "@material/web/focus/md-focus-ring.js",
+          "renderedLength": 246
+        },
+        {
+          "source": "@lit/reactive-element/decorators/custom-element.js",
+          "renderedLength": 245
+        },
+        {
+          "source": "@material/web/elevation/elevation.js",
+          "renderedLength": 245
+        },
+        {
+          "source": "@lit/reactive-element/decorators/base.js",
+          "renderedLength": 240
+        },
+        {
+          "source": "@material/web/button/internal/filled-button.js",
+          "renderedLength": 240
+        },
+        {
+          "source": "@material/web/ripple/ripple.js",
+          "renderedLength": 218
+        },
+        {
+          "source": "@lit/reactive-element/decorators/state.js",
+          "renderedLength": 173
+        },
+        {
+          "source": "lit/decorators.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/index.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "lit/directives/class-map.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/button-material-web/main.js",
+          "renderedLength": 0
+        },
+        {
+          "source": "cases/button-material-web/index.html",
+          "renderedLength": 0
+        }
+      ],
+      "mapped": [
+        {
+          "source": "lit-html/lit-html.js",
+          "bytes": 6987
+        },
+        {
+          "source": "@lit/reactive-element/reactive-element.js",
+          "bytes": 5872
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple.js",
+          "bytes": 4877
+        },
+        {
+          "source": "@material/web/button/internal/filled-styles.cssresult.js",
+          "bytes": 4320
+        },
+        {
+          "source": "@material/web/button/internal/shared-styles.cssresult.js",
+          "bytes": 4001
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring-styles.cssresult.js",
+          "bytes": 2624
+        },
+        {
+          "source": "@material/web/button/internal/button.js",
+          "bytes": 1819
+        },
+        {
+          "source": "@lit/reactive-element/css-tag.js",
+          "bytes": 1293
+        },
+        {
+          "source": "@material/web/focus/internal/focus-ring.js",
+          "bytes": 1129
+        },
+        {
+          "source": "@material/web/internal/aria/delegate.js",
+          "bytes": 1070
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation-styles.cssresult.js",
+          "bytes": 1060
+        },
+        {
+          "source": "@material/web/internal/controller/attachable-controller.js",
+          "bytes": 1013
+        },
+        {
+          "source": "@material/web/ripple/internal/ripple-styles.cssresult.js",
+          "bytes": 1000
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-associated.js",
+          "bytes": 849
+        },
+        {
+          "source": "@lit/reactive-element/decorators/property.js",
+          "bytes": 799
+        },
+        {
+          "source": "[unmapped]",
+          "bytes": 744
+        },
+        {
+          "source": "lit-element/lit-element.js",
+          "bytes": 734
+        },
+        {
+          "source": "lit-html/directives/class-map.js",
+          "bytes": 733
+        },
+        {
+          "source": "@material/web/internal/events/dispatch-hooks.js",
+          "bytes": 720
+        },
+        {
+          "source": "@material/web/labs/behaviors/form-submitter.js",
+          "bytes": 659
+        },
+        {
+          "source": "@material/web/internal/aria/aria.js",
+          "bytes": 641
+        },
+        {
+          "source": "@material/web/button/internal/shared-elevation-styles.cssresult.js",
+          "bytes": 623
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query.js",
+          "bytes": 357
+        },
+        {
+          "source": "@material/web/internal/events/form-label-activation.js",
+          "bytes": 336
+        },
+        {
+          "source": "tslib/tslib.es6.mjs",
+          "bytes": 325
+        },
+        {
+          "source": "lit-html/directive.js",
+          "bytes": 302
+        },
+        {
+          "source": "@material/web/internal/motion/animation.js",
+          "bytes": 268
+        },
+        {
+          "source": "@lit/reactive-element/decorators/query-assigned-elements.js",
+          "bytes": 237
+        },
+        {
+          "source": "@material/web/labs/behaviors/element-internals.js",
+          "bytes": 164
+        },
+        {
+          "source": "@material/web/elevation/internal/elevation.js",
+          "bytes": 159
+        },
+        {
+          "source": "@lit/reactive-element/decorators/base.js",
+          "bytes": 120
+        },
+        {
+          "source": "@material/web/button/internal/filled-button.js",
+          "bytes": 109
+        },
+        {
+          "source": "@lit/reactive-element/decorators/custom-element.js",
+          "bytes": 107
+        },
+        {
+          "source": "@material/web/button/filled-button.js",
+          "bytes": 80
+        },
+        {
+          "source": "@material/web/elevation/elevation.js",
+          "bytes": 66
+        },
+        {
+          "source": "@material/web/focus/md-focus-ring.js",
+          "bytes": 66
+        },
+        {
+          "source": "@material/web/ripple/ripple.js",
+          "bytes": 62
+        },
+        {
+          "source": "@lit/reactive-element/decorators/state.js",
+          "bytes": 54
+        }
+      ]
+    }
+  ]
+}
