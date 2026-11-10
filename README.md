@@ -809,6 +809,29 @@ The `icon` of the FAB menu and of its items is markup too. The menu opts out of 
 
 <!-- /markup-attributes -->
 
+## Icons
+
+A few components draw a Material Symbols glyph of their own. `setIcons` replaces those glyphs app-wide, by semantic name:
+
+| Name | Where it draws |
+|------|----------------|
+| `menu` | the navigation rail's menu button, while collapsed |
+| `menu-open` | the same button, while the rail is expanded |
+| `close` | the side sheet's close button |
+
+```typescript
+import { setIcons } from 'material';
+
+setIcons({
+  menu: '<svg viewBox="0 0 24 24"><path d="…"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="…"/></svg>',
+});
+```
+
+Call it once at start-up, before you create components or hydrate: a component reads the registry when it is created, so a later change reaches the next one, not the one on the page. Pass `null`, `undefined` or an empty string for a name to restore its built-in glyph.
+
+The registry is a fallback below the component's own options. The navigation rail's `expandIcon` and `collapseIcon` win over it. So does a value from `setComponentDefaults('navigation-rail', …)`. The same functions are at `material/core/icons`.
+
 ## Sizes
 
 What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
