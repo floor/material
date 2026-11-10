@@ -393,6 +393,8 @@
     "./elements/preupgrade/*.css": "./dist/elements/preupgrade/*.css",
     "./ssr": {
       "types": "./dist/ssr/index.d.ts",
+      "workerd": "./dist/ssr/index.js",
+      "worker": "./dist/ssr/index.js",
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/index.js",
       "default": "./dist/ssr/index.js"
@@ -481,24 +483,32 @@
     "./tokens/catalogue.schema.json": "./dist/tokens/catalogue.schema.json",
     "./ssr/react": {
       "types": "./dist/ssr/react.d.ts",
+      "workerd": "./dist/ssr/react.js",
+      "worker": "./dist/ssr/react.js",
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/react.js",
       "default": "./dist/ssr/react.js"
     },
     "./ssr/svelte": {
       "types": "./dist/ssr/svelte.d.ts",
+      "workerd": "./dist/ssr/svelte.js",
+      "worker": "./dist/ssr/svelte.js",
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/svelte.js",
       "default": "./dist/ssr/svelte.js"
     },
     "./ssr/vue": {
       "types": "./dist/ssr/vue.d.ts",
+      "workerd": "./dist/ssr/vue.js",
+      "worker": "./dist/ssr/vue.js",
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/vue.js",
       "default": "./dist/ssr/vue.js"
     },
     "./ssr/solid": {
       "types": "./dist/ssr/solid.d.ts",
+      "workerd": "./dist/ssr/solid.js",
+      "worker": "./dist/ssr/solid.js",
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/solid.js",
       "default": "./dist/ssr/solid.js"
@@ -535,6 +545,7 @@
     "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
+    "ssr-worker:check": "bun run scripts/check-ssr-worker.ts",
     "declaration-docs:check": "bun run scripts/check-declaration-docs.ts",
     "declaration-exports:check": "bun run scripts/check-declaration-exports.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
