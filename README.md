@@ -921,4 +921,8 @@ bar.addAction(actionButton).addFab(fabButton);
 document.body.append(bar.element);
 ```
 
-It retains the legacy facade's geometry, native Tab order, live actions/FAB containers and visibility/scroll contract using self-contained construction and docked-toolbar styles. Existing `createBottomAppBar`, element/framework registrations and SSR mappings retain their shipped implementation. The prototype has no new element or framework/SSR registration. Import its component and styles entries explicitly; the root entry does not export it. Admission requires CI proof of unchanged root bytes, compatibility and measured complete entry cost.
+It retains the legacy facade's geometry, native Tab order, live actions/FAB containers and visibility/scroll contract using self-contained construction and docked-toolbar styles.
+
+Existing `createBottomAppBar`, element/framework registrations and SSR mappings retain their shipped implementation. The prototype has no new element or framework/SSR registration.
+
+Import its component and styles entries explicitly; the root entry does not export it. Admission requires CI proof of unchanged root bytes, compatibility and measured complete entry cost.
