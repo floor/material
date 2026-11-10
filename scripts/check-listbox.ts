@@ -1006,6 +1006,65 @@ async function factoryBehaviour(page: Page): Promise<void> {
   await page.keyboard.press("Escape");
 }
 
+/** A real touch sequence. The smoke above dispatches pointer and click events by
+ * hand, which skips the browser's own decisions: a real tap focuses the tapped
+ * node between pointerdown and click, and a pan cancels the gesture. */
+async function touchBehaviour(page: Page): Promise<void> {
+  await mount(page, "listbox");
+  await page.locator("#control").tap();
+  await waitVisible(page);
+  assert.equal((await state(page)).attrs.expanded, "true", "B: a real touch tap opens the control");
+  assert.equal((await state(page)).attrs.focus, true, "B: the tap leaves focus on the control");
+  await page.locator('[role="option"]', { hasText: "Cherry" }).tap();
+  const tapped = await state(page);
+  assert.equal(tapped.text, "Cherry", "B: a real touch tap on a row selects it");
+  assert.equal(tapped.attrs.expanded, "false", "B: the tapped choice closes the popup");
+  assert.deepEqual(tapped.selected, ["Cherry"], "B: the tapped row is selected");
+  assert.deepEqual(tapped.events.filter(event => event.type === "change"),
+    [{ type: "change", value: "cherry", previousValue: null, option: "Cherry" }], "B: the tap emits one change");
+  ok("B: a real touch tap selects and closes");
+
+  // A pan over a longer list scrolls it. The browser cancels the gesture when
+  // the scroll takes over, so the pan reaches no pointerup and chooses nothing.
+  await page.setViewportSize({ width: 900, height: 400 });
+  await mount(page, "listbox", {
+    options: Array.from({ length: 30 }, (_, index) => ({ id: `item-${index}`, text: `Item ${index}` })),
+  });
+  await page.locator("#control").tap();
+  await waitVisible(page);
+  const before = await page.evaluate(() => {
+    const popup = document.querySelector('[role="listbox"]') as HTMLElement;
+    const rect = popup.getBoundingClientRect();
+    return { scrollTop: popup.scrollTop, top: rect.top, left: rect.left, height: rect.height };
+  });
+  assert.ok(before.height < 400, `B: the long list is bounded by the viewport (${before.height}px)`);
+  const client = await page.context().newCDPSession(page);
+  const x = Math.round(before.left + 100);
+  const y = Math.round(before.top + before.height - 40);
+  await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  for (const delta of [20, 40, 60, 80]) {
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y - delta }] });
+  }
+  await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await client.detach();
+  const panned = await page.evaluate(() => {
+    const popup = document.querySelector('[role="listbox"]') as HTMLElement;
+    const view = window as unknown as { __events: { type: string }[] };
+    return {
+      scrollTop: popup.scrollTop,
+      shown: popup.matches(":popover-open"),
+      text: document.getElementById("control")!.textContent,
+      events: view.__events.map(event => event.type),
+    };
+  });
+  await page.setViewportSize({ width: 900, height: 600 });
+  assert.ok(panned.scrollTop > before.scrollTop, `B: a touch pan scrolls the list (${before.scrollTop} to ${panned.scrollTop})`);
+  assert.equal(panned.shown, true, "B: the pan leaves the popup open");
+  assert.equal(panned.text, "Choose fruit", "B: the pan commits nothing");
+  assert.deepEqual(panned.events, ["open"], "B: the pan emits no change");
+  ok("B: a touch pan scrolls without choosing");
+}
+
 async function chromiumBehaviour(page: Page): Promise<void> {
   await sharedBehaviour(page, "menu");
   await menuDismissal(page);
@@ -1191,6 +1250,18 @@ try {
   await chromiumPage.page.addScriptTag({ content: HARNESS });
   await chromiumBehaviour(chromiumPage.page);
   await chromiumPage.page.close();
+
+  // The real tap and pan run in a touch context of the same engine.
+  const touchContext = await chromiumPage.browser.newContext({ viewport: { width: 900, height: 600 }, hasTouch: true });
+  const touchPage = await touchContext.newPage();
+  await touchPage.setContent("<!doctype html><html><body></body></html>");
+  await touchPage.addStyleTag({ content: CONTROL_CSS });
+  await touchPage.addStyleTag({ content: await cssText("base") });
+  await touchPage.addStyleTag({ content: await cssText("listbox") });
+  await touchPage.addScriptTag({ content: builtB.text });
+  await touchPage.addScriptTag({ content: HARNESS });
+  await touchBehaviour(touchPage);
+  await touchContext.close();
 
   const engines: [BrowserType, string][] = [[firefox, "firefox"], [webkit, "webkit"]];
   for (const [engine, name] of engines) {

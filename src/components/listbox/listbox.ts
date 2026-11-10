@@ -475,8 +475,23 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     return row ? rows.indexOf(row as HTMLElement) : -1;
   };
   const onPointerDown = (event: PointerEvent): void => {
-    // Keep the control focused: a mouse press on a plain row would move focus
-    if (event.pointerType === "mouse") event.preventDefault();
+    // Keep the control focused: a press on a plain row would move focus off it
+    // for every pointer type, and the control's focusout would close the popup
+    // before the choice lands. Canceling also suppresses the compatibility
+    // mouse events a touch tap would follow with, so touch and pen complete on
+    // the pointerup below; a pan takes the gesture over with pointercancel and
+    // commits nothing
+    event.preventDefault();
+  };
+  const onPointerUp = (event: PointerEvent): void => {
+    // Touch and pen select here: after the canceled pointerdown there is no
+    // compatibility mousedown, and the row's click is not guaranteed to land
+    if (event.pointerType === "mouse") return;
+    const index = rowAt(event);
+    if (onlyEnabled(index)) {
+      activeIndex = index;
+      commit(event);
+    }
   };
   const onPointerMove = (event: PointerEvent): void => {
     const index = rowAt(event);
@@ -580,6 +595,7 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     bind(bound, element, "keydown", onKeyDown as EventListener);
     bind(bound, element, "click", onControlClick as EventListener);
     bind(bound, popup, "pointerdown", onPointerDown as EventListener);
+    bind(bound, popup, "pointerup", onPointerUp as EventListener);
     bind(bound, popup, "pointermove", onPointerMove as EventListener);
     bind(bound, popup, "click", onClick as EventListener);
     render();
