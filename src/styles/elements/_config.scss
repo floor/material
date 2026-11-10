@@ -14,7 +14,8 @@
 // or, at runtime, use `preupgradeStyles('x')` from `material/elements/preupgrade`.
 // =============================================================================
 
-$tag-prefix: 'm' !default;
+@forward 'prefix' show $tag-prefix;
+@use 'prefix' as *;
 
 /** The element's tag: `tag('button')` is `m-button`. */
 @function tag($name) {

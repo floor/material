@@ -236,7 +236,7 @@ For the full stylesheet, use this entry instead:
 | `preference` | The system contrast preference only |
 | `none` | Standard roles only; no contrast attributes or preference rules |
 
-Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Other Sass configuration remains unsupported. Theme with CSS custom properties.
+Configure the entry before loading any other material theme modules. The setting applies to every theme loaded in that Sass compilation, including standalone themes loaded afterward. This option controls the Sass sources; prebuilt CSS imports keep their existing behavior. Theme with CSS custom properties.
 
 Material describes [three contrast levels](https://m3.material.io/styles/color/system/how-the-system-works) to accommodate different vision needs. Its [color contrast guidance](https://m3.material.io/foundations/designing/color-contrast) explains the role of contrast in readability. Choosing `none` keeps standard colors but removes responses to both explicit contrast choices and the system preference.
 
@@ -249,6 +249,33 @@ The elements' pre-upgrade rules are a third Sass entry. Until its script defines
 ```
 
 The prefix defaults to `m`. The build emits the same rules, at the default prefix, as `material/elements/preupgrade.css`.
+
+When an application compiles several Sass entries, configure the shared gateway first:
+
+```scss
+@use "material/src/styles/config" with (
+  $contrast-emit: preference,
+  $tag-prefix: "app",
+  $direction-arms: true
+);
+@use "material/src/styles/themes/ocean";
+@use "material/src/styles/main";
+@use "material/src/styles/elements";
+```
+
+The gateway emits zero CSS. Its five supported switches are:
+
+| Switch | Default | Effect |
+|--------|---------|--------|
+| `$contrast-emit` | `all` | Chooses the contrast families above |
+| `$tag-prefix` | `"m"` | Sets the undefined custom-element tag prefix |
+| `$direction-arms` | `false` | Compiles physical direction arms for a bundler's CSS pipeline when truthy |
+| `$typescale-tokens` | `false` | Boolean configuration reserved for opt-in typography emission; currently stores the value only |
+| `$spring-tokens` | `false` | Boolean configuration reserved for opt-in spring emission; currently stores the value only |
+
+The two reserved switches are also configurable directly on the full stylesheet or elements entry. They do not change CSS in this release. Token maps are not a supported configuration surface; use CSS custom properties for token values.
+
+Sass [configures a module on its first load](https://sass-lang.com/documentation/at-rules/use/#configuration). Put the gateway before every other material import, including selective sheets. Then load the other entries without `with (...)`. Configuring both the gateway and another entry with `with (...)`, or loading a component before configuring the gateway, produces Sass's standard “already loaded” error. The direct contrast and tag-prefix examples above continue to work when used on their own.
 
 ### Themes
 
