@@ -111,4 +111,60 @@ describe("catalogue identity gate", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("a removed export key fails", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const base = pack(root, "base", defaults);
+      const branch = pack(root, "branch", {
+        ...defaults,
+        "package.json": manifest({ exports: { "./other": "./other.js" } }),
+      });
+      const gate = runGate(branch, base);
+      expect(gate.code).toBe(1);
+      expect(gate.out).toContain('export key . was removed');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a changed field outside the allowlist fails (type, sideEffects, added field)", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const base = pack(root, "base", {
+        ...defaults,
+        "package.json": manifest({ type: "module", sideEffects: ["**/*.css"] }),
+      });
+      const type = pack(root, "type", { ...defaults, "package.json": manifest({ type: "commonjs", sideEffects: ["**/*.css"] }) });
+      const sideEffects = pack(root, "effects", { ...defaults, "package.json": manifest({ type: "module", sideEffects: false }) });
+      const added = pack(root, "added", { ...defaults, "package.json": manifest({ type: "module", sideEffects: ["**/*.css"], browser: "./browser.js" }) });
+      expect(runGate(type, base).out).toContain("package.json field type changed");
+      expect(runGate(sideEffects, base).out).toContain("package.json field sideEffects changed");
+      expect(runGate(added, base).out).toContain("package.json field browser was added");
+      expect(runGate(type, base).code).toBe(1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("scripts: catalogue gates may be added, nothing else may move", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const withScript = { ...defaults, "package.json": manifest({ scripts: { build: "bun run build" } }) };
+      const base = pack(root, "base", withScript);
+      const addedGate = pack(root, "gate", {
+        ...withScript,
+        "package.json": manifest({ scripts: { build: "bun run build", "tokens:catalogue:check": "bun run scripts/check-token-catalogue.ts" } }),
+      });
+      expect(runGate(addedGate, base).code).toBe(0);
+      const changed = pack(root, "changed", { ...withScript, "package.json": manifest({ scripts: { build: "bun run x" } }) });
+      const removed = pack(root, "removed", { ...withScript, "package.json": manifest({ scripts: {} }) });
+      const foreign = pack(root, "foreign", { ...withScript, "package.json": manifest({ scripts: { build: "bun run build", lint: "eslint" } }) });
+      expect(runGate(changed, base).out).toContain("script build changed");
+      expect(runGate(removed, base).out).toContain("script build was removed");
+      expect(runGate(foreign, base).out).toContain("new script lint outside the catalogue gate allowlist");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

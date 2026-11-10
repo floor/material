@@ -101,20 +101,52 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   }
 }
 
-// The allowlist is not a blank cheque: package.json may only add the new
-// export keys, and dist/tokens may only add. Versions compare equal on a
-// mid-cycle pull request and differ only across a release; either is fine,
-// which is why nothing here asserts the pair's versions.
+// The allowlist is not a blank cheque: package.json may only add the two
+// catalogue export keys and the script entries that run the catalogue gates.
+// Every other field — type, sideEffects, dependencies, main, existing export
+// targets, existing script entries, version — is frozen by name and value,
+// and nothing anywhere in it may be removed. Version compares equal because
+// the base is the main tip the merge was computed from: only this pull
+// request's own delta reaches the comparison, and a data-only change never
+// bumps a version.
 const branchPkg = JSON.parse(branch.get("package.json")!.toString()) as Record<string, unknown>;
 const mainPkg = JSON.parse(main.get("package.json")!.toString()) as Record<string, unknown>;
-const newKeys = Object.keys((branchPkg.exports ?? {}) as object).filter(key => !Object.hasOwn((mainPkg.exports ?? {}) as object, key));
-for (const key of newKeys) {
+const branchExports = (branchPkg.exports ?? {}) as Record<string, unknown>;
+const mainExports = (mainPkg.exports ?? {}) as Record<string, unknown>;
+for (const key of Object.keys(mainExports)) {
+  if (!Object.hasOwn(branchExports, key)) {
+    problems.push(`export key ${key} was removed: existing export targets are frozen by this change`);
+  } else if (JSON.stringify(branchExports[key]) !== JSON.stringify(mainExports[key])) {
+    problems.push(`export key ${key} changed: existing export targets are frozen by this change`);
+  }
+}
+for (const key of Object.keys(branchExports)) {
+  if (Object.hasOwn(mainExports, key)) continue;
   if (!/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
 }
-const changedKeys = Object.keys((branchPkg.exports ?? {}) as object)
-  .filter(key => Object.hasOwn((mainPkg.exports ?? {}) as object, key))
-  .filter(key => JSON.stringify((branchPkg.exports as Record<string, unknown>)[key]) !== JSON.stringify((mainPkg.exports as Record<string, unknown>)[key]));
-for (const key of changedKeys) problems.push(`export key ${key} changed: existing export targets are frozen by this change`);
+const branchScripts = (branchPkg.scripts ?? {}) as Record<string, unknown>;
+const mainScripts = (mainPkg.scripts ?? {}) as Record<string, unknown>;
+for (const key of Object.keys(mainScripts)) {
+  if (!Object.hasOwn(branchScripts, key)) {
+    problems.push(`script ${key} was removed: existing script entries are frozen by this change`);
+  } else if (JSON.stringify(branchScripts[key]) !== JSON.stringify(mainScripts[key])) {
+    problems.push(`script ${key} changed: existing script entries are frozen by this change`);
+  }
+}
+for (const key of Object.keys(branchScripts)) {
+  if (Object.hasOwn(mainScripts, key)) continue;
+  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key)) problems.push(`new script ${key} outside the catalogue gate allowlist`);
+}
+for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)])) {
+  if (key === "exports" || key === "scripts") continue;
+  if (!Object.hasOwn(branchPkg, key)) {
+    problems.push(`package.json field ${key} was removed: a data-only change may not`);
+  } else if (!Object.hasOwn(mainPkg, key)) {
+    problems.push(`package.json field ${key} was added: a data-only change may not, outside the catalogue export keys and scripts`);
+  } else if (JSON.stringify(mainPkg[key]) !== JSON.stringify(branchPkg[key])) {
+    problems.push(`package.json field ${key} changed: type, sideEffects and every field outside the catalogue additions are frozen by this change`);
+  }
+}
 for (const member of branch.keys()) {
   if (main.has(member) && member.startsWith("dist/tokens/")) problems.push(`dist/tokens/${member.slice("dist/tokens/".length)} exists in main: the catalogue data is not new there`);
 }
