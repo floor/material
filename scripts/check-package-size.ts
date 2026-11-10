@@ -307,7 +307,7 @@ try {
     // The entries the design ships rootless: public at their subpath only, kept
     // out of every barrel. The assertion below still holds each one out of the
     // root, so a stray root export fails rather than riding the exception.
-    const rootless = new Set(['listbox']);
+    const rootless = new Set(['listbox', 'bottom-app-bar-toolbar']);
     for (const key of componentKeys) {
       const name = key.slice(13); // remove "./components/"
       const module = await import(\`material/components/\${name}\`);
