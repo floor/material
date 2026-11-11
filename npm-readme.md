@@ -112,7 +112,9 @@ The framework components render the elements, load their CSS and register each o
 
 `renderElement` from `material/ssr` renders an element to declarative shadow DOM. Each framework has a bridge, such as `material/ssr/react`, that makes its components emit the same roots and hydrate.
 
-Node and Bun are supported; worker and edge runtimes are not supported in `material` 3.0.0. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
+Node and Bun use the server entries. Under the `workerd` and `worker` export conditions, the SSR entry and its four bridges select those same server entries ahead of browser; enabling `worker` selects server code even for a client worker. Browser-only builds keep the safe-to-import stub, whose retained `renderElement` call throws "material/ssr is server-only".
+
+Wrangler selects `workerd`. For Vite webworker SSR, set `ssr.target: "webworker"` and `ssr.noExternal: ["material"]`; also set `ssr.resolve.conditions: ["workerd", "worker", "browser"]` so default webworker browser conditions do not select the stub. CI checks the packed package and four framework renders in pinned workerd without Node compatibility. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
 
 ## Themes
 

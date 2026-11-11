@@ -18,6 +18,7 @@ const COMMANDS = [
   // build when no catalogue input changed)
   "build", "catalogue:identity:check",
   "comparators:check",
+  "ssr-worker:check",
   // the browser checks
   "elements:check:a", "elements:check:b", "shadow-styles:check",
   "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
