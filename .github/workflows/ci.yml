@@ -250,14 +250,18 @@ jobs:
       - uses: ./.github/actions/browsers
         with:
           browsers: ${{ matrix.browsers }}
-      - name: Pinned green baseline sources for the opt-in bar prototype
+      # The prototype's invariants are relative to the revision this run
+      # changes: a pull request's base, or the parent a push lands on. The
+      # nightly run has neither, so it falls back to the checked-out commit and
+      # tests that revision against itself.
+      - name: Base revision for the opt-in bar prototype
         if: matrix.group == 'bottom-app-bar-toolbar'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 17612ca276f7e46db7fe948441174402ff795688
+          ref: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
           path: .prototype-baseline
           persist-credentials: false
-      - name: Build the pinned baseline fixture independently
+      - name: Build the baseline fixture independently
         if: matrix.group == 'bottom-app-bar-toolbar'
         working-directory: .prototype-baseline
         # Fixture setup uses its own pinned lock and sources. Cross-run dist
@@ -274,6 +278,10 @@ jobs:
         # end, so the last line before a timeout names the one that hung. No
         # retry: a hang stays a failure.
         timeout-minutes: 8
+        env:
+          # The prototype check derives its receipt from the revision this run
+          # changes, the same one the baseline step checks out.
+          PROTOTYPE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
         run: |
           for script in ${{ matrix.checks }}; do
             start=$SECONDS
