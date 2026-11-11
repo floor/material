@@ -17,6 +17,42 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-11-11
+
+New opt-in entries for a lean selection popup and a docked-toolbar bottom app bar, the icon registry in more components, and server rendering on worker runtimes.
+
+### Added
+
+- **A lean selection popup ([#362](https://github.com/floor/material/pull/362)).** The opt-in `material/components/listbox` and `material/styles/listbox` entries provide a synchronous single-selection popup and its optional stylesheet. The control follows the APG select-only combobox pattern, with flat text options, separate active and committed state, keyboard/typeahead interaction, disabled options and top-layer placement. Import is SSR-safe; construction is client-only.
+- **More dismissal controls use the application close icon ([#367](https://github.com/floor/material/pull/367)).** Dialog close buttons, FAB-menu close controls, input-chip remove controls and filter-chip non-menu trailing actions read the existing `close` icon-registry key when created. Existing built-in drawings, local icon options and chip setter precedence are preserved. Later registry changes affect new instances; clearing a chip's trailing icon restores its captured fallback.
+- **An opt-in bottom app bar built on the docked toolbar ([#371](https://github.com/floor/material/pull/371)).** `material/components/bottom-app-bar-toolbar` and `material/styles/bottom-app-bar-toolbar` provide a separate factory and its compatibility styles. The legacy bottom app bar remains unchanged; applications explicitly import the new component and styles.
+- **Worker export conditions for the SSR entries ([#379](https://github.com/floor/material/pull/379)).** The five SSR subpath entries resolve to their server builds under the `workerd` and `worker` export conditions, ahead of `browser`, so a server rendered in a worker loads the real renderer instead of the browser stub. Ordinary Node and browser resolution are unchanged. CI exercises the packed package on a real workerd runtime, including the four framework bridges and their render rollback behavior.
+
+### Changed
+
+- **Documentation for the opt-in bottom app bar ([#376](https://github.com/floor/material/pull/376)).** README, npm README and MIGRATING now document the `material/components/bottom-app-bar-toolbar` and `material/styles/bottom-app-bar-toolbar` entries. Documentation only; no size change.
+- **A stable CI baseline for the bottom app bar prototype check ([#378](https://github.com/floor/material/pull/378)).** The browser check now builds its baseline from the revision the workflow run is based on and asserts only its own graph-isolation and styled-parity invariants, instead of pinning a revision and a measured byte count. Tooling only; no package change.
+
+### Size
+
+- Raise the unpacked npm package cap from **5,119,000 B to 5,179,000 B** for the additive selection-popup entries, by owner decision on **2026-11-10**. The entries add **28,235 B unpacked and six files**, with root JavaScript unchanged at **131,091 B gzip**, against the preceding merged main checkpoint. Merged at [`17612ca2`](https://github.com/floor/material/commit/17612ca276f7e46db7fe948441174402ff795688); confirmed by the [green push CI package job](https://github.com/floor/material/actions/runs/42899828774/job/130123081776) against [parent main](https://github.com/floor/material/actions/runs/42894840574/job/130105710293). The cap is the approved ceiling, not a measured release-package size. No other budget change is included in this release.
+- **Selection-popup consumer:** the fully styled replacement fixture falls from **22,150 B to 7,978 B initial JS+CSS gzip**, saving **14,172 B (64.0%)**. Both fixtures include base and theme styles. Keeping the eager menu and adding the new factory costs **3,193 B additional initial JS gzip**. Source: [green push CI listbox check](https://github.com/floor/material/actions/runs/42899828774/job/130123082249).
+- **Icon registry expansion and internal trim ([#367](https://github.com/floor/material/pull/367)):** together they reduce root JavaScript by **7 B gzip**, from **131,098 B to 131,091 B**, after the trim recovers **49 B**. No size ceiling changes. Merged at [`88eb8ce8`](https://github.com/floor/material/commit/88eb8ce8a84fc249f9e890bbb8a9ac8c510e57c9); the [green push CI package job](https://github.com/floor/material/actions/runs/42894840574/job/130105710293) confirms the root measurement.
+- **Opt-in bottom app bar ([#371](https://github.com/floor/material/pull/371)):** the retained public entry is **4,386 B gzip**. The standalone executable page with base and complete compatibility styles is **11,157 B initial JS+CSS gzip**, versus **7,358 B** for the styled legacy bar (**+3,799 B**). These page measurements use a separate ruler from the retained entry graph. The package adds **1,652 B compressed / 7,158 B unpacked / five files** against main `17612ca2`; root JavaScript remains byte-identical at **131,091 B gzip**. Sources: [green push CI browser measurements](https://github.com/floor/material/actions/runs/42907038122/job/130148080534) and [package job](https://github.com/floor/material/actions/runs/42907038122/job/130148080249), on merged main [`3e2e8437`](https://github.com/floor/material/commit/3e2e8437284e336c3efa4bfcdd2ab0a7ed840d4f).
+
+Measurements at main `e7fe9c01`, from the [push-to-main CI package job](https://github.com/floor/material/actions/runs/42979168723/job/130385669805) with all 26 jobs green:
+
+| Measurement | Bytes / count |
+| --- | ---: |
+| Root JavaScript, gzip | 131,091 B |
+| Every-component scenario, gzip | 127,958 B |
+| Full stylesheet scenario, gzip | 59,595 B |
+| npm package, compressed | 903,002 B |
+| npm package, unpacked | 5,146,488 B |
+| Package files | 1,272 |
+
+These are push-to-main integration measurements, before the release version bump; the release CI and published artifact carry the final totals.
+
 ## [3.13.1] - 2026-11-10
 
 Loading buttons report their state immediately, and carousel slides keep their names.
@@ -7195,7 +7231,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.13.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.14.0...HEAD
+[3.14.0]: https://github.com/floor/material/compare/v3.13.1...v3.14.0
 [3.13.1]: https://github.com/floor/material/compare/v3.13.0...v3.13.1
 [3.10.1]: https://github.com/floor/material/compare/v3.10.0...v3.10.1
 [3.9.0]: https://github.com/floor/material/compare/v3.8.2...v3.9.0
