@@ -317,6 +317,28 @@ Material describes [three contrast levels](https://m3.material.io/styles/color/s
 
 The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
 
+Spring durations and easings can be inherited custom properties. Prebuilt stylesheets keep the literal values. Set `$spring-tokens` on the public config gateway before any component sheet. That gateway forwards the shared flag on `abstract/emit`. Then emit the defaults where the application wants them:
+
+```scss
+@use "material/src/styles/config" with ($spring-tokens: true);
+@use "material/src/styles/motion" as motion;
+@use "material/src/styles/components/switch";
+
+:root {
+  @include motion.spring-tokens;
+}
+```
+
+`motion.spring-tokens` emits thirteen `--mtrl-sys-motion-spring-*` properties from the library motion map. They include `--mtrl-sys-motion-spring-fast-spatial-clamped-easing`.
+
+Component CSS reads those properties and keeps today's literal as the fallback. `$spring-tokens: false`, or leaving it unset, leaves that CSS unchanged. Loading `motion` by itself emits no CSS.
+
+[Motion physics](https://m3.material.io/styles/motion/overview/how-it-works) separates spatial motion from effects; these names follow that split, and the numbers stay the library's.
+
+This option configures CSS timing, not the JavaScript that schedules component state. Four deadlines stay literal: the navigation rail removes its switching state after 450ms, the slider removes its settling state after 450ms, a snackbar leaves on its opacity transition or after 425ms, and the FAB menu's exit reads the runtime's 425ms value. A spring duration longer than those bounds is cut off there; treat such an override as unsupported until a lifecycle design moves the deadlines. The rail's label swap delay and the FAB menu's icon swap delay do follow their spring tokens, at half the default spatial duration and at 48 of the fast spatial 425ms.
+
+Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in. Inline SSR drops selectors whose classes are absent from the host, so a server-rendered slider does not carry the runtime's settling transition; linked SSR serves whole sheets and keeps it.
+
 The elements' pre-upgrade rules are a third Sass entry. Until its script defines it, an element is its server-rendered light DOM; these rules give the undefined host the box it will have once the shadow root arrives, scoped to `:not(:defined)`. Configure the tag prefix when the elements use another one:
 
 ```scss
@@ -346,7 +368,7 @@ The gateway emits zero CSS. Its five supported switches are:
 | `$tag-prefix` | `"m"` | Sets the undefined custom-element tag prefix |
 | `$direction-arms` | `false` | Compiles physical direction arms for a bundler's CSS pipeline when truthy |
 | `$typescale-tokens` | `false` | Enables role-token typography with the existing literal fallbacks |
-| `$spring-tokens` | `false` | Boolean configuration reserved for opt-in spring emission; currently stores the value only |
+| `$spring-tokens` | `false` | Enables inherited spring duration/easing references with the existing literal fallbacks |
 
 Both token switches are also configurable directly on the full stylesheet or elements entry. The spring switch currently stores configuration only; typography emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
 
