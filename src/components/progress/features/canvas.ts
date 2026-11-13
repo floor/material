@@ -32,7 +32,6 @@ export interface CanvasContext {
   ctx: CanvasRenderingContext2D;
   width: number;
   height: number;
-  pixelRatio: number;
 }
 
 interface BaseComponent {
@@ -95,13 +94,11 @@ export const getWaveAmplitude = (
 
 /** The container size of a circular indicator: 40dp flat, 48dp wavy */
 export const getCircularSize = (config: CanvasConfig, size = config.size): number => {
-  const fallback =
-    config.shape === PROGRESS_SHAPES.WAVY
-      ? PROGRESS_MEASUREMENTS.CIRCULAR.WAVE_SIZE
-      : PROGRESS_MEASUREMENTS.CIRCULAR.SIZE;
   return Math.max(
     config.minSize ?? PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
-    Math.min(size ?? fallback, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
+    Math.min(size ?? (config.shape === PROGRESS_SHAPES.WAVY
+      ? PROGRESS_MEASUREMENTS.CIRCULAR.WAVE_SIZE
+      : PROGRESS_MEASUREMENTS.CIRCULAR.SIZE), PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
   );
 };
 
@@ -186,7 +183,6 @@ export const withCanvas =
         : Math.max(component.element.getBoundingClientRect?.().width || component.element.offsetWidth || 0, 0);
       context.width = width;
       context.height = height;
-      context.pixelRatio = ratioOf();
       if (width <= 0 || height <= 0) return;
       // Border-box CSS pixels onto the bitmap. Display is the content box
       // (width 100%), the squash a border-box pixel width got from max-width.
@@ -197,7 +193,7 @@ export const withCanvas =
       if (typeof canvas.getContext !== "function") return false;
       const ctx = canvas.getContext("2d");
       if (!ctx) return false;
-      context = { canvas, ctx, width: 0, height: 0, pixelRatio: view?.devicePixelRatio || 1 };
+      context = { canvas, ctx, width: 0, height: 0 };
       measure();
       return true;
     };
