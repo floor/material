@@ -1,5 +1,5 @@
 // src/components/button/features/progress.ts
-import type { ProgressConfig, ProgressComponent, ProgressEvents } from "../../progress/types";
+import type { ProgressConfig, ProgressComponent, ProgressEvents, ProgressInternals } from "../../progress/types";
 import { addClass, removeClass } from "../../../core/dom";
 import { ButtonConfig, IconAPI } from "../types";
 
@@ -106,6 +106,9 @@ export const withProgress =
       if (!progressPromise) {
         progressPromise = createProgressLazy(progressConfig).then((p) => {
           progress = p;
+          // This drawing fills the icon slot; app canvas resets must not
+          // constrain only its width. The canvas is private to progress.
+          (p as ProgressComponent & ProgressInternals).canvas.style.maxWidth = "none";
 
           // Add button-specific class to the progress element
           addClass(progress.element, component.getClass("button__progress"));

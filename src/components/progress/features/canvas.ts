@@ -118,9 +118,6 @@ export const withCanvas =
     const canvas = document.createElement("canvas");
     canvas.className = `${component.getClass(PROGRESS_CLASSES.CONTAINER)}__canvas`;
     canvas.setAttribute("aria-hidden", "true");
-    // The host fixes the slot size. App canvas resets must not squeeze only
-    // the width of this explicitly sized drawing. Standalone CSS is unchanged.
-    if (config.minSize) canvas.style.maxWidth = "none";
     component.element.appendChild(canvas);
 
     let context: CanvasContext | null = null;
@@ -350,7 +347,6 @@ export const withCanvas =
       animatedValue = (component.state?.value as number) ?? animatedValue;
       if (!indeterminate) retargetAmplitude(animatedValue / max());
       startAnimation();
-      if (!needsAnimation()) draw(0);
     };
 
     component.setThickness = (thickness: ProgressThickness): void => {
@@ -374,7 +370,6 @@ export const withCanvas =
       }
       measure();
       startAnimation(animationTime);
-      if (!needsAnimation()) draw(0);
     };
 
     component.setSize = (size: number): void => {
@@ -399,7 +394,6 @@ export const withCanvas =
       component.element.removeAttribute("hidden");
       measure();
       startAnimation(animationTime);
-      if (!needsAnimation()) draw(0);
       return component;
     };
 
