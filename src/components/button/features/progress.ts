@@ -76,9 +76,12 @@ export const withProgress =
       typeof config.progress === "object" ? config.progress : {}
     ) as ProgressConfig & { on?: Partial<ProgressEvents> };
     const progressEventHandlers = on ?? {};
-    const progressConfig: ProgressConfig = {
+    // Private drawing floor for the existing 20px icon slot. Standalone
+    // progress retains its 24px floor; this is not a public progress option.
+    const progressConfig: ProgressConfig & { minSize: number } = {
       variant: "circular", size: 20, thickness: 2, indeterminate: true,
       ...restConfig,
+      minSize: 20,
     };
 
     // Progress will be created lazily

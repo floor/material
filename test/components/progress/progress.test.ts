@@ -93,6 +93,42 @@ beforeEach(() => { frames = []; document.body.innerHTML = ''; });
 afterEach(() => { frames = []; });
 
 describe('progress', () => {
+
+  test('standalone circular progress keeps its 24px floor at creation and setSize', () => {
+    for (const shape of ['flat', 'wavy'] as const) {
+      const progress = createProgress({ variant: 'circular', shape, size: 20 });
+      expect(progress.getSize()).toBe(24);
+      expect([progress.canvas.style.width, progress.canvas.style.height]).toEqual(['24px', '24px']);
+      expect(progress.canvas.style.maxWidth).toBe('');
+      progress.setSize(1);
+      expect(progress.getSize()).toBe(24);
+      expect([progress.canvas.width, progress.canvas.height]).toEqual([24, 24]);
+      progress.setSize(300);
+      expect(progress.getSize()).toBe(240);
+      progress.destroy();
+    }
+  });
+
+  test('the private button drawing floor applies at creation and setSize', () => {
+    for (const shape of ['flat', 'wavy'] as const) {
+      const config = { variant: 'circular' as const, shape, size: 20, minSize: 20 };
+      const progress = createProgress(config);
+      expect(progress.getSize()).toBe(20);
+      expect([progress.canvas.style.width, progress.canvas.style.height]).toEqual(['20px', '20px']);
+      expect([progress.canvas.width, progress.canvas.height]).toEqual([20, 20]);
+      expect(progress.canvas.style.maxWidth).toBe('none');
+      progress.setSize(1);
+      expect(progress.getSize()).toBe(20);
+      expect([progress.canvas.width, progress.canvas.height]).toEqual([20, 20]);
+      progress.setSize(32);
+      expect(progress.getSize()).toBe(32);
+      expect([progress.canvas.width, progress.canvas.height]).toEqual([32, 32]);
+      progress.setSize(300);
+      expect(progress.getSize()).toBe(240);
+      progress.destroy();
+    }
+  });
+
   test('is a labelled progressbar with a canvas and the value in its aria attributes', () => {
     const progress = createProgress({ value: 42, ariaLabel: 'Loading news article' });
     const el = progress.element;

@@ -277,6 +277,18 @@ describe('button', () => {
     button.destroy();
   });
 
+  test('flat and wavy button indicators draw at the existing 20px slot size', async () => {
+    for (const shape of ['flat', 'wavy'] as const) {
+      const button = mount({ text: 'Save', progress: { shape } });
+      expect(button.element.querySelector('canvas')).toBeNull();
+      await button.setLoading(true);
+      const canvas = button.element.querySelector('.mtrl-button__progress canvas') as HTMLCanvasElement;
+      expect([canvas.style.width, canvas.style.height]).toEqual(['20px', '20px']);
+      expect(canvas.style.maxWidth).toBe('none');
+      button.destroy();
+    }
+  });
+
   test('custom progress values and event handlers survive lazy initialization', async () => {
     let changes = 0;
     const progress = { size: 18, value: 30, indeterminate: false, on: { change: () => changes++ } };

@@ -3,7 +3,8 @@
 // The canvas, its size, and the clock. Sizes follow the Material 3 tokens: a
 // linear indicator is as tall as its track, or 10dp at the default thickness
 // when it waves; a circular one is 40dp, or 48dp when it waves, and can be
-// set anywhere from 24dp to 240dp.
+// set anywhere from 24dp to 240dp. The button supplies a private lower floor
+// for its existing 20px icon slot.
 
 import { ProgressConfig, ProgressThickness, ProgressShape } from "../types";
 import {
@@ -20,6 +21,11 @@ import { createColors } from "./colors";
 import { drawCircularProgress } from "./circular";
 import { drawLinearProgress } from "./linear";
 import { waveAmplitudeAt, waveAmplitudeTarget } from "./motion";
+
+/** Internal host sizing; absent from the public ProgressConfig. */
+interface CanvasConfig extends ProgressConfig {
+  minSize?: number;
+}
 
 export interface CanvasContext {
   canvas: HTMLCanvasElement;
@@ -88,14 +94,14 @@ export const getWaveAmplitude = (
     : PROGRESS_WAVE.LINEAR.AMPLITUDE * (strokeWidth / PROGRESS_THICKNESS.THIN);
 
 /** The container size of a circular indicator: 40dp flat, 48dp wavy */
-export const getCircularSize = (config: ProgressConfig): number => {
+export const getCircularSize = (config: CanvasConfig, size = config.size): number => {
   const fallback =
     config.shape === PROGRESS_SHAPES.WAVY
       ? PROGRESS_MEASUREMENTS.CIRCULAR.WAVE_SIZE
       : PROGRESS_MEASUREMENTS.CIRCULAR.SIZE;
   return Math.max(
-    PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
-    Math.min(config.size ?? fallback, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
+    config.minSize ?? PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
+    Math.min(size ?? fallback, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
   );
 };
 
@@ -107,7 +113,7 @@ export const getLinearHeight = (strokeWidth: number, isWavy: boolean): number =>
  * Adds the canvas, the drawing routine and the animation loop
  */
 export const withCanvas =
-  (config: ProgressConfig) =>
+  (config: CanvasConfig) =>
   <C extends BaseComponent>(component: C): C & CanvasComponent => {
     const isCircular = config.variant === PROGRESS_VARIANTS.CIRCULAR;
     const view = component.element.ownerDocument?.defaultView ?? null;
@@ -115,6 +121,9 @@ export const withCanvas =
     const canvas = document.createElement("canvas");
     canvas.className = `${component.getClass(PROGRESS_CLASSES.CONTAINER)}__canvas`;
     canvas.setAttribute("aria-hidden", "true");
+    // The host fixes the slot size. App canvas resets must not squeeze only
+    // the width of this explicitly sized drawing. Standalone CSS is unchanged.
+    if (config.minSize) canvas.style.maxWidth = "none";
     component.element.appendChild(canvas);
 
     let context: CanvasContext | null = null;
@@ -374,10 +383,7 @@ export const withCanvas =
 
     component.setSize = (size: number): void => {
       if (!isCircular) return;
-      currentSize = Math.max(
-        PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
-        Math.min(size, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
-      );
+      currentSize = getCircularSize(config, size);
       measure();
       draw();
     };
