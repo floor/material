@@ -107,10 +107,10 @@ export const withProgress =
           progress = p;
 
           // Add button-specific class to the progress element
-          addClass(progress.element, component.getClass("button__progress"));
+          addClass(p.element, component.getClass("button__progress"));
 
           // Initially hide progress
-          progress.element.style.display = "none";
+          p.element.style.display = "none";
 
           // Attach event handlers if any were provided
           for (const [event, handler] of Object.entries(on ?? {}) as
@@ -119,9 +119,9 @@ export const withProgress =
           }
 
           // Store progress reference
-          component.progress = progress;
+          component.progress = p;
 
-          return progress;
+          return p;
         });
       }
 
