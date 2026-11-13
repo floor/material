@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * FLO-584 rows for the opt-in spring tokens (feat/spring-tokens-opt-in).
+ * Rows for the opt-in spring tokens (feat/spring-tokens-opt-in).
  *
  * Computed transition-duration, off and on, including an ancestor override.
  * Web Animations longhands Chromium emits for a transition that actually
