@@ -335,9 +335,18 @@ Component CSS reads those properties and keeps today's literal as the fallback. 
 
 [Motion physics](https://m3.material.io/styles/motion/overview/how-it-works) separates spatial motion from effects; these names follow that split, and the numbers stay the library's.
 
-This option configures CSS timing, not the JavaScript that schedules component state. Four deadlines stay literal: the navigation rail removes its switching state after 450ms, the slider removes its settling state after 450ms, a snackbar leaves on its opacity transition or after 425ms, and the FAB menu's exit reads the runtime's 425ms value. A spring duration longer than those bounds is cut off there; treat such an override as unsupported until a lifecycle design moves the deadlines. The rail's label swap delay and the FAB menu's icon swap delay do follow their spring tokens, at half the default spatial duration and at 48 of the fast spatial 425ms.
+This option configures CSS timing, not the JavaScript that schedules component state. Four deadlines stay literal:
 
-Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in. Inline SSR drops selectors whose classes are absent from the host, so a server-rendered slider does not carry the runtime's settling transition; linked SSR serves whole sheets and keeps it.
+- the navigation rail removes its switching state after 450ms;
+- the slider removes its settling state after 450ms;
+- a snackbar leaves on its opacity transition or after 425ms;
+- the FAB menu's exit reads the runtime's 425ms value.
+
+A spring duration longer than those bounds is cut off there; treat such an override as unsupported until a lifecycle design moves the deadlines. The rail's label swap delay and the FAB menu's icon swap delay do follow their spring tokens.
+
+Custom elements use the same compiled sheets through the existing `registerStyles` call before they are defined. The default element stylesheet does not include the opt-in.
+
+Inline SSR drops selectors whose classes are absent from the host, so a server-rendered slider does not carry the runtime's settling transition. Linked SSR serves whole sheets and keeps it.
 
 The elements' pre-upgrade rules are a third Sass entry. Until its script defines it, an element is its server-rendered light DOM; these rules give the undefined host the box it will have once the shadow root arrives, scoped to `:not(:defined)`. Configure the tag prefix when the elements use another one:
 
