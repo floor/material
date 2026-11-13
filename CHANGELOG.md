@@ -17,6 +17,27 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.14.1] - 2026-11-13
+
+A busy button's progress circle fills its icon slot whatever page rules do to canvas widths.
+
+### Fixed
+
+- **A busy button draws its progress at the icon slot size ([#382](https://github.com/floor/material/pull/382)).** The circular canvas is drawn at the button's 20px icon slot instead of being clamped to the standalone 24px minimum and squeezed by an application rule such as `canvas { max-width: 100% }` into an oval. Host-sized button canvases ignore page max-width rules, and standalone progress keeps its 24px minimum. Buttons without loading keep their existing output.
+
+### Size
+
+Measurements after #382, from the [push-to-main CI package job](https://github.com/floor/material/actions/runs/43418071925/job/131861379593) with all 26 jobs green:
+
+| Measurement | Bytes / count |
+| --- | ---: |
+| Root JavaScript, gzip | 131,062 B |
+| Every-component scenario, gzip | 127,962 B |
+| Full stylesheet scenario, gzip | 59,596 B |
+| npm package, compressed | 903,058 B |
+| npm package, unpacked | 5,146,181 B |
+| Package files | 1,272 |
+
 ## [3.14.0] - 2026-11-11
 
 New opt-in entries for a lean selection popup and a docked-toolbar bottom app bar, the icon registry in more components, and server rendering on worker runtimes.
@@ -7231,7 +7252,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.14.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.14.1...HEAD
+[3.14.1]: https://github.com/floor/material/compare/v3.14.0...v3.14.1
 [3.14.0]: https://github.com/floor/material/compare/v3.13.1...v3.14.0
 [3.13.1]: https://github.com/floor/material/compare/v3.13.0...v3.13.1
 [3.10.1]: https://github.com/floor/material/compare/v3.10.0...v3.10.1
