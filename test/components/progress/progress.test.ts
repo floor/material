@@ -116,7 +116,7 @@ describe('progress', () => {
       expect(progress.getSize()).toBe(20);
       expect([progress.canvas.style.width, progress.canvas.style.height]).toEqual(['20px', '20px']);
       expect([progress.canvas.width, progress.canvas.height]).toEqual([20, 20]);
-      expect(progress.canvas.style.maxWidth).toBe('');
+      expect(progress.canvas.style.maxWidth).toBe('none');
       progress.setSize(1);
       expect(progress.getSize()).toBe(20);
       expect([progress.canvas.width, progress.canvas.height]).toEqual([20, 20]);

@@ -1,5 +1,5 @@
 // src/components/button/features/progress.ts
-import type { ProgressConfig, ProgressComponent, ProgressEvents, ProgressInternals } from "../../progress/types";
+import type { ProgressConfig, ProgressComponent, ProgressEvents } from "../../progress/types";
 import { addClass, removeClass } from "../../../core/dom";
 import { ButtonConfig, IconAPI } from "../types";
 
@@ -75,7 +75,6 @@ export const withProgress =
     const { on, ...restConfig } = (
       typeof config.progress === "object" ? config.progress : {}
     ) as ProgressConfig & { on?: Partial<ProgressEvents> };
-    const progressEventHandlers = on ?? {};
     // Private drawing floor for the existing 20px icon slot. Standalone
     // progress retains its 24px floor; this is not a public progress option.
     const progressConfig: ProgressConfig & { minSize: number } = {
@@ -106,9 +105,6 @@ export const withProgress =
       if (!progressPromise) {
         progressPromise = createProgressLazy(progressConfig).then((p) => {
           progress = p;
-          // This drawing fills the icon slot; app canvas resets must not
-          // constrain only its width. The canvas is private to progress.
-          (p as ProgressComponent & ProgressInternals).canvas.style.maxWidth = "none";
 
           // Add button-specific class to the progress element
           addClass(progress.element, component.getClass("button__progress"));
@@ -117,8 +113,8 @@ export const withProgress =
           progress.element.style.display = "none";
 
           // Attach event handlers if any were provided
-          for (const event of Object.keys(progressEventHandlers) as (keyof ProgressEvents)[]) {
-            const handler = progressEventHandlers[event];
+          for (const [event, handler] of Object.entries(on ?? {}) as
+            [keyof ProgressEvents, ProgressEvents[keyof ProgressEvents] | undefined][]) {
             if (handler) p.on(event, handler);
           }
 
@@ -153,30 +149,28 @@ export const withProgress =
     const showProgress = async (): Promise<C> => {
       const p = await ensureProgress();
 
-      if (p.element) {
-        // Ensure progress element is in the DOM
-        if (!component.element.contains(p.element)) {
-          const insertPoint = getProgressInsertionPoint();
-          if (insertPoint) {
-            component.element.insertBefore(p.element, insertPoint);
-          } else {
-            component.element.appendChild(p.element);
-          }
+      // Ensure progress element is in the DOM
+      if (!component.element.contains(p.element)) {
+        const insertPoint = getProgressInsertionPoint();
+        if (insertPoint) {
+          component.element.insertBefore(p.element, insertPoint);
+        } else {
+          component.element.appendChild(p.element);
         }
+      }
 
-        p.element.style.display = "";
-        addClass(
-          component.element,
-          `${component.getClass("button")}--progress`
-        );
+      p.element.style.display = "";
+      addClass(
+        component.element,
+        `${component.getClass("button")}--progress`
+      );
 
-        // Hide the icon if it exists
-        const iconElement = component.element.querySelector(
-          `.${component.getClass("button__icon")}`
-        );
-        if (iconElement instanceof HTMLElement) {
-          iconElement.style.display = "none";
-        }
+      // Hide the icon if it exists
+      const iconElement = component.element.querySelector(
+        `.${component.getClass("button__icon")}`
+      );
+      if (iconElement instanceof HTMLElement) {
+        iconElement.style.display = "none";
       }
       return component;
     };

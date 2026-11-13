@@ -118,6 +118,8 @@ export const withCanvas =
     const canvas = document.createElement("canvas");
     canvas.className = `${component.getClass(PROGRESS_CLASSES.CONTAINER)}__canvas`;
     canvas.setAttribute("aria-hidden", "true");
+    // A host-sized drawing must not be squeezed by app canvas width resets.
+    if (config.minSize) canvas.style.maxWidth = "none";
     component.element.appendChild(canvas);
 
     let context: CanvasContext | null = null;
