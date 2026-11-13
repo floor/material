@@ -24,8 +24,9 @@ $spatial: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial
 $spatial-colour: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-clamped-easing');
 $effects: v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing');
 // Where spring-fast-spatial crosses half its progress: the icon swaps there
-// (the Compose sample swaps it at checkedProgress 0.5)
-$swap: 48ms;
+// (the Compose sample swaps it at checkedProgress 0.5). Off, this is 48ms;
+// on, it is that same fraction of the fast-spatial duration.
+$swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
 
 .#{$component} {
   position: relative;

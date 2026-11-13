@@ -40,6 +40,7 @@ const CHECKOUT_ENTRIES = [
   "elements",
   "element-styles",
   "preupgrade",
+  "motion",
   // The M3 scheme variants, read by path: the themes entry forwards the twelve
   // built-in themes, not these, and md3.io loads them this way.
   ...VARIANTS.map(name => `themes/${name}`),
