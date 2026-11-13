@@ -9,6 +9,7 @@ import { build } from "vite";
 import { chromium, type Page } from "playwright";
 import { createPackageFixture } from "./package-fixture";
 import { filledSmallRoundCss } from "./button-style-profile";
+import type createButton from "../src/components/button";
 
 const fixture = await createPackageFixture();
 const scratch = await mkdtemp(resolve(".button-profile-"));
@@ -35,7 +36,7 @@ import createButton from 'material/components/button';
 const config={text:'Continue',variant:'filled',size:'s',shape:'round',progress:true};
 const button=createButton(config);button.element.id='button';document.body.append(button.element);
 const toggle=createButton({...config,text:'Selected',toggle:true});toggle.element.id='toggle';document.body.append(toggle.element);
-Object.assign(window,{button,toggle});
+Object.assign(window,{button,toggle,createButton});
 `;
 try {
   await mkdir(join(scratch, "node_modules"));
@@ -169,6 +170,52 @@ try {
         button.setVariant("outlined"); button.setSize("l"); button.setShape("square");
       });
       await compare(`mixed general setter contract, ${reverse ? "profile first" : "general first"}`);
+    }
+    // App resets commonly constrain canvases. The button's indicator must be
+    // drawn at its 20px icon slot, not squeezed from a 24px standalone canvas.
+    const progressSizing = [];
+    for (const [index, page] of pages.entries()) {
+      const rows = await page.evaluate(async () => {
+        const { createButton: makeButton } = window as unknown as { createButton: typeof createButton };
+        const reset = document.createElement("style");
+        reset.textContent = "canvas { max-width: 100% }";
+        document.head.append(reset);
+        const rows = [];
+        for (const shape of ["flat", "wavy"] as const) {
+          const button = makeButton({ text: "Save", progress: { shape },
+            icon: '<svg viewBox="0 0 24 24"><path d="M4 12h16"/></svg>' });
+          document.body.append(button.element);
+          const box = (el: Element) => {
+            const { width, height } = el.getBoundingClientRect();
+            return { width, height };
+          };
+          const before = box(button.element);
+          await button.setLoading!(true);
+          const slot = button.element.querySelector<HTMLElement>(".mtrl-button__progress")!;
+          const canvas = slot.querySelector("canvas")!;
+          await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+          const row = { shape, before, loading: box(button.element), slot: box(slot), canvas: box(canvas),
+            bitmap: { width: canvas.width, height: canvas.height }, ratio: devicePixelRatio,
+            maxWidth: getComputedStyle(canvas).maxWidth };
+          await button.setLoading!(false);
+          rows.push({ ...row, restored: box(button.element) });
+          button.destroy();
+        }
+        reset.remove();
+        return rows;
+      });
+      progressSizing.push({ page: [...output.keys()][index], rows });
+    }
+    report.progressSizing = progressSizing;
+    console.log(`Button progress sizing: ${JSON.stringify(progressSizing)}`);
+    for (const { page, rows } of progressSizing) for (const row of rows) {
+      const name = `${page}/${row.shape}`;
+      assert.deepEqual(row.slot, { width: 20, height: 20 }, `${name}: icon slot remains 20px`);
+      assert.deepEqual(row.canvas, row.slot, `${name}: canvas must match the square icon slot`);
+      assert.deepEqual(row.bitmap, { width: 20 * row.ratio, height: 20 * row.ratio }, `${name}: drawing resolution follows the slot`);
+      assert.equal(row.maxWidth, "none", `${name}: canvas opts out of app max-width constraints`);
+      assert.deepEqual(row.loading, row.before, `${name}: loading does not move the button`);
+      assert.deepEqual(row.restored, row.before, `${name}: hiding progress restores its box`);
     }
     for (const [name, errors] of Object.entries(pageErrors)) assert.deepEqual(errors, [], `${name}: browser errors`);
     report.states = outcomes; report.stateSnapshots = snapshots; report.pageErrors = pageErrors;

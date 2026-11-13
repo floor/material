@@ -3,7 +3,8 @@
 // The canvas, its size, and the clock. Sizes follow the Material 3 tokens: a
 // linear indicator is as tall as its track, or 10dp at the default thickness
 // when it waves; a circular one is 40dp, or 48dp when it waves, and can be
-// set anywhere from 24dp to 240dp.
+// set anywhere from 24dp to 240dp. The button supplies a private lower floor
+// for its existing 20px icon slot.
 
 import { ProgressConfig, ProgressThickness, ProgressShape } from "../types";
 import {
@@ -21,12 +22,16 @@ import { drawCircularProgress } from "./circular";
 import { drawLinearProgress } from "./linear";
 import { waveAmplitudeAt, waveAmplitudeTarget } from "./motion";
 
+/** Internal host sizing; absent from the public ProgressConfig. */
+interface CanvasConfig extends ProgressConfig {
+  minSize?: number;
+}
+
 export interface CanvasContext {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   width: number;
   height: number;
-  pixelRatio: number;
 }
 
 interface BaseComponent {
@@ -88,14 +93,12 @@ export const getWaveAmplitude = (
     : PROGRESS_WAVE.LINEAR.AMPLITUDE * (strokeWidth / PROGRESS_THICKNESS.THIN);
 
 /** The container size of a circular indicator: 40dp flat, 48dp wavy */
-export const getCircularSize = (config: ProgressConfig): number => {
-  const fallback =
-    config.shape === PROGRESS_SHAPES.WAVY
-      ? PROGRESS_MEASUREMENTS.CIRCULAR.WAVE_SIZE
-      : PROGRESS_MEASUREMENTS.CIRCULAR.SIZE;
+export const getCircularSize = (config: CanvasConfig, size = config.size): number => {
   return Math.max(
-    PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
-    Math.min(config.size ?? fallback, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
+    config.minSize ?? PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
+    Math.min(size ?? (config.shape === PROGRESS_SHAPES.WAVY
+      ? PROGRESS_MEASUREMENTS.CIRCULAR.WAVE_SIZE
+      : PROGRESS_MEASUREMENTS.CIRCULAR.SIZE), PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
   );
 };
 
@@ -107,7 +110,7 @@ export const getLinearHeight = (strokeWidth: number, isWavy: boolean): number =>
  * Adds the canvas, the drawing routine and the animation loop
  */
 export const withCanvas =
-  (config: ProgressConfig) =>
+  (config: CanvasConfig) =>
   <C extends BaseComponent>(component: C): C & CanvasComponent => {
     const isCircular = config.variant === PROGRESS_VARIANTS.CIRCULAR;
     const view = component.element.ownerDocument?.defaultView ?? null;
@@ -115,6 +118,8 @@ export const withCanvas =
     const canvas = document.createElement("canvas");
     canvas.className = `${component.getClass(PROGRESS_CLASSES.CONTAINER)}__canvas`;
     canvas.setAttribute("aria-hidden", "true");
+    // A host-sized drawing must not be squeezed by app canvas width resets.
+    if (config.minSize) canvas.style.maxWidth = "none";
     component.element.appendChild(canvas);
 
     let context: CanvasContext | null = null;
@@ -177,7 +182,6 @@ export const withCanvas =
         : Math.max(component.element.getBoundingClientRect?.().width || component.element.offsetWidth || 0, 0);
       context.width = width;
       context.height = height;
-      context.pixelRatio = ratioOf();
       if (width <= 0 || height <= 0) return;
       // Border-box CSS pixels onto the bitmap. Display is the content box
       // (width 100%), the squash a border-box pixel width got from max-width.
@@ -188,7 +192,7 @@ export const withCanvas =
       if (typeof canvas.getContext !== "function") return false;
       const ctx = canvas.getContext("2d");
       if (!ctx) return false;
-      context = { canvas, ctx, width: 0, height: 0, pixelRatio: view?.devicePixelRatio || 1 };
+      context = { canvas, ctx, width: 0, height: 0 };
       measure();
       return true;
     };
@@ -345,7 +349,6 @@ export const withCanvas =
       animatedValue = (component.state?.value as number) ?? animatedValue;
       if (!indeterminate) retargetAmplitude(animatedValue / max());
       startAnimation();
-      if (!needsAnimation()) draw(0);
     };
 
     component.setThickness = (thickness: ProgressThickness): void => {
@@ -369,15 +372,11 @@ export const withCanvas =
       }
       measure();
       startAnimation(animationTime);
-      if (!needsAnimation()) draw(0);
     };
 
     component.setSize = (size: number): void => {
       if (!isCircular) return;
-      currentSize = Math.max(
-        PROGRESS_MEASUREMENTS.CIRCULAR.MIN_SIZE,
-        Math.min(size, PROGRESS_MEASUREMENTS.CIRCULAR.MAX_SIZE)
-      );
+      currentSize = getCircularSize(config, size);
       measure();
       draw();
     };
@@ -397,7 +396,6 @@ export const withCanvas =
       component.element.removeAttribute("hidden");
       measure();
       startAnimation(animationTime);
-      if (!needsAnimation()) draw(0);
       return component;
     };
 
