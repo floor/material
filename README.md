@@ -379,7 +379,7 @@ The gateway emits zero CSS. Its five supported switches are:
 | `$typescale-tokens` | `false` | Enables role-token typography with the existing literal fallbacks |
 | `$spring-tokens` | `false` | Enables inherited spring duration/easing references with the existing literal fallbacks |
 
-Both token switches are also configurable directly on the full stylesheet or elements entry. The spring switch currently stores configuration only; typography emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
+Both token switches are also configurable directly on the full stylesheet or elements entry; each emission is described above. Token maps are not a supported configuration surface; use CSS custom properties for token values.
 
 Sass [configures a module on its first load](https://sass-lang.com/documentation/at-rules/use/#configuration). Put the gateway before every other material import, including selective sheets. Then load the other entries without `with (...)`. Configuring both the gateway and another entry with `with (...)`, or loading a component before configuring the gateway, produces Sass's standard “already loaded” error. The direct contrast and tag-prefix examples above continue to work when used on their own.
 
