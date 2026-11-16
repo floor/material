@@ -37,6 +37,7 @@ export const wrong: SwitchInstanceProps = { checked: "yes" };
 type TabsInstanceProps = InstanceType<typeof MTabs>["$props"];
 assert<Equals<TabsInstanceProps["modelValue"], string | null | undefined>>();
 export const tab: typeof MTab = null as unknown as import("vue").FunctionalComponent<TabAttributes>;
+assert<Equals<TabAttributes["ariaLabel"], string | undefined>>();
 
 // Named slots: the default one and each slot the element declares.
 assert<Equals<VueSlots<DialogSpec>, SlotsType<{ default?: () => VNodeChild } & { headline?: () => VNodeChild; actions?: () => VNodeChild }>>>();

@@ -31,6 +31,7 @@ assert<Equals<TabsProps["onChange"], ((event: CustomEvent<{ value: string | null
 
 type TabProps = ReactProps<typeof Tab>;
 assert<Equals<TabProps["disabled"], boolean | undefined>>();
+assert<Equals<TabProps["ariaLabel"], string | undefined>>();
 
 type ButtonProps = ReactProps<typeof Button>;
 assert<Equals<ButtonProps["variant"], string | undefined>>();
