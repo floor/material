@@ -6,6 +6,7 @@ import { createBase, withElement } from "../../core/compose/component";
 import { withEvents, withLifecycle } from "../../core/compose/features";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
+import { activeElementOf } from "../../core/dom/focus";
 import { setHTML } from "../../core/dom/html";
 import { getIcon } from "../../core/icons/registry";
 import { warnDev } from "../../core/utils/warn";
@@ -272,7 +273,9 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     if (!opened) return;
     const last = stagger(false);
     list.style.setProperty(`--${PREFIX}-fab-menu-exit`, `${last + FAB_MENU_ITEM_EXIT}ms`);
-    const hadFocus = list.contains(document.activeElement);
+    // document.activeElement stops at the shadow host, so an item focused
+    // inside the element would look unfocused and stay in the inert list.
+    const hadFocus = list.contains(activeElementOf(list));
     list.setAttribute("inert", "");
     root.classList.remove(`${block}--open`);
     document.removeEventListener("pointerdown", onOutside, true);
