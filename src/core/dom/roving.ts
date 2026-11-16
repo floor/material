@@ -20,7 +20,7 @@ export const isTextEditable = (element: EventTarget | null | undefined): boolean
  * or, for a web component's host, by its `disabled` attribute.
  */
 const isDisabled = (element: HTMLElement): boolean =>
-  element.matches(":disabled,[disabled],[aria-disabled=true]");
+  element.matches(":disabled") || element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true";
 
 export interface RovingOptions {
   /** The composite: it receives the key and focus listeners. */
@@ -62,7 +62,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
   const sync = () => {
     observer.disconnect();
     const list = enabled();
-    if (!chosen || !current || !list.includes(current)) current = list[0] ?? null;
+    if (!chosen || !list.includes(current!)) current = list[0] ?? null;
     for (const target of targets()) {
       target.tabIndex = target === current ? 0 : -1;
       // Targets can be slotted outside the container's own shadow tree.
@@ -99,10 +99,8 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
     const target = owner(enabled(), event.target);
     if (target) {
       chosen = true;
-      if (target !== current) {
-        current = target;
-        sync();
-      }
+      current = target;
+      sync();
     }
   };
 
