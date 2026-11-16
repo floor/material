@@ -63,23 +63,27 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
         // list's own reference from an earlier render. Re-point those tokens
         // at the rebuilt row, keep any the app added, and leave the order.
         const block = getClass("list") + "-";
-        const rePoint = (value: string, replacement: string): string =>
-          value.split(/\s+/).map(token => (token.startsWith(block) ? replacement : token)).join(" ");
+        // HTML's space-separated tokens: ASCII whitespace only. U+00A0 is legal
+        // inside an id, so splitting on \s would break an app token in two.
         const reference = control.getAttribute("aria-labelledby");
-        const own = reference === null ? null : rePoint(reference, headline.id);
-        const named = own !== null && own !== reference;
-        const listName = named || (reference === null && !hasName(control));
-        if (listName) control.setAttribute("aria-labelledby", named && own !== null ? own : headline.id);
+        const tokens = reference === null ? [] : reference.split(/[ \t\n\f\r]+/);
+        const own = tokens.map(token => (token.startsWith(block) ? headline.id : token));
+        const ours = tokens.some(token => token.startsWith(block));
+        // Only a label holding a list token is the list's to rewrite; app-only
+        // tokens stay exactly as written, whitespace and all.
+        const listName = ours || (reference === null && !hasName(control));
+        if (listName) control.setAttribute("aria-labelledby", ours ? own.join(" ") : headline.id);
         // A description the app supplied is its own; the list writes one only
         // when it named the control, and re-points only its own stale tokens.
         const described = control.getAttribute("aria-describedby");
         if (described === null) {
           if (listName && supporting) control.setAttribute("aria-describedby", supporting.id);
         } else {
-          const repointed = rePoint(described, supporting?.id ?? "");
-          if (repointed !== described) {
-            if (repointed === "") control.removeAttribute("aria-describedby");
-            else control.setAttribute("aria-describedby", repointed);
+          const parts = described.split(/[ \t\n\f\r]+/);
+          if (parts.some(token => token.startsWith(block))) {
+            const next = parts.map(token => (token.startsWith(block) ? (supporting?.id ?? "") : token)).filter(Boolean).join(" ");
+            if (next) control.setAttribute("aria-describedby", next);
+            else control.removeAttribute("aria-describedby");
           }
         }
       }

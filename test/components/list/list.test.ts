@@ -210,6 +210,27 @@ describe("a rebuilt row's control name", () => {
     expect(control.getAttribute("aria-labelledby")).toBe(`app-title ${rebuilt.querySelector(".mtrl-list__headline")!.id}`);
     expect(control.getAttribute("aria-describedby")).toBe(`app-note ${rebuilt.querySelector(".mtrl-list__supporting")!.id}`);
   });
+
+  test("an app-only label is untouched, whitespace and U+00A0 included", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    // U+00A0 is legal inside an id: one token, not a separator.
+    control.setAttribute("aria-labelledby", "app\u00A0title\tother");
+    control.setAttribute("aria-describedby", "app\u00A0note");
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe("app\u00A0title\tother");
+    expect(control.getAttribute("aria-describedby")).toBe("app\u00A0note");
+  });
+
+  test("a mixed label splits on ASCII whitespace only", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    control.setAttribute("aria-labelledby", `app\u00A0title\t${control.getAttribute("aria-labelledby")}`);
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe(`app\u00A0title ${row(list).querySelector(".mtrl-list__headline")!.id}`);
+  });
 });
 
 describe("real list selection and lifecycle", () => {
