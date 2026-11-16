@@ -31,6 +31,9 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { tabsResponsive } from "../src/components/tabs/responsive";
+import { checkTabsSSRName } from "./check-tabs-ssr-name";
+
+await checkTabsSSRName();
 
 const bundle = await Bun.build({
   entrypoints: ["src/components/tabs/index.ts"],

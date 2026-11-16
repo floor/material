@@ -34,7 +34,7 @@ assert<Equals<ElementProps<TabsSpec>["value"], string | null | undefined>>();
 
 // A tab declares plain attributes.
 assert<Equals<TabAttributes, {
-  value?: string; label?: string; icon?: string; badge?: string; disabled?: boolean;
+  value?: string; label?: string; icon?: string; badge?: string; disabled?: boolean; ariaLabel?: string;
 }>>();
 
 // Instances carry the forwarded methods and the component.
