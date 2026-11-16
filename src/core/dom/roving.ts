@@ -62,7 +62,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
   const sync = () => {
     observer.disconnect();
     const list = enabled();
-    if (!chosen || !list.includes(current!)) current = list[0] ?? null;
+    if (!chosen || !current || !list.includes(current)) current = list[0] ?? null;
     for (const target of targets()) {
       target.tabIndex = target === current ? 0 : -1;
       // Targets can be slotted outside the container's own shadow tree.
@@ -99,8 +99,10 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
     const target = owner(enabled(), event.target);
     if (target) {
       chosen = true;
-      current = target;
-      sync();
+      if (target !== current) {
+        current = target;
+        sync();
+      }
     }
   };
 
