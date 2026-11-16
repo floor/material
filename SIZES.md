@@ -32,7 +32,7 @@ these rows drift from a fresh measurement.
 | divider | 9.7 KB | 3.7 KB | +0.7 KB |  |
 | drawer | 23.1 KB | 8.2 KB | +5.2 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
-| fab-menu | 22.1 KB | 8.2 KB | +5.2 KB | +10.5 KB |
+| fab-menu | 22.2 KB | 8.2 KB | +5.2 KB | +10.5 KB |
 | extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
 | icon-button | 18.7 KB | 6.3 KB | +3.3 KB |  |
 | list | 19.9 KB | 7.0 KB | +3.9 KB |  |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 17.4 KB | 6.2 KB | +3.1 KB |  |
 | toolbar | 33.2 KB | 11.1 KB | +8.1 KB | +6.9 KB |
-| all | 395.5 KB | 125.0 KB | +121.9 KB | +2.1 KB |
+| all | 395.4 KB | 125.0 KB | +121.9 KB | +2.1 KB |
 <!-- /size-table -->
