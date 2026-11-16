@@ -56,13 +56,24 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
       // new text nodes and new ids, so the row's reference from before is a
       // dangling one: drop it and take the new row's.
       const control = controlIn((el.firstElementChild as HTMLElement | null) ?? el);
-      // The row's ids are this component's namespace. A reference into it is
-      // the one the list wrote on an earlier render: follow the rebuilt row.
-      const reference = control?.getAttribute("aria-labelledby");
-      const ours = reference != null && reference.startsWith(`${getClass("list")}-`);
-      if (control && (ours || !hasName(control))) {
-        control.setAttribute("aria-labelledby", headline.id);
-        if (supporting) control.setAttribute("aria-describedby", supporting.id);
+      if (control) {
+        // The row's ids are this component's namespace: a token in it is the
+        // list's own reference from an earlier render. Re-point those tokens
+        // at the rebuilt row, keep any the app added, and leave the order.
+        const block = getClass("list") + "-";
+        const reference = control.getAttribute("aria-labelledby");
+        const tokens = reference === null ? [] : reference.split(" ");
+        const own = tokens.map(token => (token.startsWith(block) ? headline.id : token));
+        const named = tokens.some((token, index) => token !== own[index]);
+        const listName = named || (tokens.length === 0 && !hasName(control));
+        if (listName) control.setAttribute("aria-labelledby", (named ? own : [headline.id]).join(" "));
+        // A description the app supplied is its own; the list writes one only
+        // when it named the control, or when the one there is its own stale token.
+        const described = control.getAttribute("aria-describedby");
+        if (described === null ? listName : described.startsWith(block)) {
+          if (supporting) control.setAttribute("aria-describedby", supporting.id);
+          else if (described !== null) control.removeAttribute("aria-describedby");
+        }
       }
     }
     return el;
