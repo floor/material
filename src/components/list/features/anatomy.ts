@@ -52,11 +52,17 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
     else if (value.type === "icon") el.setAttribute("aria-hidden", "true");
     if (value.type === "control") {
       // A control with no name of its own borrows the row's, as the row's own
-      // action button does; a name the app gave always wins.
+      // action button does; a name the app gave always wins. A rebuild makes
+      // new text nodes and new ids, so the row's reference from before is a
+      // dangling one: drop it and take the new row's.
       const control = controlIn((el.firstElementChild as HTMLElement | null) ?? el);
-      if (control && !hasName(control)) {
+      // The row's ids are this component's namespace. A reference into it is
+      // the one the list wrote on an earlier render: follow the rebuilt row.
+      const reference = control?.getAttribute("aria-labelledby");
+      const ours = reference != null && reference.startsWith(`${getClass("list")}-`);
+      if (control && (ours || !hasName(control))) {
         control.setAttribute("aria-labelledby", headline.id);
-        if (supporting && !control.hasAttribute("aria-describedby")) control.setAttribute("aria-describedby", supporting.id);
+        if (supporting) control.setAttribute("aria-describedby", supporting.id);
       }
     }
     return el;
