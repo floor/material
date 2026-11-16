@@ -43,7 +43,7 @@ export type {
  * arrives.
  */
 const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurface => {
-  const [state, dialog, , , trigger, , isOpen] = input;
+  const [state, dialog, , , trigger, , isOpen, close] = input;
   let real: DatePickerSurface | null = null;
   // 0: idle, 1: the import is in flight, 2: destroyed.
   let phase = 0;
@@ -58,7 +58,14 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         real = createCalendarSurface(...input);
         if (isOpen()) real[0]();
       },
-      (error: unknown) => console.error("Date picker surface failed to load:", error),
+      (error: unknown) => {
+        if (phase === 2) return;
+        // Release the failed attempt without retrying automatically. A later
+        // open may try again; a cached module failure still needs a reload.
+        phase = 0;
+        console.error("Date picker surface failed to load:", error);
+        if (isOpen()) close(false);
+      },
     );
   };
   // The surface renders the title the dialog is labelled by; until it lands,
