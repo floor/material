@@ -196,6 +196,20 @@ describe("a rebuilt row's control name", () => {
     const rebuilt = row(list).querySelector(".mtrl-list__headline")!.id;
     expect(control.getAttribute("aria-labelledby")).toBe(`app-title ${rebuilt}`);
   });
+
+  test("tokens split on any whitespace, in both references", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const title = document.createElement("span"); title.id = "app-title"; document.body.append(title);
+    const note = document.createElement("p"); note.id = "app-note"; document.body.append(note);
+    control.setAttribute("aria-labelledby", `app-title\t${control.getAttribute("aria-labelledby")}`);
+    control.setAttribute("aria-describedby", `app-note\t${control.getAttribute("aria-describedby")}`);
+    await list.refresh();
+    const rebuilt = row(list);
+    expect(control.getAttribute("aria-labelledby")).toBe(`app-title ${rebuilt.querySelector(".mtrl-list__headline")!.id}`);
+    expect(control.getAttribute("aria-describedby")).toBe(`app-note ${rebuilt.querySelector(".mtrl-list__supporting")!.id}`);
+  });
 });
 
 describe("real list selection and lifecycle", () => {

@@ -63,18 +63,24 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
         // list's own reference from an earlier render. Re-point those tokens
         // at the rebuilt row, keep any the app added, and leave the order.
         const block = getClass("list") + "-";
+        const rePoint = (value: string, replacement: string): string =>
+          value.split(/\s+/).map(token => (token.startsWith(block) ? replacement : token)).join(" ");
         const reference = control.getAttribute("aria-labelledby");
-        const tokens = reference === null ? [] : reference.split(" ");
-        const own = tokens.map(token => (token.startsWith(block) ? headline.id : token));
-        const named = tokens.some((token, index) => token !== own[index]);
-        const listName = named || (tokens.length === 0 && !hasName(control));
-        if (listName) control.setAttribute("aria-labelledby", (named ? own : [headline.id]).join(" "));
+        const own = reference === null ? null : rePoint(reference, headline.id);
+        const named = own !== null && own !== reference;
+        const listName = named || (reference === null && !hasName(control));
+        if (listName) control.setAttribute("aria-labelledby", named && own !== null ? own : headline.id);
         // A description the app supplied is its own; the list writes one only
-        // when it named the control, or when the one there is its own stale token.
+        // when it named the control, and re-points only its own stale tokens.
         const described = control.getAttribute("aria-describedby");
-        if (described === null ? listName : described.startsWith(block)) {
-          if (supporting) control.setAttribute("aria-describedby", supporting.id);
-          else if (described !== null) control.removeAttribute("aria-describedby");
+        if (described === null) {
+          if (listName && supporting) control.setAttribute("aria-describedby", supporting.id);
+        } else {
+          const repointed = rePoint(described, supporting?.id ?? "");
+          if (repointed !== described) {
+            if (repointed === "") control.removeAttribute("aria-describedby");
+            else control.setAttribute("aria-describedby", repointed);
+          }
         }
       }
     }
