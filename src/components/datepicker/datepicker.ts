@@ -47,7 +47,7 @@ const createDatePicker = <M extends string = "single">(
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
     locale, firstDayOfWeek: getFirstDayOfWeek(locale),
-    dateFormat: config.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
+    dateFormat: settings.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
