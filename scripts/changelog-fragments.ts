@@ -51,20 +51,31 @@ export interface Change {
 }
 
 /**
- * `git diff --name-status` output as changes. A rename or copy writes two
- * paths (`R100<TAB>old<TAB>new`) and the new one decides the rules; both are
- * kept so a rename out of `src/` or a fragment still counts.
+ * `git diff --name-status -z` output as changes. NUL separates every field,
+ * and git does not quote or escape a path in this form: a non-ASCII name such
+ * as `src/é.ts` arrives as itself, where the line form writes `"src/\303\251.ts"`
+ * and no rule would see the `src/` prefix. A rename or copy writes
+ * `R100<TAB>old<TAB>new` in the line form; here it is `R100\0old\0new\0`, and
+ * the new path decides the rules while both are kept.
  */
 export function parseNameStatus(output: string): Change[] {
-  return output
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .map(line => {
-      const [status, first, second] = line.split("\t");
-      if (first === undefined) throw new Error(`unexpected git diff line: ${JSON.stringify(line)}`);
-      if (second === undefined) return { status: status!.trim(), path: first.trim() };
-      return { status: status!.trim(), from: first.trim(), path: second.trim() };
-    });
+  const fields = output.split("\0");
+  if (fields[fields.length - 1] === "") fields.pop();
+  const changes: Change[] = [];
+  for (let index = 0; index < fields.length; ) {
+    const status = fields[index++]!;
+    if (status === "") throw new Error(`unexpected empty status in git diff output: ${JSON.stringify(output)}`);
+    const first = fields[index++];
+    if (first === undefined) throw new Error(`unexpected git diff entry: ${JSON.stringify(output)}`);
+    if (status.startsWith("R") || status.startsWith("C")) {
+      const second = fields[index++];
+      if (second === undefined) throw new Error(`unexpected git diff rename: ${JSON.stringify(output)}`);
+      changes.push({ status, from: first, path: second });
+    } else {
+      changes.push({ status, path: first });
+    }
+  }
+  return changes;
 }
 
 const isFragment = (path: string): boolean => path.startsWith(`${FRAGMENT_DIR}/`) && path.endsWith(".md");
@@ -265,7 +276,7 @@ async function checkCommand(): Promise<void> {
   const base = process.env.CHANGELOG_BASE ?? "origin/main";
   const branch = process.env.GITHUB_HEAD_REF ?? (await git(["rev-parse", "--abbrev-ref", "HEAD"])).trim();
   const head = process.env.CHANGELOG_HEAD ?? "HEAD";
-  const changes = parseNameStatus(await git(["diff", "--name-status", base, head]));
+  const changes = parseNameStatus(await git(["diff", "--name-status", "-z", base, head]));
   const fragments = new Map<string, string>();
   for (const change of changes) {
     // Every fragment that exists after the change is parsed, so an edit to an

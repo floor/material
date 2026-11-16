@@ -182,7 +182,7 @@ describe("the pull request rules", () => {
   });
 
   test("a rename is read by both of its paths", () => {
-    expect(parseNameStatus("A\t.changes/a.md\nR100\tsrc/old.ts\tsrc/new.ts")).toEqual([
+    expect(parseNameStatus("A\0.changes/a.md\0R100\0src/old.ts\0src/new.ts\0")).toEqual([
       { status: "A", path: ".changes/a.md" },
       { status: "R100", from: "src/old.ts", path: "src/new.ts" },
     ]);
@@ -196,6 +196,15 @@ describe("the pull request rules", () => {
     expect(rules("fix/x", [{ status: "R100", from: ".changes/a.md", path: "docs/a.md" }]))
       .toEqual([".changes/a.md: fragments are deleted by the release assembler, not by a pull request"]);
     expect(rules("release/3.14.2", [{ status: "R100", from: ".changes/a.md", path: "docs/a.md" }])).toEqual([]);
+  });
+
+  test("a non-ASCII path is read as itself, not as a quoted name", () => {
+    // The line form writes `"src/\303\251.ts"`, which has no src/ prefix; the
+    // NUL form writes the name as it is.
+    expect(parseNameStatus("M\0src/é.ts\0")).toEqual([{ status: "M", path: "src/é.ts" }]);
+    expect(rules("fix/x", parseNameStatus("M\0src/é.ts\0"))).toEqual([
+      "src/: a change under src/ needs one .changes/<slug>.md fragment",
+    ]);
   });
 
   test("a release pull request may add a fragment too", () => {
