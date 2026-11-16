@@ -271,7 +271,8 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
     const width = viewport.clientWidth;
     const height = viewport.clientHeight;
     const rect = element.getBoundingClientRect();
-    const rtl = getComputedStyle(element).direction === "rtl";
+    popup.dir = getComputedStyle(element).direction;
+    const rtl = popup.dir === "rtl";
     // A control wider than the viewport must not push the popup past it: the
     // viewport bound wins over the control's width, so the inline clamp below
     // can still place the surface
@@ -417,7 +418,7 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (destroyed || event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
+    if (destroyed || disabled || event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
     if (event.ctrlKey || event.metaKey) return;
     const key = event.key;
     if (event.altKey) {
@@ -431,7 +432,6 @@ export function createListbox<T = unknown>(config: ListboxConfig<T>): ListboxCom
       return;
     }
     if (!isOpen) {
-      if (disabled) return;
       if (key === "Enter" || key === " ") {
         event.preventDefault();
         open(event);
