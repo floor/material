@@ -5,6 +5,7 @@ import {
   SECTION_ORDER,
   lintChanges,
   parseFragment,
+  parseNameStatus,
   renderSection,
   type Change,
   type Fragment,
@@ -172,6 +173,34 @@ describe("the pull request rules", () => {
       "CHANGELOG.md: a pull request adds .changes/<slug>.md instead; only release/* branches edit CHANGELOG.md",
     ]);
     expect(rules("release/3.14.2", [change("M", "CHANGELOG.md"), change("D", ".changes/a.md")])).toEqual([]);
+  });
+
+  test("an edited fragment is parsed, not only an added one", () => {
+    expect(rules("fix/x", [change("M", ".changes/a.md")], new Map([[".changes/a.md", "No header."]])))
+      .toEqual(['.changes/a.md: expected "Section:" or "Migration:" on line 1, got "No header."']);
+    expect(rules("fix/x", [change("M", ".changes/a.md")], new Map([[".changes/a.md", "Section: Fixed\n\nBody."]]))).toEqual([]);
+  });
+
+  test("a rename is read by both of its paths", () => {
+    expect(parseNameStatus("A\t.changes/a.md\nR100\tsrc/old.ts\tsrc/new.ts")).toEqual([
+      { status: "A", path: ".changes/a.md" },
+      { status: "R100", from: "src/old.ts", path: "src/new.ts" },
+    ]);
+    // A move out of src/ still changed src code, so it needs a fragment.
+    expect(rules("fix/x", [{ status: "R100", from: "src/old.ts", path: "docs/old.ts" }]))
+      .toEqual(["src/: a change under src/ needs one .changes/<slug>.md fragment"]);
+    // A move onto CHANGELOG.md is still a direct changelog edit.
+    expect(rules("fix/x", [{ status: "R100", from: "notes.md", path: "CHANGELOG.md" }]))
+      .toEqual(["CHANGELOG.md: a pull request adds .changes/<slug>.md instead; only release/* branches edit CHANGELOG.md"]);
+    // A fragment moved away is a fragment removed.
+    expect(rules("fix/x", [{ status: "R100", from: ".changes/a.md", path: "docs/a.md" }]))
+      .toEqual([".changes/a.md: fragments are deleted by the release assembler, not by a pull request"]);
+    expect(rules("release/3.14.2", [{ status: "R100", from: ".changes/a.md", path: "docs/a.md" }])).toEqual([]);
+  });
+
+  test("a release pull request may add a fragment too", () => {
+    expect(rules("release/3.14.2", [change("A", ".changes/last-fix.md")],
+      new Map([[".changes/last-fix.md", "Section: Fixed\n\nBody."]]))).toEqual([]);
   });
 
   test("a fragment is added and valid, never deleted, by an ordinary pull request", () => {

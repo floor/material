@@ -190,7 +190,10 @@ what stays the same.
 as a trailing `Migration: …` sentence in the same bullet. Name the file `<slug>.md`; bullets
 sort by section order and then by filename, so a date prefix sets the order within a section.
 `bun run changelog:check` (which CI runs on every pull request) requires a fragment when the
-diff touches `src/`, and fails a branch other than `release/*` that edits `CHANGELOG.md`.
+diff touches `src/` — directly or by renaming a file out of it — and fails a branch other than
+`release/*` that edits `CHANGELOG.md`. It parses every fragment the change adds or edits, so a
+malformed edit fails on the pull request rather than in the release. A `release/*` branch is
+exempt and may also add a fragment.
 
 ## Testing
 

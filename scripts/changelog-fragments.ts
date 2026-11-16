@@ -44,8 +44,30 @@ export interface Fragment {
 export interface Change {
   /** `A`, `M`, `D`, `R…` from `git diff --name-status`. */
   status: string;
+  /** The path after the change; for a rename, the new path. */
   path: string;
+  /** The path before the change, for a rename or a copy. */
+  from?: string;
 }
+
+/**
+ * `git diff --name-status` output as changes. A rename or copy writes two
+ * paths (`R100<TAB>old<TAB>new`) and the new one decides the rules; both are
+ * kept so a rename out of `src/` or a fragment still counts.
+ */
+export function parseNameStatus(output: string): Change[] {
+  return output
+    .split("\n")
+    .filter(line => line.trim() !== "")
+    .map(line => {
+      const [status, first, second] = line.split("\t");
+      if (first === undefined) throw new Error(`unexpected git diff line: ${JSON.stringify(line)}`);
+      if (second === undefined) return { status: status!.trim(), path: first.trim() };
+      return { status: status!.trim(), from: first.trim(), path: second.trim() };
+    });
+}
+
+const isFragment = (path: string): boolean => path.startsWith(`${FRAGMENT_DIR}/`) && path.endsWith(".md");
 
 const HEADER = /^(Section|Migration):\s*(.*)$/;
 
@@ -159,45 +181,37 @@ const isReleaseBranch = (branch: string): boolean => branch === "release" || bra
 export interface ChangeSet {
   branch: string;
   changes: readonly Change[];
-  /** Fragment sources by path, for the added ones. */
+  /** Fragment sources by path, for every fragment the change adds or edits. */
   fragments: ReadonlyMap<string, string>;
 }
 
 /** The rules a pull request's diff must satisfy. Returns one message per failure. */
 export function lintChanges({ branch, changes, fragments }: ChangeSet): string[] {
   const errors: string[] = [];
-  const paths = changes.map(change => change.path);
+  // A rename touches both names: a move out of src/ still changed src code,
+  // and a move onto CHANGELOG.md is still a direct changelog edit.
+  const touched = changes.flatMap(change => change.from === undefined ? [change.path] : [change.from, change.path]);
   const added = changes.filter(change => change.status.startsWith("A"));
-  const deleted = changes.filter(change => change.status.startsWith("D"));
-  const fragmentsAdded = added.filter(change => change.path.startsWith(`${FRAGMENT_DIR}/`) && change.path.endsWith(".md"));
-  const fragmentsDeleted = deleted.filter(change => change.path.startsWith(`${FRAGMENT_DIR}/`));
-  const srcChanged = paths.some(path => path.startsWith("src/"));
+  const fragmentsAdded = added.filter(change => isFragment(change.path));
+  const fragmentsRemoved = changes.filter(change =>
+    isFragment(change.path) ? change.status.startsWith("D") : change.from !== undefined && isFragment(change.from));
+  const srcChanged = touched.some(path => path.startsWith("src/"));
   const release = isReleaseBranch(branch);
 
-  if (release) {
-    for (const change of fragmentsAdded) errors.push(`${change.path}: a release pull request assembles fragments, it does not add them`);
-    for (const path of fragments.keys()) {
-      if (!fragmentsAdded.some(change => change.path === path)) errors.push(`${path}: not an added fragment on this branch`);
+  if (!release) {
+    if (touched.includes("CHANGELOG.md")) {
+      errors.push("CHANGELOG.md: a pull request adds .changes/<slug>.md instead; only release/* branches edit CHANGELOG.md");
     }
-    for (const [path, source] of fragments) {
-      try {
-        parseFragment(path, source);
-      } catch (error) {
-        errors.push(error instanceof Error ? error.message : String(error));
-      }
+    if (srcChanged && fragmentsAdded.length === 0) {
+      errors.push(`src/: a change under src/ needs one ${FRAGMENT_DIR}/<slug>.md fragment`);
     }
-    return errors;
+    if (fragmentsRemoved.length > 0) {
+      const change = fragmentsRemoved[0]!;
+      errors.push(`${change.from ?? change.path}: fragments are deleted by the release assembler, not by a pull request`);
+    }
   }
-
-  if (paths.includes("CHANGELOG.md")) {
-    errors.push("CHANGELOG.md: a pull request adds .changes/<slug>.md instead; only release/* branches edit CHANGELOG.md");
-  }
-  if (srcChanged && fragmentsAdded.length === 0) {
-    errors.push(`src/: a change under src/ needs one ${FRAGMENT_DIR}/<slug>.md fragment`);
-  }
-  if (fragmentsDeleted.length > 0) {
-    errors.push(`${fragmentsDeleted[0]!.path}: fragments are deleted by the release assembler, not by a pull request`);
-  }
+  // Edited fragments matter as much as added ones: assembly parses what is on
+  // disk, so a malformed edit must fail here rather than in the release.
   for (const [path, source] of fragments) {
     try {
       parseFragment(path, source);
@@ -251,16 +265,12 @@ async function checkCommand(): Promise<void> {
   const base = process.env.CHANGELOG_BASE ?? "origin/main";
   const branch = process.env.GITHUB_HEAD_REF ?? (await git(["rev-parse", "--abbrev-ref", "HEAD"])).trim();
   const head = process.env.CHANGELOG_HEAD ?? "HEAD";
-  const changes: Change[] = (await git(["diff", "--name-status", base, head]))
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .map(line => {
-      const [status, ...path] = line.split("\t");
-      return { status: status!.trim(), path: path.join("\t").trim() };
-    });
+  const changes = parseNameStatus(await git(["diff", "--name-status", base, head]));
   const fragments = new Map<string, string>();
   for (const change of changes) {
-    if (change.status.startsWith("A") && change.path.startsWith(`${FRAGMENT_DIR}/`) && change.path.endsWith(".md")) {
+    // Every fragment that exists after the change is parsed, so an edit to an
+    // existing fragment cannot pass here and break the release assembler.
+    if (!change.status.startsWith("D") && isFragment(change.path)) {
       fragments.set(change.path, await readFile(change.path, "utf8"));
     }
   }
