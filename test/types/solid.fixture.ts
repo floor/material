@@ -23,6 +23,7 @@ type TabsProps = ComponentProps<typeof Tabs>;
 assert<Equals<TabsProps["value"], string | null | undefined>>();
 assert<Equals<TabsProps["onChange"], ((event: CustomEvent<{ value: string | null }>) => void) | undefined>>();
 assert<Equals<ComponentProps<typeof Tab>["disabled"], boolean | undefined>>();
+assert<Equals<ComponentProps<typeof Tab>["ariaLabel"], string | undefined>>();
 // Host attributes still pass through.
 assert<Equals<ComponentProps<typeof Button>["class"], string | undefined>>();
 

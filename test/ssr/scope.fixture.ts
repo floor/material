@@ -16,7 +16,7 @@ const nativeTimeout = setTimeout;
 const nativeMicrotask = queueMicrotask;
 const baseline = Object.getOwnPropertyDescriptors(globalThis);
 const prototypes = [dom.HTMLElement.prototype, dom.Element.prototype, dom.EventTarget.prototype, dom.HTMLInputElement.prototype,
-  dom.HTMLTextAreaElement.prototype, dom.HTMLLabelElement.prototype, dom.HTMLCanvasElement.prototype, dom.DocumentFragment.prototype,
+  dom.HTMLTextAreaElement.prototype, dom.HTMLButtonElement.prototype, dom.HTMLLabelElement.prototype, dom.HTMLCanvasElement.prototype, dom.DocumentFragment.prototype,
   dom.ShadowRoot.prototype];
 const beforePrototypes = prototypes.map((prototype) => Object.getOwnPropertyDescriptors(prototype));
 const restored = () => {
@@ -282,6 +282,11 @@ test("reflections, live control state, selector lists, inert canvas and CSS prop
     expect(input.getAttribute("autocomplete")).toBe("off");
     const textarea = document.createElement("textarea"); textarea.textContent = "default"; textarea.value = "live";
     expect(textarea.value).toBe("live"); expect(textarea.defaultValue).toBe("default");
+    const button = document.createElement("button");
+    expect(button.value).toBe("");
+    button.setAttribute("value", "home"); expect(button.value).toBe("home");
+    button.value = "trips"; expect(button.getAttribute("value")).toBe("trips");
+    button.removeAttribute("value"); expect(button.value).toBe("");
     const container = document.createElement("div");
     setHTML(container, '<span class="keep" data-value=":popover-open"></span><div popover></div>');
     expect(container.querySelectorAll(":popover-open, .keep").length).toBe(1);
