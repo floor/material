@@ -184,7 +184,7 @@ export const createDial = (options: DialOptions): Dial => {
       option.setAttribute("aria-selected", String(i === index));
       if (options.allowed?.(next, items[i].value) === false) option.setAttribute("aria-disabled", "true");
       else option.removeAttribute("aria-disabled");
-      if (option !== focused) option.tabIndex = i === stop ? 0 : -1;
+      option.tabIndex = i === stop ? 0 : -1;
     });
     if (refocus) numbers.querySelector<HTMLElement>('[tabindex="0"]')?.focus({ preventScroll: true });
     if (!animate) { void element.offsetWidth; element.style.transition = ""; }
