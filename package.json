@@ -545,6 +545,8 @@
     "styles-package:check": "bun run scripts/check-styles-package.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
+    "changelog:assemble": "bun run scripts/changelog-fragments.ts assemble",
+    "changelog:check": "bun run scripts/changelog-fragments.ts check",
     "ssr-worker:check": "bun run scripts/check-ssr-worker.ts",
     "declaration-docs:check": "bun run scripts/check-declaration-docs.ts",
     "declaration-exports:check": "bun run scripts/check-declaration-exports.ts",
