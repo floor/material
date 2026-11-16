@@ -443,3 +443,10 @@ export interface DatePickerState {
   listStart?: Date;
   listLength?: number;
 }
+
+/** Register the date picker's existing options with the component-defaults map. */
+declare module "../../core/config/global" {
+  interface ComponentConfigMap {
+    datepicker?: Partial<DatePickerConfig>;
+  }
+}
