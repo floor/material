@@ -132,6 +132,11 @@ export const createDeferredMenu = (config: DeferredMenuConfig): DeferredMenuComp
     for (let node: Element | undefined = opener; node;) {
       if (node.closest("[inert], [hidden], dialog:not([open])") ||
         getComputedStyle(node).display === "none" || getComputedStyle(node).visibility === "hidden") return false;
+      // Display is not inherited: the opener can compute to inline-block
+      // while an ancestor removes its entire subtree from presentation.
+      for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+        if (getComputedStyle(parent).display === "none") return false;
+      }
       const root = node.getRootNode();
       node = "host" in root ? (root as ShadowRoot).host : undefined;
     }
