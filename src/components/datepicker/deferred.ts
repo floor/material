@@ -63,7 +63,7 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         // Release the failed attempt without retrying automatically. A later
         // open may try again; a cached module failure still needs a reload.
         phase = 0;
-        console.error("Date picker surface failed to load:", error);
+        console.error("Date picker load failed:", error);
         if (isOpen()) close(false);
       },
     );
