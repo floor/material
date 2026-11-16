@@ -87,10 +87,11 @@ export const withProgress =
     let progress: ProgressComponent | null = null;
     let progressPromise: Promise<ProgressComponent> | null = null;
     let isLoading = !!config.loading;
-    let wasDisabled = (component.element as HTMLButtonElement).disabled;
+    let wasDisabled: boolean | undefined;
     // An initial busy shell has not captured a loading label yet.
     let originalText: string | undefined;
     const markLoading = (): void => {
+      wasDisabled ??= (component.element as HTMLButtonElement).disabled;
       component.element.setAttribute("aria-busy", "true");
       component.disabled?.disable();
     };
@@ -130,35 +131,20 @@ export const withProgress =
       return progressPromise;
     };
 
-    // Helper to get insertion point for progress
-    const getProgressInsertionPoint = () => {
-      // Try to insert after icon if it exists
-      const iconElement = component.element.querySelector(
-        `.${component.getClass("button__icon")}`
-      );
-      if (iconElement && iconElement.nextSibling) {
-        return iconElement.nextSibling;
-      }
-
-      // Otherwise insert at the beginning
-      return component.element.firstChild;
-    };
-
     // Add progress methods that lazy-load the progress component. Each is held
     // in a local first: the interface marks them optional because they only
     // exist once this feature has run, and the wrappers below call the local,
     // which is always there.
     const showProgress = async (): Promise<C> => {
       const p = await ensureProgress();
+      const iconElement = component.element.querySelector(
+        `.${component.getClass("button__icon")}`
+      );
 
       // Ensure progress element is in the DOM
       if (!component.element.contains(p.element)) {
-        const insertPoint = getProgressInsertionPoint();
-        if (insertPoint) {
-          component.element.insertBefore(p.element, insertPoint);
-        } else {
-          component.element.appendChild(p.element);
-        }
+        // A null reference appends; otherwise keep the existing icon/text order.
+        component.element.insertBefore(p.element, iconElement?.nextSibling ?? component.element.firstChild);
       }
 
       p.element.style.display = "";
@@ -168,9 +154,6 @@ export const withProgress =
       );
 
       // Hide the icon if it exists
-      const iconElement = component.element.querySelector(
-        `.${component.getClass("button__icon")}`
-      );
       if (iconElement instanceof HTMLElement) {
         iconElement.style.display = "none";
       }
@@ -238,33 +221,26 @@ export const withProgress =
       return component;
     };
 
-    // This feature runs before withAPI, so the component it sees carries the
-    // label as the `text` manager from withText, not the setText/getText the API
-    // adds later on a separate object. Reading only those left every label swap
-    // below unreachable: setLoading(true, "Saving") kept the old label and never
-    // restored it. Prefer the manager; fall back for components built otherwise.
-    const readLabel = (): string | undefined =>
-      component.text ? component.text.getText() : component.getText?.();
-    const writeLabel = (value: string): void => {
-      if (component.text) component.text.setText(value);
-      else component.setText?.(value);
-    };
-
+    // This feature runs before withAPI adds setText/getText on a separate
+    // object. Prefer withText's manager, with a fallback for other compositions.
     const setLoading = async (loading: boolean, text?: string): Promise<C> => {
       if (loading !== isLoading || (loading && originalText === undefined)) {
-        if (!isLoading) wasDisabled = (component.element as HTMLButtonElement).disabled;
         isLoading = loading;
         if (loading) {
-          originalText = readLabel() ?? "";
+          originalText = (component.text ? component.text.getText() : component.getText?.()) ?? "";
           markLoading();
           await showProgress();
         } else {
           component.element.removeAttribute("aria-busy");
           await hideProgress();
           if (!wasDisabled) component.disabled?.enable();
+          wasDisabled = undefined;
         }
         if (!loading) text ||= originalText;
-        if (text) writeLabel(text);
+        if (text) {
+          if (component.text) component.text.setText(text);
+          else component.setText?.(text);
+        }
       }
       return component;
     };
