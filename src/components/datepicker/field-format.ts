@@ -66,13 +66,13 @@ export const parseInputDate = (text: string, format: string, locale = DEFAULT_LO
 };
 export const formatDate = (date: Date | null, format: string = 'MM/DD/YYYY', locale = DEFAULT_LOCALE): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-  const m = date.getMonth() + 1, d = date.getDate(), y = date.getFullYear(), pad = (n: number) => String(n).padStart(2, '0');
+  const m = date.getMonth() + 1, d = date.getDate(), y = String(date.getFullYear()).padStart(4, '0'), pad = (n: number) => String(n).padStart(2, '0');
   return format.replace(TOKEN_RE, token =>
     token.startsWith('MMM') ? dtf(locale, { month: token.length === 4 ? 'long' : 'short' }).format(date) :
     token === 'MM' ? pad(m) :
     token === 'M' ? String(m) :
-    token === 'YYYY' ? String(y) :
-    token === 'YY' ? String(y).slice(-2) :
+    token === 'YYYY' ? y :
+    token === 'YY' ? y.slice(-2) :
     token === 'DD' ? pad(d) :
     String(d)
   );

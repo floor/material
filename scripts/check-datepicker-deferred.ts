@@ -18,6 +18,7 @@
  * focus (once), its aria-expanded and the aria title that names the dialog.
  */
 import assert from "node:assert/strict";
+import { checkDatePickerEarlyYears } from "./check-datepicker-early-years";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { chromium } from "playwright";
@@ -92,6 +93,8 @@ const build = async (entry: string, outdir: string, metafile = true) => {
     outputs: Record<string, MetaOutput>;
   };
 };
+
+await checkDatePickerEarlyYears();
 
 rmSync(scratch, { recursive: true, force: true });
 mkdirSync(deferredOut, { recursive: true });
