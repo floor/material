@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { formatDate } from "../../../src/components/datepicker/utils";
+import * as eager from "../../../src/components/datepicker/utils";
+import * as deferred from "../../../src/components/datepicker/field-format";
 
-describe("date picker format tokens", () => {
+for (const [entry, { formatDate }] of [["eager", eager], ["deferred", deferred]] as const) {
+describe(`${entry} date picker format tokens`, () => {
   test("keeps all eight numeric and localized month tokens in one format", () => {
     const date = new Date(2026, 1, 9);
     for (const locale of ["en-US", "fr-FR", "de-DE", "ja-JP", "ar-EG", "th-TH", "fa-IR"]) {
@@ -16,11 +18,9 @@ describe("date picker format tokens", () => {
     expect(formatDate(new Date(NaN))).toBe("");
   });
 });
-
+}
 
 // Eager and deferred field formatting must preserve the same ISO year width.
-import * as eager from "../../../src/components/datepicker/utils";
-import * as deferred from "../../../src/components/datepicker/field-format";
 for (const [entry, helpers] of [["eager", eager], ["deferred", deferred]] as const) {
   describe(`${entry} early-year formatting`, () => {
     test("pads YYYY and YY and round-trips strict four-digit input", () => {
