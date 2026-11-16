@@ -71,6 +71,12 @@ describe("publish.yml's material major guard", () => {
     { name: "material", version: "", publishes: false },
   ];
 
+  // Each case spawns `sh` and waits for it. The measured time is a shell
+  // script of a few milliseconds; the deck's default 5 s per-test deadline is
+  // a machine-speed assumption, and on a loaded runner it has expired before
+  // the child was scheduled (push CI 43940159138, "mtrl 1.0.0 publishes").
+  // Thirty seconds bounds a wedged child without timing a correct one.
+  const SPAWN_TIMEOUT = 30_000;
   for (const { name, version, publishes } of CASES) {
     test(`${name} ${version} ${publishes ? "publishes" : "is refused"}`, async () => {
       const { code, stdout, stderr } = await runStep(name, version);
@@ -85,6 +91,6 @@ describe("publish.yml's material major guard", () => {
         expect(stderr).toContain(version);
         expect(stderr).toContain("the 1.x line is published from the v1 branch");
       }
-    });
+    }, SPAWN_TIMEOUT);
   }
 });
