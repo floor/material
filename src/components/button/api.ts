@@ -114,6 +114,7 @@ export const withAPI =
       disabled,
       lifecycle,
       getClass: component.getClass,
+      get progress() { return component.progress; },
 
       on: <K extends keyof ButtonEvents>(event: K, handler: ButtonEvents[K]) => {
         if (component.on) {
@@ -454,11 +455,6 @@ export const withAPI =
         lifecycle.destroy();
       },
     };
-
-    // Forward progress methods if they exist
-    if (component.progress) {
-      buttonComponent.progress = component.progress;
-    }
 
     if (component.showProgress) {
       buttonComponent.showProgress = async () => {
