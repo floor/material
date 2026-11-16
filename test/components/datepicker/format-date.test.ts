@@ -34,7 +34,7 @@ for (const [entry, helpers] of [["eager", eager], ["deferred", deferred]] as con
         expect(helpers.toIsoValue([date, date])).toBe(`${text}/${text}`);
       }
     });
-    test("year zero remains outside the date picker's accepted range", () => {
+    test("strict ISO parsing still rejects year zero", () => {
       expect(helpers.parseDate("0000-01-02")).toBeNull();
     });
   });
