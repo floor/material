@@ -69,6 +69,16 @@ jobs:
             [ "$status" = 0 ] || { echo "::error::$script failed"; failed=1; }
           done
           exit $failed
+      - name: Changelog fragment
+        # A change under src/ carries one .changes/ fragment, and only a
+        # release branch edits CHANGELOG.md; the assembler consumes fragments
+        # in the release pull request. The script reads pull requests only: a
+        # push's diff cannot name the branch the changes were reviewed on.
+        env:
+          CHANGELOG_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$CHANGELOG_BASE" ]; then git fetch --quiet --depth=1 origin "$CHANGELOG_BASE"; fi
+          bun run changelog:check
       - name: Package name
         run: bun run name:check
 
