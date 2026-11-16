@@ -87,7 +87,9 @@ export const withProgress =
     let progress: ProgressComponent | null = null;
     let progressPromise: Promise<ProgressComponent> | null = null;
     let isLoading = !!config.loading;
-    let originalText = "";
+    let wasDisabled = (component.element as HTMLButtonElement).disabled;
+    // An initial busy shell has not captured a loading label yet.
+    let originalText: string | undefined;
     const markLoading = (): void => {
       component.element.setAttribute("aria-busy", "true");
       component.disabled?.disable();
@@ -249,7 +251,8 @@ export const withProgress =
     };
 
     const setLoading = async (loading: boolean, text?: string): Promise<C> => {
-      if (loading !== isLoading) {
+      if (loading !== isLoading || (loading && originalText === undefined)) {
+        if (!isLoading) wasDisabled = (component.element as HTMLButtonElement).disabled;
         isLoading = loading;
         if (loading) {
           originalText = readLabel() ?? "";
@@ -258,7 +261,7 @@ export const withProgress =
         } else {
           component.element.removeAttribute("aria-busy");
           await hideProgress();
-          component.disabled?.enable();
+          if (!wasDisabled) component.disabled?.enable();
         }
         if (!loading) text ||= originalText;
         if (text) writeLabel(text);
