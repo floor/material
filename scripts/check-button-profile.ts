@@ -10,6 +10,7 @@ import { chromium, type Page } from "playwright";
 import { createPackageFixture } from "./package-fixture";
 import { filledSmallRoundCss } from "./button-style-profile";
 import type createButton from "../src/components/button";
+import { checkButtonInitialLoading } from "./check-button-loading-initial";
 
 const fixture = await createPackageFixture();
 const scratch = await mkdtemp(resolve(".button-profile-"));
@@ -217,6 +218,12 @@ try {
       assert.deepEqual(row.loading, row.before, `${name}: loading does not move the button`);
       assert.deepEqual(row.restored, row.before, `${name}: hiding progress restores its box`);
     }
+    const initialLoading = [];
+    for (const [index, page] of pages.entries()) {
+      const name = [...output.keys()][index];
+      initialLoading.push({ page: name, rows: await checkButtonInitialLoading(page, name) });
+    }
+    report.initialLoading = initialLoading;
     for (const [name, errors] of Object.entries(pageErrors)) assert.deepEqual(errors, [], `${name}: browser errors`);
     report.states = outcomes; report.stateSnapshots = snapshots; report.pageErrors = pageErrors;
     console.log(`Public button profile: ${outcomes.length} state comparisons pass`);

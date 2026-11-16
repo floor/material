@@ -137,6 +137,7 @@ export type TabsElement = ElementInstance<TabsSpec, TabsComponent>;
 export const tabDeclaration = {
   name: "tab",
   attributes: {
+    "aria-label": { type: "string" },
     value: { type: "string" },
     label: { type: "string" },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
