@@ -69,7 +69,7 @@ describe("createRoving", () => {
     buttons()[2].disabled = true;
     await Promise.resolve();
     expect(stops()).toEqual([]);
-    buttons()[1].removeAttribute("aria-disabled");
+    buttons()[1].setAttribute("aria-disabled", "false");
     await Promise.resolve();
     expect(stops()).toEqual(["b"]);
   });
@@ -163,6 +163,17 @@ describe("createRoving", () => {
     roving.destroy();
     roving = createRoving({ container, targets: () => Array.from(container.querySelectorAll<HTMLElement>("m-host, button")) });
     expect(stops()).toEqual(["a"]);
+  });
+
+  test("native inherited disabled state and explicit ARIA false keep their meaning", () => {
+    buttons()[0].setAttribute("aria-disabled", "false");
+    buttons()[1].setAttribute("disabled", "false");
+    buttons()[2].setAttribute("aria-disabled", "true");
+    container.insertAdjacentHTML("beforeend", '<fieldset disabled><button id="inherited"></button></fieldset><button id="enabled"></button>');
+    roving.sync();
+    buttons()[0].focus();
+    press("ArrowRight");
+    expect(document.activeElement?.id).toBe("enabled");
   });
 
   test("destroy removes the listeners", () => {

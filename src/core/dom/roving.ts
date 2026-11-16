@@ -20,7 +20,7 @@ export const isTextEditable = (element: EventTarget | null | undefined): boolean
  * or, for a web component's host, by its `disabled` attribute.
  */
 const isDisabled = (element: HTMLElement): boolean =>
-  element.matches(":disabled") || element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true";
+  element.matches(":disabled,[disabled],[aria-disabled=true]");
 
 export interface RovingOptions {
   /** The composite: it receives the key and focus listeners. */
