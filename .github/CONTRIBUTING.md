@@ -93,7 +93,7 @@ Read an existing component of the same kind before starting (`src/components/div
 - `src/styles/components/_<name>.scss`, imported in `src/styles/main.scss` and declared in `scripts/style-manifest.ts` (the selective stylesheets). Colours, type, shape and motion come from the tokens (`t.color()`, `m.typography()`, `v.shape()`, `v.motion()`), never literals.
 - `src/elements/<name>.ts`: the custom element's spec (attributes, properties, events, slots). The React, Vue, Svelte and Solid adapters are generated from it with `bun run adapters:generate`; CI fails when they are stale.
 - `scripts/size.ts`: the component's size budget; `scripts/check-token-render.ts`: a case for `bun run tokens:check`.
-- `CHANGELOG.md`: an entry under `[Unreleased]`.
+- `.changes/<slug>.md`: one changelog fragment (see "Changelog fragments").
 - md3.io: a docs page and a playground (see below).
 
 ### Using md3.io for Development
@@ -161,13 +161,39 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 ## Pull Request Process
 
 1. Branch from `main`; one topic per pull request.
-2. Include the tests, the `CHANGELOG.md` entry under `[Unreleased]` and, for a new option or behaviour, the md3.io docs change.
-3. A change that breaks the public API or the rendered DOM goes under **Changed (breaking)** with a `Migration:` line.
+2. Include the tests, one `.changes/<slug>.md` fragment (see "Changelog fragments") and, for a new option or behaviour, the md3.io docs change.
+3. A change that breaks the public API or the rendered DOM goes in the fragment's **Changed** section with a `Migration:` line.
 4. CI must pass: types, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
 
 Every pull request is reviewed against [REVIEW.md](../REVIEW.md): what failure looks like in this
 repository, how a finding is written, and how the review loop ends.
+
+### Changelog fragments
+
+Do not edit `CHANGELOG.md` in a pull request. Add one file under `.changes/`; the release
+pull request assembles the fragments into the version's section and deletes them. Two pull
+requests that each add a fragment merge in either order without a conflict.
+
+A fragment is a small Markdown file. Header lines come first, then a blank line, then one
+paragraph of bullet text (no leading `-`):
+
+```markdown
+Section: Fixed
+Migration: Replace `createThing()` with `createOtherThing()`.
+
+**What changed ([#123](https://github.com/floor/material/pull/123)).** Why it changed, and
+what stays the same.
+```
+
+`Section` is `Added`, `Changed`, `Deprecated` or `Fixed`. `Migration` is optional and renders
+as a trailing `Migration: …` sentence in the same bullet. Name the file `<slug>.md`; bullets
+sort by section order and then by filename, so a date prefix sets the order within a section.
+`bun run changelog:check` (which CI runs on every pull request) requires a fragment when the
+diff touches `src/` — directly or by renaming a file out of it — and fails a branch other than
+`release/*` that edits `CHANGELOG.md`. It parses every fragment the change adds or edits, so a
+malformed edit fails on the pull request rather than in the release. A `release/*` branch is
+exempt and may also add a fragment.
 
 ## Testing
 
@@ -224,9 +250,14 @@ Releases are published by GitHub Actions with npm trusted publishing
 Install the stable release with `npm install material`.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
-   `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
-   into the version's section, and updates `README.md` and `npm-readme.md`
-   where the release changes them. Merge it when CI passes.
+   `x.y.z-next.N` for a pre-release), assembles the changelog and updates
+   `README.md` and `npm-readme.md` where the release changes them. Merge it
+   when CI passes.
+
+   Run `bun run changelog:assemble <version> <YYYY-MM-DD>`: it groups the
+   `.changes/` fragments into the new dated section after `[Unreleased]`,
+   moves the comparison links, and deletes the fragment files. Then add the
+   section's one-line summary and its `### Size` measurements by hand.
 
    **Keep the install sections consistent with the version**, between
    `<!-- install -->` and `<!-- /install -->` in both files.
