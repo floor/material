@@ -277,6 +277,51 @@ describe('button', () => {
     button.destroy();
   });
 
+  test('clearing initial loading preserves authored disabled state', async () => {
+    const button = mount({ text: 'Save', loading: true, disabled: true });
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(true);
+    expect(button.element.disabled).toBe(true);
+    expect(button.element.hasAttribute('aria-busy')).toBe(false);
+    expect(button.getText()).toBe('Save');
+    button.enable();
+    await button.setLoading!(true, 'Saving');
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(false);
+    button.destroy();
+  });
+
+  test('the first explicit loading call starts an initial busy shell and restores its label', async () => {
+    for (const disabled of [false, true]) for (const prepared of [false, true]) {
+      const button = mount({ text: 'Save', loading: true, disabled });
+      if (prepared) await button.setProgress!(25);
+      await button.setLoading!(true, 'Saving');
+      expect(button.getText()).toBe('Saving');
+      expect(has(button, 'progress')).toBe(true);
+      expect(button.element.querySelector<HTMLElement>('.mtrl-button__progress')!.style.display).toBe('');
+      await button.setLoading!(false);
+      expect(button.getText()).toBe('Save');
+      expect(button.isDisabled()).toBe(disabled);
+      expect(has(button, 'progress')).toBe(false);
+      await button.setLoading!(true, 'Again');
+      await button.setLoading!(false);
+      expect(button.getText()).toBe('Save');
+      expect(button.isDisabled()).toBe(disabled);
+      button.destroy();
+    }
+  });
+
+  test('loading restores a disabled state set through the API before entry', async () => {
+    const button = mount({ text: 'Save', progress: true });
+    button.disable();
+    await button.setLoading!(true, 'Saving');
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(true);
+    expect(button.element.disabled).toBe(true);
+    expect(button.getText()).toBe('Save');
+    button.destroy();
+  });
+
   test('flat and wavy button indicators draw at the existing 20px slot size', async () => {
     for (const shape of ['flat', 'wavy'] as const) {
       const button = mount({ text: 'Save', progress: { shape } });
