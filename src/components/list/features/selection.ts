@@ -10,12 +10,26 @@ export const withSelection = (config: ListConfig<ListItem>) =>
   const rows = () => component.list?.getRows() ?? [];
   const rowFor = (id: string | number) => rows().find(row => row.id === String(id));
   const className = component.getClass("list__item--selected");
+  /** A row's trailing checkable control, when it has one: the row's action too. */
+  const controlFor = (row: ListRow): HTMLElement | undefined => {
+    const slot = row.element.querySelector<HTMLElement>(`.${component.getClass("list__trailing")}[data-list-control]`);
+    return slot ? controlIn(slot) : undefined;
+  };
+  /** A control's on state: a native checked box, or an ARIA switch. */
+  const isChecked = (control: HTMLElement): boolean =>
+    control.matches(":checked") || control.getAttribute("aria-checked") === "true";
   const apply = () => {
     for (const id of selected) if (!rowFor(id)) selected.delete(id);
     for (const row of rows()) {
       const checked = selected.has(row.id);
       row.element.classList.toggle(className, checked);
       row.action?.setAttribute("aria-pressed", String(checked));
+      // Clearing a selection reaches the row's control: it is the row's state.
+      const control = controlFor(row);
+      if (control && isChecked(control) !== checked) {
+        if ("checked" in control) (control as HTMLInputElement).checked = checked;
+        else control.setAttribute("aria-checked", String(checked));
+      }
     }
   };
   const update = (id: string | number, value: boolean) => {
@@ -23,30 +37,27 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     if (value) selected.add(String(id)); else selected.delete(String(id));
     apply();
   };
-  if (config.trackSelection) {
-    for (const id of config.initialSelection ?? []) if (rowFor(id)) selected.add(String(id));
-    for (const row of rows()) if (row.item.selected) selected.add(row.id);
-  }
   const ownedRow = (event: Event): ListRow | undefined => {
     if (!(event.target instanceof Element)) return;
     const nearest = event.target.closest(`.${component.getClass("list__item")}`);
     return rows().find(row => row.element === nearest);
   };
-  /** A row's trailing checkable control, when it has one: the row's action too. */
-  const controlFor = (row: ListRow): HTMLElement | undefined => {
-    const slot = row.element.querySelector<HTMLElement>(`.${component.getClass("list__trailing")}[data-list-control]`);
-    return slot ? controlIn(slot) : undefined;
-  };
   /** M3: the selected state applies to the entire list item, so the row follows its control. */
   const follow = (row: ListRow) => {
     const control = controlFor(row);
     if (!control) return;
-    const checked = control.matches(":checked") || control.getAttribute("aria-checked") === "true";
+    const checked = isChecked(control);
     if (checked === selected.has(row.id)) return;
     if (checked && !config.multiSelect) selected.clear();
     if (checked) selected.add(row.id); else selected.delete(row.id);
     apply();
   };
+  if (config.trackSelection) {
+    for (const id of config.initialSelection ?? []) if (rowFor(id)) selected.add(String(id));
+    for (const row of rows()) if (row.item.selected) selected.add(row.id);
+    // A trailing control created checked already says its row is selected.
+    for (const row of rows()) follow(row);
+  }
   const activate = (event: MouseEvent) => {
     if (!config.trackSelection || resources.destroyed || event.defaultPrevented) return;
     const row = ownedRow(event);
