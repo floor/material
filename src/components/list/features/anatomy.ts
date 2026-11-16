@@ -55,7 +55,9 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
       // action button does; a name the app gave always wins. A rebuild makes
       // new text nodes and new ids, so the row's reference from before is a
       // dangling one: drop it and take the new row's.
-      const control = controlIn((el.firstElementChild as HTMLElement | null) ?? el);
+      // The whole slot, as the selection path searches it: the slot accepts
+      // markup, so a decorative sibling may come before the control.
+      const control = controlIn(el);
       if (control) {
         // The row's ids are this component's namespace: a token in it is the
         // list's own reference from an earlier render. Re-point those tokens

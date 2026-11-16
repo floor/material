@@ -168,6 +168,14 @@ describe("a rebuilt row's control name", () => {
     expect(appNamed.getAttribute("aria-describedby")).toBe(null);
   });
 
+  test("a control after a decorative sibling inherits the row's name", () => {
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: '<span aria-hidden="true">*</span><input type="checkbox">' } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    expect(control.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")!.id);
+    expect(control.getAttribute("aria-describedby")).toBe(row(list).querySelector(".mtrl-list__supporting")!.id);
+    expect(row(list).querySelector('[aria-hidden="true"]')?.textContent).toBe("*");
+  });
+
   test("a description the app supplied is not overwritten, before or after a rebuild", async () => {
     const note = document.createElement("p"); note.id = "app-note"; note.textContent = "From the app"; document.body.append(note);
     const input = document.createElement("input"); input.type = "checkbox"; input.setAttribute("aria-describedby", "app-note");
