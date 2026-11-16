@@ -740,6 +740,8 @@ Until it arrives the dialog has no calendar and no focus into it, and `aria-expa
 
 Opening and closing are never held behind the load. The open state answers at once, and so does a close while the calendar is in flight; the calendar mounts when its chunk lands and stays closed. Read the open state rather than the dialog's markup while an open is in flight.
 
+Failed calendar imports are logged and close a waiting open. A later open tries again; browsers may cache a rejected module URL, so recovery can require reloading the page.
+
 ### Bundling
 
 The build ships two direction forms. The full stylesheet and the per-component sheets — `material/styles` and `material/styles/<component>` — write physical sides with mirrored arms. The properties an old-target bundler rewrites, the `inset-inline-*` longhands and the logical corner radii, are absent from them, so no bundler pass can put them on the wrong side. Logical margins remain, and an old-target bundler can still rewrite those.
