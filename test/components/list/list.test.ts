@@ -144,6 +144,31 @@ describe("trailing controls", () => {
   });
 });
 
+describe("a rebuilt row's control name", () => {
+  test("a control the list named follows the new row's ids, and an app name stands", async () => {
+    const toggle = createSwitch({});
+    const named = createSwitch({ ariaLabel: "Background sync" });
+    const list = mount([
+      { id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } },
+      { id: "sync", headline: "Sync", supportingText: "Every hour", trailing: { type: "control", content: named } },
+    ]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const removed = control.getAttribute("aria-labelledby");
+    expect(document.getElementById(removed!)?.textContent).toBe("Wi-Fi");
+    await list.refresh();
+    const headline = row(list).querySelector(".mtrl-list__headline")!;
+    const supporting = row(list).querySelector(".mtrl-list__supporting")!;
+    expect(control.getAttribute("aria-labelledby")).toBe(headline.id);
+    expect(control.getAttribute("aria-describedby")).toBe(supporting.id);
+    expect(document.getElementById(headline.id)?.textContent).toBe("Wi-Fi");
+    expect(document.getElementById(supporting.id)?.textContent).toBe("Connect automatically");
+    const appNamed = row(list, 1).querySelector<HTMLInputElement>("input")!;
+    expect(appNamed.getAttribute("aria-label")).toBe("Background sync");
+    expect(appNamed.getAttribute("aria-labelledby")).toBe(null);
+    expect(appNamed.getAttribute("aria-describedby")).toBe(null);
+  });
+});
+
 describe("real list selection and lifecycle", () => {
   test("selection is immediately reflected and refresh preserves it", async () => {
     const list = mount([{ id: "a", headline: "A", selected: true }, { id: "b", headline: "B" }]);
