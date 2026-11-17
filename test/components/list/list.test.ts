@@ -513,6 +513,24 @@ describe("a rebuilt row's control name", () => {
     expect(control.getAttribute("aria-describedby")).toBe(`app-note ${rebuilt.querySelector(".mtrl-list__supporting")!.id}`);
   });
 
+  test("an app id that merely starts with the list class is not the list's", async () => {
+    const title = document.createElement("span"); title.id = "mtrl-list-app-title"; title.textContent = "App"; document.body.append(title);
+    const note = document.createElement("p"); note.id = "mtrl-list-app-note"; note.textContent = "Note"; document.body.append(note);
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const stale = control.getAttribute("aria-labelledby")!;
+    control.setAttribute("aria-labelledby", "mtrl-list-app-title");
+    control.setAttribute("aria-describedby", "mtrl-list-app-note");
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe("mtrl-list-app-title");
+    expect(control.getAttribute("aria-describedby")).toBe("mtrl-list-app-note");
+    // A mixed reference keeps the app token and re-points only the list's own.
+    control.setAttribute("aria-labelledby", `mtrl-list-app-title ${stale}`);
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe(`mtrl-list-app-title ${row(list).querySelector(".mtrl-list__headline")!.id}`);
+  });
+
   test("an app-only label is untouched, whitespace and U+00A0 included", async () => {
     const toggle = createSwitch({});
     const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);

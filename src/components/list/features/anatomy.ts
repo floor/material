@@ -62,13 +62,17 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
         // The row's ids are this component's namespace: a token in it is the
         // list's own reference from an earlier render. Re-point those tokens
         // at the rebuilt row, keep any the app added, and leave the order.
+        // Only this list's own generated ids, `<list>-<n>-headline` or
+        // `-supporting`, are its to rewrite: an app id that merely starts with
+        // the class keeps its meaning.
         const block = getClass("list") + "-";
+        const owned = (token: string) => token.startsWith(block) && /^\d+-(?:headline|supporting)$/.test(token.slice(block.length));
         // HTML's space-separated tokens: ASCII whitespace only. U+00A0 is legal
         // inside an id, so splitting on \s would break an app token in two.
         const reference = control.getAttribute("aria-labelledby");
         const tokens = reference === null ? [] : reference.split(/[ \t\n\f\r]+/);
-        const own = tokens.map(token => (token.startsWith(block) ? headline.id : token));
-        const ours = tokens.some(token => token.startsWith(block));
+        const own = tokens.map(token => (owned(token) ? headline.id : token));
+        const ours = tokens.some(owned);
         // Only a label holding a list token is the list's to rewrite; app-only
         // tokens stay exactly as written, whitespace and all.
         const listName = ours || (reference === null && !hasName(control));
@@ -80,8 +84,8 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
           if (listName && supporting) control.setAttribute("aria-describedby", supporting.id);
         } else {
           const parts = described.split(/[ \t\n\f\r]+/);
-          if (parts.some(token => token.startsWith(block))) {
-            const next = parts.map(token => (token.startsWith(block) ? (supporting?.id ?? "") : token)).filter(Boolean).join(" ");
+          if (parts.some(owned)) {
+            const next = parts.map(token => (owned(token) ? (supporting?.id ?? "") : token)).filter(Boolean).join(" ");
             if (next) control.setAttribute("aria-describedby", next);
             else control.removeAttribute("aria-describedby");
           }
