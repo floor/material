@@ -92,9 +92,9 @@ const createButton = (config: ButtonConfig = {}): ButtonComponent => {
       withIcon(baseConfig),
       withDisabled(baseConfig),
       withToggle(baseConfig),
-      withProgress(baseConfig),
       withRipple(baseConfig),
       withLifecycle(),
+      withProgress(baseConfig),
       (component) => {
         if (baseConfig.shape && component.element) {
           const className = `${baseConfig.prefix}-${baseConfig.componentName}--${baseConfig.shape}`;
