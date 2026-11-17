@@ -445,3 +445,110 @@ describe("single-select listbox mode", () => {
       .toThrow(/indicator/);
   });
 });
+
+describe("a rebuilt row's control name", () => {
+  test("a control the list named follows the new row's ids, and an app name stands", async () => {
+    const toggle = createSwitch({});
+    const named = createSwitch({ ariaLabel: "Background sync" });
+    const list = mount([
+      { id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } },
+      { id: "sync", headline: "Sync", supportingText: "Every hour", trailing: { type: "control", content: named } },
+    ]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const removed = control.getAttribute("aria-labelledby");
+    expect(document.getElementById(removed!)?.textContent).toBe("Wi-Fi");
+    await list.refresh();
+    const headline = row(list).querySelector(".mtrl-list__headline")!;
+    const supporting = row(list).querySelector(".mtrl-list__supporting")!;
+    expect(control.getAttribute("aria-labelledby")).toBe(headline.id);
+    expect(control.getAttribute("aria-describedby")).toBe(supporting.id);
+    expect(document.getElementById(headline.id)?.textContent).toBe("Wi-Fi");
+    expect(document.getElementById(supporting.id)?.textContent).toBe("Connect automatically");
+    const appNamed = row(list, 1).querySelector<HTMLInputElement>("input")!;
+    expect(appNamed.getAttribute("aria-label")).toBe("Background sync");
+    expect(appNamed.getAttribute("aria-labelledby")).toBe(null);
+    expect(appNamed.getAttribute("aria-describedby")).toBe(null);
+  });
+
+  test("a control after a decorative sibling inherits the row's name", () => {
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: '<span aria-hidden="true">*</span><input type="checkbox">' } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    expect(control.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")!.id);
+    expect(control.getAttribute("aria-describedby")).toBe(row(list).querySelector(".mtrl-list__supporting")!.id);
+    expect(row(list).querySelector('[aria-hidden="true"]')?.textContent).toBe("*");
+  });
+
+  test("a description the app supplied is not overwritten, before or after a rebuild", async () => {
+    const note = document.createElement("p"); note.id = "app-note"; note.textContent = "From the app"; document.body.append(note);
+    const input = document.createElement("input"); input.type = "checkbox"; input.setAttribute("aria-describedby", "app-note");
+    const list = mount([{ id: "a", headline: "A", supportingText: "Row text", trailing: { type: "control", content: input } }]);
+    expect(input.getAttribute("aria-labelledby")).toBe(row(list).querySelector(".mtrl-list__headline")!.id);
+    expect(input.getAttribute("aria-describedby")).toBe("app-note");
+    await list.refresh();
+    expect(input.getAttribute("aria-describedby")).toBe("app-note");
+  });
+
+  test("a mixed reference keeps the app's token, in order, and re-points the list's", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const title = document.createElement("span"); title.id = "app-title"; title.textContent = "Settings"; document.body.append(title);
+    control.setAttribute("aria-labelledby", `app-title ${control.getAttribute("aria-labelledby")}`);
+    await list.refresh();
+    const rebuilt = row(list).querySelector(".mtrl-list__headline")!.id;
+    expect(control.getAttribute("aria-labelledby")).toBe(`app-title ${rebuilt}`);
+  });
+
+  test("tokens split on any whitespace, in both references", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const title = document.createElement("span"); title.id = "app-title"; document.body.append(title);
+    const note = document.createElement("p"); note.id = "app-note"; document.body.append(note);
+    control.setAttribute("aria-labelledby", `app-title\t${control.getAttribute("aria-labelledby")}`);
+    control.setAttribute("aria-describedby", `app-note\t${control.getAttribute("aria-describedby")}`);
+    await list.refresh();
+    const rebuilt = row(list);
+    expect(control.getAttribute("aria-labelledby")).toBe(`app-title ${rebuilt.querySelector(".mtrl-list__headline")!.id}`);
+    expect(control.getAttribute("aria-describedby")).toBe(`app-note ${rebuilt.querySelector(".mtrl-list__supporting")!.id}`);
+  });
+
+  test("an app id that merely starts with the list class is not the list's", async () => {
+    const title = document.createElement("span"); title.id = "mtrl-list-app-title"; title.textContent = "App"; document.body.append(title);
+    const note = document.createElement("p"); note.id = "mtrl-list-app-note"; note.textContent = "Note"; document.body.append(note);
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    const stale = control.getAttribute("aria-labelledby")!;
+    control.setAttribute("aria-labelledby", "mtrl-list-app-title");
+    control.setAttribute("aria-describedby", "mtrl-list-app-note");
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe("mtrl-list-app-title");
+    expect(control.getAttribute("aria-describedby")).toBe("mtrl-list-app-note");
+    // A mixed reference keeps the app token and re-points only the list's own.
+    control.setAttribute("aria-labelledby", `mtrl-list-app-title ${stale}`);
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe(`mtrl-list-app-title ${row(list).querySelector(".mtrl-list__headline")!.id}`);
+  });
+
+  test("an app-only label is untouched, whitespace and U+00A0 included", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    // U+00A0 is legal inside an id: one token, not a separator.
+    control.setAttribute("aria-labelledby", "app\u00A0title\tother");
+    control.setAttribute("aria-describedby", "app\u00A0note");
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe("app\u00A0title\tother");
+    expect(control.getAttribute("aria-describedby")).toBe("app\u00A0note");
+  });
+
+  test("a mixed label splits on ASCII whitespace only", async () => {
+    const toggle = createSwitch({});
+    const list = mount([{ id: "wifi", headline: "Wi-Fi", supportingText: "Connect automatically", trailing: { type: "control", content: toggle } }]);
+    const control = row(list).querySelector<HTMLInputElement>("input")!;
+    control.setAttribute("aria-labelledby", `app\u00A0title\t${control.getAttribute("aria-labelledby")}`);
+    await list.refresh();
+    expect(control.getAttribute("aria-labelledby")).toBe(`app\u00A0title ${row(list).querySelector(".mtrl-list__headline")!.id}`);
+  });
+});

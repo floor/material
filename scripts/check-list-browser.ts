@@ -102,6 +102,10 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
     initial: { ids: ["on"], checked: [true, false], pressed: ["true", "false"] },
     cleared: { ids: [], checked: [false, false], pressed: ["false", "false"] },
   }, "a control created checked selects its row; clearing unchecks the controls");
+  // A rebuild replaces the row's text nodes and their ids; the switch the list
+  // named must follow them or Chromium shows it unnamed.
+  await page.evaluate(() => (window as unknown as ListWindow).materialList.refresh());
+  assert.equal(await page.locator("#material-list").getByRole("switch", { name: "Wi-Fi", description: "Connect automatically", exact: true }).count(), 1, "refresh re-points the trailing switch's name and description");
   await wifi.locator(".mtrl-list__action").click();
   assert.equal(await wifi.getByRole("switch", { name: "Wi-Fi", exact: true }).isChecked(), true, "A click on the row reaches the switch");
   assert.equal(await wifi.locator(".mtrl-list__action").getAttribute("aria-pressed"), "true", "and the whole row takes the selected state");

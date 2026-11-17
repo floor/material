@@ -52,11 +52,44 @@ export function renderAnatomy(item: ListItem, getClass: (name: string) => string
     else if (value.type === "icon") el.setAttribute("aria-hidden", "true");
     if (value.type === "control") {
       // A control with no name of its own borrows the row's, as the row's own
-      // action button does; a name the app gave always wins.
-      const control = controlIn((el.firstElementChild as HTMLElement | null) ?? el);
-      if (control && !hasName(control)) {
-        control.setAttribute("aria-labelledby", headline.id);
-        if (supporting && !control.hasAttribute("aria-describedby")) control.setAttribute("aria-describedby", supporting.id);
+      // action button does; a name the app gave always wins. A rebuild makes
+      // new text nodes and new ids, so the row's reference from before is a
+      // dangling one: drop it and take the new row's.
+      // The whole slot, as the selection path searches it: the slot accepts
+      // markup, so a decorative sibling may come before the control.
+      const control = controlIn(el);
+      if (control) {
+        // The row's ids are this component's namespace: a token in it is the
+        // list's own reference from an earlier render. Re-point those tokens
+        // at the rebuilt row, keep any the app added, and leave the order.
+        // Only this list's own generated ids, `<list>-<n>-headline` or
+        // `-supporting`, are its to rewrite: an app id that merely starts with
+        // the class keeps its meaning.
+        const block = getClass("list") + "-";
+        const owned = (token: string) => token.startsWith(block) && /^\d+-(?:headline|supporting)$/.test(token.slice(block.length));
+        // HTML's space-separated tokens: ASCII whitespace only. U+00A0 is legal
+        // inside an id, so splitting on \s would break an app token in two.
+        const reference = control.getAttribute("aria-labelledby");
+        const tokens = reference === null ? [] : reference.split(/[ \t\n\f\r]+/);
+        const own = tokens.map(token => (owned(token) ? headline.id : token));
+        const ours = tokens.some(owned);
+        // Only a label holding a list token is the list's to rewrite; app-only
+        // tokens stay exactly as written, whitespace and all.
+        const listName = ours || (reference === null && !hasName(control));
+        if (listName) control.setAttribute("aria-labelledby", ours ? own.join(" ") : headline.id);
+        // A description the app supplied is its own; the list writes one only
+        // when it named the control, and re-points only its own stale tokens.
+        const described = control.getAttribute("aria-describedby");
+        if (described === null) {
+          if (listName && supporting) control.setAttribute("aria-describedby", supporting.id);
+        } else {
+          const parts = described.split(/[ \t\n\f\r]+/);
+          if (parts.some(owned)) {
+            const next = parts.map(token => (owned(token) ? (supporting?.id ?? "") : token)).filter(Boolean).join(" ");
+            if (next) control.setAttribute("aria-describedby", next);
+            else control.removeAttribute("aria-describedby");
+          }
+        }
       }
     }
     return el;
