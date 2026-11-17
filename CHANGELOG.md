@@ -17,6 +17,27 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.14.2] - 2026-11-17
+
+### Fixed
+
+- **Bottom app bar.** The compatibility bar keeps a top border in high contrast, and its round action icon buttons keep their pressed and selected shapes ([#403](https://github.com/floor/material/pull/403)).
+- Buttons created with loading enabled can start their indicator and loading text through `setLoading(true, text)`. Clearing loading restores the original label and preserves the disabled state from before loading ([#399](https://github.com/floor/material/pull/399)).
+- Buttons expose their lazily created progress instance so the public progress API controls the displayed indicator. Destroying the button also cleans up that progress instance ([#404](https://github.com/floor/material/pull/404)).
+- **Deferred date picker load failures.** A failed calendar import closes a waiting open and permits a later explicit load attempt. Browsers may cache the rejected module URL, so recovery can require a page reload ([#393](https://github.com/floor/material/pull/393)).
+- Date pickers now honor `dateFormat` supplied through component defaults in both the eager and deferred entries. An instance format still takes precedence, and an omitted format follows the locale ([#391](https://github.com/floor/material/pull/391)).
+- Date picker year tokens preserve leading zeros in both entries. Early-year ISO dates and ranges now survive element value normalization, form serialization and reset instead of clearing the value ([#392](https://github.com/floor/material/pull/392)).
+- **Deferred menus cancel when an opener's ancestor becomes hidden.** A pending open no longer paints a late popup or moves focus after an ancestor becomes `display: none`, including across shadow roots. Making the opener visible again allows a fresh open ([#390](https://github.com/floor/material/pull/390)).
+- **FAB menu.** Closing the list while an item has focus moves focus to the button, including when the menu is a custom element and the item sits in its shadow root ([#398](https://github.com/floor/material/pull/398)).
+- **A list row's trailing control and its selected state now agree from the start and at every clear.** A switch, checkbox or radio created checked selects its row at creation, and `clearSelection()`, `setSelection([])` and `deselectItem()` uncheck the row's control as well as dropping the selection, so the row never shows selected and unchecked at once ([#389](https://github.com/floor/material/pull/389)).
+- **Listbox popups retain their boundary and option states in forced colors.** The opt-in stylesheet uses a visible border and the user's system palette for selected and disabled options, including options that are both selected and disabled ([#394](https://github.com/floor/material/pull/394)).
+- Listbox popups and options now follow the control's computed text direction when opened, including a local `dir` or CSS direction override. Disabled listbox controls leave Alt+ArrowDown unhandled instead of canceling the key's default action ([#401](https://github.com/floor/material/pull/401)).
+- **Sheets.** Bottom and side sheets accept `variant="modal"` when rendered on the server, and changing `variant` after the element has upgraded rebuilds the sheet ([#400](https://github.com/floor/material/pull/400)).
+- Server-rendered icon-only tabs retain their value-based accessible name, including badge counts. React, Vue and Solid tab declarations now map `ariaLabel` to `aria-label` ([#397](https://github.com/floor/material/pull/397)).
+- **Time picker.** Dragging the dial from a focused number leaves a single tab stop ([#402](https://github.com/floor/material/pull/402)).
+- **Toolbar.** An icon button with a trailing icon uses the same 12px side padding as other icon buttons when the toolbar is collapsed ([#396](https://github.com/floor/material/pull/396)).
+- **Toolbars remain reachable when their tab-stop item is disabled.** Changes to native disabled state or `aria-disabled` move the tab stop to an enabled item without moving focus. This also works for slotted controls, and re-enabling an item restores a tab stop when all items were disabled ([#395](https://github.com/floor/material/pull/395)).
+
 ## [3.14.1] - 2026-11-13
 
 A busy button's progress circle fills its icon slot whatever page rules do to canvas widths.
@@ -7252,7 +7273,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.14.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.14.2...HEAD
+[3.14.2]: https://github.com/floor/material/compare/v3.14.1...v3.14.2
 [3.14.1]: https://github.com/floor/material/compare/v3.14.0...v3.14.1
 [3.14.0]: https://github.com/floor/material/compare/v3.13.1...v3.14.0
 [3.13.1]: https://github.com/floor/material/compare/v3.13.0...v3.13.1

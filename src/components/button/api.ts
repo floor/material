@@ -75,6 +75,11 @@ interface ComponentWithElements {
   setLoadingSync?: (loading: boolean, text?: string) => ComponentWithElements;
 }
 
+const getButtonClass = (component: ComponentWithElements): string => {
+  const name = component.componentName || "button";
+  return component.getClass(name);
+};
+
 /**
  * Enhances a button component with API methods.
  * This follows the higher-order function pattern to add public API methods
@@ -114,6 +119,7 @@ export const withAPI =
       disabled,
       lifecycle,
       getClass: component.getClass,
+      get progress() { return component.progress; },
 
       on: <K extends keyof ButtonEvents>(event: K, handler: ButtonEvents[K]) => {
         if (component.on) {
@@ -200,11 +206,7 @@ export const withAPI =
        */
       hasIcon() {
         const iconElement = component.icon.getElement();
-        return (
-          !!iconElement &&
-          !!iconElement.innerHTML.trim() &&
-          !!iconElement.parentNode
-        );
+        return !!(iconElement?.innerHTML.trim() && iconElement.parentNode);
       },
 
       /**
@@ -214,8 +216,7 @@ export const withAPI =
        * @returns Button component for method chaining
        */
       setIcon(icon: string) {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
+        const buttonClass = getButtonClass(component);
         if (!icon) {
           // Remove the icon if it exists
           const iconElement = component.icon.getElement();
@@ -235,14 +236,7 @@ export const withAPI =
           setHTML(newIconElement, icon);
 
           // Insert at the beginning of button
-          if (component.element.firstChild) {
-            component.element.insertBefore(
-              newIconElement,
-              component.element.firstChild,
-            );
-          } else {
-            component.element.appendChild(newIconElement);
-          }
+          component.element.insertBefore(newIconElement, component.element.firstChild);
 
           // Update component's reference to the new element
           component.icon.getElement = () => newIconElement;
@@ -273,21 +267,11 @@ export const withAPI =
        * @returns Button component for method chaining
        */
       setVariant(variant: string) {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
+        const buttonClass = getButtonClass(component);
 
-        // First remove all existing variant classes
-        const variantClasses = [
-          "filled",
-          "tonal",
-          "outlined",
-          "elevated",
-          "text",
-        ].map((v) => `${buttonClass}--${v}`);
-
-        variantClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
+        for (const variant of ["filled", "tonal", "outlined", "elevated", "text"]) {
+          component.element.classList.remove(`${buttonClass}--${variant}`);
+        }
 
         component.element.classList.add(`${buttonClass}--${variant}`);
         return buttonComponent;
@@ -298,21 +282,10 @@ export const withAPI =
        * @returns Current variant name ('filled', 'outlined', etc.)
        */
       getVariant() {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
-        const variants = ["filled", "tonal", "outlined", "elevated", "text"];
-
-        // Check which variant class is present on the element
-        for (const variant of variants) {
-          if (
-            component.element.classList.contains(`${buttonClass}--${variant}`)
-          ) {
-            return variant;
-          }
-        }
-
-        // If no variant class is found, return the default variant
-        return "filled";
+        const buttonClass = getButtonClass(component);
+        return ["filled", "tonal", "outlined", "elevated", "text"].find(
+          value => component.element.classList.contains(`${buttonClass}--${value}`),
+        ) || "filled";
       },
 
       /**
@@ -320,19 +293,10 @@ export const withAPI =
        * @returns Current size name ('xs', 's', 'm', 'l', 'xl')
        */
       getSize() {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
-        const sizes = ["xs", "s", "m", "l", "xl"];
-
-        // Check which size class is present on the element
-        for (const size of sizes) {
-          if (component.element.classList.contains(`${buttonClass}--${size}`)) {
-            return size;
-          }
-        }
-
-        // If no size class is found, return the default size
-        return "s";
+        const buttonClass = getButtonClass(component);
+        return ["xs", "s", "m", "l", "xl"].find(
+          value => component.element.classList.contains(`${buttonClass}--${value}`),
+        ) || "s";
       },
 
       /**
@@ -341,17 +305,11 @@ export const withAPI =
        * @returns Button component for method chaining
        */
       setSize(size: string) {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
+        const buttonClass = getButtonClass(component);
 
-        // First remove all existing size classes
-        const sizeClasses = ["xs", "s", "m", "l", "xl"].map(
-          (s) => `${buttonClass}--${s}`,
-        );
-
-        sizeClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
+        for (const size of ["xs", "s", "m", "l", "xl"]) {
+          component.element.classList.remove(`${buttonClass}--${size}`);
+        }
 
         component.element.classList.add(`${buttonClass}--${size}`);
         return buttonComponent;
@@ -362,21 +320,10 @@ export const withAPI =
        * @returns Current shape name ('round', 'square')
        */
       getShape() {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
-        const shapes = ["round", "square"];
-
-        // Check which shape class is present on the element
-        for (const shape of shapes) {
-          if (
-            component.element.classList.contains(`${buttonClass}--${shape}`)
-          ) {
-            return shape;
-          }
-        }
-
-        // If no shape class is found, return the default shape
-        return "round";
+        const buttonClass = getButtonClass(component);
+        return ["round", "square"].find(
+          value => component.element.classList.contains(`${buttonClass}--${value}`),
+        ) || "round";
       },
 
       /**
@@ -385,17 +332,11 @@ export const withAPI =
        * @returns Button component for method chaining
        */
       setShape(shape: string) {
-        const compName = component.componentName || "button";
-        const buttonClass = component.getClass(compName);
+        const buttonClass = getButtonClass(component);
 
-        // First remove all existing shape classes
-        const shapeClasses = ["round", "square"].map(
-          (s) => `${buttonClass}--${s}`,
-        );
-
-        shapeClasses.forEach((cls) => {
-          component.element.classList.remove(cls);
-        });
+        for (const shape of ["round", "square"]) {
+          component.element.classList.remove(`${buttonClass}--${shape}`);
+        }
 
         component.element.classList.add(`${buttonClass}--${shape}`);
         return buttonComponent;
@@ -454,11 +395,6 @@ export const withAPI =
         lifecycle.destroy();
       },
     };
-
-    // Forward progress methods if they exist
-    if (component.progress) {
-      buttonComponent.progress = component.progress;
-    }
 
     if (component.showProgress) {
       buttonComponent.showProgress = async () => {

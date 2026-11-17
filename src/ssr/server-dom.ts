@@ -102,6 +102,7 @@ const fidelity = (patches: Descriptors, document: Document): void => {
   };
   reflect(html, "inert", "inert", true);
   reflect(html, "popover", "popover");
+  reflect(dom.HTMLButtonElement.prototype, "value", "value");
   // linkedom uses HTMLElement rather than HTMLLabelElement for parsed labels.
   reflect(html, "htmlFor", "for");
   patches.define(html, "draggable", {

@@ -17,7 +17,7 @@
 import { activeElementOf } from "../../core/dom/focus";
 import { createElement } from "../../core/dom/create";
 import { renderCalendar } from "./render";
-import type { DatePickerState } from "./types";
+import type { DatePickerLoadErrorPayload, DatePickerState } from "./types";
 import { addDays, addMonths, dtf, formatDate, getFirstDayOfWeek, parseDate, parseInputDate } from "./utils";
 
 const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
@@ -40,6 +40,8 @@ export type DatePickerSurfaceInput = [
   close: (restoreFocus?: boolean) => void,
   commitDraft: () => void,
   setDisplayDate: (date: Date) => void,
+  /** Reports a failed deferred load. The calendar surface does not call it. */
+  emit: (event: "loaderror", payload: DatePickerLoadErrorPayload) => void,
 ];
 
 /** Builds the surface the shell calls: the calendar, which the stand-in builds when its chunk lands. */

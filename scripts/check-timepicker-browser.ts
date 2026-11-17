@@ -119,6 +119,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.mouse.move(face.x + 128, face.y + 28); await page.mouse.down();
   await page.mouse.move(face.x + 228, face.y + 128); await page.mouse.up();
   assert.equal(await draft(), "03:35", "a drag to three o'clock picks 3");
+  assert.equal(await dialog.locator('.mtrl-time-picker__dial-number[tabindex="0"]').count(), 1, "a drag from a focused number leaves one dial tab stop");
   await page.waitForFunction(() => document.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
   assert.equal((await hand()).selected, "35 minutes", "then the dial moves on to minutes");
   assert.equal((await selector("minutes")).checked, "true", "and checks the minute box");

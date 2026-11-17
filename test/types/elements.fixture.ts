@@ -7,7 +7,7 @@
 //
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
-  ButtonElement, ElementEvents, ElementProps, SwitchElement, SwitchSpec, TabAttributes, TabsSpec,
+  ButtonElement, CarouselItemAttributes, ElementEvents, ElementProps, SwitchElement, SwitchSpec, TabAttributes, TabsSpec,
   TextFieldElement, TextFieldSpec, ToolbarElement, ToolbarSpec,
 } from "../../src/elements";
 import type { ToolbarEvents } from "../../src/components/toolbar";
@@ -34,7 +34,23 @@ assert<Equals<ElementProps<TabsSpec>["value"], string | null | undefined>>();
 
 // A tab declares plain attributes.
 assert<Equals<TabAttributes, {
-  value?: string; label?: string; icon?: string; badge?: string; disabled?: boolean;
+  value?: string; label?: string; icon?: string; badge?: string; disabled?: boolean; ariaLabel?: string;
+}>>();
+
+// width and height are numbers. loading and decoding stay strings: an attribute is string, boolean or number.
+assert<Equals<CarouselItemAttributes, {
+  value?: string;
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  loading?: string;
+  decoding?: string;
+  label?: string;
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  buttonUrl?: string;
 }>>();
 
 // Instances carry the forwarded methods and the component.

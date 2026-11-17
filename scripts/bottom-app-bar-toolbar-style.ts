@@ -26,9 +26,14 @@ export function bottomAppBarToolbarCss(legacy: string): string {
   });
   // Existing toolbar layers remain intact. Only the explicitly marked facade
   // cancels the toolbar's density floor, item distribution and content color.
+  // Forced colors keeps the legacy top edge: the docked toolbar's four-sided
+  // outline does not apply. Round actions keep the icon button's own pressed
+  // and selected radii; the toolbar pins those to the round radius.
   root.append(postcss.parse(
     ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar{min-height:0;gap:0;width:auto;max-width:none;margin:0;border-radius:0}" +
-    ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar>.mtrl-toolbar__bar{min-height:0;flex:0 1 auto;justify-content:normal;color:inherit;transition:none}",
+    ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar>.mtrl-toolbar__bar{min-height:0;flex:0 1 auto;justify-content:normal;color:inherit;transition:none}" +
+    "@media (forced-colors:active){.mtrl-bottom-app-bar-toolbar.mtrl-toolbar--docked{outline:none}}" +
+    ".mtrl-bottom-app-bar-toolbar.mtrl-toolbar.mtrl-toolbar--docked>.mtrl-toolbar__bar>.mtrl-icon-button--round{--mtrl-icon-button-shape-selected:unset;--mtrl-icon-button-shape-pressed:unset}",
   ));
   return root.toString();
 }

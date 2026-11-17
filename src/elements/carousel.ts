@@ -2,11 +2,14 @@
 /**
  * `<m-carousel>` with `<m-carousel-item>` children.
  *
- * Each `<m-carousel-item>` declares one item (`src`, `alt`, `description`,
- * `button-text`, `button-url`, `value`, and its name). `label` names the
- * item. `title` does when `label` is absent. Otherwise its text is the name.
- * The carousel reads them into the factory's config and updates in place when
- * they change; the children stay where the framework put them.
+ * Each `<m-carousel-item>` declares one item (`src`, `alt`, `width`, `height`,
+ * `loading`, `decoding`, `description`, `button-text`, `button-url`, `value`,
+ * and its name). `label` names the item. `title` does when `label` is absent.
+ * Otherwise its text is the name. The carousel reads them into the factory's
+ * config and updates in place when they change; the children stay where the
+ * framework put them. `width` and `height` are the image's intrinsic pixels.
+ * `loading` and `decoding` are carried the same way; omitted, the factory
+ * keeps its defaults.
  *
  * `variant` and the sizing attributes have no setter on the carousel:
  * changing one recreates it. `index` on `<m-carousel>` is the default current
@@ -49,15 +52,31 @@ const itemName = (child: Element): string => {
   return (child.textContent ?? "").trim();
 };
 
+/** A number attribute, as the attribute reader parses one: missing or non-numeric stays unset. */
+const declaredNumber = (child: Element, name: string): number | undefined => {
+  const raw = child.getAttribute(name);
+  if (raw === null) return undefined;
+  const value = Number(raw);
+  return Number.isNaN(value) ? undefined : value;
+};
+
 const declaredItems = (host: HTMLElement): DeclaredItem[] => {
   const itemTag = `${host.localName}-item`;
   const items: DeclaredItem[] = [];
   for (const child of Array.from(host.children)) {
     if (child.localName !== itemTag) continue;
     const title = itemName(child);
+    const loading = child.getAttribute("loading");
+    const decoding = child.getAttribute("decoding");
+    // Always present, including `undefined`, so a later removal differs from the stored slide.
+    // An unrecognised loading or decoding stays unset and the factory keeps its default.
     const slide: CarouselSlide = {
       image: child.getAttribute("src") ?? undefined,
       alt: child.getAttribute("alt") ?? undefined,
+      width: declaredNumber(child, "width"),
+      height: declaredNumber(child, "height"),
+      loading: loading === "eager" || loading === "lazy" ? loading : undefined,
+      decoding: decoding === "sync" || decoding === "async" || decoding === "auto" ? decoding : undefined,
       title: title || undefined,
       description: child.getAttribute("description") ?? undefined,
       buttonText: child.getAttribute("button-text") ?? undefined,
@@ -164,8 +183,10 @@ export type CarouselSpec = typeof carouselSpec;
 export type CarouselElement = ElementInstance<CarouselSpec, CarouselComponent>;
 
 /**
- * `<m-carousel-item>` declares one item and renders nothing. `label` names
- * it. `title` does when `label` is absent. Otherwise its text is the name.
+ * `<m-carousel-item>` declares one item and renders nothing. `width` and
+ * `height` are the image's intrinsic pixels. `loading` and `decoding` are
+ * the image hints. `label` names it. `title` does when `label` is absent.
+ * Otherwise its text is the name.
  */
 export const carouselItemDeclaration = {
   name: "carousel-item",
@@ -173,6 +194,10 @@ export const carouselItemDeclaration = {
     value: { type: "string" },
     src: { type: "string" },
     alt: { type: "string" },
+    width: { type: "number" },
+    height: { type: "number" },
+    loading: { type: "string" },
+    decoding: { type: "string" },
     label: { type: "string" },
     title: { type: "string" },
     description: { type: "string" },

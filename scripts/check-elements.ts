@@ -23,11 +23,13 @@ import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkToolbarCollapse } from "./check-toolbar-collapse-browser";
+import { checkBottomAppBarToolbarContrast } from "./check-bottom-app-bar-toolbar-contrast";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkFabPlacement } from "./check-fab-placement-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
+import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
@@ -51,6 +53,7 @@ const server = Bun.serve({
     const path = new URL(request.url).pathname;
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/bottom-app-bar-toolbar.css") return new Response(Bun.file("dist/styles/bottom-app-bar-toolbar.css"));
     if (path === "/menu.css") return new Response(Bun.file("dist/styles/menu.css"));
     if (path === "/away") return new Response("<!doctype html><p>away</p>", { headers: { "Content-Type": "text/html" } });
     if (path === "/restore") {
@@ -5521,11 +5524,15 @@ try {
 
   await checkToolbarCollapse(page, check);
 
+  await checkBottomAppBarToolbarContrast(page, check);
+
   await checkTabBadge(page, check);
 
   await checkDrawerBadge(page, check);
 
   await checkButtonIconPosition(page, check);
+
+  await checkSheetVariant(page, check);
 
   await checkButtonToggle(page, check);
 
@@ -7137,6 +7144,66 @@ try {
       labels: ["Epsilon", "Alpha", "Gamma ray", "Delta", "Zeta"],
     });
     check("carousel: items added, removed, moved and changed update in place");
+
+    const images = await page.evaluate(async () => {
+      const host = document.createElement("m-carousel") as HTMLElement & { component: unknown };
+      host.setAttribute("aria-label", "Sized");
+      host.setAttribute("item-width", "200");
+      host.style.height = "240px";
+      const item = (attrs: Record<string, string>, text: string): HTMLElement => {
+        const el = document.createElement("m-carousel-item");
+        for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
+        el.textContent = text;
+        return el;
+      };
+      const first = item({ value: "a", src: "/photo-a", alt: "A", width: "640", height: "360", decoding: "async" }, "A");
+      const second = item({ value: "b", src: "/photo-b", alt: "B" }, "B");
+      const third = item({ value: "c", src: "/photo-c", alt: "C", loading: "eager" }, "C");
+      host.append(first, second, third);
+      document.body.append(host);
+      const read = (): Array<{ width: string | null; height: string | null; loading: string | null; decoding: string | null }> =>
+        [...(host.shadowRoot?.querySelectorAll("img") ?? [])].map((img) => ({
+          width: img.getAttribute("width"),
+          height: img.getAttribute("height"),
+          loading: img.getAttribute("loading"),
+          decoding: img.getAttribute("decoding"),
+        }));
+      const initial = read();
+      const before = host.component;
+      first.setAttribute("width", "320");
+      first.setAttribute("height", "180");
+      first.setAttribute("loading", "lazy");
+      first.setAttribute("decoding", "sync");
+      second.setAttribute("width", "10");
+      third.removeAttribute("loading");
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      const updatedImages = read();
+      const typed = first as HTMLElement & { width: number; height: number; loading: string; decoding: string };
+      typed.width = 800;
+      typed.decoding = "auto";
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      const properties = read();
+      const same = host.component === before;
+      host.remove();
+      return { same, initial, updatedImages, properties };
+    });
+    assert.equal(images.same, true);
+    assert.deepEqual(images.initial, [
+      { width: "640", height: "360", loading: "eager", decoding: "async" },
+      { width: null, height: null, loading: "lazy", decoding: null },
+      { width: null, height: null, loading: "eager", decoding: null },
+    ]);
+    assert.deepEqual(images.updatedImages, [
+      { width: "320", height: "180", loading: "lazy", decoding: "sync" },
+      { width: "10", height: null, loading: "lazy", decoding: null },
+      { width: null, height: null, loading: "lazy", decoding: null },
+    ]);
+    assert.deepEqual(images.properties, [
+      { width: "800", height: "180", loading: "lazy", decoding: "auto" },
+      { width: "10", height: null, loading: "lazy", decoding: null },
+      { width: null, height: null, loading: "lazy", decoding: null },
+    ]);
+    check("carousel: item width, height, loading and decoding reach the image, then update in place");
 
     const renamed = await page.evaluate(() => {
       const r = document.getElementById("r") as Carousel;
@@ -9055,6 +9122,24 @@ try {
     await page.keyboard.press("Tab");
     assert.equal(await focused(), "fab:Compose", "Tab out closes it on the FAB");
     check("FAB menu: arrows and Tab into the list, wrapping; Escape and Tab out close it on the FAB");
+
+    const hiddenFocus = await page.evaluate(async () => {
+      const fm = document.getElementById("fm") as Fm;
+      fm.show();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const root = fm.shadowRoot!;
+      const list = root.querySelector<HTMLElement>('[role="menu"]')!;
+      const item = list.querySelector<HTMLElement>('[role="menuitem"]')!;
+      const fab = root.querySelector<HTMLElement>('[aria-haspopup="menu"]')!;
+      item.focus();
+      const focusedBefore = root.activeElement === item;
+      fm.hide();
+      return { focusedBefore, inert: list.hasAttribute("inert"), fabFocused: root.activeElement === fab,
+        focusInList: list.contains(root.activeElement) };
+    });
+    assert.deepEqual(hiddenFocus, { focusedBefore: true, inert: true, fabFocused: true, focusInList: false },
+      "programmatic hide restores focus from the shadow-root item when the list becomes inert");
+    check("FAB menu: programmatic hide moves focus from the shadow list to its FAB");
 
     const chosen = await page.evaluate(async () => {
       const fm = document.getElementById("fm") as Fm;

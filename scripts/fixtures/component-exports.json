@@ -883,6 +883,11 @@
       "status": "public"
     },
     {
+      "name": "DatePickerLoadErrorPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "DatePickerSelectionMode",
       "kind": "type",
       "status": "public"
@@ -1013,6 +1018,11 @@
     },
     {
       "name": "DatePickerInput",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerLoadErrorPayload",
       "kind": "type",
       "status": "public"
     },

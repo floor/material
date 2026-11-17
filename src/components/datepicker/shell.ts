@@ -38,7 +38,7 @@ const TRIGGER_ICON = '<svg viewBox="0 0 24 24" width="24" height="24" fill="curr
 /** The default entry's config, repeated so this module imports no constant. */
 export const defaultConfig: DatePickerConfig = {
   variant: "docked", initialView: "day", selectionMode: "single",
-  dateFormat: "MM/DD/YYYY", animate: true, closeOnSelect: false,
+  animate: true, closeOnSelect: false,
 };
 export const createBaseConfig = (config: DatePickerConfig = {}) =>
   createComponentConfig(defaultConfig, config, "datepicker");
@@ -83,7 +83,7 @@ export function createDatePickerShell<M extends string = "single">(
     // when it lands, and nothing reads it before the calendar paints. Until
     // then the placeholder is the scale's default week start.
     locale, firstDayOfWeek: 1,
-    dateFormat: config.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
+    dateFormat: settings.dateFormat || getLocaleDateFormat(locale), variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
@@ -262,7 +262,7 @@ export function createDatePickerShell<M extends string = "single">(
   // tuple is the surface's whole runtime contract, so a stand-in forwards
   // without this shell knowing which it holds.
   const [showSurface, hideSurface, renderSurface, clickSurface, keySurface, validateSurface, destroySurface] =
-    createSurface(state, dialog, cls, view, trigger, !!settings.closeOnSelect, () => opened, close, commitDraft, setDisplayDate);
+    createSurface(state, dialog, cls, view, trigger, !!settings.closeOnSelect, () => opened, close, commitDraft, setDisplayDate, base.emit);
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();

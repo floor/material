@@ -18,6 +18,8 @@
  * focus (once), its aria-expanded and the aria title that names the dialog.
  */
 import assert from "node:assert/strict";
+import { checkDatePickerDefaultFormat } from "./check-datepicker-default-format";
+import { checkDatePickerEarlyYears } from "./check-datepicker-early-years";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { chromium } from "playwright";
@@ -92,6 +94,10 @@ const build = async (entry: string, outdir: string, metafile = true) => {
     outputs: Record<string, MetaOutput>;
   };
 };
+
+assert(await Bun.file("dist/components/datepicker/deferred.js").exists(), "datepicker-deferred:check needs built dist; run bun run build from the package root.");
+await checkDatePickerDefaultFormat();
+await checkDatePickerEarlyYears();
 
 rmSync(scratch, { recursive: true, force: true });
 mkdirSync(deferredOut, { recursive: true });

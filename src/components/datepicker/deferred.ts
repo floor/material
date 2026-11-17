@@ -14,7 +14,9 @@
 // What the surface paints is what waits: the calendar, its initial focus and
 // its aria title. Until it lands the dialog carries `aria-label` as its name,
 // `aria-expanded` stays false, and `open` has already been emitted; read
-// isOpen() rather than the DOM while an open is in flight.
+// isOpen() rather than the DOM while an open is in flight. A failed load
+// closes that open, emits `loaderror` with `{ error }`, and leaves the next
+// open free to try again.
 import { createDatePickerShell } from "./shell";
 import type { DatePickerSurface, DatePickerSurfaceInput } from "./surface";
 import type { DatePickerComponent, DatePickerConfig, DatePickerValueOf } from "./types";
@@ -27,6 +29,7 @@ export type {
   DatePickerValueOf,
   DatePickerInput,
   DatePickerChangePayload,
+  DatePickerLoadErrorPayload,
   DatePickerVisibilityPayload,
   DatePickerTapPayload,
   DatePickerSwipePayload,
@@ -43,7 +46,7 @@ export type {
  * arrives.
  */
 const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurface => {
-  const [state, dialog, , , trigger, , isOpen] = input;
+  const [state, dialog, , , trigger, , isOpen, close, , , emit] = input;
   let real: DatePickerSurface | null = null;
   // 0: idle, 1: the import is in flight, 2: destroyed.
   let phase = 0;
@@ -55,10 +58,19 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         if (phase === 2) return;
         // The calendar paints itself at creation; an open still in flight
         // paints when it lands.
-        real = createCalendarSurface(...input);
+        real = createCalendarSurface(...(input as unknown as Parameters<typeof createCalendarSurface>));
         if (isOpen()) real[0]();
       },
-      (error: unknown) => console.error("Date picker surface failed to load:", error),
+      (error: unknown) => {
+        if (phase === 2) return;
+        // Release the failed attempt without retrying automatically. A later
+        // open may try again; a cached module failure still needs a reload.
+        phase = 0;
+        console.error("Date picker load failed:", error);
+        // close() no-ops when nothing is open.
+        close(false);
+        if (phase !== 2) emit("loaderror", { error });
+      },
     );
   };
   // The surface renders the title the dialog is labelled by; until it lands,

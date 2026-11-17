@@ -150,6 +150,38 @@ describe('button', () => {
     expect(button.element.textContent).toBe('Saved');
   });
 
+  test('modifier getters keep defaults and first-match precedence with a custom prefix', () => {
+    const button = mount({ text: 'Save', prefix: 'sample' });
+    const root = button.getClass('button');
+    button.element.className = 'unrelated';
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 's', 'round']);
+    for (const value of ['text', 'filled', 'xl', 'xs', 'square', 'round']) {
+      button.element.classList.add(`${root}--${value}`);
+    }
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 'xs', 'round']);
+    expect(button.setVariant('tonal').setSize('l').setShape('square')).toBe(button);
+    expect([...button.element.classList]).toEqual(['unrelated', `${root}--tonal`, `${root}--l`, `${root}--square`]);
+    button.destroy();
+  });
+
+  test('adding, removing and re-adding an icon preserves the other child nodes', () => {
+    for (const text of ['', 'Save']) for (const ripple of [false, true]) {
+      const button = mount({ text, ripple });
+      const children = [...button.element.childNodes];
+      expect(button.hasIcon()).toBe(false);
+      for (let cycle = 0; cycle < 2; cycle++) {
+        expect(button.setIcon(ICON)).toBe(button);
+        expect(button.hasIcon()).toBe(true);
+        expect(button.element.firstChild).toBe(button.icon.getElement());
+        expect([...button.element.childNodes].slice(1)).toEqual(children);
+        button.setIcon('');
+        expect(button.hasIcon()).toBe(false);
+        expect([...button.element.childNodes]).toEqual(children);
+      }
+      button.destroy();
+    }
+  });
+
   test('an icon with text is marked for icon layout, and setIcon replaces it', () => {
     const button = mount({ text: 'Add', icon: ICON });
     expect(button.hasIcon()).toBe(true);
@@ -273,6 +305,51 @@ describe('button', () => {
     expect(button.element.hasAttribute('aria-busy')).toBe(false);
     expect(button.element.disabled).toBe(false);
     expect(has(button,'progress')).toBe(false);
+    expect(button.getText()).toBe('Save');
+    button.destroy();
+  });
+
+  test('clearing initial loading preserves authored disabled state', async () => {
+    const button = mount({ text: 'Save', loading: true, disabled: true });
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(true);
+    expect(button.element.disabled).toBe(true);
+    expect(button.element.hasAttribute('aria-busy')).toBe(false);
+    expect(button.getText()).toBe('Save');
+    button.enable();
+    await button.setLoading!(true, 'Saving');
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(false);
+    button.destroy();
+  });
+
+  test('the first explicit loading call starts an initial busy shell and restores its label', async () => {
+    for (const disabled of [false, true]) for (const prepared of [false, true]) {
+      const button = mount({ text: 'Save', loading: true, disabled });
+      if (prepared) await button.setProgress!(25);
+      await button.setLoading!(true, 'Saving');
+      expect(button.getText()).toBe('Saving');
+      expect(has(button, 'progress')).toBe(true);
+      expect(button.element.querySelector<HTMLElement>('.mtrl-button__progress')!.style.display).toBe('');
+      await button.setLoading!(false);
+      expect(button.getText()).toBe('Save');
+      expect(button.isDisabled()).toBe(disabled);
+      expect(has(button, 'progress')).toBe(false);
+      await button.setLoading!(true, 'Again');
+      await button.setLoading!(false);
+      expect(button.getText()).toBe('Save');
+      expect(button.isDisabled()).toBe(disabled);
+      button.destroy();
+    }
+  });
+
+  test('loading restores a disabled state set through the API before entry', async () => {
+    const button = mount({ text: 'Save', progress: true });
+    button.disable();
+    await button.setLoading!(true, 'Saving');
+    await button.setLoading!(false);
+    expect(button.isDisabled()).toBe(true);
+    expect(button.element.disabled).toBe(true);
     expect(button.getText()).toBe('Save');
     button.destroy();
   });
