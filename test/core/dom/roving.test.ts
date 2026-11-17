@@ -17,6 +17,7 @@ g.Node = dom.window.Node;
 g.Event = dom.window.Event;
 g.KeyboardEvent = dom.window.KeyboardEvent;
 g.FocusEvent = dom.window.FocusEvent;
+g.MutationObserver = dom.window.MutationObserver;
 
 import { createRoving, isTextEditable, type Roving } from "../../../src/core/dom/roving";
 
@@ -55,6 +56,34 @@ describe("createRoving", () => {
   test("gives the first target the one tab stop", () => {
     expect(stops()).toEqual(["a"]);
     expect(buttons().map((b) => b.tabIndex)).toEqual([0, -1, -1]);
+  });
+
+  test("disabled state changes keep exactly one enabled tab stop without moving focus", async () => {
+    buttons()[0].disabled = true;
+    await Promise.resolve();
+    expect(stops()).toEqual(["b"]);
+    expect(document.activeElement).toBe(document.body);
+    buttons()[1].setAttribute("aria-disabled", "true");
+    await Promise.resolve();
+    expect(stops()).toEqual(["c"]);
+    buttons()[2].disabled = true;
+    await Promise.resolve();
+    expect(stops()).toEqual([]);
+    buttons()[1].setAttribute("aria-disabled", "false");
+    await Promise.resolve();
+    expect(stops()).toEqual(["b"]);
+  });
+
+  test("destroy discards queued disabled changes and stops observing targets", async () => {
+    const first = buttons()[0];
+    first.disabled = true;
+    roving.destroy();
+    first.tabIndex = 6;
+    await Promise.resolve();
+    expect(first.tabIndex).toBe(6);
+    first.disabled = false;
+    await Promise.resolve();
+    expect(first.tabIndex).toBe(6);
   });
 
   test("moves with Left and Right, clamped at the ends", () => {
@@ -134,6 +163,17 @@ describe("createRoving", () => {
     roving.destroy();
     roving = createRoving({ container, targets: () => Array.from(container.querySelectorAll<HTMLElement>("m-host, button")) });
     expect(stops()).toEqual(["a"]);
+  });
+
+  test("native inherited disabled state and explicit ARIA false keep their meaning", () => {
+    buttons()[0].setAttribute("aria-disabled", "false");
+    buttons()[1].setAttribute("disabled", "false");
+    buttons()[2].setAttribute("aria-disabled", "true");
+    container.insertAdjacentHTML("beforeend", '<fieldset disabled><button id="inherited"></button></fieldset><button id="enabled"></button>');
+    roving.sync();
+    buttons()[0].focus();
+    press("ArrowRight");
+    expect(document.activeElement?.id).toBe("enabled");
   });
 
   test("destroy removes the listeners", () => {

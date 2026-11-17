@@ -9059,6 +9059,24 @@ try {
     assert.equal(await focused(), "fab:Compose", "Tab out closes it on the FAB");
     check("FAB menu: arrows and Tab into the list, wrapping; Escape and Tab out close it on the FAB");
 
+    const hiddenFocus = await page.evaluate(async () => {
+      const fm = document.getElementById("fm") as Fm;
+      fm.show();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const root = fm.shadowRoot!;
+      const list = root.querySelector<HTMLElement>('[role="menu"]')!;
+      const item = list.querySelector<HTMLElement>('[role="menuitem"]')!;
+      const fab = root.querySelector<HTMLElement>('[aria-haspopup="menu"]')!;
+      item.focus();
+      const focusedBefore = root.activeElement === item;
+      fm.hide();
+      return { focusedBefore, inert: list.hasAttribute("inert"), fabFocused: root.activeElement === fab,
+        focusInList: list.contains(root.activeElement) };
+    });
+    assert.deepEqual(hiddenFocus, { focusedBefore: true, inert: true, fabFocused: true, focusInList: false },
+      "programmatic hide restores focus from the shadow-root item when the list becomes inert");
+    check("FAB menu: programmatic hide moves focus from the shadow list to its FAB");
+
     const chosen = await page.evaluate(async () => {
       const fm = document.getElementById("fm") as Fm;
       const seen: unknown[] = [];

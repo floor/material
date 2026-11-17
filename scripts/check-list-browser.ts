@@ -75,6 +75,33 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
   assert.equal(await syncInput.getAttribute("aria-labelledby"), null, "and the row does not override it");
   assert.equal(await syncInput.getAttribute("aria-describedby"), null, "nor does it describe it");
   assert.equal(await page.locator("#material-list").evaluate(el => el.textContent?.includes("[object Object]") ?? false), false, "A component instance renders its element, not the object");
+  // The row's control is the row's state: a control created checked selects
+  // its row, and clearing the selection reaches the control back.
+  const selection = await page.evaluate(() => {
+    const state = window as unknown as ListWindow;
+    const on = state.inputs.createSwitch({ checked: true });
+    const off = state.inputs.createSwitch({});
+    const list = state.core.createList({ multiSelect: true, items: [
+      { id: "on", headline: "On", trailing: { type: "control", content: on } },
+      { id: "off", headline: "Off", trailing: { type: "control", content: off } },
+    ] });
+    list.element.id = "selection-list";
+    document.body.append(list.element);
+    const snap = () => ({
+      ids: list.getSelectedItemIds(),
+      checked: [...list.element.querySelectorAll("input")].map(input => (input as HTMLInputElement).checked),
+      pressed: [...list.element.querySelectorAll(".mtrl-list__action")].map(action => action.getAttribute("aria-pressed")),
+    });
+    const initial = snap();
+    list.clearSelection();
+    const cleared = snap();
+    list.destroy();
+    return { initial, cleared };
+  });
+  assert.deepEqual(selection, {
+    initial: { ids: ["on"], checked: [true, false], pressed: ["true", "false"] },
+    cleared: { ids: [], checked: [false, false], pressed: ["false", "false"] },
+  }, "a control created checked selects its row; clearing unchecks the controls");
   await wifi.locator(".mtrl-list__action").click();
   assert.equal(await wifi.getByRole("switch", { name: "Wi-Fi", exact: true }).isChecked(), true, "A click on the row reaches the switch");
   assert.equal(await wifi.locator(".mtrl-list__action").getAttribute("aria-pressed"), "true", "and the whole row takes the selected state");
