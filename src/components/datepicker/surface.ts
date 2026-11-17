@@ -71,7 +71,7 @@ export type DatePickerSurface = [
  * @param input - The shell's state, elements and operations
  * @returns The surface's functions, with the calendar painted into the dialog
  */
-export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialogElement, cls: (name: string) => string, view: Window, trigger: HTMLElement, closeOnSelect: boolean, isOpen: () => boolean, close: (restoreFocus?: boolean) => void, commitDraft: () => void, setDisplayDate: (date: Date) => void, _emit: (event: "loaderror", payload: DatePickerLoadErrorPayload) => void): DatePickerSurface {
+export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialogElement, cls: (name: string) => string, view: Window, trigger: HTMLElement, closeOnSelect: boolean, isOpen: () => boolean, close: (restoreFocus?: boolean) => void, commitDraft: () => void, setDisplayDate: (date: Date) => void): DatePickerSurface {
   // The deferred shell leaves the week start to the calendar: it is read only
   // here (the grid's lead days, Home and End), so it is resolved from the
   // locale now, with the helpers this module already loads.

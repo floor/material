@@ -58,7 +58,7 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         if (phase === 2) return;
         // The calendar paints itself at creation; an open still in flight
         // paints when it lands.
-        real = createCalendarSurface(...input);
+        real = createCalendarSurface(...(input as unknown as Parameters<typeof createCalendarSurface>));
         if (isOpen()) real[0]();
       },
       (error: unknown) => {
@@ -67,11 +67,9 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         // open may try again; a cached module failure still needs a reload.
         phase = 0;
         console.error("Date picker load failed:", error);
-        try {
-          if (isOpen()) close(false);
-        } finally {
-          if (phase !== 2) emit("loaderror", { error });
-        }
+        // close() no-ops when nothing is open.
+        close(false);
+        if (phase !== 2) emit("loaderror", { error });
       },
     );
   };
