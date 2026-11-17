@@ -37,7 +37,7 @@ export interface RovingOptions {
 export interface Roving {
   /** Puts the one tab stop back on the current target, or the first enabled one. */
   sync(): void;
-  /** Removes the listeners. */
+  /** Removes the listeners and disabled-state observer. */
   destroy(): void;
 }
 
@@ -60,9 +60,14 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
     list.find((target) => target === node || (node instanceof Node && target.contains(node))) ?? null;
 
   const sync = () => {
+    observer.disconnect();
     const list = enabled();
     if (!chosen || !current || !list.includes(current)) current = list[0] ?? null;
-    for (const target of targets()) target.tabIndex = target === current ? 0 : -1;
+    for (const target of targets()) {
+      target.tabIndex = target === current ? 0 : -1;
+      // Targets can be slotted outside the container's own shadow tree.
+      observer.observe(target, { attributeFilter: ["disabled", "aria-disabled"] });
+    }
   };
 
   const onKeydown = (event: KeyboardEvent) => {
@@ -101,6 +106,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
     }
   };
 
+  const observer = new MutationObserver(sync);
   container.addEventListener("keydown", onKeydown);
   container.addEventListener("focusin", onFocusin);
   sync();
@@ -108,6 +114,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
   return {
     sync,
     destroy() {
+      observer.disconnect();
       container.removeEventListener("keydown", onKeydown);
       container.removeEventListener("focusin", onFocusin);
     },

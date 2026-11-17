@@ -118,4 +118,18 @@ $component: "#{base.$prefix}-listbox";
             }
         }
     }
+
+    // Keep a boundary and state cues when the user's palette removes shadows.
+    @include m.high-contrast {
+        border: 1px solid CurrentColor;
+
+        .#{$component}__option[aria-selected="true"] {
+            background-color: Highlight;
+            color: HighlightText;
+        }
+
+        .#{$component}__option[aria-disabled="true"] {
+            color: GrayText;
+        }
+    }
 }
