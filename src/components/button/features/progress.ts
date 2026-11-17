@@ -131,15 +131,15 @@ export const withProgress =
       return progressPromise;
     };
 
+    const getIconElement = () => component.element.querySelector(`.${component.getClass("button__icon")}`);
+
     // Add progress methods that lazy-load the progress component. Each is held
     // in a local first: the interface marks them optional because they only
     // exist once this feature has run, and the wrappers below call the local,
     // which is always there.
     const showProgress = async (): Promise<C> => {
       const p = await ensureProgress();
-      const iconElement = component.element.querySelector(
-        `.${component.getClass("button__icon")}`
-      );
+      const iconElement = getIconElement();
 
       // Ensure progress element is in the DOM
       if (!component.element.contains(p.element)) {
@@ -178,9 +178,7 @@ export const withProgress =
       );
 
       // Show the icon again if it exists
-      const iconElement = component.element.querySelector(
-        `.${component.getClass("button__icon")}`
-      );
+      const iconElement = getIconElement();
       if (iconElement instanceof HTMLElement) {
         iconElement.style.display = "";
       }
@@ -258,9 +256,7 @@ export const withProgress =
       component.lifecycle.destroy = () => {
         if (progress) {
           progress.destroy();
-        }
-        if (progress && progress.element.parentNode) {
-          progress.element.parentNode.removeChild(progress.element);
+          if (progress.element.parentNode) progress.element.parentNode.removeChild(progress.element);
         }
         originalDestroy();
       };
