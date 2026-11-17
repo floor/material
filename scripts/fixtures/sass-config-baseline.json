@@ -1,8 +1,8 @@
 {
-  "tested": "f312c002d435bbeef9acfa8e79d33b34391776bb",
-  "branch": "fix/button-loading-initial",
-  "mainRevision": "6c92cbbd33b54682588e9b396219bbeb585ab61b",
-  "ci": 43975760010,
+  "tested": "8ce2f5c5dabc7cba0036d66b32ebb5ed8e01ce94",
+  "branch": "fix/button-progress-forwarding",
+  "mainRevision": "2e18d49bc91394bab9386bf78400b0981786aca2",
+  "ci": 43982816562,
   "bun": "1.4.2",
   "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
   "sourceOptions": {
@@ -40,7 +40,7 @@
     },
     "components": {
       "count": 287,
-      "sha256": "187efbc20da10059b10657ebfa545b9e6448332f596bf7c1620b25d2ca344ce4"
+      "sha256": "f67753ed8dc677ced951325981589f51e967d684f3f75569614b26713128d564"
     },
     "core": {
       "count": 76,
