@@ -1,3 +1,4 @@
+@use 'sass:math';
 @use '../abstract/base' as base;
 @use '../abstract/theme' as t;
 @use '../abstract/mixins' as m;
@@ -19,7 +20,7 @@ $component: '#{base.$prefix}-navigation-rail';
 $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-spatial-easing');
 $fast-spatial: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
 $effects: v.motion('spring-default-effects-duration') v.motion('spring-default-effects-easing');
-$midpoint: v.spring-duration-div('spring-default-spatial-duration', 2);
+$midpoint: math.div(v.motion('spring-default-spatial-duration'), 2);
 // Properties that change layout rather than glide snap at the midpoint of the
 // spatial spring, when the swap fade has the element at opacity 0.
 $snap: 0s linear $midpoint;
