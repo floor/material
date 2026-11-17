@@ -1,3 +1,0 @@
-Section: Added
-
-**Spring durations and easings can be inherited custom properties.** Set `$spring-tokens` on the configure-once Sass gateway before any component sheet, then `@include motion.spring-tokens` where the application wants the defaults: the thirteen `--mtrl-sys-motion-spring-*` properties are emitted from the library motion map, and component CSS reads them with today's literal values as fallbacks. Leaving the switch unset keeps the shipped CSS unchanged, and loading `motion` alone emits nothing. The JavaScript that schedules component state keeps its four literal deadlines, so a spring longer than those bounds is cut off there.
