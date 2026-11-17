@@ -154,44 +154,46 @@ try {
   assert.throws(() => compileSource(`@use "material/src/styles/components/button"; ${config}`), /already loaded/);
   assert.throws(() => compileSource(`${config} @use "material/src/styles/main" with ($typescale-tokens: true);`), /already loaded/);
 
-  // The payload identity is taken from a CI artifact, never from a local
-  // build: baseline.tested names the head and baseline.ci the run whose package
-  // job packed this branch — its merge ref, main included — and hashed the
-  // installed dist. The components and styles groups therefore hold this
-  // branch's additive entry files; the opt-in sheet pair is validated
-  // independently below. When a run reports a drift, its failure prints the
-  // identity that artifact actually produced; that printed value, together with
-  // the run number and head, is the pin, so the next test re-verifies those
-  // bytes against the same declared source.
+  // Payload hashes come from CI artifacts, never local builds. Keep the
+  // historical freeze provenance in baseline; record each update's artifact
+  // and run in its commit and PR. Each packed default JS or CSS file has its
+  // own hash of the banner-stripped text. Keys are dist-relative paths, sorted by UTF-16 code
+  // unit, one manifest line each. A shared chunk that many components import
+  // is still one line. The opt-in sheet pair is validated independently below
+  // and stays out of this map. A drift prints only the paths that moved and
+  // their new hashes, so the pin edit is those lines. Leave tested, branch,
+  // ci, and mainRevision as they are when a payload line changes.
   const optionalFiles = new Set(optionalStyleFiles);
   const profileInputs = new Map<string, string>();
   for (const path of files.filter(path => /^dist\/styles\/[^/]+\.(?:css|js)$/.test(path))) {
     profileInputs.set(path.slice("dist/".length), await readFile(join(fixture.installed, path), "utf8"));
   }
   validateOptionalStyleProfiles(profileInputs);
-  const groups = new Map<string, string[]>();
+  const payloadPaths: string[] = [];
   const walk = async (relative = ""): Promise<void> => {
     for (const entry of await readdir(join(fixture.installed, "dist", relative), { withFileTypes: true })) {
       const path = relative ? `${relative}/${entry.name}` : entry.name;
       if (entry.isDirectory()) await walk(path);
-      else if (/\.(?:js|css)$/.test(path)) {
-        if (optionalFiles.has(path)) continue;
-        const group = path.includes("/") ? path.split("/")[0] : ".";
-        const paths = groups.get(group) ?? [];
-        paths.push(path);
-        groups.set(group, paths);
-      }
+      else if (/\.(?:js|css)$/.test(path) && !optionalFiles.has(path)) payloadPaths.push(path);
     }
   };
   await walk();
-  const payloads: Record<string, { count: number; sha256: string }> = {};
-  for (const [group, paths] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
-    const hash = createHash("sha256");
-    for (const path of paths.sort()) hash.update(path + "\0")
-      .update((await readFile(join(fixture.installed, "dist", path), "utf8")).replace(/^\/\*! material v[^\n]*\*\/\n?/, ""))
-      .update("\0");
-    payloads[group] = { count: paths.length, sha256: hash.digest("hex") };
+  payloadPaths.sort();
+  const payloads: Record<string, string> = {};
+  for (const path of payloadPaths) {
+    const text = (await readFile(join(fixture.installed, "dist", path), "utf8")).replace(/^\/\*! material v[^\n]*\*\/\n?/, "");
+    payloads[path] = createHash("sha256").update(text).digest("hex");
   }
+  const pinned = baseline.payloads as Record<string, string>;
+  const drifted: string[] = [];
+  for (const path of [...new Set([...Object.keys(pinned), ...Object.keys(payloads)])].sort()) {
+    const actual = payloads[path];
+    const expected = pinned[path];
+    if (actual === expected) continue;
+    drifted.push(actual === undefined ? `- ${path}` : expected === undefined ? `+ ${path}: ${actual}` : `~ ${path}: ${actual}`);
+  }
+  assert.equal(drifted.length, 0,
+    `Published default JS/CSS differs from the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).\n${drifted.join("\n")}`);
   const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as typeof import("../src/ssr");
   const random = Math.random;
   Math.random = () => 0.123456;
@@ -204,14 +206,11 @@ try {
       ssrModes[mode] = hash.digest("hex");
     }
   } finally { Math.random = random; }
-  const identity = JSON.stringify({ payloads, ssr: { modes: ssrModes } });
-  assert.deepEqual(payloads, baseline.payloads,
-    `Published default JS/CSS differs from the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}); the checked artifact produced ${identity}`);
   for (const mode of ["inline", "link"] as const) {
     assert.equal(ssrModes[mode], baseline.ssr.modes[mode],
-      `${mode}: published default SSR HTML changed from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the checked artifact produced ${identity}`);
+      `${mode}: published default SSR HTML changed from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the checked artifact produced ${ssrModes[mode]}`);
   }
-  console.log(`Default identity: ${Object.values(payloads).reduce((sum, group) => sum + group.count, 0)} JS/CSS files and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
+  console.log(`Default identity: ${payloadPaths.length} JS/CSS files and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
   // The public configuration and all three consumers must work from normalized
   // packed Sass, including the first-use and false/default contracts.
   for (const name of ["main", "elements"]) {
