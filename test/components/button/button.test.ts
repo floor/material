@@ -150,6 +150,38 @@ describe('button', () => {
     expect(button.element.textContent).toBe('Saved');
   });
 
+  test('modifier getters keep defaults and first-match precedence with a custom prefix', () => {
+    const button = mount({ text: 'Save', prefix: 'sample' });
+    const root = button.getClass('button');
+    button.element.className = 'unrelated';
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 's', 'round']);
+    for (const value of ['text', 'filled', 'xl', 'xs', 'square', 'round']) {
+      button.element.classList.add(`${root}--${value}`);
+    }
+    expect([button.getVariant(), button.getSize(), button.getShape()]).toEqual(['filled', 'xs', 'round']);
+    expect(button.setVariant('tonal').setSize('l').setShape('square')).toBe(button);
+    expect([...button.element.classList]).toEqual(['unrelated', `${root}--tonal`, `${root}--l`, `${root}--square`]);
+    button.destroy();
+  });
+
+  test('adding, removing and re-adding an icon preserves the other child nodes', () => {
+    for (const text of ['', 'Save']) for (const ripple of [false, true]) {
+      const button = mount({ text, ripple });
+      const children = [...button.element.childNodes];
+      expect(button.hasIcon()).toBe(false);
+      for (let cycle = 0; cycle < 2; cycle++) {
+        expect(button.setIcon(ICON)).toBe(button);
+        expect(button.hasIcon()).toBe(true);
+        expect(button.element.firstChild).toBe(button.icon.getElement());
+        expect([...button.element.childNodes].slice(1)).toEqual(children);
+        button.setIcon('');
+        expect(button.hasIcon()).toBe(false);
+        expect([...button.element.childNodes]).toEqual(children);
+      }
+      button.destroy();
+    }
+  });
+
   test('an icon with text is marked for icon layout, and setIcon replaces it', () => {
     const button = mount({ text: 'Add', icon: ICON });
     expect(button.hasIcon()).toBe(true);
