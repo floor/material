@@ -20,6 +20,7 @@ import createNavigationRail from "../../dist/components/navigation-rail/index.js
 import createDrawer from "../../dist/components/drawer/index.js";
 import createTopAppBar from "../../dist/components/top-app-bar/index.js";
 import createBottomAppBar from "../../dist/components/bottom-app-bar/index.js";
+import createBottomAppBarToolbar from "../../dist/components/bottom-app-bar-toolbar/index.js";
 import createToolbar from "../../dist/components/toolbar/index.js";
 import createFabMenu from "../../dist/components/fab-menu/index.js";
 import createList from "../../dist/components/list/index.js";
@@ -38,7 +39,7 @@ const factories = {
   createSlider,
   createTextField,
   createRadios,
-  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createToolbar, createFabMenu,
+  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar, createBottomAppBarToolbar, createToolbar, createFabMenu,
   createList, createCard, createCarousel, createTabs,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories, withBadge }, ready: true });
