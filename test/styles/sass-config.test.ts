@@ -42,9 +42,11 @@ describe("public configure-once Sass", () => {
     expect(selective).toContain("x-button:not(:defined)");
     expect(selective.includes("[data-theme-contrast=medium]")).toBe(false);
     expect(selective.includes("[data-theme-contrast=high]")).toBe(false);
-    // Typography emission is now implemented; spring configuration remains reserved.
+    // Both token modes are implemented: a configured consumer reads the
+    // fallback form, and the defaults are emitted only by the motion mixin.
     expect(selective).toContain("var(--mtrl-sys-typescale-label-large-font-size, 14px)");
-    expect(selective).not.toContain("--mtrl-sys-motion-spring-");
+    expect(selective).toContain("var(--mtrl-sys-motion-spring-fast-spatial-duration, 425ms)");
+    expect(selective).not.toMatch(/--mtrl-sys-motion-spring-[a-z0-9-]+\s*:/);
   });
 
   for (const entry of ["main", "elements"]) {
