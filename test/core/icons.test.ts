@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { getIcon, setIcons } from "../../src/core/icons";
 import { getIcon as getIconFromCore, setIcons as setIconsFromCore } from "../../src/core";
 
-const CLEAR = { menu: null, "menu-open": null, close: null } as const;
+const CLEAR = { menu: null, "menu-open": null, close: null, "expand-more": null } as const;
 
 afterEach(() => setIcons(CLEAR));
 
@@ -19,6 +19,7 @@ describe("the icon registry", () => {
   test("returns the component's own fallback while nothing is set", () => {
     expect(getIcon("menu", "<built-in>")).toBe("<built-in>");
     expect(getIcon("close", "<built-in-close>")).toBe("<built-in-close>");
+    expect(getIcon("expand-more", "<built-in-more>")).toBe("<built-in-more>");
   });
 
   test("setIcons touches only the names it is given", () => {

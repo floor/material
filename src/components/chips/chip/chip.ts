@@ -15,8 +15,9 @@ const CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentCo
 /** Shared internal implementation for the four Material chip factories. */
 const createChip = (config: ChipOptions = {}): ChipComponent => {
   const options = createComponentConfig<ChipOptions>({ type: "filter", ripple: true }, config, "chip");
-  // Once, at creation. An empty trailing icon restores this, not a later setIcons.
+  // Once, at creation. An empty trailing icon restores these, not a later setIcons.
   const closeGlyph = getIcon("close", CLOSE);
+  const menuGlyph = getIcon("expand-more", DROP_DOWN);
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
   const elementConfig = createElementConfig(options, { tag: "div" });
@@ -88,7 +89,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       trailingAction.setAttribute("aria-haspopup", "menu");
       trailingAction.setAttribute("aria-expanded", "false");
     }
-    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : closeGlyph));
+    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? menuGlyph : closeGlyph));
     root.append(trailingAction);
     root.setAttribute("role", "group");
   }
@@ -179,7 +180,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     setLeadingIcon,
     setTrailingIcon(icon) {
       trailingIcon = type === "suggestion" ? "" : icon;
-      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : closeGlyph));
+      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? menuGlyph : closeGlyph));
       else setHTML(remove ?? trailing, trailingIcon || (remove ? closeGlyph : ""));
       render();
       return api;
