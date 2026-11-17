@@ -144,6 +144,66 @@ describe("trailing controls", () => {
   });
 });
 
+describe("a row's trailing control and its selection", () => {
+  test("a control created checked selects its row at start", () => {
+    const on = createSwitch({ checked: true });
+    const off = createSwitch({});
+    const list = mount([
+      { id: "on", headline: "On", trailing: { type: "control", content: on } },
+      { id: "off", headline: "Off", trailing: { type: "control", content: off } },
+    ], { multiSelect: true });
+    expect(list.getSelectedItemIds()).toEqual(["on"]);
+    expect(action(list, 0).getAttribute("aria-pressed")).toBe("true");
+    expect(action(list, 1).getAttribute("aria-pressed")).toBe("false");
+    expect(row(list, 0).classList.contains("mtrl-list__item--selected")).toBe(true);
+    expect(row(list, 1).classList.contains("mtrl-list__item--selected")).toBe(false);
+  });
+
+  test("clearing the selection unchecks the controls, and a later click selects again", () => {
+    const on = createSwitch({ checked: true });
+    const list = mount([{ id: "on", headline: "On", trailing: { type: "control", content: on } }], { multiSelect: true });
+    const input = row(list).querySelector<HTMLInputElement>("input")!;
+    list.clearSelection();
+    expect(list.getSelectedItemIds()).toEqual([]);
+    expect(input.checked).toBe(false);
+    expect(action(list).getAttribute("aria-pressed")).toBe("false");
+    input.click();
+    expect(list.getSelectedItemIds()).toEqual(["on"]);
+    expect(input.checked).toBe(true);
+    list.setSelection([]);
+    expect(input.checked).toBe(false);
+    expect(action(list).getAttribute("aria-pressed")).toBe("false");
+  });
+
+  test("the control's own classes follow a cleared selection", () => {
+    const on = createSwitch({ checked: true });
+    const list = mount([{ id: "on", headline: "On", trailing: { type: "control", content: on } }], { multiSelect: true });
+    expect(on.element.classList.contains("mtrl-switch--checked")).toBe(true);
+    list.clearSelection();
+    expect(on.element.classList.contains("mtrl-switch--checked")).toBe(false);
+    expect(row(list).querySelector<HTMLInputElement>("input")!.checked).toBe(false);
+  });
+
+  test("a radio group unchecks its sibling's row", () => {
+    const radio = (name: string) => {
+      const input = document.createElement("input"); input.type = "radio"; input.name = name; return input;
+    };
+    const a = radio("group"), b = radio("group");
+    const list = mount([
+      { id: "a", headline: "A", trailing: { type: "control", content: a } },
+      { id: "b", headline: "B", trailing: { type: "control", content: b } },
+    ], { multiSelect: true });
+    a.click();
+    expect(list.getSelectedItemIds()).toEqual(["a"]);
+    b.click();
+    expect(b.checked).toBe(true);
+    expect(a.checked).toBe(false);
+    expect(list.getSelectedItemIds()).toEqual(["b"]);
+    expect(action(list, 0).getAttribute("aria-pressed")).toBe("false");
+    expect(action(list, 1).getAttribute("aria-pressed")).toBe("true");
+  });
+});
+
 describe("real list selection and lifecycle", () => {
   test("selection is immediately reflected and refresh preserves it", async () => {
     const list = mount([{ id: "a", headline: "A", selected: true }, { id: "b", headline: "B" }]);
