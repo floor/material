@@ -7,12 +7,12 @@
  * or `end` (the default), logical as on the factory, and `width` its width
  * in pixels (256 by default, up to 400).
  *
- * Standard by default, docked beside the page. `modal` makes it the modal
- * sheet in the factory's top layer (`layer: "top"`): a native `<dialog>` in
- * the element's shadow root, shown with `showModal()`, above every z-index,
- * the page outside inert, the scrim its `::backdrop`; Escape and a click on
- * the backdrop close it, unless `no-close-on-scrim-click` or
- * `no-close-on-escape` says otherwise.
+ * Standard by default, docked beside the page. `modal`, and
+ * `variant="modal"`, make it the modal sheet in the factory's top layer
+ * (`layer: "top"`): a native `<dialog>` in the element's shadow root, shown
+ * with `showModal()`, above every z-index, the page outside inert, the scrim
+ * its `::backdrop`; Escape and a click on the backdrop close it, unless
+ * `no-close-on-scrim-click` or `no-close-on-escape` says otherwise.
  *
  * `open` shows it and reflects its state, as on `<dialog open>`. `show()` and
  * `close()` are its methods, and `open` and `close` are dispatched as it
@@ -76,6 +76,8 @@ const sideSheetSpec = {
   attributes: {
     open: { type: "boolean", update: (c, v) => setSheetOpen(c, !!v) },
     modal: { type: "boolean", config: "modal" },
+    // Read in create from the host. No update, so a later change recreates the sheet.
+    variant: { type: "string" },
     headline: {
       type: "string",
       config: "headline",

@@ -5,11 +5,11 @@
  * names the sheet, and the default slot, the content. The drag handle is the
  * factory's; `no-drag-handle` drops it, and dragging with it.
  *
- * Standard by default, in the page beside what it covers. `modal` makes it
- * the modal sheet in the factory's top layer (`layer: "top"`): a native
- * `<dialog>` in the element's shadow root, shown with `showModal()`, above
- * every z-index, the page outside inert, the scrim its `::backdrop`; Escape
- * and a click on the backdrop close it.
+ * Standard by default, in the page beside what it covers. `modal`, and
+ * `variant="modal"`, make it the modal sheet in the factory's top layer
+ * (`layer: "top"`): a native `<dialog>` in the element's shadow root, shown
+ * with `showModal()`, above every z-index, the page outside inert, the scrim
+ * its `::backdrop`; Escape and a click on the backdrop close it.
  *
  * `open` shows it and reflects its state, as on `<dialog open>`. `show()`,
  * `close()`, `expand()` and `collapse()` are its methods, and `open` and
@@ -127,6 +127,8 @@ const bottomSheetSpec = {
     open: { type: "boolean", update: (c, v, host) => setOpen(c, !!v, host) },
     expanded: { type: "boolean", update: (c, v) => setExpanded(c, !!v) },
     modal: { type: "boolean", config: "modal" },
+    // Read in create from the host. No update, so a later change recreates the sheet.
+    variant: { type: "string" },
     headline: {
       type: "string",
       config: "headline",
