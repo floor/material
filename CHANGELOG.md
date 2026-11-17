@@ -17,6 +17,23 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.15.0] - 2026-11-17
+
+### Added
+
+- **Carousel items declare image `width`, `height`, `loading` and `decoding`.** `<m-carousel-item>` passes them into the slide on the first read and when they change. An explicit `loading` wins; otherwise the first image is eager and the rest are lazy. `decoding` and the intrinsic size are set only when given ([#411](https://github.com/floor/material/pull/411)).
+- **Deferred date picker.** A failed calendar import emits `loaderror` with the error. A later open may try again ([#410](https://github.com/floor/material/pull/410)).
+- **The select field's dropdown and a filter chip's trailing menu can draw a registry glyph.** `setIcons({ "expand-more": … })` replaces both built-in triangles, captured when the component is created; `null`, `undefined` or the empty string restores the built-in. A chip's own `trailingIcon` still wins over the registry, as the other slots do ([#413](https://github.com/floor/material/pull/413)).
+- **Spring durations and easings can be inherited custom properties.** Set `$spring-tokens` on the configure-once Sass gateway before any component sheet, then `@include motion.spring-tokens` where the application wants the defaults: the thirteen `--mtrl-sys-motion-spring-*` properties are emitted from the library motion map, and component CSS reads them with today's literal values as fallbacks. Leaving the switch unset keeps the shipped CSS unchanged, and loading `motion` alone emits nothing. The JavaScript that schedules component state keeps its four literal deadlines, so a spring longer than those bounds is cut off there ([#409](https://github.com/floor/material/pull/409)).
+
+### Changed
+
+- Reduce the code shipped by button consumers while retaining modifier, icon, loading and progress behavior ([#408](https://github.com/floor/material/pull/408)).
+
+### Fixed
+
+- **A rebuilt list row re-points its trailing control's name.** After `list.refresh()`, a switch, checkbox or radio the list named takes the rebuilt row's `aria-labelledby` and `aria-describedby` instead of keeping references to the removed text nodes, so the control stays named for assistive technology. A name the application set is still never replaced ([#388](https://github.com/floor/material/pull/388)).
+
 ## [3.14.2] - 2026-11-17
 
 ### Fixed
@@ -7273,7 +7290,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.14.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.15.0...HEAD
+[3.15.0]: https://github.com/floor/material/compare/v3.14.2...v3.15.0
 [3.14.2]: https://github.com/floor/material/compare/v3.14.1...v3.14.2
 [3.14.1]: https://github.com/floor/material/compare/v3.14.0...v3.14.1
 [3.14.0]: https://github.com/floor/material/compare/v3.13.1...v3.14.0
