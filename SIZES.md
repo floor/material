@@ -9,7 +9,7 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at cf34cae6 on 2026-11-17. Regenerate with
+Measured at 0d8e5f02 on 2026-11-17. Regenerate with
 `bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
 these rows drift from a fresh measurement.
 
@@ -44,7 +44,7 @@ these rows drift from a fresh measurement.
 | split-button | 26.9 KB | 9.4 KB | +6.4 KB | +17.0 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.3 KB | 10.9 KB | +7.9 KB |  |
-| select | 40.8 KB | 13.0 KB | +10.0 KB | +10.5 KB |
+| select | 40.9 KB | 13.1 KB | +10.0 KB | +10.5 KB |
 | slider | 34.0 KB | 11.9 KB | +8.9 KB |  |
 | snackbar | 36.1 KB | 12.1 KB | +9.1 KB | +6.9 KB |
 | switch | 18.8 KB | 6.2 KB | +3.2 KB |  |
