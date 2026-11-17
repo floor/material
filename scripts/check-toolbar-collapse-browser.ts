@@ -3,7 +3,8 @@
  * The toolbar's `scrollBehavior: "collapse"` in Chromium: a docked toolbar
  * shrinks from its 64px bar to the 48px target area, an icon+label item shows
  * its icon only (the label leaves the layout but stays the control's name,
- * and the button closes up to the target size) while a label-only item keeps
+ * and the button closes up to the target size, a trailing icon included, at
+ * 12px of padding on each side) while a label-only item keeps
  * its label, items keep their 48x48 hit areas, an item taller than the floor
  * holds the container at its own height, reduced motion settles the height at
  * once, and a floating toolbar ignores the value.
@@ -67,6 +68,11 @@ export async function checkToolbarCollapse(page: Page, check: (name: string) => 
 
     const underline = w.mtrl.createButton({ icon, text: "Underline" }).element;
     underline.id = "collapse-underline";
+    // iconPosition is read by withIcon. ButtonConfig does not list it, so the
+    // call is widened the same way the element attribute passes it through.
+    const createTrailing = w.mtrl.createButton as (config: { icon: string; text: string; iconPosition: "end" }) => { element: HTMLElement };
+    const trailing = createTrailing({ icon, text: "Share", iconPosition: "end" }).element;
+    trailing.id = "collapse-trailing";
     const plain = w.mtrl.createButton({ text: "Plain" }).element;
     plain.id = "collapse-plain";
 
@@ -74,7 +80,7 @@ export async function checkToolbarCollapse(page: Page, check: (name: string) => 
       ariaLabel: "Collapsing",
       scrollBehavior: "collapse",
       scrollTarget: stage,
-      items: [iconButton("Bold"), iconButton("Italic"), underline, plain],
+      items: [iconButton("Bold"), iconButton("Italic"), underline, trailing, plain],
     });
     main.element.id = "collapse-main";
     host.append(main.element);
@@ -126,8 +132,9 @@ export async function checkToolbarCollapse(page: Page, check: (name: string) => 
   assert.equal(await settled(page, "collapse-main"), 48, "the collapsed bar is 48px");
   check("toolbar collapse: scrolling forward shrinks the docked bar to 48px");
 
-  // The icon+label item shows its icon alone; its label stays the name. The
-  // label-only item keeps its label and never becomes an empty pill.
+  // The icon+label item shows its icon alone; its label stays the name. A
+  // trailing icon closes up to the same 12px side padding. The label-only
+  // item keeps its label and never becomes an empty pill.
   const labels = await page.evaluate(() => {
     const read = (id: string): { width: number; height: number; position: string; content: string } => {
       const text = document.getElementById(id)!.querySelector(".mtrl-button__text") as HTMLElement;
@@ -144,15 +151,25 @@ export async function checkToolbarCollapse(page: Page, check: (name: string) => 
         paddingInline: `${style.paddingLeft} ${style.paddingRight}`,
       };
     };
-    return { underlined: read("collapse-underline"), plain: read("collapse-plain"), shapes: { underlined: shape("collapse-underline"), plain: shape("collapse-plain") } };
+    return {
+      underlined: read("collapse-underline"),
+      plain: read("collapse-plain"),
+      shapes: {
+        underlined: shape("collapse-underline"),
+        trailing: shape("collapse-trailing"),
+        plain: shape("collapse-plain"),
+      },
+    };
   });
   assert.deepEqual(labels.underlined, { width: 1, height: 1, position: "absolute", content: "Underline" });
   assert(labels.plain.width > 1 && labels.plain.position !== "absolute", "a label-only item keeps its label");
   assert.deepEqual(labels.shapes.underlined, { width: 48, height: 40, paddingInline: "12px 12px" });
+  assert.deepEqual(labels.shapes.trailing, { width: 48, height: 40, paddingInline: "12px 12px" });
   assert.equal(labels.shapes.plain.height, 40);
   assert.equal(labels.shapes.plain.paddingInline, "16px 16px");
   assert(labels.shapes.plain.width >= 58, `a label-only item keeps its inline size, not ${labels.shapes.plain.width}`);
   assert.equal(await page.locator("#collapse-main").getByRole("button", { name: "Underline" }).count(), 1);
+  assert.equal(await page.locator("#collapse-main").getByRole("button", { name: "Share" }).count(), 1);
   assert.equal(await page.locator("#collapse-main").getByRole("button", { name: "Plain" }).count(), 1);
   assert.equal(await page.locator("#collapse-main").getByRole("button", { name: "Bold" }).count(), 1);
   check("toolbar collapse: an icon+label item shows its icon at the target size, a label-only item keeps its label");
