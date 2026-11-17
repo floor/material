@@ -262,7 +262,7 @@ export function createDatePickerShell<M extends string = "single">(
   // tuple is the surface's whole runtime contract, so a stand-in forwards
   // without this shell knowing which it holds.
   const [showSurface, hideSurface, renderSurface, clickSurface, keySurface, validateSurface, destroySurface] =
-    createSurface(state, dialog, cls, view, trigger, !!settings.closeOnSelect, () => opened, close, commitDraft, setDisplayDate);
+    createSurface(state, dialog, cls, view, trigger, !!settings.closeOnSelect, () => opened, close, commitDraft, setDisplayDate, base.emit);
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();

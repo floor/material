@@ -45,11 +45,17 @@ export interface DatePickerSwipePayload {
   deltaY: number;
 }
 
+/** A deferred calendar import failed. A later explicit open may try again. */
+export interface DatePickerLoadErrorPayload {
+  error: unknown;
+}
+
 /** Events emitted by the picker API, calendar selections and interactive root. */
 export interface DatePickerEvents<V = DatePickerValue> {
   change: (payload: DatePickerChangePayload<V>) => void;
   open: (payload: DatePickerVisibilityPayload<V>) => void;
   close: (payload: DatePickerVisibilityPayload<V>) => void;
+  loaderror: (payload: DatePickerLoadErrorPayload) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
   tap: (payload: DatePickerTapPayload) => void;
@@ -403,7 +409,7 @@ export interface DatePickerComponent<V = DatePickerValue> {
   
   /**
    * Adds an event listener to the datepicker
-   * @param event - Event name ('change', 'open', 'close', etc.)
+   * @param event - Event name ('change', 'open', 'close', 'loaderror', etc.)
    * @param handler - Event handler function
    * @returns The datepicker component for chaining
    */
