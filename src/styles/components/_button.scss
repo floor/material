@@ -531,13 +531,18 @@ $content-color: (
 // without :host-context drops that rule alone and keeps the class one, and
 // the SSR style pruner (src/ssr/prune-styles.ts) can drop each one from a
 // rendered root whose markup carries no matching class.
+//
+// The button class is named and the icon class is repeated so each arm
+// ties the trailing-icon insets earlier in this file (four classes) and wins
+// by source order. A :has() bump would mark the arm opaque, and the pruner
+// would keep it in every rendered root.
 // -----------------------------------------------------------------------------
-#{$collapsed} .#{$component}--icon {
+#{$collapsed} .#{$component}.#{$component}--icon.#{$component}--icon {
   min-width: v.button('touch-target');
   padding-inline: v.button('padding-icon');
 }
 
-:host-context(#{$collapsed}) .#{$component}--icon {
+:host-context(#{$collapsed}) .#{$component}.#{$component}--icon.#{$component}--icon {
   min-width: v.button('touch-target');
   padding-inline: v.button('padding-icon');
 }

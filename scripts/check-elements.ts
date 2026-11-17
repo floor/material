@@ -29,6 +29,7 @@ import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
 import { checkFabPlacement } from "./check-fab-placement-browser";
 import { checkButtonIconPosition } from "./check-button-icon-position";
+import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
@@ -5530,6 +5531,8 @@ try {
   await checkDrawerBadge(page, check);
 
   await checkButtonIconPosition(page, check);
+
+  await checkSheetVariant(page, check);
 
   await checkButtonToggle(page, check);
 

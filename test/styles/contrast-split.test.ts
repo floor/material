@@ -312,9 +312,10 @@ describe("explicit contrast levels are opt-in", () => {
     // masks. Range bands preserve adjacent-month muted text by excluding
     // outside days from their foreground selector (+31 B, CI 42608902656).
     // Time-picker digit scale/fade uses spatial/effects motion tokens, with inverse hour return (+1,336 B).
+    // Collapsed trailing-icon buttons keep equal insets: two specificity arms (+60 B, CI 43961554964).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "cd7a5ff672c6b01f2d2cf9a45d05050572eea822b4fbd0569acd52368c374bc6",
-      length: 548270,
+      sha256: "25208ea37a8e8a840606043e3ea6b88033087d425b472105e19070058e700ade",
+      length: 548330,
     });
   });
 
