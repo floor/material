@@ -709,7 +709,7 @@ Until it arrives the dialog has no calendar and no focus into it, and `aria-expa
 
 Opening and closing are never held behind the load. The open state answers at once, and so does a close while the calendar is in flight; the calendar mounts when its chunk lands and stays closed. Read the open state rather than the dialog's markup while an open is in flight.
 
-Failed calendar imports are logged and close a waiting open. A later open tries again; browsers may cache a rejected module URL, so recovery can require reloading the page.
+Failed calendar imports are logged, close a waiting open, and emit `loaderror` with `{ error }`. Register the handler before opening. A later open tries again; browsers may cache a rejected module URL, so recovery can require reloading the page.
 
 ### Bundling
 

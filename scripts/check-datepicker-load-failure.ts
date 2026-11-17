@@ -76,7 +76,8 @@ try {
       const lab = window as unknown as LabWindow;
       lab.events = [];
       lab.picker = lab.create({ variant: "modal", value: "2026-07-15" });
-      lab.picker.on("open", () => lab.events.push("open")).on("close", () => lab.events.push("close"));
+      lab.picker.on("open", () => lab.events.push("open")).on("close", () => lab.events.push("close"))
+        .on("loaderror", ({ error }) => lab.events.push(error === undefined ? "loaderror-empty" : "loaderror"));
       document.body.append(lab.picker.element);
       document.getElementById("other")!.focus();
       const trigger = lab.picker.element.querySelector<HTMLElement>('[data-action="open"]')!;
@@ -88,7 +89,7 @@ try {
     const failed = await snapshot(page);
     check(`${intent}: a failed load closes requested and visible state`,
       [failed.open, failed.dialogOpen, failed.expanded, failed.days], [false, false, "false", 0]);
-    check(`${intent}: a failure closes one open request and leaves prefetch quiet`, failed.events, intent === "open" ? ["open", "close"] : []);
+    check(`${intent}: a failure reports loaderror after closing an open request`, failed.events, intent === "open" ? ["open", "close", "loaderror"] : ["loaderror"]);
     const escaped = await page.evaluate(() => {
       const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, composed: true, cancelable: true });
       document.activeElement!.dispatchEvent(event);
@@ -138,7 +139,8 @@ try {
       const lab = window as unknown as LabWindow;
       lab.events = [];
       lab.picker = lab.create({ variant: "modal" });
-      lab.picker.on("open", () => lab.events.push("open")).on("close", () => lab.events.push("close"));
+      lab.picker.on("open", () => lab.events.push("open")).on("close", () => lab.events.push("close"))
+        .on("loaderror", ({ error }) => lab.events.push(error === undefined ? "loaderror-empty" : "loaderror"));
       document.body.append(lab.picker.element); lab.picker.open();
     });
     await inFlight;

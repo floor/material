@@ -14,7 +14,9 @@
 // What the surface paints is what waits: the calendar, its initial focus and
 // its aria title. Until it lands the dialog carries `aria-label` as its name,
 // `aria-expanded` stays false, and `open` has already been emitted; read
-// isOpen() rather than the DOM while an open is in flight.
+// isOpen() rather than the DOM while an open is in flight. A failed load
+// closes that open, emits `loaderror` with `{ error }`, and leaves the next
+// open free to try again.
 import { createDatePickerShell } from "./shell";
 import type { DatePickerSurface, DatePickerSurfaceInput } from "./surface";
 import type { DatePickerComponent, DatePickerConfig, DatePickerValueOf } from "./types";
@@ -27,6 +29,7 @@ export type {
   DatePickerValueOf,
   DatePickerInput,
   DatePickerChangePayload,
+  DatePickerLoadErrorPayload,
   DatePickerVisibilityPayload,
   DatePickerTapPayload,
   DatePickerSwipePayload,
@@ -43,7 +46,7 @@ export type {
  * arrives.
  */
 const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurface => {
-  const [state, dialog, , , trigger, , isOpen, close] = input;
+  const [state, dialog, , , trigger, , isOpen, close, , , emit] = input;
   let real: DatePickerSurface | null = null;
   // 0: idle, 1: the import is in flight, 2: destroyed.
   let phase = 0;
@@ -64,7 +67,11 @@ const createDeferredSurface = (...input: DatePickerSurfaceInput): DatePickerSurf
         // open may try again; a cached module failure still needs a reload.
         phase = 0;
         console.error("Date picker load failed:", error);
-        if (isOpen()) close(false);
+        try {
+          if (isOpen()) close(false);
+        } finally {
+          if (phase !== 2) emit("loaderror", { error });
+        }
       },
     );
   };

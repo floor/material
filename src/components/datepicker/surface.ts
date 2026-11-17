@@ -17,7 +17,7 @@
 import { activeElementOf } from "../../core/dom/focus";
 import { createElement } from "../../core/dom/create";
 import { renderCalendar } from "./render";
-import type { DatePickerState } from "./types";
+import type { DatePickerLoadErrorPayload, DatePickerState } from "./types";
 import { addDays, addMonths, dtf, formatDate, getFirstDayOfWeek, parseDate, parseInputDate } from "./utils";
 
 const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
@@ -40,6 +40,8 @@ export type DatePickerSurfaceInput = [
   close: (restoreFocus?: boolean) => void,
   commitDraft: () => void,
   setDisplayDate: (date: Date) => void,
+  /** Reports a failed deferred load. The calendar surface does not call it. */
+  emit: (event: "loaderror", payload: DatePickerLoadErrorPayload) => void,
 ];
 
 /** Builds the surface the shell calls: the calendar, which the stand-in builds when its chunk lands. */
@@ -69,7 +71,7 @@ export type DatePickerSurface = [
  * @param input - The shell's state, elements and operations
  * @returns The surface's functions, with the calendar painted into the dialog
  */
-export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialogElement, cls: (name: string) => string, view: Window, trigger: HTMLElement, closeOnSelect: boolean, isOpen: () => boolean, close: (restoreFocus?: boolean) => void, commitDraft: () => void, setDisplayDate: (date: Date) => void): DatePickerSurface {
+export function createCalendarSurface(state: DatePickerState, dialog: HTMLDialogElement, cls: (name: string) => string, view: Window, trigger: HTMLElement, closeOnSelect: boolean, isOpen: () => boolean, close: (restoreFocus?: boolean) => void, commitDraft: () => void, setDisplayDate: (date: Date) => void, _emit: (event: "loaderror", payload: DatePickerLoadErrorPayload) => void): DatePickerSurface {
   // The deferred shell leaves the week start to the calendar: it is read only
   // here (the grid's lead days, Home and End), so it is resolved from the
   // locale now, with the helpers this module already loads.

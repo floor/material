@@ -1,7 +1,7 @@
 // Describe the API, calendar and interactive-root events as emitted.
 import createDatePicker, {
   type DatePickerComponent, type DatePickerEvents, type DatePickerValue,
-  type DatePickerChangePayload, type DatePickerVisibilityPayload,
+  type DatePickerChangePayload, type DatePickerVisibilityPayload, type DatePickerLoadErrorPayload,
   type DatePickerTapPayload, type DatePickerSwipePayload,
 } from "../../src/components/datepicker";
 import type { ForwardedEventPayload } from "../../src/core/dom";
@@ -9,11 +9,12 @@ import type { NormalizedEvent } from "../../src/core/utils/mobile";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
-export const names: Equals<keyof DatePickerEvents, "change" | "open" | "close" | "click" | "keydown" | "tap" | "swipe"> = true;
+export const names: Equals<keyof DatePickerEvents, "change" | "open" | "close" | "loaderror" | "click" | "keydown" | "tap" | "swipe"> = true;
 export const value: Equals<DatePickerValue, Date | [Date, Date] | null> = true;
 export const change: Equals<Parameters<DatePickerEvents["change"]>, [DatePickerChangePayload]> = true;
 export const open: Equals<Parameters<DatePickerEvents["open"]>, [DatePickerVisibilityPayload]> = true;
 export const close: Equals<Parameters<DatePickerEvents["close"]>, [DatePickerVisibilityPayload]> = true;
+export const loaderror: Equals<Parameters<DatePickerEvents["loaderror"]>, [DatePickerLoadErrorPayload]> = true;
 export const click: Equals<Parameters<DatePickerEvents["click"]>[0], ForwardedEventPayload<MouseEvent, HTMLElement>> = true;
 export const keydown: Equals<Parameters<DatePickerEvents["keydown"]>[0], ForwardedEventPayload<KeyboardEvent, HTMLElement>> = true;
 export const tap: Equals<Parameters<DatePickerEvents["tap"]>[0], NormalizedEvent> = true;
@@ -26,6 +27,7 @@ const handler: DatePickerEvents["change"] = payload => { payload.formattedValue.
 export const chained: DatePickerComponent = picker.on("change", handler).off("change", handler);
 picker.on("open", ({ value }) => { if (Array.isArray(value)) value[1].getTime(); else value?.getTime(); });
 picker.on("close", () => {});
+picker.on("loaderror", ({ error }) => { const value: unknown = error; void value; });
 picker.on("click", payload => payload.event.clientX);
 picker.on("keydown", payload => payload.originalEvent.key);
 picker.on("tap", payload => payload.preventDefault());

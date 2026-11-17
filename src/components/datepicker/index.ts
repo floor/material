@@ -8,6 +8,7 @@ export type {
   DatePickerValueOf,
   DatePickerInput,
   DatePickerChangePayload,
+  DatePickerLoadErrorPayload,
   DatePickerVisibilityPayload,
   DatePickerTapPayload,
   DatePickerSwipePayload,
