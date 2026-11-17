@@ -23,6 +23,7 @@ import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkToolbarCollapse } from "./check-toolbar-collapse-browser";
+import { checkBottomAppBarToolbarContrast } from "./check-bottom-app-bar-toolbar-contrast";
 import { checkTabBadge } from "./check-tab-badge-browser";
 import { checkBadge } from "./check-badge-browser";
 import { checkDrawerBadge } from "./check-drawer-badge-browser";
@@ -52,6 +53,7 @@ const server = Bun.serve({
     const path = new URL(request.url).pathname;
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/bottom-app-bar-toolbar.css") return new Response(Bun.file("dist/styles/bottom-app-bar-toolbar.css"));
     if (path === "/menu.css") return new Response(Bun.file("dist/styles/menu.css"));
     if (path === "/away") return new Response("<!doctype html><p>away</p>", { headers: { "Content-Type": "text/html" } });
     if (path === "/restore") {
@@ -5521,6 +5523,8 @@ try {
   await checkToolbarItemShape(page, check);
 
   await checkToolbarCollapse(page, check);
+
+  await checkBottomAppBarToolbarContrast(page, check);
 
   await checkTabBadge(page, check);
 
