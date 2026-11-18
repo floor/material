@@ -14,6 +14,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createBottomAppBar from "../src/components/bottom-app-bar";
 import type createCheckbox from "../src/components/checkbox";
 import type createDatePicker from "../src/components/datepicker";
@@ -82,7 +83,7 @@ type SheetWindow = Window & {
   createDatePicker: typeof createDatePicker;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 900, height: 900 }, reducedMotion: "reduce" });
   await page.setContent("<!doctype html><html><body></body></html>");

@@ -7,6 +7,7 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 
@@ -61,7 +62,7 @@ const cases: Case[] = [
   ]),
   ...[{ title: "Departure", next: "", name: "Select time" }, { title: "", next: "Arrival", name: "Arrival" }].map(c => ({ id: `time-title-${c.name}`, kind: "time" as const, config: { title: c.title, type: "input", value: "09:30" }, action: "title" as const, next: c.next, name: c.name })),
 ];
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 const failures: string[] = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });

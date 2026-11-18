@@ -10,6 +10,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type * as Card from "../src/components/card";
 import type createProgress from "../src/components/progress";
 import type createIconButton from "../src/components/icon-button";
@@ -300,7 +301,7 @@ if (import.meta.main) {
     const sass = await import("sass");
     css = sass.compile(resolve("src/styles/main.scss"), { loadPaths: [resolve("src/styles")], logger: sass.Logger.silent }).css;
   }
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   try {
     const page = await browser.newPage();
     await page.setContent("<!doctype html><html><body></body></html>");

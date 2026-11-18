@@ -23,6 +23,7 @@ import { checkDatePickerEarlyYears } from "./check-datepicker-early-years";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createDeferredDatePicker from "../src/components/datepicker/deferred";
 
 const root = resolve(import.meta.dir, "..");
@@ -172,7 +173,7 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const url = `http://127.0.0.1:${server.port}/`;
   const open = async () => {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createButton from "../src/components/button";
 
 export async function checkButtonProgressForwarding(page: Page, label = "source") {
@@ -70,7 +71,7 @@ if (import.meta.main) {
       headers: { "Content-Type": "text/html" },
     });
   } });
-  const browser = await chromium.launch();
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
   try {
     const page = await browser.newPage();
     await page.goto(String(server.url));

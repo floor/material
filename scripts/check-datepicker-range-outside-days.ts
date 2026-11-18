@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import type createDatePicker from "../src/components/datepicker";
 import { baseStyles, componentStyles } from "./style-manifest";
@@ -97,7 +98,7 @@ if (import.meta.main) {
   const css = sass.compileString([...baseStyles, componentStyles.datepicker.source].map(source => `@use "${source}";`).join("\n"), {
     loadPaths: [resolve("src/styles")], logger: sass.Logger.silent,
   }).css;
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   try {
     const page = await browser.newPage({ reducedMotion: "reduce" });
     const errors: string[] = [];

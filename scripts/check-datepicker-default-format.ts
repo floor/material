@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createDatePicker from "../src/components/datepicker";
 import type createDeferredDatePicker from "../src/components/datepicker/deferred";
 import type { setComponentDefaults, clearGlobalDefaults } from "../src/core/config/global";
@@ -28,7 +29,7 @@ window.pickers = { eager:createDatePicker, deferred:createDeferredDatePicker, se
       "Content-Type": path.endsWith(".css") ? "text/css" : "text/javascript",
     } }); } catch { return new Response("missing", { status: 404 }); }
   } });
-  const browser = await chromium.launch();
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
   try {
     const page = await browser.newPage();
     const errors: string[] = [];

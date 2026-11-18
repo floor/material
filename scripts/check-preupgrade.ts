@@ -35,6 +35,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Frame, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves, type KnownMove } from "./preupgrade-moves";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
@@ -615,7 +616,7 @@ const report = (results: Result[], checkMoves: boolean, control = false): string
   return failed;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   // Every element has a default case.
   const kebab = (name: string): string => name.replace(/[A-Z]/g, (ch) => `-${ch.toLowerCase()}`);

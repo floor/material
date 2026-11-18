@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 import type { ExpandMoreRegistryReport } from "./fixtures/icon-registry-expand-more";
@@ -24,7 +25,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/styles.css") return new Response(full, { headers: { "Content-Type": "text/css" } });
   return new Response('<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head><body><script type="module" src="/app.js"></script></body></html>', { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, reducedMotion: "reduce" });
   const errors: string[] = [];

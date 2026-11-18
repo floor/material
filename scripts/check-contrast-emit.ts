@@ -3,10 +3,11 @@
 import assert from "node:assert/strict";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 
 const stylesRoot = process.env.MATERIAL_SASS_ROOT ?? "src/styles";
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   const page = await browser.newPage();
   const measurements = new Map<string, { bytes: number; gzip: number; explicit: number; preference: number }>();

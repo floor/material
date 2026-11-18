@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import type createTimePicker from "../src/components/timepicker";
 import { baseStyles } from "./style-manifest";
@@ -15,7 +16,7 @@ assert(built.success, String(built.logs));
 const css = sass.compileString([...baseStyles, "components/timepicker"].map(s => `@use "${s}";`).join("\n"), {
   loadPaths: [resolve("src/styles")], logger: sass.Logger.silent,
 }).css;
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 850, height: 850 }, reducedMotion: "no-preference" });
   const errors: string[] = [];

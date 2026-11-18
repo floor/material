@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 import { profileStyleModule } from "./optional-style-profiles";
@@ -33,7 +34,7 @@ const check = (ok: boolean, message: string) => { if (!ok) failures.push(message
 const output = new Map<string, { html: string; files: Map<string, string> }>();
 const sizes: Record<string, unknown> = {};
 const states: string[] = [];
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   const [name, ...rest] = new URL(request.url).pathname.slice(1).split("/");
   const page = output.get(name), file = rest.join("/") || "index.html";

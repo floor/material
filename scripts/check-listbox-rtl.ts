@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { baseStyles } from "./style-manifest";
 import { compileThemeSources, inBaseLayer, styleLayerOrder } from "./build-styles";
 import type { ListboxComponent } from "../src/components/listbox/types";
@@ -22,7 +23,7 @@ options:[{id:'a',text:'Alpha'}, {id:'b',text:'Beta'}, {id:'c',text:'Charlie'}]})
   } }],
 });
 assert(entry.success, String(entry.logs));
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 const errors: string[] = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1000, height: 700 }, reducedMotion: "reduce" });

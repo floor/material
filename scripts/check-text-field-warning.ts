@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { chromium, type Browser } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { build as buildVite } from "vite";
 import type { WarningRow } from "./fixtures/text-field-warning/client";
 import { createPackageFixture } from "./package-fixture";
@@ -76,7 +77,7 @@ export async function checkTextFieldWarning(browser: Browser, source = false): P
 }
 
 if (import.meta.main) {
-  const browser = await chromium.launch();
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
   try { await checkTextFieldWarning(browser, process.argv.includes("--source")); }
   finally { await browser.close(); }
 }

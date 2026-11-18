@@ -1,3 +1,4 @@
+import { chromiumProfileDir } from "./browser-profile";
 /**
  * A18: a clickable card may opt into child actions (`promoteChildActions` /
  * `promote-child-actions`). The card is then an article container, not a button.
@@ -56,7 +57,7 @@ const cards = [
   ['card-element-actions-promoted', 'Promoted element card', 'Promoted element detail'],
 ] as const;
 
-const browser = await chromium.launch({headless: true});
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({viewport: {width: 1280, height: 900}, reducedMotion: 'reduce'});
   const errors: string[] = [];

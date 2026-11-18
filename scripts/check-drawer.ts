@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { chromiumProfileDir } from "./browser-profile";
 /** Browser coverage for the standalone MD3 drawer. Run after build. */
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -26,7 +27,7 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   window.mountDrawer = config => { window.drawer?.destroy(); window.drawer=createDrawer({headline:'Mail',items:[{id:'inbox',label:'Inbox',badge:'24',active:true},{id:'sent',label:'Sent'},{type:'divider'},{type:'section',label:'Labels'},{id:'family',label:'Family'}],...config});document.body.append(window.drawer.element); };
   document.querySelector('#opener').onclick=()=>window.drawer.open();</script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
 } });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1040, height: 720 }, reducedMotion: 'reduce' });
   const errors: string[] = [];

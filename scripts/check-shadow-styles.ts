@@ -19,6 +19,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { elements } from "../dist/elements/index.js";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import type { ShadowStylesAPI } from "./fixtures/shadow-styles";
@@ -43,7 +44,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   return new Response('<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head><body><script type="module" src="/fixture.js"></script></body></html>', { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const report = [];
 const seen = new Set<string>();
 try {

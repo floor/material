@@ -27,6 +27,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build } from "vite";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { createPackageFixture } from "./package-fixture";
 import * as coreTheme from "../src/core/theme";
 
@@ -67,7 +68,7 @@ div[data-theme]{padding:8px 16px;margin:4px 0;border-radius:8px;background:var(-
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let checks = 0;
 let fixture: Awaited<ReturnType<typeof createPackageFixture>> | undefined;
 

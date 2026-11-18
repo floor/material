@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 const entry = process.argv.includes("--base=base") ? "base" : "base-elements";
 const base = await readFile("dist/styles/base.css", "utf8");
@@ -14,7 +15,7 @@ const explicit = await readFile("dist/styles/contrast.css", "utf8");
 const bundle = await Bun.build({ entrypoints: ["scripts/fixtures/base-elements.ts"], target: "browser" });
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const report: Record<string, unknown> = { entry };
 try {
   const page = await browser.newPage();

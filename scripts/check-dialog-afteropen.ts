@@ -23,6 +23,7 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createDialog from "../src/components/dialog";
 
 type AfterOpenWindow = Window & {
@@ -42,7 +43,7 @@ const CASES = [
   { motion: "reduce", duration: 500 },
 ] as const;
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const bundle = await Bun.build({
     entrypoints: ["src/components/dialog/index.ts"],

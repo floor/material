@@ -21,6 +21,7 @@
 //   bun run build && bun run rtl:check
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
 import { checkRtlDirection } from "./check-rtl-direction";
@@ -366,7 +367,7 @@ const measureRootDirection = (
     return { ltr, rtl, back, again };
   });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 const TOLERANCE = 0.5;
 const near = (a: number, b: number): boolean => Math.abs(a - b) <= TOLERANCE;
 const mirror = (box: Box): number => WIDTH - box.x - box.width;

@@ -15,6 +15,7 @@
 //   bun run build && bun run switch-transition:check
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 const WIDTH = 600;
 
@@ -65,7 +66,7 @@ host.append(window.createSwitch({ label: "Wi-Fi", checked: ${checked} }).element
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let page: Page | undefined;
 try {
   page = await browser.newPage({ viewport: { width: WIDTH, height: 300 }, reducedMotion: "no-preference" });

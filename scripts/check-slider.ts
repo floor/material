@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { gzipSync } from "node:zlib";
 import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
@@ -65,7 +66,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
     window.slider=createSlider(config);host.append(window.slider.element);
   };window.ready=true;</script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
   const errors: string[] = [];

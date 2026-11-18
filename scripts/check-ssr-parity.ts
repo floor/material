@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { parseHTML } from "linkedom";
 import "./fixtures/ssr-css";
 import { renderElement } from "../src/ssr/index.ts";
@@ -40,7 +41,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><style>body{width:600px;margin:0}</style></head><body>${html}</body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const report: Array<{ element: string; equal: number; exceptions: number; failures: Array<Difference & { phase: string }> }> = [];
 const observed = new Set<number>();
 const optedOut = new Set(["carousel", "fab-menu"]);

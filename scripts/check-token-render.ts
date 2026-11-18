@@ -20,6 +20,7 @@
  */
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 const FIXTURE = "scripts/fixtures/token-render.json";
 const update = process.argv.includes("--update");
@@ -167,7 +168,7 @@ const read = async (page: Page, probe: boolean): Promise<Record<string, Reading>
   return readings;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   const unset = await read(page, false);

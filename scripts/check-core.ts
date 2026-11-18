@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type createButton from "../src/components/button";
 import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
@@ -37,7 +38,7 @@ type CoreWindow = Window & {
   offsetReads: number;
 };
 const fixture = await createPackageFixture();
-let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+let browser: Awaited<ReturnType<typeof chromium.launchPersistentContext>> | undefined;
 try {
   const entry = join(fixture.directory, "core.ts");
   await writeFile(entry, `import { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker } from 'material'; window.core = { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker };`);
@@ -55,7 +56,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { withIcon } from 'material/core/compose'; window.withIcon = withIcon;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   const page = await browser.newPage({ viewport: { width: 600, height: 300 } });
   await page.setContent('<!doctype html><html><body></body></html>');
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });

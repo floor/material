@@ -20,6 +20,7 @@
 // dark.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 
 const options: sass.StringOptions<"sync"> = { loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent };
@@ -32,7 +33,7 @@ const ORDERS: Record<string, string> = {
 
 const THEMES = ["ocean", "desert"] as const;
 
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   const page = await browser.newPage();
   for (const [order, source] of Object.entries(ORDERS)) {

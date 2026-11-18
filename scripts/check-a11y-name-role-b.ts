@@ -10,6 +10,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 
@@ -58,7 +59,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
 const icon = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
 const tabs = [{ value: "flights", text: "Flights", badge: "3" }, { value: "favorites", icon, ariaLabel: "Favorites" }, { value: "pins", icon }];
 const markup = `<m-tabs id="target" aria-label="Media views" value="flights"><m-tab value="flights" badge="3">Flights</m-tab><m-tab value="favorites" icon="${icon}" aria-label="Favorites"></m-tab><m-tab value="pins" icon="${icon}"></m-tab></m-tabs>`;
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 const failures: string[] = [];
 let checks = 0;
 try {

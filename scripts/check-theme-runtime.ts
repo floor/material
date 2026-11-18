@@ -13,6 +13,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 const bundle = await Bun.build({
   entrypoints: ["scripts/fixtures/theme-runtime.ts"],
@@ -44,7 +45,7 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let checks = 0;
 
 try {

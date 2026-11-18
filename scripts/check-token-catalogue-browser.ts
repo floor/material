@@ -18,6 +18,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { chromium, type Page, type ElementHandle } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { walkCss, sha256, type CssReference } from "./token-catalogue/css";
 import { shapeScale, typescale, typefaceDefault } from "./token-catalogue/expected";
 import { UNCONSUMED_STEPS } from "./token-catalogue/rows";
@@ -110,7 +111,7 @@ const computedCorners = async (page: Page, handle: unknown, corners: string[]): 
   page.evaluate(({ handle: el, corners: keys }) =>
     keys.map(key => String(getComputedStyle(el as HTMLElement)[key as keyof CSSStyleDeclaration])), { handle, corners });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   await page.setContent(`<!doctype html><html><head><style>${read("styles.css")}</style></head><body><div id="probe-host"></div></body></html>`);

@@ -21,6 +21,7 @@ import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { hostStyleText } from "../src/elements/define";
 import { elements } from "../src/elements/index";
@@ -598,7 +599,7 @@ async function assertPage(page: Page, mode: "off" | "on"): Promise<void> {
 }
 
 async function assertBrowser(off: string, on: string): Promise<void> {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   try {
     for (const [mode, css] of [["off", off], ["on", on]] as const) {
       const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -768,7 +769,7 @@ function readShadowButton(page: Page, id: string): Promise<ShadowRead | null> {
 
 async function assertElements(): Promise<void> {
   const bundle = await elementBundle();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   try {
     for (const fallback of [false, true]) {
       const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -839,7 +840,7 @@ async function assertLinkedSsr(): Promise<void> {
       );
     },
   });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   try {
     const page = await browser.newPage();
     await page.goto(server.url.href);

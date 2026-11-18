@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type { TooltipComponent, TooltipConfig, TooltipPosition } from "../src/components/tooltip/types";
 import { TOOLTIP_POSITIONS } from "../src/components/tooltip/constants";
 
@@ -60,7 +61,7 @@ const near = (failures: string[], name: string, actual: number, wanted: number, 
   if (Math.abs(actual - wanted) >= tolerance) failures.push(`${name} ${actual.toFixed(1)}, expected ${wanted.toFixed(1)}`);
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
   const errors: string[] = [];

@@ -10,6 +10,7 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 
@@ -59,7 +60,7 @@ const cases: Case[] = [
     { id: `element-radios-required-${required}`, html: `<m-radios id="target" aria-label="Size" ${required ? "required" : ""}>${radioChildren}</m-radios>`, role: "radiogroup" as const, name: "Size", required },
   ]),
 ];
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 const failures: string[] = [];
 let checks = 0;
 try {

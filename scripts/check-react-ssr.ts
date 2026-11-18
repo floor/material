@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { clientAttributes, comparableAttributes, liveAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
@@ -36,7 +37,7 @@ const mtrlWarnings = async <T>(run: () => Promise<T>): Promise<{ result: T; warn
     console.warn = original;
   }
 };
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const summaries: object[] = [];
 const contextFailures: string[] = [];
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {

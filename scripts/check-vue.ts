@@ -10,6 +10,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
 
 // Development builds, so Vue reports hydration mismatches and warnings.
@@ -42,7 +43,7 @@ type Win = Window & {
   };
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let checks = 0;
 
 const run = async (): Promise<void> => {

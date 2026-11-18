@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 const LITE = "dist/styles/base-lite.css";
 assert(existsSync(LITE), `${LITE} is missing: the build emits no base-lite stylesheet`);
@@ -33,7 +34,7 @@ assert(orderOf(css).startsWith("@layer "), "base-lite has no layer-order prelude
 assert(css.includes("@layer mtrl.base{"), "base-lite does not emit into mtrl.base");
 assert(!css.includes("@layer mtrl.base-lite{"), "base-lite opened a layer of its own");
 
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   const page = await browser.newPage();
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "no-preference" });

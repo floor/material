@@ -32,6 +32,7 @@ import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { build, preview } from "vite";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 
 import { createPackageFixture } from "./package-fixture";
 import { FILES, parse } from "./readme-blocks";
@@ -45,7 +46,7 @@ assert(examples.some(block => block.file === "npm-readme.md"), "npm-readme.md ha
 
 const fixture = await createPackageFixture();
 const { directory } = fixture;
-let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+let browser: Awaited<ReturnType<typeof chromium.launchPersistentContext>> | undefined;
 let server: Awaited<ReturnType<typeof preview>> | undefined;
 const failures: string[] = [];
 try {
@@ -81,7 +82,7 @@ try {
   });
   const address = server.httpServer.address();
   assert(address && typeof address === "object");
-  browser = await chromium.launch();
+  browser = await chromium.launchPersistentContext(chromiumProfileDir);
 
   for (const [index, block] of examples.entries()) {
     const where = `${block.file}:${block.line}`;

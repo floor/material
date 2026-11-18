@@ -30,6 +30,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { tabsResponsive } from "../src/components/tabs/responsive";
 import { checkTabsSSRName } from "./check-tabs-ssr-name";
 
@@ -157,7 +158,7 @@ type Geometry = {
   indicatorPosition: string;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let checks = 0;
 
 try {

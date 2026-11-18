@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { chromium, type Browser, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { compile } from "svelte/compiler";
 import type { BunPlugin } from "bun";
 import { renderElement } from "../dist/ssr/index.js";
@@ -268,7 +269,7 @@ export const checkTextFieldTrailing = async (browser: Browser, check: (name: str
 };
 
 if (import.meta.main) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
   let checks = 0;
   try {
     await checkTextFieldTrailing(browser, (name) => {

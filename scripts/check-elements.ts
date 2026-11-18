@@ -12,6 +12,7 @@
 import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
@@ -107,7 +108,7 @@ const server = Bun.serve({
 type Win = Window & Record<string, unknown>;
 /** Icon markup for the icon-only elements, quoted with ' in attributes. */
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 let checks = 0;
 const check = (name: string): void => {
   checks++;
@@ -2392,7 +2393,7 @@ try {
     // value, from the input's own state (a value set with no event, which the
     // script has not seen), and in the focused, error, disabled, required and
     // multiline states. Its own context, forced colours being one.
-    const forcedContext = await browser.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 1200 } });
+    const forcedContext = await browser.browser()!.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 1200 } });
     const forcedPage = await forcedContext.newPage();
     await forcedPage.goto(`http://127.0.0.1:${server.port}`);
     await forcedPage.waitForFunction(() => (window as unknown as Win).ready === true);

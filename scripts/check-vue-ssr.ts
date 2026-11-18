@@ -9,6 +9,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { parseHTML } from "linkedom";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
 import { pascal as componentName } from "./element-modules";
@@ -353,7 +354,7 @@ for (const item of defaults) {
   });
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {

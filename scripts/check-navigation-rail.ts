@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { chromiumProfileDir } from "./browser-profile";
 import assert from 'node:assert/strict';
 import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
@@ -73,7 +74,7 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   document.querySelector('#outside').onclick=()=>window.rail.expand();
   </script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     } });
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
     // One page for both stylesheets: two pages rasterise text differently on
     // the same machine, so the comparison must swap the stylesheet in place.

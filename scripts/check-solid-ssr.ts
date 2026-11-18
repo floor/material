@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { transformAsync } from "@babel/core";
 import { parseHTML } from "linkedom";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
@@ -292,7 +293,7 @@ for (const item of defaults) {
   });
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
@@ -456,7 +457,7 @@ const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request)
   const required = new URL(request.url).searchParams.get("required") === "true";
   return new Response(`<!doctype html><html><head>${head}</head><body><div id="root">${required ? contextHTML.required : contextHTML.default}</div><script type="module" src="/client.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const contextBrowser = await chromium.launch();
+const contextBrowser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   for (const required of [false, true]) {
     const label = required ? "required" : "default-valued";

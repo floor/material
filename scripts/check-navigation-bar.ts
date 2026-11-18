@@ -10,6 +10,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium, type Page } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type { NavigationBarComponent, NavigationBarConfig } from "../src/components/navigation-bar/types";
 
 declare global {
@@ -119,7 +120,7 @@ const measure = (page: Page) => page.evaluate(() => {
 const near = (actual: number, expected: number, label: string, tolerance = 0.5) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${label}: ${actual} (expected ${expected})`);
 
-const browser = await chromium.launch();
+const browser = await chromium.launchPersistentContext(chromiumProfileDir);
 try {
   for (const stylesheet of ["full", "selective"]) {
     const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });

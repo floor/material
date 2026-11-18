@@ -2,6 +2,7 @@
 // scripts/check-ssr-fallback.ts
 // Build first. Check parser-created roots, phase-A fallbacks and browser upgrade.
 import assert from "node:assert/strict";
+import { chromiumProfileDir } from "./browser-profile";
 import { chromium, firefox, webkit } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -42,7 +43,11 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
 try {
   for (const [name, engine] of Object.entries(engines)) {
     if (requested && requested !== name) continue;
-    const browser = await engine.launch();
+    // Chromium keeps its profile inside the worktree (browser-profile.ts);
+    // the other engines launch as before.
+    const browser = engine === chromium
+      ? (await chromium.launchPersistentContext(chromiumProfileDir)).browser()!
+      : await engine.launch();
     try {
       await checkDeclarativeUpgrade(browser);
       const page = await browser.newPage();

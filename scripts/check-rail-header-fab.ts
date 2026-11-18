@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import type { NavigationRailComponent } from "../src/components/navigation-rail/types";
 import type { NavigationRailElement } from "../src/elements/navigation-rail";
 import type { ExtendedFabElement } from "../src/elements/extended-fab";
@@ -38,7 +39,7 @@ export async function checkRailHeaderFab(): Promise<void> {
 </head><body><div id="stage"></div><div id="outside"></div><script type="module" src="/fixture.js"></script></body></html>`,
     { headers: { "Content-Type": "text/html" } });
   } });
-  const browser = await chromium.launch();
+  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
   const failures: string[] = [];
   let checks = 0;
   const verify = (name: string, condition: boolean): void => {

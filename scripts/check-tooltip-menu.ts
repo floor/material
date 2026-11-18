@@ -15,6 +15,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
+import { chromiumProfileDir } from "./browser-profile";
 import * as sass from "sass";
 import { TOOLTIP_DEFAULTS } from "../src/components/tooltip/constants";
 import { componentStyles } from "./style-manifest";
@@ -66,7 +67,7 @@ const server = Bun.serve({
 
 type Box = { top: number; left: number; width: number; height: number };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
   const errors: string[] = [];
