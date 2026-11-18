@@ -224,6 +224,9 @@ jobs:
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
+          - group: app-bar-conformance
+            browsers: chromium
+            checks: app-bar-conformance:check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check

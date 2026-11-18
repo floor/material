@@ -99,28 +99,28 @@ export const createBottomAppBar = (
   // Flag to track visibility
   let isVisible = true;
 
-  // Previous scroll position for determining scroll direction
-  let prevScrollY = window.scrollY;
+  // Where the scroll last turned: the bar changes state once the content has
+  // moved the threshold away from it, so a slow scroll that travels less than
+  // the threshold per event still hides and shows it (MDC
+  // HideBottomViewOnScrollBehavior, BottomAppBar.md:279-285).
+  let anchor = window.scrollY;
 
   // Handle scrolling behavior if autoHide is enabled
   if (componentConfig.autoHide) {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      // Determine scroll direction
-      if (currentScrollY > prevScrollY + 10) {
-        // Scrolling down - hide the bottom bar
-        if (isVisible) {
-          bottomBar.hide();
-        }
-      } else if (currentScrollY < prevScrollY - 10) {
-        // Scrolling up - show the bottom bar
-        if (!isVisible) {
-          bottomBar.show();
-        }
+      if (currentScrollY <= 0) {
+        if (!isVisible) bottomBar.show();
+        anchor = 0;
+      } else if (isVisible ? currentScrollY - anchor >= 10 : anchor - currentScrollY >= 10) {
+        // Scrolling down hides the bottom bar, scrolling up shows it
+        if (isVisible) bottomBar.hide();
+        else bottomBar.show();
+        anchor = currentScrollY;
+      } else if (isVisible ? currentScrollY < anchor : currentScrollY > anchor) {
+        anchor = currentScrollY;
       }
-
-      prevScrollY = currentScrollY;
     };
 
     // Add scroll event listener
@@ -181,6 +181,9 @@ export const createBottomAppBar = (
       this.element.classList.remove(
         `${component.getClass("bottom-app-bar")}--hidden`
       );
+      // Off-screen it stays inert; back on screen it is focusable and readable
+      // again (MDC HideBottomViewOnScrollBehavior).
+      this.element.removeAttribute("inert");
       const changed = !isVisible;
       isVisible = true;
       if (changed) componentConfig.onVisibilityChange?.(true);
@@ -191,6 +194,7 @@ export const createBottomAppBar = (
       this.element.classList.add(
         `${component.getClass("bottom-app-bar")}--hidden`
       );
+      this.element.setAttribute("inert", "");
       const changed = isVisible;
       isVisible = false;
       if (changed) componentConfig.onVisibilityChange?.(false);

@@ -50,19 +50,36 @@ $component: '#{base.$prefix}-top-app-bar';
       padding 0.3s ease-in-out;
   }
   
-  // Leading section (usually navigation icon)
+  // Leading section (usually navigation icon). Compose's LeadingIconColor is
+  // OnSurface, not the standard icon button's OnSurfaceVariant
+  // (tokens/AppBarTokens.kt:31), and a slotted bare button takes the same
+  // colour rather than the page's.
   &__leading {
     display: flex;
     align-items: center;
-    margin-right: 24px;
+    color: t.color('on-surface');
+    --#{base.$prefix}-icon-button-standard-color: #{t.color('on-surface')};
+    // A slotted bare button keeps the UA's buttontext unless it inherits: the
+    // element selector ties that rule and beats it, and any component class
+    // still outranks it.
+    button { color: inherit; }
+    // The end gap belongs to an icon that is there: an empty leading must not
+    // shift the title (AppBar.kt:3512-3516, 16dp title inset without one).
+    &:not(:empty) {
+      margin-right: 24px;
+    }
   }
-  
-  // Trailing section (usually action icons)
+
+  // Trailing section (usually action icons): TrailingIconColor is
+  // OnSurfaceVariant (tokens/AppBarTokens.kt:37).
   &__trailing {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-left: auto;
+    color: t.color('on-surface-variant');
+    --#{base.$prefix}-icon-button-standard-color: #{t.color('on-surface-variant')};
+    button { color: inherit; }
   }
   
   // Center-aligned top app bar
@@ -135,38 +152,43 @@ $component: '#{base.$prefix}-top-app-bar';
   // States for on-scroll behavior
   &--scrolled {
     background-color: t.color('surface-container');
-    @include m.elevation(1);
-    
-    // Compress medium and large variants to small on scroll if compressible
+    // OnScrollContainerElevation is Level2, not this bar's resting Level0
+    // travelled one step (tokens/AppBarTokens.kt:34; MDC tokens.xml:30).
+    @include m.elevation(2);
+
+    // Compress medium and large variants to small on scroll if compressible.
+    // The bar keeps one 64dp row: navigation and actions stay reachable
+    // (app-bars accessibility, "Actions and navigation pathways must remain
+    // reachable and operable"), and the title collapses in beside them
+    // (TwoRowsTopAppBar, AppBar.kt:2755-2860).
     &.#{$component}--medium.#{$component}--compressible,
     &.#{$component}--large.#{$component}--compressible {
       height: 64px;
       flex-direction: row;
       align-items: center;
       padding: 0 16px;
-      
+
+      // The two rows dissolve into the bar's own row, so leading, title and
+      // trailing order themselves in it: 0, 1, 2.
       .#{$component}__row {
-        display: none;
+        display: contents;
       }
-      
+
+      .#{$component}__leading { order: 0; }
+
       .#{$component}__headline {
+        order: 1;
         margin: 0;
         @include m.typography('title-large');
       }
-      
-      // Fix for headline that is inside row in medium/large
-      .#{$component}__row:nth-child(2) {
-        display: flex;
-        flex: 1;
-        margin: 0;
-        padding: 0;
-      }
+
+      .#{$component}__trailing { order: 2; }
     }
   }
   
   // RTL Support
   @include m.rtl {
-    .#{$component}__leading {
+    .#{$component}__leading:not(:empty) {
       margin-right: 0;
       margin-left: 24px;
     }
@@ -198,15 +220,15 @@ $component: '#{base.$prefix}-top-app-bar';
   @media (max-width: map.get(v.$breakpoints, 'sm')) {
     // Reduce side padding slightly on small screens
     padding: 0 12px;
-    
-    .#{$component}__leading {
+
+    .#{$component}__leading:not(:empty) {
       margin-right: 16px;
     }
 
     // The narrow bar reduces the leading's end gap, not its start edges: the
     // direction rule has to be restated here, or this later rule wins over it.
     @include m.rtl {
-      .#{$component}__leading {
+      .#{$component}__leading:not(:empty) {
         margin-right: 0;
         margin-left: 16px;
       }

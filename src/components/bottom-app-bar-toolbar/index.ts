@@ -35,9 +35,12 @@ export function createBottomAppBarToolbar(config: BottomAppBarConfig = {}): Bott
   const fab = createToolbarFab(root, `${PREFIX}-toolbar__fab ${block}__fab-container`);
   const resources = getCleanup(component);
   let visible = true;
-  let previous = window.scrollY;
+  // Where the scroll last turned, as in the legacy bar: the distance from it is
+  // what counts, not one event's delta (MDC HideBottomViewOnScrollBehavior).
+  let anchor = window.scrollY;
   const setVisible = (next: boolean) => {
     root.classList.toggle(`${block}--hidden`, !next);
+    root.toggleAttribute("inert", !next);
     const changed = visible !== next;
     visible = next;
     // State is settled before a callback can re-enter the facade.
@@ -61,9 +64,16 @@ export function createBottomAppBarToolbar(config: BottomAppBarConfig = {}): Bott
   if (settings.autoHide) {
     const scroll = () => {
       const current = window.scrollY;
-      if (current > previous + 10 && visible) api.hide();
-      else if (current < previous - 10 && !visible) api.show();
-      previous = current;
+      if (current <= 0) {
+        if (!visible) api.show();
+        anchor = 0;
+      } else if (visible ? current - anchor >= 10 : anchor - current >= 10) {
+        if (visible) api.hide();
+        else api.show();
+        anchor = current;
+      } else if (visible ? current < anchor : current > anchor) {
+        anchor = current;
+      }
     };
     window.addEventListener("scroll", scroll, { passive: true });
     resources.add(() => window.removeEventListener("scroll", scroll));

@@ -23,6 +23,14 @@ $component: '#{base.$prefix}-bottom-app-bar';
   box-sizing: border-box;
   padding: 12px 16px 12px 4px; // top/bottom 12px, right 16px, left 4px
   background-color: t.color('surface-container');
+  // Actions take OnSurfaceVariant (MDC BottomAppBar.md:80, AppBar.kt:656): a
+  // slotted icon button carries its own colour, a bare button inherits this
+  // instead of the page's (the element selector ties the UA's buttontext).
+  color: t.color('on-surface-variant');
+
+  button {
+    color: inherit;
+  }
   
   // Apply material elevation
   @include m.elevation(2);
