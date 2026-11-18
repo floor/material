@@ -84,11 +84,25 @@ export const withState =
       element.style.pointerEvents = open ? "" : "none";
     };
 
+    const fullHeight = `${root}--full-height`;
+    // The stylesheet squares the top corners when this class is on an
+    // ancestor of the container. offsetTop is the layout edge, so the slide
+    // in does not decide it. A short sheet stays rounded, and a box that has
+    // not been laid out (height 0) is not the top of the viewport.
+    const syncFullHeight = (): void => {
+      const box = structure.container;
+      element.classList.toggle(
+        fullHeight,
+        state === BOTTOM_SHEET_STATES.EXPANDED && box.offsetHeight > 0 && box.offsetTop < 1,
+      );
+    };
+
     const setState = (next: BottomSheetState): void => {
       if (next === state) return;
       const previous = state;
       state = next;
       applyState(next);
+      syncFullHeight();
       component.emit(BOTTOM_SHEET_EVENTS.STATE_CHANGE, { state: next, previous });
     };
 
@@ -155,7 +169,13 @@ export const withState =
     }
 
     applyState(state);
+    syncFullHeight();
     if (state !== BOTTOM_SHEET_STATES.HIDDEN) onStack(true);
+    const onResize = (): void => {
+      if (state === BOTTOM_SHEET_STATES.EXPANDED) syncFullHeight();
+    };
+    const view = element.ownerDocument.defaultView;
+    view?.addEventListener("resize", onResize);
     let stopCloses: (() => void) | null = null;
     if (top) {
       element.addEventListener("click", handleScrimClick);
@@ -182,6 +202,7 @@ export const withState =
         setState,
         /** Releases the listeners this feature put on the document */
         release: () => {
+          view?.removeEventListener("resize", onResize);
           document.removeEventListener("keydown", handleKeydown);
           structure.scrim?.removeEventListener("click", handleScrimClick);
           element.removeEventListener("click", handleScrimClick);

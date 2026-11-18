@@ -58,4 +58,29 @@ describe('divider insets', () => {
     const divider = createDivider({ orientation: 'vertical' });
     expect(divider.element.style.height).toBe('100%');
   });
+
+  test('a full-width divider keeps an explicit inset and still fits', () => {
+    const constructed = createDivider({ insetStart: 24, insetEnd: 12 });
+    expect(constructed.element.style.marginInlineStart).toBe('24px');
+    expect(constructed.element.style.marginInlineEnd).toBe('12px');
+    expect(constructed.element.style.width).toBe('auto');
+
+    const updated = createDivider();
+    updated.setInset(32, 20);
+    expect(updated.element.style.marginInlineStart).toBe('32px');
+    expect(updated.element.style.marginInlineEnd).toBe('20px');
+    expect(updated.element.style.width).toBe('auto');
+  });
+
+  test('one explicit side of a full-width divider leaves the other at 0', () => {
+    const start = createDivider({ insetStart: 24 });
+    expect(start.element.style.marginInlineStart).toBe('24px');
+    expect(start.element.style.marginInlineEnd).toBe('0px');
+    expect(start.element.style.width).toBe('auto');
+
+    const end = createDivider({ orientation: 'vertical', insetEnd: 12 });
+    expect(end.element.style.marginBlockStart).toBe('0px');
+    expect(end.element.style.marginBlockEnd).toBe('12px');
+    expect(end.element.style.height).toBe('auto');
+  });
 });

@@ -38,6 +38,51 @@ afterEach(() => {
   sheets = [];
 });
 
+describe('bottom sheet corners at the viewport edge', () => {
+  const rect = (sheet: ReturnType<typeof make>, top: number, height: number) => {
+    const container = sheet.element.querySelector('.mtrl-bottom-sheet__container') as HTMLElement;
+    Object.defineProperty(container, 'offsetTop', { configurable: true, get: () => top });
+    Object.defineProperty(container, 'offsetHeight', { configurable: true, get: () => height });
+  };
+
+  test('an expanded sheet that meets the top of the screen squares its corners', () => {
+    const sheet = make({ content: '<p>Tall</p>' });
+    rect(sheet, 0, 600);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(true);
+  });
+
+  test('a short expanded sheet stays rounded', () => {
+    const sheet = make({ content: '<p>Short</p>' });
+    rect(sheet, 400, 200);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
+  });
+
+  test('a resize while expanded follows the viewport edge', () => {
+    const sheet = make({ content: '<p>Tall</p>' });
+    rect(sheet, 400, 200);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
+    rect(sheet, 0, 600);
+    sheet.element.ownerDocument.defaultView?.dispatchEvent(new Event('resize'));
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(true);
+  });
+
+  test('leaving the expanded state, or a zero box, clears the square corners', () => {
+    const sheet = make({ variant: 'standard', content: '<p>Tall</p>' });
+    rect(sheet, 0, 600);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(true);
+    sheet.collapse();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
+
+    rect(sheet, 0, 0);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
+  });
+});
+
 describe('bottom sheet', () => {
   test('it mounts itself, hidden', () => {
     const sheet = make({ title: 'Share' });

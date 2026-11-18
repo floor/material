@@ -43,8 +43,15 @@ const applyLayout = (component: ElementComponent & BaseComponent, config: Divide
   style[cross] = `${thickness}px`;
   style[main] = '100%';
 
-  if (variant !== 'full-width') {
-    const insetStart = config.insetStart !== undefined ? config.insetStart : DEFAULT_INSET;
+  // An explicit inset applies on every variant, including full-width. With
+  // none, a full-width divider stays at the edges. Named variants keep their
+  // defaults: inset is 16/0, middle-inset is 16/16. One explicit side leaves
+  // the other at 0 on a full-width divider, not at the named default.
+  const explicit = config.insetStart !== undefined || config.insetEnd !== undefined;
+  if (variant !== 'full-width' || explicit) {
+    const insetStart = config.insetStart !== undefined
+      ? config.insetStart
+      : (variant === 'full-width' ? 0 : DEFAULT_INSET);
     const insetEnd = config.insetEnd !== undefined
       ? config.insetEnd
       : (variant === 'middle-inset' ? DEFAULT_INSET : 0);
