@@ -865,16 +865,15 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
-    // Disabled is resolved before error. TextFieldDefaults labelColor and
-    // supportingTextColor (material3 1.4.0) take the disabled role when the
-    // field is not enabled, then the error role. The variant error rules and
-    // the helper and counter error colours are more specific than the
-    // disabled colours above, so an error that is also disabled kept the
-    // error colour. The indicator, the outline and the trailing icon already
-    // resolve to the disabled role.
+    // Disabled is resolved before error. TextFieldDefaults
+    // supportingTextColor (material3 1.4.0) takes the disabled role when the
+    // field is not enabled, then the error role. The label already does: the
+    // disabled-input rule above outranks the variant error label. The helper
+    // and the counter set the error colour on themselves, so a disabled field
+    // in error kept it. The indicator, the outline and the trailing icon
+    // already resolve to the disabled role.
     &.#{$component}--disabled.#{$component}--error,
     &:has(.#{$component}__input:disabled) {
-        .#{$component}__label,
         .#{$component}__helper--error,
         .#{$component}__counter {
             color: t.color("on-surface");
