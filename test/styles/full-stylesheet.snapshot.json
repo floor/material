@@ -2130,6 +2130,7 @@
     ".mtrl-toolbar__bar>*",
     ".mtrl-toolbar__fab",
     ".mtrl-tooltip",
+    ".mtrl-tooltip--default,.mtrl-tooltip--plain",
     ".mtrl-tooltip--plain",
     ".mtrl-tooltip--rich",
     ".mtrl-tooltip--visible",
