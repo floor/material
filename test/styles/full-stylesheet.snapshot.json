@@ -1971,6 +1971,7 @@
     ".mtrl-text-field--with-suffix",
     ".mtrl-text-field--with-trailing-icon",
     ".mtrl-text-field--with-trailing-icon .mtrl-text-field__input[type=search i]::-webkit-search-cancel-button",
+    ".mtrl-text-field.mtrl-text-field--disabled.mtrl-text-field--error .mtrl-text-field__helper--error,.mtrl-text-field.mtrl-text-field--disabled.mtrl-text-field--error .mtrl-text-field__counter,.mtrl-text-field:has(.mtrl-text-field__input:disabled) .mtrl-text-field__helper--error,.mtrl-text-field:has(.mtrl-text-field__input:disabled) .mtrl-text-field__counter",
     ".mtrl-text-field:has(.mtrl-text-field__input:disabled) .mtrl-text-field__label,.mtrl-text-field:has(.mtrl-text-field__input:disabled) .mtrl-text-field__supporting",
     ".mtrl-text-field:has(>.mtrl-text-field__field>.mtrl-text-field__label):not(.mtrl-text-field--focused) .mtrl-text-field__input::placeholder",
     ".mtrl-text-field__counter",
