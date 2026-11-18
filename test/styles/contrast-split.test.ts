@@ -313,9 +313,12 @@ describe("explicit contrast levels are opt-in", () => {
     // outside days from their foreground selector (+31 B, CI 42608902656).
     // Time-picker digit scale/fade uses spatial/effects motion tokens, with inverse hour return (+1,336 B).
     // Collapsed trailing-icon buttons keep equal insets: two specificity arms (+60 B, CI 43961554964).
+    // The app bars' conformance rows: the scrolled bar's Level2, the slots'
+    // colours and their bare buttons, the compressed rows, the docked spacing
+    // and the navigation label (+332 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "25208ea37a8e8a840606043e3ea6b88033087d425b472105e19070058e700ade",
-      length: 548330,
+      sha256: "ba9b3dfa192b32e8fe4c66d5d970610c5976f54602c09711f519c4ac48cfd9d1",
+      length: 548662,
     });
   });
 
