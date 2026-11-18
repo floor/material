@@ -1703,6 +1703,7 @@
     ".mtrl-side-sheet__close",
     ".mtrl-side-sheet__close::after",
     ".mtrl-side-sheet__close::before",
+    ".mtrl-side-sheet__close:active::before",
     ".mtrl-side-sheet__close:focus-visible",
     ".mtrl-side-sheet__container",
     ".mtrl-side-sheet__container:focus",
