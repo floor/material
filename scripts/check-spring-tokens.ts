@@ -21,6 +21,7 @@ import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
+import type { Page } from "playwright";
 import * as sass from "sass";
 import { hostStyleText } from "../src/elements/define";
 import { elements } from "../src/elements/index";

@@ -463,7 +463,7 @@ try {
     const label = required ? "required" : "default-valued";
     const expected = required ? "required provider" : "from provider";
     const url = `${contextServer.url.href}?required=${required}`;
-    const inert = await contextBrowser.newPage({ javaScriptEnabled: false });
+    const inert = await contextBrowser.browser()!.newPage({ javaScriptEnabled: false });
     try {
       const response = await inert.goto(url);
       try {

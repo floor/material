@@ -55,7 +55,7 @@ let failures = 0;
 const report: Result[] = [];
 const started = performance.now();
 try {
-  const inert = await browser.browser()!.newPage({ viewport: { width: 1024, height: 768 }, javaScriptEnabled: false });
+  const inert = await browser.newPage({ viewport: { width: 1024, height: 768 }, javaScriptEnabled: false });
   await inert.goto(server.url.href);
   const results = await inert.evaluate(({ entries, fallback }) => {
     type Entry = { count: number; selector?: string };

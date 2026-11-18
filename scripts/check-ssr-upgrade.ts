@@ -120,7 +120,7 @@ try {
     preupgrade = false;
     const children = RENDERED_CHILDREN[fixture.element] ?? "";
     let roots: boolean[] = [];
-    let inert = await browser.browser()!.newPage({ ...options, javaScriptEnabled: false });
+    let inert = await browser.newPage({ ...options, javaScriptEnabled: false });
     await inert.goto(server.url.href);
     const firstPaint = await inert.evaluate(() => {
       const root = document.querySelector("#stage > :first-child")!.shadowRoot;
@@ -167,7 +167,7 @@ try {
       assert(roots.length > 0 && roots.every(Boolean), `${engine}/${fixture.element}: every ${children} must have a styled declarative root without JavaScript`);
       await inert.close();
       preupgrade = true;
-      inert = await browser.browser()!.newPage({ ...options, javaScriptEnabled: false });
+      inert = await browser.newPage({ ...options, javaScriptEnabled: false });
       await inert.goto(server.url.href);
     } else {
       assert(firstPaint.root && firstPaint.rules > 0 && firstPaint.styled, `${engine}/${fixture.element}: unstyled no-JS root ${JSON.stringify(firstPaint)}`);

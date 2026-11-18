@@ -490,9 +490,8 @@ async function openPage(engine: BrowserType): Promise<{ page: Page; browser: Bro
   const context = engine === chromium
     ? await launchChromium({ headless: true, viewport: { width: 900, height: 600 } })
     : undefined;
-  const launched = context ?? await engine.launch({ headless: true });
-  const browser = context?.browser() ?? launched;
-  const page = context ? await context.newPage() : await launched.newPage({ viewport: { width: 900, height: 600 } });
+  const browser: Browser = context?.browser() ?? await engine.launch({ headless: true });
+  const page = context ? await context.newPage() : await browser.newPage({ viewport: { width: 900, height: 600 } });
   await page.setContent("<!doctype html><html><body></body></html>");
   await page.addStyleTag({ content: CONTROL_CSS });
   browsers[engine.name()] = browser.version();

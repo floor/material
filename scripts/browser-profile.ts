@@ -1,7 +1,7 @@
 /** The browser checks' Chromium launches, each with its own worktree profile. */
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { chromium, type BrowserContext, type LaunchOptions } from "playwright";
+import { chromium, type BrowserContext } from "playwright";
 
 // Chromium's user data directory stays inside the worktree —
 // `<repo root>/.chrome-profile/run-<unique>/`, gitignored — so the browser's
@@ -34,7 +34,9 @@ const closeRemovesDir = <T extends { close: () => Promise<unknown> }>(handle: T,
  * @returns The persistent context; its `close()` (and the browser's) removes
  *   the launch's profile directory
  */
-export const launchChromium = async (options?: LaunchOptions): Promise<BrowserContext> => {
+type PersistentContextOptions = NonNullable<Parameters<typeof chromium.launchPersistentContext>[1]>;
+
+export const launchChromium = async (options?: PersistentContextOptions): Promise<BrowserContext> => {
   await mkdir(profileRoot, { recursive: true });
   const dir = await mkdtemp(join(profileRoot, "run-"));
   const context = await chromium.launchPersistentContext(dir, options);

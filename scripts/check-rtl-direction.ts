@@ -518,7 +518,7 @@ async function assertAutoBar(browser: Browser, base: string, sheet: string): Pro
       </div>
     </nav></div>`;
   for (const direction of ["ltr", "rtl"] as Direction[]) {
-    const page = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
+    const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
     try {
       await page.goto(`${base}${sheet}&dir=${direction}`);
       const rows = await page.evaluate(async (markup: Record<string, string>) => {
@@ -581,7 +581,7 @@ async function assertAutoBar(browser: Browser, base: string, sheet: string): Pro
 
 /** A shadow host: the sheet inside the root, the marker on the host itself. */
 async function assertShadowHost(browser: Browser, base: string, sheet: string): Promise<void> {
-  const page = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
   try {
     await page.goto(`${base}${sheet}&dir=ltr`);
     const row = await page.evaluate(async (halves) => {
@@ -620,7 +620,7 @@ async function assertShadowHost(browser: Browser, base: string, sheet: string): 
 /** The switch's handle rides its spring to the checked position. */
 async function assertSwitchAnimates(browser: Browser, base: string, sheet: string): Promise<void> {
   for (const direction of ["ltr", "rtl"] as Direction[]) {
-    const page = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
+    const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
     try {
       await page.goto(`${base}${sheet}&dir=${direction}`);
       const samples = await page.evaluate(async () => {
@@ -699,7 +699,7 @@ export async function checkRtlDirection(browser: Browser): Promise<void> {
   try {
     for (const sheet of ["arms", "logical"] as const) {
       for (const direction of ["ltr", "rtl"] as Direction[]) {
-        const page = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
+        const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, reducedMotion: "reduce" });
         try {
           await page.goto(`${server.url.href}?sheet=${sheet}&dir=${direction}`);
           const measured = await measure(page, sheet, direction);

@@ -381,7 +381,7 @@ for (const environment of ["development", "production"] as const) {
     const inert = await launchChromium();
     try {
       for (const mode of ["default", "required"] as const) {
-        const page = await inert.newPage({ javaScriptEnabled: false });
+        const page = await inert.browser()!.newPage({ javaScriptEnabled: false });
         try {
           const response = await page.goto(`${contextServer.url.href}?mode=${mode}`);
           const expected = mode === "required" ? "required provider" : "from provider";
