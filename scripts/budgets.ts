@@ -24,7 +24,7 @@ export const PACKAGE_GZIP = {
   "navigation-rail-css": 5_400,
   "text-field": 9_600,
   form: 20_500,
-  "all-js": 131_320, // Owner decision 2026-11-09: time picker transitions in 3.10.1 and card child actions in 3.11; raised to 131,100, owner decision 2026-11-10; raised to 131,200 for the list control names (#388, 131,165 packed) and the expand-more registry role (131,102 packed) in 3.15.0, owner decision 2026-11-17; raised to 131,320 for #388 together with the icon role, whose stacked measurement is 131,294 packed, owner decision 2026-11-17.
+  "all-js": 131_400, // Owner decision 2026-11-09: time picker transitions in 3.10.1 and card child actions in 3.11; raised to 131,100, owner decision 2026-11-10; raised to 131,200 for the list control names (#388, 131,165 packed) and the expand-more registry role (131,102 packed) in 3.15.0, owner decision 2026-11-17; raised to 131,320 for #388 together with the icon role, whose stacked measurement is 131,294 packed, owner decision 2026-11-17; raised to 131,400 for the menu's selected item as a checked menuitemradio (#416), whose stacked measurement is 131,365 packed, owner decision 2026-11-18.
   "base-css": 3_150,
   "base-lite-css": 1_750,
   "button-css": 5_550,
