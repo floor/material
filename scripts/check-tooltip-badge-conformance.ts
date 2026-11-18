@@ -39,11 +39,18 @@ try {
     });
     const badge = fixture.createBadge({ label: 5 });
     document.querySelector("#badge")!.append(badge.element);
+    const wideBadge = fixture.createBadge({ label: "WWWW" });
+    document.body.append(wideBadge.element);
     const typography = (element: Element) => {
       const { fontFamily, fontSize, fontWeight, letterSpacing, lineHeight } = getComputedStyle(element);
       return { fontFamily, fontSize, fontWeight, letterSpacing, lineHeight };
     };
-    return { sizes, badge: typography(badge.element), reference: typography(document.querySelector(".label-small-reference")!) };
+    return {
+      sizes,
+      badge: typography(badge.element),
+      reference: typography(document.querySelector(".label-small-reference")!),
+      authored: { maxWidth: getComputedStyle(wideBadge.element).maxWidth, width: wideBadge.element.getBoundingClientRect().width },
+    };
   });
 
   console.log(JSON.stringify(styles));
@@ -51,6 +58,8 @@ try {
   assert.deepEqual(styles.sizes[2]?.slice(2), ["0px", "0px"]);
   assert.deepEqual(styles.badge, styles.reference);
   assert.equal(styles.badge.letterSpacing, "0.5px");
+  assert.equal(styles.authored.maxWidth, "none");
+  assert(styles.authored.width > 34);
 } finally {
   await browser.close();
 }

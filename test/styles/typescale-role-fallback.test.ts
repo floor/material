@@ -97,12 +97,8 @@ describe("opt-in typography consumers", () => {
       expect(css).toContain("var(--mtrl-sys-typescale-label-small-line-height, 16px)");
       expect(css).toContain("var(--mtrl-sys-typescale-label-small-font-weight, 500)");
       expect(css).toContain("font-size:0");
-      if (source === "components/badge") {
-        expect(css).toContain("var(--mtrl-sys-typescale-label-small-font, var(--mtrl-ref-typeface-plain, Roboto, sans-serif))");
-        expect(css).toContain("var(--mtrl-sys-typescale-label-small-letter-spacing, 0.5px)");
-      } else {
-        expect(css).not.toContain("--mtrl-sys-typescale-label-small-font,");
-      }
+      expect(css).toContain("var(--mtrl-sys-typescale-label-small-font, var(--mtrl-ref-typeface-plain, Roboto, sans-serif))");
+      expect(css).toContain("var(--mtrl-sys-typescale-label-small-letter-spacing, 0.5px)");
     }
   });
 
