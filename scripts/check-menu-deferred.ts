@@ -306,7 +306,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
       });
       await release();
       await page.evaluate(async () => { await (window as unknown as { lab: Lab }).lab.menu.preload(); });
-      await page.getByRole("menuitem", { name: "One" }).click();
+      await page.getByRole("menuitemradio", { name: "One" }).click();
       assert.deepEqual(await page.evaluate(() => {
         const { menu, events } = (window as unknown as { lab: Lab }).lab;
         return [menu.isOpen(), menu.getPosition(), menu.getSelected(), events];

@@ -91,7 +91,9 @@ const withController =
   // has no aria-selected for assistive technology to announce, while
   // menuitemradio requires aria-checked (WAI-ARIA 1.2) -- the check Material
   // shows beside a chosen menu item's label
-  // (m3.material.io/components/menus/specs, selected state). A menu with no
+  // (m3.material.io/components/menus/specs, selected state). Only the level
+  // that holds the selection is marked: a submenu's items are commands that
+  // carry no selection, so they stay menuitem (nested). A menu with no
   // selection keeps menuitem, and a listbox keeps option with aria-selected.
   const itemRole = (): string => (state.selectedItemId ? "menuitemradio" : "menuitem");
   /** Where a listbox says which option is chosen, and a menu which item is checked. */
@@ -138,7 +140,7 @@ const withController =
   /**
    * Creates a DOM element for a menu item
    */
-  const createMenuItem = (item: MenuItem, index: number): HTMLElement => {
+  const createMenuItem = (item: MenuItem, index: number, role = itemRole()): HTMLElement => {
     const itemElement = document.createElement("li");
     const itemClass = `${component.getClass("menu__item")}`;
 
@@ -147,7 +149,7 @@ const withController =
       itemElement.setAttribute("role", "option");
       itemElement.id = `${optionIdPrefix}-option-${index}`;
     } else {
-      itemElement.setAttribute("role", itemRole());
+      itemElement.setAttribute("role", role);
       itemElement.setAttribute("tabindex", "-1"); // Set to -1 by default, will update when needed
     }
     itemElement.setAttribute("data-id", item.id);
@@ -160,11 +162,15 @@ const withController =
       itemElement.setAttribute("aria-disabled", "false");
     }
 
-    if (state.selectedItemId && item.id === state.selectedItemId) {
-      itemElement.classList.add(`${itemClass}--selected`);
-      itemElement.setAttribute(checkedAttribute, "true");
-    } else if (listbox || state.selectedItemId) {
-      itemElement.setAttribute(checkedAttribute, "false");
+    // The check belongs to the level that carries the selection: a submenu's
+    // items are created as menuitem and keep nothing of the level above.
+    if (listbox || role === "menuitemradio") {
+      if (state.selectedItemId && item.id === state.selectedItemId) {
+        itemElement.classList.add(`${itemClass}--selected`);
+        itemElement.setAttribute(checkedAttribute, "true");
+      } else {
+        itemElement.setAttribute(checkedAttribute, "false");
+      }
     }
 
     if (item.hasSubmenu) {
@@ -765,7 +771,9 @@ const withController =
       } else if ("type" in item && item.type === "divider") {
         element = createDivider(item, index);
       } else {
-        element = createMenuItem(item as MenuItem, index);
+        // A submenu's items are commands under the selection's own level: they
+        // stay menuitem and never carry its check.
+        element = createMenuItem(item as MenuItem, index, "menuitem");
       }
       container.appendChild(element);
       if (onItemCreated) {

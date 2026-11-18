@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * A menu that carries a selection announces it.
+ * A menu announces the item it has chosen, and only that item.
  *
  * A menu marks its chosen item with menuitemradio and aria-checked. role
  * menuitem has no aria-selected to expose, so Chromium drops the attribute and
@@ -8,9 +8,10 @@
  * (WAI-ARIA 1.2, menuitem: "aria-selected is not supported"; menuitemradio:
  * "aria-checked is required" — and Material renders a chosen menu item with a
  * leading check, m3.material.io/components/menus/specs, the selected state of
- * the vertical menu). A menu with no selection keeps role menuitem and no
- * checked state, and a listbox — a combobox's popup — keeps role option with
- * aria-selected.
+ * the vertical menu). Only the level that holds the selection is marked: a
+ * submenu's items are commands and stay menuitem. A menu with no selection
+ * keeps role menuitem and no checked state, and a listbox — a combobox's popup
+ * — keeps role option with aria-selected.
  *
  * The check reads the Chromium accessibility tree, what a screen reader
  * receives, beside the DOM attributes, for the factory menu, the <m-menu>
@@ -26,22 +27,29 @@ interface RawAXProperty { name: string; value?: RawAXValue }
 interface RawAXNode { nodeId: string; ignored?: boolean; role?: RawAXValue; name?: RawAXValue; properties?: RawAXProperty[] }
 interface AXSummary { role: string; name: string; props: Record<string, unknown> }
 
-const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
-const mainCss = sass.compileString(`@use "main";`, {
-  loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
-  style: "compressed",
-  logger: sass.Logger.silent,
-}).css;
-const menuCss = sass.compileString(`@use "components/menu";`, {
-  loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
-  style: "compressed",
-  logger: sass.Logger.silent,
-}).css;
+/** What the page's menu instance offers the checks. */
+interface MenuInstance {
+  element: HTMLElement;
+  open: () => void;
+  setSelected: (id: string | null) => void;
+  destroy: () => void;
+}
+interface Lab {
+  mtrl: { createMenu: (config: Record<string, unknown>) => MenuInstance };
+  menu?: MenuInstance;
+  root: HTMLElement;
+}
 
+const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
+const compile = (source: string): string => sass.compileString(`@use "${source}";`, {
+  loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
+  style: "compressed",
+  logger: sass.Logger.silent,
+}).css;
 const entrySource = `
 import * as mtrl from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
 import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
-registerStyles({ menu: ${JSON.stringify(menuCss)} });
+registerStyles({ menu: ${JSON.stringify(compile("components/menu"))} });
 defineAll();
 window.mtrl = mtrl;
 `;
@@ -67,7 +75,7 @@ try {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body><main id="stage"></main></body></html>`);
-  await page.addStyleTag({ content: mainCss });
+  await page.addStyleTag({ content: compile("main") });
   await page.addScriptTag({ content: bundleJs });
 
   const cdp = await context.newCDPSession(page);
@@ -80,29 +88,36 @@ try {
       return { role: String(node.role?.value ?? ""), name: String(node.name?.value ?? ""), props };
     });
   };
-  const menuItems = (): Promise<Array<{ text: string; role: string | null; checked: string | null; selected: string | null }>> =>
-    page.evaluate(() => Array.from(
-      (window as unknown as { root: HTMLElement }).root.querySelectorAll<HTMLElement>(".mtrl-menu__item"),
-      (item) => ({
-        text: item.querySelector(".mtrl-menu__item-text")?.textContent ?? "",
-        role: item.getAttribute("role"),
-        checked: item.getAttribute("aria-checked"),
-        selected: item.getAttribute("aria-selected"),
-      }),
-    ));
+  /** The items of one menu surface, its own list's and not a submenu's. */
+  const items = (submenu: boolean): Promise<Array<[string, string | null, string | null, string | null]>> =>
+    page.evaluate((submenu) => {
+      const lab = window as unknown as Lab;
+      const surface = submenu
+        ? document.querySelector<HTMLElement>(".mtrl-menu--submenu.mtrl-menu--visible")
+        : null;
+      const root = surface ?? lab.root;
+      return Array.from(root.querySelectorAll<HTMLElement>(".mtrl-menu__item"), (item) => [
+        item.querySelector(".mtrl-menu__item-text")?.textContent ?? "",
+        item.getAttribute("role"),
+        item.getAttribute("aria-checked"),
+        item.getAttribute("aria-selected"),
+      ]);
+    }, submenu);
   const present = (ax: AXSummary[], name: string): AXSummary => {
     const node = ax.find((candidate) => candidate.name === name && /menuitem|option/.test(candidate.role));
     assert.ok(node, `no menuitem ax node named ${name}: ${JSON.stringify(ax.filter((n) => n.name).map((n) => [n.role, n.name]))}`);
     return node;
   };
+  const checkedNames = async (): Promise<string> =>
+    (await readAX()).filter((node) => node.role === "menuitemradio" && String(node.props.checked) === "true")
+      .map((node) => node.name).join();
 
-  // A menu with a selected item: every item is a menuitemradio, the chosen one
+  // A menu with a selected item: its items are menuitemradio, the chosen one
   // checked, the others not.
   await page.evaluate(async () => {
-    const stage = document.getElementById("stage")!;
-    stage.innerHTML = `<button id="menu-opener">Size</button>`;
-    const w = window as unknown as { mtrl: { createMenu: (config: Record<string, unknown>) => { open: () => void; setSelected: (id: string | null) => void; destroy: () => void } }; menu?: { destroy: () => void } };
-    w.menu = w.mtrl.createMenu({
+    const lab = window as unknown as Lab;
+    document.getElementById("stage")!.innerHTML = `<button id="menu-opener">Size</button>`;
+    lab.menu = lab.mtrl.createMenu({
       opener: "#menu-opener",
       ariaLabel: "Size",
       items: [
@@ -111,9 +126,9 @@ try {
         { id: "l", text: "Large" },
       ],
     });
-    w.menu.setSelected("m");
-    (window as unknown as { root: HTMLElement }).root = (w.menu as unknown as { element: HTMLElement }).element;
-    w.menu.open();
+    lab.menu.setSelected("m");
+    lab.root = lab.menu.element;
+    lab.menu.open();
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
   // What a screen reader receives: the chosen item is a checked menuitemradio.
@@ -123,73 +138,126 @@ try {
     assert.equal(node.role, "menuitemradio", `${name}: announced as ${node.role}, so the selection is not announced`);
     assert.equal(String(node.props.checked), checked, `${name}: checked is ${node.props.checked}, not ${checked}`);
   }
-  assert.deepEqual(await menuItems(), [
-    { text: "Small", role: "menuitemradio", checked: "false", selected: null },
-    { text: "Medium", role: "menuitemradio", checked: "true", selected: null },
-    { text: "Large", role: "menuitemradio", checked: "false", selected: null },
+  assert.deepEqual(await items(false), [
+    ["Small", "menuitemradio", "false", null],
+    ["Medium", "menuitemradio", "true", null],
+    ["Large", "menuitemradio", "false", null],
   ], "a selected menu's items are menuitemradio with aria-checked, and no aria-selected");
-  // setSelected moves the check, and creating an item with a selection live
-  // gives it the same role.
-  await page.evaluate(async () => {
-    const w = window as unknown as { menu: { setSelected: (id: string | null) => void } };
-    w.menu.setSelected("l");
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-  assert.deepEqual((await menuItems()).map((item) => [item.text, item.role, item.checked]), [
+
+  // setSelected moves the check.
+  await page.evaluate(() => (window as unknown as Lab).menu!.setSelected("l"));
+  assert.deepEqual((await items(false)).map(([text, role, checked]) => [text, role, checked]), [
     ["Small", "menuitemradio", "false"],
     ["Medium", "menuitemradio", "false"],
     ["Large", "menuitemradio", "true"],
   ], "setSelected moves the checked state without recreating the items");
-  assert.equal((await readAX()).filter((node) => node.role === "menuitemradio" && String(node.props.checked) === "true").map((node) => node.name).join(), "Large",
-    "the announced checked item follows setSelected");
+  assert.equal(await checkedNames(), "Large", "the announced checked item follows setSelected");
 
-  // A menu with no selection keeps menuitem and carries no checked state.
+  // Clearing the selection makes the menu a plain menu again: menuitem, no
+  // checked state, nothing announced as chosen.
+  await page.evaluate(() => (window as unknown as Lab).menu!.setSelected(null));
+  assert.deepEqual(await items(false), [
+    ["Small", "menuitem", null, null],
+    ["Medium", "menuitem", null, null],
+    ["Large", "menuitem", null, null],
+  ], "setSelected(null) returns the items to menuitem with no checked state");
+  const clearedAX = await readAX();
+  assert.equal(clearedAX.filter((node) => node.role === "menuitemradio").length, 0,
+    "setSelected(null): the items are still announced as menuitemradio");
+  assert.equal(present(clearedAX, "Large").props.checked, undefined,
+    "setSelected(null): the item still carries a checked state");
+  await page.evaluate(() => (window as unknown as Lab).menu!.destroy());
+
+  // A submenu's items are commands under the level that holds the selection:
+  // they stay menuitem and never carry its check.
   await page.evaluate(async () => {
-    const stage = document.getElementById("stage")!;
-    const w = window as unknown as { menu?: { destroy: () => void }; mtrl: { createMenu: (config: Record<string, unknown>) => { open: () => void; destroy: () => void } } };
-    w.menu?.destroy();
-    stage.innerHTML = `<button id="menu-opener">Edit</button>`;
-    w.menu = w.mtrl.createMenu({
-      opener: "#menu-opener",
+    const lab = window as unknown as Lab;
+    document.getElementById("stage")!.innerHTML = `<button id="submenu-opener">Edit</button>`;
+    document.querySelectorAll(".mtrl-menu").forEach((element) => element.remove());
+    lab.menu = lab.mtrl.createMenu({
+      opener: "#submenu-opener",
       ariaLabel: "Edit",
+      items: [
+        { id: "size", text: "Size" },
+        { id: "more", text: "More", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+      ],
+    });
+    lab.menu.setSelected("size");
+    lab.root = lab.menu.element;
+    lab.menu.open();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    lab.menu.element.querySelector<HTMLElement>('[data-id="more"]')!.click();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  });
+  assert.deepEqual(await items(false), [
+    ["Size", "menuitemradio", "true", null],
+    ["More", "menuitemradio", "false", null],
+  ], "the level that holds the selection is menuitemradio");
+  assert.deepEqual(await items(true), [
+    ["Copy link", "menuitem", null, null],
+  ], "a submenu's items are commands: menuitem, with no checked state of the level above");
+  const submenuAX = await readAX();
+  assert.equal(present(submenuAX, "Copy link").role, "menuitem", "a submenu item is announced as menuitem");
+  assert.equal(present(submenuAX, "Copy link").props.checked, undefined, "a submenu item carries no checked state");
+  assert.equal(await checkedNames(), "Size", "the checked item is the top level's own");
+
+  // Clearing the selection while that submenu is open leaves no menuitemradio
+  // anywhere: the level above returns to menuitem, and the submenu never had it.
+  await page.evaluate(() => (window as unknown as Lab).menu!.setSelected(null));
+  assert.deepEqual(await items(false), [
+    ["Size", "menuitem", null, null],
+    ["More", "menuitem", null, null],
+  ], "setSelected(null) returns the selecting level to menuitem");
+  assert.deepEqual(await items(true), [["Copy link", "menuitem", null, null]],
+    "setSelected(null): the open submenu still carries a checked state");
+  assert.equal((await readAX()).filter((node) => node.role === "menuitemradio").length, 0,
+    "setSelected(null): an item is still announced as menuitemradio");
+  await page.evaluate(() => (window as unknown as Lab).menu!.destroy());
+
+  // A menu with no selection is a plain menu: menuitem and no checked state.
+  await page.evaluate(async () => {
+    const lab = window as unknown as Lab;
+    document.getElementById("stage")!.innerHTML = `<button id="menu-opener">Cut</button>`;
+    document.querySelectorAll(".mtrl-menu").forEach((element) => element.remove());
+    lab.menu = lab.mtrl.createMenu({
+      opener: "#menu-opener",
+      ariaLabel: "Cut",
       items: [{ id: "cut", text: "Cut" }, { id: "copy", text: "Copy" }],
     });
-    (window as unknown as { root: HTMLElement }).root = (w.menu as unknown as { element: HTMLElement }).element;
-    w.menu.open();
+    lab.root = lab.menu.element;
+    lab.menu.open();
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
-  assert.deepEqual((await menuItems()).map((item) => [item.text, item.role, item.checked, item.selected]), [
+  assert.deepEqual(await items(false), [
     ["Cut", "menuitem", null, null],
     ["Copy", "menuitem", null, null],
   ], "a menu with no selection keeps role menuitem and carries no checked state");
 
   // A listbox keeps option and aria-selected.
   await page.evaluate(async () => {
-    const stage = document.getElementById("stage")!;
-    const w = window as unknown as { menu?: { destroy: () => void }; mtrl: { createMenu: (config: Record<string, unknown>) => { setSelected: (id: string) => void; destroy: () => void } } };
-    w.menu?.destroy();
-    stage.innerHTML = `<button id="listbox-opener">Combo</button>`;
-    w.menu = w.mtrl.createMenu({
+    const lab = window as unknown as Lab;
+    document.getElementById("stage")!.innerHTML = `<button id="listbox-opener">Combo</button>`;
+    document.querySelectorAll(".mtrl-menu").forEach((element) => element.remove());
+    lab.menu = lab.mtrl.createMenu({
       opener: "#listbox-opener",
       listbox: true,
       items: [{ id: "s", text: "Small" }, { id: "m", text: "Medium" }],
     });
-    w.menu.setSelected("m");
-    (window as unknown as { root: HTMLElement }).root = (w.menu as unknown as { element: HTMLElement }).element;
-    stage.append((w.menu as unknown as { element: HTMLElement }).element);
+    lab.menu.setSelected("m");
+    lab.root = lab.menu.element;
+    document.getElementById("stage")!.append(lab.menu.element);
   });
-  assert.deepEqual((await menuItems()).map((item) => [item.text, item.role, item.checked, item.selected]), [
+  assert.deepEqual(await items(false), [
     ["Small", "option", null, "false"],
     ["Medium", "option", null, "true"],
   ], "a listbox keeps role option with aria-selected, and no aria-checked");
 
   // The <m-menu> element renders the same markup for the same state.
   await page.evaluate(async () => {
-    const stage = document.getElementById("stage")!;
-    const w = window as unknown as { menu?: { destroy: () => void } };
-    w.menu?.destroy();
+    const lab = window as unknown as Lab;
+    lab.menu?.destroy();
     document.querySelectorAll(".mtrl-menu").forEach((element) => element.remove());
-    stage.innerHTML = `
+    document.getElementById("stage")!.innerHTML = `
       <button id="el-opener">Size</button>
       <m-menu id="el-menu" anchor="el-opener" aria-label="Size" open>
         <m-menu-item value="s">Small</m-menu-item>
@@ -197,27 +265,20 @@ try {
         <m-menu-item value="l">Large</m-menu-item>
       </m-menu>`;
     await new Promise((resolve) => setTimeout(resolve, 150));
-    (document.getElementById("el-menu") as unknown as { component: { setSelected: (id: string) => void } }).component.setSelected("m");
+    const host = document.getElementById("el-menu") as unknown as { component: { setSelected: (id: string) => void } };
+    host.component.setSelected("m");
+    (window as unknown as Lab).root = document.getElementById("el-menu")!.shadowRoot as unknown as HTMLElement;
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
-  assert.deepEqual(await page.evaluate(() => {
-    const host = document.getElementById("el-menu")!;
-    return Array.from(host.shadowRoot!.querySelectorAll<HTMLElement>(".mtrl-menu__item"), (item) => [
-      item.querySelector(".mtrl-menu__item-text")?.textContent,
-      item.getAttribute("role"),
-      item.getAttribute("aria-checked"),
-      item.getAttribute("aria-selected"),
-    ]);
-  }), [
+  assert.deepEqual(await items(false), [
     ["Small", "menuitemradio", "false", null],
     ["Medium", "menuitemradio", "true", null],
     ["Large", "menuitemradio", "false", null],
   ], "<m-menu> renders the same menuitemradio markup as the factory for the same selection");
-  const elementAX = await readAX();
-  assert.equal(String(present(elementAX, "Medium").props.checked), "true", "<m-menu>: the selected item is checked in the AX tree");
+  assert.equal(String(present(await readAX(), "Medium").props.checked), "true", "<m-menu>: the selected item is checked in the AX tree");
 
   assert.deepEqual(errors, []);
-  console.log("Passed packed menu checked state: a menu with a selection renders menuitemradio with aria-checked and Chromium announces the checked item; a menu with no selection keeps menuitem; a listbox keeps option with aria-selected; <m-menu> renders the same markup and announces the same state.");
+  console.log("Passed packed menu checked state: a menu with a selection renders menuitemradio with aria-checked and Chromium announces the checked item, follows setSelected, and returns to menuitem when the selection is cleared; a submenu's items stay menuitem; a menu with no selection keeps menuitem; a listbox keeps option with aria-selected; <m-menu> renders the same markup and announces the same state.");
 } finally {
   await browser.close();
 }

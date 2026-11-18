@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Menu: the selected item is announced as checked.** A menu whose items are `role="menuitem"` carried the selection on `aria-selected`, which that role does not support, so no selected state reached assistive technology. In a menu that carries a selection the items are now `menuitemradio` with `aria-checked` true/false, updated by `setSelected`; a menu with no selection keeps `menuitem`, and a listbox keeps `role="option"` with `aria-selected`, unchanged. The markup and styling are the same — only the roles and the attribute that carries the selection change (`m3.material.io/components/menus/specs`, selected state; WAI-ARIA 1.2, menuitemradio requires `aria-checked`).
