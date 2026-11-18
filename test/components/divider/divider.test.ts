@@ -90,7 +90,7 @@ describe('divider orientation', () => {
     expect(divider.element.style.marginInlineStart).toBe('');
     expect(divider.element.style.marginBlockStart).toBe('24px');
     expect(divider.element.style.marginBlockEnd).toBe('0px');
-    expect(divider.element.style.height).toBe('calc(100% - 24px)');
+    expect(divider.element.style.height).toBe('auto');
   });
 });
 

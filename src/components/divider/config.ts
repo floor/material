@@ -66,9 +66,9 @@ export interface DividerConfig {
    * Custom inset value (left margin for horizontal, top margin for vertical)
    * 
    * Overrides the default inset spacing at the start of the divider.
-   * An explicit value applies on every variant, including full-width.
+   * Only applies when variant is 'inset' or 'middle-inset'.
    * 
-   * @default 16 for 'inset' and 'middle-inset' variants, 0 for full-width
+   * @default 16 for 'inset' and 'middle-inset' variants
    * 
    * @example
    * ```typescript
@@ -82,9 +82,9 @@ export interface DividerConfig {
    * Custom inset end value (right margin for horizontal, bottom margin for vertical)
    * 
    * Overrides the default inset spacing at the end of the divider.
-   * An explicit value applies on every variant, including full-width.
+   * Only applies when variant is 'middle-inset'.
    * 
-   * @default 0 for 'inset' and full-width, 16 for 'middle-inset'
+   * @default 0 for 'inset', 16 for 'middle-inset'
    * 
    * @example
    * ```typescript

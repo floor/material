@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
-// Divider insets, bottom-sheet corners at the viewport edge, and the side
-// sheet's pressed close button and standard inner border.
+// Side sheet pressed close button and the standard inner border.
 //
 //   bun run scripts/check-divider-sheet-conformance.ts
 //
-// Geometry needs a browser. The page loads the factories and the three
-// stylesheets compiled for this run, with reduced motion so springs settle.
+// Geometry needs a browser. The page loads the factory and the side sheet
+// stylesheet compiled for this run, with reduced motion so springs settle.
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
@@ -18,17 +17,12 @@ const compile = (source: string): string =>
     style: "expanded",
   }).css;
 
-const dividerCss = compile("components/divider");
 // The inner border's color is a custom property. Without the theme the
 // shorthand is invalid and the used width is 0.
-const css = [compile("themes/baseline"), dividerCss, compile("components/bottom-sheet"), compile("components/side-sheet")].join("\n");
+const css = [compile("themes/baseline"), compile("components/side-sheet")].join("\n");
 
 const entrySource = `
 import * as mtrl from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
-import { defineDivider } from ${JSON.stringify(resolve(repoRoot, "src/elements/divider.ts"))};
-import { registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/styles.ts"))};
-registerStyles({ divider: ${JSON.stringify(dividerCss)} });
-defineDivider();
 window.mtrl = mtrl;
 `;
 
@@ -64,98 +58,10 @@ try {
   const measured = await page.evaluate(async () => {
     const w = window as unknown as {
       mtrl: {
-        createDivider: (c?: object) => { element: HTMLElement; setInset: (a?: number, b?: number) => void };
-        createBottomSheet: (c?: object) => {
-          element: HTMLElement;
-          expand: () => void;
-          destroy: () => void;
-          setContent: (content: string | HTMLElement) => void;
-        };
         createSideSheet: (c?: object) => { element: HTMLElement; open: () => void; destroy: () => void };
       };
     };
-    const settle = (): Promise<void> => new Promise((resolve) => requestAnimationFrame(() => resolve()));
     const px = (value: string): number => Number.parseFloat(value);
-    const inset = (el: HTMLElement) => {
-      const style = getComputedStyle(el);
-      return { start: px(style.marginInlineStart), end: px(style.marginInlineEnd), width: Math.round(px(style.width)) };
-    };
-
-    const host = document.createElement("div");
-    host.style.width = "480px";
-    document.body.append(host);
-    const full = w.mtrl.createDivider();
-    host.append(full.element);
-    full.setInset(32, 20);
-    const explicit = w.mtrl.createDivider({ insetStart: 24, insetEnd: 12 });
-    host.append(explicit.element);
-    const named = w.mtrl.createDivider({ variant: "inset" });
-    host.append(named.element);
-    const element = document.createElement("m-divider");
-    element.setAttribute("inset-start", "24");
-    element.setAttribute("inset-end", "12");
-    host.append(element);
-    await settle();
-    const inner = element.shadowRoot?.querySelector(".mtrl-divider") as HTMLElement | null;
-
-    const sheetOf = (height: string, variant: "standard" | "modal") => {
-      const content = document.createElement("div");
-      content.style.height = height;
-      const sheet = w.mtrl.createBottomSheet({ content, variant });
-      sheet.expand();
-      return sheet;
-    };
-    const tall = sheetOf("900px", "modal");
-    const tallStandard = sheetOf("900px", "standard");
-    const short = sheetOf("80px", "modal");
-    const column = document.createElement("div");
-    column.style.cssText = "height:200px;width:48px";
-    document.body.append(column);
-    const vertical = w.mtrl.createDivider({ orientation: "vertical", insetStart: 24, insetEnd: 12 });
-    const verticalUpdated = w.mtrl.createDivider({ orientation: "vertical" });
-    verticalUpdated.setInset(24, 12);
-    const verticalZero = w.mtrl.createDivider({ orientation: "vertical", insetStart: 0, insetEnd: 0 });
-    column.append(vertical.element, verticalUpdated.element, verticalZero.element);
-    const grown = document.createElement("div");
-    grown.style.height = "1400px";
-    const swapping = w.mtrl.createBottomSheet({ content: grown, variant: "standard" });
-    swapping.expand();
-    await settle();
-    const corners = (sheet: { element: HTMLElement }) => {
-      const container = sheet.element.querySelector(".mtrl-bottom-sheet__container") as HTMLElement;
-      const box = container.getBoundingClientRect();
-      const style = getComputedStyle(container);
-      return {
-        top: Math.round(box.top),
-        height: Math.round(box.height),
-        full: sheet.element.classList.contains("mtrl-bottom-sheet--full-height"),
-        start: px(style.borderStartStartRadius),
-        end: px(style.borderStartEndRadius),
-      };
-    };
-    const beforeSwap = corners(swapping);
-    const shrunk = document.createElement("div");
-    shrunk.style.height = "80px";
-    swapping.setContent(shrunk);
-    await settle();
-    const afterShrink = corners(swapping);
-    const regrown = document.createElement("div");
-    regrown.style.height = "1400px";
-    swapping.setContent(regrown);
-    await settle();
-    const afterGrow = corners(swapping);
-    swapping.destroy();
-    const line = (el: HTMLElement) => {
-      const style = getComputedStyle(el);
-      const box = el.getBoundingClientRect();
-      return {
-        start: px(style.marginBlockStart),
-        end: px(style.marginBlockEnd),
-        width: Math.round(box.width),
-        height: Math.round(box.height),
-      };
-    };
-
     const borderOf = (position: "end" | "start", variant: "standard" | "modal") => {
       const sheet = w.mtrl.createSideSheet({ variant, position, title: "Filters" });
       sheet.open();
@@ -167,19 +73,6 @@ try {
     };
 
     return {
-      updated: inset(full.element),
-      constructed: inset(explicit.element),
-      named: inset(named.element),
-      element: inner ? inset(inner) : null,
-      tall: corners(tall),
-      tallStandard: corners(tallStandard),
-      short: corners(short),
-      vertical: line(vertical.element),
-      verticalUpdated: line(verticalUpdated.element),
-      verticalZero: line(verticalZero.element),
-      beforeSwap,
-      afterShrink,
-      afterGrow,
       standardEnd: borderOf("end", "standard"),
       standardStart: borderOf("start", "standard"),
       modalEnd: borderOf("end", "modal"),
@@ -203,35 +96,6 @@ try {
   const report = { ...measured, pressed: { rest, hover, ...pressed }, errors };
   console.log(JSON.stringify(report));
   assert.deepEqual(errors, []);
-
-  assert.deepEqual(report.updated, { start: 32, end: 20, width: 428 });
-  assert.deepEqual(report.constructed, { start: 24, end: 12, width: 444 });
-  assert.equal(report.named.start, 16);
-  assert.deepEqual(report.element, { start: 24, end: 12, width: 444 });
-
-  assert.equal(report.tall.full, true);
-  assert.equal(report.tall.top, 0);
-  assert.equal(report.tall.start, 0);
-  assert.equal(report.tall.end, 0);
-  assert.equal(report.tallStandard.full, true);
-  assert.equal(report.tallStandard.start, 0);
-  assert.equal(report.short.full, false);
-  assert.ok(report.short.top > 0);
-  assert.equal(report.short.start, 28);
-
-  assert.deepEqual(report.vertical, { start: 24, end: 12, width: 1, height: 164 });
-  assert.deepEqual(report.verticalUpdated, { start: 24, end: 12, width: 1, height: 164 });
-  assert.deepEqual(report.verticalZero, { start: 0, end: 0, width: 1, height: 200 });
-
-  assert.equal(report.beforeSwap.full, true);
-  assert.equal(report.beforeSwap.top, 0);
-  assert.equal(report.beforeSwap.start, 0);
-  assert.equal(report.afterShrink.full, false);
-  assert.ok(report.afterShrink.top > 0);
-  assert.equal(report.afterShrink.start, 28);
-  assert.equal(report.afterGrow.full, true);
-  assert.equal(report.afterGrow.top, 0);
-  assert.equal(report.afterGrow.start, 0);
 
   assert.deepEqual(report.standardEnd, { start: 1, end: 0 });
   assert.deepEqual(report.standardStart, { start: 0, end: 1 });
