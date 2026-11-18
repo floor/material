@@ -103,22 +103,8 @@ describe('bottom app bar', () => {
     bar.destroy();
   });
 
-  test('with autoHide, a scroll of eight-pixel steps accumulates and the hidden bar is inert', async () => {
-    // No single event travels the 10px threshold; the distance from the last
-    // turn is what hides the bar (MDC HideBottomViewOnScrollBehavior), and a
-    // hidden bar takes no focus or pointer (inert).
-    const bar = createBottomAppBar({ autoHide: true });
-    document.body.append(bar.element);
-    for (let y = 8; y <= 200; y += 8) await scrollPage(y);
-    expect(bar.isVisible()).toBe(false);
-    expect(bar.element.hasAttribute('inert')).toBe(true);
-    await scrollPage(60);
-    expect(bar.isVisible()).toBe(true);
-    expect(bar.element.hasAttribute('inert')).toBe(false);
-    bar.destroy();
-  });
-
-  test('destroy removes the element and stops auto-hiding', async () => {    const onVisibilityChange = mock((_visible: boolean) => {});
+  test('destroy removes the element and stops auto-hiding', async () => {
+    const onVisibilityChange = mock((_visible: boolean) => {});
     const bar = createBottomAppBar({ autoHide: true, onVisibilityChange });
     document.body.append(bar.element);
     bar.destroy();

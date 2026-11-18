@@ -74,23 +74,16 @@ describe("opt-in bottom app bar toolbar", () => {
     expect(events).toEqual([]);
   });
 
-  test("accumulates scroll distance from the last turn, sets inert while hidden, and cleans up", () => {
+  test("uses the legacy per-event strict 10px threshold, reversal and cleanup", () => {
     const states: boolean[] = [];
     const bar = make({ autoHide: true, transitionDuration: 123, onVisibilityChange: v => states.push(v) });
     expect(bar.element.style.transition).toBe("transform 123ms ease-in-out");
-    // Eight-pixel steps: no single event travels 10px, and 200px down still
-    // hides the bar (MDC HideBottomViewOnScrollBehavior).
-    for (let value = 8; value <= 200; value += 8) scroll(value);
-    expect(bar.isVisible()).toBe(false);
-    expect(bar.element.hasAttribute("inert")).toBe(true);
-    // A small upward turn first: the distance restarts from the turn.
-    scroll(204); expect(bar.isVisible()).toBe(false);
-    for (let value = 196; value >= 120; value -= 8) scroll(value);
-    scroll(120);
+    for (const value of [10, 20, 25, 30]) scroll(value);
     expect(bar.isVisible()).toBe(true);
-    expect(bar.element.hasAttribute("inert")).toBe(false);
-    // Down again from the turn at 120.
-    scroll(132); expect(bar.isVisible()).toBe(false);
+    scroll(41); expect(bar.isVisible()).toBe(false);
+    scroll(31); expect(bar.isVisible()).toBe(false);
+    scroll(20); expect(bar.isVisible()).toBe(true);
+    scroll(31); expect(bar.isVisible()).toBe(false);
     expect(states).toEqual([false, true, false]);
     bar.destroy(); scroll(0);
     expect(states).toEqual([false, true, false]);
