@@ -87,6 +87,18 @@ const withController =
     component,
   };
 
+  // A menu that carries a selection marks it on the item itself: role menuitem
+  // has no aria-selected for assistive technology to announce, while
+  // menuitemradio requires aria-checked (WAI-ARIA 1.2) -- the check Material
+  // shows beside a chosen menu item's label
+  // (m3.material.io/components/menus/specs, selected state). Only the level
+  // that holds the selection is marked: a submenu's items are commands and are
+  // created as menuitem. A menu with no selection keeps menuitem, and a listbox
+  // keeps option with aria-selected.
+  const itemRole = (): string => (state.selectedItemId ? "menuitemradio" : "menuitem");
+  /** Where a listbox says which option is chosen, and a menu which item is checked. */
+  const checkedAttribute = listbox ? "aria-selected" : "aria-checked";
+
   // Create event helpers
   const eventHelpers = {
     // Generic over the payload, so a caller's data is part of the returned
@@ -128,7 +140,7 @@ const withController =
   /**
    * Creates a DOM element for a menu item
    */
-  const createMenuItem = (item: MenuItem, index: number): HTMLElement => {
+  const createMenuItem = (item: MenuItem, index: number, role = itemRole()): HTMLElement => {
     const itemElement = document.createElement("li");
     const itemClass = `${component.getClass("menu__item")}`;
 
@@ -137,7 +149,9 @@ const withController =
       itemElement.setAttribute("role", "option");
       itemElement.id = `${optionIdPrefix}-option-${index}`;
     } else {
-      itemElement.setAttribute("role", "menuitem");
+      // A submenu's opener is a menuitem with a popup, not a radio: it opens a
+      // level, it is not one of the choices.
+      itemElement.setAttribute("role", item.hasSubmenu ? "menuitem" : role);
       itemElement.setAttribute("tabindex", "-1"); // Set to -1 by default, will update when needed
     }
     itemElement.setAttribute("data-id", item.id);
@@ -150,11 +164,16 @@ const withController =
       itemElement.setAttribute("aria-disabled", "false");
     }
 
-    if (state.selectedItemId && item.id === state.selectedItemId) {
-      itemElement.classList.add(`${itemClass}--selected`);
-      itemElement.setAttribute("aria-selected", "true");
-    } else if (listbox) {
-      itemElement.setAttribute("aria-selected", "false");
+    // The check belongs to the level that carries the selection and to the
+    // items that are choices: a submenu's items are created as menuitem, and
+    // so is the item that opens a submenu.
+    if (listbox || (role === "menuitemradio" && !item.hasSubmenu)) {
+      if (state.selectedItemId && item.id === state.selectedItemId) {
+        itemElement.classList.add(`${itemClass}--selected`);
+        itemElement.setAttribute(checkedAttribute, "true");
+      } else {
+        itemElement.setAttribute(checkedAttribute, "false");
+      }
     }
 
     if (item.hasSubmenu) {
@@ -399,7 +418,8 @@ const withController =
    * @param itemId - The ID of the item to mark as selected, or null to clear selection
    */
   const updateSelectedState = (itemId: string | null): void => {
-    if (!component.element) return;
+    // Also update state
+    state.selectedItemId = itemId;
 
     // Get all menu items
     const menuItems = component.element.querySelectorAll(
@@ -408,20 +428,18 @@ const withController =
 
     // Update selected state for each item
     menuItems.forEach((item) => {
-      const currentItemId = item.getAttribute("data-id");
+      // An item that opens a submenu is a menuitem with a popup, never a
+      // radio, and it is not one of the choices.
+      const opens = item.hasAttribute("aria-haspopup");
+      const selected = !opens && item.getAttribute("data-id") === itemId;
 
-      if (currentItemId === itemId) {
-        item.classList.add(`${component.getClass("menu__item--selected")}`);
-        item.setAttribute("aria-selected", "true");
-      } else {
-        item.classList.remove(`${component.getClass("menu__item--selected")}`);
-        if (listbox) item.setAttribute("aria-selected", "false");
-        else item.removeAttribute("aria-selected");
-      }
+      item.classList.toggle(`${component.getClass("menu__item--selected")}`, selected);
+      // A listbox's options keep aria-selected; a menu's items are
+      // menuitemradio while it carries a selection, and menuitem without one.
+      if (!listbox) item.setAttribute("role", opens ? "menuitem" : itemRole());
+      if (listbox || (itemId && !opens)) item.setAttribute(checkedAttribute, String(selected));
+      else item.removeAttribute(checkedAttribute);
     });
-
-    // Also update state
-    state.selectedItemId = itemId;
   };
 
   // What the registry closes when another menu opens. Focus is not restored to
@@ -759,7 +777,9 @@ const withController =
       } else if ("type" in item && item.type === "divider") {
         element = createDivider(item, index);
       } else {
-        element = createMenuItem(item as MenuItem, index);
+        // A submenu's items are commands under the selection's own level: they
+        // stay menuitem and never carry its check.
+        element = createMenuItem(item as MenuItem, index, "menuitem");
       }
       container.appendChild(element);
       if (onItemCreated) {

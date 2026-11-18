@@ -80,19 +80,32 @@ describe("A9: menu item selection semantics and menu naming", () => {
     menu.destroy();
   });
 
-  test("setSelected marks only the chosen menuitem and removes aria-selected from others", () => {
+  test("setSelected marks the chosen item checked and clears the others", () => {
     const opener = document.body.appendChild(document.createElement("button"));
     const menu = createMenu({ opener, items });
     menu.setSelected("edit");
+    // A menu that carries a selection marks it on the item: role menuitem has
+    // no aria-selected to announce, so the items are menuitemradio with
+    // aria-checked (WAI-ARIA 1.2, menuitemradio: aria-checked is required).
     const [edit, del] = Array.from(
-      menu.element.querySelectorAll<HTMLElement>('[role="menuitem"]')
+      menu.element.querySelectorAll<HTMLElement>('[role="menuitemradio"]')
     );
-    expect(edit!.getAttribute("aria-selected")).toBe("true");
-    expect(del!.hasAttribute("aria-selected")).toBe(false);
+    expect(edit!.getAttribute("aria-checked")).toBe("true");
+    expect(edit!.hasAttribute("aria-selected")).toBe(false);
+    expect(del!.getAttribute("aria-checked")).toBe("false");
 
     menu.setSelected("del");
-    expect(edit!.hasAttribute("aria-selected")).toBe(false);
-    expect(del!.getAttribute("aria-selected")).toBe("true");
+    expect(edit!.getAttribute("aria-checked")).toBe("false");
+    expect(del!.getAttribute("aria-checked")).toBe("true");
+
+    // Without a selection the menu is a plain menu again.
+    menu.setSelected(null);
+    expect(
+      Array.from(
+        menu.element.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+        (item) => item.hasAttribute("aria-checked") || item.hasAttribute("aria-selected")
+      )
+    ).toEqual([false, false]);
     menu.destroy();
   });
 

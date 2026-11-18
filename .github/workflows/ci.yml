@@ -221,6 +221,9 @@ jobs:
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check
+          - group: menu-item-checked
+            browsers: chromium
+            checks: menu-item-checked:check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check

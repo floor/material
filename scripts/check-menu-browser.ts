@@ -468,7 +468,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       trailingEdge: document.documentElement.dir === "rtl" ? left - itemRect.left : itemRect.right - right,
       gap: document.documentElement.dir === "rtl" ? textRect.left - right : left - textRect.right,
       overlap: painted ? Math.max(0, Math.min(right, textRect.right) - Math.max(left, textRect.left)) : 0,
-      selected: item.getAttribute("aria-selected"),
+      selected: item.getAttribute("aria-checked"),
     };
   });
   try {
@@ -493,7 +493,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
       await page.waitForFunction(() => document.getAnimations().length === 0);
       const vertical = await measure();
-      assert.equal(vertical.selected, "true", `${dir}: the selected item is not announced as selected`);
+      assert.equal(vertical.selected, "true", `${dir}: the selected item is not announced as checked`);
       assert.equal(vertical.overlap, 0, `${dir}: the selected item's trailing check (${JSON.stringify(vertical.content)}, ${vertical.width}px wide, ${vertical.trailingEdge}px from the end) overlaps its label by ${vertical.overlap}px`);
       assert.equal(vertical.painted, false, `${dir}: a vertical menu's selected item still paints a trailing check`);
 
@@ -519,7 +519,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       await page.waitForFunction(() => (window as unknown as MenuWindow).menu.element.style.top !== "");
       await page.waitForFunction(() => document.getAnimations().length === 0);
       const horizontal = await measure();
-      assert.equal(horizontal.selected, "true", `${dir} horizontal: the selected item is not announced as selected`);
+      assert.equal(horizontal.selected, "true", `${dir} horizontal: the selected item is not announced as checked`);
       assert.equal(horizontal.painted, true, `${dir} horizontal: the trailing check is gone`);
       assert.ok(Math.abs(horizontal.trailingEdge - 12) <= 0.5, `${dir} horizontal: the check ends ${horizontal.trailingEdge}px from the item, not 12px`);
       assert.ok(Math.abs(horizontal.width - 18) <= 0.5 && Math.abs(horizontal.height - 18) <= 0.5, `${dir} horizontal: the check is ${horizontal.width} by ${horizontal.height}, not 18 by 18`);
@@ -582,7 +582,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       document.documentElement.dir = "";
     });
   }
-  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; aria-selected is unchanged.");
+  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; the selected item keeps its checked state.");
 }
 
 /**
