@@ -176,7 +176,7 @@
     "components/menu/config.js": "c2820fc823b0b3923a9663e55c89b7044b932d632b2ee7120d9b807a5d232181",
     "components/menu/constants.js": "9bd87fa35e56663c45d435770cc47c7e888db35f1589a6de4ea8480b3070a5f0",
     "components/menu/deferred.js": "2ba52d61e9a351b2254c06c4618a110881108525e110ff0eec275cd66843b261",
-    "components/menu/features/controller.js": "a1c39719866bc1e854f63e5dd9c77232e955e5fe9481d8c07d888a33812d2d17",
+    "components/menu/features/controller.js": "2d9398cbf2218dae2b120d88d2562a7ca91d61c2c301b4cdd23fcb74d2980360",
     "components/menu/features/index.js": "a4a2c82976e6d4015eb443250ab97133b35aa0fda1e288e1df10946d045eafc1",
     "components/menu/features/keyboard.js": "8602490a292b4143f6dd7d49d43263d49e96b7a1d37364badd2cc26a820004d0",
     "components/menu/features/layer.js": "566b6bb9861eee67da0026c4cdcb696ffe06e6c7ae8de35d9e98462ae88cbc45",
