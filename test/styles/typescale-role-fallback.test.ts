@@ -90,14 +90,15 @@ describe("opt-in typography consumers", () => {
     expect(css.replace(/\s/g, "")).toEndWith(preupgradeRollback().replace(/\s/g, "") + "}");
   });
 
-  test("badge text consumes its three existing properties; dots remain zero sized text", () => {
+  test("large badge text consumes label-small; dots keep zero font size", () => {
     for (const source of ["components/badge", "elements/badge"]) {
       const css = compile(config("true") + `@use "${source}";`);
       expect(css).toContain("var(--mtrl-sys-typescale-label-small-font-size, 11px)");
       expect(css).toContain("var(--mtrl-sys-typescale-label-small-line-height, 16px)");
       expect(css).toContain("var(--mtrl-sys-typescale-label-small-font-weight, 500)");
       expect(css).toContain("font-size:0");
-      expect(css).not.toContain("--mtrl-sys-typescale-label-small-font,");
+      expect(css).toContain("var(--mtrl-sys-typescale-label-small-font, var(--mtrl-ref-typeface-plain, Roboto, sans-serif))");
+      expect(css).toContain("var(--mtrl-sys-typescale-label-small-letter-spacing, 0.5px)");
     }
   });
 
