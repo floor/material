@@ -43,17 +43,26 @@ const applyLayout = (component: ElementComponent & BaseComponent, config: Divide
   style[cross] = `${thickness}px`;
   style[main] = '100%';
 
-  if (variant !== 'full-width') {
-    const insetStart = config.insetStart !== undefined ? config.insetStart : DEFAULT_INSET;
+  // An explicit inset applies on every variant, including full-width. With
+  // none, a full-width divider stays at the edges. Named variants keep their
+  // defaults: inset is 16/0, middle-inset is 16/16. One explicit side leaves
+  // the other at 0 on a full-width divider, not at the named default.
+  const explicit = config.insetStart !== undefined || config.insetEnd !== undefined;
+  if (variant !== 'full-width' || explicit) {
+    const insetStart = config.insetStart !== undefined
+      ? config.insetStart
+      : (variant === 'full-width' ? 0 : DEFAULT_INSET);
     const insetEnd = config.insetEnd !== undefined
       ? config.insetEnd
       : (variant === 'middle-inset' ? DEFAULT_INSET : 0);
     // Logical: the start inset is on the right in right-to-left
     style[horizontal ? 'marginInlineStart' : 'marginBlockStart'] = `${insetStart}px`;
     style[horizontal ? 'marginInlineEnd' : 'marginBlockEnd'] = `${insetEnd}px`;
-    // 100% plus margins overflows the parent, so let the box shrink to what
-    // the insets leave.
-    style[main] = 'auto';
+    // A horizontal divider is a block: width:auto fills what the margins
+    // leave, while width:100% plus margins overflows. A vertical divider is
+    // inline-block, so height:auto collapses an empty line to 0. Subtract
+    // the insets from the parent height instead.
+    style[main] = horizontal ? 'auto' : `calc(100% - ${insetStart + insetEnd}px)`;
   }
 };
 
