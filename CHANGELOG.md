@@ -17,6 +17,12 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.15.1] - 2026-11-18
+
+### Fixed
+
+- **Menu: the selected item is announced as checked.** A menu whose items are `role="menuitem"` carried the selection on `aria-selected`, which that role does not support, so no selected state reached assistive technology. In a menu that carries a selection the items are now `menuitemradio` with `aria-checked` true/false, updated by `setSelected`; a menu with no selection keeps `menuitem`, and a listbox keeps `role="option"` with `aria-selected`, unchanged. The markup and styling are the same — only the roles and the attribute that carries the selection change (`m3.material.io/components/menus/specs`, selected state; WAI-ARIA 1.2, menuitemradio requires `aria-checked`) ([#416](https://github.com/floor/material/pull/416)).
+
 ## [3.15.0] - 2026-11-17
 
 ### Added
@@ -7290,7 +7296,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.15.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.15.1...HEAD
+[3.15.1]: https://github.com/floor/material/compare/v3.15.0...v3.15.1
 [3.15.0]: https://github.com/floor/material/compare/v3.14.2...v3.15.0
 [3.14.2]: https://github.com/floor/material/compare/v3.14.1...v3.14.2
 [3.14.1]: https://github.com/floor/material/compare/v3.14.0...v3.14.1
