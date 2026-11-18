@@ -24,6 +24,7 @@ interface StateComponent {
   structure: {
     scrim: HTMLElement | null;
     container: HTMLElement;
+    setContent: (next: string | HTMLElement) => void;
   };
 }
 
@@ -95,6 +96,13 @@ export const withState =
         fullHeight,
         state === BOTTOM_SHEET_STATES.EXPANDED && box.offsetHeight > 0 && box.offsetTop < 1,
       );
+    };
+    // Replacing the body changes the layout without a state change or a
+    // window resize, which is the only other time the class is reconciled.
+    const placeContent = structure.setContent;
+    structure.setContent = (next) => {
+      placeContent(next);
+      syncFullHeight();
     };
 
     const setState = (next: BottomSheetState): void => {

@@ -81,6 +81,25 @@ describe('bottom sheet corners at the viewport edge', () => {
     sheet.expand();
     expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
   });
+
+  test('replacing the content of an expanded sheet follows the new edge', () => {
+    const sheet = make({ content: '<p>Tall</p>' });
+    rect(sheet, 0, 600);
+    sheet.expand();
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(true);
+
+    rect(sheet, 448, 152);
+    const short = document.createElement('p');
+    short.textContent = 'Short';
+    sheet.setContent(short);
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(false);
+
+    rect(sheet, 0, 600);
+    const tall = document.createElement('p');
+    tall.textContent = 'Tall again';
+    sheet.setContent(tall);
+    expect(sheet.element.classList.contains('mtrl-bottom-sheet--full-height')).toBe(true);
+  });
 });
 
 describe('bottom sheet', () => {

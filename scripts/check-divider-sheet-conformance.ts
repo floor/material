@@ -19,7 +19,9 @@ const compile = (source: string): string =>
   }).css;
 
 const dividerCss = compile("components/divider");
-const css = [dividerCss, compile("components/bottom-sheet"), compile("components/side-sheet")].join("\n");
+// The inner border's color is a custom property. Without the theme the
+// shorthand is invalid and the used width is 0.
+const css = [compile("themes/baseline"), dividerCss, compile("components/bottom-sheet"), compile("components/side-sheet")].join("\n");
 
 const entrySource = `
 import * as mtrl from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
@@ -63,7 +65,12 @@ try {
     const w = window as unknown as {
       mtrl: {
         createDivider: (c?: object) => { element: HTMLElement; setInset: (a?: number, b?: number) => void };
-        createBottomSheet: (c?: object) => { element: HTMLElement; expand: () => void; destroy: () => void };
+        createBottomSheet: (c?: object) => {
+          element: HTMLElement;
+          expand: () => void;
+          destroy: () => void;
+          setContent: (content: string | HTMLElement) => void;
+        };
         createSideSheet: (c?: object) => { element: HTMLElement; open: () => void; destroy: () => void };
       };
     };
@@ -101,6 +108,18 @@ try {
     const tall = sheetOf("900px", "modal");
     const tallStandard = sheetOf("900px", "standard");
     const short = sheetOf("80px", "modal");
+    const column = document.createElement("div");
+    column.style.cssText = "height:200px;width:48px";
+    document.body.append(column);
+    const vertical = w.mtrl.createDivider({ orientation: "vertical", insetStart: 24, insetEnd: 12 });
+    const verticalUpdated = w.mtrl.createDivider({ orientation: "vertical" });
+    verticalUpdated.setInset(24, 12);
+    const verticalZero = w.mtrl.createDivider({ orientation: "vertical", insetStart: 0, insetEnd: 0 });
+    column.append(vertical.element, verticalUpdated.element, verticalZero.element);
+    const grown = document.createElement("div");
+    grown.style.height = "1400px";
+    const swapping = w.mtrl.createBottomSheet({ content: grown, variant: "standard" });
+    swapping.expand();
     await settle();
     const corners = (sheet: { element: HTMLElement }) => {
       const container = sheet.element.querySelector(".mtrl-bottom-sheet__container") as HTMLElement;
@@ -112,6 +131,28 @@ try {
         full: sheet.element.classList.contains("mtrl-bottom-sheet--full-height"),
         start: px(style.borderStartStartRadius),
         end: px(style.borderStartEndRadius),
+      };
+    };
+    const beforeSwap = corners(swapping);
+    const shrunk = document.createElement("div");
+    shrunk.style.height = "80px";
+    swapping.setContent(shrunk);
+    await settle();
+    const afterShrink = corners(swapping);
+    const regrown = document.createElement("div");
+    regrown.style.height = "1400px";
+    swapping.setContent(regrown);
+    await settle();
+    const afterGrow = corners(swapping);
+    swapping.destroy();
+    const line = (el: HTMLElement) => {
+      const style = getComputedStyle(el);
+      const box = el.getBoundingClientRect();
+      return {
+        start: px(style.marginBlockStart),
+        end: px(style.marginBlockEnd),
+        width: Math.round(box.width),
+        height: Math.round(box.height),
       };
     };
 
@@ -133,6 +174,12 @@ try {
       tall: corners(tall),
       tallStandard: corners(tallStandard),
       short: corners(short),
+      vertical: line(vertical.element),
+      verticalUpdated: line(verticalUpdated.element),
+      verticalZero: line(verticalZero.element),
+      beforeSwap,
+      afterShrink,
+      afterGrow,
       standardEnd: borderOf("end", "standard"),
       standardStart: borderOf("start", "standard"),
       modalEnd: borderOf("end", "modal"),
@@ -171,6 +218,20 @@ try {
   assert.equal(report.short.full, false);
   assert.ok(report.short.top > 0);
   assert.equal(report.short.start, 28);
+
+  assert.deepEqual(report.vertical, { start: 24, end: 12, width: 1, height: 164 });
+  assert.deepEqual(report.verticalUpdated, { start: 24, end: 12, width: 1, height: 164 });
+  assert.deepEqual(report.verticalZero, { start: 0, end: 0, width: 1, height: 200 });
+
+  assert.equal(report.beforeSwap.full, true);
+  assert.equal(report.beforeSwap.top, 0);
+  assert.equal(report.beforeSwap.start, 0);
+  assert.equal(report.afterShrink.full, false);
+  assert.ok(report.afterShrink.top > 0);
+  assert.equal(report.afterShrink.start, 28);
+  assert.equal(report.afterGrow.full, true);
+  assert.equal(report.afterGrow.top, 0);
+  assert.equal(report.afterGrow.start, 0);
 
   assert.deepEqual(report.standardEnd, { start: 1, end: 0 });
   assert.deepEqual(report.standardStart, { start: 0, end: 1 });
