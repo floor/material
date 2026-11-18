@@ -222,6 +222,12 @@ test("menu items and search suggestions are included in the synchronous server t
   const menuTree = menu.querySelector("template")!.content;
   expect(Array.from(menuTree.querySelectorAll('[role="menuitem"]'), item => [item.textContent, item.getAttribute("tabindex")])).toEqual([["Copy", "0"], ["Paste", "-1"]]);
   expect(menuTree.querySelectorAll('[role="separator"]')).toHaveLength(1);
+  // A menu with no selection has nothing to announce as chosen, and neither
+  // role menuitem nor the server tree carries a checked or selected state: the
+  // items stay menuitem, as the client renders them before a setSelected, and
+  // as they become menuitemradio once one arrives
+  // (scripts/check-menu-item-checked.ts holds the selected case in Chromium).
+  expect(menuTree.querySelectorAll('[aria-selected], [aria-checked], [role="menuitemradio"]')).toHaveLength(0);
 
   const search = parsed(renderElement("m-search", { value: "app" }, '<m-search-suggestion value="apple">Apple</m-search-suggestion><m-search-suggestion>Banana</m-search-suggestion>'));
   const searchTree = search.querySelector("template")!.content;

@@ -87,6 +87,16 @@ const withController =
     component,
   };
 
+  // A menu that carries a selection marks it on the item itself: role menuitem
+  // has no aria-selected for assistive technology to announce, while
+  // menuitemradio requires aria-checked (WAI-ARIA 1.2) -- the check Material
+  // shows beside a chosen menu item's label
+  // (m3.material.io/components/menus/specs, selected state). A menu with no
+  // selection keeps menuitem, and a listbox keeps option with aria-selected.
+  const itemRole = (): string => (state.selectedItemId ? "menuitemradio" : "menuitem");
+  /** Where a listbox says which option is chosen, and a menu which item is checked. */
+  const checkedAttribute = listbox ? "aria-selected" : "aria-checked";
+
   // Create event helpers
   const eventHelpers = {
     // Generic over the payload, so a caller's data is part of the returned
@@ -137,7 +147,7 @@ const withController =
       itemElement.setAttribute("role", "option");
       itemElement.id = `${optionIdPrefix}-option-${index}`;
     } else {
-      itemElement.setAttribute("role", "menuitem");
+      itemElement.setAttribute("role", itemRole());
       itemElement.setAttribute("tabindex", "-1"); // Set to -1 by default, will update when needed
     }
     itemElement.setAttribute("data-id", item.id);
@@ -152,9 +162,9 @@ const withController =
 
     if (state.selectedItemId && item.id === state.selectedItemId) {
       itemElement.classList.add(`${itemClass}--selected`);
-      itemElement.setAttribute("aria-selected", "true");
-    } else if (listbox) {
-      itemElement.setAttribute("aria-selected", "false");
+      itemElement.setAttribute(checkedAttribute, "true");
+    } else if (listbox || state.selectedItemId) {
+      itemElement.setAttribute(checkedAttribute, "false");
     }
 
     if (item.hasSubmenu) {
@@ -399,7 +409,8 @@ const withController =
    * @param itemId - The ID of the item to mark as selected, or null to clear selection
    */
   const updateSelectedState = (itemId: string | null): void => {
-    if (!component.element) return;
+    // Also update state
+    state.selectedItemId = itemId;
 
     // Get all menu items
     const menuItems = component.element.querySelectorAll(
@@ -408,20 +419,15 @@ const withController =
 
     // Update selected state for each item
     menuItems.forEach((item) => {
-      const currentItemId = item.getAttribute("data-id");
+      const selected = item.getAttribute("data-id") === itemId;
 
-      if (currentItemId === itemId) {
-        item.classList.add(`${component.getClass("menu__item--selected")}`);
-        item.setAttribute("aria-selected", "true");
-      } else {
-        item.classList.remove(`${component.getClass("menu__item--selected")}`);
-        if (listbox) item.setAttribute("aria-selected", "false");
-        else item.removeAttribute("aria-selected");
-      }
+      item.classList.toggle(`${component.getClass("menu__item--selected")}`, selected);
+      // A listbox's options keep aria-selected; a menu's items are
+      // menuitemradio while it carries a selection, and menuitem without one.
+      if (!listbox) item.setAttribute("role", itemRole());
+      if (listbox || itemId) item.setAttribute(checkedAttribute, String(selected));
+      else item.removeAttribute(checkedAttribute);
     });
-
-    // Also update state
-    state.selectedItemId = itemId;
   };
 
   // What the registry closes when another menu opens. Focus is not restored to
