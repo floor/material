@@ -10,7 +10,7 @@
 // superset, so no match there still proves no match for the original).
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 import { chromium, firefox, webkit } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -47,7 +47,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Resp
 // Chromium keeps its profile inside the worktree (browser-profile.ts); the
 // other engines launch as before.
 const browser = engine === "chromium"
-  ? (await chromium.launchPersistentContext(chromiumProfileDir)).browser()!
+  ? (await launchChromium()).browser()!
   : await ({ chromium, firefox, webkit })[engine].launch();
 type Result = { element: string; root: boolean; served: number; full: number; dropped: number; selectors: number; failures: string[] };
 let equal = 0;
@@ -55,7 +55,7 @@ let failures = 0;
 const report: Result[] = [];
 const started = performance.now();
 try {
-  const inert = await browser.newPage({ viewport: { width: 1024, height: 768 }, javaScriptEnabled: false });
+  const inert = await browser.browser()!.newPage({ viewport: { width: 1024, height: 768 }, javaScriptEnabled: false });
   await inert.goto(server.url.href);
   const results = await inert.evaluate(({ entries, fallback }) => {
     type Entry = { count: number; selector?: string };

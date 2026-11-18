@@ -3,8 +3,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import type { DeferredMenuComponent } from "../src/components/menu/deferred";
 
@@ -28,7 +28,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   return new Response(`<!doctype html><style>${css}.gone{display:none}</style><script type="module" src="/hidden-opener-entry.js"></script>`,
     { headers: { "content-type": "text/html" } });
 } });
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 const rows: unknown[] = [];
 try {
   for (const mode of ["inline", "class", "shadow-inner", "shadow-outer", "contents"] as const) {

@@ -8,8 +8,8 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { parseHTML } from "linkedom";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
 import { pascal as componentName } from "./element-modules";
@@ -354,7 +354,7 @@ for (const item of defaults) {
   });
 }
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir);
+const browser = await launchChromium();
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
@@ -366,7 +366,7 @@ const server = Bun.serve({
   },
 });
 try {
-  const inert = await browser.newPage({ javaScriptEnabled: false });
+  const inert = await browser.browser()!.newPage({ javaScriptEnabled: false });
   await inert.goto(server.url.href);
   const before = await inert.evaluate(() => [...document.querySelectorAll("[id^='host-']")].map((node) => ({
     id: node.id,
@@ -434,7 +434,7 @@ try {
   await page.close();
 
   const asyncPage = `${server.url.origin}/async`;
-  const asyncInert = await browser.newPage({ javaScriptEnabled: false });
+  const asyncInert = await browser.browser()!.newPage({ javaScriptEnabled: false });
   await asyncInert.goto(asyncPage);
   const asyncShadow = await asyncInert.evaluate(() => ["host-async", "host-outside", "host-sync"].map((id) => ({
     id, shadow: !!document.getElementById(id)?.shadowRoot,

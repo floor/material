@@ -9,8 +9,8 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 const artifacts = resolve(process.argv.find(arg => arg.startsWith("--out="))?.slice(6) ?? "analysis/toolbar-card");
@@ -140,9 +140,9 @@ const read = (page: Page): Promise<Side> => page.evaluate(() => {
   return { paint, headers };
 });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 880, height: 1200 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 880, height: 1200 }, reducedMotion: "reduce" });
   await page.setContent("<!doctype html><html><body></body></html>");
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: await bundle.outputs[0].text() });

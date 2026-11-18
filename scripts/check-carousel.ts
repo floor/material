@@ -2,8 +2,8 @@
 /** Build first. Browser conformance check for carousel (uncontained layout and wheel interaction). */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import { checkCarouselWheel, checkCarouselUncontained } from "./check-carousel-browser";
 
 const bundle = await Bun.build({
@@ -38,9 +38,9 @@ window.ready = true;
   },
 });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1000, height: 700 } });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
 

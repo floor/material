@@ -2,8 +2,8 @@
 /** Real emitted-module failures must leave the deferred picker closed and reusable. */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { baseStyles } from "./style-manifest";
 import type createDeferredDatePicker from "../src/components/datepicker/deferred";
@@ -37,7 +37,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   const asset = assets.get(new URL(request.url).pathname);
   return new Response(asset ?? html, { headers: { "content-type": asset === undefined ? "text/html" : "application/javascript" } });
 } });
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 const measurements: Record<string, unknown> = { browser: browser.browser()!.version(), surface };
 const failures: string[] = [];
 const check = (name: string, actual: unknown, expected: unknown) => {

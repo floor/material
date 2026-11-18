@@ -17,8 +17,8 @@
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { chromium, type Page, type ElementHandle } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page, type ElementHandle } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { walkCss, sha256, type CssReference } from "./token-catalogue/css";
 import { shapeScale, typescale, typefaceDefault } from "./token-catalogue/expected";
 import { UNCONSUMED_STEPS } from "./token-catalogue/rows";
@@ -111,9 +111,9 @@ const computedCorners = async (page: Page, handle: unknown, corners: string[]): 
   page.evaluate(({ handle: el, corners: keys }) =>
     keys.map(key => String(getComputedStyle(el as HTMLElement)[key as keyof CSSStyleDeclaration])), { handle, corners });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
   await page.setContent(`<!doctype html><html><head><style>${read("styles.css")}</style></head><body><div id="probe-host"></div></body></html>`);
 
   // --- shape.corner.root-defaults -------------------------------------------
@@ -296,7 +296,7 @@ try {
   {
     const sheet = "styles/button.css";
     const css = read(sheet);
-    const page2 = await browser.newPage({ viewport: { width: 900, height: 700 } });
+    const page2 = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
     await page2.setContent(`<!doctype html><html><head><style>${css}</style></head><body><div id="probe-host"></div></body></html>`);
     let cases = 0;
     for (const step of Object.keys(shapeScale)) {

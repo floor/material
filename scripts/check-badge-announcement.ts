@@ -1,8 +1,8 @@
 // Run the focused badge check without a library build. Supply CSS from CI dist.
 // bun scripts/check-badge-announcement.ts /path/to/ci-dist/styles/badge.css
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import { checkBadgeAnnouncement } from "./check-badge-announcement-browser";
 const css = await Bun.file(process.argv[2] ?? "dist/styles/badge.css").text();
 const build = await Bun.build({ entrypoints: ["scripts/fixtures/badge-announcement.ts"], target: "browser" });
@@ -13,7 +13,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
     ? new Response(js, { headers: { "Content-Type": "text/javascript" } })
     : new Response('<!doctype html><html><head></head><body><script type="module" src="/fixture.js"></script></body></html>', { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.port}`);

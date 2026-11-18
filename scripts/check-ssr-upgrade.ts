@@ -3,7 +3,7 @@
 // Per-engine pixel parity is independent of Chromium's structural parity exceptions.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 import { chromium, firefox, webkit, type Page } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -80,7 +80,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
 // Chromium keeps its profile inside the worktree (browser-profile.ts); the
 // other engines launch as before.
 const browser = engine === "chromium"
-  ? (await chromium.launchPersistentContext(chromiumProfileDir)).browser()!
+  ? (await launchChromium()).browser()!
   : await ({ chromium, firefox, webkit })[engine].launch();
 type Box = { x: number; y: number; width: number; height: number };
 const regions = (page: Page, selector: string): Promise<Box[]> => page.evaluate(selector =>
@@ -120,7 +120,7 @@ try {
     preupgrade = false;
     const children = RENDERED_CHILDREN[fixture.element] ?? "";
     let roots: boolean[] = [];
-    let inert = await browser.newPage({ ...options, javaScriptEnabled: false });
+    let inert = await browser.browser()!.newPage({ ...options, javaScriptEnabled: false });
     await inert.goto(server.url.href);
     const firstPaint = await inert.evaluate(() => {
       const root = document.querySelector("#stage > :first-child")!.shadowRoot;
@@ -167,7 +167,7 @@ try {
       assert(roots.length > 0 && roots.every(Boolean), `${engine}/${fixture.element}: every ${children} must have a styled declarative root without JavaScript`);
       await inert.close();
       preupgrade = true;
-      inert = await browser.newPage({ ...options, javaScriptEnabled: false });
+      inert = await browser.browser()!.newPage({ ...options, javaScriptEnabled: false });
       await inert.goto(server.url.href);
     } else {
       assert(firstPaint.root && firstPaint.rules > 0 && firstPaint.styled, `${engine}/${fixture.element}: unstyled no-JS root ${JSON.stringify(firstPaint)}`);

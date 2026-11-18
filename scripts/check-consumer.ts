@@ -6,7 +6,7 @@ import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build, preview, type Manifest } from "vite";
 import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 import { CONSUMER_INITIAL_GZIP } from "./budgets";
 import { createPackageFixture } from "./package-fixture";
 
@@ -271,7 +271,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   const address = server.httpServer.address();
   assert(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
-  browser = await chromium.launchPersistentContext(chromiumProfileDir);
+  browser = await launchChromium();
   const context = await browser.browser()!.newContext({ viewport: { width: 1040, height: 900 }, reducedMotion: "reduce", deviceScaleFactor: 1 });
   const errors: string[] = [];
   context.on("page", page => {

@@ -1,4 +1,4 @@
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 /**
  * Initial loading and authored slide names, retaining the chip/card controls.
  * Authored carousel slide names take precedence over the positional fallback.
@@ -12,7 +12,6 @@ import { chromiumProfileDir } from "./browser-profile";
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
-import {chromium} from 'playwright';
 import * as sass from 'sass';
 import {componentStyles} from './style-manifest';
 const options = {loadPaths:[resolve('src/styles')],logger:sass.Logger.silent};
@@ -31,9 +30,9 @@ const server=Bun.serve({hostname:'127.0.0.1',port:0,fetch(request){
   return new Response('<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><style>#stage{display:grid;gap:24px}#carousel-factory,m-carousel{width:600px;height:220px}</style></head><body><main id="stage"></main><script type="module" src="/app.js"></script></body></html>',{headers:{'Content-Type':'text/html'}});
 }});
 type Ax={nodeId:string;backendDOMNodeId?:number;ignored?:boolean;role?:{value:string};name?:{value:string};properties?:{name:string;value:{value:unknown}}[];childIds?:string[]};
-const browser=await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser=await launchChromium({ headless: true });
 try{
-  const page=await browser.newPage({viewport:{width:1280,height:1200},reducedMotion:'reduce'});
+  const page=await browser.browser()!.newPage({viewport:{width:1280,height:1200},reducedMotion:'reduce'});
   const errors:string[]=[];
   const warnings:string[]=[];
   page.on('pageerror',error=>errors.push(error.message));

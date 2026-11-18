@@ -1,7 +1,7 @@
 /** Enter on a focused day accepts a single date and returns focus to the field. */
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type createDatePicker from "../src/components/datepicker";
 import type { DatePickerVariant } from "../src/components/datepicker";
 
@@ -109,9 +109,9 @@ export async function checkDatePickerEnter(page: Page): Promise<void> {
 if (import.meta.main) {
   const bundle = await Bun.build({ entrypoints: ["src/components/datepicker/index.ts"], target: "browser" });
   assert(bundle.success, String(bundle.logs));
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+  const browser = await launchChromium({ headless: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 800, height: 850 } });
+    const page = await browser.browser()!.newPage({ viewport: { width: 800, height: 850 } });
     const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
     await page.setContent("<!doctype html><html><body></body></html>");
     await page.addStyleTag({ content: await Bun.file("dist/styles.css").text() });

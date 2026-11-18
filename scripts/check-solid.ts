@@ -10,8 +10,8 @@
 
 import assert from "node:assert/strict";
 import { transformAsync } from "@babel/core";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
 
@@ -56,7 +56,7 @@ type Win = Window & {
   };
 };
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 const run = async (): Promise<void> => {

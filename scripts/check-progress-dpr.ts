@@ -13,8 +13,8 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 
 interface ProgressHandle {
   element: HTMLElement;
@@ -54,7 +54,7 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   const context = await browser.browser()!.newContext({ viewport: { width: 900, height: 300 }, deviceScaleFactor: 1 });
   const page = await context.newPage();

@@ -20,8 +20,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { hostStyleText } from "../src/elements/define";
 import { elements } from "../src/elements/index";
@@ -599,10 +598,10 @@ async function assertPage(page: Page, mode: "off" | "on"): Promise<void> {
 }
 
 async function assertBrowser(off: string, on: string): Promise<void> {
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+  const browser = await launchChromium({ headless: true });
   try {
     for (const [mode, css] of [["off", off], ["on", on]] as const) {
-      const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+      const page = await browser.browser()!.newPage({ viewport: { width: 800, height: 600 } });
       const errors: string[] = [];
       page.on("pageerror", error => errors.push(error.message));
       await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -769,10 +768,10 @@ function readShadowButton(page: Page, id: string): Promise<ShadowRead | null> {
 
 async function assertElements(): Promise<void> {
   const bundle = await elementBundle();
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+  const browser = await launchChromium({ headless: true });
   try {
     for (const fallback of [false, true]) {
-      const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+      const page = await browser.browser()!.newPage({ viewport: { width: 800, height: 600 } });
       await page.setContent(REAL_PAGE);
       // No constructable stylesheets: applyStyles takes its <style> path.
       if (fallback) await page.addScriptTag({ content: 'Reflect.deleteProperty(CSSStyleSheet.prototype, "replaceSync");' });
@@ -840,7 +839,7 @@ async function assertLinkedSsr(): Promise<void> {
       );
     },
   });
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+  const browser = await launchChromium({ headless: true });
   try {
     const page = await browser.newPage();
     await page.goto(server.url.href);

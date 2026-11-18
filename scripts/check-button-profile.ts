@@ -6,8 +6,8 @@ import { mkdir, mkdtemp, writeFile, symlink, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture } from "./package-fixture";
 import { filledSmallRoundCss } from "./button-style-profile";
 import type createButton from "../src/components/button";
@@ -88,7 +88,7 @@ try {
     mixedTotal: sizes["mixed-full"].total - sizes["mixed-narrow"].total };
   console.log(JSON.stringify({ direct: report.direct, sizes, saving: report.saving }, null, 2));
 
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
+  const browser = await launchChromium();
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
     const [name, ...rest] = new URL(request.url).pathname.slice(1).split("/");
     const result = output.get(name), file = rest.join("/") || "index.html";
@@ -99,7 +99,7 @@ try {
     const pages: Page[] = [];
     const pageErrors: Record<string, string[]> = {};
     for (const name of ["button-full", "button-narrow", "mixed-full", "mixed-narrow"]) {
-      const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+      const page = await browser.browser()!.newPage({ viewport: { width: 1000, height: 700 } });
       page.setDefaultTimeout(10_000);
       pageErrors[name] = [];
       page.on("pageerror", error => pageErrors[name].push(error.message));

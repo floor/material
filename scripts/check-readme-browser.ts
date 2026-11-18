@@ -32,7 +32,7 @@ import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { build, preview } from "vite";
 import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 
 import { createPackageFixture } from "./package-fixture";
 import { FILES, parse } from "./readme-blocks";
@@ -82,7 +82,7 @@ try {
   });
   const address = server.httpServer.address();
   assert(address && typeof address === "object");
-  browser = await chromium.launchPersistentContext(chromiumProfileDir);
+  browser = await launchChromium();
 
   for (const [index, block] of examples.entries()) {
     const where = `${block.file}:${block.line}`;

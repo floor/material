@@ -8,8 +8,8 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { parseHTML } from "linkedom";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import { compile, type Warning } from "svelte/compiler";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
@@ -250,7 +250,7 @@ const slotted = (items: typeof SLOTTED) => items.map(({ id }) => {
 });
 const expectedSlotted = SLOTTED.map(({ host, slot, id }) => ({ id, wrapper: "span", slot, display: "contents", host, assigned: slot, inRoot: true }));
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir);
+const browser = await launchChromium();
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
@@ -259,7 +259,7 @@ const server = Bun.serve({
   },
 });
 try {
-  const inert = await browser.newPage({ javaScriptEnabled: false });
+  const inert = await browser.browser()!.newPage({ javaScriptEnabled: false });
   await inert.goto(server.url.href);
   const before = await inert.evaluate(() => [...document.querySelectorAll("[id^='host-']")].map((node) => ({
     id: node.id,
@@ -378,7 +378,7 @@ for (const environment of ["development", "production"] as const) {
     return new Response(`<!doctype html><div id="root">${mode === "required" ? required.html : provided.html}</div><script type="module" src="/client.js"></script>`, { headers: { "Content-Type": "text/html" } });
   } });
   try {
-    const inert = await chromium.launchPersistentContext(chromiumProfileDir);
+    const inert = await launchChromium();
     try {
       for (const mode of ["default", "required"] as const) {
         const page = await inert.newPage({ javaScriptEnabled: false });

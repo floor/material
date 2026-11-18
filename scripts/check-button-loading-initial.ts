@@ -2,8 +2,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { basename, resolve } from "node:path";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type createButton from "../src/components/button";
 
 export async function checkButtonInitialLoading(page: Page, label = "source") {
@@ -88,7 +88,7 @@ if (import.meta.main) {
       headers: { "Content-Type": "text/html" },
     });
   } });
-  const browser = await chromium.launchPersistentContext(chromiumProfileDir);
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     await page.goto(String(server.url));

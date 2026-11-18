@@ -26,7 +26,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { chromium, firefox, webkit, type Browser, type BrowserType, type CDPSession, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 
 const fixture = await createPackageFixture();
@@ -488,7 +488,7 @@ async function openPage(engine: BrowserType): Promise<{ page: Page; browser: Bro
   // Chromium keeps its profile inside the worktree (browser-profile.ts); the
   // other engines are a smoke pass and launch as before.
   const context = engine === chromium
-    ? await engine.launchPersistentContext(chromiumProfileDir, { headless: true, viewport: { width: 900, height: 600 } })
+    ? await launchChromium({ headless: true, viewport: { width: 900, height: 600 } })
     : undefined;
   const launched = context ?? await engine.launch({ headless: true });
   const browser = context?.browser() ?? launched;

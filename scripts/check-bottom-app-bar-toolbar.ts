@@ -5,8 +5,8 @@ import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:
 import { join, resolve } from "node:path";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 import { profileStyleModule } from "./optional-style-profiles";
@@ -34,7 +34,7 @@ const check = (ok: boolean, message: string) => { if (!ok) failures.push(message
 const output = new Map<string, { html: string; files: Map<string, string> }>();
 const sizes: Record<string, unknown> = {};
 const states: string[] = [];
-const browser = await chromium.launchPersistentContext(chromiumProfileDir);
+const browser = await launchChromium();
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   const [name, ...rest] = new URL(request.url).pathname.slice(1).split("/");
   const page = output.get(name), file = rest.join("/") || "index.html";
@@ -172,7 +172,7 @@ Object.assign(window,{probe:{bar,old,normal,events,button,setReenter:v=>reenter=
       const optional=opt?"import 'material/styles/bottom-app-bar-toolbar';":"";
       await pageBuild(label,opt?candidate.installed:baseline.installed,
         (base?"import 'material/styles/base';":"")+(reverse?optional+general:general+optional)+app(opt));
-      const page=await browser.newPage({viewport:{width:800,height:700}});page.setDefaultTimeout(10000);
+      const page=await browser.browser()!.newPage({viewport:{width:800,height:700}});page.setDefaultTimeout(10000);
       const errors: string[]=[];page.on('pageerror',error=>errors.push(error.message));
       await page.goto(`${server.url}${label}/`);await page.waitForFunction(()=>document.documentElement.dataset.ready==='true');
       pages.push(page);

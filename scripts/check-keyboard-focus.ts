@@ -24,8 +24,8 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 export type CheckMode =
@@ -1386,9 +1386,9 @@ async function evaluateReducedMotionOnTarget(
   return res;
 }
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1200, height: 900 } });
   const pageErrors: string[] = [];
   page.on("pageerror", err => pageErrors.push(err.message));
 

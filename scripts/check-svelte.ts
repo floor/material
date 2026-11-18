@@ -10,8 +10,8 @@
 //   bun run build && bun run scripts/check-svelte.ts
 
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { compile } from "svelte/compiler";
 import type { BunPlugin } from "bun";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
@@ -54,7 +54,7 @@ type Win = Window & {
   };
 };
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 const run = async (): Promise<void> => {
@@ -173,7 +173,6 @@ const run = async (): Promise<void> => {
     assert.equal(disabled.input, true);
     assert.match(disabled.text ?? "", /Unavailable/);
     check("boolean and dashed attributes reach the component");
-
 
     // ------------------------------------------------------------- button
     const button = await page.evaluate(() => {

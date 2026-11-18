@@ -22,8 +22,8 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import type createSplitButton from "../src/components/split-button";
 
 const root = resolve(import.meta.dir, "..");
@@ -148,7 +148,7 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.port}/`);

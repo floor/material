@@ -11,8 +11,8 @@
 
 import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
@@ -108,7 +108,7 @@ const server = Bun.serve({
 type Win = Window & Record<string, unknown>;
 /** Icon markup for the icon-only elements, quoted with ' in attributes. */
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 const check = (name: string): void => {
   checks++;
@@ -180,8 +180,8 @@ try {
   const parts = process.argv.slice(2);
   const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
 
-  if (selected("a")) await checkDeclarativeUpgrade(browser);
-  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+  if (selected("a")) await checkDeclarativeUpgrade(browser.browser()!);
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
@@ -4435,8 +4435,8 @@ try {
     check("text field: renaming the focused trailing button keeps the button, the input and focus");
   }
 
-  await checkTextFieldTrailing(browser, check);
-  await checkTextFieldWarning(browser);
+  await checkTextFieldTrailing(browser.browser()!, check);
+  await checkTextFieldWarning(browser.browser()!);
   check("text field: an unlabeled trailing listener warns once in development, never in production");
 
   // ---------------------------------------------------------------- progress
@@ -11275,7 +11275,6 @@ try {
       );
       check(`${item.name} in the top layer: a :modal <dialog> in its shadow root, painted, its state reflected`);
 
-
       const stops: Array<{ inside: boolean; label: string }> = [];
       for (let i = 0; i < 6; i++) {
         await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
@@ -12128,10 +12127,10 @@ try {
     check("chips: removing a selected input chip changes the selection and marks the set dirty; a change does too");
   }
   // ---------------------------------------------------------------- date and time pickers
-  await checkPickers({ page, browser, js, fresh, check });
+  await checkPickers({ page, browser: browser.browser()!, js, fresh, check });
   // ---------------------------------------------------------------- <m-search>
   const { checkSearch } = await import("./check-elements-search");
-  await checkSearch({ browser, page, origin: `http://127.0.0.1:${server.port}`, check, fresh });
+  await checkSearch({ browser: browser.browser()!, page, origin: `http://127.0.0.1:${server.port}`, check, fresh });
 
   // ---------------------------------------------------------------- pickers and search: open and close are state
   // Opening and closing without a choice leaves the element clean: its value

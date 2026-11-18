@@ -10,8 +10,8 @@
  * bun run scripts/check-dialog-reduced-motion.ts
  */
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import type createDialog from "../src/components/dialog";
 
 type ReducedMotionWindow = Window & {
@@ -22,9 +22,9 @@ type ReducedMotionWindow = Window & {
   afterOpenCount?: number;
 };
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({
+  const page = await browser.browser()!.newPage({
     viewport: { width: 900, height: 700 },
     reducedMotion: "reduce",
   });

@@ -19,8 +19,8 @@
  *   bun run build && bun run tokens:check --update   record the values again
  */
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 
 const FIXTURE = "scripts/fixtures/token-render.json";
 const update = process.argv.includes("--update");
@@ -168,9 +168,9 @@ const read = async (page: Page, probe: boolean): Promise<Record<string, Reading>
   return readings;
 };
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
   const unset = await read(page, false);
   const probed = await read(page, true);
   const now = Object.fromEntries(Object.keys(CASES).map((name) => [name, record(unset[name]!, probed[name]!)]));

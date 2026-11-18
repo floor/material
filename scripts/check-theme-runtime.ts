@@ -12,8 +12,8 @@
 //   bun run scripts/check-theme-runtime.ts
 
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 
 const bundle = await Bun.build({
   entrypoints: ["scripts/fixtures/theme-runtime.ts"],
@@ -45,11 +45,11 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);

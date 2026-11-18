@@ -9,8 +9,8 @@
  * Author attributes remain on their original hosts; no DOM method is overridden.
  */
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
-import { chromiumProfileDir } from "./browser-profile";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 
@@ -60,11 +60,11 @@ const cases: Case[] = [
     { id: `element-radios-required-${required}`, html: `<m-radios id="target" aria-label="Size" ${required ? "required" : ""}>${radioChildren}</m-radios>`, role: "radiogroup" as const, name: "Size", required },
   ]),
 ];
-const browser = await chromium.launchPersistentContext(chromiumProfileDir, { headless: true });
+const browser = await launchChromium({ headless: true });
 const failures: string[] = [];
 let checks = 0;
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1280, height: 900 } });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   const cdp = await page.context().newCDPSession(page);
