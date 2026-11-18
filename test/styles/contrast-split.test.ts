@@ -314,8 +314,8 @@ describe("explicit contrast levels are opt-in", () => {
     // Time-picker digit scale/fade uses spatial/effects motion tokens, with inverse hour return (+1,336 B).
     // Collapsed trailing-icon buttons keep equal insets: two specificity arms (+60 B, CI 43961554964).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "25208ea37a8e8a840606043e3ea6b88033087d425b472105e19070058e700ade",
-      length: 548330,
+      sha256: "170e72b04d523b7ca0dfea4bb27e1dd35f6fff8791fb1ae5b58f6b6aaf910436",
+      length: 548488,
     });
   });
 

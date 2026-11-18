@@ -21,7 +21,7 @@
     "scripts/optional-style-profiles.ts": "001b3cb27a2fa887b73962d06891e1dac67dfe16412a7a9fb4157f834937e5ec"
   },
   "sources": {
-    "main": "73e4b0792a34a593d670790e6ab69ee2b94f5c70d1771be6dbb99c0ad2308e10",
+    "main": "68a50d253d7cc1be82b35e430d9cd71bb1b832057af4aec27086637f9b8f742d",
     "themes": "e4e33bb1bc5de1d3da2670b0596996d2dd20f0b7844bdf96b9b9a777df454ede",
     "elements": "8c065cab3f4ce4498f42c911036c2645ad9d81ca9a760c0561882354afb1e7c8",
     "themes/neutral": "7260a3aa568672a5dd208884bc17e773e601215e8e1075b4a053c48bd6b31cf6",
@@ -407,7 +407,7 @@
     "elements/carousel.js": "fda184f361bf9f2469263ee911d9c6d77f61a86beecddaecc5ad032bc75d3270",
     "elements/checkbox.js": "d28e381eb832fe9ebeb06118a7068368e1f032ec308de32984068b4aaa192f33",
     "elements/chips.js": "b666a98270609c3a0ad468a4f5f5a30c777a2f80396f18daece32d1d38aa25ca",
-    "elements/css/badge.css": "7255fdcaa61678bdb6a4600a5b50fac67609b328d259e6871231d489391127c9",
+    "elements/css/badge.css": "a06098d112ba5a53ce48e0c2bbad4b2293f3cbcb675fce3bb29dab904278e680",
     "elements/css/badge.js": "37d7a6ad5600603e0e57c51b9c476b50fba83d2344e092c6e93b763a84f5053e",
     "elements/css/bottom-app-bar.css": "eddeef2e22f103d31305af099a390aba51a165296203a47c5eb7363a259c3b06",
     "elements/css/bottom-app-bar.js": "5749c8c374bbdd8c7212ff5e6b89f6a04da539c8d3096d4f1c67326673cbd3dd",
@@ -517,7 +517,7 @@
     "elements/css/timepicker.js": "a2b0a39f07823bd571d3652f3c4784f31967bfcdc68b93732ee2264f074ebb39",
     "elements/css/toolbar.css": "97c5994864712557f9a67e2291a0933c1d97624041428c86ca29ac415ae87112",
     "elements/css/toolbar.js": "aeabaaf243428e4e8e485ec5dae26b82368843302c0ef4cbdf8ddd3ab9d356b4",
-    "elements/css/tooltip.css": "b829c6fc926200e66af8642913b8e909c2ea5d08c2a618f320e8dd985882d585",
+    "elements/css/tooltip.css": "c0f7e647147582a446e88215bd9377a4310e1ed2f09b47cd317c5496688550f1",
     "elements/css/tooltip.js": "82252a3f354df1cdda4847a49027ec33c9e0d92f610478a5c9e9ac5e5046959e",
     "elements/css/top-app-bar.css": "606aa387919989050e61f59baff8d71262d51aaaf5c4cca7275807e6c0aa35a9",
     "elements/css/top-app-bar.js": "e79e341eb3f82ac2079023704e3ef398a31afc2873ca7d42fea5d09feb6a0789",
@@ -588,7 +588,7 @@
     "elements/slider.js": "8b3118bb9e4c368af200cbd937e32effe361332db2ee108c776a08905491dda7",
     "elements/snackbar.js": "89de64febb6e437e20b5d992ba46394f54efa9aebd6580d224697ab28f524f40",
     "elements/split-button.js": "e246f5e4dba50f2aa302915840efb2a68d0c2e8c59e1e79169a89557ae5268a3",
-    "elements/styles.js": "87449e8de71a2244a462c557c77a4903290c0cd93e5e0e6e3906b14a01a81fb5",
+    "elements/styles.js": "b71563cd20f7e79f78f7c78298a3343cad668b0b75dd0a8b122e0e0e3f4452d3",
     "elements/switch.js": "e16cd4b4c0b4dcb63740c91af2388849b3a2a30920e81dd499d493d9aa7fec6a",
     "elements/tabs.js": "99e7c71d29eb2f783cf4de38698fb2d6a4060330ed5666ba0d48a52a010b1a71",
     "elements/text-field.js": "b0bb1b5601adf35f7ffbfe4165df23385295442cce1d6407c50d9b1286187796",
@@ -709,8 +709,8 @@
     "ssr/solid.js": "65137f0a07f819f8066ac665d70bbb4fb027f9440453eb94bf36145ecc31b33e",
     "ssr/svelte.js": "1f741a58b9fd0c26d1517fe07382845644626c796d6e2e420f2687cc5c263ef2",
     "ssr/vue.js": "82545059c3d1184b4ec6fca9f0aa8369df8829c0132864793fef1f8a2df257c5",
-    "styles.css": "c653a0cf863ac7733a53dd872b7a484cfd5d5212929874dd69005cc25f24ac3a",
-    "styles/badge.css": "6abe5d0aa6aec9bf335a3edde4580a31867f0e7fc7b166a196af56b71f81681e",
+    "styles.css": "f1d412bb4a45c9c18b74f5e68c7a75980190491985f910b2eeb8000f2912745f",
+    "styles/badge.css": "be52dc9de18a3afbcb5d1004cbe52db5befa9c3cb3585e008aa090952e456c71",
     "styles/badge.js": "79dcf8253d668161aecd89b5569468f8a215fce90c85b0431fe0acad512b84a7",
     "styles/base-elements.css": "49645ad5584d6b45d36a9cce3db96a42ad798d84314d46ae27f9e07812d2a436",
     "styles/base-elements.js": "f84110d0578148371a45aa68e2807ae7232400d0b414824501b1af3a93b675a8",
@@ -792,7 +792,7 @@
     "styles/timepicker.js": "e8dd5cbff1da70b3a4f5cecef4d6ae2f7f94e938c59a7c05aa63b5362f1c83af",
     "styles/toolbar.css": "9e4c49f471d2b7f68eb868cada802e27bb8220ae2b66432abc2d530c6073f65e",
     "styles/toolbar.js": "9cc1cbdc53e091c349b7f5917393385204e23b3cbea78e8bfbf81a6e5bdd1213",
-    "styles/tooltip.css": "0628ec011a928430a4be95d8ec40332ea06f22290f3b115334c581c115b2df28",
+    "styles/tooltip.css": "ce99a44e87ff92a848cd12f4b0d7c7a97651820a99c744ff37bb3e0e5b0ce4a8",
     "styles/tooltip.js": "65e48d98af87e064c356b1be5eff17d833d788cc47a9ccdd9c61509cbf8803f3",
     "styles/top-app-bar.css": "968e8786bb8ce4a974e463a28668425b1284835186888fe9be8d37f2be14954d",
     "styles/top-app-bar.js": "b0f8b1e09e613ce380730a05a349dd991d36f2510c4db02c6d0251b6057e50e8",
@@ -955,7 +955,7 @@
       }
     ],
     "modes": {
-      "inline": "b0e1c3f15c76d1110eb6edf178a13c7bd7bbb527ce3ea0208fb814d320523d3d",
+      "inline": "2709ba29813ae52de9e19ce728814167b2077ab5bd8dd7dc336e7651451aec2e",
       "link": "260113e4ea7cbea6618cfb46f54f9dc82441bdd1eb1c4497da92a451604869f7"
     },
     "random": "constant 0.123456 during the synthetic render fixture only"

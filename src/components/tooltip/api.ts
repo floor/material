@@ -205,7 +205,7 @@ export const withAPI =
 
       // Press on any anchor, the click that follows, and Enter or Space.
       targetEl.addEventListener("pointerdown", press);
-      targetEl.addEventListener("click", handleClick);
+      targetEl.addEventListener("click", dismiss);
       targetEl.addEventListener("keydown", handleKeyDown);
     };
 
@@ -216,15 +216,13 @@ export const withAPI =
         targetEl.removeEventListener("focus", handleTargetFocus);
         targetEl.removeEventListener("blur", handleTargetBlur);
         targetEl.removeEventListener("pointerdown", press);
-        targetEl.removeEventListener("click", handleClick);
+        targetEl.removeEventListener("click", dismiss);
         targetEl.removeEventListener("keydown", handleKeyDown);
       }
     };
 
     // Event handlers
-    const handleTargetMouseEnter = () => {
-      if (touchExpiry === undefined) api.show();
-    };
+    const handleTargetMouseEnter = () => api.show();
     const handleTargetMouseLeave = () => api.hide();
 
     // WCAG 1.4.13: the pointer can move from the target onto the tooltip and
@@ -248,42 +246,14 @@ export const withAPI =
     // anchor. The focus that press causes is ignored until the pointer is
     // released; a later hover, or a keyboard focus after release, may show.
     let pressed = false;
-    let touchPointer: number | undefined;
-    let touchHold: number | undefined;
-    let touchExpiry: number | undefined;
     const menuOpen = () => target?.getAttribute("aria-expanded") === "true";
     const dismiss = () => api.hide(true);
-    const dismissOutsideTouch = (event: PointerEvent) => {
-      if (!event.composedPath().includes(component.element)) dismiss();
-    };
-    const clearTouch = () => {
-      window.clearTimeout(touchHold);
-      window.clearTimeout(touchExpiry);
-      touchPointer = touchHold = touchExpiry = undefined;
-      document.removeEventListener("pointerdown", dismissOutsideTouch, true);
-    };
-    const press = (event: PointerEvent) => {
+    const press = () => {
       pressed = true;
       dismiss();
-      if (event.pointerType !== "touch" || !event.isPrimary || !(showOnHover || showOnFocus)) return;
-      touchPointer = event.pointerId;
-      touchHold = window.setTimeout(() => {
-        api.show(true);
-        if (!isVisible) return;
-        touchExpiry = window.setTimeout(dismiss, 1500);
-        document.addEventListener("pointerdown", dismissOutsideTouch, true);
-      }, 500);
     };
-    const release = (event: PointerEvent) => {
+    const release = () => {
       pressed = false;
-      if (event.pointerId === touchPointer) {
-        window.clearTimeout(touchHold);
-        touchPointer = touchHold = undefined;
-      }
-    };
-    const handleClick = (event: MouseEvent) => {
-      // Let the anchor's action run without dismissing a just-opened touch tip.
-      if (touchExpiry === undefined || (event as PointerEvent).pointerType !== "touch") dismiss();
     };
     // Capture so a pointerup dispatched on the anchor reaches us, including
     // one released outside the anchor.
@@ -381,8 +351,6 @@ export const withAPI =
       },
 
       setTarget(newTarget) {
-        if (touchExpiry === undefined) clearTouch();
-        else dismiss();
         // Remove events from old target
         if (target) {
           removeTargetEvents(target);
@@ -417,7 +385,6 @@ export const withAPI =
         // An open menu stays uncovered. A show already waiting is caught
         // again when its callback runs: the menu may have opened since.
         if (menuOpen()) return this;
-        clearTouch();
 
         // Clear any existing timers
         if (showTimer !== null) {
@@ -472,7 +439,6 @@ export const withAPI =
       },
 
       hide(immediate = false) {
-        clearTouch();
         // Clear any existing timers
         if (hideTimer !== null) {
           window.clearTimeout(hideTimer);
@@ -547,7 +513,6 @@ export const withAPI =
       },
 
       destroy() {
-        clearTouch();
         // Clear timers
         if (showTimer !== null) {
           window.clearTimeout(showTimer);
