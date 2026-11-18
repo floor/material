@@ -36,6 +36,9 @@ const compile = (source: string): string => sass.compileString(`@use "${source}"
 
 const entrySource = `
 import { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton } from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
+import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
+registerStyles({ "top-app-bar": ${JSON.stringify(compile("components/top-app-bar"))}, "bottom-app-bar": ${JSON.stringify(compile("components/bottom-app-bar"))} });
+defineAll();
 window.api = { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton };
 `;
 const bundleBuild = await Bun.build({
@@ -263,6 +266,55 @@ try {
       });
       assert.ok(measured, "P11: no horizontal active label");
       assert.equal(measured, secondary, `P11: the horizontal active label is ${measured}, not Secondary`);
+    },
+  });
+
+  rows.push({
+    name: "P2 P5 P8 the custom elements: empty leading title inset and slotted bare buttons",
+    run: async () => {
+      const [onSurface, onSurfaceVariant] = [await probe("on-surface"), await probe("on-surface-variant")];
+      const measured = await page.evaluate(async () => {
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 60));
+        document.body.replaceChildren();
+        document.documentElement.dir = "ltr";
+        const bar = document.createElement("m-top-app-bar");
+        bar.setAttribute("headline", "Mail");
+        document.body.append(bar);
+        await settle();
+        const shadow = bar.shadowRoot as unknown as ParentNode & { querySelector: (selector: string) => HTMLElement | null };
+        const element = shadow.querySelector(".mtrl-top-app-bar")!;
+        const headline = shadow.querySelector(".mtrl-top-app-bar__headline")!;
+        const box = element.getBoundingClientRect();
+        const emptyInset = Math.round(headline.getBoundingClientRect().left - box.left);
+        // The same element with a bare button in each slot.
+        const button = document.createElement("button");
+        button.textContent = "Nav";
+        button.slot = "leading";
+        const action = document.createElement("button");
+        action.textContent = "Act";
+        action.slot = "trailing";
+        bar.append(button, action);
+        await settle();
+        const withIconInset = Math.round(headline.getBoundingClientRect().left - box.left);
+        const bottom = document.createElement("m-bottom-app-bar");
+        document.body.append(bottom);
+        const bare = document.createElement("button");
+        bare.textContent = "Do";
+        bottom.append(bare);
+        await settle();
+        return {
+          emptyInset,
+          withIconInset,
+          leading: getComputedStyle(button).color,
+          trailing: getComputedStyle(action).color,
+          bottom: getComputedStyle(bare).color,
+        };
+      });
+      assert.equal(measured.emptyInset, 16, `P5 element: a title with no leading content is inset ${measured.emptyInset}px, not 16`);
+      assert.ok(measured.withIconInset > measured.emptyInset, `P5 element: a slotted leading icon does not take its gap (${measured.withIconInset}px)`);
+      assert.equal(measured.leading, onSurface, `P2 element: a slotted bare leading button is ${measured.leading}, not OnSurface`);
+      assert.equal(measured.trailing, onSurfaceVariant, `P2 element: a slotted bare trailing button is ${measured.trailing}, not OnSurfaceVariant`);
+      assert.equal(measured.bottom, onSurfaceVariant, `P8 element: a slotted bare action is ${measured.bottom}, not OnSurfaceVariant`);
     },
   });
 

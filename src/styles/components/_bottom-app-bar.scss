@@ -28,7 +28,8 @@ $component: '#{base.$prefix}-bottom-app-bar';
   // instead of the page's (the element selector ties the UA's buttontext).
   color: t.color('on-surface-variant');
 
-  button {
+  button,
+  slot::slotted(button) {
     color: inherit;
   }
   

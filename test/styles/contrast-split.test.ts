@@ -317,8 +317,8 @@ describe("explicit contrast levels are opt-in", () => {
     // colours and their bare buttons, the compressed rows, the docked spacing
     // and the navigation label (+332 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "ba9b3dfa192b32e8fe4c66d5d970610c5976f54602c09711f519c4ac48cfd9d1",
-      length: 548662,
+      sha256: "ca3851dc82af3b7890a091ae3b0c8153324e35574a9c04805909106d0c759dae",
+      length: 548903,
     });
   });
 

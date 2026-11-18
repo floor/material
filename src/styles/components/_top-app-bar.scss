@@ -65,10 +65,15 @@ $component: '#{base.$prefix}-top-app-bar';
     button { color: inherit; }
     // The end gap belongs to an icon that is there: an empty leading must not
     // shift the title (AppBar.kt:3512-3516, 16dp title inset without one).
-    &:not(:empty) {
+    &:not(:empty):not([data-empty]) {
       margin-right: 24px;
     }
   }
+
+  // The element's slots: a slotted bare button inherits its slot's container
+  // colour, which the document's buttontext rule cannot reach through the
+  // shadow boundary.
+  slot::slotted(button) { color: inherit; }
 
   // Trailing section (usually action icons): TrailingIconColor is
   // OnSurfaceVariant (tokens/AppBarTokens.kt:37).
@@ -188,7 +193,7 @@ $component: '#{base.$prefix}-top-app-bar';
   
   // RTL Support
   @include m.rtl {
-    .#{$component}__leading:not(:empty) {
+    .#{$component}__leading:not(:empty):not([data-empty]) {
       margin-right: 0;
       margin-left: 24px;
     }
@@ -221,14 +226,14 @@ $component: '#{base.$prefix}-top-app-bar';
     // Reduce side padding slightly on small screens
     padding: 0 12px;
 
-    .#{$component}__leading:not(:empty) {
+    .#{$component}__leading:not(:empty):not([data-empty]) {
       margin-right: 16px;
     }
 
     // The narrow bar reduces the leading's end gap, not its start edges: the
     // direction rule has to be restated here, or this later rule wins over it.
     @include m.rtl {
-      .#{$component}__leading:not(:empty) {
+      .#{$component}__leading:not(:empty):not([data-empty]) {
         margin-right: 0;
         margin-left: 16px;
       }
