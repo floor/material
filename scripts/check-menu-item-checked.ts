@@ -189,10 +189,15 @@ try {
     lab.menu.element.querySelector<HTMLElement>('[data-id="more"]')!.click();
     await new Promise((resolve) => setTimeout(resolve, 200));
   });
+  // The item that opens a submenu is a menuitem with aria-haspopup, never a
+  // radio: it is a way into a level, not one of the choices.
   assert.deepEqual(await items(false), [
     ["Size", "menuitemradio", "true", null],
-    ["More", "menuitemradio", "false", null],
-  ], "the level that holds the selection is menuitemradio");
+    ["More", "menuitem", null, null],
+  ], "the level that holds the selection is menuitemradio, and its submenu opener stays a menuitem");
+  const openerAX = present(await readAX(), "More");
+  assert.equal(openerAX.role, "menuitem", `the submenu opener is announced as ${openerAX.role}, not menuitem`);
+  assert.equal(openerAX.props.checked, undefined, "the submenu opener carries no checked state");
   assert.deepEqual(await items(true), [
     ["Copy link", "menuitem", null, null],
   ], "a submenu's items are commands: menuitem, with no checked state of the level above");

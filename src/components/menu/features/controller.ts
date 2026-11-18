@@ -92,9 +92,9 @@ const withController =
   // menuitemradio requires aria-checked (WAI-ARIA 1.2) -- the check Material
   // shows beside a chosen menu item's label
   // (m3.material.io/components/menus/specs, selected state). Only the level
-  // that holds the selection is marked: a submenu's items are commands that
-  // carry no selection, so they stay menuitem (nested). A menu with no
-  // selection keeps menuitem, and a listbox keeps option with aria-selected.
+  // that holds the selection is marked: a submenu's items are commands and are
+  // created as menuitem. A menu with no selection keeps menuitem, and a listbox
+  // keeps option with aria-selected.
   const itemRole = (): string => (state.selectedItemId ? "menuitemradio" : "menuitem");
   /** Where a listbox says which option is chosen, and a menu which item is checked. */
   const checkedAttribute = listbox ? "aria-selected" : "aria-checked";
@@ -149,7 +149,9 @@ const withController =
       itemElement.setAttribute("role", "option");
       itemElement.id = `${optionIdPrefix}-option-${index}`;
     } else {
-      itemElement.setAttribute("role", role);
+      // A submenu's opener is a menuitem with a popup, not a radio: it opens a
+      // level, it is not one of the choices.
+      itemElement.setAttribute("role", item.hasSubmenu ? "menuitem" : role);
       itemElement.setAttribute("tabindex", "-1"); // Set to -1 by default, will update when needed
     }
     itemElement.setAttribute("data-id", item.id);
@@ -162,9 +164,10 @@ const withController =
       itemElement.setAttribute("aria-disabled", "false");
     }
 
-    // The check belongs to the level that carries the selection: a submenu's
-    // items are created as menuitem and keep nothing of the level above.
-    if (listbox || role === "menuitemradio") {
+    // The check belongs to the level that carries the selection and to the
+    // items that are choices: a submenu's items are created as menuitem, and
+    // so is the item that opens a submenu.
+    if (listbox || (role === "menuitemradio" && !item.hasSubmenu)) {
       if (state.selectedItemId && item.id === state.selectedItemId) {
         itemElement.classList.add(`${itemClass}--selected`);
         itemElement.setAttribute(checkedAttribute, "true");
@@ -425,13 +428,16 @@ const withController =
 
     // Update selected state for each item
     menuItems.forEach((item) => {
-      const selected = item.getAttribute("data-id") === itemId;
+      // An item that opens a submenu is a menuitem with a popup, never a
+      // radio, and it is not one of the choices.
+      const opens = item.hasAttribute("aria-haspopup");
+      const selected = !opens && item.getAttribute("data-id") === itemId;
 
       item.classList.toggle(`${component.getClass("menu__item--selected")}`, selected);
       // A listbox's options keep aria-selected; a menu's items are
       // menuitemradio while it carries a selection, and menuitem without one.
-      if (!listbox) item.setAttribute("role", itemRole());
-      if (listbox || itemId) item.setAttribute(checkedAttribute, String(selected));
+      if (!listbox) item.setAttribute("role", opens ? "menuitem" : itemRole());
+      if (listbox || (itemId && !opens)) item.setAttribute(checkedAttribute, String(selected));
       else item.removeAttribute(checkedAttribute);
     });
   };
