@@ -10,14 +10,8 @@ const css = sass.compileString(
     "\n.label-small-reference { @include mixins.typography('label-small'); }",
   { loadPaths: ["src/styles"], logger: sass.Logger.silent },
 ).css;
-const entry = `
-import createTooltip from "./src/components/tooltip";
-import createBadge from "./src/components/badge";
-Object.assign(window, { createTooltip, createBadge });
-`;
 const { outputs, success, logs } = await Bun.build({
-  entrypoints: ["tooltip-badge-fixture.ts"],
-  files: { "tooltip-badge-fixture.ts": entry },
+  entrypoints: ["scripts/fixtures/tooltip-badge-conformance.ts"],
   target: "browser",
   format: "iife",
 });
