@@ -20,7 +20,7 @@ import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReduced
 import { checkTextFieldTrailing, trailingActivation, trailingFocus } from "./check-text-field-trailing";
 import { checkTextFieldWarning } from "./check-text-field-warning";
 import { checkRadiosLayout } from "./check-radios-layout";
-import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
+import { checkSelectMenu, checkSelectWidth, checkSelectMenuHeight } from "./check-select-browser";
 import { checkToolbarItemShape } from "./check-toolbar-shape-browser";
 import { checkToolbarCollapse } from "./check-toolbar-collapse-browser";
 import { checkBottomAppBarToolbarContrast } from "./check-bottom-app-bar-toolbar-contrast";
@@ -2250,8 +2250,9 @@ try {
     // The select's menu in the top layer, inside the shadow root: its width, its
     // selected option's mark in both directions, and its colours
     await checkSelectMenu(page, "element");
+    await checkSelectMenuHeight(page, "element");
     await checkSelectWidth(page, "element");
-    check("select: the menu is its field's width, the selected mark at the item's end in both directions, the selected option on secondary-container");
+    check("select: the menu is its field's width, taller than 20rem when the list is, the selected mark at the item's end in both directions, the selected option on secondary-container");
 
     // The required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {

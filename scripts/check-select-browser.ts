@@ -577,3 +577,67 @@ export async function checkSelectActiveOptionFocusRing(page: Page): Promise<void
   }
   console.log("Passed packed select active option focus ring: in light, dark and forced-colors modes the option a key reaches draws the 3dp inward secondary ring (3:1 against its own background in light and dark), the ring follows ArrowDown and leaves the option it left, and a pointer opening or a hover draws no ring.");
 }
+
+/**
+ * A top-layer select menu that fits the window is not capped at 20rem.
+ *
+ * The adjacent-sibling rule `.mtrl-select + .mtrl-menu` set `max-height:
+ * 20rem`. That matches the factory's top layer and `<m-select>` (the menu
+ * is the select's next sibling). A list taller than 20rem and shorter than
+ * the window was clipped there. Compose `Menu.kt` `MenuVerticalMargin` is
+ * 48dp: the list scrolls against the window, which `position.ts` already
+ * does when the list does not fit. Ten options are past 20rem and inside
+ * a 900px window, so the measured max-height is `none` and the box is the
+ * list.
+ */
+export async function checkSelectMenuHeight(page: Page, api: "factory-top" | "element"): Promise<void> {
+  const previous = page.viewportSize();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  try {
+    const measured = await page.evaluate(async (api) => {
+      const options = Array.from({ length: 10 }, (_, index) => ({ id: `o${index}`, text: `Option ${index}` }));
+      const cell = document.createElement("div");
+      cell.style.cssText = "position:fixed;left:24px;top:24px";
+      document.body.append(cell);
+      let select: { open: () => unknown; destroy?: () => void };
+      let scope: ParentNode;
+      const win = window as unknown as SelectWindow;
+      if (api === "element") {
+        const host = document.createElement("m-select");
+        host.setAttribute("label", "Pet");
+        host.setAttribute("value", "o0");
+        host.style.width = "280px";
+        for (const option of options) {
+          const declared = document.createElement("m-select-option");
+          declared.setAttribute("value", option.id);
+          declared.setAttribute("label", option.text);
+          host.append(declared);
+        }
+        cell.append(host);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        select = (host as unknown as { component: typeof select }).component;
+        scope = host.shadowRoot as ShadowRoot;
+      } else {
+        const made = win.createSelect({ label: "Pet", value: "o0", options, layer: "top" });
+        made.element.style.width = "280px";
+        cell.append(made.element);
+        select = made;
+        scope = cell;
+      }
+      select.open();
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      const menu = scope.querySelector(".mtrl-select__menu") as HTMLElement;
+      await Promise.all(menu.getAnimations({ subtree: true }).map((animation) => animation.finished));
+      const box = menu.getBoundingClientRect();
+      const result = { maxHeight: getComputedStyle(menu).maxHeight, height: Math.round(box.height) };
+      select.destroy?.();
+      cell.remove();
+      return result;
+    }, api);
+    assert.equal(measured.maxHeight, "none", `${api}: the menu's max-height is ${measured.maxHeight}`);
+    assert.ok(measured.height > 400, `${api}: a ten-option menu is taller than 20rem (${measured.height}px)`);
+    console.log(`Passed select menu height (${api}): max-height none, box ${measured.height}px.`);
+  } finally {
+    if (previous) await page.setViewportSize(previous);
+  }
+}

@@ -77,8 +77,8 @@ $component: "#{base.$prefix}-select";
 
     // Menu styles specifically for select
     & + .#{base.$prefix}-menu {
-        // Additional styles for the connected menu
-        max-height: 20rem;
+        // The list scrolls when position.ts fits it to the window (48px
+        // margin, Compose MenuVerticalMargin). A 20rem cap is not a token.
         overflow-y: auto;
         max-width: initial;
 
