@@ -313,10 +313,11 @@ describe("explicit contrast levels are opt-in", () => {
     // outside days from their foreground selector (+31 B, CI 42608902656).
     // Time-picker digit scale/fade uses spatial/effects motion tokens, with inverse hour return (+1,336 B).
     // Collapsed trailing-icon buttons keep equal insets: two specificity arms (+60 B, CI 43961554964).
+    // Side sheet: pressed close layer and a 1px outline-variant inner border (+184 B, CI 44396908315).
     // A disabled field in error paints its helper and counter on-surface (+397 B, CI 44393533911).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "5403af7bbbe7c0e04194789167f4a2acd23f2cdd02411d19dafbdbbe853815f1",
-      length: 548885,
+      sha256: "1a0a819f0905cbf1ec420004cf2c46b199138fd532df6abed01e84856dd43d37",
+      length: 549069,
     });
   });
 

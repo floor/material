@@ -93,6 +93,18 @@ describe('side sheet stylesheet', () => {
     expect(value('.mtrl-side-sheet__close:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
   });
 
+  test('the close button pressed layer is the pressed opacity', () => {
+    expect(value('.mtrl-side-sheet__close:active::before', 'opacity')).toBe('0.1');
+  });
+
+  test('a standard sheet draws a 1px outline-variant border on its inner edge', () => {
+    const line = '1px solid var(--mtrl-sys-color-outline-variant)';
+    expect(value('.mtrl-side-sheet--standard.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-inline-start')).toBe(line);
+    expect(value('.mtrl-side-sheet--standard.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-inline-end')).toBe(line);
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-inline-start')).toBeUndefined();
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-inline-end')).toBeUndefined();
+  });
+
   test('no corner is written as an unanimatable pill', () => {
     expect(css).not.toContain('9999px');
     expect(css).not.toContain('!important');
