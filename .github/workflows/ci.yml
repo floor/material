@@ -193,10 +193,13 @@ jobs:
   browser:
     needs: build
     runs-on: ubuntu-24.04
-    # Allow the cold Firefox/WebKit download (21 minutes measured), a shorter
-    # HTTPS retry, the eight-minute test step, and runner/cache setup.
-    # Chromium-only groups keep their previous limit.
-    timeout-minutes: ${{ contains(matrix.browsers, 'webkit') && 46 || 25 }}
+    timeout-minutes: 25
+    container:
+      # Playwright 1.63.0 Noble (linux/amd64). Update this digest with bun.lock.
+      image: ${{ (contains(matrix.browsers, 'firefox') || contains(matrix.browsers, 'webkit')) && 'mcr.microsoft.com/playwright@sha256:bc6ab0d6d44ff4826e4cb8c1e6d801e185bfc42bb0753f8e2a30efc70db054c7' || '' }}
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_CONTAINER: ${{ (contains(matrix.browsers, 'firefox') || contains(matrix.browsers, 'webkit')) && 'true' || 'false' }}
     strategy:
       fail-fast: false
       matrix:
@@ -255,10 +258,20 @@ jobs:
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: ${{ env.PLAYWRIGHT_CONTAINER != 'true' }}
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: env.PLAYWRIGHT_CONTAINER != 'true'
         with:
           bun-version: "1.4.2"
+      - name: Install pinned Bun in the Playwright container
+        if: env.PLAYWRIGHT_CONTAINER == 'true'
+        # The image has npm but lacks unzip, which setup-bun needs.
+        run: |
+          npm install --prefix "$RUNNER_TEMP/material-bun" --no-save --no-package-lock --no-audit --no-fund @oven/bun-linux-x64@1.4.2
+          install "$RUNNER_TEMP/material-bun/node_modules/@oven/bun-linux-x64/bin/bun" /usr/local/bin/bun
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: env.PLAYWRIGHT_CONTAINER != 'true'
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -271,10 +284,34 @@ jobs:
         with:
           node-version: "22.23.3"
       - uses: ./.github/actions/browsers
+        if: env.PLAYWRIGHT_CONTAINER != 'true'
         with:
           browsers: ${{ matrix.browsers }}
-          deps-timeout: ${{ contains(matrix.browsers, 'webkit') && '23m' || '4m' }}
-          deps-retry-timeout: ${{ contains(matrix.browsers, 'webkit') && '10m' || '4m' }}
+      - name: Check Playwright container version
+        if: env.PLAYWRIGHT_CONTAINER == 'true'
+        run: |
+          node <<'NODE'
+          const { readFileSync } = require('node:fs')
+          const { driverVersion } = JSON.parse(readFileSync(process.env.PLAYWRIGHT_BROWSERS_PATH + '/.docker-info', 'utf8'))
+          const { version } = require('./node_modules/playwright/package.json')
+          if (driverVersion !== version) {
+            console.error(`Playwright container is ${driverVersion}, but bun.lock installs ${version}. Update the Noble image digest in ci.yml.`)
+            process.exit(1)
+          }
+          console.log(`Playwright container and package both use ${version}`)
+          NODE
+      - name: Stage checks for the container home directory owner
+        if: env.PLAYWRIGHT_CONTAINER == 'true'
+        shell: bash
+        # Firefox refuses to run as root with GitHub's mounted /github/home
+        # owned by the runner user. Stage a writable checkout as that user.
+        run: |
+          owner=$(stat -c %u /github/home)
+          group=$(stat -c %g /github/home)
+          as_owner=(setpriv --reuid "$owner" --regid "$group" --clear-groups)
+          staged=$("${as_owner[@]}" mktemp -d /github/home/material-browser.XXXXXX)
+          tar -cf - . | "${as_owner[@]}" tar -xf - -C "$staged"
+          printf 'BROWSER_CHECKOUT=%s\n' "$staged" >> "$GITHUB_ENV"
       # The prototype's invariants are relative to the revision this run
       # changes: a pull request's base, or the parent a push lands on. The
       # nightly run has neither, so it falls back to the checked-out commit and
@@ -303,18 +340,31 @@ jobs:
         # end, so the last line before a timeout names the one that hung. No
         # retry: a hang stays a failure.
         timeout-minutes: 8
+        shell: bash
         env:
           # The prototype check derives its receipt from the revision this run
           # changes, the same one the baseline step checks out.
           PROTOTYPE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
         run: |
+          runner=(bun)
+          if [ "$PLAYWRIGHT_CONTAINER" = true ]; then
+            cd "$BROWSER_CHECKOUT"
+            runner=(setpriv --reuid "$(stat -c %u /github/home)" --regid "$(stat -c %g /github/home)" --clear-groups bun)
+          fi
           for script in ${{ matrix.checks }}; do
             start=$SECONDS
             echo "::group::$script (start)"
-            bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
+            "${runner[@]}" run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
             echo "$script: passed in $((SECONDS - start))s"
           done
+      - name: Collect container browser artifacts
+        if: always() && env.BROWSER_CHECKOUT != ''
+        run: |
+          if [ -d "$BROWSER_CHECKOUT/analysis" ]; then
+            mkdir -p analysis
+            cp -R "$BROWSER_CHECKOUT/analysis/." analysis/
+          fi
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
