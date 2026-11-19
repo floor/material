@@ -128,7 +128,7 @@
     "components/drawer/drawer.js": "218c2f5a7e16e2256eb40e01815736eb1c3c3ba875901e8d5e94e06b7fa6b87f",
     "components/drawer/features/headline.js": "af7c2a7acb62784bb6bbcd10a7842dd228835b95aceaf51b1a329ce40d42f337",
     "components/drawer/features/index.js": "4cff078d3c71d341d26719ca3fe97237669b0a336c3c7567ee3e10e66828885f",
-    "components/drawer/features/items.js": "91b2cb73056c050a46afe820dee64292ec1287f51d1e82fa7f20ca6f10b22258",
+    "components/drawer/features/items.js": "f2fd06a742615714f21ee698a8b65a90432daebd6537ca5918afd22b41aa1f2f",
     "components/drawer/features/state.js": "c7b230fbdb37bd2ac11c263f8d162d7fd4f5bcf43c1e3ce6a396fa291b5779fc",
     "components/drawer/index.js": "38ac2e9d5be97a2058a9fdf4ce4c1bf7c92961ce463e9ed9c37c597cfc450cb2",
     "components/extended-fab/api.js": "689805c55b546f15931a1e785f5681fcb654ab33e901914c9c548717f1906fbb",
