@@ -79,7 +79,9 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(panel.getAttribute("role")).toBe("group");
   expect(panel.hasAttribute("inert")).toBe(true);
 
+  expect(drawer.getItems()[1].expanded).toBe(false);
   drawer.setActive("nested");
+  expect(drawer.getItems()[1].expanded).toBe(true);
   expect(drawer.isSectionExpanded("closed")).toBe(true);
   expect(changes).toEqual([]);
   expect(row("nested").getAttribute("aria-current")).toBe("page");

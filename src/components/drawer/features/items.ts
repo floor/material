@@ -217,7 +217,6 @@ export const withItems =
         (enabled(section.button) ? section.button : component.element).focus();
       }
       paintSection(section, expanded);
-      currentItems = currentItems.map((item, index) => index === section.index ? { ...item, expanded } : item);
       const detail: DrawerSectionEvent = {
         id: section.id, value: section.id, label: section.label, expanded,
         ...(event && { originalEvent: event }),
@@ -430,7 +429,14 @@ export const withItems =
         setActive,
         getActive: () => activeId,
         setItems,
-        getItems: () => currentItems,
+        getItems: () => {
+          if (!sections.size) return currentItems;
+          const items = currentItems.slice();
+          for (const { index, expanded } of sections.values()) {
+            items[index] = { ...items[index], expanded };
+          }
+          return items;
+        },
         setBadge,
         expandSection: id => setExpanded(sections.get(id), true),
         collapseSection: id => setExpanded(sections.get(id), false),
