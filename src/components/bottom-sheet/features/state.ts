@@ -98,12 +98,20 @@ export const withState =
       );
     };
     // Replacing the body changes the layout without a state change or a
-    // window resize, which is the only other time the class is reconciled.
+    // window resize. A later size change of the same node is observed below.
     const placeContent = structure.setContent;
     structure.setContent = (next) => {
       placeContent(next);
       syncFullHeight();
     };
+    // Growing or shrinking the mounted content moves the container without
+    // setContent or a window resize. The class follows that size.
+    const boxObserver = typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => {
+          if (state === BOTTOM_SHEET_STATES.EXPANDED) syncFullHeight();
+        })
+      : null;
+    boxObserver?.observe(structure.container);
 
     const setState = (next: BottomSheetState): void => {
       if (next === state) return;
@@ -210,6 +218,7 @@ export const withState =
         setState,
         /** Releases the listeners this feature put on the document */
         release: () => {
+          boxObserver?.disconnect();
           view?.removeEventListener("resize", onResize);
           document.removeEventListener("keydown", handleKeydown);
           structure.scrim?.removeEventListener("click", handleScrimClick);

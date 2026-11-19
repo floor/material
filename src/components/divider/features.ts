@@ -58,11 +58,11 @@ const applyLayout = (component: ElementComponent & BaseComponent, config: Divide
     // Logical: the start inset is on the right in right-to-left
     style[horizontal ? 'marginInlineStart' : 'marginBlockStart'] = `${insetStart}px`;
     style[horizontal ? 'marginInlineEnd' : 'marginBlockEnd'] = `${insetEnd}px`;
-    // A horizontal divider is a block: width:auto fills what the margins
-    // leave, while width:100% plus margins overflows. A vertical divider is
-    // inline-block, so height:auto collapses an empty line to 0. Subtract
-    // the insets from the parent height instead.
-    style[main] = horizontal ? 'auto' : `calc(100% - ${insetStart + insetEnd}px)`;
+    // width or height 100% plus the margins overflows a block. width:auto
+    // fills a block, but on a flex item it is the content size, so an empty
+    // horizontal line in a row collapses to 0. Subtract the insets from the
+    // full size on both axes.
+    style[main] = `calc(100% - ${insetStart + insetEnd}px)`;
   }
 };
 

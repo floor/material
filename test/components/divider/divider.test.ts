@@ -102,7 +102,7 @@ describe('divider variants and insets', () => {
     expect(modifiers(divider)).toEqual(['mtrl-divider--horizontal', 'mtrl-divider--inset']);
     expect(divider.element.style.marginInlineStart).toBe('16px');
     expect(divider.element.style.marginInlineEnd).toBe('0px');
-    expect(divider.element.style.width).toBe('auto');
+    expect(divider.element.style.width).toBe('calc(100% - 16px)');
   });
 
   test('setVariant back to full-width clears the inset', () => {

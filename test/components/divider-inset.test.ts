@@ -30,21 +30,21 @@ describe('divider insets', () => {
     expect(divider.element.style.marginInlineStart).toBe('16px');
     // The bug: width stayed 100% alongside a 16px margin, overflowing the parent.
     expect(divider.element.style.width).not.toBe('100%');
-    expect(divider.element.style.width).toBe('auto');
+    expect(divider.element.style.width).toBe('calc(100% - 16px)');
   });
 
   test('a middle-inset divider is inset on both sides and still fits', () => {
     const divider = createDivider({ variant: 'middle-inset' });
     expect(divider.element.style.marginInlineStart).toBe('16px');
     expect(divider.element.style.marginInlineEnd).toBe('16px');
-    expect(divider.element.style.width).toBe('auto');
+    expect(divider.element.style.width).toBe('calc(100% - 32px)');
   });
 
   test('explicit insets are honoured, and still fit', () => {
     const divider = createDivider({ variant: 'inset', insetStart: 24, insetEnd: 8 });
     expect(divider.element.style.marginInlineStart).toBe('24px');
     expect(divider.element.style.marginInlineEnd).toBe('8px');
-    expect(divider.element.style.width).toBe('auto');
+    expect(divider.element.style.width).toBe('calc(100% - 32px)');
   });
 
   test('a vertical inset divider does not also claim the full height', () => {
@@ -63,20 +63,20 @@ describe('divider insets', () => {
     const constructed = createDivider({ insetStart: 24, insetEnd: 12 });
     expect(constructed.element.style.marginInlineStart).toBe('24px');
     expect(constructed.element.style.marginInlineEnd).toBe('12px');
-    expect(constructed.element.style.width).toBe('auto');
+    expect(constructed.element.style.width).toBe('calc(100% - 36px)');
 
     const updated = createDivider();
     updated.setInset(32, 20);
     expect(updated.element.style.marginInlineStart).toBe('32px');
     expect(updated.element.style.marginInlineEnd).toBe('20px');
-    expect(updated.element.style.width).toBe('auto');
+    expect(updated.element.style.width).toBe('calc(100% - 52px)');
   });
 
   test('one explicit side of a full-width divider leaves the other at 0', () => {
     const start = createDivider({ insetStart: 24 });
     expect(start.element.style.marginInlineStart).toBe('24px');
     expect(start.element.style.marginInlineEnd).toBe('0px');
-    expect(start.element.style.width).toBe('auto');
+    expect(start.element.style.width).toBe('calc(100% - 24px)');
 
     const end = createDivider({ orientation: 'vertical', insetEnd: 12 });
     expect(end.element.style.marginBlockStart).toBe('0px');
@@ -99,5 +99,14 @@ describe('divider insets', () => {
     expect(zero.element.style.marginBlockStart).toBe('0px');
     expect(zero.element.style.marginBlockEnd).toBe('0px');
     expect(zero.element.style.height).toBe('calc(100% - 0px)');
+  });
+
+  test('explicit insets keep a full-width basis, including zero', () => {
+    // width:auto is the content size of a flex item, so an empty horizontal
+    // divider in a row collapses. The basis stays the parent minus the insets.
+    const zero = createDivider({ insetStart: 0, insetEnd: 0 });
+    expect(zero.element.style.width).toBe('calc(100% - 0px)');
+    const inset = createDivider({ insetStart: 24, insetEnd: 12 });
+    expect(inset.element.style.width).toBe('calc(100% - 36px)');
   });
 });

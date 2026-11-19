@@ -169,6 +169,17 @@ try {
     const tall = sheetOf("900px", "modal");
     const tallStandard = sheetOf("900px", "standard");
     const short = sheetOf("80px", "modal");
+    const flexOf = (start: number, end: number) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;flex-direction:row;width:480px";
+      const divider = w.mtrl.createDivider({ insetStart: start, insetEnd: end });
+      row.append(divider.element);
+      document.body.append(row);
+      return divider.element;
+    };
+    const flexZero = flexOf(0, 0);
+    const flexInset = flexOf(24, 12);
+
     const column = document.createElement("div");
     column.style.cssText = "height:200px;width:48px";
     document.body.append(column);
@@ -206,6 +217,19 @@ try {
     await settle();
     const afterGrow = corners(swapping);
     swapping.destroy();
+    const live = document.createElement("div");
+    live.style.height = "80px";
+    const resizing = w.mtrl.createBottomSheet({ content: live, variant: "modal" });
+    resizing.expand();
+    await settle();
+    const beforeGrow = corners(resizing);
+    live.style.height = "1400px";
+    await settle();
+    const afterInPlaceGrow = corners(resizing);
+    live.style.height = "80px";
+    await settle();
+    const afterInPlaceShrink = corners(resizing);
+    resizing.destroy();
     const line = (el: HTMLElement) => {
       const style = getComputedStyle(el);
       const box = el.getBoundingClientRect();
@@ -228,6 +252,11 @@ try {
       vertical: line(vertical.element),
       verticalUpdated: line(verticalUpdated.element),
       verticalZero: line(verticalZero.element),
+      flexZero: inset(flexZero),
+      flexInset: inset(flexInset),
+      beforeGrow,
+      afterInPlaceGrow,
+      afterInPlaceShrink,
       beforeSwap,
       afterShrink,
       afterGrow,
@@ -256,6 +285,19 @@ try {
   assert.deepEqual(report.vertical, { start: 24, end: 12, width: 1, height: 164 });
   assert.deepEqual(report.verticalUpdated, { start: 24, end: 12, width: 1, height: 164 });
   assert.deepEqual(report.verticalZero, { start: 0, end: 0, width: 1, height: 200 });
+
+  assert.deepEqual(report.flexZero, { start: 0, end: 0, width: 480 });
+  assert.deepEqual(report.flexInset, { start: 24, end: 12, width: 444 });
+
+  assert.equal(report.beforeGrow.full, false);
+  assert.ok(report.beforeGrow.top > 0);
+  assert.equal(report.beforeGrow.start, 28);
+  assert.equal(report.afterInPlaceGrow.full, true);
+  assert.equal(report.afterInPlaceGrow.top, 0);
+  assert.equal(report.afterInPlaceGrow.start, 0);
+  assert.equal(report.afterInPlaceShrink.full, false);
+  assert.ok(report.afterInPlaceShrink.top > 0);
+  assert.equal(report.afterInPlaceShrink.start, 28);
 
   assert.equal(report.beforeSwap.full, true);
   assert.equal(report.beforeSwap.top, 0);
