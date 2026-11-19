@@ -230,7 +230,7 @@ jobs:
             checks: menu-item-checked:check
           - group: app-bar-conformance
             browsers: chromium
-            checks: app-bar-conformance:check
+            checks: app-bar-conformance:check top-app-bar:check
           - group: closed-surfaces
             browsers: chromium
             checks: closed-surfaces:check

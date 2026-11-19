@@ -266,3 +266,48 @@ $component: '#{base.$prefix}-top-app-bar';
     border-bottom: 1px solid currentColor;
   }
 }
+
+// A bare button in a leading or trailing slot. The resting box is the button's
+// own: this only adds the pressed layer and a target that reaches past it.
+// Physical centering, so the target stays on the button in both directions.
+// The two rules stay apart: a document sheet drops a whole rule that contains
+// ::slotted(), and ::slotted() cannot take a following ::before or ::after.
+@mixin plain-slot-button {
+  position: relative;
+  overflow: visible;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: t.color('on-surface');
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:active::before {
+    opacity: v.state('pressed-state-layer-opacity');
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.#{$component}__leading > button:not([class*='#{base.$prefix}-']),
+.#{$component}__trailing > button:not([class*='#{base.$prefix}-']) {
+  @include plain-slot-button;
+}
+
+// The element's button is light DOM on <m-top-app-bar>, outside the shadow
+// tree, so the document copy of this sheet is what reaches its pseudos.
+m-top-app-bar > button:not([class*='#{base.$prefix}-']):is([slot='leading'], [slot='trailing']) {
+  @include plain-slot-button;
+}

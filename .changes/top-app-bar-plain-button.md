@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Top app bar: a bare button in the leading or trailing slot shows a pressed state and keeps a 48px target.** A plain button in either slot had no pressed layer and no 48px hit target. It now draws an on-surface layer at the pressed opacity while held, and a 48px target centred on the button, at desktop and small-screen widths, for the factory and for `<m-top-app-bar>`. The resting box, padding and background stay as they are. Icon buttons and other library buttons keep their own layers.
