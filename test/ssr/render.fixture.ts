@@ -235,6 +235,19 @@ test("menu items and search suggestions are included in the synchronous server t
   expect(searchTree.querySelector("strong")?.textContent).toBe("App");
 });
 
+test("a closed dialog and snackbar render inert in the server tree", () => {
+  // The closed state is `inert` on the surface, so a server-rendered closed
+  // dialog or snackbar is out of the accessibility tree and the Tab order
+  // before hydration too; an open one is not marked.
+  const dialog = parsed(renderElement("m-dialog", { headline: "Closed" }, "<p>Body</p>"));
+  const dialogSurface = dialog.querySelector("template")!.content.querySelector(".mtrl-dialog")!;
+  expect(dialogSurface.hasAttribute("inert")).toBe(true);
+
+  const snackbar = parsed(renderElement("m-snackbar", { message: "Saved", action: "Undo" }, ""));
+  const snackbarSurface = snackbar.querySelector("template")!.content.querySelector(".mtrl-snackbar")!;
+  expect(snackbarSurface.hasAttribute("inert")).toBe(true);
+});
+
 test("a toolbar renders its shadow root and writes no roving tabindex", () => {
   const icon = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
   const html = renderElement(
