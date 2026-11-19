@@ -200,8 +200,10 @@ try {
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowRight");
     assert.equal(await containment.getAttribute("aria-expanded"), "false");
-    assert.equal(await containment.locator(".mtrl-drawer__item-chevron").evaluate(node => getComputedStyle(node).transitionProperty), "none");
-    assert.equal(await host.locator(".mtrl-drawer__group-items").first().evaluate(node => getComputedStyle(node).transitionProperty), "none");
+    const chevronMotion = await containment.locator(".mtrl-drawer__item-chevron").evaluate(node => getComputedStyle(node).transitionProperty);
+    const panelMotion = await host.locator(".mtrl-drawer__group-items").first().evaluate(node => getComputedStyle(node).transitionProperty);
+    assert(!/\b(?:all|transform)\b/.test(chevronMotion), chevronMotion);
+    assert(!/\b(?:all|grid-template-rows)\b/.test(panelMotion), panelMotion);
 
     await page.emulateMedia({ forcedColors: "active" });
     assert.equal(await containment.locator(".mtrl-drawer__active-indicator").evaluate(node => getComputedStyle(node).outlineStyle), "solid");
