@@ -17,6 +17,23 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.0] - 2026-11-19
+
+### Added
+
+- Drawer destinations can be native links, and drawers can group them in expandable sections. Sections support keyboard navigation and open automatically to reveal the active destination. Server-rendered drawers expose visible links before client JavaScript loads ([#437](https://github.com/floor/material/pull/437)).
+
+### Size
+
+The drawer feature raised four package size ceilings under the standing size rule.
+
+| Budget | Previous | New |
+| --- | ---: | ---: |
+| Standalone drawer gzip | 8,652 B | 10,190 B |
+| All components gzip | 128,660 B | 130,360 B |
+| Root all-JS gzip | 131,770 B | 133,460 B |
+| Unpacked package | 5,179,000 B | 5,195,510 B |
+
 ## [3.15.3] - 2026-11-20
 
 ### Fixed
@@ -7336,7 +7353,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.15.3...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.0...HEAD
+[3.16.0]: https://github.com/floor/material/compare/v3.15.3...v3.16.0
 [3.15.3]: https://github.com/floor/material/compare/v3.15.2...v3.15.3
 [3.15.2]: https://github.com/floor/material/compare/v3.15.1...v3.15.2
 [3.15.1]: https://github.com/floor/material/compare/v3.15.0...v3.15.1
