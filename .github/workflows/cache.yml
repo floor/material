@@ -59,3 +59,4 @@ jobs:
         with:
           browsers: ${{ matrix.browsers }}
           deps-timeout: 25m
+          deps-retry-timeout: 25m

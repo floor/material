@@ -3,11 +3,15 @@
 set -euo pipefail
 
 install_from_mirror() {
-  local attempt status start
+  local attempt status start limit
   for attempt in 1 2; do
+    limit=$DEPS_TIMEOUT
+    if [[ $attempt == 2 ]]; then
+      limit=$DEPS_RETRY_TIMEOUT
+    fi
     start=$SECONDS
-    echo "System packages: mirror attempt $attempt/2 (limit $DEPS_TIMEOUT)"
-    if install_attempt; then
+    echo "System packages: mirror attempt $attempt/2 (limit $limit)"
+    if install_attempt "$attempt" "$limit"; then
       echo "System packages: mirror attempt $attempt succeeded in $((SECONDS - start))s"
       return 0
     else
@@ -21,13 +25,49 @@ install_from_mirror() {
   return "$status"
 }
 
+# Preserve the runner's suites, components, and keyrings. Change only Ubuntu
+# archive URLs, leaving other repositories and the host's source files alone.
+make_https_sources() {
+  local apt_root=$1 dest=$2 file
+  mkdir -p "$dest/sources.list.d" || return
+  if [[ -f "$apt_root/sources.list" ]]; then
+    cp "$apt_root/sources.list" "$dest/sources.list" || return
+  else
+    touch "$dest/sources.list" || return
+  fi
+  for file in "$apt_root"/sources.list.d/*.list "$apt_root"/sources.list.d/*.sources; do
+    [[ -f "$file" ]] || continue
+    cp "$file" "$dest/sources.list.d/" || return
+  done
+  for file in "$dest"/sources.list "$dest"/sources.list.d/*.list "$dest"/sources.list.d/*.sources; do
+    [[ -f "$file" ]] || continue
+    sed -E \
+      -e 's#mirror\+file:(//)?/etc/apt/apt-mirrors\.txt([[:space:]]|$)#https://archive.ubuntu.com/ubuntu/\2#g' \
+      -e 's#https?://([[:alnum:].-]+\.)?archive\.ubuntu\.com/ubuntu/?([[:space:]]|$)#https://archive.ubuntu.com/ubuntu/\2#g' \
+      "$file" > "$file.rewritten" || return
+    mv "$file.rewritten" "$file" || return
+  done
+  printf 'Dir::Etc::sourcelist "%s/sources.list";\nDir::Etc::sourceparts "%s/sources.list.d";\n' "$dest" "$dest" > "$dest/apt.conf"
+}
+
 install_attempt() {
+  local config=
+  if [[ $1 == 2 ]]; then
+    local fallback
+    fallback=$(mktemp -d "$RUNNER_TEMP/playwright-apt.XXXXXX") || return
+    make_https_sources /etc/apt "$fallback" || return
+    config="$fallback/apt.conf"
+    echo "System packages: retrying Ubuntu archives via https://archive.ubuntu.com/ubuntu/"
+  fi
   # Run the deadline as root so it can also stop apt and its child processes.
   # Repair interrupted or partially configured packages inside the same
   # deadline. Leave any archives apt fetched in place for the retry.
-  sudo DEBIAN_FRONTEND=noninteractive timeout --kill-after=15s "$DEPS_TIMEOUT" \
-    bash -c 'dpkg --configure -a || apt-get -y -f install || exit; exec "$@"' \
-    bash "${playwright[@]}" install-deps "${browsers[@]}"
+  sudo DEBIAN_FRONTEND=noninteractive timeout --kill-after=15s "$2" bash -c '
+    if [[ -n $1 ]]; then export APT_CONFIG="$1"; fi
+    shift
+    dpkg --configure -a || apt-get -y -f install || exit
+    exec "$@"
+  ' bash "$config" "${playwright[@]}" install-deps "${browsers[@]}"
 }
 
 main() {

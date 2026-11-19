@@ -193,9 +193,10 @@ jobs:
   browser:
     needs: build
     runs-on: ubuntu-24.04
-    # A group takes about four minutes. A runner that stalls fails here, and is
-    # run again, instead of holding the pull request for most of an hour.
-    timeout-minutes: 25
+    # Allow the cold Firefox/WebKit download (21 minutes measured), a shorter
+    # HTTPS retry, the eight-minute test step, and runner/cache setup.
+    # Chromium-only groups keep their previous limit.
+    timeout-minutes: ${{ contains(matrix.browsers, 'webkit') && 46 || 25 }}
     strategy:
       fail-fast: false
       matrix:
@@ -272,6 +273,8 @@ jobs:
       - uses: ./.github/actions/browsers
         with:
           browsers: ${{ matrix.browsers }}
+          deps-timeout: ${{ contains(matrix.browsers, 'webkit') && '23m' || '4m' }}
+          deps-retry-timeout: ${{ contains(matrix.browsers, 'webkit') && '10m' || '4m' }}
       # The prototype's invariants are relative to the revision this run
       # changes: a pull request's base, or the parent a push lands on. The
       # nightly run has neither, so it falls back to the checked-out commit and
