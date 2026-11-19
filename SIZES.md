@@ -19,7 +19,7 @@ these rows drift from a fresh measurement.
 | core | 7.7 KB | 3.0 KB | — |  |
 | badge | 15.4 KB | 5.3 KB | +2.2 KB |  |
 | bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
-| bottom-sheet | 19.4 KB | 7.1 KB | +4.0 KB |  |
+| bottom-sheet | 19.7 KB | 7.2 KB | +4.1 KB |  |
 | side-sheet | 17.8 KB | 6.6 KB | +3.5 KB |  |
 | button | 21.3 KB | 7.3 KB | +4.3 KB | +6.9 KB |
 | button-group | 36.0 KB | 11.8 KB | +8.7 KB | +6.9 KB |
@@ -29,7 +29,7 @@ these rows drift from a fresh measurement.
 | chips | 28.0 KB | 9.2 KB | +6.1 KB |  |
 | datepicker | 36.4 KB | 12.9 KB | +9.9 KB |  |
 | dialog | 36.9 KB | 12.1 KB | +9.1 KB | +6.9 KB |
-| divider | 9.7 KB | 3.7 KB | +0.7 KB |  |
+| divider | 9.8 KB | 3.8 KB | +0.7 KB |  |
 | drawer | 23.1 KB | 8.2 KB | +5.2 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
 | fab-menu | 22.2 KB | 8.2 KB | +5.2 KB | +10.6 KB |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 17.4 KB | 6.2 KB | +3.1 KB |  |
 | toolbar | 32.8 KB | 11.1 KB | +8.1 KB | +6.9 KB |
-| all | 395.9 KB | 125.3 KB | +122.2 KB | +2.1 KB |
+| all | 396.3 KB | 125.4 KB | +122.3 KB | +2.1 KB |
 <!-- /size-table -->
