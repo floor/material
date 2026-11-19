@@ -21,6 +21,11 @@ interface ApiOptions {
     setItems: (items: DrawerItemConfig[] | undefined) => void;
     getItems: () => DrawerItemConfig[] | undefined;
     setBadge: (id: string, badge: string) => void;
+    expandSection: (id: string) => void;
+    collapseSection: (id: string) => void;
+    toggleSection: (id: string) => void;
+    isSectionExpanded: DrawerComponent["isSectionExpanded"];
+    getExpandedSections: DrawerComponent["getExpandedSections"];
   };
   headline: {
     setHeadline: (text: string) => void;
@@ -146,6 +151,24 @@ export const withAPI =
         items.setBadge(id, badge);
         return drawerComponent;
       },
+
+      expandSection(id: string) {
+        items.expandSection(id);
+        return drawerComponent;
+      },
+
+      collapseSection(id: string) {
+        items.collapseSection(id);
+        return drawerComponent;
+      },
+
+      toggleSection(id: string) {
+        items.toggleSection(id);
+        return drawerComponent;
+      },
+
+      isSectionExpanded: items.isSectionExpanded,
+      getExpandedSections: items.getExpandedSections,
 
       // ----------------------------------------------------------------
       // Headline methods

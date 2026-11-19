@@ -891,6 +891,29 @@ The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the regis
 
 A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. The split button's chevron, selection checks and other icon slots keep their existing behavior.
 
+## Drawer links and sections
+
+Set `href` on a drawer destination to render a native link. The active destination has `aria-current="page"`. The browser handles modified clicks and navigation. In a factory `onSelect` handler, a router can cancel navigation through `originalEvent.preventDefault()`.
+
+<!-- example: fragment -->
+```html
+<m-drawer open value="drawer" headline="Components">
+  <m-drawer-item value="overview" href="/overview">Overview</m-drawer-item>
+  <m-drawer-item value="navigation" label="Navigation">
+    <m-drawer-item value="drawer" href="/components/drawer">Drawer</m-drawer-item>
+    <m-drawer-item value="tabs" href="/components/tabs">Tabs</m-drawer-item>
+  </m-drawer-item>
+</m-drawer>
+```
+
+Register the element with `defineDrawer()` from `material/elements`. Import `material/elements/css/drawer` for its shadow styles. React, Vue, Svelte, and Solid drawer adapters accept the same nested declarations. `renderElement` from `material/ssr` renders the initially visible links inside the declarative shadow root. Those links navigate without client JavaScript.
+
+In a factory, give a section an `items` array and its destinations an `href`. Sections support one level of children. A section with no children can still be a static heading with `type: "section"`.
+
+A section opens initially when marked `expanded` or when it contains the active destination. Factory `expanded: false` allows an initially collapsed section. Selecting one of its children later opens it automatically. The inline-start arrow returns focus to the header, and the inline-end arrow opens a section or enters its first enabled child.
+
+Use `expandSection(id)` and `collapseSection(id)` to change visibility. Call `toggleSection(id)` to switch between the two states. Read it with `isSectionExpanded(id)` or `getExpandedSections()`. The `expand` and `collapse` events report section state separately from destination selection. Set `--mtrl-drawer-child-indent` to change the child padding from its 28 px default.
+
 ## Bottom app bar compatibility entry
 
 The experimental `material/components/bottom-app-bar-toolbar` entry provides a bottom app bar factory with docked-toolbar styling and the legacy bar's API. Import `material/styles/bottom-app-bar-toolbar` alongside the base stylesheet, even when the page already loads the full stylesheet.

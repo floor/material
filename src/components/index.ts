@@ -153,6 +153,7 @@ export type {
   DrawerPosition,
   DrawerItemConfig,
   DrawerSelectEvent,
+  DrawerSectionEvent,
 } from "./drawer/types";
 
 // Divider

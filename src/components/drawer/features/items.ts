@@ -1,14 +1,42 @@
 // src/components/drawer/features/items.ts
 
-import { DrawerConfig, DrawerItemConfig, DrawerSelectEvent } from "../types";
-import { DRAWER_EVENTS } from "../constants";
+import { DrawerConfig, DrawerItemConfig, DrawerSelectEvent, DrawerSectionEvent } from "../types";
+import { DRAWER_CLASSES, DRAWER_EVENTS } from "../constants";
 import {
   createRipple,
-  RippleController,
 } from "../../../core/compose/features/ripple";
 
 import { setHTML } from "../../../core/dom/html";
 import { activeElementOf } from "../../../core/dom/focus";
+import { getIcon } from "../../../core/icons";
+import { safeUrl } from "../../../core/utils/url";
+
+let drawerCount = 0;
+const DEFAULT_CHEVRON = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>';
+const isDestination = (item: DrawerItemConfig) => item.type !== "divider" && item.type !== "section";
+const isSection = (item: DrawerItemConfig) => item.type !== "divider" && !!item.items?.length;
+const hasModifiers = (event: MouseEvent | KeyboardEvent) => event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
+const enabled = (element: HTMLElement) => !element.matches('[disabled], [aria-disabled="true"]');
+const visible = (element: HTMLElement) => enabled(element) && !element.closest("[inert], [hidden]");
+
+interface Section {
+  id: string;
+  index: number;
+  label: string;
+  group: HTMLElement;
+  button: HTMLElement;
+  panel: HTMLElement;
+  expanded: boolean;
+}
+interface Destination {
+  item: DrawerItemConfig;
+  element: HTMLElement;
+  parent?: Section;
+}
+
+const initialActive = (items: DrawerItemConfig[]) =>
+  items.flatMap(item => isSection(item) ? item.items! : [item])
+    .find(item => isDestination(item) && item.active && !item.disabled)?.id || null;
 
 /**
  * An empty or zero count is no badge: the same rule the standalone badge
@@ -38,6 +66,11 @@ export interface ItemsFeature {
     setItems: (items: DrawerItemConfig[]) => void;
     getItems: () => DrawerItemConfig[];
     setBadge: (id: string, badge: string) => void;
+    expandSection: (id: string) => void;
+    collapseSection: (id: string) => void;
+    toggleSection: (id: string) => void;
+    isSectionExpanded: (id: string) => boolean;
+    getExpandedSections: () => string[];
     renderItems: () => void;
     destroy: () => void;
   };
@@ -50,9 +83,16 @@ const createItemElement = (
   item: DrawerItemConfig,
   getClass: (name: string) => string,
 ): HTMLElement => {
-  const el = document.createElement("button");
-  el.className = getClass("drawer__item");
-  el.type = "button";
+  const { href } = item;
+  const el = document.createElement(href === undefined ? "button" : "a");
+  el.className = getClass(DRAWER_CLASSES.ITEM);
+  if (href !== undefined) {
+    if (item.disabled) el.setAttribute("role", "link");
+    else el.setAttribute("href", safeUrl(href) || (href ? "about:blank" : ""));
+  } else {
+    el.setAttribute("type", "button");
+    if (item.disabled) el.setAttribute("disabled", "");
+  }
   el.setAttribute("tabindex", item.disabled ? "-1" : "0");
 
   if (item.id) {
@@ -60,7 +100,6 @@ const createItemElement = (
   }
 
   if (item.disabled) {
-    el.disabled = true;
     el.setAttribute("aria-disabled", "true");
   }
 
@@ -136,239 +175,252 @@ const createSectionElement = (
  * @returns Component enhancer function
  */
 export const withItems =
-  (config: DrawerConfig) =>
+  (config: DrawerConfig, shadow: boolean) =>
   <C extends ItemsBaseComponent>(component: C): C & ItemsFeature => {
-    let currentItems: DrawerItemConfig[] = config.items || [];
-    let activeId: string | null = null;
-    let itemsContainer: HTMLElement | null = null;
+    const cls = component.getClass;
+    const itemsContainer = document.createElement("div");
+    itemsContainer.className = cls(DRAWER_CLASSES.ITEMS);
+    let currentItems = config.items ?? [];
+    let activeId = initialActive(currentItems);
+    let destinations: Destination[] = [];
+    let instance: number | undefined;
+    const sections = new Map<string, Section>();
 
-    // One ripple controller serves every item; the press ripple is clipped
-    // to the item shape by CSS so it reads as part of the active indicator.
-    const ripple: RippleController | null =
-      config.ripple !== false ? createRipple() : null;
+    // Capture the registry value at creation, as with other drawer icons.
+    const chevronMarkup = getIcon("expand-more", DEFAULT_CHEVRON);
+    const ripple = config.ripple !== false ? createRipple() : null;
     let rippled: HTMLElement[] = [];
     const unmountRipples = (): void => {
-      rippled.forEach((element) => ripple?.unmount(element));
+      rippled.forEach(element => ripple?.unmount(element));
       rippled = [];
     };
+    const mountRipple = (element: HTMLElement, disabled?: boolean): void => {
+      if (!ripple || disabled) return;
+      ripple.mount(element);
+      rippled.push(element);
+    };
 
-    // Find initial active item
-    const initialActive = currentItems.find(
-      (item) =>
-        item.type !== "divider" && item.type !== "section" && item.active && !item.disabled,
-    );
-    if (initialActive?.id) {
-      activeId = initialActive.id;
-    }
+    const paintSection = (section: Section, expanded: boolean): void => {
+      section.expanded = expanded;
+      section.button.setAttribute("aria-expanded", String(expanded));
+      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_EXPANDED), expanded);
+      section.group.classList.toggle(cls("drawer__group--expanded"), expanded);
+      section.panel.toggleAttribute("inert", !expanded);
+    };
+    const paintParent = (section: Section, active: boolean): void => {
+      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_HAS_ACTIVE), active);
+    };
 
-    /**
-     * Renders all items into the items container
-     */
+    const setExpanded = (section: Section | undefined, expanded: boolean, event?: Event): void => {
+      if (!section || section.expanded === expanded) return;
+      if (!expanded && section.panel.contains(activeElementOf(itemsContainer))) {
+        (enabled(section.button) ? section.button : component.element).focus();
+      }
+      paintSection(section, expanded);
+      currentItems = currentItems.map((item, index) => index === section.index ? { ...item, expanded } : item);
+      const detail: DrawerSectionEvent = {
+        id: section.id, value: section.id, label: section.label, expanded,
+        ...(event && { originalEvent: event }),
+      };
+      component.emit(expanded ? DRAWER_EVENTS.EXPAND : DRAWER_EVENTS.COLLAPSE, detail);
+    };
+
+    const mapItems = (map: (item: DrawerItemConfig) => DrawerItemConfig): void => {
+      currentItems = currentItems.map(item => {
+        const next = map(item);
+        return isSection(item) ? { ...next, items: item.items!.map(map) } : next;
+      });
+    };
+
+    const setActive = (id: string): void => {
+      const target = id ? destinations.find(({ item }) => item.id === id && !item.disabled) : undefined;
+      if (id && !target) return;
+      activeId = target ? id : null;
+      for (const row of destinations) {
+        const active = row === target;
+        row.element.classList.toggle(cls("drawer__item--active"), active);
+        if (active) row.element.setAttribute("aria-current", "page");
+        else row.element.removeAttribute("aria-current");
+        const icon = row.element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_ICON)}`);
+        if (icon) setHTML(icon, active && row.item.activeIcon ? row.item.activeIcon : row.item.icon);
+      }
+      for (const section of sections.values()) paintParent(section, section === target?.parent);
+      if (target?.parent && !target.parent.expanded) paintSection(target.parent, true);
+      mapItems(item => ({ ...item, active: item.id === id }));
+    };
+
     const renderItems = (): void => {
-      if (!itemsContainer) return;
-
-      // Clear existing items
       unmountRipples();
       itemsContainer.replaceChildren();
+      destinations = [];
+      sections.clear();
+      const usedDomIds = new Set<string>();
+      const namedSections = new Set(currentItems.filter(isSection).map(item => item.id));
+      let sectionIndex = 0;
 
-      let navIndex = 0;
-
-      currentItems.forEach((item) => {
-        const type = item.type || "item";
-
-        if (type === "divider") {
-          itemsContainer!.appendChild(createDividerElement(component.getClass));
+      const renderItem = (item: DrawerItemConfig, container: HTMLElement, parent?: Section): void => {
+        if (item.type === "divider") {
+          container.append(createDividerElement(cls));
           return;
         }
-
-        if (type === "section") {
-          itemsContainer!.appendChild(
-            createSectionElement(item, component.getClass),
-          );
+        if (item.type === "section") {
+          container.append(createSectionElement(item, cls));
           return;
         }
-
-        // Navigation item
-        const itemEl = createItemElement({ ...item, active: !!activeId && item.id === activeId }, component.getClass);
-        itemEl.dataset.navIndex = String(navIndex);
-        navIndex++;
-
-        // Click handler
-        itemEl.addEventListener("click", (e: Event) => {
-          if (item.id && !item.disabled) {
-            setActive(item.id);
-
-            const selectEvent: DrawerSelectEvent = {
-              id: item.id,
-              value: item.id,
-              label: item.label || "",
-              index: parseInt(itemEl.dataset.navIndex || "0", 10),
-              originalEvent: e,
-            };
-
-            component.emit(DRAWER_EVENTS.SELECT, selectEvent);
+        const active = !!activeId && item.id === activeId && !item.disabled;
+        const element = createItemElement({ ...item, active }, cls);
+        const index = destinations.length;
+        element.dataset.navIndex = String(index);
+        if (parent) {
+          element.classList.add(cls(DRAWER_CLASSES.ITEM_CHILD));
+          element.dataset.parentId = parent.id;
+        }
+        destinations.push({ item, element, parent });
+        element.addEventListener("click", (event) => {
+          if (item.disabled) {
+            event.preventDefault();
+            return;
           }
+          if (item.href !== undefined && (hasModifiers(event) || event.button !== 0)) return;
+          if (!item.id) return;
+          setActive(item.id);
+          const detail: DrawerSelectEvent = { id: item.id, value: item.id, label: item.label || "", index, originalEvent: event };
+          component.emit(DRAWER_EVENTS.SELECT, detail);
         });
+        mountRipple(element, item.disabled);
+        container.append(element);
+      };
 
-        if (ripple && !item.disabled) {
-          ripple.mount(itemEl);
-          rippled.push(itemEl);
+      currentItems.forEach((item, index) => {
+        if (!isSection(item)) {
+          renderItem(item, itemsContainer);
+          return;
         }
 
-        itemsContainer!.appendChild(itemEl);
+        let id = item.id;
+        if (!id) {
+          do { id = String(sectionIndex++); } while (namedSections.has(id));
+        }
+        const slug = id.replace(/[^\w-]+/g, "-");
+        // Shadow roots scope ID references. Light-DOM instances can share
+        // item ids, so give each factory drawer a document-wide namespace.
+        const scope = shadow ? "" : `${instance ??= ++drawerCount}-`;
+        const base = cls(`drawer-sec-${scope}${slug}`);
+        let prefix = base;
+        for (let suffix = 1; usedDomIds.has(prefix); suffix++) prefix = `${base}-${suffix}`;
+        usedDomIds.add(prefix);
+
+        const label = item.label || item.sectionLabel || "";
+        const group = document.createElement("div");
+        group.className = cls(DRAWER_CLASSES.GROUP);
+        group.dataset.sectionId = id;
+        const button = createItemElement({ ...item, id, label, href: undefined, active: false }, cls);
+        button.id = `${prefix}-btn`;
+        button.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE));
+        const chevron = document.createElement("span");
+        chevron.className = cls(DRAWER_CLASSES.ITEM_CHEVRON);
+        chevron.setAttribute("aria-hidden", "true");
+        setHTML(chevron, chevronMarkup);
+        button.append(chevron);
+
+        const panel = document.createElement("div");
+        panel.className = cls(DRAWER_CLASSES.GROUP_ITEMS);
+        panel.id = `${prefix}-panel`;
+        panel.setAttribute("role", "group");
+        panel.setAttribute("aria-labelledby", button.id);
+        button.setAttribute("aria-controls", panel.id);
+        const inner = document.createElement("div");
+        inner.className = cls(DRAWER_CLASSES.GROUP_ITEMS_INNER);
+        panel.append(inner);
+        group.append(button, panel);
+        itemsContainer.append(group);
+
+        const section: Section = { id, index, label, group, button, panel, expanded: false };
+        sections.set(id, section);
+        item.items!.forEach(child => renderItem(child, inner, section));
+        const active = !!activeId && item.items!.some(child => isDestination(child) && !child.disabled && child.id === activeId);
+        paintParent(section, active);
+        paintSection(section, item.expanded ?? active);
+        button.addEventListener("click", event => {
+          if (!item.disabled) setExpanded(section, !section.expanded, event);
+        });
+        mountRipple(button, item.disabled);
       });
     };
 
-    /**
-     * Shows the item's active icon while it is the active destination, and its
-     * own icon otherwise: the navigation rail's swap, mirrored here for the
-     * drawer's optional icons.
-     */
-    const swapIcon = (element: HTMLElement, active: boolean): void => {
-      const item = currentItems.find((entry) => entry.id === element.dataset.id);
-      const iconEl = element.querySelector<HTMLElement>(`.${component.getClass("drawer__item-icon")}`);
-      if (!item || !iconEl) return;
-      setHTML(iconEl, active && item.activeIcon ? item.activeIcon : item.icon);
-    };
-
-    /**
-     * Sets the active item by id
-     */
-    const setActive = (id: string): void => {
-      if (!itemsContainer) return;
-
-      const activeClass = `${component.getClass("drawer__item")}--active`;
-
-      const allItems = [...itemsContainer.querySelectorAll<HTMLElement>(`.${component.getClass("drawer__item")}`)];
-      const target = allItems.find(element => element.dataset.id === id && !element.hasAttribute("disabled"));
-      if (id && !target) return;
-      allItems.forEach(element => {
-        element.classList.toggle(activeClass, element === target);
-        if (element === target) element.setAttribute("aria-current", "page");
-        else element.removeAttribute("aria-current");
-        swapIcon(element, element === target);
-      });
-      activeId = target ? id : null;
-
-      // Update the items config to reflect new active state
-      currentItems = currentItems.map((item) => ({
-        ...item,
-        active: item.id === id,
-      }));
-    };
-
-    /**
-     * Gets the active item id
-     */
-    const getActive = (): string | null => activeId;
-
-    /**
-     * Sets the items and re-renders
-     */
     const setItems = (items: DrawerItemConfig[]): void => {
       currentItems = items;
-
-      // Recalculate active id
-      const active = items.find(
-        (item) =>
-          item.type !== "divider" && item.type !== "section" && item.active && !item.disabled,
-      );
-      activeId = active?.id || null;
-
+      activeId = initialActive(items);
       renderItems();
     };
 
-    /**
-     * Gets the current items configuration
-     */
-    const getItems = (): DrawerItemConfig[] => currentItems;
-
-    /**
-     * Sets badge text on a specific item
-     */
     const setBadge = (id: string, badge: string): void => {
-      if (!itemsContainer) return;
+      const section = sections.get(id);
+      const element = section?.button ?? destinations.find(row => row.element.dataset.id === id)?.element;
+      if (!element) return;
 
-      const itemEl = [...itemsContainer.querySelectorAll<HTMLElement>("[data-id]")].find(element => element.dataset.id === id);
-      if (!itemEl) return;
-
-      let badgeEl = itemEl.querySelector(
-        `.${component.getClass("drawer__item-badge")}`,
-      ) as HTMLElement;
-
-      // An empty or zero count clears the badge.
+      let badgeElement = element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_BADGE)}`);
       if (hasBadge(badge)) {
-        if (!badgeEl) {
-          badgeEl = document.createElement("span");
-          badgeEl.className = component.getClass("drawer__item-badge");
-          itemEl.appendChild(badgeEl);
+        if (!badgeElement) {
+          badgeElement = document.createElement("span");
+          badgeElement.className = cls(DRAWER_CLASSES.ITEM_BADGE);
+          element.insertBefore(badgeElement, element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_CHEVRON)}`));
         }
-        badgeEl.textContent = badge;
-      } else if (badgeEl) {
-        badgeEl.remove();
-      }
-
-      // Update items config
-      currentItems = currentItems.map((item) =>
-        item.id === id ? { ...item, badge } : item,
-      );
+        badgeElement.textContent = badge;
+      } else badgeElement?.remove();
+      if (section && currentItems[section.index].id !== id) {
+        currentItems = currentItems.map((item, index) => index === section.index ? { ...item, badge } : item);
+      } else mapItems(item => item.id === id ? { ...item, badge } : item);
     };
 
-    // Setup keyboard navigation within items
-    const handleKeydown = (e: KeyboardEvent): void => {
-      if (!itemsContainer) return;
+    const visibleItems = (container: HTMLElement): HTMLElement[] =>
+      [...container.querySelectorAll<HTMLElement>(`.${cls(DRAWER_CLASSES.ITEM)}`)].filter(visible);
 
-      const items = Array.from(
-        itemsContainer.querySelectorAll(
-          `.${component.getClass("drawer__item")}:not([disabled])`,
-        ),
-      ) as HTMLElement[];
-
+    const handleKeydown = (event: KeyboardEvent): void => {
+      const { key } = event;
+      const items = visibleItems(itemsContainer);
       if (!items.length) return;
+      const current = activeElementOf(itemsContainer) as HTMLElement;
+      const index = items.indexOf(current);
+      let next: HTMLElement | undefined;
 
-      const currentIndex = items.indexOf(activeElementOf(itemsContainer) as HTMLElement);
-
-      let nextIndex = -1;
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-          break;
-        case "Home":
-          e.preventDefault();
-          nextIndex = 0;
-          break;
-        case "End":
-          e.preventDefault();
-          nextIndex = items.length - 1;
-          break;
+      switch (key) {
+        case "ArrowDown": next = items[(index + 1) % items.length]; break;
+        case "ArrowUp": next = items[index > 0 ? index - 1 : items.length - 1]; break;
+        case "Home": next = items[0]; break;
+        case "End": next = items.at(-1); break;
         case "Enter":
         case " ":
-          e.preventDefault();
-          if (currentIndex >= 0) {
-            items[currentIndex].click();
+          if (key === "Enter" && current?.localName === "a" && hasModifiers(event)) return;
+          event.preventDefault();
+          if (index >= 0) {
+            const section = sections.get(current.dataset.id ?? "");
+            if (section?.button === current) setExpanded(section, !section.expanded, event);
+            else current.click();
           }
           return;
-        default:
+        case "ArrowRight":
+        case "ArrowLeft": {
+          if (index < 0 || !sections.size) return;
+          const opens = key === (itemsContainer.matches(":dir(rtl)") ? "ArrowLeft" : "ArrowRight");
+          const section = sections.get(current.dataset.id ?? "");
+          const parent = sections.get(current.dataset.parentId ?? "");
+          if (section?.button === current) {
+            event.preventDefault();
+            if (opens && section.expanded) visibleItems(section.panel)[0]?.focus();
+            else setExpanded(section, opens, event);
+          } else if (!opens && parent && enabled(parent.button)) {
+            event.preventDefault();
+            parent.button.focus();
+          }
           return;
+        }
+        default: return;
       }
-
-      if (nextIndex >= 0 && nextIndex < items.length) {
-        items[nextIndex].focus();
-      }
+      event.preventDefault();
+      next?.focus();
     };
-
-    // Create the items container and render
-    itemsContainer = document.createElement("div");
-    itemsContainer.className = component.getClass("drawer__items");
-
     itemsContainer.addEventListener("keydown", handleKeydown);
-
     renderItems();
 
     return {
@@ -376,10 +428,18 @@ export const withItems =
       itemsContainer,
       drawerItems: {
         setActive,
-        getActive,
+        getActive: () => activeId,
         setItems,
-        getItems,
+        getItems: () => currentItems,
         setBadge,
+        expandSection: id => setExpanded(sections.get(id), true),
+        collapseSection: id => setExpanded(sections.get(id), false),
+        toggleSection: id => {
+          const section = sections.get(id);
+          if (section) setExpanded(section, !section.expanded);
+        },
+        isSectionExpanded: id => sections.get(id)?.expanded ?? false,
+        getExpandedSections: () => [...sections.values()].filter(section => section.expanded).map(section => section.id),
         renderItems,
         destroy: unmountRipples,
       },

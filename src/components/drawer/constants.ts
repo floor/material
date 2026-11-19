@@ -42,6 +42,8 @@ export const DRAWER_EVENTS = {
   CLOSE: "close",
   /** Fired when a navigation item is selected */
   SELECT: "select",
+  EXPAND: "expand",
+  COLLAPSE: "collapse",
 } as const;
 
 /**
@@ -66,6 +68,14 @@ export const DRAWER_CLASSES = {
   ITEM_LABEL: "drawer__item-label",
   /** Item badge */
   ITEM_BADGE: "drawer__item-badge",
+  GROUP: "drawer__group",
+  GROUP_ITEMS: "drawer__group-items",
+  GROUP_ITEMS_INNER: "drawer__group-items-inner",
+  ITEM_EXPANDABLE: "drawer__item--expandable",
+  ITEM_EXPANDED: "drawer__item--expanded",
+  ITEM_CHILD: "drawer__item--child",
+  ITEM_HAS_ACTIVE: "drawer__item--has-active",
+  ITEM_CHEVRON: "drawer__item-chevron",
   /** Active indicator shape */
   ACTIVE_INDICATOR: "drawer__active-indicator",
   /** Dense/compact variant */

@@ -1,3 +1,4 @@
+import type { ItemsFeature } from "./features/items";
 // src/components/drawer/config.ts
 import {
   createComponentConfig,
@@ -100,15 +101,7 @@ export const getApiConfig = (comp: {
     toggle: () => void;
     isOpen: () => boolean;
   };
-  drawerItems: {
-    setActive: (id: string) => void;
-    getActive: () => string | null;
-    // The adapter below normalizes undefined before calling the item feature.
-    setItems: (items: NonNullable<DrawerConfig["items"]>) => void;
-    getItems: () => DrawerConfig["items"];
-    setBadge: (id: string, badge: string) => void;
-    destroy: () => void;
-  };
+  drawerItems: ItemsFeature["drawerItems"];
   drawerHeadline: {
     setHeadline: (text: string) => void;
     getHeadline: () => string;
@@ -132,6 +125,11 @@ export const getApiConfig = (comp: {
     getItems: () => comp.drawerItems.getItems(),
     setBadge: (id: string, badge: string) =>
       comp.drawerItems.setBadge(id, badge),
+    expandSection: comp.drawerItems.expandSection,
+    collapseSection: comp.drawerItems.collapseSection,
+    toggleSection: comp.drawerItems.toggleSection,
+    isSectionExpanded: comp.drawerItems.isSectionExpanded,
+    getExpandedSections: comp.drawerItems.getExpandedSections,
   },
   headline: {
     setHeadline: (text: string) => comp.drawerHeadline.setHeadline(text),

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { renderElement } from '../dist/ssr/index.js';
 import type { DrawerComponent, DrawerConfig } from '../src/components/drawer/types';
 
 declare global {
@@ -17,10 +18,35 @@ await mkdir(artifacts, { recursive: true });
 const bundle = await Bun.build({ entrypoints: [resolve('src/components/drawer/index.ts')], target: 'browser', minify: true });
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
+const sections = `
+  <m-drawer-item value="home" href="#home">Home</m-drawer-item>
+  <m-drawer-item value="navigation">Navigation
+    <m-drawer-item value="drawer" href="#drawer">Drawer</m-drawer-item>
+    <m-drawer-item value="tabs" href="#tabs">Tabs</m-drawer-item>
+    <m-drawer-item value="disabled" href="#disabled" disabled>Unavailable</m-drawer-item>
+  </m-drawer-item>
+  <m-drawer-item value="containment" label="Containment">
+    <m-drawer-item value="card" href="#card">Card</m-drawer-item>
+  </m-drawer-item>`;
+const shadowDrawer = renderElement("m-drawer", { open: true, value: "drawer" }, sections);
+
 const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   const path = new URL(request.url).pathname;
   if (path === '/drawer.js') return new Response(js, { headers: { 'Content-Type': 'text/javascript' } });
   if (path === '/styles.css') return new Response(Bun.file('dist/styles.css'));
+  if (path.startsWith("/dist/")) return new Response(Bun.file(path.slice(1)), { headers: { "Content-Type": "text/javascript" } });
+  if (path === "/sections") {
+    const variant = new URL(request.url).searchParams.get("variant");
+    const markup = variant === "server" ? shadowDrawer :
+      `<m-drawer open value="drawer" ${variant === "modal" ? "modal dense" : ""}>${sections}</m-drawer>`;
+    return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+      <body>${markup}<span id="tabs">Tabs destination</span><button id="outside">Outside</button>
+      <script type="module">
+        import "/dist/elements/css/drawer.js";
+        import { defineDrawer } from "/dist/elements/index.js";
+        defineDrawer();
+      </script></body></html>`, { headers: { "Content-Type": "text/html" } });
+  }
   return new Response(`<!doctype html><html><head><link rel="stylesheet" href="/styles.css"><style>body{margin:0;height:100vh}main{padding:24px}</style></head><body><main><button id="opener">Navigation</button><button id="outside">Outside</button></main>
   <script type="module">import createDrawer from '/drawer.js';
   window.mountDrawer = config => { window.drawer?.destroy(); window.drawer=createDrawer({headline:'Mail',items:[{id:'inbox',label:'Inbox',badge:'24',active:true},{id:'sent',label:'Sent'},{type:'divider'},{type:'section',label:'Labels'},{id:'family',label:'Family'}],...config});document.body.append(window.drawer.element); };
@@ -89,5 +115,99 @@ try {
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   assert.equal(await page.locator('main[inert]').count(), 0);
   assert.deepEqual(errors, []);
+  const url = (variant: string): string => `http://127.0.0.1:${server.port}/sections?variant=${variant}`;
+  const still = await browser.newPage({ javaScriptEnabled: false, reducedMotion: "reduce" });
+  await still.goto(url("server"));
+  const before = still.getByRole("button", { name: "Navigation", exact: true });
+  assert.equal(await before.getAttribute("id"), "mtrl-drawer-sec-navigation-btn");
+  assert.equal(await before.getAttribute("aria-expanded"), "true");
+  assert.equal(await still.getByRole("link", { name: "Drawer" }).getAttribute("aria-current"), "page");
+  assert.equal(await still.getByRole("link", { name: "Card" }).count(), 0);
+  await still.getByRole("link", { name: "Tabs" }).click();
+  assert.equal(new URL(still.url()).hash, "#tabs", "server-rendered link navigates with JavaScript off");
+  await still.close();
+
+  for (const variant of ["standard", "modal", "server"]) {
+    await page.goto(url(variant));
+    await page.waitForFunction(() => !!document.querySelector("m-drawer")?.component);
+    const host = page.locator("m-drawer");
+    const sheet = host.getByRole(variant === "modal" ? "dialog" : "navigation");
+    const navigation = sheet.getByRole("button", { name: "Navigation", exact: true });
+    const containment = sheet.getByRole("button", { name: "Containment" });
+    const drawer = sheet.getByRole("link", { name: "Drawer", exact: true });
+    if (variant === "modal") assert.equal(await sheet.evaluate(node => node.matches(":modal")), true);
+    assert.equal(await navigation.getAttribute("id"), "mtrl-drawer-sec-navigation-btn");
+    assert.equal(await navigation.getAttribute("aria-expanded"), "true");
+    assert.equal(await drawer.getAttribute("aria-current"), "page");
+    assert.equal(await sheet.getByRole("link", { name: "Card" }).count(), 0);
+    assert.equal(await sheet.getByRole("link", { name: "Unavailable" }).getAttribute("aria-disabled"), "true");
+    assert.equal(await drawer.evaluate(node => node.getBoundingClientRect().height), variant === "modal" ? 36 : 56);
+
+    const cdp = await page.context().newCDPSession(page);
+    const { nodes } = await cdp.send("Accessibility.getFullAXTree");
+    assert(nodes.some(node => !node.ignored && node.role?.value === "link" && node.name?.value === "Drawer"), variant);
+    assert(!nodes.some(node => !node.ignored && node.role?.value === "link" && node.name?.value === "Card"), variant);
+    await cdp.detach();
+
+    await navigation.focus();
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await drawer.evaluate(node => node.matches(":focus")), true);
+    await page.keyboard.press("End");
+    assert.equal(await containment.evaluate(node => node.matches(":focus")), true);
+    await page.keyboard.press("Tab");
+    const tabTarget = variant === "modal" ? sheet.getByRole("link", { name: "Home" }) : page.locator("#outside");
+    assert.equal(await tabTarget.evaluate(node => node.matches(":focus")), true, variant);
+    await containment.focus();
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await containment.getAttribute("aria-expanded"), "true");
+    await page.keyboard.press("ArrowRight");
+    const card = sheet.getByRole("link", { name: "Card" });
+    assert.equal(await card.evaluate(node => node.matches(":focus")), true);
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await containment.evaluate(node => node.matches(":focus")), true);
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await containment.getAttribute("aria-expanded"), "false");
+    await page.keyboard.press("Enter");
+    assert.equal(await containment.getAttribute("aria-expanded"), "true");
+    await page.keyboard.press("Space");
+    assert.equal(await containment.getAttribute("aria-expanded"), "false");
+
+    const reflection = await host.evaluate((node: HTMLElementTagNameMap["m-drawer"]) => {
+      const declaration = node.querySelector('m-drawer-item[value="containment"]')!;
+      const log: unknown[] = [];
+      node.addEventListener("expand", event =>
+        log.push([(event as CustomEvent).detail, declaration.hasAttribute("expanded"), node.value]));
+      node.expandSection("containment");
+      node.collapseSection("containment");
+      node.value = "card";
+      return { log, expanded: node.getExpandedSections() };
+    });
+    assert.deepEqual(reflection, { log: [[{ value: "containment", expanded: true }, true, "drawer"]], expanded: ["navigation", "containment"] });
+    assert.equal(await card.getAttribute("aria-current"), "page");
+    await host.locator('m-drawer-item[value="card"]').evaluate(node => node.setAttribute("label", "Card details"));
+    await page.waitForFunction(() => document.querySelector("m-drawer")?.shadowRoot?.querySelector('[data-id="card"]')?.textContent?.includes("Card details"));
+    assert.equal(await containment.getAttribute("aria-expanded"), "true");
+    const updatedCard = sheet.getByRole("link", { name: "Card details" });
+
+    await page.evaluate(() => { document.documentElement.dir = "rtl"; });
+    assert.deepEqual(await updatedCard.evaluate(node => {
+      const style = getComputedStyle(node);
+      return [style.paddingLeft, style.paddingRight];
+    }), ["24px", "44px"]);
+    await containment.focus();
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await updatedCard.evaluate(node => node.matches(":focus")), true);
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await containment.getAttribute("aria-expanded"), "false");
+    assert.equal(await containment.locator(".mtrl-drawer__item-chevron").evaluate(node => getComputedStyle(node).transitionProperty), "none");
+    assert.equal(await host.locator(".mtrl-drawer__group-items").first().evaluate(node => getComputedStyle(node).transitionProperty), "none");
+
+    await page.emulateMedia({ forcedColors: "active" });
+    assert.equal(await containment.locator(".mtrl-drawer__active-indicator").evaluate(node => getComputedStyle(node).outlineStyle), "solid");
+    await page.emulateMedia({ forcedColors: "none" });
+  }
+  assert.deepEqual(errors, []);
+  console.log("Passed drawer links, no-JS navigation, initial section state, AX visibility, native focus, LTR/RTL disclosure keys, forced colors and reduced motion.");
   console.log(`Passed ${scenes} drawer scenes, modal keyboard/scrim interaction, standard layout, reduced motion, and 40 teardown cycles.`);
 } finally { await browser.close(); server.stop(true); }
