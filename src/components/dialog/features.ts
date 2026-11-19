@@ -166,7 +166,7 @@ export const withStructure =
   // caller that appends the public element itself mounts it outside the scrim
   // whose CSS hides it, and an opacity-0 dialog is still announced and still
   // reachable; open() and close() own this from here.
-  component.element.setAttribute("inert", "");
+  component.element.inert = true;
 
   // Name and describe the dialog by its own content
   if (config.title) {
@@ -762,7 +762,7 @@ export const withVisibility =
       // Open from here on. A close still on its way out is abandoned: the
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
-      component.element.removeAttribute("inert");
+      component.element.inert = false;
       clearTimeout(afterCloseTimer);
       afterOpenWaiting = false;
       focusPending = false;
@@ -841,7 +841,7 @@ export const withVisibility =
 
       // Closed, and out of the accessibility tree and the Tab order at once:
       // the exit keeps painting, nothing is announced or reachable in it
-      component.element.setAttribute("inert", "");
+      component.element.inert = true;
 
       // Out of the top layer first: the page is inert until then, and focus
       // could not go back to it. The stylesheet keeps it painted, in the top
