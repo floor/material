@@ -214,6 +214,8 @@ try {
   for (const peer of Object.keys(published.peerDependencies)) {
     assert(published.peerDependenciesMeta[peer]?.optional, `${peer} is not an optional peer: both READMEs say each framework is`);
   }
+  // solid-js 2 drops solid-js/web, which material/solid imports.
+  assert.equal(published.peerDependencies["solid-js"], ">=1.8 <2");
   // "the 37 components": the components `bun run size` measures (scripts/size.ts),
   // one `./components/<name>` entry each. A rootless entry ships at its subpath
   // but not from the root, so it has no root-import size budget and is not one

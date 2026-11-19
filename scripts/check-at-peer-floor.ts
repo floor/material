@@ -27,11 +27,17 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readdir, rm } from "node:fs/promises";
 
-/** The lowest version a `>=` range allows: `>=1.8` is `1.8.0`. */
+/** The lowest version a `>=` range allows: `>=1.8` is `1.8.0`. An upper bound (`>=1.8 <2`) does not change the floor. */
 export const floorOf = (range: string): string => {
-  const match = /^>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?$/.exec(range.trim());
+  const match = /^>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:\s+<\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?)?$/.exec(range.trim());
   if (!match) throw new TypeError(`Not a ">=" range, so it has no single floor: ${range}`);
-  return [match[1], match[2] ?? "0", match[3] ?? "0"].join(".");
+  const floor = [Number(match[1]), Number(match[2] ?? "0"), Number(match[3] ?? "0")];
+  if (match[4] !== undefined) {
+    const cap = [Number(match[4]), Number(match[5] ?? "0"), Number(match[6] ?? "0")];
+    const below = floor[0] < cap[0] || (floor[0] === cap[0] && (floor[1] < cap[1] || (floor[1] === cap[1] && floor[2] < cap[2])));
+    if (!below) throw new TypeError(`The upper bound is not above the floor: ${range}`);
+  }
+  return floor.join(".");
 };
 
 /**

@@ -10,13 +10,14 @@ import { floorOf, versionsFor } from "../../scripts/check-at-peer-floor";
 describe("floorOf", () => {
   test("is the lowest version a >= range allows", () => {
     expect(floorOf(">=1.8")).toBe("1.8.0");
+    expect(floorOf(">=1.8 <2")).toBe("1.8.0");
     expect(floorOf(">=3.3")).toBe("3.3.0");
     expect(floorOf(">=18")).toBe("18.0.0");
     expect(floorOf(">= 5.2.1")).toBe("5.2.1");
   });
 
   test("refuses a range with no single floor", () => {
-    for (const range of ["^3.5", "~1.8", "1.8", ">=1.8 <2", "*", ""]) expect(() => floorOf(range)).toThrow(TypeError);
+    for (const range of ["^3.5", "~1.8", "1.8", ">=2 <2", "*", ""]) expect(() => floorOf(range)).toThrow(TypeError);
   });
 
   test("reads the floor of every peer the floor scripts name", async () => {
@@ -29,6 +30,7 @@ describe("floorOf", () => {
       const peer = /check-at-peer-floor\.ts (\S+)/.exec(command)![1];
       expect(floorOf(peerDependencies[peer])).toMatch(/^\d+\.\d+\.\d+$/);
     }
+    expect(peerDependencies["solid-js"]).toBe(">=1.8 <2");
     expect(floorOf(peerDependencies["solid-js"])).toBe("1.8.0");
     expect(floorOf(peerDependencies.vue)).toBe("3.4.20");
     expect(floorOf(peerDependencies.react)).toBe("18.0.0");
