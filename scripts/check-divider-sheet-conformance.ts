@@ -7,7 +7,7 @@
 // stylesheet compiled for this run, with reduced motion so springs settle.
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { compileString } from "sass";
 
 const repoRoot = resolve(import.meta.dir, "..");
@@ -46,9 +46,9 @@ const bundle = await Bun.build({
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0]!.text();
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 480, height: 600 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 480, height: 600 }, reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setContent(`<!doctype html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body></body></html>`);
