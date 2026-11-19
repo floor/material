@@ -57,6 +57,24 @@ afterEach(() => {
 });
 
 describe('dialog', () => {
+  // JSDOM has no `inert` reflection, so the attribute is asserted in the
+  // Chromium check; the aria half of the closed pair is testable here.
+  test('a never-opened dialog is aria-hidden, and open/close swap it', () => {
+    const dialog = createDialog({ title: 'Rest dialog', buttons });
+    expect(dialog.element.getAttribute('aria-hidden')).toBe('true');
+    dialog.open();
+    expect(dialog.element.hasAttribute('aria-hidden')).toBe(false);
+    dialog.close();
+    expect(dialog.element.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  test('a dialog created open carries no aria-hidden, and a close adds it', () => {
+    const dialog = createDialog({ title: 'Already open', open: true, buttons });
+    expect(dialog.element.hasAttribute('aria-hidden')).toBe(false);
+    dialog.close();
+    expect(dialog.element.getAttribute('aria-hidden')).toBe('true');
+  });
+
   test('the dialog carries the role and the modal flag, not the scrim behind it', () => {
     const dialog = createDialog({ title: 'Delete file?', content: 'This cannot be undone.', buttons });
     const el = dialog.element;

@@ -39,6 +39,16 @@ afterEach(() => {
 });
 
 describe('snackbar', () => {
+  // JSDOM has no `inert` reflection, so that half is asserted in Chromium.
+  test('a never-shown snackbar is aria-hidden, and show/hide swap it', () => {
+    const bar = createSnackbar({ message: 'Saved', action: 'Undo', duration: 'indefinite' });
+    expect(bar.element.getAttribute('aria-hidden')).toBe('true');
+    bar.show();
+    expect(bar.element.hasAttribute('aria-hidden')).toBe(false);
+    bar.hide();
+    expect(bar.element.getAttribute('aria-hidden')).toBe('true');
+  });
+
   test('is a status live region with the message, positioned by a class', () => {
     const snackbar = createSnackbar({ message: 'Saved' });
     const el = snackbar.element;

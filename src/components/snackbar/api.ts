@@ -39,6 +39,7 @@ export const withAPI =
     // show(). `inert` is what keeps it out of both; open() and close() own it
     // from here.
     element.inert = true;
+    element.setAttribute("aria-hidden", "true");
 
     // What the queue holds while this snackbar waits or shows
     let entry: QueuedSnackbar | null = null;
@@ -162,6 +163,7 @@ export const withAPI =
       // Closed, out of the accessibility tree and the Tab order at once: the
       // exit keeps painting, nothing in it is announced or reachable.
       element.inert = true;
+      element.setAttribute("aria-hidden", "true");
       scheduleRemoval();
 
       emit('close', { reason, originalEvent });
@@ -173,6 +175,7 @@ export const withAPI =
       api.state = 'visible';
       // On screen from here: the closed state's guards come off
       element.inert = false;
+      element.removeAttribute("aria-hidden");
       cancelRemoval();
       previouslyFocused = deepActiveElement();
       if (topLayer) {
