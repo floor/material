@@ -7960,7 +7960,15 @@ try {
           ...(await read()),
           ...(await page.evaluate(() => ({
             overflow: document.body.style.overflow,
-            inert: document.querySelectorAll("[inert]").length,
+            // The forced close must leave no BACKGROUND inert, and the closed
+            // dialog itself carries the closed state's `inert`: two numbers,
+            // so a leftover background cannot hide behind the dialog's own.
+            inert: {
+              background: [...document.querySelectorAll("[inert]")]
+                .filter((element) => !element.classList.contains("mtrl-dialog"))
+                .map((element) => element.id || element.localName),
+              dialog: document.querySelectorAll(".mtrl-dialog[inert]").length,
+            },
             focus: (document.activeElement as HTMLElement | null)?.id ?? null,
           }))),
         };
@@ -8014,7 +8022,7 @@ try {
         default: escapesExpected,
         top: {
           ...escapesExpected,
-          forced: { open: false, visible: false, beforeclose: 5, close: 1, overflow: "", inert: 0, focus: "opener" },
+          forced: { open: false, visible: false, beforeclose: 5, close: 1, overflow: "", inert: { background: [], dialog: 1 }, focus: "opener" },
           opensAgain: { open: true, native: true, modal: true },
         },
       },
