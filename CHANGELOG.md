@@ -17,6 +17,22 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.15.3] - 2026-11-20
+
+### Fixed
+
+- **A never-opened dialog or snackbar carries the same closed-state attributes as one that has closed.** The closed surface had `inert` from creation but only gained `aria-hidden="true"` through an open and a close, so a tool that reads the ARIA tree alone still saw a dialog's title and a snackbar's message and action before the first show. Creation now sets both attributes, opening removes both, and closing restores both, for the dialog and the snackbar, factory and element alike; a surface created open carries neither ([#435](https://github.com/floor/material/pull/435)).
+- The optional solid-js peer stops before 2. material/solid imports solid-js/web, which solid-js 2 does not provide. 1.8 and 1.9 stay in range ([#434](https://github.com/floor/material/pull/434)).
+
+### Size
+
+The closed-state accessibility fix raised two gzip budgets under the standing size rule.
+
+| Budget | Previous | New |
+| --- | ---: | ---: |
+| Root all-JS | 131,750 B | 131,770 B |
+| All components | 128,640 B | 128,660 B |
+
 ## [3.15.2] - 2026-11-19
 
 ### Fixed
@@ -7320,7 +7336,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.15.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.15.3...HEAD
+[3.15.3]: https://github.com/floor/material/compare/v3.15.2...v3.15.3
 [3.15.2]: https://github.com/floor/material/compare/v3.15.1...v3.15.2
 [3.15.1]: https://github.com/floor/material/compare/v3.15.0...v3.15.1
 [3.15.0]: https://github.com/floor/material/compare/v3.14.2...v3.15.0
