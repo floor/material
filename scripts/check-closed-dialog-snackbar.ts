@@ -253,6 +253,101 @@ try {
     assert.ok(await exposed("Element open"), "a <m-snackbar open> is not exposed");
   });
 
+  // An ARIA snapshot, the tree a tool that reads ARIA alone sees: a
+  // never-opened surface must be absent from it, not only from the AX tree.
+  const snapshotOf = async (selector: string): Promise<string> => {
+    try {
+      return await page.locator(selector).first().ariaSnapshot({ timeout: 1500 });
+    } catch {
+      return "";
+    }
+  };
+  const closedAttributes = (selector: string): Promise<{ hidden: string | null; inert: string | null }> =>
+    page.evaluate((selector) => {
+      // An element keeps its surface in its shadow root: search both trees
+      const find = (): HTMLElement | null => {
+        const direct = document.querySelector(selector) as HTMLElement | null;
+        if (direct) return direct;
+        for (const host of Array.from(document.querySelectorAll("*"))) {
+          const found = host.shadowRoot?.querySelector(selector) as HTMLElement | null;
+          if (found) return found;
+        }
+        return null;
+      };
+      const surface = find();
+      return {
+        hidden: surface?.getAttribute("aria-hidden") ?? null,
+        inert: surface ? String(surface.hasAttribute("inert")) : null,
+      };
+    }, selector);
+
+  for (const [kind, selector, label, openName, closeName] of [
+    ["dialog", ".mtrl-dialog", "Rest dialog", "open", "close"],
+    ["snackbar", ".mtrl-snackbar", "Saved", "show", "hide"],
+  ] as const) {
+    await row(`${kind}: a never-opened surface is absent from an ARIA snapshot`, async () => {
+      await mount(kind, true);
+      const before = await closedAttributes(selector);
+      assert.deepEqual(before, { hidden: "true", inert: "true" }, `${kind} closed attributes at creation`);
+      assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the never-opened snapshot`);
+      await act(openName);
+      await page.waitForTimeout(150);
+      assert.equal((await snapshotOf(selector)).includes(label), true, `${label} is not in the open snapshot`);
+      const open = await closedAttributes(selector);
+      assert.deepEqual(open, { hidden: null, inert: "false" }, `${kind} attributes while open`);
+      await act(closeName as "close" | "hide");
+      const closed = await closedAttributes(selector);
+      assert.deepEqual(closed, { hidden: "true", inert: "true" }, `${kind} attributes just after close`);
+      assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the snapshot after close`);
+      await settle();
+    });
+  }
+
+  for (const [tag, selector, label, openName, closeName] of [
+    ["m-dialog", ".mtrl-dialog", "Rest dialog", "show", "close"],
+    ["m-snackbar", ".mtrl-snackbar", "Saved", "show", "hide"],
+  ] as const) {
+    await row(`<${tag}>: a never-opened surface carries both closed attributes`, async () => {
+      await page.evaluate(({ tag, label }) => {
+        document.body.replaceChildren();
+        const host = document.createElement(tag);
+        if (tag === "m-dialog") {
+          host.setAttribute("headline", label);
+          host.innerHTML = "<p>Take a break?</p>";
+        } else {
+          host.setAttribute("message", label);
+          host.setAttribute("action", "Undo");
+          host.setAttribute("duration", "indefinite");
+        }
+        document.body.append(host);
+      }, { tag, label });
+      await page.waitForTimeout(120);
+      assert.deepEqual(await closedAttributes(selector), { hidden: "true", inert: "true" }, `${tag} closed attributes at creation`);
+      assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the never-opened <${tag}> snapshot`);
+      await page.evaluate(({ tag, openName }) => {
+        (document.querySelector(tag) as unknown as Record<string, () => void>)[openName]!();
+      }, { tag, openName });
+      await page.waitForTimeout(150);
+      assert.deepEqual(await closedAttributes(selector), { hidden: null, inert: "false" }, `${tag} attributes while open`);
+      await page.evaluate(({ tag, closeName }) => {
+        (document.querySelector(tag) as unknown as Record<string, () => void>)[closeName]!();
+      }, { tag, closeName });
+      assert.deepEqual(await closedAttributes(selector), { hidden: "true", inert: "true" }, `${tag} attributes just after close`);
+      await settle();
+    });
+  }
+
+  await row("factory dialog created open: no closed attribute, present in an ARIA snapshot", async () => {
+    await page.evaluate(() => {
+      document.body.replaceChildren();
+      const api = (window as unknown as { api: Record<string, (config: Record<string, unknown>) => Record<string, unknown>> }).api;
+      (window as unknown as { surface: unknown }).surface = api.createDialog!({ open: true, title: "Initially open", buttons: [{ text: "Continue", action: "close" }] });
+    });
+    await page.waitForTimeout(400);
+    assert.deepEqual(await closedAttributes(".mtrl-dialog"), { hidden: null, inert: "false" }, "attributes of a dialog created open");
+    assert.equal((await snapshotOf(".mtrl-dialog")).includes("Initially open"), true, "a dialog created open is absent from the snapshot");
+  });
+
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, [], `closed surfaces:\n  ${failures.join("\n  ")}`);
   console.log("Passed closed surfaces: both factories and both elements keep a closed dialog and snackbar out of the AX tree and the Tab order, before the first open and after the exit settles.");
