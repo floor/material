@@ -1,0 +1,81 @@
+// A bare button in a leading or trailing slot of a top app bar.
+// The resting border box is the button's own. The inline margin is half of
+// (48 - 16), so a 16px leading button's 48px target ends at the margin edge
+// and does not cover the next button. A wider button extends less, so it
+// stays clear too. Physical centering keeps the target on the button in both
+// directions. Only a library class (the configured prefix) is excluded, so an
+// author class such as nav-button still gets the layer. The tag comes from
+// $tag-prefix. The top app bar stylesheet carries the light-DOM selectors.
+// That compilation is also the element shadow sheet. ::slotted()::before
+// reaches a slotted button there; the pressed pseudo-class sits inside
+// ::slotted()'s argument, where :active after ::slotted() does not match.
+// The shared document base and the pre-upgrade sheet do not carry these rules.
+@use '../abstract/base' as base;
+@use '../abstract/element-prefix' as tags;
+@use '../abstract/theme' as t;
+@use '../abstract/variables' as v;
+
+@mixin plain-slot-rest {
+  position: relative;
+  overflow: visible;
+  margin-inline: 16px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: t.color('on-surface');
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@mixin plain-slot-button {
+  @include plain-slot-rest;
+
+  &:active::before {
+    opacity: v.state('pressed-state-layer-opacity');
+  }
+}
+
+@mixin plain-button-exclusion {
+  &:not([class*='#{base.$prefix}-']) {
+    @content;
+  }
+}
+
+[class*='-top-app-bar__leading'] > button,
+[class*='-top-app-bar__trailing'] > button {
+  @include plain-button-exclusion {
+    @include plain-slot-button;
+  }
+}
+
+#{tags.$tag-prefix}-top-app-bar > button:is([slot='leading'], [slot='trailing']) {
+  @include plain-button-exclusion {
+    @include plain-slot-button;
+  }
+}
+
+// Element shadow sheet. :active is inside ::slotted(); placed after it, the
+// pressed layer does not match.
+slot[name='leading']::slotted(button:not([class*='#{base.$prefix}-'])),
+slot[name='trailing']::slotted(button:not([class*='#{base.$prefix}-'])) {
+  @include plain-slot-rest;
+}
+
+slot[name='leading']::slotted(button:not([class*='#{base.$prefix}-']):active)::before,
+slot[name='trailing']::slotted(button:not([class*='#{base.$prefix}-']):active)::before {
+  opacity: v.state('pressed-state-layer-opacity');
+}

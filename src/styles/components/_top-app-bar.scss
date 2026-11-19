@@ -2,6 +2,7 @@
 @use 'sass:map';
 @use '../../styles/abstract/base' as base;
 @use '../../styles/abstract/variables' as v;
+@use '../base/plain-slot-button';
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
 @use '../../styles/abstract/theme' as t;
