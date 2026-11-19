@@ -161,6 +161,13 @@ export const withStructure =
   // Add dialog classes to the main component element
   addClass(component.element, component.getClass("dialog"));
 
+  // Closed, the surface is out of the accessibility tree and out of the Tab
+  // order: `inert` hides it from assistive technology and the keyboard. A
+  // caller that appends the public element itself mounts it outside the scrim
+  // whose CSS hides it, and an opacity-0 dialog is still announced and still
+  // reachable; open() and close() own this from here.
+  component.element.inert = true;
+
   // Name and describe the dialog by its own content
   if (config.title) {
     component.element.setAttribute("aria-labelledby", titleId);
@@ -731,6 +738,9 @@ export const withVisibility =
   // Setup initial state
   scopeScrim();
   if (isOpen) {
+    // Born open: the closed state's guard comes off here too, or the surface
+    // this creation shows could take no focus (open() is the other path)
+    component.element.inert = false;
     if (top) showModal();
     addClass(component.overlay, overlayVisibleClass);
     addClass(component.element, dialogVisibleClass);
@@ -755,6 +765,7 @@ export const withVisibility =
       // Open from here on. A close still on its way out is abandoned: the
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
+      component.element.inert = false;
       clearTimeout(afterCloseTimer);
       afterOpenWaiting = false;
       focusPending = false;
@@ -830,6 +841,10 @@ export const withVisibility =
       // Remove visible classes
       removeClass(component.element, dialogVisibleClass);
       removeClass(component.overlay, overlayVisibleClass);
+
+      // Closed, and out of the accessibility tree and the Tab order at once:
+      // the exit keeps painting, nothing is announced or reachable in it
+      component.element.inert = true;
 
       // Out of the top layer first: the page is inert until then, and focus
       // could not go back to it. The stylesheet keeps it painted, in the top
