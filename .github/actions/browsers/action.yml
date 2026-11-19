@@ -8,8 +8,10 @@
 # nothing is left out, and `install-deps --dry-run` checks that on every cached
 # install.
 #
-# Both caches miss on a new runner image or a new Playwright version. The job
-# then runs `install --with-deps` exactly as before and saves what it fetched.
+# On a miss, install dependencies before the browser binaries. Test jobs get
+# two bounded attempts so a slow mirror cannot consume their whole deadline.
+# The cache warmer has a longer deadline and saves the .deb files immediately,
+# even if a later browser download or test fails.
 #
 # Needs node_modules (for Playwright's CLI) and Node on the PATH.
 name: Playwright browsers
@@ -19,6 +21,9 @@ inputs:
   browsers:
     description: Playwright browser names, separated by spaces.
     required: true
+  deps-timeout:
+    description: Maximum time for each system dependency install attempt (GNU timeout duration).
+    default: "4m"
 
 runs:
   using: composite
@@ -41,46 +46,33 @@ runs:
         path: ~/.cache/ms-playwright
         key: ${{ steps.keys.outputs.browsers }}
 
-    - name: System package cache
+    - name: Restore system package cache
       id: packages
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/playwright-packages
         key: ${{ steps.keys.outputs.packages }}
 
-    - name: Install ${{ inputs.browsers }}
+    - name: Install system dependencies
+      id: deps
       shell: bash
       env:
         BROWSERS: ${{ inputs.browsers }}
         CACHED: ${{ steps.packages.outputs.cache-hit }}
+        DEPS_TIMEOUT: ${{ inputs.deps-timeout }}
+      run: bash "$GITHUB_ACTION_PATH/install-deps.sh"
+
+    - name: Save system package cache
+      if: steps.packages.outputs.cache-hit != 'true' && steps.deps.outputs.archives == 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/playwright-packages
+        key: ${{ steps.keys.outputs.packages }}
+
+    - name: Install ${{ inputs.browsers }} binaries
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
       run: |
-        packages="$HOME/.cache/playwright-packages"
-        playwright="node node_modules/playwright/cli.js"
-
-        if [ "$CACHED" = true ] && ls "$packages"/*.deb > /dev/null 2>&1; then
-          # dpkg, not `apt-get install <files>`: given a file whose version is also
-          # in its package lists, apt downloads that package from the mirror again.
-          # The files are everything apt fetched for this image, so they install
-          # as one set: apt itself unpacked them all before configuring any.
-          # Playwright's own dry run then confirms that none of the packages it
-          # asks for is still to install.
-          if sudo DEBIAN_FRONTEND=noninteractive dpkg -i "$packages"/*.deb \
-            && $playwright install-deps --dry-run $BROWSERS; then
-            echo "System packages: $(ls "$packages"/*.deb | wc -l) installed with dpkg from the cache, none from the mirror"
-            $playwright install $BROWSERS
-            exit 0
-          fi
-          echo "::warning::The cached system packages did not install; falling back to the mirror"
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f || true
-        fi
-
-        # No usable cache: install as before, and keep what apt downloads.
-        echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-packages > /dev/null
-        sudo apt-get clean
-        $playwright install --with-deps $BROWSERS
-        rm -rf "$packages"
-        mkdir -p "$packages"
-        cp /var/cache/apt/archives/*.deb "$packages"/ 2> /dev/null || true
-        count=$(ls "$packages" | wc -l)
-        echo "System packages: $count downloaded from the mirror"
-        [ "$count" -gt 0 ] || echo "::warning::apt kept no downloaded packages, so the next run downloads them again"
+        read -r -a browsers <<< "$BROWSERS"
+        node node_modules/playwright/cli.js install "${browsers[@]}"

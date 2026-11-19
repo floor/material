@@ -31,16 +31,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The same two browser sets as CI's browser groups.
+  # Warm every exact browser set used by the CI matrix.
   browsers:
     runs-on: ubuntu-24.04
-    # Long enough for the slowest mirror seen (42 minutes for both installs): a
-    # job that times out saves nothing, and this one gates nothing.
+    # Allow two 25-minute dependency attempts, with room to save the cache
+    # and finish downloading the browser binaries. This job gates nothing.
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        browsers: ["chromium", "chromium firefox webkit"]
+        browsers: ["chromium", "chromium firefox webkit", "firefox webkit"]
     name: browsers (${{ matrix.browsers }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -58,3 +58,4 @@ jobs:
       - uses: ./.github/actions/browsers
         with:
           browsers: ${{ matrix.browsers }}
+          deps-timeout: 25m
