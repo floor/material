@@ -121,6 +121,12 @@ $component: "#{base.$prefix}-side-sheet";
 
         @include m.state-layer(t.color("on-surface-variant"), "hover");
 
+        // Pressed is 0.10 (PressedStateLayerOpacity). The hover layer above
+        // stays at 0.08, including at rest, so this only adds the press.
+        &:active::before {
+            opacity: v.state("pressed-state-layer-opacity");
+        }
+
         &:focus-visible {
             outline: 3px solid t.color("secondary");
             outline-offset: 2px;
@@ -163,13 +169,19 @@ $component: "#{base.$prefix}-side-sheet";
             pointer-events: auto;
         }
 
-        // Cover the gap the spring's overshoot opens at the docked edge
+        // Cover the gap the spring's overshoot opens at the docked edge.
+        // The inner edge is a 1px outline-variant line (side sheet specs,
+        // https://m3.material.io/components/side-sheets/specs, color role
+        // Outline; the same role this library's divider uses). The modal
+        // sheet keeps its rounded inner edge and no border.
         &.#{$component}--end .#{$component}__container {
             box-shadow: calc(m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface");
+            border-inline-start: 1px solid t.color("outline-variant");
         }
 
         &.#{$component}--start .#{$component}__container {
             box-shadow: calc(-1 * m.$sheet-overshoot-guard * var(--#{$component}-direction)) 0 0 0 t.color("surface");
+            border-inline-end: 1px solid t.color("outline-variant");
         }
     }
 

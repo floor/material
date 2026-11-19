@@ -89,6 +89,9 @@ export async function checkTextFieldTokens(page: Page): Promise<void> {
       outlinedError: make({ variant: "outlined", trailingIcon: icon, error: true }),
       disabled: make({ variant: "filled", disabled: true, supportingText: "Help" }),
       outlinedDisabled: make({ variant: "outlined", disabled: true }),
+      errorNoted: make({ variant: "filled", error: true, supportingText: "Help", maxLength: 20 }),
+      errorDisabled: make({ variant: "filled", disabled: true, error: true, supportingText: "Help", maxLength: 20 }),
+      outlinedErrorDisabled: make({ variant: "outlined", disabled: true, error: true, supportingText: "Help", maxLength: 20 }),
     };
   });
   const read = (script: string) => page.evaluate((code) => {
@@ -124,6 +127,19 @@ export async function checkTextFieldTokens(page: Page): Promise<void> {
     disabledText: style("disabled", "input").color === role("on-surface", 0.38),
     disabledHelper: style("disabled", ".mtrl-text-field__supporting").opacity,
     outlinedDisabledFill: style("outlinedDisabled", "input").backgroundColor,
+    errorNoted: [style("errorNoted", ".mtrl-text-field__helper").color, style("errorNoted", ".mtrl-text-field__counter").color].every(c => c === role("error")),
+    errorDisabled: {
+      label: style("errorDisabled", "label").color === role("on-surface"),
+      labelOpacity: style("errorDisabled", "label").opacity,
+      helper: style("errorDisabled", ".mtrl-text-field__helper").color === role("on-surface"),
+      counter: style("errorDisabled", ".mtrl-text-field__counter").color === role("on-surface"),
+      supportingOpacity: style("errorDisabled", ".mtrl-text-field__supporting").opacity,
+    },
+    outlinedErrorDisabled: {
+      label: style("outlinedErrorDisabled", "label").color === role("on-surface"),
+      helper: style("outlinedErrorDisabled", ".mtrl-text-field__helper").color === role("on-surface"),
+      counter: style("outlinedErrorDisabled", ".mtrl-text-field__counter").color === role("on-surface"),
+    },
   };`);
   assert.deepEqual(rest, {
     indicator: true, caret: true, placeholderUnderLabel: true, placeholderNoLabel: true,
@@ -132,6 +148,9 @@ export async function checkTextFieldTokens(page: Page): Promise<void> {
     icons: ["1", "24px"],
     disabledFill: ["1", true, true], disabledText: true, disabledHelper: "0.38",
     outlinedDisabledFill: "rgba(0, 0, 0, 0)",
+    errorNoted: true,
+    errorDisabled: { label: true, labelOpacity: "0.38", helper: true, counter: true, supportingOpacity: "0.38" },
+    outlinedErrorDisabled: { label: true, helper: true, counter: true },
   });
 
   await page.locator(".mtrl-text-field__input").first().focus();

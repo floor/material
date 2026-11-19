@@ -170,7 +170,7 @@ try {
     // Centered: ((100 - 10 * (4 + 3)) / 2)% = 15% of 800 on each side
     near(m.items[0]!.box.left - m.bar.left, 120, `${stylesheet}: centred arrangement`, 1);
     near(m.bar.right - m.items[3]!.box.right, 120, `${stylesheet}: centred arrangement, end`, 1);
-    assert.equal(h.labelColor, m.roles["on-secondary-container"], `${stylesheet}: horizontal active label`);
+    assert.equal(h.labelColor, m.roles.secondary, `${stylesheet}: horizontal active label (ItemActiveLabelTextColor Secondary)`);
 
     // The same width in a narrow container stays vertical; a forced layout wins either way
     await page.evaluate(() => window.mountBar({ itemLayout: "vertical" }, "800px"));

@@ -58,9 +58,10 @@ $arrow-size: 8px;
   
   // Variants
   
-  // Default variant
-  &--default {
-    // Default styles already applied in base
+  &--default,
+  &--plain {
+    min-width: 40px;
+    min-height: 24px;
   }
   
   // Rich (RichTooltipTokens): surface-container, on-surface-variant text,

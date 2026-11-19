@@ -25,9 +25,7 @@ $colors: ('primary', 'secondary', 'tertiary', 'success', 'warning', 'info');
   max-width: 34px; // the overflow badge's 16x34dp
   padding: 0 4px;
   border-radius: v.shape('full');
-  font-weight: m.typography-value('label-small', 'font-weight', 500);
-  font-size: m.typography-value('label-small', 'font-size', 11px);
-  line-height: m.typography-value('label-small', 'line-height', 16px);
+  @include m.typography('label-small');
   background-color: t.color('error');
   color: t.color('on-error');
 
@@ -45,6 +43,12 @@ $colors: ('primary', 'secondary', 'tertiary', 'success', 'warning', 'info');
   // re-formats on upgrade ("1000" becomes "999+"), which CSS cannot repeat.
   &:empty[label]:not([label=''])::before {
     content: attr(label);
+  }
+
+  // The formatted count can also be authored literally. The live badge
+  // applies its overflow cap only when a numeric count exceeds max.
+  &[label='999+'] {
+    max-width: none;
   }
 
   // Nothing to show: an empty or zero label hides the large badge on upgrade,
