@@ -895,7 +895,6 @@ A chip's explicit trailing-icon setter wins too. Clearing it restores the regist
 
 Set `href` on a drawer destination to render a native link. The active destination has `aria-current="page"`. The browser handles modified clicks and navigation. In a factory `onSelect` handler, a router can cancel navigation through `originalEvent.preventDefault()`.
 
-<!-- example: fragment -->
 ```html
 <m-drawer open value="drawer" headline="Components">
   <m-drawer-item value="overview" href="/overview">Overview</m-drawer-item>
@@ -979,11 +978,11 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.5 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.3 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 131.8 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 133.4 kB |
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |
-| `material/styles`, the full stylesheet | 60.1 kB |
+| `material/styles`, the full stylesheet | 60.4 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
