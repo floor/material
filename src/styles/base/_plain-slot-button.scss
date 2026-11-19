@@ -5,16 +5,17 @@
 // stays clear too. Physical centering keeps the target on the button in both
 // directions. Only a library class (the configured prefix) is excluded, so an
 // author class such as nav-button still gets the layer. The tag comes from
-// $tag-prefix. The top app bar stylesheet carries these rules, and the
-// element's sheet is that same compilation. A shadow stylesheet cannot style
-// a slotted button's ::before or ::after, so the light-DOM tag selector has
-// to load with the document sheet. The shared document base does not.
+// $tag-prefix. The top app bar stylesheet carries the light-DOM selectors.
+// That compilation is also the element shadow sheet. ::slotted()::before
+// reaches a slotted button there; the pressed pseudo-class sits inside
+// ::slotted()'s argument, where :active after ::slotted() does not match.
+// The shared document base and the pre-upgrade sheet do not carry these rules.
 @use '../abstract/base' as base;
 @use '../abstract/element-prefix' as tags;
 @use '../abstract/theme' as t;
 @use '../abstract/variables' as v;
 
-@mixin plain-slot-button {
+@mixin plain-slot-rest {
   position: relative;
   overflow: visible;
   margin-inline: 16px;
@@ -29,10 +30,6 @@
     pointer-events: none;
   }
 
-  &:active::before {
-    opacity: v.state('pressed-state-layer-opacity');
-  }
-
   &::after {
     content: '';
     position: absolute;
@@ -41,6 +38,14 @@
     width: 48px;
     height: 48px;
     transform: translate(-50%, -50%);
+  }
+}
+
+@mixin plain-slot-button {
+  @include plain-slot-rest;
+
+  &:active::before {
+    opacity: v.state('pressed-state-layer-opacity');
   }
 }
 
@@ -61,4 +66,16 @@
   @include plain-button-exclusion {
     @include plain-slot-button;
   }
+}
+
+// Element shadow sheet. :active is inside ::slotted(); placed after it, the
+// pressed layer does not match.
+slot[name='leading']::slotted(button:not([class*='#{base.$prefix}-'])),
+slot[name='trailing']::slotted(button:not([class*='#{base.$prefix}-'])) {
+  @include plain-slot-rest;
+}
+
+slot[name='leading']::slotted(button:not([class*='#{base.$prefix}-']):active)::before,
+slot[name='trailing']::slotted(button:not([class*='#{base.$prefix}-']):active)::before {
+  opacity: v.state('pressed-state-layer-opacity');
 }

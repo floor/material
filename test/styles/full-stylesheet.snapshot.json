@@ -2443,6 +2443,10 @@
     "m-top-app-bar>button:is([slot=leading],[slot=trailing]):not([class*=mtrl-])::before",
     "m-top-app-bar>button:is([slot=leading],[slot=trailing]):not([class*=mtrl-]):active::before",
     "p",
+    "slot[name=leading]::slotted(button:not([class*=mtrl-])),slot[name=trailing]::slotted(button:not([class*=mtrl-]))",
+    "slot[name=leading]::slotted(button:not([class*=mtrl-]))::after,slot[name=trailing]::slotted(button:not([class*=mtrl-]))::after",
+    "slot[name=leading]::slotted(button:not([class*=mtrl-]))::before,slot[name=trailing]::slotted(button:not([class*=mtrl-]))::before",
+    "slot[name=leading]::slotted(button:not([class*=mtrl-]):active)::before,slot[name=trailing]::slotted(button:not([class*=mtrl-]):active)::before",
     "table",
     "ul,ol"
   ],

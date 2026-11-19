@@ -13,10 +13,10 @@
  * Two adjacent bare buttons are checked separately: a point 1px inside the
  * first, toward the second, must hit the first. Two 16px leading buttons must
  * not share a 48px target. An author class such as nav-button is styled; a
- * library class is not. The top app bar stylesheet plus shadow CSS, and a
- * configured tag prefix, are checked on their own page. The document base
- * does not carry the rule. The pre-upgrade sheet styles no child
- * pseudo-element.
+ * library class is not. base-elements plus the element shadow sheet, with no
+ * document top-app-bar sheet, is checked on its own page, as is a configured
+ * tag prefix. The document base does not carry the rule. The pre-upgrade
+ * sheet styles no child pseudo-element.
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
@@ -475,8 +475,16 @@ try {
   } catch (error) {
     failures.push(error instanceof Error ? error.message : String(error));
   }
-  if (baseElements.includes("m-top-app-bar>button")) failures.push("base-elements sheet carries the plain-button rule");
+  if (baseElements.includes("m-top-app-bar>button") || baseElements.includes("::slotted(")) {
+    failures.push("base-elements sheet carries the plain-button rule");
+  }
   if (!shadowCss.includes("m-top-app-bar>button")) failures.push("top app bar sheet omitted the plain-button rule");
+  if (!shadowCss.includes("slot[name=leading]::slotted(button:not([class*=mtrl-]))::before")) {
+    failures.push("element shadow sheet omitted the slotted pressed layer");
+  }
+  if (!shadowCss.includes("::slotted(button:not([class*=mtrl-]):active)::before")) {
+    failures.push("element shadow sheet omitted the slotted pressed opacity");
+  }
   if (baseElements.includes("[class*=-button]") || shadowCss.includes("[class*=-button]")) {
     failures.push("plain-button rule still excludes an author class");
   }
@@ -496,7 +504,7 @@ try {
     </m-top-app-bar>
     <x-top-app-bar><button type="button" slot="leading" id="custom-tag" class="nav-button"></button></x-top-app-bar>
   </body></html>`);
-  await prefixPage.addStyleTag({ content: configuredComponent });
+  await prefixPage.addStyleTag({ content: baseElements });
   const adoptShadow = (css: string) => {
     const host = document.getElementById("host")!;
     const root = host.shadowRoot ?? host.attachShadow({ mode: "open" });
@@ -554,20 +562,33 @@ try {
     };
   };
   const shadowOnly = await prefixPage.evaluate(readButtons);
-  await prefixPage.addStyleTag({ content: shadowCss });
-  const withSheet = await prefixPage.evaluate(readButtons);
-  console.log(`BASE ${JSON.stringify({ shadowOnly, withSheet })}`);
-  same("shadow CSS alone ::after", shadowOnly.bare.width, "auto");
-  same("top app bar sheet plus shadow ::after", withSheet.bare.width, "48px");
-  same("top app bar sheet plus shadow rest opacity", withSheet.bare.opacity, "0");
-  if (withSheet.bare.content === "none") failures.push("top app bar sheet plus shadow ::before content is none");
-  same("top app bar sheet author class border", withSheet.bare.border, 16);
-  if (!(withSheet.overlap <= 0)) failures.push(`top app bar sheet 16px targets overlap by ${withSheet.overlap}px`);
-  same("top app bar sheet gap before midpoint", withSheet.beforeMid, "first");
-  same("top app bar sheet gap after midpoint", withSheet.afterMid, "second");
-  same("top app bar sheet library ::after", withSheet.library.width, "auto");
-  same("configured top app bar sheet ::after", withSheet.customTag.width, "48px");
-  same("configured top app bar sheet rest opacity", withSheet.customTag.opacity, "0");
+  const bareBox = await prefixPage.locator("#bare").boundingBox();
+  if (!bareBox) failures.push("slotted button has no box");
+  else {
+    await prefixPage.mouse.move(bareBox.x + bareBox.width / 2, bareBox.y + bareBox.height / 2);
+    await prefixPage.mouse.down();
+  }
+  const pressed = await prefixPage.evaluate(() => {
+    const button = document.getElementById("bare");
+    const before = button ? getComputedStyle(button, "::before") : null;
+    return { active: button?.matches(":active") ?? false, opacity: before?.opacity ?? "missing" };
+  });
+  await prefixPage.mouse.up();
+  await prefixPage.addStyleTag({ content: configuredComponent });
+  const withConfigured = await prefixPage.evaluate(readButtons);
+  console.log(`BASE ${JSON.stringify({ shadowOnly, pressed, withConfigured })}`);
+  same("base-elements plus shadow ::after", shadowOnly.bare.width, "48px");
+  same("base-elements plus shadow rest opacity", shadowOnly.bare.opacity, "0");
+  if (shadowOnly.bare.content === "none") failures.push("base-elements plus shadow ::before content is none");
+  same("base-elements plus shadow author class border", shadowOnly.bare.border, 16);
+  if (!(shadowOnly.overlap <= 0)) failures.push(`base-elements plus shadow 16px targets overlap by ${shadowOnly.overlap}px`);
+  same("base-elements plus shadow gap before midpoint", shadowOnly.beforeMid, "first");
+  same("base-elements plus shadow gap after midpoint", shadowOnly.afterMid, "second");
+  same("base-elements plus shadow library ::after", shadowOnly.library.width, "auto");
+  if (!pressed.active) failures.push("slotted button was not :active");
+  same("base-elements plus shadow pressed opacity", pressed.opacity, "0.1");
+  same("configured top app bar sheet ::after", withConfigured.customTag.width, "48px");
+  same("configured top app bar sheet rest opacity", withConfigured.customTag.opacity, "0");
   await prefixPage.close();
 
   assert.deepEqual(errors, []);
