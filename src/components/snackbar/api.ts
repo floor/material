@@ -33,6 +33,13 @@ export const withAPI =
     const prefix = config.prefix || 'mtrl';
     const cls = (name: string): string => `${prefix}-${name}`;
 
+    // Closed, the surface is out of the accessibility tree and the Tab order:
+    // detached it is out anyway, and a caller that mounts it early would
+    // otherwise expose a role="status" snackbar and reach its Undo before
+    // show(). `inert` is what keeps it out of both; open() and close() own it
+    // from here.
+    element.setAttribute('inert', '');
+
     // What the queue holds while this snackbar waits or shows
     let entry: QueuedSnackbar | null = null;
     let previouslyFocused: Element | null = null;
@@ -152,6 +159,9 @@ export const withAPI =
       }
 
       element.classList.remove(cls(SNACKBAR_CLASSES.VISIBLE));
+      // Closed, out of the accessibility tree and the Tab order at once: the
+      // exit keeps painting, nothing in it is announced or reachable.
+      element.setAttribute('inert', '');
       scheduleRemoval();
 
       emit('close', { reason, originalEvent });
@@ -161,6 +171,8 @@ export const withAPI =
     const open = (): void => {
       // Its turn: the state and the event together
       api.state = 'visible';
+      // On screen from here: the closed state's guards come off
+      element.removeAttribute('inert');
       cancelRemoval();
       previouslyFocused = deepActiveElement();
       if (topLayer) {

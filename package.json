@@ -589,6 +589,7 @@
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts && bun run scripts/check-menu-hidden-opener.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
     "app-bar-conformance:check": "bun run scripts/check-app-bar-conformance.ts",
+    "closed-surfaces:check": "bun run scripts/check-closed-dialog-snackbar.ts",
     "divider-sheet-conformance:check": "bun run scripts/check-divider-sheet-conformance.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts && bun run scripts/check-icon-registry-expand-more.ts",
     "listbox:check": "bun run scripts/check-listbox.ts && bun run scripts/check-listbox-rtl.ts && bun run scripts/check-listbox-forced-colors.ts",
