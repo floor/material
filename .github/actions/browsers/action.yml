@@ -22,7 +22,10 @@ inputs:
     description: Playwright browser names, separated by spaces.
     required: true
   deps-timeout:
-    description: Maximum time for each system dependency install attempt (GNU timeout duration).
+    description: Maximum time for the first system dependency install attempt (GNU timeout duration).
+    default: "4m"
+  deps-retry-timeout:
+    description: Maximum time for retrying system dependencies on the Ubuntu HTTPS archive (GNU timeout duration).
     default: "4m"
 
 runs:
@@ -60,6 +63,7 @@ runs:
         BROWSERS: ${{ inputs.browsers }}
         CACHED: ${{ steps.packages.outputs.cache-hit }}
         DEPS_TIMEOUT: ${{ inputs.deps-timeout }}
+        DEPS_RETRY_TIMEOUT: ${{ inputs.deps-retry-timeout }}
       run: bash "$GITHUB_ACTION_PATH/install-deps.sh"
 
     - name: Save system package cache
