@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
+import { launchChromium } from "./browser-profile";
 import assert from 'node:assert/strict';
 import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { chromium } from 'playwright';
 import type { NavigationRailComponent, NavigationRailConfig } from '../src/components/navigation-rail/types';
 declare global {
     interface Window {
@@ -73,11 +73,11 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   document.querySelector('#outside').onclick=()=>window.rail.expand();
   </script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     } });
-const browser = await chromium.launch();
+const browser = await launchChromium();
 try {
     // One page for both stylesheets: two pages rasterise text differently on
     // the same machine, so the comparison must swap the stylesheet in place.
-    const page = await browser.newPage({ reducedMotion: 'reduce' });
+    const page = await browser.browser()!.newPage({ reducedMotion: 'reduce' });
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     const urls = [`http://127.0.0.1:${server.port}/`, `http://127.0.0.1:${server.port}/?selective`];
@@ -208,7 +208,7 @@ try {
     assert.deepEqual(await badgeState(), { gone: false, name: 'Count, 12', text: '12' }, 'a count after the empty values shows again');
 
     // The element, through its shadow root
-    const elementPage = await browser.newPage({ viewport: { width: 900, height: 720 } });
+    const elementPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 720 } });
     const elementErrors: string[] = [];
     elementPage.on('pageerror', (error) => elementErrors.push(error.message));
     await elementPage.goto(`${server.url.href}element`);

@@ -20,7 +20,8 @@
 //
 //   bun run build && bun run rtl:check
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { checkSideSheetRtl } from "./check-side-sheet-rtl";
 import { checkCarouselRtl } from "./check-carousel-rtl";
 import { checkRtlDirection } from "./check-rtl-direction";
@@ -366,7 +367,7 @@ const measureRootDirection = (
     return { ltr, rtl, back, again };
   });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 const TOLERANCE = 0.5;
 const near = (a: number, b: number): boolean => Math.abs(a - b) <= TOLERANCE;
 const mirror = (box: Box): number => WIDTH - box.x - box.width;
@@ -423,8 +424,8 @@ const differences = (ltr: Measures, rtl: Measures): string[] => {
 
 try {
   // Bundled output first: the lowering is the defect this pass exists for.
-  const plainLtrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
-  const plainRtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 } });
+  const plainLtrPage = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: 720 } });
+  const plainRtlPage = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: 720 } });
   await plainLtrPage.goto(`${server.url.href}plain?dir=ltr`);
   await plainRtlPage.goto(`${server.url.href}plain?dir=rtl`);
   const plainLtr = await measureBundled(plainLtrPage);
@@ -475,20 +476,20 @@ try {
   assert.deepEqual(plainRtl.nested, nestedLtr,
     "an LTR instance inside an RTL parent did not keep its own direction values inside a right-to-left page");
 
-  const ltrPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
-  const rtlPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
+  const ltrPage = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
+  const rtlPage = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   await ltrPage.goto(`${server.url.href}?dir=ltr`);
   await rtlPage.goto(`${server.url.href}?dir=rtl`);
   for (const page of [ltrPage, rtlPage]) {
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
   }
   await checkSideSheetRtl(ltrPage);
-  await checkCarouselRtl(browser, server.url.href);
+  await checkCarouselRtl(browser.browser()!, server.url.href);
   // The direction switch's own pass — every converted component under both
   // forms the build ships (dist/styles.css arms and the logical main.scss),
   // across the full marker matrix. It replaced the per-component
   // right-to-left checks (split button, datepicker, navigation, FAB menu).
-  await checkRtlDirection(browser);
+  await checkRtlDirection(browser.browser()!);
   const ltr = await measureFixtures(ltrPage);
   const rtl = await measureFixtures(rtlPage);
 
@@ -538,7 +539,7 @@ try {
 
   // The factory's own direction, set on its element in an LTR page (a `dir`
   // on the picker itself is the nearest boundary), through runtime toggles.
-  const factoryPage = await browser.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
+  const factoryPage = await browser.browser()!.newPage({ viewport: { width: WIDTH, height: 720 }, reducedMotion: "reduce" });
   await factoryPage.goto(`${server.url.href}?dir=ltr`);
   await factoryPage.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
   const rootDirection = await measureRootDirection(factoryPage);

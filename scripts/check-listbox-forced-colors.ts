@@ -5,7 +5,8 @@ import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { baseStyles } from "./style-manifest";
 import { compileThemeSources, inBaseLayer, styleLayerOrder } from "./build-styles";
 import type { ListboxComponent } from "../src/components/listbox/types";
@@ -34,11 +35,11 @@ window.contrastListbox.open();` }));
 });
 assert(entry.success, String(entry.logs));
 const code = await entry.outputs[0]!.text();
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 const rows: unknown[] = [];
 try {
   for (const colorScheme of ["light", "dark"] as const) {
-    const page = await browser.newPage({ forcedColors: "active", colorScheme, reducedMotion: "reduce" });
+    const page = await browser.browser()!.newPage({ forcedColors: "active", colorScheme, reducedMotion: "reduce" });
     try {
       const errors: string[] = [];
       page.on("pageerror", error => errors.push(error.message));

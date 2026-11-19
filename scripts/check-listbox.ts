@@ -26,6 +26,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { chromium, firefox, webkit, type Browser, type BrowserType, type CDPSession, type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 
 const fixture = await createPackageFixture();
@@ -484,12 +485,17 @@ async function bundle(entry: string): Promise<Built> {
 }
 
 async function openPage(engine: BrowserType): Promise<{ page: Page; browser: Browser }> {
-  const launched = await engine.launch({ headless: true });
-  const page = await launched.newPage({ viewport: { width: 900, height: 600 } });
+  // Chromium keeps its profile inside the worktree (browser-profile.ts); the
+  // other engines are a smoke pass and launch as before.
+  const context = engine === chromium
+    ? await launchChromium({ headless: true, viewport: { width: 900, height: 600 } })
+    : undefined;
+  const browser: Browser = context?.browser() ?? await engine.launch({ headless: true });
+  const page = context ? await context.newPage() : await browser.newPage({ viewport: { width: 900, height: 600 } });
   await page.setContent("<!doctype html><html><body></body></html>");
   await page.addStyleTag({ content: CONTROL_CSS });
-  browsers[engine.name()] = launched.version();
-  return { page, browser: launched };
+  browsers[engine.name()] = browser.version();
+  return { page, browser };
 }
 
 async function mount(page: Page, kind: "menu" | "listbox", overrides: Record<string, unknown> = {}): Promise<void> {

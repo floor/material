@@ -20,7 +20,8 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import type createSelect from "../src/components/select";
 
 const root = resolve(import.meta.dir, "..");
@@ -153,7 +154,7 @@ const OPTIONS = [
   { id: "cherry", text: "Cherry" },
 ];
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   const url = `http://127.0.0.1:${server.port}/`;
   const open = async () => {

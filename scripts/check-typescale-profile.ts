@@ -7,7 +7,8 @@ import { pathToFileURL } from "node:url";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
 import * as sass from "sass";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture } from "./package-fixture";
 import { PACKAGE_GZIP } from "./budgets";
 
@@ -16,7 +17,7 @@ const scratch = await mkdtemp(resolve(".typescale-packed-"));
 const report: Record<string, unknown> = { package: { size: fixture.pack.size, unpackedSize: fixture.pack.unpackedSize, entryCount: fixture.pack.entryCount }, bun: Bun.version };
 const outcomes: string[] = [];
 const record = (text: string) => { outcomes.push(text); console.log(`typescale: ${text}`); };
-const browser = await chromium.launch();
+const browser = await launchChromium();
 const output = new Map<string, { files: Map<string, string>; html: string }>();
 const family = ["button", "text-field", "badge", "button-group", "card", "tabs"];
 const js = `

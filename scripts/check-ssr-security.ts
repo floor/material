@@ -2,6 +2,7 @@
 // scripts/check-ssr-security.ts
 // Reparse source SSR output in each browser engine; kept out of the browser-free bun suites.
 import assert from "node:assert/strict";
+import { launchChromium } from "./browser-profile";
 import { chromium, firefox, webkit } from "playwright";
 import "./fixtures/ssr-css";
 import { configureHTML } from "../src/core/dom/html";
@@ -11,7 +12,11 @@ import { renderElement } from "../src/ssr/index.ts";
 
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
 assert(engine === "chromium" || engine === "firefox" || engine === "webkit", `Unknown engine: ${engine}`);
-const browser = await ({ chromium, firefox, webkit })[engine].launch();
+// Chromium keeps its profile inside the worktree (browser-profile.ts); the
+// other engines launch as before.
+const browser = engine === "chromium"
+  ? (await launchChromium()).browser()!
+  : await ({ chromium, firefox, webkit })[engine].launch();
 try {
   const page = await browser.newPage();
   const load = async (html: string) => page.setContent(`<!doctype html><body>${html}</body>`);

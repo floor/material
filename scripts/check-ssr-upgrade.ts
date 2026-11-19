@@ -3,6 +3,7 @@
 // Per-engine pixel parity is independent of Chromium's structural parity exceptions.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
+import { launchChromium } from "./browser-profile";
 import { chromium, firefox, webkit, type Page } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -76,7 +77,11 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/preupgrade.css") return new Response(Bun.file("dist/elements/preupgrade.css"));
   return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">${preupgrade ? '<link rel="stylesheet" href="/preupgrade.css">' : ""}<style>body{width:600px;margin:0;padding-top:${CLEAR}px}#stage{width:600px}</style></head><body><main id="stage">${html}<div id="following">Following content</div></main></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await ({ chromium, firefox, webkit })[engine].launch();
+// Chromium keeps its profile inside the worktree (browser-profile.ts); the
+// other engines launch as before.
+const browser = engine === "chromium"
+  ? (await launchChromium()).browser()!
+  : await ({ chromium, firefox, webkit })[engine].launch();
 type Box = { x: number; y: number; width: number; height: number };
 const regions = (page: Page, selector: string): Promise<Box[]> => page.evaluate(selector =>
   Array.from(document.querySelector("#stage > :first-child")!.shadowRoot!.querySelectorAll(selector), node => {

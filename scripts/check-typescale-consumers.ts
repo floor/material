@@ -4,7 +4,8 @@
 import assert from "node:assert/strict";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 const defaults = process.argv.includes("--default-profile");
@@ -16,7 +17,7 @@ const styles = defaults ? undefined : Object.fromEntries(["ripple", "progress", 
   [name, compile(`@use "element-styles" with ($name: "${name}");`)]));
 const scratch = await mkdtemp(resolve(".typescale-check-"));
 const report: Record<string, unknown> = { defaults };
-const browser = await chromium.launch();
+const browser = await launchChromium();
 try {
   const entry = join(scratch, "entry.ts");
   await writeFile(entry, `

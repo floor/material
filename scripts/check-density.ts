@@ -13,7 +13,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import type createButton from "../src/components/button";
 import type createButtonGroup from "../src/components/button-group";
 import type createDatePicker from "../src/components/datepicker";
@@ -119,9 +120,9 @@ type DensityWindow = Window & {
 
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M0 0h24v24H0z"/></svg>';
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 900 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 900 }, reducedMotion: "reduce" });
   await page.setContent("<!doctype html><html><body></body></html>");
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: await bundle.outputs[0].text() });

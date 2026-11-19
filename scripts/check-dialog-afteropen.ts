@@ -22,7 +22,8 @@
  * bun run scripts/check-dialog-afteropen.ts
  */
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import type createDialog from "../src/components/dialog";
 
 type AfterOpenWindow = Window & {
@@ -42,7 +43,7 @@ const CASES = [
   { motion: "reduce", duration: 500 },
 ] as const;
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   const bundle = await Bun.build({
     entrypoints: ["src/components/dialog/index.ts"],
@@ -56,7 +57,7 @@ try {
   const seen: { motion: string; duration: number; active: string; visibility: string }[] = [];
 
   for (const { motion, duration } of CASES) {
-    const page = await browser.newPage({
+    const page = await browser.browser()!.newPage({
       viewport: { width: 900, height: 700 },
       reducedMotion: motion,
     });
