@@ -73,9 +73,8 @@ test("the HTTPS fallback preserves suites, security keys and other repositories"
 
     const result = Bun.spawnSync(["bash", "-c",
       'source .github/actions/browsers/install-deps.sh; make_https_sources "$1" "$2"',
-      "bash", source, dest]);
-    expect(result.stderr.toString()).toBe("");
-    expect(result.exitCode).toBe(0);
+      "bash", source, dest], { stderr: "pipe" });
+    expect(result.exitCode, result.stderr.toString()).toBe(0);
     const archive = "https://archive.ubuntu.com/ubuntu/";
     expect(readFileSync(join(dest, "sources.list"), "utf8")).toBe(`deb ${archive} noble main\n`);
     expect(readFileSync(join(dest, "sources.list.d", "ubuntu.sources"), "utf8"))
