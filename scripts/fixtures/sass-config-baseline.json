@@ -311,7 +311,7 @@
     "components/toolbar/constants.js": "f77d6f482ca70f0d1159a1b6944c3b6a26ecce10b8a42520cbd9cc533e9b26a3",
     "components/toolbar/index.js": "5b3fcb5945b0c6929ba82007b32349eccf7d3ca3aee6c75357c1461d526ae1ec",
     "components/toolbar/toolbar.js": "7ad992f236b9464f789d8d637f75d209711a745beda4a0361327db27d5d4d300",
-    "components/tooltip/api.js": "fd26304f27a1ccf4ebd4c60ba5ae781e195f5c1243330fb3156bd83605aae95d",
+    "components/tooltip/api.js": "1bc625bb9a25bde456bd8b942f4b85bde1816588fbf9bbe9aaeff02ebf979e2c",
     "components/tooltip/config.js": "54eee8fe8ee210792985273ba237925fe627bf77acd997ac7c4243fae4d35f77",
     "components/tooltip/constants.js": "cc0f431f27f2fd8fd3b0d01a0397fdb13b38c09a993524e82b95306b63668217",
     "components/tooltip/index.js": "bb1f54f051830dade189496dfa324037b69d3036b4231a50f944a2370923f2af",
