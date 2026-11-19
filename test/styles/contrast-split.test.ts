@@ -316,8 +316,8 @@ describe("explicit contrast levels are opt-in", () => {
     // Side sheet: pressed close layer and a 1px outline-variant inner border (+184 B, CI 44396908315).
     // A disabled field in error paints its helper and counter on-surface (+397 B, CI 44393533911).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "2761d8d60e80d5dcd2a2e4ddec3f4ba0660474cc05a7f0cdad99d4ee43841804",
-      length: 548911,
+      sha256: "a2cb8d2729bb828ff788991dc38f46df32e32496db3cebd272bf46637d1d96d4",
+      length: 549642,
     });
   });
 

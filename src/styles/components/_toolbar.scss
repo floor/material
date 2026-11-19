@@ -72,6 +72,9 @@ $component: '#{base.$prefix}-toolbar';
     .#{$component}__bar {
       flex: 1;
       justify-content: space-between;
+      // ContainerMinSpacing = 4dp (tokens/DockedToolbarTokens.kt:31): crowded
+      // items keep that gap rather than touching at the space-between 0.
+      gap: 4px;
       min-height: max(48px, 64px + 4px * var(--#{base.$prefix}-density, 0));
     }
   }

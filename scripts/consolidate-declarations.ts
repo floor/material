@@ -496,7 +496,10 @@ class Consolidation {
     const mergedFiles: string[] = [];
     for (const [barrel, members] of this.groups) {
       mergedFiles.push(...members);
-      const text = this.buildGroup(barrel, members);
+      // Members fold in a deterministic, barrel-independent order: the walk
+      // order they were collected in reaches here, and the fold's output —
+      // and its shadowing-renaming allocation — must not depend on it.
+      const text = this.buildGroup(barrel, [...members].sort());
       await writeFile(join(this.root, barrel), text);
     }
     for (const file of this.modules.keys()) {
@@ -505,7 +508,7 @@ class Consolidation {
       if (text === undefined) continue;
       await writeFile(join(this.root, file), text);
     }
-    return { merged: mergedFiles, kept: [...this.kept].sort() };
+    return { merged: mergedFiles.sort(), kept: [...this.kept].sort() };
   }
 
   /** The merged barrel text: imports, declarations, then the barrel's exports. */
@@ -1092,9 +1095,20 @@ async function removeEmptyDirectories(root: string, paths: string[]): Promise<vo
  * delete the files. Fails the build rather than ship a declaration whose
  * exported names or origin changed.
  */
-export async function consolidateDeclarations(outdir: string, exports: unknown): Promise<ConsolidateResult> {
+export async function consolidateDeclarations(
+  outdir: string,
+  exports: unknown,
+  fileOrder?: (files: string[]) => string[],
+): Promise<ConsolidateResult> {
   const root = resolve(outdir);
-  const files = await filesUnder(root);
+  // The directory walk returns the filesystem's order, which varies between
+  // machines: the fold appends each private module's declarations to its
+  // barrel in walk order, so two runners could ship byte-different barrels
+  // from one source. Everything downstream reads this set's iteration order,
+  // so it is normalized here whatever the walk returned; `fileOrder` lets a
+  // test prove the pass is invariant to any order it is handed.
+  const walked = [...await filesUnder(root)].sort();
+  const files = new Set<string>(fileOrder ? fileOrder(walked) : walked);
   const consolidation = new Consolidation(root, files, exports);
   await consolidation.load();
   consolidation.loadBefore();

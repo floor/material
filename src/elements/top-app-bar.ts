@@ -50,6 +50,23 @@ const headlineText = (component: TopAppBarComponent): HTMLElement | null =>
   component.getHeadlineElement().querySelector("span");
 
 /**
+ * Marks the leading container while nothing is assigned to its slot. The
+ * element always puts a slot there, so `:empty` never holds and the stylesheet
+ * cannot tell an empty leading from one with an icon; the title's end gap
+ * belongs to an icon that is there (components/_top-app-bar.scss).
+ */
+const leadingEmptiness = (component: TopAppBarComponent): (() => void) => {
+  const leading = component.getLeadingContainer();
+  const slot = leading.querySelector("slot") as HTMLSlotElement;
+  const sync = (): void => {
+    leading.toggleAttribute("data-empty", slot.assignedElements().length === 0);
+  };
+  sync();
+  slot.addEventListener("slotchange", sync);
+  return () => slot.removeEventListener("slotchange", sync);
+};
+
+/**
  * Shows the `headline` text while the default slot has no content. Not the
  * slot's own fallback: the whitespace between the slotted buttons is
  * assigned to the default slot, which would hide it.
@@ -130,7 +147,7 @@ const topAppBarSpec = {
   setup: (host, component) => {
     const label = host.getAttribute("aria-label");
     if (label !== null) component.element.setAttribute("aria-label", label);
-    const cleanups = [headlineFallback(component), followScrollTarget(host, component)];
+    const cleanups = [headlineFallback(component), leadingEmptiness(component), followScrollTarget(host, component)];
     return () => cleanups.forEach((cleanup) => cleanup());
   },
 } satisfies ElementSpec<TopAppBarComponent>;

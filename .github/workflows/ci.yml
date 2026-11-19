@@ -224,6 +224,9 @@ jobs:
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
+          - group: app-bar-conformance
+            browsers: chromium
+            checks: app-bar-conformance:check
           - group: divider-sheet-conformance
             browsers: chromium
             checks: divider-sheet-conformance:check
