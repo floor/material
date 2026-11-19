@@ -1,0 +1,63 @@
+// A bare button in a leading or trailing slot of a top app bar.
+// The resting border box is the button's own. The inline margin is half of
+// (48 - 16), so a 16px leading button's 48px target ends at the margin edge
+// and does not cover the next button. A wider button extends less, so it
+// stays clear too. Physical centering keeps the target on the button in both
+// directions. Only a library class (the configured prefix) is excluded, so an
+// author class such as nav-button still gets the layer. The tag comes from
+// $tag-prefix. Element applications load this from the document base: a shadow
+// stylesheet cannot style a slotted button's ::before or ::after, and
+// ::slotted() cannot take a following pseudo-element.
+@use '../abstract/base' as base;
+@use '../abstract/element-prefix' as tags;
+@use '../abstract/theme' as t;
+@use '../abstract/variables' as v;
+
+@mixin plain-slot-button {
+  position: relative;
+  overflow: visible;
+  margin-inline: 16px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: t.color('on-surface');
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:active::before {
+    opacity: v.state('pressed-state-layer-opacity');
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@mixin plain-button-exclusion {
+  &:not([class*='#{base.$prefix}-']) {
+    @content;
+  }
+}
+
+[class*='-top-app-bar__leading'] > button,
+[class*='-top-app-bar__trailing'] > button {
+  @include plain-button-exclusion {
+    @include plain-slot-button;
+  }
+}
+
+#{tags.$tag-prefix}-top-app-bar > button:is([slot='leading'], [slot='trailing']) {
+  @include plain-button-exclusion {
+    @include plain-slot-button;
+  }
+}

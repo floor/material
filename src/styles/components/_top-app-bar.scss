@@ -1,8 +1,8 @@
 // src/components/top-app-bar/_styles.scss
 @use 'sass:map';
 @use '../../styles/abstract/base' as base;
-@use '../../styles/abstract/element-prefix' as tags;
 @use '../../styles/abstract/variables' as v;
+@use '../base/plain-slot-button';
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
 @use '../../styles/abstract/theme' as t;
@@ -265,62 +265,5 @@ $component: '#{base.$prefix}-top-app-bar';
   // High contrast mode support
   @include m.high-contrast {
     border-bottom: 1px solid currentColor;
-  }
-}
-
-// A bare button in a leading or trailing slot. The resting border box is the
-// button's own. The inline margin is half of (48 - 24), so a 24px button's
-// target ends at the margin edge and does not cover the next button.
-// Physical centering, so the target stays on the button in both directions.
-// The class match is the BEM element, not the mtrl- prefix, so a custom class
-// prefix still reaches it. The tag comes from $tag-prefix. A document sheet
-// drops a whole rule that contains ::slotted(), and ::slotted() cannot take
-// a following ::before or ::after.
-@mixin plain-slot-button {
-  position: relative;
-  overflow: visible;
-  margin-inline: 12px;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-color: t.color('on-surface');
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  &:active::before {
-    opacity: v.state('pressed-state-layer-opacity');
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 48px;
-    height: 48px;
-    transform: translate(-50%, -50%);
-  }
-}
-
-@mixin plain-button-exclusion {
-  &:not([class*='#{base.$prefix}-']):not([class*='-button']):not([class*='-fab']) {
-    @content;
-  }
-}
-
-[class*='-top-app-bar__leading'] > button,
-[class*='-top-app-bar__trailing'] > button {
-  @include plain-button-exclusion {
-    @include plain-slot-button;
-  }
-}
-
-#{tags.$tag-prefix}-top-app-bar > button:is([slot='leading'], [slot='trailing']) {
-  @include plain-button-exclusion {
-    @include plain-slot-button;
   }
 }

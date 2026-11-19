@@ -11,13 +11,18 @@
  *
  * Prints one MEASURE line per button, then fails if any row is off.
  * Two adjacent bare buttons are checked separately: a point 1px inside the
- * first, toward the second, must hit the first. Element-only styles and a
- * configured tag prefix are checked on their own page.
+ * first, toward the second, must hit the first. Two 16px leading buttons must
+ * not share a 48px target. An author class such as nav-button is styled; a
+ * library class is not. The document base plus shadow CSS, and a configured
+ * tag prefix, are checked on their own page. The pre-upgrade sheet styles no
+ * child pseudo-element.
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 import * as sass from "sass";
+import { baseElementsStyles } from "./style-manifest";
+import { assertRollbackBeats } from "./preupgrade-specificity";
 
 const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
 const compile = (source: string): string => sass.compileString(`@use "${source}";`, {
@@ -347,19 +352,68 @@ try {
     const custom = document.createElement("div");
     custom.className = "acme-top-app-bar__leading";
     const customBare = button("custom-bare");
+    const authorClass = button("author-class");
+    authorClass.className = "nav-button";
+    const authorIcon = button("author-icon");
+    authorIcon.className = "acme-icon-button";
     const customLibrary = button("custom-library");
-    customLibrary.className = "acme-icon-button";
-    custom.append(customBare, customLibrary);
+    customLibrary.className = "mtrl-decoy";
+    custom.append(customBare, authorClass, authorIcon, customLibrary);
     document.body.append(custom);
+    const small = (probe: string): HTMLButtonElement => {
+      const element = button(probe);
+      element.style.boxSizing = "border-box";
+      element.style.width = "16px";
+      element.style.height = "16px";
+      element.style.padding = "0";
+      element.style.minWidth = "0";
+      element.style.border = "0";
+      element.replaceChildren();
+      return element;
+    };
+    const factorySmallFirst = small("factory-small-first");
+    const factorySmallSecond = small("factory-small-second");
+    bar.addLeadingElement(factorySmallFirst);
+    bar.addLeadingElement(factorySmallSecond);
+    const elementSmallFirst = small("element-small-first");
+    const elementSmallSecond = small("element-small-second");
+    elementSmallFirst.slot = "leading";
+    elementSmallSecond.slot = "leading";
+    host.append(elementSmallFirst, elementSmallSecond);
+    const afterBox = (element: HTMLButtonElement) => {
+      const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element, "::after");
+      const width = Number.parseFloat(style.width);
+      const height = Number.parseFloat(style.height);
+      const left = box.left + box.width / 2 - width / 2;
+      const top = box.top + box.height / 2 - height / 2;
+      return { left, right: left + width, top, bottom: top + height, border: Math.round(box.width) };
+    };
+    const share = (first: HTMLButtonElement, second: HTMLButtonElement) => {
+      const one = afterBox(first);
+      const two = afterBox(second);
+      const overlap = Math.min(one.right, two.right) - Math.max(one.left, two.left);
+      const box = first.getBoundingClientRect();
+      const other = second.getBoundingClientRect();
+      const mid = (box.right + other.left) / 2;
+      const y = box.top + box.height / 2;
+      const name = (x: number) => {
+        const hit = document.elementFromPoint(x, y);
+        return hit === first ? "first" : hit === second ? "second" : hit ? hit.tagName.toLowerCase() : "null";
+      };
+      return { overlap, border: one.border, beforeMid: name(mid - 1), afterMid: name(mid + 1) };
+    };
     // Both bars are position:absolute at the top. Measure one at a time so
     // the later bar's target does not cover the earlier bar's buttons.
     host.hidden = true;
     const factoryLeading = inward(factoryFirst, factorySecond);
     const factoryTrailing = inward(factoryTrailFirst, factoryTrailSecond);
+    const factorySmall = share(factorySmallFirst, factorySmallSecond);
     host.hidden = false;
     bar.element.hidden = true;
     const elementLeading = inward(elementFirst, elementSecond);
     const elementTrailing = inward(elementTrailFirst, elementTrailSecond);
+    const elementSmall = share(elementSmallFirst, elementSmallSecond);
     const read = (element: HTMLButtonElement) => {
       const after = getComputedStyle(element, "::after");
       const before = getComputedStyle(element, "::before");
@@ -370,7 +424,11 @@ try {
       factoryTrailing,
       elementLeading,
       elementTrailing,
+      factorySmall,
+      elementSmall,
       customBare: read(customBare),
+      authorClass: read(authorClass),
+      authorIcon: read(authorIcon),
       customLibrary: read(customLibrary),
     };
   });
@@ -384,42 +442,129 @@ try {
   same("custom class prefix ::after", neighbours.customBare.width, "48px");
   same("custom class prefix rest opacity", neighbours.customBare.opacity, "0");
   if (neighbours.customBare.content === "none") failures.push("custom class prefix ::before content is none");
-  same("custom class prefix library ::after", neighbours.customLibrary.width, "auto");
+  same("author class nav-button ::after", neighbours.authorClass.width, "48px");
+  same("author class nav-button rest opacity", neighbours.authorClass.opacity, "0");
+  if (neighbours.authorClass.content === "none") failures.push("author class nav-button ::before content is none");
+  same("author class acme-icon-button ::after", neighbours.authorIcon.width, "48px");
+  same("author class acme-icon-button rest opacity", neighbours.authorIcon.opacity, "0");
+  same("library class ::after", neighbours.customLibrary.width, "auto");
+  for (const [name, small] of Object.entries({ factorySmall: neighbours.factorySmall, elementSmall: neighbours.elementSmall })) {
+    same(`${name} border box`, small.border, 16);
+    if (!(small.overlap <= 0)) failures.push(`${name} 48px targets overlap by ${small.overlap}px`);
+    same(`${name} gap before midpoint`, small.beforeMid, "first");
+    same(`${name} gap after midpoint`, small.afterMid, "second");
+  }
 
-  const elementOnly = sass.compileString(`@use "elements/top-app-bar";`, {
+  const sassOptions = {
     loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
-    style: "compressed",
+    style: "compressed" as const,
     logger: sass.Logger.silent,
-  }).css;
-  const configured = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "components/top-app-bar" as component; @use "elements/top-app-bar" as element;`, {
-    loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
-    style: "compressed",
-    logger: sass.Logger.silent,
-  }).css;
-  if (!configured.includes("x-top-app-bar>button")) failures.push("configured tag prefix did not emit x-top-app-bar>button");
-  if (configured.includes("m-top-app-bar>button")) failures.push("configured tag prefix still emits m-top-app-bar>button");
+  };
+  const baseElements = sass.compileString(
+    baseElementsStyles.map((source, index) => `@use "${source}" as entry${index};`).join("\n"),
+    sassOptions,
+  ).css;
+  const shadowCss = compile("components/top-app-bar");
+  const preupgradeCss = sass.compileString(`@use "elements/top-app-bar";`, sassOptions).css;
+  if (preupgradeCss.includes("::before") || preupgradeCss.includes("::after")) {
+    failures.push("pre-upgrade sheet styles a pseudo-element");
+  }
+  try {
+    assertRollbackBeats(preupgradeCss);
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error));
+  }
+  if (!baseElements.includes("m-top-app-bar>button")) failures.push("base-elements sheet omitted the plain-button rule");
+  if (baseElements.includes("[class*=-button]") || shadowCss.includes("[class*=-button]")) {
+    failures.push("plain-button rule still excludes an author class");
+  }
+  const configuredBase = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "base/document";`, sassOptions).css;
+  const configuredComponent = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "components/top-app-bar";`, sassOptions).css;
+  for (const [name, css] of Object.entries({ base: configuredBase, component: configuredComponent })) {
+    if (!css.includes("x-top-app-bar>button")) failures.push(`configured ${name} did not emit x-top-app-bar>button`);
+    if (css.includes("m-top-app-bar>button")) failures.push(`configured ${name} still emits m-top-app-bar>button`);
+  }
   const prefixPage = await context.newPage();
   await prefixPage.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body>
-    <m-top-app-bar><button type="button" slot="leading" id="element-only"></button></m-top-app-bar>
-    <x-top-app-bar><button type="button" slot="leading" id="custom-tag"></button></x-top-app-bar>
+    <m-top-app-bar id="host">
+      <button type="button" slot="leading" id="bare" class="nav-button"></button>
+      <button type="button" slot="leading" id="next"></button>
+      <button type="button" slot="leading" id="library" class="mtrl-decoy"></button>
+    </m-top-app-bar>
+    <x-top-app-bar><button type="button" slot="leading" id="custom-tag" class="nav-button"></button></x-top-app-bar>
   </body></html>`);
-  await prefixPage.addStyleTag({ content: elementOnly });
-  await prefixPage.addStyleTag({ content: configured });
-  const prefixReading = await prefixPage.evaluate(() => {
+  await prefixPage.addStyleTag({ content: configuredBase });
+  const adoptShadow = (css: string) => {
+    const host = document.getElementById("host")!;
+    const root = host.shadowRoot ?? host.attachShadow({ mode: "open" });
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(css);
+    root.adoptedStyleSheets = [sheet];
+    if (!root.querySelector("slot")) {
+      const slot = document.createElement("slot");
+      slot.name = "leading";
+      root.append(slot);
+    }
+  };
+  await prefixPage.evaluate(adoptShadow, shadowCss);
+  const readButtons = () => {
     const read = (id: string) => {
       const button = document.getElementById(id)!;
       const after = getComputedStyle(button, "::after");
       const before = getComputedStyle(button, "::before");
-      return { width: after.width, opacity: before.opacity, content: before.content };
+      const box = button.getBoundingClientRect();
+      return { width: after.width, opacity: before.opacity, content: before.content, border: Math.round(box.width) };
     };
-    return { elementOnly: read("element-only"), customTag: read("custom-tag") };
-  });
-  console.log(`PREFIX ${JSON.stringify(prefixReading)}`);
-  same("element-only styles ::after", prefixReading.elementOnly.width, "48px");
-  same("element-only styles rest opacity", prefixReading.elementOnly.opacity, "0");
-  if (prefixReading.elementOnly.content === "none") failures.push("element-only styles ::before content is none");
-  same("custom tag prefix ::after", prefixReading.customTag.width, "48px");
-  same("custom tag prefix rest opacity", prefixReading.customTag.opacity, "0");
+    const bare = document.getElementById("bare") as HTMLButtonElement;
+    const next = document.getElementById("next") as HTMLButtonElement;
+    for (const button of [bare, next]) {
+      button.style.boxSizing = "border-box";
+      button.style.width = "16px";
+      button.style.height = "16px";
+      button.style.padding = "0";
+      button.style.minWidth = "0";
+      button.style.border = "0";
+    }
+    const one = bare.getBoundingClientRect();
+    const two = next.getBoundingClientRect();
+    const afterOf = (element: HTMLButtonElement) => {
+      const box = element.getBoundingClientRect();
+      const width = Number.parseFloat(getComputedStyle(element, "::after").width);
+      const left = box.left + box.width / 2 - width / 2;
+      return { left, right: left + width };
+    };
+    const left = afterOf(bare);
+    const right = afterOf(next);
+    const mid = (one.right + two.left) / 2;
+    const y = one.top + one.height / 2;
+    const hit = (x: number) => {
+      const target = document.elementFromPoint(x, y);
+      return target === bare ? "first" : target === next ? "second" : target ? target.tagName.toLowerCase() : "null";
+    };
+    return {
+      bare: read("bare"),
+      library: read("library"),
+      customTag: read("custom-tag"),
+      overlap: Math.min(left.right, right.right) - Math.max(left.left, right.left),
+      beforeMid: hit(mid - 1),
+      afterMid: hit(mid + 1),
+    };
+  };
+  const shadowOnly = await prefixPage.evaluate(readButtons);
+  await prefixPage.addStyleTag({ content: baseElements });
+  const withBase = await prefixPage.evaluate(readButtons);
+  console.log(`BASE ${JSON.stringify({ shadowOnly, withBase })}`);
+  same("shadow CSS alone ::after", shadowOnly.bare.width, "auto");
+  same("base-elements plus shadow ::after", withBase.bare.width, "48px");
+  same("base-elements plus shadow rest opacity", withBase.bare.opacity, "0");
+  if (withBase.bare.content === "none") failures.push("base-elements plus shadow ::before content is none");
+  same("base-elements author class border", withBase.bare.border, 16);
+  if (!(withBase.overlap <= 0)) failures.push(`base-elements 16px targets overlap by ${withBase.overlap}px`);
+  same("base-elements gap before midpoint", withBase.beforeMid, "first");
+  same("base-elements gap after midpoint", withBase.afterMid, "second");
+  same("base-elements library ::after", withBase.library.width, "auto");
+  same("configured document base ::after", withBase.customTag.width, "48px");
+  same("configured document base rest opacity", withBase.customTag.opacity, "0");
   await prefixPage.close();
 
   assert.deepEqual(errors, []);
