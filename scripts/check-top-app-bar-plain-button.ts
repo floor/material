@@ -10,6 +10,9 @@
  * library prefix keeps its own layers.
  *
  * Prints one MEASURE line per button, then fails if any row is off.
+ * Two adjacent bare buttons are checked separately: a point 1px inside the
+ * first, toward the second, must hit the first. Element-only styles and a
+ * configured tag prefix are checked on their own page.
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
@@ -287,6 +290,137 @@ try {
     same(`${name} library-classed ::before`, row.decoyBefore, "none");
     same(`${name} library-classed ::after`, row.decoyAfter, "none");
   }
+
+  const neighbours = await page.evaluate(() => {
+    const icon = (): SVGSVGElement => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "24");
+      svg.setAttribute("height", "24");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M4 4h16v16H4z");
+      svg.append(path);
+      return svg;
+    };
+    const button = (probe: string): HTMLButtonElement => {
+      const element = document.createElement("button");
+      element.type = "button";
+      element.dataset.probe = probe;
+      element.append(icon());
+      return element;
+    };
+    const inward = (first: HTMLButtonElement, second: HTMLButtonElement): string => {
+      const box = first.getBoundingClientRect();
+      const other = second.getBoundingClientRect();
+      const toward = other.left >= box.left ? box.right - 1 : box.left + 1;
+      const hit = document.elementFromPoint(toward, box.top + box.height / 2);
+      return hit === first ? "first" : hit === second ? "second" : hit ? hit.tagName.toLowerCase() : "null";
+    };
+    document.body.replaceChildren();
+    document.documentElement.dir = "ltr";
+    const api = (window as unknown as { api: { createTopAppBar: (config: { title: string }) => {
+      element: HTMLElement;
+      addLeadingElement: (element: HTMLElement) => void;
+      addTrailingElement: (element: HTMLElement) => void;
+    } } }).api;
+    const bar = api.createTopAppBar({ title: "Title" });
+    const factoryFirst = button("factory-first");
+    const factorySecond = button("factory-second");
+    bar.addLeadingElement(factoryFirst);
+    bar.addLeadingElement(factorySecond);
+    const factoryTrailFirst = button("factory-trail-first");
+    const factoryTrailSecond = button("factory-trail-second");
+    bar.addTrailingElement(factoryTrailFirst);
+    bar.addTrailingElement(factoryTrailSecond);
+    document.body.append(bar.element);
+    const host = document.createElement("m-top-app-bar");
+    const elementFirst = button("element-first");
+    const elementSecond = button("element-second");
+    elementFirst.slot = "leading";
+    elementSecond.slot = "leading";
+    const elementTrailFirst = button("element-trail-first");
+    const elementTrailSecond = button("element-trail-second");
+    elementTrailFirst.slot = "trailing";
+    elementTrailSecond.slot = "trailing";
+    host.append(elementFirst, elementSecond, elementTrailFirst, elementTrailSecond);
+    document.body.append(host);
+    const custom = document.createElement("div");
+    custom.className = "acme-top-app-bar__leading";
+    const customBare = button("custom-bare");
+    const customLibrary = button("custom-library");
+    customLibrary.className = "acme-icon-button";
+    custom.append(customBare, customLibrary);
+    document.body.append(custom);
+    // Both bars are position:absolute at the top. Measure one at a time so
+    // the later bar's target does not cover the earlier bar's buttons.
+    host.hidden = true;
+    const factoryLeading = inward(factoryFirst, factorySecond);
+    const factoryTrailing = inward(factoryTrailFirst, factoryTrailSecond);
+    host.hidden = false;
+    bar.element.hidden = true;
+    const elementLeading = inward(elementFirst, elementSecond);
+    const elementTrailing = inward(elementTrailFirst, elementTrailSecond);
+    const read = (element: HTMLButtonElement) => {
+      const after = getComputedStyle(element, "::after");
+      const before = getComputedStyle(element, "::before");
+      return { width: after.width, opacity: before.opacity, content: before.content };
+    };
+    return {
+      factoryLeading,
+      factoryTrailing,
+      elementLeading,
+      elementTrailing,
+      customBare: read(customBare),
+      customLibrary: read(customLibrary),
+    };
+  });
+  console.log(`NEIGHBOURS ${JSON.stringify(neighbours)}`);
+  for (const [name, hit] of Object.entries({
+    factoryLeading: neighbours.factoryLeading,
+    factoryTrailing: neighbours.factoryTrailing,
+    elementLeading: neighbours.elementLeading,
+    elementTrailing: neighbours.elementTrailing,
+  })) same(`adjacent ${name} 1px inside the first`, hit, "first");
+  same("custom class prefix ::after", neighbours.customBare.width, "48px");
+  same("custom class prefix rest opacity", neighbours.customBare.opacity, "0");
+  if (neighbours.customBare.content === "none") failures.push("custom class prefix ::before content is none");
+  same("custom class prefix library ::after", neighbours.customLibrary.width, "auto");
+
+  const elementOnly = sass.compileString(`@use "elements/top-app-bar";`, {
+    loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
+    style: "compressed",
+    logger: sass.Logger.silent,
+  }).css;
+  const configured = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "components/top-app-bar" as component; @use "elements/top-app-bar" as element;`, {
+    loadPaths: [resolve(repoRoot, "src/styles"), repoRoot],
+    style: "compressed",
+    logger: sass.Logger.silent,
+  }).css;
+  if (!configured.includes("x-top-app-bar>button")) failures.push("configured tag prefix did not emit x-top-app-bar>button");
+  if (configured.includes("m-top-app-bar>button")) failures.push("configured tag prefix still emits m-top-app-bar>button");
+  const prefixPage = await context.newPage();
+  await prefixPage.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body>
+    <m-top-app-bar><button type="button" slot="leading" id="element-only"></button></m-top-app-bar>
+    <x-top-app-bar><button type="button" slot="leading" id="custom-tag"></button></x-top-app-bar>
+  </body></html>`);
+  await prefixPage.addStyleTag({ content: elementOnly });
+  await prefixPage.addStyleTag({ content: configured });
+  const prefixReading = await prefixPage.evaluate(() => {
+    const read = (id: string) => {
+      const button = document.getElementById(id)!;
+      const after = getComputedStyle(button, "::after");
+      const before = getComputedStyle(button, "::before");
+      return { width: after.width, opacity: before.opacity, content: before.content };
+    };
+    return { elementOnly: read("element-only"), customTag: read("custom-tag") };
+  });
+  console.log(`PREFIX ${JSON.stringify(prefixReading)}`);
+  same("element-only styles ::after", prefixReading.elementOnly.width, "48px");
+  same("element-only styles rest opacity", prefixReading.elementOnly.opacity, "0");
+  if (prefixReading.elementOnly.content === "none") failures.push("element-only styles ::before content is none");
+  same("custom tag prefix ::after", prefixReading.customTag.width, "48px");
+  same("custom tag prefix rest opacity", prefixReading.customTag.opacity, "0");
+  await prefixPage.close();
 
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, [], `top app bar plain button:\n  ${failures.join("\n  ")}`);

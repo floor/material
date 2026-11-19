@@ -2,9 +2,11 @@
 // <m-top-app-bar> before upgrade: the bar, placed as the upgraded one is
 // (over the top of its positioned container), with the headline in its
 // type style; leading and trailing children in their places.
+@use '../abstract/base' as base;
 @use '../abstract/functions' as f;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
+@use '../abstract/variables' as v;
 @use 'config' as c;
 
 // As components/_top-app-bar.scss: 64px small and center bars, the headline
@@ -53,5 +55,41 @@
   > [slot='trailing'] {
     order: 1;
     margin-left: auto;
+  }
+}
+
+// The same pressed layer and 48px target as the component sheet, for a page
+// that loads only the element styles. Not limited to :not(:defined): the
+// slotted button is light DOM and this sheet is what reaches it when the
+// component sheet is absent. tag() follows $tag-prefix, and the built sheet
+// is retagged for a runtime prefix. The inline margin keeps the target off
+// the next button.
+#{c.tag('top-app-bar')} > button:is([slot='leading'], [slot='trailing']):not([class*='#{base.$prefix}-']):not([class*='-button']):not([class*='-fab']) {
+  position: relative;
+  overflow: visible;
+  margin-inline: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: t.color('on-surface');
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:active::before {
+    opacity: v.state('pressed-state-layer-opacity');
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translate(-50%, -50%);
   }
 }
