@@ -41,6 +41,11 @@ describe("the CI toolchain is pinned", () => {
     });
   }
 
+  test("the browser container uses the same Bun version as the host jobs", () => {
+    const installs = [...files[".github/workflows/ci.yml"].matchAll(/@oven\/bun-linux-x64@(\S+)/g)];
+    expect(installs.map(match => match[1])).toEqual([values("bun-version")[0][1]]);
+  });
+
   test("every action is a commit, with its version in a comment", () => {
     const lines = Object.entries(files).flatMap(([path, text]) =>
       [...text.matchAll(/^\s*(?:- )?uses:[ \t]*(.*)$/gm)].map((match) => `${path}: ${match[1]}`),

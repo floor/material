@@ -5,15 +5,71 @@ import { join } from "node:path";
 
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
 
-test("the warmer covers every browser set in the test matrix", async () => {
-  const ci = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as {
-    jobs: { browser: { strategy: { matrix: { include: { browsers: string }[] } } } };
-  };
+interface WorkflowStep {
+  name?: string;
+  uses?: string;
+  if?: string;
+  run?: string;
+  with?: { browsers?: string };
+}
+
+const ci = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as {
+  jobs: { browser: {
+    container: { image: string };
+    env: { PLAYWRIGHT_CONTAINER: string };
+    steps: WorkflowStep[];
+    strategy: { matrix: { include: { browsers: string }[] } };
+  } };
+};
+const browser = ci.jobs.browser;
+
+test("only native browser sets use the warmer and browser install action", async () => {
   const cache = YAML.parse(await Bun.file(".github/workflows/cache.yml").text()) as {
-    jobs: { browsers: { strategy: { matrix: { browsers: string[] } } } };
+    jobs: { browsers: { steps: WorkflowStep[] } };
   };
-  const required = new Set(ci.jobs.browser.strategy.matrix.include.map(row => row.browsers));
-  expect(new Set(cache.jobs.browsers.strategy.matrix.browsers)).toEqual(required);
+  const action = "./.github/actions/browsers";
+  const native = browser.strategy.matrix.include
+    .map(row => row.browsers)
+    .filter(browsers => !/\b(?:firefox|webkit)\b/.test(browsers));
+  const warmed = cache.jobs.browsers.steps.find(step => step.uses === action)?.with?.browsers;
+  expect(new Set(native)).toEqual(new Set(["chromium"]));
+  expect(warmed).toBe("chromium");
+  expect(browser.steps.find(step => step.uses === action)?.if).toBe("env.PLAYWRIGHT_CONTAINER != 'true'");
+});
+
+test("Firefox and WebKit use an immutable Playwright image", () => {
+  const needsImage = "(contains(matrix.browsers, 'firefox') || contains(matrix.browsers, 'webkit'))";
+  expect(browser.container.image).toStartWith(`\${{ ${needsImage} && '`);
+  expect(browser.container.image).toMatch(/'mcr\.microsoft\.com\/playwright@sha256:[a-f0-9]{64}' \|\| '' \}\}$/);
+  expect(browser.env.PLAYWRIGHT_CONTAINER).toBe(`\${{ ${needsImage} && 'true' || 'false' }}`);
+});
+
+test("the Playwright version check rejects a mismatched container before browsers launch", () => {
+  const step = browser.steps.find(step => step.name === "Check Playwright container version");
+  expect(step?.if).toBe("env.PLAYWRIGHT_CONTAINER == 'true'");
+  if (!step?.run) throw new Error("Missing Playwright version check");
+  const scratch = mkdtempSync(join(tmpdir(), "browser-container-version-"));
+  try {
+    const pkg = join(scratch, "node_modules", "playwright");
+    mkdirSync(pkg, { recursive: true });
+    writeFileSync(join(pkg, "package.json"), JSON.stringify({ version: "1.63.1" }));
+    for (const driverVersion of ["1.63.1", "1.63.0"]) {
+      writeFileSync(join(scratch, ".docker-info"), JSON.stringify({ driverVersion }));
+      const result = Bun.spawnSync(["bash", "-c", step.run], {
+        cwd: scratch,
+        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: scratch },
+        stderr: "pipe",
+      });
+      if (driverVersion === "1.63.1") {
+        expect(result.exitCode, result.stderr.toString()).toBe(0);
+      } else {
+        expect(result.exitCode).toBe(1);
+        expect(result.stderr.toString()).toContain("container is 1.63.0, but bun.lock installs 1.63.1");
+      }
+    }
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
 });
 
 // Isolate the retry from apt so outcomes are deterministic and no host packages change.
