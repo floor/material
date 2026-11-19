@@ -17,6 +17,30 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.15.2] - 2026-11-19
+
+### Fixed
+
+- **App bars: the scrolled bar's elevation, slot colours, compressed rows, action colour, toolbar spacing and navigation labels.** A scrolled top app bar takes the Level2 elevation its token names instead of Level1; its leading icon is OnSurface and its trailing icon OnSurfaceVariant, and a slotted bare button takes its slot's colour instead of the page's; a compressed medium or large bar keeps its navigation and actions beside the title at 64dp instead of hiding them; a title with no leading icon is inset 16dp, not 40dp. A bottom app bar's actions take OnSurfaceVariant, a bare button included. A docked toolbar keeps 4dp between crowded items, and a horizontal navigation bar's active label keeps Secondary, as the vertical one does. No API changes and no defaults that callers rely on ([#421](https://github.com/floor/material/pull/421)).
+- **A closed dialog and a closed snackbar are out of the accessibility tree and the Tab order.** Both factories guarded a closed surface with opacity and pointer events only, so a caller that appended the public `.element` itself had a dialog announced and a snackbar's status, message and action readable — and its Undo reachable by Tab — before the first open; a `<m-snackbar>` showed the same after its exit settled. The closed state now carries `inert` and `aria-hidden="true"` on the surface, removed when it opens and restored as it closes, for the dialog and the snackbar, factory and element alike. The open and close motion, the emitted events and every public API are unchanged ([#427](https://github.com/floor/material/pull/427)).
+- A full-width divider keeps an explicit inset, including as the only child of a flex row, and a vertical one keeps its length. An expanded bottom sheet squares its top corners only when it meets the top of the screen, including after its content changes size in place; the resting radius stays 28dp (https://m3.material.io/components/bottom-sheets). An omitted full-width divider still spans its container, and a short expanded sheet stays rounded ([#425](https://github.com/floor/material/pull/425)).
+- A standard side sheet draws a 1px outline-variant border on its inner edge and shows a pressed close button (https://m3.material.io/components/side-sheets/specs). A modal side sheet is unchanged ([#423](https://github.com/floor/material/pull/423)).
+- **Text field: a disabled field in error uses the disabled colour on its helper and counter.** The helper and counter of a field that is both disabled and in error were painted error, faded to 0.38. They now use on-surface at 0.38, which is the disabled role. The label already used on-surface at 0.38. An enabled field in error stays error. The indicator, the outline and the trailing icon were already the disabled role (`TextFieldDefaults` `supportingTextColor`, material3 1.4.0: the disabled role is chosen before the error role) ([#418](https://github.com/floor/material/pull/418)).
+- Plain tooltips reserve at least 40 × 24 px. Large badge labels use the label-small font family and letter spacing ([#420](https://github.com/floor/material/pull/420)).
+- Touching and holding a tooltip anchor shows its tooltip. A tooltip opened by touch closes after 1.5 seconds or on an outside press ([#422](https://github.com/floor/material/pull/422)).
+- **Top app bar: a bare button in the leading or trailing slot shows a pressed state and keeps a 48px target.** A plain button in either slot had no pressed layer and no 48px hit target. It now draws an on-surface layer at the pressed opacity while held, and a 48px target centred on the button, at desktop and small-screen widths, for the factory and for `<m-top-app-bar>`. A 16px inline margin keeps a 16px leading button's target off the next bare button. An author class on the button, such as `nav-button`, still gets the layer. The rules ship in the top app bar stylesheet. The element shadow sheet reaches a slotted button with `::slotted()`, and the shared document base does not carry them. The resting box, padding and background stay as they are. Icon buttons and other library buttons keep their own layers ([#432](https://github.com/floor/material/pull/432)).
+- Generated TypeScript barrel declarations now keep a deterministic order across builds ([#426](https://github.com/floor/material/pull/426)).
+
+### Size
+
+The owner approved these gzip budget increases.
+
+| Budget | Previous | New |
+| --- | ---: | ---: |
+| Root all-JS | 131,400 B | 131,750 B |
+| All components | 128,300 B | 128,640 B |
+| Standalone tooltip | 6,400 B | 6,480 B |
+
 ## [3.15.1] - 2026-11-18
 
 ### Fixed
@@ -7296,7 +7320,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.15.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.15.2...HEAD
+[3.15.2]: https://github.com/floor/material/compare/v3.15.1...v3.15.2
 [3.15.1]: https://github.com/floor/material/compare/v3.15.0...v3.15.1
 [3.15.0]: https://github.com/floor/material/compare/v3.14.2...v3.15.0
 [3.14.2]: https://github.com/floor/material/compare/v3.14.1...v3.14.2

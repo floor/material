@@ -1,3 +1,0 @@
-Section: Fixed
-
-**A closed dialog and a closed snackbar are out of the accessibility tree and the Tab order.** Both factories guarded a closed surface with opacity and pointer events only, so a caller that appended the public `.element` itself had a dialog announced and a snackbar's status, message and action readable — and its Undo reachable by Tab — before the first open; a `<m-snackbar>` showed the same after its exit settled. The closed state now carries `inert` and `aria-hidden="true"` on the surface, removed when it opens and restored as it closes, for the dialog and the snackbar, factory and element alike. The open and close motion, the emitted events and every public API are unchanged.
