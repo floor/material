@@ -38,6 +38,15 @@ export interface DrawerItemConfig {
   /** Icon HTML content shown while this item is the active destination, in place of `icon`. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   activeIcon?: string;
 
+  /** Navigation URL for a leaf destination. */
+  href?: string;
+
+  /** A non-empty list makes this item a disclosure section. One level is rendered. */
+  items?: DrawerItemConfig[];
+
+  /** Initial section state. If omitted, an active child opens the section. */
+  expanded?: boolean;
+
   /** Badge text (e.g. unread count) */
   badge?: string;
 
@@ -68,12 +77,23 @@ export interface DrawerSelectEvent {
   originalEvent: Event;
 }
 
+/** The new state of a drawer disclosure section. */
+export interface DrawerSectionEvent {
+  id: string;
+  value: string;
+  label: string;
+  expanded: boolean;
+  originalEvent?: Event;
+}
+
 /** Events emitted by drawer state, navigation items and root DOM forwarding. */
 export interface DrawerEvents {
   open: () => void;
   close: () => void;
   /** User activation only; setActive() is silent. */
   select: (payload: DrawerSelectEvent) => void;
+  expand: (payload: DrawerSectionEvent) => void;
+  collapse: (payload: DrawerSectionEvent) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
 }
@@ -197,6 +217,10 @@ export interface DrawerConfig extends BaseComponentConfig {
 
   /** `close` listener registered at creation. */
   onClose?: DrawerEvents["close"];
+
+  /** Section listeners registered at creation. */
+  onExpand?: DrawerEvents["expand"];
+  onCollapse?: DrawerEvents["collapse"];
 }
 
 /**
@@ -286,6 +310,14 @@ export interface DrawerComponent {
    * @returns The drawer component for chaining
    */
   setBadge: (id: string, badge: string) => DrawerComponent;
+
+  /** Open, close or toggle the disclosure with this id. */
+  expandSection: (id: string) => DrawerComponent;
+  collapseSection: (id: string) => DrawerComponent;
+  toggleSection: (id: string) => DrawerComponent;
+  isSectionExpanded: (id: string) => boolean;
+  /** Expanded section ids in document order. */
+  getExpandedSections: () => string[];
 
   /**
    * Adds an event listener

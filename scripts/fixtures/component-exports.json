@@ -1267,6 +1267,11 @@
       "status": "public"
     },
     {
+      "name": "DrawerSectionEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "DrawerSelectEvent",
       "kind": "type",
       "status": "public"

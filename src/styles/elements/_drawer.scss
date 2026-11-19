@@ -21,6 +21,6 @@
   display: block;
   // As components/_drawer.scss: 4dp a step, floored at the 36dp item the
   // dense option has always used.
-  height: f.density(56px, 36px);
+  min-height: f.density(56px, 36px);
   overflow: hidden;
 }

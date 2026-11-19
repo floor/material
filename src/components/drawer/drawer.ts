@@ -68,7 +68,14 @@ import { DRAWER_DEFAULTS } from "./constants";
  *
  * @category Components
  */
-const createDrawer = (config: DrawerConfig = {}): DrawerComponent => {
+export default function createDrawer(config: DrawerConfig = {}): DrawerComponent {
+  return buildDrawer(config, false);
+}
+
+/** @internal The element and SSR share the shadow-scoped section ids. */
+export const createShadowDrawer = (config: DrawerConfig): DrawerComponent => buildDrawer(config, true);
+
+const buildDrawer = (config: DrawerConfig, shadow: boolean): DrawerComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {
@@ -78,7 +85,7 @@ const createDrawer = (config: DrawerConfig = {}): DrawerComponent => {
       withElement(getElementConfig(baseConfig)),
       withVariant(baseConfig),
       withHeadline(baseConfig),
-      withItems(baseConfig),
+      withItems(baseConfig, shadow),
       withState(baseConfig),
       withLifecycle(),
       // Assemble the DOM structure
@@ -131,6 +138,8 @@ const createDrawer = (config: DrawerConfig = {}): DrawerComponent => {
     if (baseConfig.onSelect) drawer.on("select", baseConfig.onSelect);
     if (baseConfig.onOpen) drawer.on("open", baseConfig.onOpen);
     if (baseConfig.onClose) drawer.on("close", baseConfig.onClose);
+    if (baseConfig.onExpand) drawer.on("expand", baseConfig.onExpand);
+    if (baseConfig.onCollapse) drawer.on("collapse", baseConfig.onCollapse);
 
     return drawer;
   } catch (error) {
@@ -138,5 +147,3 @@ const createDrawer = (config: DrawerConfig = {}): DrawerComponent => {
     throw new Error(`Failed to create drawer: ${(error as Error).message}`);
   }
 };
-
-export default createDrawer;

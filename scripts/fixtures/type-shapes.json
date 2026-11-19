@@ -840,6 +840,12 @@
       "string"
     ]
   },
+  "DrawerElement": {
+    "kind": "extends",
+    "bases": [
+      "ElementInstance<DrawerSpec, DrawerComponent>"
+    ]
+  },
   "DrawerItemConfig.type": {
     "kind": "union",
     "members": [

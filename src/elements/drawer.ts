@@ -23,74 +23,125 @@
  * changed).
  *
  * Parts: `drawer`, `sheet`, `items`, `item`, `active-indicator`, `item-icon`, `item-label`,
- * `ripple`.
+ * `ripple`, `group`, `group-items`, `item-chevron`, `item-badge`.
  *
  * @module elements
  */
 
-import createDrawer from "../components/drawer";
-import type { DrawerComponent, DrawerConfig, DrawerItemConfig } from "../components/drawer/types";
+import { createShadowDrawer } from "../components/drawer/drawer";
+import type { DrawerComponent, DrawerConfig, DrawerItemConfig, DrawerSectionEvent } from "../components/drawer/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
 } from "./define";
 
-/** The declared items, `active` as given. A destination without a label is left out until it has one. */
-const declaredItems = (host: HTMLElement, active: string | null): DrawerItemConfig[] => {
-  const itemTag = `${host.localName}-item`;
+const collapsedDeclarations = new WeakSet<Element>();
+const previousDeclarations = new WeakMap<HTMLElement, DrawerItemConfig[]>();
+
+const itemChildren = (host: Element, tag: string): Element[] =>
+  Array.from(host.children).filter(child => child.localName === tag);
+
+const itemLabel = (child: Element, section: boolean): string =>
+  child.getAttribute("label") ?? (section
+    ? Array.from(child.childNodes).filter(node => node.nodeType === 3).map(node => node.textContent).join("")
+    : child.textContent ?? "").trim();
+
+const declaredItems = (host: Element, tag: string, active: string | null, sections: boolean): DrawerItemConfig[] => {
   const items: DrawerItemConfig[] = [];
-  for (const child of Array.from(host.children)) {
-    if (child.localName !== itemTag) continue;
+  for (const child of itemChildren(host, tag)) {
     const type = child.getAttribute("type");
-    const label = child.getAttribute("label") ?? (child.textContent ?? "").trim();
     if (type === "divider") {
       items.push({ type: "divider" });
       continue;
     }
-    if (type === "section") {
+    const nested = itemChildren(child, tag);
+    const children = sections && nested.length ? declaredItems(child, tag, active, false) : [];
+    const label = itemLabel(child, nested.length > 0);
+    if (type === "section" && !children.length) {
       items.push({ type: "section", label });
       continue;
     }
     if (!label) continue;
     const id = child.getAttribute("value") ?? label;
-    items.push({
+    const item: DrawerItemConfig = {
       id,
       label,
       icon: child.getAttribute("icon") ?? undefined,
       activeIcon: child.getAttribute("selected-icon") ?? undefined,
       badge: child.getAttribute("badge") ?? undefined,
       disabled: child.hasAttribute("disabled"),
-      active: id === active,
-    });
+    };
+    if (children.length) {
+      item.items = children;
+      if (child.hasAttribute("expanded")) {
+        collapsedDeclarations.delete(child);
+        item.expanded = true;
+      } else if (collapsedDeclarations.has(child)) item.expanded = false;
+    } else {
+      item.active = id === active;
+      item.href = child.getAttribute("href") ?? undefined;
+    }
+    items.push(item);
   }
   return items;
 };
 
-const readDrawer = (host: HTMLElement): Config =>
-  ({ items: declaredItems(host, host.getAttribute("value")) }) satisfies DrawerConfig;
+const reflectSection = (host: HTMLElement, { id, expanded }: DrawerSectionEvent): void => {
+  const tag = `${host.localName}-item`;
+  const item = itemChildren(host, tag).find(child =>
+    itemChildren(child, tag).length && (child.getAttribute("value") ?? itemLabel(child, true)) === id);
+  if (!item) return;
+  if (expanded) collapsedDeclarations.delete(item);
+  else collapsedDeclarations.add(item);
+  const previous = previousDeclarations.get(host)?.find(section => section.items && section.id === id);
+  if (previous) previous.expanded = expanded;
+  item.toggleAttribute("expanded", expanded);
+};
+
+const readDrawer = (host: HTMLElement): Config => {
+  const items = declaredItems(host, `${host.localName}-item`, host.getAttribute("value"), true);
+  previousDeclarations.set(host, items);
+  const reflect = (event: DrawerSectionEvent): void => reflectSection(host, event);
+  return { items, onExpand: reflect, onCollapse: reflect } satisfies DrawerConfig;
+};
 
 const withoutActive = (items: DrawerItemConfig[]): string =>
-  JSON.stringify(items.map(({ active: _active, ...item }) => item));
+  JSON.stringify(items, (name, value: unknown) => name === "active" ? undefined : value);
 
-/**
- * Applies the declared items in place, keeping the selection: the factory
- * renders its items again. A clean drawer takes its `value` attribute again,
- * whose item may only now have a label. A focused item keeps focus when it is
- * still there.
- */
+/** Update declarations in place and restore focus if the focused item remains visible. */
 const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerComponent): boolean => {
-  const items = declaredItems(host, host.dirty ? component.getActive() : host.getAttribute("value"));
-  if (withoutActive(items) === withoutActive(component.getItems())) return true;
-  // The factory renders new buttons without restoring focus.
+  const active = component.getActive();
+  const items = declaredItems(host, `${host.localName}-item`, host.dirty ? active : host.getAttribute("value"), true);
+  const previous = previousDeclarations.get(host) ?? [];
+  previousDeclarations.set(host, items);
+
+  const signature = withoutActive(items);
+  if (signature === withoutActive(previous) || signature === withoutActive(component.getItems())) return true;
+
+  // Keep live expansion when the declaration's expansion attribute did not
+  // change. A newly available active child still uses the initial-state rule.
+  const settings = items.map(item => {
+    if (!item.items || item.id === undefined || item.items.some(child => child.active && child.id !== active)) return item;
+    const old = previous.find(candidate => candidate.items && candidate.id === item.id);
+    return old && old.expanded === item.expanded
+      ? { ...item, expanded: component.isSectionExpanded(item.id) }
+      : item;
+  });
+
   const focused = (host.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id;
-  component.setItems(items);
+  component.setItems(settings);
   if (focused !== undefined) {
     const item = Array.from(component.element.querySelectorAll<HTMLElement>("[data-id]")).find(
-      (element) => element.dataset.id === focused && !element.hasAttribute("disabled")
+      element => element.dataset.id === focused && !element.matches('[disabled], [aria-disabled="true"]') && !element.closest("[inert]")
     );
     item?.focus();
   }
   return true;
+};
+
+const sectionDetail = (payload: unknown) => {
+  const { value, expanded } = payload as DrawerSectionEvent;
+  return { value, expanded };
 };
 
 /** Selects an item; null clears the selection, which the factory does for an empty id. */
@@ -103,7 +154,7 @@ const select = (component: DrawerComponent, value: unknown): void =>
  */
 const create = ({ modal, ...config }: DrawerConfig & { modal?: boolean }): DrawerComponent => {
   const width = typeof config.width === "string" && /^\d+(\.\d+)?$/.test(config.width) ? Number(config.width) : config.width;
-  return createDrawer({ ...config, width, ...(modal ? { variant: "modal", layer: "top" } : { variant: "standard" }) });
+  return createShadowDrawer({ ...config, width, ...(modal ? { variant: "modal", layer: "top" } : { variant: "standard" }) });
 };
 
 const drawerSpec = {
@@ -133,6 +184,7 @@ const drawerSpec = {
     value: { get: (c) => c.getActive(), set: (c, v) => select(c, v) },
   },
   model: "value" as const,
+  methods: ["expandSection", "collapseSection", "toggleSection", "isSectionExpanded", "getExpandedSections"] as const,
   events: {
     // The factory emits `select` on a click or a keyboard activation, and
     // setActive() is silent: `setup` forwards it as `change`. Listed here for
@@ -143,6 +195,8 @@ const drawerSpec = {
     // State beside the model: opening leaves the drawer clean.
     open: { detail: () => null, state: true },
     close: { detail: () => null, state: true },
+    expand: { detail: sectionDetail, state: true },
+    collapse: { detail: sectionDetail, state: true },
   },
   config: readDrawer,
   setup: (host, component) => {
@@ -183,7 +237,13 @@ const drawerSpec = {
 export const drawerElement = defineElement<DrawerComponent>(drawerSpec);
 export type DrawerSpec = typeof drawerSpec;
 /** `<m-drawer>` as a ref or a query returns it. */
-export type DrawerElement = ElementInstance<DrawerSpec, DrawerComponent>;
+export interface DrawerElement extends ElementInstance<DrawerSpec, DrawerComponent> {
+  expandSection(id: string): this;
+  collapseSection(id: string): this;
+  toggleSection(id: string): this;
+  isSectionExpanded(id: string): boolean;
+  getExpandedSections(): string[];
+}
 
 /**
  * `<m-drawer-item>` declares one destination, section headline or divider,
@@ -200,6 +260,8 @@ export const drawerItemDeclaration = {
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Shown while this destination is active. */
     "selected-icon": { type: "string" },
     badge: { type: "string" },
+    href: { type: "string" },
+    expanded: { type: "boolean" },
     disabled: { type: "boolean" },
   },
 } as const;
