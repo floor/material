@@ -225,7 +225,10 @@ export const withAPI =
     const handleTargetMouseEnter = () => {
       if (touchExpiry === undefined) api.show();
     };
-    const handleTargetMouseLeave = () => api.hide();
+    const handleTargetMouseLeave = () => {
+      // A touch release can change the mouse hover target before its click.
+      if (touchExpiry === undefined) api.hide();
+    };
 
     // WCAG 1.4.13: the pointer can move from the target onto the tooltip and
     // rest there without it disappearing, and leaving the tooltip hides it as

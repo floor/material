@@ -13,7 +13,6 @@ declare global {
     tooltip: TooltipComponent;
     mountTooltip: (config: TooltipConfig) => void;
     mountPanelTooltip: (config: TooltipConfig) => void;
-    tooltipReleaseTrace?: unknown[];
   }
 }
 
@@ -486,29 +485,13 @@ try {
   const quickTap = await visible();
   // A release can give an unfocused anchor focus before its click arrives.
   await touchPage.evaluate(() => document.querySelector<HTMLButtonElement>("#target")!.blur());
-  await touchPage.evaluate(() => {
-    const trace: unknown[] = window.tooltipReleaseTrace = [];
-    const target = document.querySelector("#target")!;
-    for (const name of ["pointerup", "pointercancel", "focus", "blur", "mouseenter", "mouseleave", "click"]) {
-      target.addEventListener(name, (event) => {
-        const pointer = event as PointerEvent & { sourceCapabilities?: { firesTouchEvents?: boolean } };
-        trace.push([name, pointer.pointerType, pointer.sourceCapabilities?.firesTouchEvents, window.tooltip.isVisible()]);
-      }, true);
-    }
-    for (const method of ["show", "hide"] as const) {
-      const invoke = window.tooltip[method].bind(window.tooltip);
-      window.tooltip[method] = (immediate) => {
-        trace.push([method, immediate, new Error().stack?.split("\n").slice(1, 5)]);
-        return invoke(immediate);
-      };
-    }
-  });
   await hold();
   await touchPage.clock.runFor(600);
   const duringHold = await visible();
+  // Chromium can leave the mouse hover target before dispatching touch release.
+  await touchPage.evaluate(() => document.querySelector("#target")!.dispatchEvent(new MouseEvent("mouseleave")));
   await release();
   const afterRelease = await visible();
-  if (!afterRelease) console.log("Tooltip release trace", await touchPage.evaluate(() => window.tooltipReleaseTrace));
   await touchPage.clock.runFor(1500);
   const afterExpiry = await visible();
   await hold();
