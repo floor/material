@@ -317,10 +317,10 @@ describe("explicit contrast levels are opt-in", () => {
     // A disabled field in error paints its helper and counter on-surface (+397 B, CI 44393533911).
     // A bare top app bar button keeps a 16px inline margin so a 16px leading
     // button's 48px target ends at the margin edge, and an author class still
-    // matches. The rule is in the document base as well as the component sheet
-    // (−492 B from the 12px sheet). This pin is the locked Sass 1.85.1
-    // compressed compile (styles/base/_plain-slot-button.scss,
-    // styles/base/_document.scss, styles/components/_top-app-bar.scss).
+    // matches. The rule is in the top app bar sheet only; the full sheet already
+    // emitted it from that module (−492 B from the 12px sheet). This pin is the
+    // locked Sass 1.85.1 compressed compile (styles/base/_plain-slot-button.scss,
+    // styles/components/_top-app-bar.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
       sha256: "51f741c89bcb2a61cd8ce9896101b55f79c07ef72d29ee7e8fb9c970624b81b6",
       length: 551114,

@@ -13,9 +13,10 @@
  * Two adjacent bare buttons are checked separately: a point 1px inside the
  * first, toward the second, must hit the first. Two 16px leading buttons must
  * not share a 48px target. An author class such as nav-button is styled; a
- * library class is not. The document base plus shadow CSS, and a configured
- * tag prefix, are checked on their own page. The pre-upgrade sheet styles no
- * child pseudo-element.
+ * library class is not. The top app bar stylesheet plus shadow CSS, and a
+ * configured tag prefix, are checked on their own page. The document base
+ * does not carry the rule. The pre-upgrade sheet styles no child
+ * pseudo-element.
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
@@ -474,16 +475,18 @@ try {
   } catch (error) {
     failures.push(error instanceof Error ? error.message : String(error));
   }
-  if (!baseElements.includes("m-top-app-bar>button")) failures.push("base-elements sheet omitted the plain-button rule");
+  if (baseElements.includes("m-top-app-bar>button")) failures.push("base-elements sheet carries the plain-button rule");
+  if (!shadowCss.includes("m-top-app-bar>button")) failures.push("top app bar sheet omitted the plain-button rule");
   if (baseElements.includes("[class*=-button]") || shadowCss.includes("[class*=-button]")) {
     failures.push("plain-button rule still excludes an author class");
   }
-  const configuredBase = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "base/document";`, sassOptions).css;
+  const configuredDocument = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "base/document";`, sassOptions).css;
   const configuredComponent = sass.compileString(`@use "config" with ($tag-prefix: "x"); @use "components/top-app-bar";`, sassOptions).css;
-  for (const [name, css] of Object.entries({ base: configuredBase, component: configuredComponent })) {
-    if (!css.includes("x-top-app-bar>button")) failures.push(`configured ${name} did not emit x-top-app-bar>button`);
-    if (css.includes("m-top-app-bar>button")) failures.push(`configured ${name} still emits m-top-app-bar>button`);
+  if (configuredDocument.includes("x-top-app-bar>button") || configuredDocument.includes("m-top-app-bar>button")) {
+    failures.push("configured document base emits a top app bar button rule");
   }
+  if (!configuredComponent.includes("x-top-app-bar>button")) failures.push("configured component did not emit x-top-app-bar>button");
+  if (configuredComponent.includes("m-top-app-bar>button")) failures.push("configured component still emits m-top-app-bar>button");
   const prefixPage = await context.newPage();
   await prefixPage.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body>
     <m-top-app-bar id="host">
@@ -493,7 +496,7 @@ try {
     </m-top-app-bar>
     <x-top-app-bar><button type="button" slot="leading" id="custom-tag" class="nav-button"></button></x-top-app-bar>
   </body></html>`);
-  await prefixPage.addStyleTag({ content: configuredBase });
+  await prefixPage.addStyleTag({ content: configuredComponent });
   const adoptShadow = (css: string) => {
     const host = document.getElementById("host")!;
     const root = host.shadowRoot ?? host.attachShadow({ mode: "open" });
@@ -551,20 +554,20 @@ try {
     };
   };
   const shadowOnly = await prefixPage.evaluate(readButtons);
-  await prefixPage.addStyleTag({ content: baseElements });
-  const withBase = await prefixPage.evaluate(readButtons);
-  console.log(`BASE ${JSON.stringify({ shadowOnly, withBase })}`);
+  await prefixPage.addStyleTag({ content: shadowCss });
+  const withSheet = await prefixPage.evaluate(readButtons);
+  console.log(`BASE ${JSON.stringify({ shadowOnly, withSheet })}`);
   same("shadow CSS alone ::after", shadowOnly.bare.width, "auto");
-  same("base-elements plus shadow ::after", withBase.bare.width, "48px");
-  same("base-elements plus shadow rest opacity", withBase.bare.opacity, "0");
-  if (withBase.bare.content === "none") failures.push("base-elements plus shadow ::before content is none");
-  same("base-elements author class border", withBase.bare.border, 16);
-  if (!(withBase.overlap <= 0)) failures.push(`base-elements 16px targets overlap by ${withBase.overlap}px`);
-  same("base-elements gap before midpoint", withBase.beforeMid, "first");
-  same("base-elements gap after midpoint", withBase.afterMid, "second");
-  same("base-elements library ::after", withBase.library.width, "auto");
-  same("configured document base ::after", withBase.customTag.width, "48px");
-  same("configured document base rest opacity", withBase.customTag.opacity, "0");
+  same("top app bar sheet plus shadow ::after", withSheet.bare.width, "48px");
+  same("top app bar sheet plus shadow rest opacity", withSheet.bare.opacity, "0");
+  if (withSheet.bare.content === "none") failures.push("top app bar sheet plus shadow ::before content is none");
+  same("top app bar sheet author class border", withSheet.bare.border, 16);
+  if (!(withSheet.overlap <= 0)) failures.push(`top app bar sheet 16px targets overlap by ${withSheet.overlap}px`);
+  same("top app bar sheet gap before midpoint", withSheet.beforeMid, "first");
+  same("top app bar sheet gap after midpoint", withSheet.afterMid, "second");
+  same("top app bar sheet library ::after", withSheet.library.width, "auto");
+  same("configured top app bar sheet ::after", withSheet.customTag.width, "48px");
+  same("configured top app bar sheet rest opacity", withSheet.customTag.opacity, "0");
   await prefixPage.close();
 
   assert.deepEqual(errors, []);

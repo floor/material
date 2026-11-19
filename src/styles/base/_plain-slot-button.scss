@@ -5,9 +5,10 @@
 // stays clear too. Physical centering keeps the target on the button in both
 // directions. Only a library class (the configured prefix) is excluded, so an
 // author class such as nav-button still gets the layer. The tag comes from
-// $tag-prefix. Element applications load this from the document base: a shadow
-// stylesheet cannot style a slotted button's ::before or ::after, and
-// ::slotted() cannot take a following pseudo-element.
+// $tag-prefix. The top app bar stylesheet carries these rules, and the
+// element's sheet is that same compilation. A shadow stylesheet cannot style
+// a slotted button's ::before or ::after, so the light-DOM tag selector has
+// to load with the document sheet. The shared document base does not.
 @use '../abstract/base' as base;
 @use '../abstract/element-prefix' as tags;
 @use '../abstract/theme' as t;
