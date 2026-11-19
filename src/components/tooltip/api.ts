@@ -293,7 +293,7 @@ export const withAPI =
       if (event.key === "Enter" || event.key === " ") dismiss();
     };
     const handleTargetFocus = () => {
-      if (!pressed) api.show();
+      if (!pressed && touchExpiry === undefined) api.show();
     };
     const handleTargetBlur = () => api.hide();
 

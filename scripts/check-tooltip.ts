@@ -477,12 +477,14 @@ try {
   // between CDP input and the assertion must not consume the visible window.
   const clockStart = Date.now();
   await touchPage.clock.install({ time: clockStart });
-  await touchPage.clock.pauseAt(clockStart + 1000);
+  await touchPage.clock.pauseAt(clockStart + 60_000);
   await hold();
   await touchPage.clock.runFor(100);
   await release();
   await touchPage.clock.runFor(600);
   const quickTap = await visible();
+  // A release can give an unfocused anchor focus before its click arrives.
+  await touchPage.evaluate(() => document.querySelector<HTMLButtonElement>("#target")!.blur());
   await hold();
   await touchPage.clock.runFor(600);
   const duringHold = await visible();
