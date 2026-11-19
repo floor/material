@@ -473,7 +473,11 @@ try {
     type: "touchStart", touchPoints: [{ x: anchor.x + anchor.width / 2, y: anchor.y + anchor.height / 2 }],
   });
   const release = () => cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await touchPage.clock.install();
+  // Advance the touch timers only when the check asks. Runner scheduling
+  // between CDP input and the assertion must not consume the visible window.
+  const clockStart = Date.now();
+  await touchPage.clock.install({ time: clockStart });
+  await touchPage.clock.pauseAt(clockStart + 1000);
   await hold();
   await touchPage.clock.runFor(100);
   await release();
@@ -499,7 +503,7 @@ try {
   const explicitAfterOutside = await visible();
   await touchPage.keyboard.press("Escape");
   const afterEscape = await visible();
-  await touchPage.locator("#target").hover();
+  await touchPage.mouse.move(anchor.x + anchor.width / 2, anchor.y + anchor.height / 2);
   await touchPage.clock.runFor(1600);
   const hoverAfterTimeout = await visible();
 
