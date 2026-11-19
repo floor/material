@@ -323,9 +323,10 @@ describe("explicit contrast levels are opt-in", () => {
     // The shared document base does not. This pin is the locked Sass 1.85.1
     // compressed compile (styles/base/_plain-slot-button.scss,
     // styles/components/_top-app-bar.scss).
+    // Drawer disclosures add child padding, state layers and group motion.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "71a91ea381ec2e910a75b51c76f1e34503192a49a1efe943015247d051b8cb10",
-      length: 551931,
+      sha256: "d552ff61a4a37b66528a608152594138f4c745920f3abe0db14543d44d162a6c",
+      length: 554376,
     });
   });
 

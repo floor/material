@@ -131,7 +131,10 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
  * @module ${framework.dir}/jsx
  */
 `;
-  const entries = tags.map(({ tag, spec, element, deprecated }) => `${deprecated ? `      /** @deprecated ${deprecated} */\n` : ""}      "${tag}": Tag<${spec}, ${element}>;`).join("\n");
+  const entries = tags.map(({ tag, spec, element, deprecated }) => {
+    const type = !react && tag === "m-drawer" ? "DrawerTag" : "Tag";
+    return `${deprecated ? `      /** @deprecated ${deprecated} */\n` : ""}      "${tag}": ${type}<${spec}, ${element}>;`;
+  }).join("\n");
   if (react) {
     return `${header}import type * as React from "react";
 import type { ElementEvents, ElementMarkup } from "../elements";
@@ -168,14 +171,23 @@ ${entries}
   const specUnion = elementModules.map(({ name, module: from }) => `import("../elements/${from}").${pascal(name)}Spec`).join(" | ");
   const list = (names: Map<string, string[]>, fn: string): string =>
     [...names.keys()].map((name) => `      "${name}": ${fn}<"${name}">;`).join("\n");
-  return `${header}import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
+  return `${header}import type { JSX } from "solid-js";
+import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
+import type { DrawerSpec } from "../elements/drawer";
 import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+// Drawer disclosures carry detail; the existing global toolbar and rail events keep their payload.
+type Disclosure = "expand" | "collapse";
+type DrawerEvents<E extends HTMLElement> = {
+  [K in Disclosure as \`on:\${K}\`]?: JSX.EventHandler<E, ElementEvents<DrawerSpec>[K]>;
+};
+type DrawerTag<S, E extends HTMLElement> = Omit<Tag<S, E>, keyof DrawerEvents<E>> & DrawerEvents<E>;
 type Spec = ${specUnion};
 type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
-type Ev<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
+type Ev<K extends string, S = K extends Disclosure ? Exclude<Spec, DrawerSpec> : Spec> =
+  S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it
