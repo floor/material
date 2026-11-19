@@ -193,6 +193,66 @@ try {
     });
   }
 
+  // Born open: the closed state's guard must come off with the same call that
+  // opens the surface, or a dialog created open could take no focus.
+  for (const layer of ["default", "top"] as const) {
+    await row(`factory dialog created open (${layer} layer): exposed, not inert, focus inside`, async () => {
+      const state = await page.evaluate(async (layer) => {
+        document.body.replaceChildren();
+        const api = (window as unknown as { api: Record<string, (config: Record<string, unknown>) => Record<string, unknown>> }).api;
+        const dialog = api.createDialog!({
+          open: true,
+          title: "Initially open",
+          buttons: [{ text: "Continue", action: "close" }],
+          ...(layer === "top" ? { layer: "top" } : {}),
+        }) as unknown as { element: HTMLElement; isOpen: () => boolean };
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return {
+          isOpen: dialog.isOpen(),
+          inert: dialog.element.hasAttribute("inert"),
+          focusInside: dialog.element.contains(document.activeElement),
+          active: (document.activeElement as HTMLElement | null)?.textContent?.trim().slice(0, 40) ?? null,
+        };
+      }, layer);
+      assert.equal(state.isOpen, true, "the dialog did not open at creation");
+      assert.equal(state.inert, false, "a dialog created open is inert");
+      assert.equal(state.focusInside, true, `focus is not in the dialog created open (${state.active})`);
+      assert.ok(await exposed("Initially open"), "a dialog created open is not exposed");
+    });
+  }
+  await row("<m-dialog open>: exposed, not inert", async () => {
+    await page.evaluate(async () => {
+      document.body.replaceChildren();
+      const host = document.createElement("m-dialog");
+      host.setAttribute("headline", "Element open");
+      host.innerHTML = "<p>Body</p>";
+      host.setAttribute("open", "");
+      document.body.append(host);
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    });
+    const inert = await page.evaluate(() => {
+      const host = document.querySelector("m-dialog")!;
+      const surface = host.shadowRoot?.querySelector(".mtrl-dialog") as HTMLElement | null;
+      return surface ? surface.hasAttribute("inert") : null;
+    });
+    assert.equal(inert, false, "a <m-dialog open> surface is inert");
+    assert.ok(await exposed("Element open"), "a <m-dialog open> is not exposed");
+  });
+  await row("<m-snackbar open>: exposed, not inert", async () => {
+    await page.evaluate(async () => {
+      document.body.replaceChildren();
+      const host = document.createElement("m-snackbar");
+      host.setAttribute("message", "Element open");
+      host.setAttribute("action", "Undo");
+      host.setAttribute("duration", "indefinite");
+      // `open` is the element's property; it is applied as the element upgrades
+      (host as unknown as { open: boolean }).open = true;
+      document.body.append(host);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    });
+    assert.ok(await exposed("Element open"), "a <m-snackbar open> is not exposed");
+  });
+
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, [], `closed surfaces:\n  ${failures.join("\n  ")}`);
   console.log("Passed closed surfaces: both factories and both elements keep a closed dialog and snackbar out of the AX tree and the Tab order, before the first open and after the exit settles.");

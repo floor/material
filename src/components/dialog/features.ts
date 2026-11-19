@@ -738,6 +738,9 @@ export const withVisibility =
   // Setup initial state
   scopeScrim();
   if (isOpen) {
+    // Born open: the closed state's guard comes off here too, or the surface
+    // this creation shows could take no focus (open() is the other path)
+    component.element.inert = false;
     if (top) showModal();
     addClass(component.overlay, overlayVisibleClass);
     addClass(component.element, dialogVisibleClass);
