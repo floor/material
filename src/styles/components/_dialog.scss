@@ -465,7 +465,10 @@ dialog.#{$component} {
 
 // High contrast mode
 @include m.high-contrast {
-    .#{$component} {
+    // The top layer's `dialog.#{$component}` reset clears the border for a
+    // `layer: "top"` dialog; the forced-colours edge is restated on it too
+    .#{$component},
+    dialog.#{$component} {
         border: 2px solid CurrentColor;
     }
 
