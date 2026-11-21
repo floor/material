@@ -526,9 +526,9 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
 
-**Button accessibility.** Set `aria-expanded`, `aria-haspopup`, and `aria-pressed` on `<m-button>`,
-`<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`, or `<m-split-button>`.
-The states reach the native button, or the leading action of a split button.
+**Button accessibility.** The host forwards `aria-expanded` and `aria-haspopup`
+to the native button. It also forwards `aria-pressed`. This applies to buttons,
+icon buttons, FABs, extended FABs, and the leading action of split buttons.
 For a Material toggle, use its `selected` state to drive `aria-pressed`.
 
 `aria-controls` and `aria-describedby` resolve IDs in the host's document or
