@@ -28,6 +28,7 @@ import type { SplitButtonComponent, SplitButtonConfig, SplitButtonEvent, SplitBu
 import type { MenuContent } from "../components/menu/types";
 import { innerMenu } from "../components/menu/inner";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
+import { buttonAria, syncButtonAria } from "./form-button";
 import { declaredMenuItems, defineMenuItem } from "./menu";
 
 /** The factory's events, and the element's own names for two of them. */
@@ -120,6 +121,7 @@ const splitButtonSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     "trailing-label": { type: "string", config: "trailingLabel" },
     "group-label": { type: "string", config: "groupLabel" },
+    ...buttonAria,
     "aria-label": {
       type: "string",
       config: "ariaLabel",
@@ -138,7 +140,8 @@ const splitButtonSpec = {
     },
   },
   config: readSplitButton,
-  setup: (_host, c) => {
+  setup: (host, c) => {
+    syncButtonAria(host, c);
     // The native click is the leading action's: one from the trailing button
     // or the menu does not leave the shadow root.
     const contain = (event: MouseEvent): void => {

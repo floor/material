@@ -23,7 +23,7 @@
 import createIconButton from "../components/icon-button";
 import type { IconButtonChangePayload, IconButtonComponent, IconButtonConfig } from "../components/icon-button/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
-import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
+import { buttonAria, buttonForm, setupFormButton, typeAttribute } from "./form-button";
 
 const iconButtonSpec = {
   name: "icon-button",
@@ -56,6 +56,7 @@ const iconButtonSpec = {
     selected: { type: "boolean", config: "selected", update: (c, v) => void (v ? c.select() : c.deselect()) },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
+    ...buttonAria,
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
   },
   properties: {
@@ -77,7 +78,7 @@ const iconButtonSpec = {
     },
   },
   form: buttonForm<IconButtonComponent>(),
-  setup: submitOnClick,
+  setup: setupFormButton,
 } satisfies ElementSpec<IconButtonComponent>;
 
 export const iconButtonElement = defineElement<IconButtonComponent>(iconButtonSpec);
