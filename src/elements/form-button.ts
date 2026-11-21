@@ -10,7 +10,7 @@
 import { PREFIX } from "../core/config";
 import type { AttributeSpec, ElementComponent, ElementHost, FormSpec } from "./define";
 
-interface ButtonControl {
+export interface ButtonControl {
   element: HTMLElement;
   leadingElement?: HTMLElement;
   isSelected?: () => boolean;
