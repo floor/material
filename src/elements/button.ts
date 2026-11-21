@@ -21,7 +21,7 @@
 import createButton from "../components/button";
 import type { ButtonChangePayload, ButtonComponent, ButtonConfig } from "../components/button/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
-import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
+import { buttonAria, buttonForm, setupFormButton, typeAttribute } from "./form-button";
 
 const buttonSpec = {
   name: "button",
@@ -48,6 +48,7 @@ const buttonSpec = {
     selected: { type: "boolean", config: "selected", update: (c, v) => void c.setSelected(Boolean(v)) },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
+    ...buttonAria,
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
   },
   properties: {
@@ -74,7 +75,7 @@ const buttonSpec = {
     },
   },
   form: buttonForm<ButtonComponent>(),
-  setup: submitOnClick,
+  setup: setupFormButton,
 } satisfies ElementSpec<ButtonComponent>;
 
 export const buttonElement = defineElement<ButtonComponent>(buttonSpec);

@@ -788,6 +788,44 @@ try {
     check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it");
   }
 
+  await fresh(page, `
+    <m-button id="disclosure" aria-expanded="false" aria-controls="panel" aria-describedby="hint">Show details</m-button>
+    <section id="panel">Details</section>
+    <p id="hint">Additional details</p>
+  `);
+  {
+    const client = await page.context().newCDPSession(page);
+    try {
+      const disclosureAX = async () => {
+        const { nodes } = await client.send("Accessibility.getFullAXTree");
+        const buttons = nodes.filter((node) => !node.ignored && node.role?.value === "button" && node.name?.value === "Show details");
+        assert.equal(buttons.length, 1, "the shadow button is the sole disclosure control");
+        return buttons[0]!;
+      };
+      const expanded = (node: Awaited<ReturnType<typeof disclosureAX>>) =>
+        node.properties?.find((property) => property.name === "expanded")?.value.value;
+      const collapsed = await disclosureAX();
+      assert.equal(expanded(collapsed), false, "the native disclosure button is initially collapsed in the accessibility tree");
+      assert.equal(collapsed.description?.value, "Additional details", "the description crosses the shadow boundary");
+
+      const setExpanded = (value: string | null) => page.locator("#disclosure").evaluate((host, state) => {
+        if (state === null) host.removeAttribute("aria-expanded");
+        else host.setAttribute("aria-expanded", state);
+      }, value);
+      await setExpanded("true");
+      assert.equal(expanded(await disclosureAX()), true, "a host update exposes the expanded state on the native button");
+      await setExpanded(null);
+      assert.equal(expanded(await disclosureAX()), undefined, "removing the host attribute clears the expanded state");
+      assert.equal(await page.locator("#disclosure").evaluate((host) => {
+        const button = host.shadowRoot?.querySelector("button") as HTMLButtonElement & { ariaControlsElements?: Element[] };
+        return button.ariaControlsElements?.[0] === document.getElementById("panel");
+      }), true, "the native button references the controlled element in the document");
+      check("button: Chromium exposes disclosure state and resolves ARIA references across the shadow boundary");
+    } finally {
+      await client.detach();
+    }
+  }
+
   // Leading icon: the start inset and the end inset match in both directions
   // (12 and 16 at size s; size xs keeps whatever left-to-right measures), and
   // the extra-small icon-to-label gap is 4. The icon already follows direction

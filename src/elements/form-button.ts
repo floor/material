@@ -7,7 +7,59 @@
  * @module elements
  */
 
-import type { ElementComponent, ElementHost, FormSpec } from "./define";
+import { PREFIX } from "../core/config";
+import type { AttributeSpec, ElementComponent, ElementHost, FormSpec } from "./define";
+
+interface ButtonControl {
+  element: HTMLElement;
+  leadingElement?: HTMLElement;
+  isSelected?: () => boolean;
+}
+
+type ReferenceProperty = "ariaControlsElements" | "ariaDescribedByElements";
+
+const ariaAttribute = (name: string, reference?: ReferenceProperty): AttributeSpec<ButtonControl> & { type: "string" } => ({
+  type: "string",
+  update(component, value, host) {
+    const button = component.leadingElement ?? component.element;
+    if (reference) {
+      const control = button as HTMLElement & Partial<Record<ReferenceProperty, Element[] | null>>;
+      if (!(reference in control)) return;
+      // Resolve in the host's scope, where the author wrote the ID references.
+      const root = host.getRootNode() as Document | DocumentFragment;
+      const targets: Element[] = [];
+      for (const id of String(value ?? "").split(/[\t\n\f\r ]+/)) {
+        const target = id && root.getElementById?.(id);
+        if (target) targets.push(target);
+      }
+      control[reference] = targets.length ? targets : null;
+    } else if (value !== null) {
+      button.setAttribute(name, String(value));
+    } else if (name === "aria-pressed" && (
+      button.classList.contains(`${PREFIX}-button--toggle`) || button.classList.contains(`${PREFIX}-icon-button--toggle`)
+    )) {
+      // With the authored override gone, the built-in toggle owns this state.
+      button.setAttribute(name, String(component.isSelected?.() ?? false));
+    } else {
+      button.removeAttribute(name);
+    }
+  },
+});
+
+export const buttonAria = {
+  "aria-expanded": ariaAttribute("aria-expanded"),
+  "aria-haspopup": ariaAttribute("aria-haspopup"),
+  "aria-pressed": ariaAttribute("aria-pressed"),
+  "aria-controls": ariaAttribute("aria-controls", "ariaControlsElements"),
+  "aria-describedby": ariaAttribute("aria-describedby", "ariaDescribedByElements"),
+};
+
+export const syncButtonAria = (host: HTMLElement, component: ButtonControl): void => {
+  for (const [name, attribute] of Object.entries(buttonAria)) {
+    const value = host.getAttribute(name);
+    if (value !== null) attribute.update?.(component, value, host);
+  }
+};
 
 /** The part of a button-like component the form wiring uses. */
 interface Disableable {
@@ -31,7 +83,8 @@ export const buttonForm = <C extends Disableable>(): FormSpec<C> => ({
 });
 
 /** Submits or resets the host's form on click, as `type` asks. Returns the cleanup. */
-export const submitOnClick = <C extends ElementComponent>(host: ElementHost<C>): (() => void) => {
+export const setupFormButton = <C extends ElementComponent>(host: ElementHost<C>, component: C): (() => void) => {
+  syncButtonAria(host, component);
   const onClick = (): void => {
     const form = host.internals?.form;
     const type = host.getAttribute("type");
