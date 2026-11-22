@@ -532,6 +532,17 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
 
+**Button accessibility.** The host forwards `aria-expanded` and `aria-haspopup`
+to the native button. It also forwards `aria-pressed`. This applies to buttons,
+icon buttons, FABs, extended FABs, and the leading action of split buttons.
+For a Material toggle, use its `selected` state to drive `aria-pressed`.
+
+`aria-controls` and `aria-describedby` resolve IDs in the host's document or
+shadow root and pass element references to the native button. The targets must
+be present when the host connects or its ARIA attributes change. Browsers
+without ARIA element reflection expose the button's states independently of
+these cross-shadow relationships.
+
 A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions.
 
 Opt in with `promoteChildActions` or `promote-child-actions` when that clickable card should keep its child actions. The card becomes an article, Tab reaches those children, and the development warning stays off.
