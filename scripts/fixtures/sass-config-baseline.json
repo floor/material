@@ -2,7 +2,7 @@
   "tested": "9f1436fd9314d8a602fdac0b0e36d296805f5b0a",
   "branch": "fix/app-bar-naming",
   "mainRevision": "e4cd894327c9cf9a4dda1c529d29315e9ff01fef",
-  "ci": 44994147740,
+  "ci": 44995058056,
   "bun": "1.4.2",
   "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
   "sourceOptions": {
@@ -588,7 +588,7 @@
     "elements/slider.js": "8b3118bb9e4c368af200cbd937e32effe361332db2ee108c776a08905491dda7",
     "elements/snackbar.js": "89de64febb6e437e20b5d992ba46394f54efa9aebd6580d224697ab28f524f40",
     "elements/split-button.js": "e246f5e4dba50f2aa302915840efb2a68d0c2e8c59e1e79169a89557ae5268a3",
-    "elements/styles.js": "d1342bbc111bd5057f9e438a7d631cfd36db571434d2cd2144f61e060cb18acb",
+    "elements/styles.js": "8a38b9a0b6245d2998d3d9a223744f8a7f382e8c1acaafb423f2c2ac7a6f5260",
     "elements/switch.js": "e16cd4b4c0b4dcb63740c91af2388849b3a2a30920e81dd499d493d9aa7fec6a",
     "elements/tabs.js": "99e7c71d29eb2f783cf4de38698fb2d6a4060330ed5666ba0d48a52a010b1a71",
     "elements/text-field.js": "b0bb1b5601adf35f7ffbfe4165df23385295442cce1d6407c50d9b1286187796",
