@@ -86,7 +86,7 @@ export async function emitSvelte(outdir: string): Promise<void> {
   for (const { name, module, styles } of elementModules) {
     const P = pascal(name);
     const live = Object.keys(elements[name as keyof typeof elements].spec.properties ?? {});
-    const note = elementDeprecations[name]?.(pascal("toolbar"));
+    const note = elementDeprecations[name]?.(pascal);
     await writeFile(`${dir}/${P}.svelte`, component(name, live, module, styles));
     await writeFile(`${dir}/${P}.svelte.d.ts`, `import type { Component } from "svelte";
 import type { ${P}Spec, ${P}Element } from "../elements/index.js";

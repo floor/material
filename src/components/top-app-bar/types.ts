@@ -16,7 +16,7 @@ export type TopAppBarType = 'small' | 'medium' | 'large' | 'center';
  * Configuration options for Top App Bar component
  * @category Components
  */
-export interface TopAppBarConfig {
+export interface AppBarConfig {
   /**
    * Element to use for the container
    * @default 'header'
@@ -79,7 +79,7 @@ export interface TopAppBarConfig {
  * Top App Bar component interface
  * @category Components
  */
-export interface TopAppBarComponent extends ElementComponent {
+export interface AppBarComponent extends ElementComponent {
   /**
    * Sets the title of the top app bar
    * @param {string} title - Title text
@@ -139,3 +139,13 @@ export interface TopAppBarComponent extends ElementComponent {
    */
   getTrailingContainer: () => HTMLElement;
 }
+
+/**
+ * @deprecated use {@link AppBarConfig}. The top app bar is the app bar.
+ */
+export type TopAppBarConfig = AppBarConfig;
+
+/**
+ * @deprecated use {@link AppBarComponent}. The top app bar is the app bar.
+ */
+export type TopAppBarComponent = AppBarComponent;

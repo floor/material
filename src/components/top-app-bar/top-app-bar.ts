@@ -13,20 +13,21 @@ import {
 } from "../../core/compose";
 
 import { createConfig } from "./config";
-import type { TopAppBarComponent, TopAppBarConfig, TopAppBarType } from "./types";
+import type { AppBarComponent, AppBarConfig, TopAppBarType } from "./types";
 import { TOP_APP_BAR_DEFAULTS } from "./constants";
 
-// The one TopAppBarComponent declaration is the public one in types.ts; this
+// The one AppBarComponent declaration is the public one in types.ts; this
 // module re-exports it for the element, which imports it from here.
-export type { TopAppBarComponent };
+export type { AppBarComponent };
 
 /**
- * Creates a top app bar component
+ * Creates an app bar: the Material 3 app bar, in the small, centre, medium
+ * or large type.
  *
- * @param {TopAppBarConfig} config - Configuration options
- * @returns {TopAppBarComponent} Top app bar component instance
+ * @param {AppBarConfig} config - Configuration options
+ * @returns {AppBarComponent} App bar component instance
  */
-export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponent => {
+export const createAppBar = (config: AppBarConfig = {}): AppBarComponent => {
   // Process configuration with defaults
   const componentConfig = createConfig(config);
 
@@ -218,7 +219,7 @@ export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponen
   };
 
   // Create the top app bar interface
-  const topAppBar: TopAppBarComponent = {
+  const topAppBar: AppBarComponent = {
     ...withLifecycleComponent,
 
     // Spreading a component copies `addClass` but not the `this` it returns:
@@ -293,3 +294,9 @@ export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponen
 
   return topAppBar;
 };
+
+/**
+ * @deprecated use {@link createAppBar}. The top app bar is the app bar; this
+ * name stays for 3.x.
+ */
+export const createTopAppBar = createAppBar;

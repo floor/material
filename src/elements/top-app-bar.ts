@@ -1,6 +1,7 @@
 // src/elements/top-app-bar.ts
 /**
- * `<m-top-app-bar>`: the top app bar as a container with slots.
+ * `<m-app-bar>`: the app bar as a container with slots. `<m-top-app-bar>` is
+ * the same element under the deprecated name.
  *
  * Children are the headline, and `headline` its text when there are none;
  * `slot="leading"` takes the navigation icon button and `slot="trailing"` the
@@ -19,8 +20,8 @@
  */
 
 import createTopAppBar from "../components/top-app-bar";
-import type { TopAppBarComponent } from "../components/top-app-bar/top-app-bar";
-import type { TopAppBarConfig, TopAppBarType } from "../components/top-app-bar/types";
+import type { AppBarComponent } from "../components/top-app-bar/top-app-bar";
+import type { AppBarConfig, TopAppBarType } from "../components/top-app-bar/types";
 import { TOP_APP_BAR_DEFAULTS } from "../components/top-app-bar/constants";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
@@ -35,7 +36,7 @@ const namedSlot = (name: string): HTMLSlotElement => {
  * the text after it (see `headlineFallback`). Slots go in the leading and
  * trailing containers the factory appends elements to.
  */
-const create = (config: TopAppBarConfig): TopAppBarComponent => {
+const create = (config: AppBarConfig): AppBarComponent => {
   const bar = createTopAppBar(config);
   const headline = bar.getHeadlineElement();
   const text = document.createElement("span");
@@ -46,7 +47,7 @@ const create = (config: TopAppBarConfig): TopAppBarComponent => {
   return bar;
 };
 
-const headlineText = (component: TopAppBarComponent): HTMLElement | null =>
+const headlineText = (component: AppBarComponent): HTMLElement | null =>
   component.getHeadlineElement().querySelector("span");
 
 /**
@@ -55,7 +56,7 @@ const headlineText = (component: TopAppBarComponent): HTMLElement | null =>
  * cannot tell an empty leading from one with an icon; the title's end gap
  * belongs to an icon that is there (components/_top-app-bar.scss).
  */
-const leadingEmptiness = (component: TopAppBarComponent): (() => void) => {
+const leadingEmptiness = (component: AppBarComponent): (() => void) => {
   const leading = component.getLeadingContainer();
   const slot = leading.querySelector("slot") as HTMLSlotElement;
   const sync = (): void => {
@@ -71,7 +72,7 @@ const leadingEmptiness = (component: TopAppBarComponent): (() => void) => {
  * slot's own fallback: the whitespace between the slotted buttons is
  * assigned to the default slot, which would hide it.
  */
-const headlineFallback = (component: TopAppBarComponent): (() => void) => {
+const headlineFallback = (component: AppBarComponent): (() => void) => {
   const slot = component.getHeadlineElement().querySelector("slot") as HTMLSlotElement;
   const sync = (): void => {
     const text = headlineText(component);
@@ -91,7 +92,7 @@ const readBar = (host: HTMLElement): Config =>
     // A scroll target replaces the window as what the bar follows.
     scrollable: !host.hasAttribute("no-scroll") && !host.hasAttribute("scroll-target"),
     compressible: !host.hasAttribute("no-compress"),
-  }) satisfies Partial<TopAppBarConfig>;
+  }) satisfies Partial<AppBarConfig>;
 
 const threshold = (host: HTMLElement): number => {
   const value = Number(host.getAttribute("scroll-threshold") ?? TOP_APP_BAR_DEFAULTS.SCROLL_THRESHOLD);
@@ -102,7 +103,7 @@ const threshold = (host: HTMLElement): number => {
  * Follows the element whose id `scroll-target` names. Listening at the
  * document, in the capture phase, finds a target rendered after the bar.
  */
-const followScrollTarget = (host: HTMLElement, component: TopAppBarComponent): (() => void) => {
+const followScrollTarget = (host: HTMLElement, component: AppBarComponent): (() => void) => {
   const id = host.getAttribute("scroll-target");
   if (!id || host.hasAttribute("no-scroll")) return () => undefined;
   const update = (target: Element): void => void component.setScrollState(target.scrollTop > threshold(host));
@@ -119,7 +120,7 @@ const followScrollTarget = (host: HTMLElement, component: TopAppBarComponent): (
 const topAppBarSpec = {
   name: "top-app-bar",
   slots: ["leading", "trailing"] as const,
-  create: (config) => create(config as TopAppBarConfig),
+  create: (config) => create(config as AppBarConfig),
   styles: ["top-app-bar"],
   hostStyles: ":host{display:block}",
   attributes: {
@@ -150,19 +151,39 @@ const topAppBarSpec = {
     const cleanups = [headlineFallback(component), leadingEmptiness(component), followScrollTarget(host, component)];
     return () => cleanups.forEach((cleanup) => cleanup());
   },
-} satisfies ElementSpec<TopAppBarComponent>;
+} satisfies ElementSpec<AppBarComponent>;
 
-export const topAppBarElement = defineElement<TopAppBarComponent>(topAppBarSpec);
+/** The app bar: the same spec under the name Material gives it. */
+const appBarSpec = { ...topAppBarSpec, name: "app-bar" } as const;
+
+export const appBarElement = defineElement<AppBarComponent>(appBarSpec);
+export type AppBarSpec = typeof appBarSpec;
+/** `<m-app-bar>` as a ref or a query returns it. */
+export type AppBarElement = ElementInstance<AppBarSpec, AppBarComponent>;
+
+/** Registers `<m-app-bar>` (or `<prefix-app-bar>`). */
+export const defineAppBar = (options?: DefineOptions): string => appBarElement.define(options);
+
+/**
+ * @deprecated use {@link appBarElement}. The top app bar is the app bar.
+ */
+export const topAppBarElement = defineElement<AppBarComponent>(topAppBarSpec);
+/** @deprecated use {@link AppBarSpec}. */
 export type TopAppBarSpec = typeof topAppBarSpec;
-/** `<m-top-app-bar>` as a ref or a query returns it. */
-export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBarComponent>;
+/** @deprecated use {@link AppBarElement}. */
+export type TopAppBarElement = ElementInstance<TopAppBarSpec, AppBarComponent>;
 
-/** Registers `<m-top-app-bar>` (or `<prefix-top-app-bar>`). */
+/**
+ * @deprecated use {@link defineAppBar}. Registers `<m-top-app-bar>` (or
+ * `<prefix-top-app-bar>`).
+ */
 export const defineTopAppBar = (options?: DefineOptions): string => topAppBarElement.define(options);
 
 declare global {
   /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
   interface HTMLElementTagNameMap {
+    "m-app-bar": AppBarElement;
+    /** @deprecated use `m-app-bar`. */
     "m-top-app-bar": TopAppBarElement;
   }
 }

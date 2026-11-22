@@ -54,7 +54,9 @@ export { createTab } from "./tabs/tab";
 export { default as createTextField } from "./text-field";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
-export { default as createTopAppBar } from "./top-app-bar";
+export { default as createAppBar } from "./top-app-bar";
+/** @deprecated use `createAppBar`. The top app bar is the app bar. */
+export { createTopAppBar } from "./top-app-bar";
 export { default as createTooltip } from "./tooltip";
 
 // Card content components
@@ -277,11 +279,15 @@ export type {
 } from "./toolbar/types";
 export type { ToolbarVariant } from "./toolbar/constants";
 
-// Top App Bar
+// App Bar
 export type {
-  TopAppBarConfig,
-  TopAppBarComponent,
+  AppBarConfig,
+  AppBarComponent,
 } from "./top-app-bar/types";
+/** @deprecated use `AppBarConfig`. The top app bar is the app bar. */
+export type { TopAppBarConfig } from "./top-app-bar/types";
+/** @deprecated use `AppBarComponent`. The top app bar is the app bar. */
+export type { TopAppBarComponent } from "./top-app-bar/types";
 
 // Tooltip
 export type { TooltipConfig, TooltipVariant, TooltipComponent } from "./tooltip/types";

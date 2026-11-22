@@ -27,6 +27,7 @@ export { MRadios } from "./radios";
 export { MNavigationBar } from "./navigation-bar";
 export { MNavigationRail } from "./navigation-rail";
 export { MDrawer } from "./drawer";
+export { MAppBar } from "./app-bar";
 export { MTopAppBar } from "./top-app-bar";
 export { MBottomAppBar } from "./bottom-app-bar";
 export { MButtonGroup } from "./button-group";

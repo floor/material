@@ -144,7 +144,7 @@ Every component comes three ways:
 |-------|------------|
 | Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
 | Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
-| Navigation | Navigation bar, Navigation rail, Drawer, Tabs, Menu, Top app bar, Bottom app bar |
+| Navigation | Navigation bar, Navigation rail, Drawer, Tabs, Menu, App bar, Bottom app bar (deprecated) |
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
@@ -155,10 +155,15 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Actions | `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar` |
 | Selection and input | `createCheckbox`, `createSwitch`, `createRadios`, `createChips`, `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker` |
 | Chips, one at a time | `createAssistChip`, `createFilterChip`, `createInputChip`, `createSuggestionChip` |
-| Navigation | `createNavigationBar`, `createNavigationRail`, `createDrawer`, `createTabs`, `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar` |
+| Navigation | `createNavigationBar`, `createNavigationRail`, `createDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar`, `createBottomAppBar` |
 | Containment | `createCard`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet` |
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
+
+Two names are deprecated and keep working for 3.x:
+
+- `createTopAppBar`, `TopAppBarConfig` and `TopAppBarComponent` are the app bar under its old name; use `createAppBar`, `AppBarConfig` and `AppBarComponent`. The element is `<m-app-bar>`, with `<m-top-app-bar>` kept as a deprecated alias; the style classes and tokens stay `mtrl-top-app-bar`, as Material's sizes are the same bar.
+- `createBottomAppBar` is deprecated: Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use `createToolbar` with `variant="docked"` and `placement="bottom"`; a centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available there.
 
 ### Factory control labels
 

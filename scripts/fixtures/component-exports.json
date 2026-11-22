@@ -81,10 +81,26 @@
     }
   ],
   "bottom-app-bar-toolbar": [
-    { "name": "BottomAppBarToolbarComponent", "kind": "type", "status": "deprecated" },
-    { "name": "BottomAppBarToolbarConfig", "kind": "type", "status": "deprecated" },
-    { "name": "createBottomAppBarToolbar", "kind": "value", "status": "public" },
-    { "name": "default", "kind": "value", "status": "public" }
+    {
+      "name": "BottomAppBarToolbarComponent",
+      "kind": "type",
+      "status": "deprecated"
+    },
+    {
+      "name": "BottomAppBarToolbarConfig",
+      "kind": "type",
+      "status": "deprecated"
+    },
+    {
+      "name": "createBottomAppBarToolbar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
   ],
   "bottom-app-bar/constants": [
     {
@@ -3952,9 +3968,24 @@
   ],
   "top-app-bar": [
     {
-      "name": "createTopAppBar",
+      "name": "AppBarComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "AppBarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createAppBar",
       "kind": "value",
       "status": "public"
+    },
+    {
+      "name": "createTopAppBar",
+      "kind": "value",
+      "status": "deprecated"
     },
     {
       "name": "default",
@@ -3984,12 +4015,12 @@
     {
       "name": "TopAppBarComponent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TopAppBarConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     }
   ],
   "top-app-bar/constants": [

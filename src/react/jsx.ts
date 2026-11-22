@@ -50,6 +50,8 @@ declare module "react" {
       "m-navigation-bar": Tag<import("../elements/navigation-bar").NavigationBarSpec, import("../elements/navigation-bar").NavigationBarElement>;
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;
       "m-drawer": Tag<import("../elements/drawer").DrawerSpec, import("../elements/drawer").DrawerElement>;
+      "m-app-bar": Tag<import("../elements/top-app-bar").AppBarSpec, import("../elements/top-app-bar").AppBarElement>;
+      /** @deprecated Material Design 3 names this the app bar. Use AppBar instead. */
       "m-top-app-bar": Tag<import("../elements/top-app-bar").TopAppBarSpec, import("../elements/top-app-bar").TopAppBarElement>;
       /** @deprecated Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use Toolbar with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar. */
       "m-bottom-app-bar": Tag<import("../elements/bottom-app-bar").BottomAppBarSpec, import("../elements/bottom-app-bar").BottomAppBarElement>;

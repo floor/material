@@ -27,6 +27,10 @@ export type FabPosition = 'center' | 'end';
  * toolbar. Removal is parked until Material Design v4.
  * @category Components
  */
+/**
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar; see `ToolbarConfig`.
+ */
 export interface BottomAppBarConfig {
   /**
    * Element to use for the container
@@ -108,6 +112,10 @@ export interface BottomAppBarConfig {
  * { variant: 'docked', placement: 'bottom' }; each method names its toolbar
  * replacement. Removal is parked until Material Design v4.
  * @category Components
+ */
+/**
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar; see `ToolbarComponent`.
  */
 export interface BottomAppBarComponent extends ElementComponent {
   /**

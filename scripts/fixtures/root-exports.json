@@ -1,5 +1,15 @@
 [
   {
+    "name": "AppBarComponent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "AppBarConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "AssistChipConfig",
     "kind": "type",
     "status": "public"
@@ -203,6 +213,11 @@
   },
   {
     "name": "configureHTML",
+    "kind": "value",
+    "status": "public"
+  },
+  {
+    "name": "createAppBar",
     "kind": "value",
     "status": "public"
   },
@@ -435,7 +450,8 @@
   {
     "name": "createTopAppBar",
     "kind": "value",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DatePickerComponent",
@@ -1035,12 +1051,14 @@
   {
     "name": "TopAppBarComponent",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "TopAppBarConfig",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "TrustedHTMLLike",

@@ -28,6 +28,7 @@ export { Radios } from "./radios";
 export { NavigationBar } from "./navigation-bar";
 export { NavigationRail } from "./navigation-rail";
 export { Drawer } from "./drawer";
+export { AppBar } from "./app-bar";
 export { TopAppBar } from "./top-app-bar";
 export { BottomAppBar } from "./bottom-app-bar";
 export { ButtonGroup } from "./button-group";

@@ -28,7 +28,7 @@ import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 import { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
 import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
 import { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
-import { topAppBarElement, defineTopAppBar } from "./top-app-bar";
+import { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
 import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
 import { chipsElement, chipDeclaration, defineChips } from "./chips";
@@ -100,8 +100,12 @@ export { navigationRailElement, navigationRailItemDeclaration, defineNavigationR
 export type { NavigationRailSpec, NavigationRailElement, NavigationRailItemAttributes } from "./navigation-rail";
 export { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
 export type { DrawerSpec, DrawerElement, DrawerItemAttributes } from "./drawer";
-export { topAppBarElement, defineTopAppBar } from "./top-app-bar";
-export type { TopAppBarSpec, TopAppBarElement } from "./top-app-bar";
+export { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
+export type {
+  AppBarSpec, AppBarElement,
+  /** @deprecated use `AppBarSpec`. */ TopAppBarSpec,
+  /** @deprecated use `AppBarElement`. */ TopAppBarElement,
+} from "./top-app-bar";
 export { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 export type { BottomAppBarSpec, BottomAppBarElement } from "./bottom-app-bar";
 export { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
@@ -163,6 +167,7 @@ export const elements = {
   navigationBar: navigationBarElement,
   navigationRail: navigationRailElement,
   drawer: drawerElement,
+  appBar: appBarElement,
   topAppBar: topAppBarElement,
   bottomAppBar: bottomAppBarElement,
   buttonGroup: buttonGroupElement,
@@ -235,6 +240,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineNavigationBar(options);
   defineNavigationRail(options);
   defineDrawer(options);
+  defineAppBar(options);
   defineTopAppBar(options);
   defineBottomAppBar(options);
   defineButtonGroup(options);

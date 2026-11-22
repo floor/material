@@ -1,5 +1,6 @@
 // src/styles/elements/_top-app-bar.scss
-// <m-top-app-bar> before upgrade: the bar, placed as the upgraded one is
+// <m-app-bar> and <m-top-app-bar> before upgrade: the bar, placed as the
+// upgraded one is
 // (over the top of its positioned container), with the headline in its
 // type style; leading and trailing children in their places.
 @use '../abstract/functions' as f;
@@ -10,7 +11,7 @@
 // As components/_top-app-bar.scss: 64px small and center bars, the headline
 // 16px after the 12px padding; medium (112px) and large (152px) bars set it
 // in a second row, 24px and 28px above the bottom.
-@include c.host('top-app-bar') {
+@mixin bar {
   position: absolute;
   top: 0;
   left: 0;
@@ -54,4 +55,11 @@
     order: 1;
     margin-left: auto;
   }
+}
+
+@include c.host('top-app-bar') {
+  @include bar;
+}
+@include c.host('app-bar') {
+  @include bar;
 }

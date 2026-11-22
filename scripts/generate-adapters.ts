@@ -68,7 +68,7 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  const note = elementDeprecations[name]?.(framework.component("toolbar"));
+  const note = elementDeprecations[name]?.(framework.component);
   const body = `${note ? `/** @deprecated ${note} */\n` : ""}export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`;
   return module(framework, name, body, [
     ...styles.map((style) => `import "${pkg.name}/elements/css/${style}";`),
@@ -103,7 +103,7 @@ ${[...elementModules, ...declarationModules].map(({ name }) => `export { ${frame
 // `material/react/jsx` and `material/solid/jsx`. Augmenting from material/elements would
 // break type-checking for an app without React or Solid.
 const tags = [
-  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element`, deprecated: elementDeprecations[name]?.(pascal("toolbar")) })),
+  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element`, deprecated: elementDeprecations[name]?.(pascal) })),
   ...declarationModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `typeof import("../elements/${from}").${name}Declaration`, element: "HTMLElement", deprecated: undefined })),
 ];
 
