@@ -1,0 +1,413 @@
+// src/styles/md2.scss
+// The MD2 look, opt-in: `import "material/styles/md2"` and `data-style="md2"`
+// on <html> or a subtree. Nothing else changes: a page that does not import
+// this sheet and set the flag gets the default MD3 styles, byte for byte.
+//
+// One asset carries both arms the look needs. The document arm is scoped by
+// the ancestor flag (`[data-style="md2"] .mtrl-button`); the shadow arm is the
+// same rules with `:host([data-style="md2"])`, which only matches inside a
+// shadow root that adopts this sheet (see the runtime in styles/md2.js). In the
+// other context each arm is inert.
+//
+// The sheet is unlayered on purpose: every default asset emits into
+// `@layer mtrl.*`, and an unlayered author rule wins over those layers without
+// touching the order the default sheets declare. App CSS unlayered and loaded
+// later still wins over this sheet, which is the usual authoring order.
+//
+// Values come from m2.material.io, read 2026-11-22:
+// - colour roles: https://m2.material.io/design/color/the-color-system.html
+// - dark theme: https://m2.material.io/design/color/dark-theme.html
+// - type: https://m2.material.io/design/typography/the-type-system.html
+// - states: https://m2.material.io/design/interaction/states.html
+// - elevation: https://m2.material.io/design/environment/elevation.html
+// - buttons: https://m2.material.io/components/buttons
+// - text fields: https://m2.material.io/components/text-fields
+// - cards: https://m2.material.io/components/cards
+// - selection controls: https://m2.material.io/components/selection-controls
+// - top app bars: https://m2.material.io/components/app-bars-top
+@use 'abstract/base' as *;
+@use 'abstract/theme' as t;
+
+$md2: '#{$prefix}';
+
+// The document scope and the shadow scope of every rule below.
+$document-scope: '[data-style="md2"]';
+$shadow-scope: ':host([data-style="md2"])';
+
+// MD2 elevation, as the design's elevation guidelines give it: two layers of
+// ambient and key shadow, dp by dp. Kept as shadows rather than the M3
+// elevation helper because MD2's rungs are not M3's.
+@mixin md2-elevation($dp) {
+  @if $dp == 1 {
+    box-shadow: 0 2px 1px -1px rgb(0 0 0 / 20%), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
+  } @else if $dp == 2 {
+    box-shadow: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px 0 rgb(0 0 0 / 14%), 0 1px 5px 0 rgb(0 0 0 / 12%);
+  } @else if $dp == 4 {
+    box-shadow: 0 2px 4px -1px rgb(0 0 0 / 20%), 0 4px 5px 0 rgb(0 0 0 / 14%), 0 1px 10px 0 rgb(0 0 0 / 12%);
+  } @else if $dp == 8 {
+    box-shadow: 0 5px 5px -3px rgb(0 0 0 / 20%), 0 8px 10px 1px rgb(0 0 0 / 14%), 0 3px 14px 2px rgb(0 0 0 / 12%);
+  } @else {
+    box-shadow: none;
+  }
+}
+
+// MD2 ink at an emphasis, from the role the element paints in.
+@function ink($role, $emphasis) {
+  @return #{'color-mix(in srgb, var(--#{$prefix}-sys-color-#{$role}) #{$emphasis * 100}%, transparent)'};
+}
+
+// One scope's worth of rules: every selector below carries the scope prefix.
+@mixin look($scope) {
+  // ---------------------------------------------------------------------------
+  // Colour roles: MD2's palette replaces the MD3 tonal roles this look reads.
+  // Applications may override them on the same scope.
+  // ---------------------------------------------------------------------------
+  #{$scope} {
+    --#{$prefix}-sys-color-primary: #6200ee;
+    --#{$prefix}-sys-color-on-primary: #ffffff;
+    --#{$prefix}-sys-color-secondary: #03dac6;
+    --#{$prefix}-sys-color-on-secondary: #000000;
+    --#{$prefix}-sys-color-surface: #ffffff;
+    --#{$prefix}-sys-color-background: #ffffff;
+    --#{$prefix}-sys-color-on-surface: #000000;
+    --#{$prefix}-sys-color-on-surface-variant: #000000;
+    --#{$prefix}-sys-color-outline: #000000;
+    --#{$prefix}-sys-color-outline-variant: #000000;
+    --#{$prefix}-sys-color-surface-container-low: #ffffff;
+    --#{$prefix}-sys-color-surface-container-highest: #ffffff;
+    --#{$prefix}-sys-color-error: #b00020;
+    --#{$prefix}-sys-color-on-error: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #{$scope} {
+      --#{$prefix}-sys-color-primary: #bb86fc;
+      --#{$prefix}-sys-color-on-primary: #000000;
+      --#{$prefix}-sys-color-secondary: #03dac6;
+      --#{$prefix}-sys-color-on-secondary: #000000;
+      --#{$prefix}-sys-color-surface: #121212;
+      --#{$prefix}-sys-color-background: #121212;
+      --#{$prefix}-sys-color-on-surface: #ffffff;
+      --#{$prefix}-sys-color-on-surface-variant: #ffffff;
+      --#{$prefix}-sys-color-outline: #ffffff;
+      --#{$prefix}-sys-color-outline-variant: #ffffff;
+      --#{$prefix}-sys-color-surface-container-low: #121212;
+      --#{$prefix}-sys-color-surface-container-highest: #121212;
+      --#{$prefix}-sys-color-error: #cf6679;
+      --#{$prefix}-sys-color-on-error: #000000;
+    }
+  }
+
+  #{$scope}[data-theme-mode='dark'] {
+    --#{$prefix}-sys-color-primary: #bb86fc;
+    --#{$prefix}-sys-color-on-primary: #000000;
+    --#{$prefix}-sys-color-secondary: #03dac6;
+    --#{$prefix}-sys-color-on-secondary: #000000;
+    --#{$prefix}-sys-color-surface: #121212;
+    --#{$prefix}-sys-color-background: #121212;
+    --#{$prefix}-sys-color-on-surface: #ffffff;
+    --#{$prefix}-sys-color-on-surface-variant: #ffffff;
+    --#{$prefix}-sys-color-outline: #ffffff;
+    --#{$prefix}-sys-color-outline-variant: #ffffff;
+    --#{$prefix}-sys-color-surface-container-low: #121212;
+    --#{$prefix}-sys-color-surface-container-highest: #121212;
+    --#{$prefix}-sys-color-error: #cf6679;
+    --#{$prefix}-sys-color-on-error: #000000;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Button: 36px contained box, 4px corners in every state, 14sp medium
+  // uppercase with 1.25px tracking; raised contained 2dp rest, 8dp press.
+  // ---------------------------------------------------------------------------
+  #{$scope} .#{$md2}-button {
+    min-width: 64px;
+    height: 36px;
+    padding: 0 16px;
+    gap: 8px;
+    border-radius: 4px;
+    font-family: Roboto, 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 1.25px;
+    text-transform: uppercase;
+  }
+
+  // The size and pressed rules of the default look restate the corner; keep
+  // MD2's 4px on all of them. The type stays MD2's for every explicit size.
+  #{$scope} .#{$md2}-button:is(:active, .#{$md2}-button--active, .#{$md2}-button--selected, .#{$md2}-button--square),
+  #{$scope} .#{$md2}-button--xs,
+  #{$scope} .#{$md2}-button--s,
+  #{$scope} .#{$md2}-button--m,
+  #{$scope} .#{$md2}-button--l,
+  #{$scope} .#{$md2}-button--xl {
+    border-radius: 4px;
+  }
+
+  // Text buttons inset 8px; a button with a leading icon 12px, an 18px icon
+  // and an 8px gap; a trailing icon mirrors the start inset.
+  #{$scope} .#{$md2}-button--text {
+    padding-inline: 8px;
+  }
+
+  #{$scope} .#{$md2}-button--icon {
+    padding-inline-start: 12px;
+  }
+
+  #{$scope} .#{$md2}-button--text.#{$md2}-button--icon {
+    padding-inline: 8px;
+  }
+
+  #{$scope} .#{$md2}-button__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  // Contained: filled and tonal are MD2's unelevated contained button, raised
+  // is its elevated one (2dp at rest, 8dp pressed); outlined paints primary
+  // ink over a transparent container with a 12% on-surface stroke.
+  #{$scope} .#{$md2}-button--filled,
+  #{$scope} .#{$md2}-button--tonal,
+  #{$scope} .#{$md2}-button--elevated {
+    background-color: t.color('primary');
+    color: t.color('on-primary');
+    box-shadow: none;
+  }
+
+  #{$scope} .#{$md2}-button--elevated {
+    @include md2-elevation(2);
+
+    &:active,
+    &.#{$md2}-button--active {
+      @include md2-elevation(8);
+    }
+  }
+
+  // The default look lifts filled buttons on hover; MD2's unelevated contained
+  // button stays flat.
+  #{$scope} .#{$md2}-button--filled:hover,
+  #{$scope} .#{$md2}-button--tonal:hover,
+  #{$scope} .#{$md2}-button--text:hover {
+    box-shadow: none;
+  }
+
+  #{$scope} .#{$md2}-button--outlined {
+    background-color: transparent;
+    color: t.color('primary');
+    border: 1px solid ink('on-surface', 0.12);
+  }
+
+  #{$scope} .#{$md2}-button--text {
+    color: t.color('primary');
+  }
+
+  // Disabled: 38% ink, 12% container; an outlined button keeps its stroke at
+  // the 12% it already has.
+  #{$scope} .#{$md2}-button:is(:disabled, [aria-disabled='true']) {
+    color: ink('on-surface', 0.38);
+    background-color: ink('on-surface', 0.12);
+    box-shadow: none;
+    border-color: transparent;
+  }
+
+  #{$scope} .#{$md2}-button--outlined:is(:disabled, [aria-disabled='true']),
+  #{$scope} .#{$md2}-button--text:is(:disabled, [aria-disabled='true']) {
+    background-color: transparent;
+    border-color: ink('on-surface', 0.12);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Text field: 4% on-surface fill, 42% idle line, primary 2px focus, 87%
+  // input ink and 60% label/helper ink. Sizes (56, dense 40) and the 16px inset
+  // match; the focus, error and disabled arms are restated here because this
+  // sheet is unlayered and would otherwise win over the default's own states.
+  // ---------------------------------------------------------------------------
+  #{$scope} .#{$md2}-text-field--filled .#{$md2}-text-field__input {
+    background-color: ink('on-surface', 0.04);
+    border-bottom-color: ink('on-surface', 0.42);
+    border-radius: 4px 4px 0 0;
+    color: ink('on-surface', 0.87);
+  }
+
+  #{$scope} .#{$md2}-text-field--filled.#{$md2}-text-field--focused .#{$md2}-text-field__input,
+  #{$scope} .#{$md2}-text-field--filled:focus-within .#{$md2}-text-field__input {
+    border-bottom-color: t.color('primary');
+  }
+
+  #{$scope} .#{$md2}-text-field__input {
+    color: ink('on-surface', 0.87);
+  }
+
+  #{$scope} .#{$md2}-text-field__label,
+  #{$scope} .#{$md2}-text-field__helper {
+    color: ink('on-surface', 0.6);
+  }
+
+  #{$scope} .#{$md2}-text-field--outlined {
+    --#{$md2}-text-field-outline-color: #{ink('on-surface', 0.38)};
+    --#{$md2}-text-field-outline-width: 1px;
+  }
+
+  #{$scope} .#{$md2}-text-field--outlined.#{$md2}-text-field--focused,
+  #{$scope} .#{$md2}-text-field--outlined:focus-within {
+    --#{$md2}-text-field-outline-color: #{t.color('primary')};
+    --#{$md2}-text-field-outline-width: 2px;
+  }
+
+  #{$scope} .#{$md2}-text-field--error .#{$md2}-text-field__label,
+  #{$scope} .#{$md2}-text-field--error .#{$md2}-text-field__helper,
+  #{$scope} .#{$md2}-text-field--error .#{$md2}-text-field__input {
+    color: t.color('error');
+  }
+
+  #{$scope} .#{$md2}-text-field--outlined.#{$md2}-text-field--error {
+    --#{$md2}-text-field-outline-color: #{t.color('error')};
+  }
+
+  #{$scope} .#{$md2}-text-field--filled.#{$md2}-text-field--error .#{$md2}-text-field__input {
+    border-bottom-color: t.color('error');
+  }
+
+  #{$scope} .#{$md2}-text-field--disabled .#{$md2}-text-field__input,
+  #{$scope} .#{$md2}-text-field--disabled .#{$md2}-text-field__label,
+  #{$scope} .#{$md2}-text-field--disabled .#{$md2}-text-field__helper {
+    color: ink('on-surface', 0.38);
+  }
+
+  #{$scope} .#{$md2}-text-field--outlined.#{$md2}-text-field--disabled {
+    --#{$md2}-text-field-outline-color: #{ink('on-surface', 0.38)};
+  }
+
+  // ---------------------------------------------------------------------------
+  // Card: 4px corners, 1dp resting elevated card, 1px outlined stroke at 12%,
+  // surface containers, and the 16px content / 8px action rhythm.
+  // ---------------------------------------------------------------------------
+  #{$scope} .#{$md2}-card {
+    border-radius: 4px;
+    background-color: t.color('surface');
+    color: ink('on-surface', 0.87);
+    box-shadow: none;
+  }
+
+  #{$scope} .#{$md2}-card--elevated {
+    @include md2-elevation(1);
+  }
+
+  #{$scope} .#{$md2}-card--outlined {
+    border: 1px solid ink('on-surface', 0.12);
+  }
+
+  #{$scope} .#{$md2}-card__media {
+    border-radius: 4px 4px 0 0;
+  }
+
+  #{$scope} .#{$md2}-card__content {
+    padding: 16px;
+  }
+
+  // A pointer-capable device rests the elevated card flat and lifts it to 4dp
+  // on hover, as the MD2 elevation guidance describes for desktop.
+  @media (hover: hover) and (pointer: fine) {
+    #{$scope} .#{$md2}-card--elevated {
+      box-shadow: none;
+    }
+
+    #{$scope} .#{$md2}-card--elevated:hover {
+      @include md2-elevation(4);
+    }
+  }
+
+  #{$scope} .#{$md2}-card--dragging {
+    @include md2-elevation(8);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Switch: a 36x14 borderless track with a 20px raised thumb overhanging it,
+  // the same thumb size in both positions, no pressed size morph and no glyph.
+  // ---------------------------------------------------------------------------
+  #{$scope} .#{$md2}-switch__track {
+    width: 36px;
+    min-width: 36px;
+    height: 14px;
+    border: none;
+    border-radius: 7px;
+    background-color: ink('on-surface', 0.38);
+  }
+
+  #{$scope} .#{$md2}-switch--checked .#{$md2}-switch__track {
+    background-color: t.color('primary');
+  }
+
+  #{$scope} .#{$md2}-switch__thumb {
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background-color: t.color('surface');
+    @include md2-elevation(1);
+  }
+
+  #{$scope} .#{$md2}-switch--checked .#{$md2}-switch__thumb {
+    background-color: t.color('on-primary');
+    box-shadow: none;
+  }
+
+  #{$scope} .#{$md2}-switch__thumb-icon {
+    display: none;
+  }
+
+  #{$scope} .#{$md2}-switch--disabled .#{$md2}-switch__track {
+    background-color: ink('on-surface', 0.12);
+  }
+
+  #{$scope} .#{$md2}-switch--checked.#{$md2}-switch--disabled .#{$md2}-switch__thumb {
+    background-color: ink('on-surface', 0.38);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Top app bar: 56px regular (64px from 600px up), 128px prominent, a 20sp
+  // title at MD2's 32px line and 0.25px tracking, primary-on-on-primary
+  // regular colour, and a 4dp scrolled shadow.
+  // ---------------------------------------------------------------------------
+  #{$scope} .#{$md2}-top-app-bar {
+    height: 56px;
+    background-color: t.color('primary');
+    color: t.color('on-primary');
+    box-shadow: none;
+    padding-inline: 16px;
+  }
+
+  @media (min-width: 600px) {
+    #{$scope} .#{$md2}-top-app-bar {
+      height: 64px;
+    }
+  }
+
+  #{$scope} .#{$md2}-top-app-bar.#{$md2}-top-app-bar--medium,
+  #{$scope} .#{$md2}-top-app-bar.#{$md2}-top-app-bar--large {
+    height: 128px;
+  }
+
+  #{$scope} .#{$md2}-top-app-bar__headline {
+    font-family: Roboto, 'Helvetica Neue', sans-serif;
+    font-size: 20px;
+    line-height: 32px;
+    font-weight: 500;
+    letter-spacing: 0.25px;
+  }
+
+  #{$scope} .#{$md2}-top-app-bar.#{$md2}-top-app-bar--scrolled {
+    @include md2-elevation(4);
+    background-color: t.color('primary');
+    color: t.color('on-primary');
+  }
+
+  // MD2's icon buttons are 24px glyphs in 48px targets; the glyph keeps its
+  // measured size while the target stays the hit area.
+  #{$scope} .#{$md2}-top-app-bar .#{$md2}-icon-button {
+    --#{$prefix}-icon-button-icon-size: 24px;
+  }
+}
+
+@include look($document-scope);
+@include look($shadow-scope);
