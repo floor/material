@@ -275,8 +275,7 @@ export async function buildStyles(outdir: string, banner: string) {
   const md2Css = sass.compileString(`@use "md2";`, options).css;
   await writeFile(`${outdir}/styles/md2.css`, `${banner}\n${md2Css}\n`);
   await writeFile(`${outdir}/styles/md2.js`, md2StyleModule(md2Css));
-  await writeFile(`${outdir}/styles/md2.d.ts`,
-    "export declare const md2Css: string;\nexport declare const applyMd2: (host: Element) => void;\n");
+  await writeFile(`${outdir}/styles/md2.d.ts`, await readFile("src/styles/md2.ts", "utf8"));
   await writeFile(`${outdir}/styles/md2.css.d.ts`, "export {};\n");
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);

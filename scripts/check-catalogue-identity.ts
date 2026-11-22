@@ -131,7 +131,7 @@ const newLooks = new Set(Object.keys(branchExports)
 const lookMembers = new Map([...newLooks].flatMap(name =>
   [`dist/styles/${name}.js`, `dist/styles/${name}.css`, `dist/styles/${name}.d.ts`, `dist/styles/${name}.css.d.ts`]
     .map(member => [member, name] as [string, string])
-    .concat([[`src/styles/${name}.scss`, name]])));
+    .concat([[`src/styles/${name}.scss`, name], [`src/styles/${name}.ts`, name]])));
 const optInEntries = Object.entries(componentStyles).filter(([, entry]) => entry.optIn);
 const newOptIn = new Set(optInEntries
   .filter(([name]) => Object.hasOwn(branchExports, `./components/${name}`) && !Object.hasOwn(mainExports, `./components/${name}`))
