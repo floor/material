@@ -114,6 +114,24 @@ const addsProfile = [...optionalAdditions].some(path => branch.has(path) && !mai
 // decides — an entry already packed on main, or a pair of tarballs that ships
 // no such key, gets no allowance and every member stays frozen byte for byte.
 const partialPath = (source: string): string => `src/styles/${source.replace(/\/([^/]+)$/, "/_$1.scss")}`;
+// A declared opt-in look is a stylesheet shipped at its own subpath, as the
+// MD2 look is: the branch adds `./styles/<name>` and `./styles/<name>.css`,
+// and the look joins no default sheet. The allowance admits exactly what it
+// produces — its style pair and their types, the Sass source it compiles
+// from, its two export keys and its check script — and only when the pair's
+// export targets are the declared ones.
+const styleExport = (name: string) => JSON.stringify({ types: `./dist/styles/${name}.d.ts`, import: `./dist/styles/${name}.js` });
+const styleCssExport = (name: string) => JSON.stringify({ types: `./dist/styles/${name}.css.d.ts`, default: `./dist/styles/${name}.css` });
+const newLooks = new Set(Object.keys(branchExports)
+  .map(key => /^\.\/styles\/([\w-]+)$/.exec(key)?.[1])
+  .filter((name): name is string => name !== undefined
+    && !Object.hasOwn(mainExports, `./styles/${name}`)
+    && JSON.stringify(branchExports[`./styles/${name}`]) === styleExport(name)
+    && JSON.stringify(branchExports[`./styles/${name}.css`]) === styleCssExport(name)));
+const lookMembers = new Map([...newLooks].flatMap(name =>
+  [`dist/styles/${name}.js`, `dist/styles/${name}.css`, `dist/styles/${name}.d.ts`, `dist/styles/${name}.css.d.ts`]
+    .map(member => [member, name] as [string, string])
+    .concat([[`src/styles/${name}.scss`, name]])));
 const optInEntries = Object.entries(componentStyles).filter(([, entry]) => entry.optIn);
 const newOptIn = new Set(optInEntries
   .filter(([name]) => Object.hasOwn(branchExports, `./components/${name}`) && !Object.hasOwn(mainExports, `./components/${name}`))
@@ -122,6 +140,8 @@ const optInStyleMembers = new Map(optInEntries.flatMap(([name, entry]) =>
   [[`dist/styles/${name}.js`, name], [`dist/styles/${name}.css`, name], [partialPath(entry.source), name]] as [string, string][]));
 /** The declared opt-in entry a new member belongs to, when it is one it produces. */
 const optInMember = (member: string): string | undefined => {
+  const look = lookMembers.get(member);
+  if (look !== undefined) return look;
   const style = optInStyleMembers.get(member);
   if (style !== undefined) return newOptIn.has(style) ? style : undefined;
   const component = /^dist\/components\/([\w-]+)\/(?:[\w.-]+\.js|[\w.-]+\.d\.ts)$/.exec(member);
@@ -178,7 +198,9 @@ for (const key of Object.keys(branchExports)) {
       types: `./dist/components/${componentKey[1]}/index.d.ts`,
       import: `./dist/components/${componentKey[1]}/index.js`,
     });
-  if (!optInExport && !/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
+  const lookKey = /^\.\/styles\/([\w-]+)(?:\.css)?$/.exec(key);
+  const lookExport = lookKey !== null && newLooks.has(lookKey[1]!) && JSON.stringify(branchExports[key]) === (key.endsWith(".css") ? styleCssExport(lookKey[1]!) : styleExport(lookKey[1]!));
+  if (!optInExport && !lookExport && !/^\.\/tokens\/catalogue\.(json|schema\.json)$/.test(key)) problems.push(`new export key ${key} outside the catalogue data allowlist`);
 }
 const branchScripts = (branchPkg.scripts ?? {}) as Record<string, unknown>;
 const mainScripts = (mainPkg.scripts ?? {}) as Record<string, unknown>;
@@ -194,7 +216,8 @@ for (const key of Object.keys(branchScripts)) {
   const profileCheck = addsProfile && key === "button-profile:check" && branchScripts[key] === "bun run scripts/check-button-profile.ts";
   const checkKey = /^([\w-]+):check$/.exec(key);
   const optInCheck = checkKey !== null && newOptIn.has(checkKey[1]!) && branchScripts[key] === `bun run scripts/check-${checkKey[1]}.ts`;
-  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key) && !profileCheck && !optInCheck) problems.push(`new script ${key} outside the catalogue gate allowlist`);
+  const lookCheck = checkKey !== null && newLooks.has(checkKey[1]!) && branchScripts[key] === `bun run scripts/check-${checkKey[1]}.ts`;
+  if (!/^(?:tokens:catalogue|catalogue:identity)/.test(key) && !profileCheck && !optInCheck && !lookCheck) problems.push(`new script ${key} outside the catalogue gate allowlist`);
 }
 for (const key of new Set([...Object.keys(mainPkg), ...Object.keys(branchPkg)])) {
   if (key === "exports" || key === "scripts") continue;
