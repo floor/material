@@ -173,6 +173,24 @@ duplicate host names remain a known limitation.
 
 ## Styles
 
+## Optional MD2 look
+
+The default look is Material Design 3. An opt-in look can put one API in Material Design 2's style for five components: button, text field, card, switch and top app bar. Import the sheet and set the flag on `html` or on a subtree. Every value comes from `m2.material.io`, linked in the stylesheet's source.
+
+```typescript
+import 'material/styles/base';
+import 'material/styles/md2';
+```
+
+```html
+<html data-style="md2">
+```
+
+The flag is the scope: a subtree with `data-style="md2"` takes the look, and the rest of the page keeps the default. Pages that do not import the sheet and set the flag load no byte of it.
+
+An element takes the flag on the host itself, as `<m-button data-style="md2">` does; the import adopts the sheet into that host's shadow root. Call `applyMd2(host)` yourself when an application creates a host later and wants it adopted. Server rendering of the look follows in a later change.
+
+
 The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
 
 ```typescript

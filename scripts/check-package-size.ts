@@ -614,6 +614,9 @@ try {
     // ceiling covers the larger bundle a consumer with old targets gets.
     // dist/styles.css itself carries no `:lang()` or `:dir()` rule.
     { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
+    // The MD2 look is opt-in and its own file: a page that does not import it
+    // carries none of it, so it budgets apart from the default sheets.
+    { name: "md2-css", code: "import 'material/styles/md2.css';", gzip: PACKAGE_GZIP["md2-css"] },
   ];
   // Complete the measurement report even when an earlier fixture exceeds its cap.
   const overBudget: string[] = [];

@@ -1,0 +1,3 @@
+Section: Added
+
+**Optional MD2 look.** `import "material/styles/md2"` and `data-style="md2"` on `html` or a subtree put button, text field, card, switch and top app bar in Material Design 2's style, for the factories and — through the same asset, adopted into the opted-in hosts' shadow roots — the elements. Nothing else changes: pages that do not import the sheet and set the flag ship no byte of it, and the default stylesheet and bundle are unchanged. The look is its own asset with its own export (`material/styles/md2`, `material/styles/md2.css`); `applyMd2(host)` adopts it into a host the application created later. Values come from m2.material.io, linked in the stylesheet. Server rendering of the look follows in a later change.
