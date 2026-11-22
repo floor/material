@@ -299,4 +299,4 @@ export const createAppBar = (config: AppBarConfig = {}): AppBarComponent => {
  * @deprecated use {@link createAppBar}. The top app bar is the app bar; this
  * name stays for 3.x.
  */
-export const createTopAppBar = createAppBar;
+export const createTopAppBar = (config: AppBarConfig = {}): AppBarComponent => createAppBar(config);
