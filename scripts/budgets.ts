@@ -31,8 +31,8 @@ export const PACKAGE_GZIP = {
   "select-css": 8_400,
   "slider-css": 5_050,
   "full-css": 63_750,
-  // The MD2 look, its own opt-in asset; pinned at CI's measurement + 10 B.
-  "md2-css": 30_000,
+  // The MD2 look, its own opt-in asset: CI 45046275478 measured 1,877 B gzip.
+  "md2-css": 1_887,
 } as const;
 
 /** check-package-size.ts: the button's initial graph, progress deferred. */
