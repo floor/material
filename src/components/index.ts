@@ -27,8 +27,7 @@ export { default as createDatePicker } from "./datepicker";
 export { default as createDialog } from "./dialog";
 export { createDivider } from "./divider";
 export { default as createNavigationDrawer } from "./drawer";
-/** @deprecated use `createNavigationDrawer`. Material Design 3 names the component the navigation drawer. */
-export { createNavigationDrawer as createDrawer } from "./drawer";
+export { createDrawer } from "./drawer";
 export { default as createFab } from "./fab";
 export { default as createFabMenu } from "./fab-menu";
 export { default as createExtendedFab } from "./extended-fab";
@@ -158,6 +157,7 @@ export type {
   NavigationDrawerItemConfig,
   NavigationDrawerSelectEvent,
   NavigationDrawerSectionEvent,
+  NavigationDrawerEvents,
 } from "./drawer/types";
 /** @deprecated use `NavigationDrawerConfig`. */
 export type { DrawerConfig } from "./drawer/types";

@@ -16,13 +16,7 @@ import { createConfig } from "./config";
 import { BottomAppBarComponent, BottomAppBarConfig } from "./types";
 
 /**
- * Creates a bottom app bar component.
- *
- * @deprecated Material Design 3 Expressive replaces the bottom app bar with
- * the docked toolbar. Use {@link createToolbar} with `variant="docked"` and
- * `placement="bottom"` instead. A centred FAB, adding a FAB after creation, a
- * custom transition duration and a custom tag are not yet available on the
- * docked toolbar. This name stays for 3.x.
+ * Creates a bottom app bar component
  *
  * @deprecated Material Design 3 Expressive replaces the bottom app bar with
  * the docked toolbar. Use createToolbar with

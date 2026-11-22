@@ -310,7 +310,8 @@
   {
     "name": "createDrawer",
     "kind": "value",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "createExtendedFab",
@@ -748,6 +749,11 @@
   },
   {
     "name": "NavigationDrawerConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerEvents",
     "kind": "type",
     "status": "public"
   },

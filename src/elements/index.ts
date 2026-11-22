@@ -109,7 +109,10 @@ export type {
   /** @deprecated use `NavigationDrawerItemAttributes`. */ DrawerItemAttributes,
 } from "./drawer";
 export { appBarElement, defineAppBar } from "./app-bar";
-export { topAppBarElement, defineTopAppBar } from "./top-app-bar";
+export {
+  /** @deprecated use `appBarElement`. */ topAppBarElement,
+  /** @deprecated use `defineAppBar`. */ defineTopAppBar,
+} from "./top-app-bar";
 export type { AppBarSpec, AppBarElement } from "./app-bar";
 export type {
   /** @deprecated use `AppBarSpec`. */ TopAppBarSpec,

@@ -1,9 +1,9 @@
 // src/elements/navigation-drawer.ts
 /**
- * `<m-drawer>` with `<m-drawer-item>` children: the standard (in-page)
- * navigation drawer.
+ * `<m-navigation-drawer>` with `<m-navigation-drawer-item>` children: the
+ * standard (in-page) navigation drawer.
  *
- * Each `<m-drawer-item>` declares one destination (`value`, `icon`,
+ * Each `<m-navigation-drawer-item>` declares one destination (`value`, `icon`,
  * `selected-icon`, `badge`, `disabled`, and its text as the label), or with
  * `type="section"` a section headline (its text) and with `type="divider"` a
  * divider. The drawer reads

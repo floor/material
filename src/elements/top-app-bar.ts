@@ -16,6 +16,7 @@ import { createBarSpec } from "./app-bar";
 import { defineElement, type DefineOptions, type ElementInstance } from "./define";
 
 const topAppBarSpec = createBarSpec("top-app-bar");
+/** @deprecated use `appBarElement`. */
 export const topAppBarElement = defineElement<AppBarComponent>(topAppBarSpec);
 /** @deprecated use `AppBarSpec`. */
 export type TopAppBarSpec = typeof topAppBarSpec;
