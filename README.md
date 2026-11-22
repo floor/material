@@ -160,11 +160,11 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
-Two names are deprecated and keep working for 3.x:
+Three names change, additively:
 
-- `createTopAppBar`, `TopAppBarConfig` and `TopAppBarComponent` are the app bar under its old name; use `createAppBar`, `AppBarConfig` and `AppBarComponent`. The element is `<m-app-bar>`, with `<m-top-app-bar>` kept as a deprecated alias; the style classes and tokens stay `mtrl-top-app-bar`, as Material's sizes are the same bar.
-- `createDrawer`, the `Drawer*` types, `drawerElement`, `defineDrawer`, `<m-drawer>`, `<m-drawer-item>` and the `Drawer`/`DrawerItem` adapters are the navigation drawer under their old names; use `createNavigationDrawer`, the `NavigationDrawer*` types, `navigationDrawerElement`, `defineNavigationDrawer`, `<m-navigation-drawer>`, `<m-navigation-drawer-item>` and `NavigationDrawer`/`NavigationDrawerItem`. The old names stay exported and working for 3.x, each marked `@deprecated`.
-- `createBottomAppBar` is deprecated: Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use `createToolbar` with `variant="docked"` and `placement="bottom"`; a centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available there.
+- **App bar.** The primary factory is `createAppBar`. The element is `<m-app-bar>` and the adapters are `AppBar`. The old factory `createTopAppBar` stays exported and working, marked deprecated. So do the old types, the `<m-top-app-bar>` element and the `TopAppBar` adapters. No CSS class or token is renamed.
+- **Navigation drawer.** The primary factory is `createNavigationDrawer`. The elements are `<m-navigation-drawer>` and `<m-navigation-drawer-item>`. The adapters are `NavigationDrawer` and `NavigationDrawerItem`. The old factory `createDrawer`, the old types, the `<m-drawer>` elements and the old adapters stay exported and working, marked deprecated.
+- **Bottom app bar.** It is deprecated: Material Design 3 Expressive replaces it with the docked toolbar. Use `createToolbar` with `placement="bottom"`. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available there. The bottom app bar's code does not change.
 
 ### Factory control labels
 
@@ -913,7 +913,7 @@ Set `href` on a navigation drawer destination to render a native link. The activ
 </m-navigation-drawer>
 ```
 
-Register the element with `defineNavigationDrawer()` from `material/elements` (`<m-drawer>` and `defineDrawer()` are the deprecated names). Import `material/elements/css/drawer` for its shadow styles. React, Vue, Svelte, and Solid navigation drawer adapters accept the same nested declarations. `renderElement` from `material/ssr` renders the initially visible links inside the declarative shadow root. Those links navigate without client JavaScript.
+Register the element with `defineNavigationDrawer()` from `material/elements`. The deprecated name is `defineDrawer()`. Import `material/elements/css/drawer` for its shadow styles. React, Vue, Svelte, and Solid navigation drawer adapters accept the same nested declarations. `renderElement` from `material/ssr` renders the initially visible links inside the declarative shadow root. Those links navigate without client JavaScript.
 
 In a factory, give a section an `items` array and its destinations an `href`. Sections support one level of children. A section with no children can still be a static heading with `type: "section"`.
 
