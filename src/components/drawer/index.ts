@@ -5,10 +5,16 @@
  * @module components/drawer
  */
 
-export { default, default as createNavigationDrawer } from './drawer';
-/** @deprecated use `createNavigationDrawer`. */
-export { createDrawer } from './drawer';
+export { default, default as createDrawer, createNavigationDrawer } from './drawer';
 export type {
+  DrawerConfig,
+  DrawerComponent,
+  DrawerVariant,
+  DrawerPosition,
+  DrawerItemConfig,
+  DrawerSelectEvent,
+  DrawerSectionEvent,
+  DrawerEvents,
   NavigationDrawerConfig,
   NavigationDrawerComponent,
   NavigationDrawerVariant,
@@ -17,20 +23,4 @@ export type {
   NavigationDrawerSelectEvent,
   NavigationDrawerSectionEvent,
   NavigationDrawerEvents,
-  /** @deprecated use `NavigationDrawerConfig`. */
-  DrawerConfig,
-  /** @deprecated use `NavigationDrawerComponent`. */
-  DrawerComponent,
-  /** @deprecated use `NavigationDrawerVariant`. */
-  DrawerVariant,
-  /** @deprecated use `NavigationDrawerPosition`. */
-  DrawerPosition,
-  /** @deprecated use `NavigationDrawerItemConfig`. */
-  DrawerItemConfig,
-  /** @deprecated use `NavigationDrawerSelectEvent`. */
-  DrawerSelectEvent,
-  /** @deprecated use `NavigationDrawerSectionEvent`. */
-  DrawerSectionEvent,
-  /** @deprecated use `NavigationDrawerEvents`. */
-  DrawerEvents,
 } from './types';

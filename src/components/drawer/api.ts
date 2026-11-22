@@ -1,5 +1,5 @@
 // src/components/drawer/api.ts
-import type { NavigationDrawerComponent, NavigationDrawerItemConfig, NavigationDrawerEvents } from './types';
+import type { DrawerComponent, DrawerItemConfig, DrawerEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import { addClass } from '../../core';
 
@@ -18,14 +18,14 @@ interface ApiOptions {
   items: {
     setActive: (id: string) => void;
     getActive: () => string | null;
-    setItems: (items: NavigationDrawerItemConfig[] | undefined) => void;
-    getItems: () => NavigationDrawerItemConfig[] | undefined;
+    setItems: (items: DrawerItemConfig[] | undefined) => void;
+    getItems: () => DrawerItemConfig[] | undefined;
     setBadge: (id: string, badge: string) => void;
     expandSection: (id: string) => void;
     collapseSection: (id: string) => void;
     toggleSection: (id: string) => void;
-    isSectionExpanded: NavigationDrawerComponent["isSectionExpanded"];
-    getExpandedSections: NavigationDrawerComponent["getExpandedSections"];
+    isSectionExpanded: DrawerComponent["isSectionExpanded"];
+    getExpandedSections: DrawerComponent["getExpandedSections"];
   };
   headline: {
     setHeadline: (text: string) => void;
@@ -63,8 +63,8 @@ interface ComponentWithElements {
  */
 export const withAPI =
   ({ state, items, headline, lifecycle }: ApiOptions) =>
-  (component: ComponentWithElements): NavigationDrawerComponent => {
-    const drawerComponent: NavigationDrawerComponent = {
+  (component: ComponentWithElements): DrawerComponent => {
+    const drawerComponent: DrawerComponent = {
       element: component.element,
       getClass: component.getClass,
 
@@ -74,14 +74,14 @@ export const withAPI =
       // Event methods
       // ----------------------------------------------------------------
 
-      on<K extends keyof NavigationDrawerEvents>(event: K, handler: NavigationDrawerEvents[K]) {
+      on<K extends keyof DrawerEvents>(event: K, handler: DrawerEvents[K]) {
         if (component.on) {
           component.on(event, handler);
         }
         return drawerComponent;
       },
 
-      off<K extends keyof NavigationDrawerEvents>(event: K, handler: NavigationDrawerEvents[K]) {
+      off<K extends keyof DrawerEvents>(event: K, handler: DrawerEvents[K]) {
         if (component.off) {
           component.off(event, handler);
         }
@@ -138,13 +138,13 @@ export const withAPI =
         return items.getActive();
       },
 
-      setItems(newItems: NavigationDrawerItemConfig[]) {
+      setItems(newItems: DrawerItemConfig[]) {
         items.setItems(newItems);
         return drawerComponent;
       },
 
       getItems() {
-        return (items.getItems() || []) as NavigationDrawerItemConfig[];
+        return (items.getItems() || []) as DrawerItemConfig[];
       },
 
       setBadge(id: string, badge: string) {

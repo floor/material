@@ -4,7 +4,7 @@ import {
   createComponentConfig,
   createElementConfig,
 } from "../../core/config/component";
-import { NavigationDrawerConfig } from "./types";
+import { DrawerConfig } from "./types";
 import { DRAWER_DEFAULTS } from "./constants";
 import { supportsTopLayer } from "../../core/dom/layer";
 
@@ -14,7 +14,7 @@ import { supportsTopLayer } from "../../core/dom/layer";
  *
  * @category Components
  */
-export const defaultConfig: NavigationDrawerConfig = {
+export const defaultConfig: DrawerConfig = {
   variant: DRAWER_DEFAULTS.VARIANT,
   position: DRAWER_DEFAULTS.POSITION,
   open: DRAWER_DEFAULTS.OPEN,
@@ -29,13 +29,13 @@ export const defaultConfig: NavigationDrawerConfig = {
  * user-provided config with default values. Global configuration is
  * automatically applied by createComponentConfig.
  *
- * @param {NavigationDrawerConfig} config - User provided configuration
- * @returns {NavigationDrawerConfig} Complete configuration with defaults applied
+ * @param {DrawerConfig} config - User provided configuration
+ * @returns {DrawerConfig} Complete configuration with defaults applied
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: NavigationDrawerConfig = {}): NavigationDrawerConfig => {
-  const merged = createComponentConfig(defaultConfig, config, "drawer") as NavigationDrawerConfig;
+export const createBaseConfig = (config: DrawerConfig = {}): DrawerConfig => {
+  const merged = createComponentConfig(defaultConfig, config, "drawer") as DrawerConfig;
   // Only a modal drawer goes to the top layer, and only where it can
   if (merged.layer === "top" && (merged.variant !== "modal" || !supportsTopLayer("modal"))) {
     merged.layer = undefined;
@@ -48,12 +48,12 @@ export const createBaseConfig = (config: NavigationDrawerConfig = {}): Navigatio
  * This function creates the necessary attributes and configuration
  * for the DOM element creation process.
  *
- * @param {NavigationDrawerConfig} config - Drawer configuration
+ * @param {DrawerConfig} config - Drawer configuration
  * @returns {Object} Element configuration object for withElement
  * @category Components
  * @internal
  */
-export const getElementConfig = (config: NavigationDrawerConfig) => {
+export const getElementConfig = (config: DrawerConfig) => {
   const isModal = config.variant === "modal";
 
   const attributes: Record<string, string | boolean | undefined> = {};
@@ -120,7 +120,7 @@ export const getApiConfig = (comp: {
   items: {
     setActive: (id: string) => comp.drawerItems.setActive(id),
     getActive: () => comp.drawerItems.getActive(),
-    setItems: (items: NavigationDrawerConfig["items"]) =>
+    setItems: (items: DrawerConfig["items"]) =>
       comp.drawerItems.setItems(items || []),
     getItems: () => comp.drawerItems.getItems(),
     setBadge: (id: string, badge: string) =>

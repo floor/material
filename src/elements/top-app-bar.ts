@@ -11,17 +11,17 @@
  * @module elements
  */
 
-import type { AppBarComponent } from "../components/top-app-bar/top-app-bar";
+import type { TopAppBarComponent } from "../components/top-app-bar/top-app-bar";
 import { createBarSpec } from "./app-bar";
 import { defineElement, type DefineOptions, type ElementInstance } from "./define";
 
 const topAppBarSpec = createBarSpec("top-app-bar");
 /** @deprecated use `appBarElement`. */
-export const topAppBarElement = defineElement<AppBarComponent>(topAppBarSpec);
+export const topAppBarElement = defineElement<TopAppBarComponent>(topAppBarSpec);
 /** @deprecated use `AppBarSpec`. */
 export type TopAppBarSpec = typeof topAppBarSpec;
 /** @deprecated use `AppBarElement`. */
-export type TopAppBarElement = ElementInstance<TopAppBarSpec, AppBarComponent>;
+export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBarComponent>;
 
 /**
  * @deprecated use `defineAppBar`. Registers `<m-top-app-bar>` (or

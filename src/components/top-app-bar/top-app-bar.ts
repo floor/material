@@ -13,21 +13,23 @@ import {
 } from "../../core/compose";
 
 import { createConfig } from "./config";
-import type { AppBarComponent, AppBarConfig, TopAppBarType } from "./types";
+import type { TopAppBarComponent, TopAppBarConfig, TopAppBarType } from "./types";
 import { TOP_APP_BAR_DEFAULTS } from "./constants";
 
-// The one AppBarComponent declaration is the public one in types.ts; this
+// The one TopAppBarComponent declaration is the public one in types.ts; this
 // module re-exports it for the element, which imports it from here.
-export type { AppBarComponent };
+export type { TopAppBarComponent };
 
 /**
- * Creates an app bar: the Material 3 app bar, in the small, centre, medium
- * or large type.
+ * Creates a top app bar component
  *
- * @param {AppBarConfig} config - Configuration options
- * @returns {AppBarComponent} App bar component instance
+ * @deprecated use {@link createAppBar}. Material Design 3 names the
+ * component the app bar; this name stays for 3.x.
+ *
+ * @param {TopAppBarConfig} config - Configuration options
+ * @returns {TopAppBarComponent} Top app bar component instance
  */
-export const createAppBar = (config: AppBarConfig = {}): AppBarComponent => {
+export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponent => {
   // Process configuration with defaults
   const componentConfig = createConfig(config);
 
@@ -219,7 +221,7 @@ export const createAppBar = (config: AppBarConfig = {}): AppBarComponent => {
   };
 
   // Create the top app bar interface
-  const topAppBar: AppBarComponent = {
+  const topAppBar: TopAppBarComponent = {
     ...withLifecycleComponent,
 
     // Spreading a component copies `addClass` but not the `this` it returns:
@@ -296,7 +298,7 @@ export const createAppBar = (config: AppBarConfig = {}): AppBarComponent => {
 };
 
 /**
- * @deprecated use {@link createAppBar}. The top app bar is the app bar; this
- * name stays for 3.x.
+ * Creates an app bar: the same factory as {@link createTopAppBar}, under the
+ * name Material Design 3 gives the component.
  */
-export const createTopAppBar = createAppBar;
+export const createAppBar = createTopAppBar;

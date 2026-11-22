@@ -1,10 +1,4 @@
 {
-  "AppBarComponent": {
-    "kind": "extends",
-    "bases": [
-      "ElementComponent"
-    ]
-  },
   "AttributeType": {
     "kind": "union",
     "members": [
@@ -822,13 +816,42 @@
   "DrawerConfig": {
     "kind": "extends",
     "bases": [
-      "NavigationDrawerConfig"
+      "BaseComponentConfig"
+    ]
+  },
+  "DrawerConfig.position": {
+    "kind": "union",
+    "members": [
+      "DrawerPosition",
+      "string"
+    ]
+  },
+  "DrawerConfig.variant": {
+    "kind": "union",
+    "members": [
+      "DrawerVariant",
+      "string"
+    ]
+  },
+  "DrawerConfig.width": {
+    "kind": "union",
+    "members": [
+      "number",
+      "string"
     ]
   },
   "DrawerElement": {
     "kind": "extends",
     "bases": [
       "ElementInstance<DrawerSpec, NavigationDrawerComponent>"
+    ]
+  },
+  "DrawerItemConfig.type": {
+    "kind": "union",
+    "members": [
+      "\"divider\"",
+      "\"item\"",
+      "\"section\""
     ]
   },
   "DrawerPosition": {
@@ -1475,45 +1498,10 @@
       "\"vertical\""
     ]
   },
-  "NavigationDrawerConfig": {
-    "kind": "extends",
-    "bases": [
-      "BaseComponentConfig"
-    ]
-  },
-  "NavigationDrawerConfig.position": {
-    "kind": "union",
-    "members": [
-      "NavigationDrawerPosition",
-      "string"
-    ]
-  },
-  "NavigationDrawerConfig.variant": {
-    "kind": "union",
-    "members": [
-      "NavigationDrawerVariant",
-      "string"
-    ]
-  },
-  "NavigationDrawerConfig.width": {
-    "kind": "union",
-    "members": [
-      "number",
-      "string"
-    ]
-  },
   "NavigationDrawerElement": {
     "kind": "extends",
     "bases": [
       "ElementInstance<NavigationDrawerSpec, NavigationDrawerComponent>"
-    ]
-  },
-  "NavigationDrawerItemConfig.type": {
-    "kind": "union",
-    "members": [
-      "\"divider\"",
-      "\"item\"",
-      "\"section\""
     ]
   },
   "NavigationDrawerPosition": {
@@ -2450,10 +2438,10 @@
       "\"rich\""
     ]
   },
-  "TopAppBarConfig": {
+  "TopAppBarComponent": {
     "kind": "extends",
     "bases": [
-      "AppBarConfig"
+      "ElementComponent"
     ]
   },
   "TopLayerKind": {

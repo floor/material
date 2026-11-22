@@ -26,8 +26,7 @@ export { createAssistChip, createFilterChip, createInputChip, createSuggestionCh
 export { default as createDatePicker } from "./datepicker";
 export { default as createDialog } from "./dialog";
 export { createDivider } from "./divider";
-export { default as createNavigationDrawer } from "./drawer";
-export { createDrawer } from "./drawer";
+export { default as createDrawer, createNavigationDrawer } from "./drawer";
 export { default as createFab } from "./fab";
 export { default as createFabMenu } from "./fab-menu";
 export { default as createExtendedFab } from "./extended-fab";
@@ -55,9 +54,7 @@ export { createTab } from "./tabs/tab";
 export { default as createTextField } from "./text-field";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
-export { default as createAppBar } from "./top-app-bar";
-/** @deprecated use `createAppBar`. The top app bar is the app bar. */
-export { createTopAppBar } from "./top-app-bar";
+export { default as createTopAppBar, createAppBar } from "./top-app-bar";
 export { default as createTooltip } from "./tooltip";
 
 // Card content components
@@ -148,8 +145,16 @@ export type { DatePickerConfig, DatePickerComponent, DatePickerVariant } from ".
 // Dialog
 export type { DialogConfig, DialogComponent } from "./dialog/types";
 
-// Navigation drawer
+// Drawer (navigation drawer)
 export type {
+  DrawerConfig,
+  DrawerComponent,
+  DrawerVariant,
+  DrawerPosition,
+  DrawerItemConfig,
+  DrawerSelectEvent,
+  DrawerSectionEvent,
+  DrawerEvents,
   NavigationDrawerConfig,
   NavigationDrawerComponent,
   NavigationDrawerVariant,
@@ -159,22 +164,7 @@ export type {
   NavigationDrawerSectionEvent,
   NavigationDrawerEvents,
 } from "./drawer/types";
-/** @deprecated use `NavigationDrawerConfig`. */
-export type { DrawerConfig } from "./drawer/types";
-/** @deprecated use `NavigationDrawerComponent`. */
-export type { DrawerComponent } from "./drawer/types";
-/** @deprecated use `NavigationDrawerVariant`. */
-export type { DrawerVariant } from "./drawer/types";
-/** @deprecated use `NavigationDrawerPosition`. */
-export type { DrawerPosition } from "./drawer/types";
-/** @deprecated use `NavigationDrawerItemConfig`. */
-export type { DrawerItemConfig } from "./drawer/types";
-/** @deprecated use `NavigationDrawerSelectEvent`. */
-export type { DrawerSelectEvent } from "./drawer/types";
-/** @deprecated use `NavigationDrawerSectionEvent`. */
-export type { DrawerSectionEvent } from "./drawer/types";
-/** @deprecated use `NavigationDrawerEvents`. */
-export type { DrawerEvents } from "./drawer/types";
+
 
 // Divider
 export type { DividerConfig } from "./divider/config";
@@ -297,15 +287,13 @@ export type {
 } from "./toolbar/types";
 export type { ToolbarVariant } from "./toolbar/constants";
 
-// App Bar
+// App bar (top app bar)
 export type {
+  TopAppBarConfig,
+  TopAppBarComponent,
   AppBarConfig,
   AppBarComponent,
 } from "./top-app-bar/types";
-/** @deprecated use `AppBarConfig`. The top app bar is the app bar. */
-export type { TopAppBarConfig } from "./top-app-bar/types";
-/** @deprecated use `AppBarComponent`. The top app bar is the app bar. */
-export type { TopAppBarComponent } from "./top-app-bar/types";
 
 // Tooltip
 export type { TooltipConfig, TooltipVariant, TooltipComponent } from "./tooltip/types";

@@ -8,7 +8,7 @@ import {
 } from "../../core/compose/features";
 import { withItems, withState, withHeadline } from "./features";
 import { withAPI } from "./api";
-import { NavigationDrawerConfig, NavigationDrawerComponent } from "./types";
+import { DrawerConfig, DrawerComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 import { DRAWER_DEFAULTS } from "./constants";
 
@@ -23,11 +23,11 @@ import { DRAWER_DEFAULTS } from "./constants";
  * The Drawer component is created using a functional composition pattern,
  * applying various features through the pipe function.
  *
- * @param {NavigationDrawerConfig} config - Configuration options for the drawer
+ * @param {DrawerConfig} config - Configuration options for the drawer
  *  This can include variant, items, headline, position, open state,
- *  and other drawer properties. See {@link NavigationDrawerConfig} for available options.
+ *  and other drawer properties. See {@link DrawerConfig} for available options.
  *
- * @returns {NavigationDrawerComponent} A fully configured drawer component instance with
+ * @returns {DrawerComponent} A fully configured drawer component instance with
  *  all requested features applied. The returned component has methods for
  *  state management, item selection, and lifecycle management.
  *
@@ -67,21 +67,17 @@ import { DRAWER_DEFAULTS } from "./constants";
  * ```
  *
  * @category Components
- */
-export default function createNavigationDrawer(config: NavigationDrawerConfig = {}): NavigationDrawerComponent {
-  return buildDrawer(config, false);
-}
-
-/**
  * @deprecated use {@link createNavigationDrawer}. Material Design 3 names the
  * component the navigation drawer; this name stays for 3.x.
  */
-export const createDrawer = createNavigationDrawer;
+export default function createDrawer(config: DrawerConfig = {}): DrawerComponent {
+  return buildDrawer(config, false);
+}
 
 /** @internal The element and SSR share the shadow-scoped section ids. */
-export const createShadowDrawer = (config: NavigationDrawerConfig): NavigationDrawerComponent => buildDrawer(config, true);
+export const createShadowDrawer = (config: DrawerConfig): DrawerComponent => buildDrawer(config, true);
 
-const buildDrawer = (config: NavigationDrawerConfig, shadow: boolean): NavigationDrawerComponent => {
+const buildDrawer = (config: DrawerConfig, shadow: boolean): DrawerComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {
@@ -153,3 +149,9 @@ const buildDrawer = (config: NavigationDrawerConfig, shadow: boolean): Navigatio
     throw new Error(`Failed to create drawer: ${(error as Error).message}`);
   }
 };
+
+/**
+ * Creates a navigation drawer: the same factory as {@link createDrawer}, under
+ * the name Material Design 3 gives the component.
+ */
+export const createNavigationDrawer = createDrawer;

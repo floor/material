@@ -5,13 +5,13 @@
  */
 
 import { createComponentConfig } from '../../core/config/component';
-import { AppBarConfig } from './types';
+import { TopAppBarConfig } from './types';
 import { TOP_APP_BAR_DEFAULTS } from './constants';
 
 /**
  * Default configuration for top app bar
  */
-export const defaultConfig: Partial<AppBarConfig> = {
+export const defaultConfig: Partial<TopAppBarConfig> = {
   tag: TOP_APP_BAR_DEFAULTS.TAG,
   type: TOP_APP_BAR_DEFAULTS.TYPE,
   scrollable: TOP_APP_BAR_DEFAULTS.SCROLLABLE,
@@ -22,8 +22,8 @@ export const defaultConfig: Partial<AppBarConfig> = {
 /**
  * Creates the configuration for a top app bar component
  * 
- * @param {AppBarConfig} config - User provided configuration
- * @returns {AppBarConfig} Complete configuration with defaults applied
+ * @param {TopAppBarConfig} config - User provided configuration
+ * @returns {TopAppBarConfig} Complete configuration with defaults applied
  */
-export const createConfig = (config: AppBarConfig = {} as AppBarConfig): AppBarConfig => 
-  createComponentConfig(defaultConfig, config, 'top-app-bar') as AppBarConfig;
+export const createConfig = (config: TopAppBarConfig = {} as TopAppBarConfig): TopAppBarConfig => 
+  createComponentConfig(defaultConfig, config, 'top-app-bar') as TopAppBarConfig;

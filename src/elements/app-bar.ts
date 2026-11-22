@@ -20,8 +20,8 @@
  */
 
 import createTopAppBar from "../components/top-app-bar";
-import type { AppBarComponent } from "../components/top-app-bar/top-app-bar";
-import type { AppBarConfig, TopAppBarType } from "../components/top-app-bar/types";
+import type { TopAppBarComponent } from "../components/top-app-bar/top-app-bar";
+import type { TopAppBarConfig, TopAppBarType } from "../components/top-app-bar/types";
 import { TOP_APP_BAR_DEFAULTS } from "../components/top-app-bar/constants";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
@@ -36,7 +36,7 @@ const namedSlot = (name: string): HTMLSlotElement => {
  * the text after it (see `headlineFallback`). Slots go in the leading and
  * trailing containers the factory appends elements to.
  */
-const create = (config: AppBarConfig): AppBarComponent => {
+const create = (config: TopAppBarConfig): TopAppBarComponent => {
   const bar = createTopAppBar(config);
   const headline = bar.getHeadlineElement();
   const text = document.createElement("span");
@@ -47,7 +47,7 @@ const create = (config: AppBarConfig): AppBarComponent => {
   return bar;
 };
 
-const headlineText = (component: AppBarComponent): HTMLElement | null =>
+const headlineText = (component: TopAppBarComponent): HTMLElement | null =>
   component.getHeadlineElement().querySelector("span");
 
 /**
@@ -56,7 +56,7 @@ const headlineText = (component: AppBarComponent): HTMLElement | null =>
  * cannot tell an empty leading from one with an icon; the title's end gap
  * belongs to an icon that is there (components/_top-app-bar.scss).
  */
-const leadingEmptiness = (component: AppBarComponent): (() => void) => {
+const leadingEmptiness = (component: TopAppBarComponent): (() => void) => {
   const leading = component.getLeadingContainer();
   const slot = leading.querySelector("slot") as HTMLSlotElement;
   const sync = (): void => {
@@ -72,7 +72,7 @@ const leadingEmptiness = (component: AppBarComponent): (() => void) => {
  * slot's own fallback: the whitespace between the slotted buttons is
  * assigned to the default slot, which would hide it.
  */
-const headlineFallback = (component: AppBarComponent): (() => void) => {
+const headlineFallback = (component: TopAppBarComponent): (() => void) => {
   const slot = component.getHeadlineElement().querySelector("slot") as HTMLSlotElement;
   const sync = (): void => {
     const text = headlineText(component);
@@ -92,7 +92,7 @@ const readBar = (host: HTMLElement): Config =>
     // A scroll target replaces the window as what the bar follows.
     scrollable: !host.hasAttribute("no-scroll") && !host.hasAttribute("scroll-target"),
     compressible: !host.hasAttribute("no-compress"),
-  }) satisfies Partial<AppBarConfig>;
+  }) satisfies Partial<TopAppBarConfig>;
 
 const threshold = (host: HTMLElement): number => {
   const value = Number(host.getAttribute("scroll-threshold") ?? TOP_APP_BAR_DEFAULTS.SCROLL_THRESHOLD);
@@ -103,7 +103,7 @@ const threshold = (host: HTMLElement): number => {
  * Follows the element whose id `scroll-target` names. Listening at the
  * document, in the capture phase, finds a target rendered after the bar.
  */
-const followScrollTarget = (host: HTMLElement, component: AppBarComponent): (() => void) => {
+const followScrollTarget = (host: HTMLElement, component: TopAppBarComponent): (() => void) => {
   const id = host.getAttribute("scroll-target");
   if (!id || host.hasAttribute("no-scroll")) return () => undefined;
   const update = (target: Element): void => void component.setScrollState(target.scrollTop > threshold(host));
@@ -121,7 +121,7 @@ const followScrollTarget = (host: HTMLElement, component: AppBarComponent): (() 
 export const createBarSpec = (name: string) => ({
   name,
   slots: ["leading", "trailing"] as const,
-  create: (config) => create(config as AppBarConfig),
+  create: (config) => create(config as TopAppBarConfig),
   styles: ["top-app-bar"],
   hostStyles: ":host{display:block}",
   attributes: {
@@ -152,13 +152,13 @@ export const createBarSpec = (name: string) => ({
     const cleanups = [headlineFallback(component), leadingEmptiness(component), followScrollTarget(host, component)];
     return () => cleanups.forEach((cleanup) => cleanup());
   },
-}) satisfies ElementSpec<AppBarComponent>;
+}) satisfies ElementSpec<TopAppBarComponent>;
 
 export const appBarSpec = createBarSpec("app-bar");
-export const appBarElement = defineElement<AppBarComponent>(appBarSpec);
+export const appBarElement = defineElement<TopAppBarComponent>(appBarSpec);
 export type AppBarSpec = typeof appBarSpec;
 /** `<m-app-bar>` as a ref or a query returns it. */
-export type AppBarElement = ElementInstance<AppBarSpec, AppBarComponent>;
+export type AppBarElement = ElementInstance<AppBarSpec, TopAppBarComponent>;
 
 /** Registers `<m-app-bar>` (or `<prefix-app-bar>`). */
 export const defineAppBar = (options?: DefineOptions): string => appBarElement.define(options);

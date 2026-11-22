@@ -1260,55 +1260,47 @@
     {
       "name": "default",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerComponent",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerComponent`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerConfig",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerConfig`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerEvents",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerEvents`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerItemConfig",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerItemConfig`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerPosition",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerPosition`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerSectionEvent",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerSectionEvent`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerSelectEvent",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerSelectEvent`."
+      "status": "deprecated"
     },
     {
       "name": "DrawerVariant",
       "kind": "type",
-      "status": "deprecated",
-      "note": "use `NavigationDrawerVariant`."
+      "status": "deprecated"
     },
     {
       "name": "NavigationDrawerComponent",
@@ -4043,7 +4035,7 @@
     {
       "name": "default",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TOP_APP_BAR_CLASSES",

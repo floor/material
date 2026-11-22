@@ -1,5 +1,5 @@
 // src/components/drawer/features/headline.ts
-import { NavigationDrawerConfig } from "../types";
+import { DrawerConfig } from "../types";
 
 /**
  * Component shape expected by withHeadline
@@ -28,7 +28,7 @@ export interface HeadlineFeature {
  * @returns Component enhancer function
  */
 export const withHeadline =
-  (config: NavigationDrawerConfig) =>
+  (config: DrawerConfig) =>
   <C extends HeadlineBaseComponent>(component: C): C & HeadlineFeature => {
     let headlineElement: HTMLElement | null = null;
     let headlineText: string = config.headline || "";

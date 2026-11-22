@@ -4,7 +4,7 @@
  * @description Top app bar component for application headers
  */
 
-import { createAppBar } from './top-app-bar';
+import { createTopAppBar } from './top-app-bar';
 
 // Export constants
 export { 
@@ -15,11 +15,11 @@ export {
 } from './constants';
 
 // Export main component and types
-export default createAppBar;
-export { createAppBar, createTopAppBar } from './top-app-bar';
+export default createTopAppBar;
+export { createTopAppBar, createAppBar } from './top-app-bar';
 export type {
-  AppBarConfig,
-  AppBarComponent,
   TopAppBarConfig,
   TopAppBarComponent,
+  AppBarConfig,
+  AppBarComponent,
 } from './types';

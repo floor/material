@@ -15,8 +15,10 @@ export type TopAppBarType = 'small' | 'medium' | 'large' | 'center';
 /**
  * Configuration options for Top App Bar component
  * @category Components
+ * @deprecated use `AppBarConfig`. Material Design 3 names the component the
+ * app bar. Removal in 4.0.
  */
-export interface AppBarConfig {
+export interface TopAppBarConfig {
   /**
    * Element to use for the container
    * @default 'header'
@@ -78,8 +80,9 @@ export interface AppBarConfig {
 /**
  * Top App Bar component interface
  * @category Components
+ * @deprecated use `AppBarComponent`. Removal in 4.0.
  */
-export interface AppBarComponent extends ElementComponent {
+export interface TopAppBarComponent extends ElementComponent {
   /**
    * Sets the title of the top app bar
    * @param {string} title - Title text
@@ -140,14 +143,7 @@ export interface AppBarComponent extends ElementComponent {
   getTrailingContainer: () => HTMLElement;
 }
 
-/**
- * @deprecated use {@link AppBarConfig}. The top app bar is the app bar. An
- * interface, so a consumer's module augmentation still compiles.
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- the deprecated name must stay augmentable
-export interface TopAppBarConfig extends AppBarConfig {}
-
-/**
- * @deprecated use {@link AppBarComponent}. The top app bar is the app bar.
- */
-export type TopAppBarComponent = AppBarComponent;
+/** The app bar's configuration; the top app bar is the app bar. */
+export type AppBarConfig = TopAppBarConfig;
+/** The app bar's component; the top app bar is the app bar. */
+export type AppBarComponent = TopAppBarComponent;
