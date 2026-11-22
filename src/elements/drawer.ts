@@ -11,7 +11,7 @@
  */
 
 import type { NavigationDrawerComponent } from "../components/drawer/types";
-import { createDrawerSpec, createItemDeclaration } from "./navigation-drawer";
+import { createDrawerSpec } from "./navigation-drawer";
 import { createDeclarationClass, defineElement, type DefineOptions, type ElementAttributes, type ElementInstance } from "./define";
 import { DEFAULT_PREFIX } from "./define";
 
@@ -29,8 +29,28 @@ export interface DrawerElement extends ElementInstance<DrawerSpec, NavigationDra
   getExpandedSections(): string[];
 }
 
-/** @deprecated use `navigationDrawerItemDeclaration`. */
-export const drawerItemDeclaration = createItemDeclaration("drawer-item");
+/**
+ * @deprecated use `navigationDrawerItemDeclaration`.
+ *
+ * `<m-drawer-item>` declares one destination, section headline or divider,
+ * and renders nothing. Its text content is the label unless `label` is set.
+ */
+export const drawerItemDeclaration = {
+  name: "drawer-item",
+  attributes: {
+    type: { type: "string" },
+    value: { type: "string" },
+    label: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
+    icon: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Shown while this destination is active. */
+    "selected-icon": { type: "string" },
+    badge: { type: "string" },
+    href: { type: "string" },
+    expanded: { type: "boolean" },
+    disabled: { type: "boolean" },
+  },
+} as const;
 /** @deprecated use `NavigationDrawerItemAttributes`. */
 export type DrawerItemAttributes = ElementAttributes<typeof drawerItemDeclaration>;
 

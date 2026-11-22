@@ -251,11 +251,10 @@ export interface NavigationDrawerElement extends ElementInstance<NavigationDrawe
 /**
  * `<m-navigation-drawer-item>` (formerly `<m-drawer-item>`) declares one
  * destination, section headline or divider, and renders nothing. Its text
- * content is the label unless `label` is set. `createItemDeclaration` builds
- * the same declaration under the deprecated name.
+ * content is the label unless `label` is set.
  */
-export const createItemDeclaration = (name: string) => ({
-  name,
+export const navigationDrawerItemDeclaration = {
+  name: "navigation-drawer-item",
   attributes: {
     type: { type: "string" },
     value: { type: "string" },
@@ -269,9 +268,7 @@ export const createItemDeclaration = (name: string) => ({
     expanded: { type: "boolean" },
     disabled: { type: "boolean" },
   },
-}) as const;
-
-export const navigationDrawerItemDeclaration = createItemDeclaration("navigation-drawer-item");
+} as const;
 export type NavigationDrawerItemAttributes = ElementAttributes<typeof navigationDrawerItemDeclaration>;
 
 /** Registers `<m-navigation-drawer>` and `<m-navigation-drawer-item>` (or with another prefix). */
