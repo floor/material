@@ -19,6 +19,7 @@ const parents: Record<string, string> = {
   "navigation-bar-item": "navigation-bar",
   "navigation-rail-item": "navigation-rail",
   "drawer-item": "drawer",
+  "navigation-drawer-item": "navigation-drawer",
   "button-group-item": "button-group",
   chip: "chips",
   "list-item": "list",

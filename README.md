@@ -851,8 +851,10 @@ On a declaration child:
 - `icon` on `<m-chip>`
 - `trailing-icon` on `<m-chip>`
 - `avatar` on `<m-chip>` — input chips only, and it takes precedence over `icon`; not a person's name or an image URL
-- `icon` on `<m-navigation-drawer-item>` (or the deprecated `<m-drawer-item>`)
-- `selected-icon` on `<m-navigation-drawer-item>` (or the deprecated `<m-drawer-item>`) — while that destination is active
+- `icon` on `<m-navigation-drawer-item>`
+- `selected-icon` on `<m-navigation-drawer-item>` — while that destination is active
+- `icon` on `<m-drawer-item>` — the deprecated name of the same declaration
+- `selected-icon` on `<m-drawer-item>` — the deprecated name, while that destination is active
 - `leading-icon` on `<m-list-item>`
 - `leading-avatar` on `<m-list-item>` — not a person's name or an image URL
 - `trailing-icon` on `<m-list-item>`

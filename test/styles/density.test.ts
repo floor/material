@@ -35,7 +35,8 @@ const reads = (text: string) => text.match(READS) ?? [];
 // below keeps a new sheet from joining this list by accident.
 const DENSIFYING: Record<string, string[]> = {
   components: ["button", "button-group", "drawer", "icon-button", "list", "text-field", "toolbar"],
-  elements: ["button", "button-group", "drawer", "field", "icon-button", "list", "text-field"],
+  // The drawer and navigation-drawer tags share one rule set (shared-drawer).
+  elements: ["button", "button-group", "field", "icon-button", "list", "shared-drawer", "text-field"],
 };
 
 // A fixed surface pins the property at its root, so a page-wide value cannot

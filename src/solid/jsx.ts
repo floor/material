@@ -8,7 +8,8 @@
  */
 import type { JSX } from "solid-js";
 import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
-import type { DrawerSpec, NavigationDrawerSpec } from "../elements/drawer";
+import type { DrawerSpec } from "../elements/drawer";
+import type { NavigationDrawerSpec } from "../elements/navigation-drawer";
 import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
@@ -21,7 +22,7 @@ type DrawerEvents<E extends HTMLElement> = {
   [K in Disclosure as `on:${K}`]?: JSX.EventHandler<E, ElementEvents<DrawerLikeSpec>[K]>;
 };
 type DrawerTag<S, E extends HTMLElement> = Omit<Tag<S, E>, keyof DrawerEvents<E>> & DrawerEvents<E>;
-type Spec = import("../elements/button").ButtonSpec | import("../elements/switch").SwitchSpec | import("../elements/tabs").TabsSpec | import("../elements/progress").ProgressSpec | import("../elements/loading-indicator").LoadingIndicatorSpec | import("../elements/badge").BadgeSpec | import("../elements/divider").DividerSpec | import("../elements/icon-button").IconButtonSpec | import("../elements/fab").FabSpec | import("../elements/extended-fab").ExtendedFabSpec | import("../elements/checkbox").CheckboxSpec | import("../elements/slider").SliderSpec | import("../elements/text-field").TextFieldSpec | import("../elements/radios").RadiosSpec | import("../elements/navigation-bar").NavigationBarSpec | import("../elements/navigation-rail").NavigationRailSpec | import("../elements/drawer").NavigationDrawerSpec | import("../elements/drawer").DrawerSpec | import("../elements/top-app-bar").AppBarSpec | import("../elements/top-app-bar").TopAppBarSpec | import("../elements/bottom-app-bar").BottomAppBarSpec | import("../elements/button-group").ButtonGroupSpec | import("../elements/chips").ChipsSpec | import("../elements/list").ListSpec | import("../elements/card").CardSpec | import("../elements/carousel").CarouselSpec | import("../elements/menu").MenuSpec | import("../elements/fab-menu").FabMenuSpec | import("../elements/select").SelectSpec | import("../elements/split-button").SplitButtonSpec | import("../elements/tooltip").TooltipSpec | import("../elements/toolbar").ToolbarSpec | import("../elements/snackbar").SnackbarSpec | import("../elements/dialog").DialogSpec | import("../elements/bottom-sheet").BottomSheetSpec | import("../elements/side-sheet").SideSheetSpec | import("../elements/datepicker").DatepickerSpec | import("../elements/timepicker").TimepickerSpec | import("../elements/search").SearchSpec;
+type Spec = import("../elements/button").ButtonSpec | import("../elements/switch").SwitchSpec | import("../elements/tabs").TabsSpec | import("../elements/progress").ProgressSpec | import("../elements/loading-indicator").LoadingIndicatorSpec | import("../elements/badge").BadgeSpec | import("../elements/divider").DividerSpec | import("../elements/icon-button").IconButtonSpec | import("../elements/fab").FabSpec | import("../elements/extended-fab").ExtendedFabSpec | import("../elements/checkbox").CheckboxSpec | import("../elements/slider").SliderSpec | import("../elements/text-field").TextFieldSpec | import("../elements/radios").RadiosSpec | import("../elements/navigation-bar").NavigationBarSpec | import("../elements/navigation-rail").NavigationRailSpec | import("../elements/navigation-drawer").NavigationDrawerSpec | import("../elements/drawer").DrawerSpec | import("../elements/app-bar").AppBarSpec | import("../elements/top-app-bar").TopAppBarSpec | import("../elements/bottom-app-bar").BottomAppBarSpec | import("../elements/button-group").ButtonGroupSpec | import("../elements/chips").ChipsSpec | import("../elements/list").ListSpec | import("../elements/card").CardSpec | import("../elements/carousel").CarouselSpec | import("../elements/menu").MenuSpec | import("../elements/fab-menu").FabMenuSpec | import("../elements/select").SelectSpec | import("../elements/split-button").SplitButtonSpec | import("../elements/tooltip").TooltipSpec | import("../elements/toolbar").ToolbarSpec | import("../elements/snackbar").SnackbarSpec | import("../elements/dialog").DialogSpec | import("../elements/bottom-sheet").BottomSheetSpec | import("../elements/side-sheet").SideSheetSpec | import("../elements/datepicker").DatepickerSpec | import("../elements/timepicker").TimepickerSpec | import("../elements/search").SearchSpec;
 type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
 type Ev<K extends string, S = K extends Disclosure ? Exclude<Spec, DrawerLikeSpec> : Spec> =
   S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
@@ -46,10 +47,10 @@ declare module "solid-js" {
       "m-radios": Tag<import("../elements/radios").RadiosSpec, import("../elements/radios").RadiosElement>;
       "m-navigation-bar": Tag<import("../elements/navigation-bar").NavigationBarSpec, import("../elements/navigation-bar").NavigationBarElement>;
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;
-      "m-navigation-drawer": DrawerTag<import("../elements/drawer").NavigationDrawerSpec, import("../elements/drawer").NavigationDrawerElement>;
+      "m-navigation-drawer": DrawerTag<import("../elements/navigation-drawer").NavigationDrawerSpec, import("../elements/navigation-drawer").NavigationDrawerElement>;
       /** @deprecated Material Design 3 names this the navigation drawer. Use NavigationDrawer instead. */
       "m-drawer": DrawerTag<import("../elements/drawer").DrawerSpec, import("../elements/drawer").DrawerElement>;
-      "m-app-bar": Tag<import("../elements/top-app-bar").AppBarSpec, import("../elements/top-app-bar").AppBarElement>;
+      "m-app-bar": Tag<import("../elements/app-bar").AppBarSpec, import("../elements/app-bar").AppBarElement>;
       /** @deprecated Material Design 3 names this the app bar. Use AppBar instead. */
       "m-top-app-bar": Tag<import("../elements/top-app-bar").TopAppBarSpec, import("../elements/top-app-bar").TopAppBarElement>;
       /** @deprecated Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use Toolbar with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar. */
@@ -76,7 +77,7 @@ declare module "solid-js" {
       "m-radio": Tag<typeof import("../elements/radios").radioDeclaration, HTMLElement>;
       "m-navigation-bar-item": Tag<typeof import("../elements/navigation-bar").navigationBarItemDeclaration, HTMLElement>;
       "m-navigation-rail-item": Tag<typeof import("../elements/navigation-rail").navigationRailItemDeclaration, HTMLElement>;
-      "m-navigation-drawer-item": Tag<typeof import("../elements/drawer").navigationDrawerItemDeclaration, HTMLElement>;
+      "m-navigation-drawer-item": Tag<typeof import("../elements/navigation-drawer").navigationDrawerItemDeclaration, HTMLElement>;
       /** @deprecated Material Design 3 names this the navigation drawer. Use NavigationDrawerItem instead. */
       "m-drawer-item": Tag<typeof import("../elements/drawer").drawerItemDeclaration, HTMLElement>;
       "m-button-group-item": Tag<typeof import("../elements/button-group").buttonGroupItemDeclaration, HTMLElement>;

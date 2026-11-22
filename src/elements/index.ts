@@ -27,8 +27,10 @@ import { textFieldElement, defineTextField } from "./text-field";
 import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 import { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
 import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
-import { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer, drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
-import { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
+import { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer } from "./navigation-drawer";
+import { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+import { appBarElement, defineAppBar } from "./app-bar";
+import { topAppBarElement, defineTopAppBar } from "./top-app-bar";
 import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
 import { chipsElement, chipDeclaration, defineChips } from "./chips";
@@ -98,16 +100,18 @@ export { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar
 export type { NavigationBarSpec, NavigationBarElement, NavigationBarItemAttributes } from "./navigation-bar";
 export { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
 export type { NavigationRailSpec, NavigationRailElement, NavigationRailItemAttributes } from "./navigation-rail";
-export { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer, drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+export { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer } from "./navigation-drawer";
+export { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+export type { NavigationDrawerSpec, NavigationDrawerElement, NavigationDrawerItemAttributes } from "./navigation-drawer";
 export type {
-  NavigationDrawerSpec, NavigationDrawerElement, NavigationDrawerItemAttributes,
   /** @deprecated use `NavigationDrawerSpec`. */ DrawerSpec,
   /** @deprecated use `NavigationDrawerElement`. */ DrawerElement,
   /** @deprecated use `NavigationDrawerItemAttributes`. */ DrawerItemAttributes,
 } from "./drawer";
-export { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
+export { appBarElement, defineAppBar } from "./app-bar";
+export { topAppBarElement, defineTopAppBar } from "./top-app-bar";
+export type { AppBarSpec, AppBarElement } from "./app-bar";
 export type {
-  AppBarSpec, AppBarElement,
   /** @deprecated use `AppBarSpec`. */ TopAppBarSpec,
   /** @deprecated use `AppBarElement`. */ TopAppBarElement,
 } from "./top-app-bar";
