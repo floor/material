@@ -289,7 +289,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
 }
 
 /** Partials in src/styles/elements that are shared, not an element's. */
-const SHARED_PREUPGRADE = ["config", "field", "index"];
+const SHARED_PREUPGRADE = ["config", "field", "index", "shared-app-bar", "shared-drawer"];
 
 /**
  * Each element's pre-upgrade rules (src/styles/elements/_<name>.scss), by

@@ -4,6 +4,7 @@
 // The build emits the same rules as material/elements/preupgrade.css.
 @forward '../abstract/emit' show $typescale-tokens, $spring-tokens;
 @forward 'config';
+@use 'app-bar';
 @use 'badge';
 @use 'bottom-app-bar';
 @use 'bottom-sheet';
@@ -25,6 +26,7 @@
 @use 'loading-indicator';
 @use 'menu';
 @use 'navigation-bar';
+@use 'navigation-drawer';
 @use 'navigation-rail';
 @use 'progress';
 @use 'radios';
