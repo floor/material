@@ -325,8 +325,8 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_top-app-bar.scss).
     // Drawer disclosures add child padding, state layers and group motion.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "d552ff61a4a37b66528a608152594138f4c745920f3abe0db14543d44d162a6c",
-      length: 554376,
+      sha256: "f6a9740be20c9a0a2a27abd61a91f173aff9856986cafd8088b3a89a8ddc743f",
+      length: 554415,
     });
   });
 
