@@ -5,7 +5,7 @@ import { join } from "node:path";
 const factories: Record<string, string> = {
   'tabs': 'createTabs',
   'split-button': 'createSplitButton',
-  'drawer': 'createDrawer',
+  'drawer': 'createNavigationDrawer',
   'loading-indicator': 'createLoadingIndicator',
   'timepicker': 'createTimePicker',
   'tooltip': 'createTooltip',
@@ -26,7 +26,7 @@ const factories: Record<string, string> = {
   'bottom-app-bar-toolbar': 'createBottomAppBarToolbar',
   'slider': 'createSlider',
   'carousel': 'createCarousel',
-  'top-app-bar': 'createTopAppBar',
+  'top-app-bar': 'createAppBar',
   'search': 'createSearch',
   'dialog': 'createDialog',
   'button': 'createButton',
