@@ -819,6 +819,12 @@
       "'middle-inset'"
     ]
   },
+  "DrawerConfig": {
+    "kind": "extends",
+    "bases": [
+      "NavigationDrawerConfig"
+    ]
+  },
   "DrawerElement": {
     "kind": "extends",
     "bases": [
@@ -2442,6 +2448,12 @@
       "\"default\"",
       "\"plain\"",
       "\"rich\""
+    ]
+  },
+  "TopAppBarConfig": {
+    "kind": "extends",
+    "bases": [
+      "AppBarConfig"
     ]
   },
   "TopLayerKind": {

@@ -76,7 +76,7 @@ export default function createNavigationDrawer(config: NavigationDrawerConfig = 
  * @deprecated use {@link createNavigationDrawer}. Material Design 3 names the
  * component the navigation drawer; this name stays for 3.x.
  */
-export const createDrawer = (config: NavigationDrawerConfig = {}): NavigationDrawerComponent => createNavigationDrawer(config);
+export const createDrawer = createNavigationDrawer;
 
 /** @internal The element and SSR share the shadow-scoped section ids. */
 export const createShadowDrawer = (config: NavigationDrawerConfig): NavigationDrawerComponent => buildDrawer(config, true);

@@ -73,3 +73,21 @@ describe("component default exports", () => {
     });
   }
 });
+
+// The deprecated factory names are the same binding, not wrappers: a consumer
+// that compares them, or that passes `createDrawer` where `createNavigationDrawer`
+// is expected, keeps working.
+describe("the deprecated factory names are the primary ones", () => {
+  const pairs = [
+    ["drawer", "createDrawer", "createNavigationDrawer"],
+    ["top-app-bar", "createTopAppBar", "createAppBar"],
+  ] as const;
+  for (const [name, deprecated, primary] of pairs) {
+    test(`${name}: default, ${deprecated} and ${primary} are one function`, async () => {
+      const mod = await import(`../../src/components/${name}/index.ts`);
+      expect(mod.default).toBe(mod[primary]);
+      expect(mod[deprecated]).toBe(mod[primary]);
+      expect(mod[deprecated]).toBe(mod.default);
+    });
+  }
+});

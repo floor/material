@@ -141,9 +141,11 @@ export interface AppBarComponent extends ElementComponent {
 }
 
 /**
- * @deprecated use {@link AppBarConfig}. The top app bar is the app bar.
+ * @deprecated use {@link AppBarConfig}. The top app bar is the app bar. An
+ * interface, so a consumer's module augmentation still compiles.
  */
-export type TopAppBarConfig = AppBarConfig;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- the deprecated name must stay augmentable
+export interface TopAppBarConfig extends AppBarConfig {}
 
 /**
  * @deprecated use {@link AppBarComponent}. The top app bar is the app bar.

@@ -356,9 +356,11 @@ export interface NavigationDrawerComponent {
 
 /**
  * @deprecated use {@link NavigationDrawerConfig}. Material Design 3 names the
- * component the navigation drawer.
+ * component the navigation drawer. An interface, so a consumer's module
+ * augmentation still compiles.
  */
-export type DrawerConfig = NavigationDrawerConfig;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- the deprecated name must stay augmentable
+export interface DrawerConfig extends NavigationDrawerConfig {}
 /** @deprecated use {@link NavigationDrawerComponent}. */
 export type DrawerComponent = NavigationDrawerComponent;
 /** @deprecated use {@link NavigationDrawerVariant}. */
