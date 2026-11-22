@@ -114,3 +114,6 @@ AGENTS.md
 
 # CI-only comparator builds
 scripts/fixtures/comparators/.generated/
+
+# The MD2 check's scratch builds
+.md2-check-*/
