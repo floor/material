@@ -310,7 +310,7 @@ test("reflections, live control state, selector lists, inert canvas and CSS prop
   }); restored();
 });
 
-test("all 37 defaults repeatedly mount detached and leave no late work, listeners or observers", async () => {
+test("all 39 defaults repeatedly mount detached and leave no late work, listeners or observers", async () => {
   const failures: unknown[] = [];
   let callbacks = 0;
   const onError = (...args: unknown[]) => { failures.push(args); };
@@ -318,7 +318,7 @@ test("all 37 defaults repeatedly mount detached and leave no late work, listener
   console.error = onError;
   process.on("uncaughtException", onError); process.on("unhandledRejection", onError);
   try {
-    expect(Object.keys(elements)).toHaveLength(37);
+    expect(Object.keys(elements)).toHaveLength(39);
     for (let iteration = 0; iteration < 2; iteration++) {
       for (const { spec: definition } of Object.values(elements)) {
         let resources: ServerResources;
