@@ -1066,3 +1066,39 @@ export async function checkMenuItemFocusRing(page: Page): Promise<void> {
   }
   console.log("Passed packed menu item and surface focus ring: 3dp inward secondary focus ring on keyboard-focused baseline and vertical items, empty menu surfaces, and split-button first items (LTR and RTL) across light, dark and forced-colors modes; no outline on pointer open.");
 }
+
+/**
+ * A top-layer menu is a popover, and the popover reset that clears its border
+ * outranks the forced-colours edge by one class-and-attribute selector. Under
+ * forced colours the popover keeps the same 1px edge a menu without the layer
+ * draws.
+ */
+export async function checkMenuForcedColorsBorder(page: Page): Promise<void> {
+  await page.emulateMedia({ forcedColors: "active" });
+  try {
+    const borders = await page.evaluate(async () => {
+      document.body.replaceChildren();
+      const state = window as unknown as MenuWindow;
+      const border = async (layer: "top" | undefined): Promise<[string, string] | null> => {
+        const opener = document.createElement("button");
+        opener.textContent = "Open";
+        document.body.append(opener);
+        const menu = state.createMenu({ opener, items: [{ id: "a", text: "Alpha" }], ...(layer ? { layer } : {}) });
+        menu.open();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const style = getComputedStyle(menu.element);
+        const value: [string, string] = [style.borderTopWidth, style.borderTopStyle];
+        menu.destroy();
+        opener.remove();
+        return value;
+      };
+      return { flat: await border(undefined), top: await border("top") };
+    });
+    assert.deepEqual(borders.flat, ["1px", "solid"], "a menu without the layer keeps its forced-colours edge");
+    assert.deepEqual(borders.top, ["1px", "solid"], "a top-layer menu keeps its forced-colours edge");
+  } finally {
+    await page.emulateMedia({ forcedColors: "none" });
+    await page.evaluate(() => document.body.replaceChildren());
+  }
+  console.log("Passed forced-colours border on a top-layer menu popover.");
+}

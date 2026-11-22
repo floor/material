@@ -394,3 +394,37 @@ if (import.meta.main) {
     await browser.close();
   }
 }
+
+/**
+ * A `layer: "top"` dialog is a native `<dialog>`; the reset that clears its
+ * border outranks the forced-colours edge by one element-and-class selector.
+ * Under forced colours the top-layer dialog keeps the same 2px edge a plain
+ * dialog draws.
+ */
+export async function checkDialogForcedColorsBorder(page: Page): Promise<void> {
+  await page.emulateMedia({ forcedColors: "active" });
+  try {
+    const borders = await page.evaluate(async () => {
+      document.body.replaceChildren();
+      const create = (window as unknown as { createDialog?: (config: object) => { open: () => void; close: () => void } }).createDialog;
+      const measure = async (layer: "top" | undefined): Promise<[string, string] | null> => {
+        const dialog = create!({ headline: "Title", content: "Body", ...(layer ? { layer } : {}) });
+        dialog.open();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const surface = document.querySelector("dialog.mtrl-dialog, .mtrl-dialog");
+        const style = surface ? getComputedStyle(surface) : null;
+        const value: [string, string] = [style?.borderTopWidth ?? "", style?.borderTopStyle ?? ""];
+        dialog.close();
+        document.body.replaceChildren();
+        return value;
+      };
+      return { flat: await measure(undefined), top: await measure("top") };
+    });
+    assert.deepEqual(borders.flat, ["2px", "solid"], "a dialog without the layer keeps its forced-colours edge");
+    assert.deepEqual(borders.top, ["2px", "solid"], "a top-layer dialog keeps its forced-colours edge");
+  } finally {
+    await page.emulateMedia({ forcedColors: "none" });
+    await page.evaluate(() => document.body.replaceChildren());
+  }
+  console.log("Passed forced-colours border on a top-layer dialog.");
+}

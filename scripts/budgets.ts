@@ -63,7 +63,7 @@ export const TARBALL_BYTES = 920_000;
 // and the rule figure are in check-package-size.ts. The lean listbox entry's six
 // files measure 5,127,470 B in CI, 1,265 files; measured + 1%, up to the next 1,000,
 // is 5,179,000. Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
-export const UNPACKED_BYTES = 5_202_340; // Button ARIA forwarding: CI 44907617850 measured 5,202,331 B unpacked.
+export const UNPACKED_BYTES = 5_195_714; // Top-layer forced-colours edges: local measurement 5,195,704 B unpacked, +10 B.
 
 /** check-slider.ts: its own build of the slider element entry. */
 export const SLIDER_INLINE_GZIP = 13_400;
