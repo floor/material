@@ -10,19 +10,19 @@ import { BaseComponentConfig } from "../../core/config/component";
  * - standard: Inline drawer, can be permanently visible or toggled. Best for expanded+ window sizes.
  * - modal: Overlay drawer with scrim. Best for compact/medium window sizes.
  */
-export type DrawerVariant = "standard" | "modal";
+export type NavigationDrawerVariant = "standard" | "modal";
 
 /**
  * Drawer position — which edge the drawer anchors to
  * @category Components
  */
-export type DrawerPosition = "start" | "end";
+export type NavigationDrawerPosition = "start" | "end";
 
 /**
  * Configuration for a navigation destination item
  * @category Components
  */
-export interface DrawerItemConfig {
+export interface NavigationDrawerItemConfig {
   /** Item type — defaults to 'item' if omitted */
   type?: "item" | "divider" | "section";
 
@@ -42,7 +42,7 @@ export interface DrawerItemConfig {
   href?: string;
 
   /** A non-empty list makes this item a disclosure section. One level is rendered. */
-  items?: DrawerItemConfig[];
+  items?: NavigationDrawerItemConfig[];
 
   /** Initial section state. If omitted, an active child opens the section. */
   expanded?: boolean;
@@ -64,7 +64,7 @@ export interface DrawerItemConfig {
  * Event detail emitted when a drawer item is selected
  * @category Components
  */
-export interface DrawerSelectEvent {
+export interface NavigationDrawerSelectEvent {
   /** The selected item's id */
   id: string;
   /** The id again, as the `value` of the `<m-drawer>` element's `change` */
@@ -78,7 +78,7 @@ export interface DrawerSelectEvent {
 }
 
 /** The new state of a drawer disclosure section. */
-export interface DrawerSectionEvent {
+export interface NavigationDrawerSectionEvent {
   id: string;
   value: string;
   label: string;
@@ -87,13 +87,13 @@ export interface DrawerSectionEvent {
 }
 
 /** Events emitted by drawer state, navigation items and root DOM forwarding. */
-export interface DrawerEvents {
+export interface NavigationDrawerEvents {
   open: () => void;
   close: () => void;
   /** User activation only; setActive() is silent. */
-  select: (payload: DrawerSelectEvent) => void;
-  expand: (payload: DrawerSectionEvent) => void;
-  collapse: (payload: DrawerSectionEvent) => void;
+  select: (payload: NavigationDrawerSelectEvent) => void;
+  expand: (payload: NavigationDrawerSectionEvent) => void;
+  collapse: (payload: NavigationDrawerSectionEvent) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
 }
@@ -102,18 +102,18 @@ export interface DrawerEvents {
  * Configuration interface for the Drawer component
  * @category Components
  */
-export interface DrawerConfig extends BaseComponentConfig {
+export interface NavigationDrawerConfig extends BaseComponentConfig {
   /**
    * Drawer variant that determines layout behavior
    * @default 'standard'
    */
-  variant?: DrawerVariant | string;
+  variant?: NavigationDrawerVariant | string;
 
   /**
    * Drawer anchor position
    * @default 'start'
    */
-  position?: DrawerPosition | string;
+  position?: NavigationDrawerPosition | string;
 
   /**
    * Whether the drawer is initially open
@@ -169,7 +169,7 @@ export interface DrawerConfig extends BaseComponentConfig {
    *   { id: 'family', label: 'Family', icon: '<svg>...</svg>' },
    * ]
    */
-  items?: DrawerItemConfig[];
+  items?: NavigationDrawerItemConfig[];
 
   /**
    * Drawer width as a CSS value
@@ -210,24 +210,24 @@ export interface DrawerConfig extends BaseComponentConfig {
   componentName?: string;
 
   /** `select` listener registered at creation. */
-  onSelect?: DrawerEvents["select"];
+  onSelect?: NavigationDrawerEvents["select"];
 
   /** `open` listener registered at creation. */
-  onOpen?: DrawerEvents["open"];
+  onOpen?: NavigationDrawerEvents["open"];
 
   /** `close` listener registered at creation. */
-  onClose?: DrawerEvents["close"];
+  onClose?: NavigationDrawerEvents["close"];
 
   /** Section listeners registered at creation. */
-  onExpand?: DrawerEvents["expand"];
-  onCollapse?: DrawerEvents["collapse"];
+  onExpand?: NavigationDrawerEvents["expand"];
+  onCollapse?: NavigationDrawerEvents["collapse"];
 }
 
 /**
  * Drawer component interface — public API
  * @category Components
  */
-export interface DrawerComponent {
+export interface NavigationDrawerComponent {
   /** The drawer's root DOM element */
   element: HTMLElement;
 
@@ -242,19 +242,19 @@ export interface DrawerComponent {
    * Opens the drawer
    * @returns The drawer component for chaining
    */
-  open: () => DrawerComponent;
+  open: () => NavigationDrawerComponent;
 
   /**
    * Closes the drawer
    * @returns The drawer component for chaining
    */
-  close: () => DrawerComponent;
+  close: () => NavigationDrawerComponent;
 
   /**
    * Toggles the drawer open/closed state
    * @returns The drawer component for chaining
    */
-  toggle: () => DrawerComponent;
+  toggle: () => NavigationDrawerComponent;
 
   /**
    * Checks if the drawer is currently open
@@ -267,7 +267,7 @@ export interface DrawerComponent {
    * @param id - Item id to activate
    * @returns The drawer component for chaining
    */
-  setActive: (id: string) => DrawerComponent;
+  setActive: (id: string) => NavigationDrawerComponent;
 
   /**
    * Gets the currently active item id
@@ -282,7 +282,7 @@ export interface DrawerComponent {
    * @param text - Headline text
    * @returns The drawer component for chaining
    */
-  setHeadline: (text: string) => DrawerComponent;
+  setHeadline: (text: string) => NavigationDrawerComponent;
 
   /**
    * Gets the headline text
@@ -295,13 +295,13 @@ export interface DrawerComponent {
    * @param items - Array of item configurations
    * @returns The drawer component for chaining
    */
-  setItems: (items: DrawerItemConfig[]) => DrawerComponent;
+  setItems: (items: NavigationDrawerItemConfig[]) => NavigationDrawerComponent;
 
   /**
    * Gets the current items configuration
    * @returns Array of item configurations
    */
-  getItems: () => DrawerItemConfig[];
+  getItems: () => NavigationDrawerItemConfig[];
 
   /**
    * Sets a badge on a specific item
@@ -309,12 +309,12 @@ export interface DrawerComponent {
    * @param badge - Badge text or empty string to remove
    * @returns The drawer component for chaining
    */
-  setBadge: (id: string, badge: string) => DrawerComponent;
+  setBadge: (id: string, badge: string) => NavigationDrawerComponent;
 
   /** Open, close or toggle the disclosure with this id. */
-  expandSection: (id: string) => DrawerComponent;
-  collapseSection: (id: string) => DrawerComponent;
-  toggleSection: (id: string) => DrawerComponent;
+  expandSection: (id: string) => NavigationDrawerComponent;
+  collapseSection: (id: string) => NavigationDrawerComponent;
+  toggleSection: (id: string) => NavigationDrawerComponent;
   isSectionExpanded: (id: string) => boolean;
   /** Expanded section ids in document order. */
   getExpandedSections: () => string[];
@@ -325,7 +325,7 @@ export interface DrawerComponent {
    * @param handler - Event handler function
    * @returns The drawer component for chaining
    */
-  on: <K extends keyof DrawerEvents>(event: K, handler: DrawerEvents[K]) => DrawerComponent;
+  on: <K extends keyof NavigationDrawerEvents>(event: K, handler: NavigationDrawerEvents[K]) => NavigationDrawerComponent;
 
   /**
    * Removes an event listener
@@ -333,14 +333,14 @@ export interface DrawerComponent {
    * @param handler - Event handler function
    * @returns The drawer component for chaining
    */
-  off: <K extends keyof DrawerEvents>(event: K, handler: DrawerEvents[K]) => DrawerComponent;
+  off: <K extends keyof NavigationDrawerEvents>(event: K, handler: NavigationDrawerEvents[K]) => NavigationDrawerComponent;
 
   /**
    * Adds CSS classes to the drawer element
    * @param classes - One or more class names to add
    * @returns The drawer component for chaining
    */
-  addClass: (...classes: string[]) => DrawerComponent;
+  addClass: (...classes: string[]) => NavigationDrawerComponent;
 
   /**
    * Destroys the drawer component and cleans up resources
@@ -353,3 +353,23 @@ export interface DrawerComponent {
     destroy: () => void;
   };
 }
+
+/**
+ * @deprecated use {@link NavigationDrawerConfig}. Material Design 3 names the
+ * component the navigation drawer.
+ */
+export type DrawerConfig = NavigationDrawerConfig;
+/** @deprecated use {@link NavigationDrawerComponent}. */
+export type DrawerComponent = NavigationDrawerComponent;
+/** @deprecated use {@link NavigationDrawerVariant}. */
+export type DrawerVariant = NavigationDrawerVariant;
+/** @deprecated use {@link NavigationDrawerPosition}. */
+export type DrawerPosition = NavigationDrawerPosition;
+/** @deprecated use {@link NavigationDrawerItemConfig}. */
+export type DrawerItemConfig = NavigationDrawerItemConfig;
+/** @deprecated use {@link NavigationDrawerSelectEvent}. */
+export type DrawerSelectEvent = NavigationDrawerSelectEvent;
+/** @deprecated use {@link NavigationDrawerSectionEvent}. */
+export type DrawerSectionEvent = NavigationDrawerSectionEvent;
+/** @deprecated use {@link NavigationDrawerEvents}. */
+export type DrawerEvents = NavigationDrawerEvents;

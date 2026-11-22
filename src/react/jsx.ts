@@ -49,6 +49,8 @@ declare module "react" {
       "m-radios": Tag<import("../elements/radios").RadiosSpec, import("../elements/radios").RadiosElement>;
       "m-navigation-bar": Tag<import("../elements/navigation-bar").NavigationBarSpec, import("../elements/navigation-bar").NavigationBarElement>;
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;
+      "m-navigation-drawer": Tag<import("../elements/drawer").NavigationDrawerSpec, import("../elements/drawer").NavigationDrawerElement>;
+      /** @deprecated Material Design 3 names this the navigation drawer. Use NavigationDrawer instead. */
       "m-drawer": Tag<import("../elements/drawer").DrawerSpec, import("../elements/drawer").DrawerElement>;
       "m-app-bar": Tag<import("../elements/top-app-bar").AppBarSpec, import("../elements/top-app-bar").AppBarElement>;
       /** @deprecated Material Design 3 names this the app bar. Use AppBar instead. */
@@ -77,6 +79,8 @@ declare module "react" {
       "m-radio": Tag<typeof import("../elements/radios").radioDeclaration, HTMLElement>;
       "m-navigation-bar-item": Tag<typeof import("../elements/navigation-bar").navigationBarItemDeclaration, HTMLElement>;
       "m-navigation-rail-item": Tag<typeof import("../elements/navigation-rail").navigationRailItemDeclaration, HTMLElement>;
+      "m-navigation-drawer-item": Tag<typeof import("../elements/drawer").navigationDrawerItemDeclaration, HTMLElement>;
+      /** @deprecated Material Design 3 names this the navigation drawer. Use NavigationDrawerItem instead. */
       "m-drawer-item": Tag<typeof import("../elements/drawer").drawerItemDeclaration, HTMLElement>;
       "m-button-group-item": Tag<typeof import("../elements/button-group").buttonGroupItemDeclaration, HTMLElement>;
       "m-chip": Tag<typeof import("../elements/chips").chipDeclaration, HTMLElement>;

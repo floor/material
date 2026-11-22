@@ -1,6 +1,6 @@
 // src/components/drawer/features/items.ts
 
-import { DrawerConfig, DrawerItemConfig, DrawerSelectEvent, DrawerSectionEvent } from "../types";
+import { NavigationDrawerConfig, NavigationDrawerItemConfig, NavigationDrawerSelectEvent, NavigationDrawerSectionEvent } from "../types";
 import { DRAWER_CLASSES, DRAWER_EVENTS } from "../constants";
 import {
   createRipple,
@@ -13,8 +13,8 @@ import { safeUrl } from "../../../core/utils/url";
 
 let drawerCount = 0;
 const DEFAULT_CHEVRON = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>';
-const isDestination = (item: DrawerItemConfig) => item.type !== "divider" && item.type !== "section";
-const isSection = (item: DrawerItemConfig) => item.type !== "divider" && !!item.items?.length;
+const isDestination = (item: NavigationDrawerItemConfig) => item.type !== "divider" && item.type !== "section";
+const isSection = (item: NavigationDrawerItemConfig) => item.type !== "divider" && !!item.items?.length;
 const hasModifiers = (event: MouseEvent | KeyboardEvent) => event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
 const enabled = (element: HTMLElement) => !element.matches('[disabled], [aria-disabled="true"]');
 const visible = (element: HTMLElement) => enabled(element) && !element.closest("[inert], [hidden]");
@@ -29,12 +29,12 @@ interface Section {
   expanded: boolean;
 }
 interface Destination {
-  item: DrawerItemConfig;
+  item: NavigationDrawerItemConfig;
   element: HTMLElement;
   parent?: Section;
 }
 
-const initialActive = (items: DrawerItemConfig[]) =>
+const initialActive = (items: NavigationDrawerItemConfig[]) =>
   items.flatMap(item => isSection(item) ? item.items! : [item])
     .find(item => isDestination(item) && item.active && !item.disabled)?.id || null;
 
@@ -63,8 +63,8 @@ export interface ItemsFeature {
   drawerItems: {
     setActive: (id: string) => void;
     getActive: () => string | null;
-    setItems: (items: DrawerItemConfig[]) => void;
-    getItems: () => DrawerItemConfig[];
+    setItems: (items: NavigationDrawerItemConfig[]) => void;
+    getItems: () => NavigationDrawerItemConfig[];
     setBadge: (id: string, badge: string) => void;
     expandSection: (id: string) => void;
     collapseSection: (id: string) => void;
@@ -80,7 +80,7 @@ export interface ItemsFeature {
  * Creates a single navigation item element
  */
 const createItemElement = (
-  item: DrawerItemConfig,
+  item: NavigationDrawerItemConfig,
   getClass: (name: string) => string,
 ): HTMLElement => {
   const { href } = item;
@@ -159,7 +159,7 @@ const createDividerElement = (
  * Creates a section label element
  */
 const createSectionElement = (
-  item: DrawerItemConfig,
+  item: NavigationDrawerItemConfig,
   getClass: (name: string) => string,
 ): HTMLElement => {
   const el = document.createElement("div");
@@ -175,7 +175,7 @@ const createSectionElement = (
  * @returns Component enhancer function
  */
 export const withItems =
-  (config: DrawerConfig, shadow: boolean) =>
+  (config: NavigationDrawerConfig, shadow: boolean) =>
   <C extends ItemsBaseComponent>(component: C): C & ItemsFeature => {
     const cls = component.getClass;
     const itemsContainer = document.createElement("div");
@@ -217,14 +217,14 @@ export const withItems =
         (enabled(section.button) ? section.button : component.element).focus();
       }
       paintSection(section, expanded);
-      const detail: DrawerSectionEvent = {
+      const detail: NavigationDrawerSectionEvent = {
         id: section.id, value: section.id, label: section.label, expanded,
         ...(event && { originalEvent: event }),
       };
       component.emit(expanded ? DRAWER_EVENTS.EXPAND : DRAWER_EVENTS.COLLAPSE, detail);
     };
 
-    const mapItems = (map: (item: DrawerItemConfig) => DrawerItemConfig): void => {
+    const mapItems = (map: (item: NavigationDrawerItemConfig) => NavigationDrawerItemConfig): void => {
       currentItems = currentItems.map(item => {
         const next = map(item);
         return isSection(item) ? { ...next, items: item.items!.map(map) } : next;
@@ -257,7 +257,7 @@ export const withItems =
       const namedSections = new Set(currentItems.filter(isSection).map(item => item.id));
       let sectionIndex = 0;
 
-      const renderItem = (item: DrawerItemConfig, container: HTMLElement, parent?: Section): void => {
+      const renderItem = (item: NavigationDrawerItemConfig, container: HTMLElement, parent?: Section): void => {
         if (item.type === "divider") {
           container.append(createDividerElement(cls));
           return;
@@ -283,7 +283,7 @@ export const withItems =
           if (item.href !== undefined && (hasModifiers(event) || event.button !== 0)) return;
           if (!item.id) return;
           setActive(item.id);
-          const detail: DrawerSelectEvent = { id: item.id, value: item.id, label: item.label || "", index, originalEvent: event };
+          const detail: NavigationDrawerSelectEvent = { id: item.id, value: item.id, label: item.label || "", index, originalEvent: event };
           component.emit(DRAWER_EVENTS.SELECT, detail);
         });
         mountRipple(element, item.disabled);
@@ -347,7 +347,7 @@ export const withItems =
       });
     };
 
-    const setItems = (items: DrawerItemConfig[]): void => {
+    const setItems = (items: NavigationDrawerItemConfig[]): void => {
       currentItems = items;
       activeId = initialActive(items);
       renderItems();

@@ -29,14 +29,14 @@
  */
 
 import { createShadowDrawer } from "../components/drawer/drawer";
-import type { DrawerComponent, DrawerConfig, DrawerItemConfig, DrawerSectionEvent } from "../components/drawer/types";
+import type { NavigationDrawerComponent, NavigationDrawerConfig, NavigationDrawerItemConfig, NavigationDrawerSectionEvent } from "../components/drawer/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
 } from "./define";
 
 const collapsedDeclarations = new WeakSet<Element>();
-const previousDeclarations = new WeakMap<HTMLElement, DrawerItemConfig[]>();
+const previousDeclarations = new WeakMap<HTMLElement, NavigationDrawerItemConfig[]>();
 
 const itemChildren = (host: Element, tag: string): Element[] =>
   Array.from(host.children).filter(child => child.localName === tag);
@@ -46,8 +46,8 @@ const itemLabel = (child: Element, section: boolean): string =>
     ? Array.from(child.childNodes).filter(node => node.nodeType === 3).map(node => node.textContent).join("")
     : child.textContent ?? "").trim();
 
-const declaredItems = (host: Element, tag: string, active: string | null, sections: boolean): DrawerItemConfig[] => {
-  const items: DrawerItemConfig[] = [];
+const declaredItems = (host: Element, tag: string, active: string | null, sections: boolean): NavigationDrawerItemConfig[] => {
+  const items: NavigationDrawerItemConfig[] = [];
   for (const child of itemChildren(host, tag)) {
     const type = child.getAttribute("type");
     if (type === "divider") {
@@ -63,7 +63,7 @@ const declaredItems = (host: Element, tag: string, active: string | null, sectio
     }
     if (!label) continue;
     const id = child.getAttribute("value") ?? label;
-    const item: DrawerItemConfig = {
+    const item: NavigationDrawerItemConfig = {
       id,
       label,
       icon: child.getAttribute("icon") ?? undefined,
@@ -86,7 +86,7 @@ const declaredItems = (host: Element, tag: string, active: string | null, sectio
   return items;
 };
 
-const reflectSection = (host: HTMLElement, { id, expanded }: DrawerSectionEvent): void => {
+const reflectSection = (host: HTMLElement, { id, expanded }: NavigationDrawerSectionEvent): void => {
   const tag = `${host.localName}-item`;
   const item = itemChildren(host, tag).find(child =>
     itemChildren(child, tag).length && (child.getAttribute("value") ?? itemLabel(child, true)) === id);
@@ -101,15 +101,15 @@ const reflectSection = (host: HTMLElement, { id, expanded }: DrawerSectionEvent)
 const readDrawer = (host: HTMLElement): Config => {
   const items = declaredItems(host, `${host.localName}-item`, host.getAttribute("value"), true);
   previousDeclarations.set(host, items);
-  const reflect = (event: DrawerSectionEvent): void => reflectSection(host, event);
-  return { items, onExpand: reflect, onCollapse: reflect } satisfies DrawerConfig;
+  const reflect = (event: NavigationDrawerSectionEvent): void => reflectSection(host, event);
+  return { items, onExpand: reflect, onCollapse: reflect } satisfies NavigationDrawerConfig;
 };
 
-const withoutActive = (items: DrawerItemConfig[]): string =>
+const withoutActive = (items: NavigationDrawerItemConfig[]): string =>
   JSON.stringify(items, (name, value: unknown) => name === "active" ? undefined : value);
 
 /** Update declarations in place and restore focus if the focused item remains visible. */
-const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerComponent): boolean => {
+const updateDrawer = (host: ElementHost<NavigationDrawerComponent>, component: NavigationDrawerComponent): boolean => {
   const active = component.getActive();
   const items = declaredItems(host, `${host.localName}-item`, host.dirty ? active : host.getAttribute("value"), true);
   const previous = previousDeclarations.get(host) ?? [];
@@ -140,26 +140,26 @@ const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerCompo
 };
 
 const sectionDetail = (payload: unknown) => {
-  const { value, expanded } = payload as DrawerSectionEvent;
+  const { value, expanded } = payload as NavigationDrawerSectionEvent;
   return { value, expanded };
 };
 
 /** Selects an item; null clears the selection, which the factory does for an empty id. */
-const select = (component: DrawerComponent, value: unknown): void =>
+const select = (component: NavigationDrawerComponent, value: unknown): void =>
   void component.setActive(value === null || value === undefined ? "" : String(value));
 
 /**
  * The standard drawer, or with `modal` the modal one in the top layer; a bare
  * number `width` is pixels, as a number is for the factory.
  */
-const create = ({ modal, ...config }: DrawerConfig & { modal?: boolean }): DrawerComponent => {
+const create = ({ modal, ...config }: NavigationDrawerConfig & { modal?: boolean }): NavigationDrawerComponent => {
   const width = typeof config.width === "string" && /^\d+(\.\d+)?$/.test(config.width) ? Number(config.width) : config.width;
   return createShadowDrawer({ ...config, width, ...(modal ? { variant: "modal", layer: "top" } : { variant: "standard" }) });
 };
 
 const drawerSpec = {
   name: "drawer",
-  create: (config) => create(config as DrawerConfig),
+  create: (config) => create(config as NavigationDrawerConfig),
   styles: ["drawer"],
   hostStyles: ":host{display:block;flex-shrink:0}",
   attributes: {
@@ -232,12 +232,15 @@ const drawerSpec = {
     };
   },
   observeChildren: updateDrawer,
-} satisfies ElementSpec<DrawerComponent>;
+} satisfies ElementSpec<NavigationDrawerComponent>;
 
-export const drawerElement = defineElement<DrawerComponent>(drawerSpec);
-export type DrawerSpec = typeof drawerSpec;
-/** `<m-drawer>` as a ref or a query returns it. */
-export interface DrawerElement extends ElementInstance<DrawerSpec, DrawerComponent> {
+/** The same spec under the name Material gives it, and the same disclosures. */
+const navigationDrawerSpec = { ...drawerSpec, name: "navigation-drawer" } as const;
+
+export const navigationDrawerElement = defineElement<NavigationDrawerComponent>(navigationDrawerSpec);
+export type NavigationDrawerSpec = typeof navigationDrawerSpec;
+/** `<m-navigation-drawer>` as a ref or a query returns it. */
+export interface NavigationDrawerElement extends ElementInstance<NavigationDrawerSpec, NavigationDrawerComponent> {
   expandSection(id: string): this;
   collapseSection(id: string): this;
   toggleSection(id: string): this;
@@ -246,10 +249,27 @@ export interface DrawerElement extends ElementInstance<DrawerSpec, DrawerCompone
 }
 
 /**
- * `<m-drawer-item>` declares one destination, section headline or divider,
- * and renders nothing. Its text content is the label unless `label` is set.
+ * @deprecated use {@link navigationDrawerElement}. Material Design 3 names the
+ * component the navigation drawer.
  */
-export const drawerItemDeclaration = {
+export const drawerElement = defineElement<NavigationDrawerComponent>(drawerSpec);
+/** @deprecated use {@link NavigationDrawerSpec}. */
+export type DrawerSpec = typeof drawerSpec;
+/** @deprecated use {@link NavigationDrawerElement}. */
+export interface DrawerElement extends ElementInstance<DrawerSpec, NavigationDrawerComponent> {
+  expandSection(id: string): this;
+  collapseSection(id: string): this;
+  toggleSection(id: string): this;
+  isSectionExpanded(id: string): boolean;
+  getExpandedSections(): string[];
+}
+
+/**
+ * `<m-navigation-drawer-item>` (formerly `<m-drawer-item>`) declares one
+ * destination, section headline or divider, and renders nothing. Its text
+ * content is the label unless `label` is set.
+ */
+const itemDeclaration = {
   name: "drawer-item",
   attributes: {
     type: { type: "string" },
@@ -265,13 +285,29 @@ export const drawerItemDeclaration = {
     disabled: { type: "boolean" },
   },
 } as const;
+
+export const navigationDrawerItemDeclaration = { ...itemDeclaration, name: "navigation-drawer-item" } as const;
+export type NavigationDrawerItemAttributes = ElementAttributes<typeof navigationDrawerItemDeclaration>;
+/** @deprecated use {@link navigationDrawerItemDeclaration}. */
+export const drawerItemDeclaration = itemDeclaration;
+/** @deprecated use {@link NavigationDrawerItemAttributes}. */
 export type DrawerItemAttributes = ElementAttributes<typeof drawerItemDeclaration>;
 
-/** Registers `<m-drawer>` and `<m-drawer-item>` (or with another prefix). */
-export const defineDrawer = (options?: DefineOptions): string => {
-  const itemTag = `${options?.prefix ?? DEFAULT_PREFIX}-${drawerItemDeclaration.name}`;
+/** Registers `<m-navigation-drawer>` and `<m-navigation-drawer-item>` (or with another prefix). */
+export const defineNavigationDrawer = (options?: DefineOptions): string => {
+  const itemTag = `${options?.prefix ?? DEFAULT_PREFIX}-${navigationDrawerItemDeclaration.name}`;
   // Defined first, so items already in the page are upgraded before the
   // drawer reads them.
+  if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(navigationDrawerItemDeclaration.attributes));
+  return navigationDrawerElement.define(options);
+};
+
+/**
+ * @deprecated use {@link defineNavigationDrawer}. Registers `<m-drawer>` and
+ * `<m-drawer-item>` (or with another prefix).
+ */
+export const defineDrawer = (options?: DefineOptions): string => {
+  const itemTag = `${options?.prefix ?? DEFAULT_PREFIX}-${drawerItemDeclaration.name}`;
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(drawerItemDeclaration.attributes));
   return drawerElement.define(options);
 };
@@ -279,7 +315,11 @@ export const defineDrawer = (options?: DefineOptions): string => {
 declare global {
   /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
   interface HTMLElementTagNameMap {
+    "m-navigation-drawer": NavigationDrawerElement;
+    "m-navigation-drawer-item": HTMLElement & NavigationDrawerItemAttributes;
+    /** @deprecated use `m-navigation-drawer`. */
     "m-drawer": DrawerElement;
+    /** @deprecated use `m-navigation-drawer-item`. */
     "m-drawer-item": HTMLElement & DrawerItemAttributes;
   }
 }

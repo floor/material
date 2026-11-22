@@ -27,7 +27,7 @@ import { textFieldElement, defineTextField } from "./text-field";
 import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 import { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
 import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
-import { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+import { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer, drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
 import { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
 import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
@@ -98,8 +98,13 @@ export { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar
 export type { NavigationBarSpec, NavigationBarElement, NavigationBarItemAttributes } from "./navigation-bar";
 export { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
 export type { NavigationRailSpec, NavigationRailElement, NavigationRailItemAttributes } from "./navigation-rail";
-export { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
-export type { DrawerSpec, DrawerElement, DrawerItemAttributes } from "./drawer";
+export { navigationDrawerElement, navigationDrawerItemDeclaration, defineNavigationDrawer, drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+export type {
+  NavigationDrawerSpec, NavigationDrawerElement, NavigationDrawerItemAttributes,
+  /** @deprecated use `NavigationDrawerSpec`. */ DrawerSpec,
+  /** @deprecated use `NavigationDrawerElement`. */ DrawerElement,
+  /** @deprecated use `NavigationDrawerItemAttributes`. */ DrawerItemAttributes,
+} from "./drawer";
 export { appBarElement, defineAppBar, topAppBarElement, defineTopAppBar } from "./top-app-bar";
 export type {
   AppBarSpec, AppBarElement,
@@ -166,6 +171,7 @@ export const elements = {
   radios: radiosElement,
   navigationBar: navigationBarElement,
   navigationRail: navigationRailElement,
+  navigationDrawer: navigationDrawerElement,
   drawer: drawerElement,
   appBar: appBarElement,
   topAppBar: topAppBarElement,
@@ -196,6 +202,7 @@ export const declarations: {
   readonly radio: typeof radioDeclaration;
   readonly navigationBarItem: typeof navigationBarItemDeclaration;
   readonly navigationRailItem: typeof navigationRailItemDeclaration;
+  readonly navigationDrawerItem: typeof navigationDrawerItemDeclaration;
   readonly drawerItem: typeof drawerItemDeclaration;
   readonly buttonGroupItem: typeof buttonGroupItemDeclaration;
   readonly chip: typeof chipDeclaration;
@@ -210,6 +217,7 @@ export const declarations: {
   radio: radioDeclaration,
   navigationBarItem: navigationBarItemDeclaration,
   navigationRailItem: navigationRailItemDeclaration,
+  navigationDrawerItem: navigationDrawerItemDeclaration,
   drawerItem: drawerItemDeclaration,
   buttonGroupItem: buttonGroupItemDeclaration,
   chip: chipDeclaration,
@@ -239,6 +247,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineRadios(options);
   defineNavigationBar(options);
   defineNavigationRail(options);
+  defineNavigationDrawer(options);
   defineDrawer(options);
   defineAppBar(options);
   defineTopAppBar(options);

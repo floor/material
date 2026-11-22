@@ -26,7 +26,9 @@ export { createAssistChip, createFilterChip, createInputChip, createSuggestionCh
 export { default as createDatePicker } from "./datepicker";
 export { default as createDialog } from "./dialog";
 export { createDivider } from "./divider";
-export { default as createDrawer } from "./drawer";
+export { default as createNavigationDrawer } from "./drawer";
+/** @deprecated use `createNavigationDrawer`. Material Design 3 names the component the navigation drawer. */
+export { createNavigationDrawer as createDrawer } from "./drawer";
 export { default as createFab } from "./fab";
 export { default as createFabMenu } from "./fab-menu";
 export { default as createExtendedFab } from "./extended-fab";
@@ -147,16 +149,32 @@ export type { DatePickerConfig, DatePickerComponent, DatePickerVariant } from ".
 // Dialog
 export type { DialogConfig, DialogComponent } from "./dialog/types";
 
-// Drawer
+// Navigation drawer
 export type {
-  DrawerConfig,
-  DrawerComponent,
-  DrawerVariant,
-  DrawerPosition,
-  DrawerItemConfig,
-  DrawerSelectEvent,
-  DrawerSectionEvent,
+  NavigationDrawerConfig,
+  NavigationDrawerComponent,
+  NavigationDrawerVariant,
+  NavigationDrawerPosition,
+  NavigationDrawerItemConfig,
+  NavigationDrawerSelectEvent,
+  NavigationDrawerSectionEvent,
 } from "./drawer/types";
+/** @deprecated use `NavigationDrawerConfig`. */
+export type { DrawerConfig } from "./drawer/types";
+/** @deprecated use `NavigationDrawerComponent`. */
+export type { DrawerComponent } from "./drawer/types";
+/** @deprecated use `NavigationDrawerVariant`. */
+export type { DrawerVariant } from "./drawer/types";
+/** @deprecated use `NavigationDrawerPosition`. */
+export type { DrawerPosition } from "./drawer/types";
+/** @deprecated use `NavigationDrawerItemConfig`. */
+export type { DrawerItemConfig } from "./drawer/types";
+/** @deprecated use `NavigationDrawerSelectEvent`. */
+export type { DrawerSelectEvent } from "./drawer/types";
+/** @deprecated use `NavigationDrawerSectionEvent`. */
+export type { DrawerSectionEvent } from "./drawer/types";
+/** @deprecated use `NavigationDrawerEvents`. */
+export type { DrawerEvents } from "./drawer/types";
 
 // Divider
 export type { DividerConfig } from "./divider/config";

@@ -4,7 +4,7 @@ import {
   createComponentConfig,
   createElementConfig,
 } from "../../core/config/component";
-import { DrawerConfig } from "./types";
+import { NavigationDrawerConfig } from "./types";
 import { DRAWER_DEFAULTS } from "./constants";
 import { supportsTopLayer } from "../../core/dom/layer";
 
@@ -14,7 +14,7 @@ import { supportsTopLayer } from "../../core/dom/layer";
  *
  * @category Components
  */
-export const defaultConfig: DrawerConfig = {
+export const defaultConfig: NavigationDrawerConfig = {
   variant: DRAWER_DEFAULTS.VARIANT,
   position: DRAWER_DEFAULTS.POSITION,
   open: DRAWER_DEFAULTS.OPEN,
@@ -29,13 +29,13 @@ export const defaultConfig: DrawerConfig = {
  * user-provided config with default values. Global configuration is
  * automatically applied by createComponentConfig.
  *
- * @param {DrawerConfig} config - User provided configuration
- * @returns {DrawerConfig} Complete configuration with defaults applied
+ * @param {NavigationDrawerConfig} config - User provided configuration
+ * @returns {NavigationDrawerConfig} Complete configuration with defaults applied
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: DrawerConfig = {}): DrawerConfig => {
-  const merged = createComponentConfig(defaultConfig, config, "drawer") as DrawerConfig;
+export const createBaseConfig = (config: NavigationDrawerConfig = {}): NavigationDrawerConfig => {
+  const merged = createComponentConfig(defaultConfig, config, "drawer") as NavigationDrawerConfig;
   // Only a modal drawer goes to the top layer, and only where it can
   if (merged.layer === "top" && (merged.variant !== "modal" || !supportsTopLayer("modal"))) {
     merged.layer = undefined;
@@ -48,12 +48,12 @@ export const createBaseConfig = (config: DrawerConfig = {}): DrawerConfig => {
  * This function creates the necessary attributes and configuration
  * for the DOM element creation process.
  *
- * @param {DrawerConfig} config - Drawer configuration
+ * @param {NavigationDrawerConfig} config - Drawer configuration
  * @returns {Object} Element configuration object for withElement
  * @category Components
  * @internal
  */
-export const getElementConfig = (config: DrawerConfig) => {
+export const getElementConfig = (config: NavigationDrawerConfig) => {
   const isModal = config.variant === "modal";
 
   const attributes: Record<string, string | boolean | undefined> = {};
@@ -120,7 +120,7 @@ export const getApiConfig = (comp: {
   items: {
     setActive: (id: string) => comp.drawerItems.setActive(id),
     getActive: () => comp.drawerItems.getActive(),
-    setItems: (items: DrawerConfig["items"]) =>
+    setItems: (items: NavigationDrawerConfig["items"]) =>
       comp.drawerItems.setItems(items || []),
     getItems: () => comp.drawerItems.getItems(),
     setBadge: (id: string, badge: string) =>

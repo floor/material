@@ -49,4 +49,12 @@ export const elementDeprecations: Record<string, (component: (name: string) => s
     `Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use ${component("toolbar")} with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar.`,
   topAppBar: (component) =>
     `Material Design 3 names this the app bar. Use ${component("appBar")} instead.`,
+  drawer: (component) =>
+    `Material Design 3 names this the navigation drawer. Use ${component("navigationDrawer")} instead.`,
+};
+
+/** Deprecated declaration children, with the note their generated adapters carry. */
+export const declarationDeprecations: Record<string, (component: (name: string) => string) => string> = {
+  drawerItem: (component) =>
+    `Material Design 3 names this the navigation drawer. Use ${component("navigationDrawerItem")} instead.`,
 };

@@ -8,7 +8,7 @@ import {
 } from "../../core/compose/features";
 import { withItems, withState, withHeadline } from "./features";
 import { withAPI } from "./api";
-import { DrawerConfig, DrawerComponent } from "./types";
+import { NavigationDrawerConfig, NavigationDrawerComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 import { DRAWER_DEFAULTS } from "./constants";
 
@@ -23,11 +23,11 @@ import { DRAWER_DEFAULTS } from "./constants";
  * The Drawer component is created using a functional composition pattern,
  * applying various features through the pipe function.
  *
- * @param {DrawerConfig} config - Configuration options for the drawer
+ * @param {NavigationDrawerConfig} config - Configuration options for the drawer
  *  This can include variant, items, headline, position, open state,
- *  and other drawer properties. See {@link DrawerConfig} for available options.
+ *  and other drawer properties. See {@link NavigationDrawerConfig} for available options.
  *
- * @returns {DrawerComponent} A fully configured drawer component instance with
+ * @returns {NavigationDrawerComponent} A fully configured drawer component instance with
  *  all requested features applied. The returned component has methods for
  *  state management, item selection, and lifecycle management.
  *
@@ -68,14 +68,20 @@ import { DRAWER_DEFAULTS } from "./constants";
  *
  * @category Components
  */
-export default function createDrawer(config: DrawerConfig = {}): DrawerComponent {
+export default function createNavigationDrawer(config: NavigationDrawerConfig = {}): NavigationDrawerComponent {
   return buildDrawer(config, false);
 }
 
-/** @internal The element and SSR share the shadow-scoped section ids. */
-export const createShadowDrawer = (config: DrawerConfig): DrawerComponent => buildDrawer(config, true);
+/**
+ * @deprecated use {@link createNavigationDrawer}. Material Design 3 names the
+ * component the navigation drawer; this name stays for 3.x.
+ */
+export const createDrawer = createNavigationDrawer;
 
-const buildDrawer = (config: DrawerConfig, shadow: boolean): DrawerComponent => {
+/** @internal The element and SSR share the shadow-scoped section ids. */
+export const createShadowDrawer = (config: NavigationDrawerConfig): NavigationDrawerComponent => buildDrawer(config, true);
+
+const buildDrawer = (config: NavigationDrawerConfig, shadow: boolean): NavigationDrawerComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {

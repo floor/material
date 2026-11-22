@@ -1,4 +1,4 @@
-import { DrawerConfig } from "../types";
+import { NavigationDrawerConfig } from "../types";
 import { DRAWER_EVENTS } from "../constants";
 import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
 import { hideFromTopLayer, onModalEscape, onTopLayerClose, showInTopLayer, type ModalEscape } from "../../../core/dom/layer";
@@ -70,7 +70,7 @@ function releaseModal(root: HTMLElement): void {
 }
 
 /** Standard drawers remain in the page; modal drawers own focus and background interaction. */
-export const withState = (config: DrawerConfig) => <C extends StateBaseComponent>(component: C): C & StateFeature => {
+export const withState = (config: NavigationDrawerConfig) => <C extends StateBaseComponent>(component: C): C & StateFeature => {
   const root = component.element;
   const doc = root.ownerDocument;
   const isModal = config.variant === "modal";

@@ -1250,6 +1250,11 @@
     {
       "name": "createDrawer",
       "kind": "value",
+      "status": "deprecated"
+    },
+    {
+      "name": "createNavigationDrawer",
+      "kind": "value",
       "status": "public"
     },
     {
@@ -1260,40 +1265,88 @@
     {
       "name": "DrawerComponent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerComponent`."
     },
     {
       "name": "DrawerConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerConfig`."
     },
     {
       "name": "DrawerEvents",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerEvents`."
     },
     {
       "name": "DrawerItemConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerItemConfig`."
     },
     {
       "name": "DrawerPosition",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerPosition`."
     },
     {
       "name": "DrawerSectionEvent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerSectionEvent`."
     },
     {
       "name": "DrawerSelectEvent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "use `NavigationDrawerSelectEvent`."
     },
     {
       "name": "DrawerVariant",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "use `NavigationDrawerVariant`."
+    },
+    {
+      "name": "NavigationDrawerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerSectionEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerSelectEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerVariant",
       "kind": "type",
       "status": "public"
     }

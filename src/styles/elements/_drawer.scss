@@ -1,13 +1,13 @@
 // src/styles/elements/_drawer.scss
-// <m-drawer> before upgrade: the sheet's height, with a place per
-// <m-drawer-item>, which is drawn on upgrade. Closed, the upgraded drawer
-// keeps that height with nothing in it; open, its sheet is painted.
+// <m-navigation-drawer> and <m-drawer> before upgrade: the sheet's height,
+// with a place per item, which is drawn on upgrade. Closed, the upgraded
+// drawer keeps that height with nothing in it; open, its sheet is painted.
 @use '../abstract/functions' as f;
 @use '../abstract/theme' as t;
 @use 'config' as c;
 
 // As components/_drawer.scss: 12px above and below 56px items.
-@include c.host('drawer') {
+@mixin host {
   display: block;
   flex-shrink: 0;
   padding: 12px 0;
@@ -17,10 +17,24 @@
   }
 }
 
-@include c.declarations('drawer') {
+@mixin declarations {
   display: block;
   // As components/_drawer.scss: 4dp a step, floored at the 36dp item the
   // dense option has always used.
   min-height: f.density(56px, 36px);
   overflow: hidden;
+}
+
+@include c.host('navigation-drawer') {
+  @include host;
+}
+@include c.host('drawer') {
+  @include host;
+}
+
+@include c.declarations('navigation-drawer') {
+  @include declarations;
+}
+@include c.declarations('drawer') {
+  @include declarations;
 }
