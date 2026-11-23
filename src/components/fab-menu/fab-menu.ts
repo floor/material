@@ -13,6 +13,7 @@ import { warnDev } from "../../core/utils/warn";
 import { composeButton } from "../button/compose";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
+import { fitVertically } from "../../core/dom/placement";
 import { createConfig, CLOSE_ICON } from "./config";
 import { staggerDelays } from "./stagger";
 import {
@@ -250,8 +251,15 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   // ---- The list presentation
 
   const reduced = () => matches("(prefers-reduced-motion: reduce)");
-  const stagger = (opening: boolean): number => {
-    const delays = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
+  // The side this opening chose. The close keeps it, so the items leave where
+  // they appeared; the next open decides again.
+  let opensDownward = false;
+  const stagger = (opening: boolean, downward = false): number => {
+    // Distance is from the FAB. Above it the last item is the nearest; below
+    // it the first is. Reversing puts the nearest first on open and the
+    // farthest first on close, in either direction.
+    const byDistance = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
+    const delays = downward ? [...byDistance].reverse() : byDistance;
     entries.forEach(({ element }, index) => element.style.setProperty(`--${PREFIX}-fab-menu-delay`, `${delays[index]}ms`));
     return Math.max(0, ...delays);
   };
@@ -269,12 +277,79 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
       element.style.setProperty(`--${PREFIX}-fab-menu-item-width`, `${content.offsetWidth}px`);
     });
 
+  /**
+   * Where the list opens, decided once per opening: above the FAB while it
+   * fits there, otherwise on the side with more room (the shared vertical
+   * rule), scrolling only when neither side holds it; and horizontally, per
+   * placeHorizontally. The placement classes say which. They stay through the
+   * close, so the list does not jump while the items are still leaving, and
+   * the next open rewrites them.
+   */
+  const placeList = (): boolean => {
+    const fab = root.getBoundingClientRect();
+    // Without layout (a tree that has not been rendered) the list keeps the
+    // upward opening it has always had.
+    if (fab.height === 0) return false;
+    const above = fab.top - FAB_MENU_LIST_GAP - WINDOW_MARGIN;
+    const below = window.innerHeight - fab.bottom - FAB_MENU_LIST_GAP - WINDOW_MARGIN;
+    // The list's own height, measured while closed: the items are laid out
+    // at their full 56dp, only their width is held at 0.
+    const fit = fitVertically({ preferred: "top", height: list.scrollHeight, above, below });
+    const downward = fit.side === "bottom";
+    root.classList.toggle(`${block}--list-down`, downward);
+    placeHorizontally(fab);
+    // Upward, the room above is the ceiling it has always had; downward, only
+    // when that side cannot hold it.
+    list.style.maxHeight = downward
+      ? fit.maxHeight === null ? "" : `${fit.maxHeight}px`
+      : above > 0 ? `${above}px` : "";
+    return downward;
+  };
+
+  /**
+   * The list's horizontal placement, decided once per opening: end-aligned
+   * while the whole list stays inside the window; otherwise start-aligned
+   * while that fits; when neither alignment fits, the end alignment shifts
+   * just enough to stay inside — to the window's start edge when the list
+   * would cross it, to its end edge when it crosses that. The shift rides a
+   * custom property the stylesheet applies to the list and holds through the
+   * close, like the placement classes. The test is the window's edge itself,
+   * so a list that fits is not moved for a margin's few pixels. A list wider
+   * than the window takes the start-edge pin and its end edge overflows.
+   */
+  const placeHorizontally = (fab: DOMRect): void => {
+    const width = widest();
+    const rtl = getComputedStyle(root).direction === "rtl";
+    // The end-aligned list's left edge; the start-aligned one is its mirror.
+    const endLeft = rtl ? fab.left : fab.right - width;
+    const startLeft = rtl ? fab.right - width : fab.left;
+    const inside = (left: number): boolean => left >= 0 && left + width <= window.innerWidth;
+    let start = false;
+    let shift = 0;
+    if (width > 0 && !inside(endLeft)) {
+      if (inside(startLeft)) {
+        start = true;
+      } else {
+        // Neither alignment holds the list: keep the end alignment and move
+        // it the minimum that brings both edges inside.
+        shift = endLeft < 0 ? -endLeft : window.innerWidth - (endLeft + width);
+      }
+    }
+    root.classList.toggle(`${block}--list-start`, start);
+    root.style.setProperty(`--${PREFIX}-fab-menu-shift`, `${shift}px`);
+  };
+
+  /** The widest item, as it will be revealed (its content's width). */
+  const widest = (): number =>
+    entries.reduce((widest, { element }) => {
+      const content = element.querySelector(`.${block}__item-content`) as HTMLElement | null;
+      return Math.max(widest, content?.offsetWidth ?? 0);
+    }, 0);
+
   const openList = () => {
     measure();
-    stagger(true);
-    // The items scroll behind the close button when the window is short.
-    const top = root.getBoundingClientRect().top;
-    list.style.maxHeight = top > 0 ? `${Math.max(0, top - FAB_MENU_LIST_GAP - WINDOW_MARGIN)}px` : "";
+    opensDownward = placeList();
+    stagger(true, opensDownward);
     list.removeAttribute("inert");
     root.classList.add(`${block}--open`);
     document.addEventListener("pointerdown", onOutside, true);
@@ -283,7 +358,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   function closeList(restoreFocus: boolean) {
     if (!opened) return;
-    const last = stagger(false);
+    // The farthest item leaves first, on the side this opening chose.
+    const last = stagger(false, opensDownward);
     list.style.setProperty(`--${PREFIX}-fab-menu-exit`, `${last + FAB_MENU_ITEM_EXIT}ms`);
     // document.activeElement stops at the shadow host, so an item focused
     // inside the element would look unfocused and stay in the inert list.

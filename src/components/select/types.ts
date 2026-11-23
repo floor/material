@@ -113,7 +113,14 @@ export interface SelectConfig {
     container?: HTMLElement | null;
     /** The menu's max height (a CSS length); the list scrolls inside it */
     maxHeight?: string;
-    /** Whether the menu flips above the field when there is no room below */
+    /**
+     * Whether the menu may take the other side of the field when it does not
+     * fit below. `true` (the default) opens it on the side with more room and
+     * caps the height there, so a long list scrolls. `false` keeps it on the
+     * field's preferred side — capped and scrolling when it does not fit —
+     * and a menu that fits is unaffected.
+     * @default true
+     */
     autoFlip?: boolean;
     /** The menu's variant: 'vertical' is the M3 expressive menu, items apart in a rounded container */
     variant?: MenuVariant;

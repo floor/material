@@ -1,0 +1,3 @@
+Section: Fixed
+
+**The FAB menu's list opens where the window has room, and `autoFlip` is honoured.** The list hung above the FAB alone, and a FAB near the top of a short window cut it; it now opens above while it fits there, otherwise on the side with more room, reaching into the page from the start edge with the stagger reversed, and scrolling only when neither side holds it. Menus and selects documented `autoFlip` but their positioner never read it; `autoFlip: false` now keeps the preferred side — capped, so the list scrolls — and `true` places exactly as before, for main menus and submenus. A menu that fits is placed exactly as it was.

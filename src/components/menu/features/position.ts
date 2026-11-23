@@ -1,5 +1,6 @@
 // src/components/menu/features/position.ts
 
+import { fitVertically } from "../../../core/dom/placement";
 import { MenuConfig, MenuFeatureHost } from "../types";
 
 /**
@@ -132,14 +133,17 @@ export const createPositioner = (
       // Default position is to the right of parent
       calculatedPosition = preferredPosition || "right-start";
 
-      // Check if this would push the submenu out of the viewport
+      // Check if this would push the submenu out of the viewport. With
+      // autoFlip: false the submenu keeps the side it was asked for.
       if (
+        config.autoFlip !== false &&
         calculatedPosition.startsWith("right") &&
         horizontalRect.right + menuRect.width + offset > viewportWidth - 16
       ) {
         // Flip to the left side if it doesn't fit on the right
         calculatedPosition = calculatedPosition.replace("right", "left");
       } else if (
+        config.autoFlip !== false &&
         calculatedPosition.startsWith("left") &&
         horizontalRect.left - menuRect.width - offset < 16
       ) {
@@ -148,8 +152,9 @@ export const createPositioner = (
       }
 
       // Check vertical positioning as well for submenus
-      // If submenu would extend beyond the bottom of the viewport, adjust positioning
-      if (openerRect.top + menuRect.height > viewportHeight - 48) {
+      // If submenu would extend beyond the bottom of the viewport, adjust
+      // positioning; autoFlip: false keeps the start alignment.
+      if (config.autoFlip !== false && openerRect.top + menuRect.height > viewportHeight - 48) {
         if (calculatedPosition === "right-start") {
           calculatedPosition = "right-end";
         } else if (calculatedPosition === "left-start") {
@@ -160,31 +165,9 @@ export const createPositioner = (
       // For main menu, follow the standard position calculation
       // First determine correct position based on original position
       switch (preferredPosition) {
-        case "top-start":
-        case "top":
-        case "top-end":
-          // Check if enough space above
-          if (openerRect.top < menuRect.height + offset + 48) {
-            // Not enough space above, flip to bottom
-            calculatedPosition = preferredPosition.replace("top", "bottom");
-          }
-          break;
-
-        case "bottom-start":
-        case "bottom":
-        case "bottom-end":
-          // Check if enough space below
-          if (
-            openerRect.bottom + menuRect.height + offset + 48 >
-            viewportHeight
-          ) {
-            // Not enough space below, check if more space above
-            if (openerRect.top > viewportHeight - openerRect.bottom) {
-              // More space above, flip to top
-              calculatedPosition = preferredPosition.replace("bottom", "top");
-            }
-          }
-          break;
+        // top* and bottom* are decided below, once, by the shared vertical
+        // rule (core/dom/placement): preferred side while the list fits,
+        // otherwise the side with more room, then a capped height.
 
         // Specifically handle right-start, right, left-start, and left positions
         case "right-start":
@@ -212,23 +195,30 @@ export const createPositioner = (
       }
     }
 
-    // The menu's height, capped to the room on its side of the anchor, so a
-    // long list scrolls inside the viewport wherever the menu is mounted: the
-    // body, a container or the top layer. For a main menu above or
-    // below its anchor; one beside it and submenus keep their own rules.
+    // The menu's height and side, from the shared vertical rule
+    // (core/dom/placement) with this component's margin and minimum: the
+    // preferred side while the list fits there, otherwise the side with more
+    // room — or, with autoFlip: false, still the preferred side — then a cap,
+    // so a long list scrolls inside the viewport wherever the menu is mounted:
+    // the body, a container or the top layer. One beside its anchor and
+    // submenus keep their own rules.
     let height = menuRect.height;
     let fitted: number | null = null;
     if (!isSubmenu && /^(top|bottom)/.test(calculatedPosition)) {
       const below = viewportHeight - openerRect.bottom - offset - VIEWPORT_MARGIN;
       const above = openerRect.top - offset - VIEWPORT_MARGIN;
-      // Where the list fits on neither side, the side with more room
-      if (height > (calculatedPosition.startsWith("bottom") ? below : above)) {
-        calculatedPosition = calculatedPosition.replace(/^(top|bottom)/, below >= above ? "bottom" : "top");
-      }
-      const room = Math.max(calculatedPosition.startsWith("bottom") ? below : above, MIN_MENU_HEIGHT);
-      if (height > room) {
-        fitted = room;
-        height = room;
+      const fit = fitVertically({
+        preferred: calculatedPosition.startsWith("top") ? "top" : "bottom",
+        height,
+        above,
+        below,
+        minHeight: MIN_MENU_HEIGHT,
+        autoFlip: config.autoFlip !== false,
+      });
+      calculatedPosition = calculatedPosition.replace(/^(top|bottom)/, fit.side);
+      if (fit.maxHeight !== null) {
+        fitted = fit.maxHeight;
+        height = fit.maxHeight;
       }
     }
     // The fitted height, else the configured one; none left over from a
