@@ -15,6 +15,8 @@ export type TopAppBarType = 'small' | 'medium' | 'large' | 'center';
 /**
  * Configuration options for Top App Bar component
  * @category Components
+ * @deprecated use `AppBarConfig`. Material Design 3 names the component the
+ * app bar. Removal in 4.0.
  */
 export interface TopAppBarConfig {
   /**
@@ -78,6 +80,7 @@ export interface TopAppBarConfig {
 /**
  * Top App Bar component interface
  * @category Components
+ * @deprecated use `AppBarComponent`. Removal in 4.0.
  */
 export interface TopAppBarComponent extends ElementComponent {
   /**
@@ -139,3 +142,8 @@ export interface TopAppBarComponent extends ElementComponent {
    */
   getTrailingContainer: () => HTMLElement;
 }
+
+/** The app bar's configuration; the top app bar is the app bar. */
+export type AppBarConfig = TopAppBarConfig;
+/** The app bar's component; the top app bar is the app bar. */
+export type AppBarComponent = TopAppBarComponent;

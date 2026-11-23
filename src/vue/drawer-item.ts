@@ -3,4 +3,5 @@
 import { drawerItemDeclaration, type DrawerItemAttributes } from "../elements/drawer";
 import { createDeclaration, type MDeclaration } from "./create";
 
+/** @deprecated Material Design 3 names this the navigation drawer. Use MNavigationDrawerItem instead. */
 export const MDrawerItem: MDeclaration<DrawerItemAttributes> = /*#__PURE__*/ createDeclaration(drawerItemDeclaration, "MDrawerItem");

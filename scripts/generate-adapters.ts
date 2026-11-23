@@ -13,7 +13,7 @@
 import { readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { elements } from "../src/elements";
-import { camel, declarationModules, elementDeprecations, elementModules, kebab, pascal } from "./element-modules";
+import { camel, declarationDeprecations, declarationModules, elementDeprecations, elementModules, kebab, pascal } from "./element-modules";
 
 /** The package name the generated adapters import: mtrl, material, … */
 const pkg = (await Bun.file(join(import.meta.dir, "..", "package.json")).json()) as { name: string };
@@ -68,7 +68,7 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  const note = elementDeprecations[name]?.(framework.component("toolbar"));
+  const note = elementDeprecations[name]?.(framework.component);
   const body = `${note ? `/** @deprecated ${note} */\n` : ""}export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`;
   return module(framework, name, body, [
     ...styles.map((style) => `import "${pkg.name}/elements/css/${style}";`),
@@ -80,7 +80,8 @@ const elementModule = (framework: Framework, { name, module: from, styles }: (ty
 const declarationModule = (framework: Framework, { name, module: from }: (typeof declarationModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  return module(framework, name, `export const ${C}: MDeclaration<${P}Attributes> = /*#__PURE__*/ createDeclaration(${name}Declaration, "${C}");`, [
+  const note = declarationDeprecations[name]?.(framework.component);
+  return module(framework, name, `${note ? `/** @deprecated ${note} */\n` : ""}export const ${C}: MDeclaration<${P}Attributes> = /*#__PURE__*/ createDeclaration(${name}Declaration, "${C}");`, [
     `import { ${name}Declaration, type ${P}Attributes } from "../elements/${from}";`,
     `import { createDeclaration, type MDeclaration } from "./create";`,
   ]);
@@ -103,8 +104,8 @@ ${[...elementModules, ...declarationModules].map(({ name }) => `export { ${frame
 // `material/react/jsx` and `material/solid/jsx`. Augmenting from material/elements would
 // break type-checking for an app without React or Solid.
 const tags = [
-  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element`, deprecated: elementDeprecations[name]?.(pascal("toolbar")) })),
-  ...declarationModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `typeof import("../elements/${from}").${name}Declaration`, element: "HTMLElement", deprecated: undefined })),
+  ...elementModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `import("../elements/${from}").${pascal(name)}Spec`, element: `import("../elements/${from}").${pascal(name)}Element`, deprecated: elementDeprecations[name]?.(pascal) })),
+  ...declarationModules.map(({ name, module: from }) => ({ tag: `m-${kebab(name)}`, spec: `typeof import("../elements/${from}").${name}Declaration`, element: "HTMLElement", deprecated: declarationDeprecations[name]?.(pascal) })),
 ];
 
 /** Each live property and element event name, with the specs that have it: Solid's `prop:` and `on:` are global. */
@@ -132,7 +133,7 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
  */
 `;
   const entries = tags.map(({ tag, spec, element, deprecated }) => {
-    const type = !react && tag === "m-drawer" ? "DrawerTag" : "Tag";
+    const type = !react && (tag === "m-drawer" || tag === "m-navigation-drawer") ? "DrawerTag" : "Tag";
     return `${deprecated ? `      /** @deprecated ${deprecated} */\n` : ""}      "${tag}": ${type}<${spec}, ${element}>;`;
   }).join("\n");
   if (react) {
@@ -174,19 +175,22 @@ ${entries}
   return `${header}import type { JSX } from "solid-js";
 import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
 import type { DrawerSpec } from "../elements/drawer";
+import type { NavigationDrawerSpec } from "../elements/navigation-drawer";
 import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
 // Drawer disclosures carry detail; the existing global toolbar and rail events keep their payload.
 type Disclosure = "expand" | "collapse";
+/** Both names of the navigation drawer carry the disclosures. */
+type DrawerLikeSpec = DrawerSpec | NavigationDrawerSpec;
 type DrawerEvents<E extends HTMLElement> = {
-  [K in Disclosure as \`on:\${K}\`]?: JSX.EventHandler<E, ElementEvents<DrawerSpec>[K]>;
+  [K in Disclosure as \`on:\${K}\`]?: JSX.EventHandler<E, ElementEvents<DrawerLikeSpec>[K]>;
 };
 type DrawerTag<S, E extends HTMLElement> = Omit<Tag<S, E>, keyof DrawerEvents<E>> & DrawerEvents<E>;
 type Spec = ${specUnion};
 type Prop<K extends string, S = Spec> = S extends unknown ? K extends keyof ElementProperties<S> ? NonNullable<ElementProperties<S>[K]> : never : never;
-type Ev<K extends string, S = K extends Disclosure ? Exclude<Spec, DrawerSpec> : Spec> =
+type Ev<K extends string, S = K extends Disclosure ? Exclude<Spec, DrawerLikeSpec> : Spec> =
   S extends unknown ? K extends keyof ElementEvents<S> ? ElementEvents<S>[K] : never : never;
 
 declare module "solid-js" {

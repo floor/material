@@ -44,7 +44,17 @@ export const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-$
  * note for direct element users; here the replacement is named by the
  * framework's own component, which the caller passes in.
  */
-export const elementDeprecations: Record<string, (toolbarComponent: string) => string> = {
-  bottomAppBar: (Toolbar) =>
-    `Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use ${Toolbar} with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar.`,
+export const elementDeprecations: Record<string, (component: (name: string) => string) => string> = {
+  bottomAppBar: (component) =>
+    `Material Design 3 Expressive replaces the bottom app bar with the docked toolbar. Use ${component("toolbar")} with variant="docked" placement="bottom" instead. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available on the docked toolbar.`,
+  topAppBar: (component) =>
+    `Material Design 3 names this the app bar. Use ${component("appBar")} instead.`,
+  drawer: (component) =>
+    `Material Design 3 names this the navigation drawer. Use ${component("navigationDrawer")} instead.`,
+};
+
+/** Deprecated declaration children, with the note their generated adapters carry. */
+export const declarationDeprecations: Record<string, (component: (name: string) => string) => string> = {
+  drawerItem: (component) =>
+    `Material Design 3 names this the navigation drawer. Use ${component("navigationDrawerItem")} instead.`,
 };

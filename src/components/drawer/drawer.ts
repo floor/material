@@ -67,6 +67,8 @@ import { DRAWER_DEFAULTS } from "./constants";
  * ```
  *
  * @category Components
+ * @deprecated use {@link createNavigationDrawer}. Material Design 3 names the
+ * component the navigation drawer; this name stays for 3.x.
  */
 export default function createDrawer(config: DrawerConfig = {}): DrawerComponent {
   return buildDrawer(config, false);
@@ -147,3 +149,9 @@ const buildDrawer = (config: DrawerConfig, shadow: boolean): DrawerComponent => 
     throw new Error(`Failed to create drawer: ${(error as Error).message}`);
   }
 };
+
+/**
+ * Creates a navigation drawer: the same factory as {@link createDrawer}, under
+ * the name Material Design 3 gives the component.
+ */
+export const createNavigationDrawer = createDrawer;
