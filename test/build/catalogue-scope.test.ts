@@ -15,4 +15,15 @@ describe("catalogue identity scope", () => {
     expect(styleManifestDependenciesOnly(manifest, manifest.replace("components/fab-menu", "components/other"))).toBe(false);
     expect(styleManifestDependenciesOnly(manifest, `${manifest}  extra: { source: "components/extra", dependencies: [] },\n`)).toBe(false);
   });
+
+  test("an optional profile dependency stays catalogue data", () => {
+    const withProfile = `${manifest}export const optionalStyleProfiles = {\n  "button-filled-small-round": { parent: "button", dependencies: ["progress"] },\n};\n`;
+    const changedProfile = withProfile.replace(
+      '{ parent: "button", dependencies: ["progress"] }',
+      '{ parent: "button", dependencies: ["menu"] }',
+    );
+    expect(styleManifestDependenciesOnly(withProfile, changedProfile)).toBe(false);
+    const changedEdge = withProfile.replace('["fab", "menu"]', '["button", "fab", "menu"]');
+    expect(styleManifestDependenciesOnly(withProfile, changedEdge)).toBe(true);
+  });
 });
