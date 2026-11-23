@@ -843,7 +843,7 @@
   "DrawerElement": {
     "kind": "extends",
     "bases": [
-      "ElementInstance<DrawerSpec, DrawerComponent>"
+      "ElementInstance<DrawerSpec, NavigationDrawerComponent>"
     ]
   },
   "DrawerItemConfig.type": {
@@ -1496,6 +1496,26 @@
       "\"auto\"",
       "\"horizontal\"",
       "\"vertical\""
+    ]
+  },
+  "NavigationDrawerElement": {
+    "kind": "extends",
+    "bases": [
+      "ElementInstance<NavigationDrawerSpec, NavigationDrawerComponent>"
+    ]
+  },
+  "NavigationDrawerPosition": {
+    "kind": "union",
+    "members": [
+      "\"end\"",
+      "\"start\""
+    ]
+  },
+  "NavigationDrawerVariant": {
+    "kind": "union",
+    "members": [
+      "\"modal\"",
+      "\"standard\""
     ]
   },
   "NavigationRailConfig": {

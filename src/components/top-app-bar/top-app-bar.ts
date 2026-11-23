@@ -23,6 +23,9 @@ export type { TopAppBarComponent };
 /**
  * Creates a top app bar component
  *
+ * @deprecated use {@link createAppBar}. Material Design 3 names the
+ * component the app bar; this name stays for 3.x.
+ *
  * @param {TopAppBarConfig} config - Configuration options
  * @returns {TopAppBarComponent} Top app bar component instance
  */
@@ -293,3 +296,9 @@ export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponen
 
   return topAppBar;
 };
+
+/**
+ * Creates an app bar: the same factory as {@link createTopAppBar}, under the
+ * name Material Design 3 gives the component.
+ */
+export const createAppBar = createTopAppBar;

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import createDrawer, { type DrawerSectionEvent } from "../../src/components/drawer";
+import createDrawer, { createNavigationDrawer, type DrawerSectionEvent } from "../../src/components/drawer";
 import { setIcons } from "../../src/core/icons";
 import { callbacksFixture } from "./callbacks.fixture";
 
@@ -123,4 +123,14 @@ test("drawer sections use the registered chevron and keep the default fallback",
   }
   const fallback = mount(createDrawer({ items }));
   expect(fallback.element.querySelector('.mtrl-drawer__item-chevron svg[width="24"] path')).not.toBeNull();
+});
+
+test("createNavigationDrawer and createDrawer build the same element", () => {
+  const config = { items: [{ id: "home", label: "Home", icon: "<svg></svg>", active: true }], headline: "Components" };
+  const navigationDrawer = createNavigationDrawer(config);
+  const drawer = createDrawer(config);
+  expect(navigationDrawer.element.outerHTML).toBe(drawer.element.outerHTML);
+  expect(navigationDrawer.element.className).toBe(drawer.element.className);
+  navigationDrawer.destroy();
+  drawer.destroy();
 });

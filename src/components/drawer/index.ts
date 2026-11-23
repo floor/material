@@ -5,7 +5,7 @@
  * @module components/drawer
  */
 
-export { default, default as createDrawer } from './drawer';
+export { default, default as createDrawer, createNavigationDrawer } from './drawer';
 export type {
   DrawerConfig,
   DrawerComponent,
@@ -15,4 +15,12 @@ export type {
   DrawerSelectEvent,
   DrawerSectionEvent,
   DrawerEvents,
+  NavigationDrawerConfig,
+  NavigationDrawerComponent,
+  NavigationDrawerVariant,
+  NavigationDrawerPosition,
+  NavigationDrawerItemConfig,
+  NavigationDrawerSelectEvent,
+  NavigationDrawerSectionEvent,
+  NavigationDrawerEvents,
 } from './types';

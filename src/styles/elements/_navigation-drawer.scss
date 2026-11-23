@@ -1,0 +1,13 @@
+// src/styles/elements/_navigation-drawer.scss
+// <m-navigation-drawer> before upgrade: the rule set it shares with the
+// deprecated <m-drawer>.
+@use 'config' as c;
+@use 'shared-drawer' as s;
+
+@include c.host('navigation-drawer') {
+  @include s.host;
+}
+
+@include c.declarations('navigation-drawer') {
+  @include s.declarations;
+}

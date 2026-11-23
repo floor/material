@@ -4,4 +4,5 @@ import "material/elements/css/top-app-bar";
 import { topAppBarElement, defineTopAppBar, type TopAppBarSpec, type TopAppBarElement } from "../elements/top-app-bar";
 import { createComponent, type MComponent } from "./create";
 
+/** @deprecated Material Design 3 names this the app bar. Use MAppBar instead. */
 export const MTopAppBar: MComponent<TopAppBarSpec, TopAppBarElement> = /*#__PURE__*/ createComponent(topAppBarElement.spec, defineTopAppBar, "MTopAppBar");

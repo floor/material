@@ -255,8 +255,13 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   };
   await write("ripple", "utilities/ripple", []);
   // Only components that have an element, and what their CSS depends on.
-  const names = resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]));
-  const missing = [...preupgrade.keys()].filter(name => !names.includes(name));
+  const specs = Object.values(elements);
+  const names = resolveStyleDependencies(specs.flatMap(element => [...element.spec.styles]));
+  // A pre-upgrade partial belongs to a CSS module or to an element name.
+  // The deprecated top app bar's and drawer's specs reuse their component
+  // sheets under the new names, which have no sheet of their own.
+  const elementNames = specs.map(element => element.spec.name);
+  const missing = [...preupgrade.keys()].filter(name => !names.includes(name) && !elementNames.includes(name));
   assert.deepEqual(missing, [], "Pre-upgrade rules for an element without a CSS module");
   for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
   await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
@@ -289,7 +294,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
 }
 
 /** Partials in src/styles/elements that are shared, not an element's. */
-const SHARED_PREUPGRADE = ["config", "field", "index"];
+const SHARED_PREUPGRADE = ["config", "field", "index", "shared-app-bar", "shared-drawer"];
 
 /**
  * Each element's pre-upgrade rules (src/styles/elements/_<name>.scss), by

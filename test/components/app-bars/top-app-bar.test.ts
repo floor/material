@@ -25,7 +25,7 @@ g.MutationObserver = dom.window.MutationObserver;
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
 
-import createTopAppBar from '../../../src/components/top-app-bar';
+import createTopAppBar, { createAppBar } from '../../../src/components/top-app-bar';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const scrollPage = async (y: number) => {
@@ -113,5 +113,17 @@ describe('top app bar', () => {
     expect(document.body.contains(bar.element)).toBe(false);
     await scrollPage(200);
     expect(onScroll).not.toHaveBeenCalled();
+  });
+});
+
+describe('app bar naming', () => {
+  test('createAppBar and createTopAppBar build the same element', () => {
+    const config = { title: 'Inbox', type: 'small' as const, actions: [{ icon: 'settings', ariaLabel: 'Settings' }] };
+    const appBar = createAppBar(config);
+    const topAppBar = createTopAppBar(config);
+    expect(appBar.element.outerHTML).toBe(topAppBar.element.outerHTML);
+    expect(appBar.element.className).toBe(topAppBar.element.className);
+    appBar.destroy();
+    topAppBar.destroy();
   });
 });
