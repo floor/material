@@ -16,7 +16,8 @@ import { chromium, type BrowserContext } from "playwright";
 // and no storage, cache or permission state crosses a run. A run that dies
 // before closing leaves its directory behind; it sits ignored under
 // `.chrome-profile/` until cleaned.
-const profileRoot = join(import.meta.dir, "..", ".chrome-profile");
+/** The worktree directory under which every Chromium launch takes its own per-run profile. */
+export const profileRoot = join(import.meta.dir, "..", ".chrome-profile");
 
 const closeRemovesDir = <T extends { close: () => Promise<unknown> }>(handle: T, dir: string): T => {
   const close = handle.close.bind(handle);

@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { readFile, symlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createPackageFixture } from "./package-fixture";
+import { profileRoot } from "./browser-profile";
 
 assert.equal(process.env.GITHUB_ACTIONS, "true", "comparators:check runs only in GitHub CI");
 const fixture = await createPackageFixture();
@@ -15,7 +16,7 @@ try {
     env: { ...process.env, COMPARATOR_PACK: JSON.stringify({
       sha256: createHash("sha256").update(await readFile(join(fixture.directory, fixture.pack.filename))).digest("hex"),
       integrity: fixture.pack.integrity, size: fixture.pack.size, unpackedSize: fixture.pack.unpackedSize,
-    }), COMPARATOR_HEAD: (await Bun.$`git rev-parse HEAD`.text()).trim() }, stdout: "inherit", stderr: "inherit",
+    }), COMPARATOR_HEAD: (await Bun.$`git rev-parse HEAD`.text()).trim(), CHROMIUM_PROFILE_ROOT: profileRoot }, stdout: "inherit", stderr: "inherit",
   });
   assert.equal(await child.exited, 0, "rendered comparator failed; inspect analysis/comparators artifacts");
 } finally {
