@@ -73,8 +73,12 @@ export const SPLIT_BUTTON_CLASSES = {
  * The trailing button's icon. It always points down and turns 180 degrees
  * when the button is activated, so it should not be swapped out
  * (M3 split button guidelines, "Anatomy").
+ *
+ * The path is Material's expand_more outline, translated by 14 units. That
+ * keeps the outline and puts the closed and open rasters on the same pixel.
+ * A check rejects any edit that is not a translation of that path.
  * @category Components
  */
 export const SPLIT_BUTTON_CHEVRON =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">' +
-  '<path d="M480-332 240-572l56-56 184 184 184-184 56 56-240 240Z"/></svg>';
+  '<path d="M480-331 240-571l56-56 184 184 184-184 56 56-240 240Z"/></svg>';
