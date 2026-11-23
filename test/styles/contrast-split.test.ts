@@ -333,9 +333,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The list opens on the side with room below the FAB and from the start
     // edge when its widest item would cross the window's start
     // (styles/components/_fab-menu.scss: --list-down, --list-start; +269 B).
+    // When neither alignment keeps the list inside the window it shifts just
+    // enough through the --mtrl-fab-menu-shift custom property the list
+    // consumes (styles/components/_fab-menu.scss: translate; +44 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "22ce804e728c4d5e3d7d5c11632f8f80173222c56b5ff36b44b0d03c402f5b14",
-      length: 554748,
+      sha256: "48e35a5c2b928f1637315e59265906d6838be5032869a647bcff4bf011597774",
+      length: 554792,
     });
   });
 

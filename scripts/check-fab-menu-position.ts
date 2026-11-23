@@ -6,7 +6,9 @@
  * with more room (the shared vertical rule in src/core/dom/placement.ts),
  * scrolling only when neither side holds it; and on the end side while it
  * stays inside the window, otherwise on the start side. A list that fits is
- * placed exactly as before. The decision is taken once per opening.
+ * placed exactly as before. The decision is taken once per opening, and the
+ * close keeps it: the list stays on that side while the items leave, and the
+ * item farthest from the FAB leaves first.
  *
  * Menus and selects have read `autoFlip` in their types but not their
  * positioner; both now keep the preferred side when it is `false`, capped so
@@ -85,7 +87,7 @@ const buildBundle = async (): Promise<string> => {
 };
 
 type Box = { x: number; y: number; width: number; height: number };
-type Corner = "top-start" | "top-end" | "bottom-start" | "bottom-end";
+type Corner = "top-start" | "top-end" | "bottom-start" | "bottom-end" | "top-centre";
 
 const failures: string[] = [];
 const fail = (message: string): void => {
@@ -110,8 +112,18 @@ window.h = {
 };
 `;
 
-const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", config: Record<string, unknown> = {}) =>
-  page.evaluate(({ corner, route, config, icon }) => {
+const mountCorner = (
+  page: Page,
+  corner: Corner,
+  route: "factory" | "element",
+  config: Record<string, unknown> = {},
+  items: Array<{ id: string; text: string; icon: string }> = [
+    { id: "reply", text: "Reply", icon },
+    { id: "forward", text: "Forward", icon },
+    { id: "archive", text: "Archive", icon },
+  ],
+) =>
+  page.evaluate(({ corner, route, config, items, icon }) => {
     const stage = document.getElementById("stage")!;
     stage.replaceChildren();
     stage.dataset.corner = corner;
@@ -119,11 +131,6 @@ const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", c
     cell.className = "cell";
     cell.dataset.corner = corner;
     stage.append(cell);
-    const items = [
-      { id: "reply", text: "Reply", icon },
-      { id: "forward", text: "Forward", icon },
-      { id: "archive", text: "Archive", icon },
-    ];
     const w = window as unknown as { mtrl: { createFabMenu: (c: Record<string, unknown>) => never } };
     if (route === "factory") {
       const menu = w.mtrl.createFabMenu({ icon, ariaLabel: "Compose", presentation: "list", placement: "none", items, ...config });
@@ -143,7 +150,7 @@ const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", c
       host.append(declared);
     }
     cell.append(host);
-  }, { corner, route, config, icon });
+  }, { corner, route, config, items, icon });
 
 const openFab = async (page: Page): Promise<void> => {
   const point = await page.evaluate(() => {
@@ -189,7 +196,8 @@ try {
   await page.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8">
 <style>#stage{position:fixed;inset:0;padding:24px}.cell{position:absolute;width:56px;height:56px}
 .cell[data-corner="bottom-end"]{right:24px;bottom:24px}.cell[data-corner="bottom-start"]{left:24px;bottom:24px}
-.cell[data-corner="top-end"]{right:24px;top:24px}.cell[data-corner="top-start"]{left:24px;top:24px}</style>
+.cell[data-corner="top-end"]{right:24px;top:24px}.cell[data-corner="top-start"]{left:24px;top:24px}
+.cell[data-corner="top-centre"]{left:152px;top:0}</style>
 </head><body><main id="stage"></main></body></html>`);
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: await buildBundle() });
@@ -263,6 +271,41 @@ try {
     });
     assert(inside(state.box, 300, 700), `narrow ${dir}: the list stays inside the window (${JSON.stringify(state.box)}, ${JSON.stringify(detail)})`);
     assert.equal(state.start, true, `narrow ${dir}: a list that would cross the start edge takes the start alignment (${JSON.stringify(detail)})`);
+  }
+  await page.setViewportSize({ width: 900, height: 700 });
+
+  // ---- A FAB at the top centre and a list wider than the room on either
+  // side: end alignment crosses the window's start edge, start alignment its
+  // end edge, so neither fits. The list shifts just enough to stay inside,
+  // both directions and both APIs, and the close button holds its position
+  // while the shifted list opens and leaves.
+  await page.setViewportSize({ width: 360, height: 320 });
+  const longItems = [
+    { id: "reply", text: "Reply", icon },
+    { id: "forward", text: "Forward", icon },
+    { id: "archive", text: "Move conversation to the archive", icon },
+  ];
+  for (const route of ["factory", "element"] as const) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      await page.evaluate((direction) => { document.documentElement.dir = direction; }, dir);
+      await mountCorner(page, "top-centre", route, {}, longItems);
+      await openFab(page);
+      const state = await listState(page);
+      const label = `top-centre long list ${route}/${dir}`;
+      assert(state.down, `${label}: the list opens below the top-edge FAB`);
+      assert(state.box.width > 300, `${label}: the long label makes the list wide (${state.box.width})`);
+      assert(inside(state.box, 360, 320), `${label}: neither alignment fits, so the shifted list stays inside the window (${JSON.stringify(state.box)})`);
+      const closeBox = () => page.evaluate(() => {
+        const h = (window as unknown as { h: { root: () => HTMLElement; box: (element: HTMLElement) => Box } }).h;
+        return h.box(h.root().querySelector(".mtrl-fab-menu__close") as HTMLElement);
+      });
+      const closeOpen = await closeBox();
+      await page.waitForTimeout(350);
+      assert.equal(JSON.stringify((await listState(page)).box), JSON.stringify(state.box), `${label}: the shifted list does not move while open`);
+      await page.evaluate(() => { (window as unknown as { h: { fab: () => HTMLElement } }).h.fab().click(); });
+      const closeShut = await closeBox();
+      assert.deepEqual(closeShut, closeOpen, `${label}: the close holds its position through the shift and the close`);
+    }
   }
   await page.setViewportSize({ width: 900, height: 700 });
 
@@ -381,6 +424,116 @@ try {
   await openFab(page);
   const elementState = await listState(page);
   assert(inside(elementState.box, 900, 700), "element: the list stays inside the window");
+
+  // A downward list closes where it opened. Reduced motion zeroes every delay,
+  // which would hide the stagger, so this case runs with motion on.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  await mountCorner(page, "top-start", "factory");
+  await openFab(page);
+  const closing = await page.evaluate(() => {
+    const h = (window as unknown as { h: { fab: () => HTMLElement; list: () => HTMLElement; root: () => HTMLElement; items: () => HTMLElement[] } }).h;
+    const fab = h.fab().getBoundingClientRect();
+    const before = h.list().getBoundingClientRect();
+    const root = h.root();
+    h.fab().click();
+    const after = h.list().getBoundingClientRect();
+    return {
+      down: root.classList.contains("mtrl-fab-menu--list-down"),
+      start: root.classList.contains("mtrl-fab-menu--list-start"),
+      open: root.classList.contains("mtrl-fab-menu--open"),
+      fabBottom: fab.bottom,
+      before: { x: before.x, y: before.y },
+      after: { x: after.x, y: after.y },
+      delays: h.items().map((item) => Number.parseFloat(item.style.getPropertyValue("--mtrl-fab-menu-delay"))),
+    };
+  });
+  assert.equal(closing.open, false, "close: the list has closed");
+  assert.equal(closing.down, true, "close: the list stays below the FAB while it leaves");
+  assert.equal(closing.start, true, "close: the list keeps the start side while it leaves");
+  assert(Math.abs(closing.after.x - closing.before.x) < 1 && Math.abs(closing.after.y - closing.before.y) < 1, `close: the list does not jump (${JSON.stringify(closing.before)} -> ${JSON.stringify(closing.after)})`);
+  assert(closing.after.y >= closing.fabBottom - 1, `close: the list remains below the FAB (${closing.after.y} vs ${closing.fabBottom})`);
+  assert(closing.delays.at(-1)! < closing.delays[0]!, `close: the farthest item leaves first (${closing.delays.join(", ")})`);
+
+  // Reopen during the close: the next open decides the side again.
+  await openFab(page);
+  const reopened = await listState(page);
+  const reopenedDelays = reopened.delays.map((value) => Number.parseFloat(value));
+  assert.equal(reopened.down, true, "reopen: the list opens downward again");
+  assert(reopenedDelays[0]! < reopenedDelays.at(-1)!, `reopen: the nearest item shows first (${reopened.delays.join(", ")})`);
+
+  // The window grew while the list was open, so closing changes the presentation.
+  // The placement classes may remain; the next list opening decides them again.
+  await page.setViewportSize({ width: 500, height: 700 });
+  await mountCorner(page, "top-end", "factory", { presentation: "auto" });
+  await openFab(page);
+  assert.equal((await listState(page)).down, true, "auto: a narrow window opens the list downward");
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.evaluate(() => (window as unknown as { h: { fab: () => HTMLElement } }).h.fab().click());
+  const presented = await page.evaluate(() => {
+    const root = (window as unknown as { h: { root: () => HTMLElement } }).h.root();
+    return {
+      menu: root.classList.contains("mtrl-fab-menu--menu"),
+      list: root.classList.contains("mtrl-fab-menu--list"),
+    };
+  });
+  assert.equal(presented.menu, true, "auto: closing into a wide window presents the menu");
+  assert.equal(presented.list, false, "auto: the list presentation is gone");
+  await page.setViewportSize({ width: 500, height: 700 });
+  // The viewport change does not dispatch resize on its own. The component follows resize.
+  await page.evaluate(() => window.dispatchEvent(new Event("resize")));
+  await openFab(page);
+  assert.equal((await listState(page)).down, true, "auto: back in a narrow window the list opens downward");
+
+  // A list on the start side, and a list below the FAB, in both directions:
+  // each label keeps its left and top through the whole close.
+  const closeTracks: Array<["ltr" | "rtl", Corner, boolean, boolean]> = [
+    ["ltr", "top-start", true, true],
+    ["ltr", "top-end", true, false],
+    ["rtl", "top-end", true, true],
+    ["rtl", "top-start", true, false],
+  ];
+  for (const [dir, corner, down, start] of closeTracks) {
+    await page.setViewportSize({ width: 900, height: 700 });
+    await page.evaluate((direction) => { document.documentElement.dir = direction; }, dir);
+    await mountCorner(page, corner, "factory");
+    await openFab(page);
+    await page.waitForTimeout(700);
+    const track = await page.evaluate(async () => {
+      const h = (window as unknown as { h: { fab: () => HTMLElement; root: () => HTMLElement } }).h;
+      const root = h.root();
+      const labels = Array.from(root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item-text"));
+      const origin = labels.map((node) => {
+        const box = node.getBoundingClientRect();
+        return { left: box.left, top: box.top };
+      });
+      h.fab().click();
+      let maxLeft = 0;
+      let maxTop = 0;
+      const started = performance.now();
+      while (performance.now() - started < 700) {
+        await new Promise<void>((done) => requestAnimationFrame(() => done()));
+        labels.forEach((node, index) => {
+          const box = node.getBoundingClientRect();
+          maxLeft = Math.max(maxLeft, Math.abs(box.left - origin[index]!.left));
+          maxTop = Math.max(maxTop, Math.abs(box.top - origin[index]!.top));
+        });
+      }
+      return {
+        down: root.classList.contains("mtrl-fab-menu--list-down"),
+        start: root.classList.contains("mtrl-fab-menu--list-start"),
+        maxLeft,
+        maxTop,
+      };
+    });
+    const label = `${dir}/${corner}`;
+    assert.equal(track.down, down, `${label}: the list is below the FAB`);
+    assert.equal(track.start, start, `${label}: the start-side placement`);
+    assert(track.maxLeft < 1 && track.maxTop < 1, `${label}: a label moved during the close (left ${track.maxLeft.toFixed(1)}, top ${track.maxTop.toFixed(1)})`);
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 900, height: 700 });
 
   assert.deepEqual(errors, [], "no page errors");
   if (failures.length === 0) console.log("fab menu position: all cases pass");

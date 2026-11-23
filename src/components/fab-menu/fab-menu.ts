@@ -6,6 +6,7 @@ import { createBase, withElement } from "../../core/compose/component";
 import { withEvents, withLifecycle } from "../../core/compose/features";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
+import { getComponentDefaults, setComponentDefaults } from "../../core/config/global";
 import { activeElementOf } from "../../core/dom/focus";
 import { setHTML } from "../../core/dom/html";
 import { getIcon } from "../../core/icons/registry";
@@ -131,12 +132,21 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     // The list item is a button, so it takes the button's ripple and state
     // layers. The pill, the content and the item class stay the item's.
     // composeButton is that button without the progress chunk: an item never
-    // shows one, and createButton's public behaviour is unchanged.
-    const itemButton = composeButton({
-      variant: "text",
-      size: "m",
-      class: `${block}__item`,
-    });
+    // shows one. The public button defaults are lifted off for this build
+    // and put back: an item is not a button the page configured, and
+    // createButton still reads them.
+    const buttonDefaults = getComponentDefaults("button");
+    setComponentDefaults("button", {});
+    let itemButton;
+    try {
+      itemButton = composeButton({
+        variant: "text",
+        size: "m",
+        class: `${block}__item`,
+      });
+    } finally {
+      setComponentDefaults("button", buttonDefaults);
+    }
     resources.add(() => itemButton.destroy());
     const element = itemButton.element;
     element.setAttribute("role", "menuitem");
@@ -249,9 +259,13 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   // ---- The list presentation
 
   const reduced = () => matches("(prefers-reduced-motion: reduce)");
+  // The side this opening chose. The close keeps it, so the items leave where
+  // they appeared; the next open decides again.
+  let opensDownward = false;
   const stagger = (opening: boolean, downward = false): number => {
-    // A list opening below the FAB shows its nearest item first too, and that
-    // item is the first in document order there, so the delays reverse.
+    // Distance is from the FAB. Above it the last item is the nearest; below
+    // it the first is. Reversing puts the nearest first on open and the
+    // farthest first on close, in either direction.
     const byDistance = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
     const delays = downward ? [...byDistance].reverse() : byDistance;
     entries.forEach(({ element }, index) => element.style.setProperty(`--${PREFIX}-fab-menu-delay`, `${delays[index]}ms`));
@@ -274,9 +288,10 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   /**
    * Where the list opens, decided once per opening: above the FAB while it
    * fits there, otherwise on the side with more room (the shared vertical
-   * rule), scrolling only when neither side holds it; and on the end side
-   * while it stays inside the window, otherwise on the start side. The
-   * placement classes say which; nothing moves it while it is open.
+   * rule), scrolling only when neither side holds it; and horizontally, per
+   * placeHorizontally. The placement classes say which. They stay through the
+   * close, so the list does not jump while the items are still leaving, and
+   * the next open rewrites them.
    */
   const placeList = (): boolean => {
     const fab = root.getBoundingClientRect();
@@ -290,7 +305,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     const fit = fitVertically({ preferred: "top", height: list.scrollHeight, above, below });
     const downward = fit.side === "bottom";
     root.classList.toggle(`${block}--list-down`, downward);
-    root.classList.toggle(`${block}--list-start`, crossesStart(fab));
+    placeHorizontally(fab);
     // Upward, the room above is the ceiling it has always had; downward, only
     // when that side cannot hold it.
     list.style.maxHeight = downward
@@ -300,17 +315,36 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   };
 
   /**
-   * Whether the list, at its widest, would cross the window's start edge. It
-   * keeps its end alignment while its end edge stays inside the window; the
-   * test is the window's edge itself, so a list that fits is not moved for a
-   * margin's few pixels.
+   * The list's horizontal placement, decided once per opening: end-aligned
+   * while the whole list stays inside the window; otherwise start-aligned
+   * while that fits; when neither alignment fits, the end alignment shifts
+   * just enough to stay inside — to the window's start edge when the list
+   * would cross it, to its end edge when it crosses that. The shift rides a
+   * custom property the stylesheet applies to the list and holds through the
+   * close, like the placement classes. The test is the window's edge itself,
+   * so a list that fits is not moved for a margin's few pixels. A list wider
+   * than the window takes the start-edge pin and its end edge overflows.
    */
-  const crossesStart = (fab: DOMRect): boolean => {
+  const placeHorizontally = (fab: DOMRect): void => {
     const width = widest();
-    if (width === 0) return false;
-    return getComputedStyle(root).direction === "rtl"
-      ? fab.left + width > window.innerWidth
-      : fab.right - width < 0;
+    const rtl = getComputedStyle(root).direction === "rtl";
+    // The end-aligned list's left edge; the start-aligned one is its mirror.
+    const endLeft = rtl ? fab.left : fab.right - width;
+    const startLeft = rtl ? fab.right - width : fab.left;
+    const inside = (left: number): boolean => left >= 0 && left + width <= window.innerWidth;
+    let start = false;
+    let shift = 0;
+    if (width > 0 && !inside(endLeft)) {
+      if (inside(startLeft)) {
+        start = true;
+      } else {
+        // Neither alignment holds the list: keep the end alignment and move
+        // it the minimum that brings both edges inside.
+        shift = endLeft < 0 ? -endLeft : window.innerWidth - (endLeft + width);
+      }
+    }
+    root.classList.toggle(`${block}--list-start`, start);
+    root.style.setProperty(`--${PREFIX}-fab-menu-shift`, `${shift}px`);
   };
 
   /** The widest item, as it will be revealed (its content's width). */
@@ -322,8 +356,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   const openList = () => {
     measure();
-    const downward = placeList();
-    stagger(true, downward);
+    opensDownward = placeList();
+    stagger(true, opensDownward);
     list.removeAttribute("inert");
     root.classList.add(`${block}--open`);
     document.addEventListener("pointerdown", onOutside, true);
@@ -332,14 +366,14 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   function closeList(restoreFocus: boolean) {
     if (!opened) return;
-    const last = stagger(false);
+    // The farthest item leaves first, on the side this opening chose.
+    const last = stagger(false, opensDownward);
     list.style.setProperty(`--${PREFIX}-fab-menu-exit`, `${last + FAB_MENU_ITEM_EXIT}ms`);
     // document.activeElement stops at the shadow host, so an item focused
     // inside the element would look unfocused and stay in the inert list.
     const hadFocus = list.contains(activeElementOf(list));
     list.setAttribute("inert", "");
     root.classList.remove(`${block}--open`);
-    root.classList.remove(`${block}--list-down`, `${block}--list-start`);
     document.removeEventListener("pointerdown", onOutside, true);
     if (restoreFocus || hadFocus) button.focus();
     setOpened(false);
