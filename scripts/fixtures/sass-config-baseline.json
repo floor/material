@@ -2,7 +2,7 @@
   "tested": "9f1436fd9314d8a602fdac0b0e36d296805f5b0a",
   "branch": "fix/timepicker-dial-tabstop",
   "mainRevision": "2459e2e85d3de334ce91c62d80049f4a62153e03",
-  "ci": 45144839287,
+  "ci": 45145966892,
   "bun": "1.4.2",
   "sass": "dart-sass\t1.85.1\t(Sass Compiler)\t[Dart]\ndart2js\t3.7.0\t(Dart Compiler)\t[Dart]",
   "sourceOptions": {
@@ -929,7 +929,22 @@
     "vue/tooltip.js": "331728a42b6a1550ddc41ca2fedc54ff723966f94a959b1469fef18097e1669f",
     "vue/top-app-bar.js": "c4589f2ee712110b45bd7c3f7df0f3d5e9983640fec4f94537e39e4eb795d0c4",
     "styles/md2.css": "0c4e8fa1559e7b5e5eb7774b38134321fc5275d0156227722a1ddbd6044121a9",
-    "styles/md2.js": "121bd221b41d0905f9e3d051b855de2f317bccaebaadf55fd1e055fc7354a68d"
+    "styles/md2.js": "121bd221b41d0905f9e3d051b855de2f317bccaebaadf55fd1e055fc7354a68d",
+    "elements/app-bar.js": "e2181bfeee12861f2318ae2f390f03071c9a81adb93bfa552f46307a8b5ab002",
+    "elements/css/hosts/app-bar.css": "c33c191a3f16c3877297effc54f1a923c35cdb68c16bf3cf77d500b79eeb8381",
+    "elements/css/hosts/navigation-drawer.css": "d7008b2603e094168c2d15ef6c682edb5633b469524a03b82175a7e0a093c50d",
+    "elements/navigation-drawer.js": "6f75f56881d1ad9c80cc663d0d92ec2a7481aa6e9a00af3b905ab7df3e552cc9",
+    "elements/preupgrade/app-bar.css": "d22bcdd8d706e9d9b34ce77dc46088ca82482e6fea989ced3f5d1bd2a5902371",
+    "elements/preupgrade/navigation-drawer.css": "ef828b752052653205fe62afe696f206562d7f88a9d92806d9a138e228e8c461",
+    "react/app-bar.js": "19b9b1313430d2381f5950a38ff18148b2b87ddebd3f19db20629eecf6c6d047",
+    "react/navigation-drawer-item.js": "5079953271f8ec032e7527447946105740ad40be79b557577cad37451f054323",
+    "react/navigation-drawer.js": "0130b2d8e8b5b07933d2bf2abb9f60057aa2f85db663d7c98c99c43288fa9d24",
+    "solid/app-bar.js": "ff6d03e67d8a601b1963cea963e35d6c0d36f2694a7200a8e705456a23752f66",
+    "solid/navigation-drawer-item.js": "cdaa8f2fce37e73591e369df9e3c3c9e08af20894d5ea50af2fe9a9ae36a08bb",
+    "solid/navigation-drawer.js": "115a44d38f5868272805188b7b136c984412bf33dfd1b7dbcd4333754b1ea9ad",
+    "vue/app-bar.js": "40ea92cb96b31b88d23efa9f9b3b9c851fa34436829f22fd1c19c4ec8057bd40",
+    "vue/navigation-drawer-item.js": "744ea4da3a9774ea753d4563c9a79df0cc72e2d76c270d521acd919a69082cc5",
+    "vue/navigation-drawer.js": "94c1fd8cff18b97d9d1dce6a19e832583fccc68bad50d7f83ffd6e49a2a152d5"
   },
   "normalization": "remove only a leading material version banner",
   "ssr": {
