@@ -278,10 +278,10 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   /**
    * Where the list opens, decided once per opening: above the FAB while it
    * fits there, otherwise on the side with more room (the shared vertical
-   * rule), scrolling only when neither side holds it; and on the end side
-   * while it stays inside the window, otherwise on the start side. The
-   * placement classes say which. They stay through the close, so the list does
-   * not jump while the items are still leaving, and the next open rewrites them.
+   * rule), scrolling only when neither side holds it; and horizontally, per
+   * placeHorizontally. The placement classes say which. They stay through the
+   * close, so the list does not jump while the items are still leaving, and
+   * the next open rewrites them.
    */
   const placeList = (): boolean => {
     const fab = root.getBoundingClientRect();
@@ -295,7 +295,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     const fit = fitVertically({ preferred: "top", height: list.scrollHeight, above, below });
     const downward = fit.side === "bottom";
     root.classList.toggle(`${block}--list-down`, downward);
-    root.classList.toggle(`${block}--list-start`, crossesStart(fab));
+    placeHorizontally(fab);
     // Upward, the room above is the ceiling it has always had; downward, only
     // when that side cannot hold it.
     list.style.maxHeight = downward
@@ -305,17 +305,36 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   };
 
   /**
-   * Whether the list, at its widest, would cross the window's start edge. It
-   * keeps its end alignment while its end edge stays inside the window; the
-   * test is the window's edge itself, so a list that fits is not moved for a
-   * margin's few pixels.
+   * The list's horizontal placement, decided once per opening: end-aligned
+   * while the whole list stays inside the window; otherwise start-aligned
+   * while that fits; when neither alignment fits, the end alignment shifts
+   * just enough to stay inside — to the window's start edge when the list
+   * would cross it, to its end edge when it crosses that. The shift rides a
+   * custom property the stylesheet applies to the list and holds through the
+   * close, like the placement classes. The test is the window's edge itself,
+   * so a list that fits is not moved for a margin's few pixels. A list wider
+   * than the window takes the start-edge pin and its end edge overflows.
    */
-  const crossesStart = (fab: DOMRect): boolean => {
+  const placeHorizontally = (fab: DOMRect): void => {
     const width = widest();
-    if (width === 0) return false;
-    return getComputedStyle(root).direction === "rtl"
-      ? fab.left + width > window.innerWidth
-      : fab.right - width < 0;
+    const rtl = getComputedStyle(root).direction === "rtl";
+    // The end-aligned list's left edge; the start-aligned one is its mirror.
+    const endLeft = rtl ? fab.left : fab.right - width;
+    const startLeft = rtl ? fab.right - width : fab.left;
+    const inside = (left: number): boolean => left >= 0 && left + width <= window.innerWidth;
+    let start = false;
+    let shift = 0;
+    if (width > 0 && !inside(endLeft)) {
+      if (inside(startLeft)) {
+        start = true;
+      } else {
+        // Neither alignment holds the list: keep the end alignment and move
+        // it the minimum that brings both edges inside.
+        shift = endLeft < 0 ? -endLeft : window.innerWidth - (endLeft + width);
+      }
+    }
+    root.classList.toggle(`${block}--list-start`, start);
+    root.style.setProperty(`--${PREFIX}-fab-menu-shift`, `${shift}px`);
   };
 
   /** The widest item, as it will be revealed (its content's width). */

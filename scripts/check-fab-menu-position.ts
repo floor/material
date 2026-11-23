@@ -87,7 +87,7 @@ const buildBundle = async (): Promise<string> => {
 };
 
 type Box = { x: number; y: number; width: number; height: number };
-type Corner = "top-start" | "top-end" | "bottom-start" | "bottom-end";
+type Corner = "top-start" | "top-end" | "bottom-start" | "bottom-end" | "top-centre";
 
 const failures: string[] = [];
 const fail = (message: string): void => {
@@ -112,8 +112,18 @@ window.h = {
 };
 `;
 
-const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", config: Record<string, unknown> = {}) =>
-  page.evaluate(({ corner, route, config, icon }) => {
+const mountCorner = (
+  page: Page,
+  corner: Corner,
+  route: "factory" | "element",
+  config: Record<string, unknown> = {},
+  items: Array<{ id: string; text: string; icon: string }> = [
+    { id: "reply", text: "Reply", icon },
+    { id: "forward", text: "Forward", icon },
+    { id: "archive", text: "Archive", icon },
+  ],
+) =>
+  page.evaluate(({ corner, route, config, items, icon }) => {
     const stage = document.getElementById("stage")!;
     stage.replaceChildren();
     stage.dataset.corner = corner;
@@ -121,11 +131,6 @@ const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", c
     cell.className = "cell";
     cell.dataset.corner = corner;
     stage.append(cell);
-    const items = [
-      { id: "reply", text: "Reply", icon },
-      { id: "forward", text: "Forward", icon },
-      { id: "archive", text: "Archive", icon },
-    ];
     const w = window as unknown as { mtrl: { createFabMenu: (c: Record<string, unknown>) => never } };
     if (route === "factory") {
       const menu = w.mtrl.createFabMenu({ icon, ariaLabel: "Compose", presentation: "list", placement: "none", items, ...config });
@@ -145,7 +150,7 @@ const mountCorner = (page: Page, corner: Corner, route: "factory" | "element", c
       host.append(declared);
     }
     cell.append(host);
-  }, { corner, route, config, icon });
+  }, { corner, route, config, items, icon });
 
 const openFab = async (page: Page): Promise<void> => {
   const point = await page.evaluate(() => {
@@ -191,7 +196,8 @@ try {
   await page.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8">
 <style>#stage{position:fixed;inset:0;padding:24px}.cell{position:absolute;width:56px;height:56px}
 .cell[data-corner="bottom-end"]{right:24px;bottom:24px}.cell[data-corner="bottom-start"]{left:24px;bottom:24px}
-.cell[data-corner="top-end"]{right:24px;top:24px}.cell[data-corner="top-start"]{left:24px;top:24px}</style>
+.cell[data-corner="top-end"]{right:24px;top:24px}.cell[data-corner="top-start"]{left:24px;top:24px}
+.cell[data-corner="top-centre"]{left:152px;top:0}</style>
 </head><body><main id="stage"></main></body></html>`);
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: await buildBundle() });
@@ -265,6 +271,41 @@ try {
     });
     assert(inside(state.box, 300, 700), `narrow ${dir}: the list stays inside the window (${JSON.stringify(state.box)}, ${JSON.stringify(detail)})`);
     assert.equal(state.start, true, `narrow ${dir}: a list that would cross the start edge takes the start alignment (${JSON.stringify(detail)})`);
+  }
+  await page.setViewportSize({ width: 900, height: 700 });
+
+  // ---- A FAB at the top centre and a list wider than the room on either
+  // side: end alignment crosses the window's start edge, start alignment its
+  // end edge, so neither fits. The list shifts just enough to stay inside,
+  // both directions and both APIs, and the close button holds its position
+  // while the shifted list opens and leaves.
+  await page.setViewportSize({ width: 360, height: 320 });
+  const longItems = [
+    { id: "reply", text: "Reply", icon },
+    { id: "forward", text: "Forward", icon },
+    { id: "archive", text: "Move conversation to the archive", icon },
+  ];
+  for (const route of ["factory", "element"] as const) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      await page.evaluate((direction) => { document.documentElement.dir = direction; }, dir);
+      await mountCorner(page, "top-centre", route, {}, longItems);
+      await openFab(page);
+      const state = await listState(page);
+      const label = `top-centre long list ${route}/${dir}`;
+      assert(state.down, `${label}: the list opens below the top-edge FAB`);
+      assert(state.box.width > 300, `${label}: the long label makes the list wide (${state.box.width})`);
+      assert(inside(state.box, 360, 320), `${label}: neither alignment fits, so the shifted list stays inside the window (${JSON.stringify(state.box)})`);
+      const closeBox = () => page.evaluate(() => {
+        const h = (window as unknown as { h: { root: () => HTMLElement; box: (element: HTMLElement) => Box } }).h;
+        return h.box(h.root().querySelector(".mtrl-fab-menu__close") as HTMLElement);
+      });
+      const closeOpen = await closeBox();
+      await page.waitForTimeout(350);
+      assert.equal(JSON.stringify((await listState(page)).box), JSON.stringify(state.box), `${label}: the shifted list does not move while open`);
+      await page.evaluate(() => { (window as unknown as { h: { fab: () => HTMLElement } }).h.fab().click(); });
+      const closeShut = await closeBox();
+      assert.deepEqual(closeShut, closeOpen, `${label}: the close holds its position through the shift and the close`);
+    }
   }
   await page.setViewportSize({ width: 900, height: 700 });
 

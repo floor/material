@@ -156,11 +156,14 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
   }
 
   // The list: above the close button, end-aligned, scrolling behind it when
-  // the window is short
+  // the window is short. The runtime shifts it by --#{$component}-shift when
+  // neither alignment keeps it inside the window (fab-menu.ts); 0px is the
+  // unshifted alignment.
   &__list {
     position: absolute;
     bottom: calc(100% + 8px);
     @include d.end(0);
+    translate: var(--#{$component}-shift, 0px) 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
