@@ -32,8 +32,9 @@ const identity: ProgressStep = () => (component) => component;
 export const composeButton = (
   config: ButtonConfig = {},
   progress: ProgressStep = identity,
+  isolated = false,
 ): ButtonComponent => {
-  const baseConfig = createBaseConfig(config);
+  const baseConfig = createBaseConfig(config, isolated);
   return pipe(
     createBase,
     withEvents(),
