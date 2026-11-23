@@ -405,9 +405,11 @@ try {
 
 /** The owner's page: every widget inlined, nothing loaded from anywhere. */
 function ownerPage(styles: string, scriptBase64: string, svg: string): string {
+  const head = (process.env.FAB_MENU_PAGE_COMMIT ?? "").trim() || "working tree";
   const demo = `
 <header>
   <strong>FAB menu, menu and select placement</strong>
+  <span id="build">built from ${head}</span>
   <label>Demo area <input id="resize" type="range" min="260" max="100%" value="100%"></label>
   <label><input id="dark" type="checkbox"> Dark</label>
   <label><input id="rtl" type="checkbox"> RTL</label>
