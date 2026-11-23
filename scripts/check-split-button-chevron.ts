@@ -6,8 +6,10 @@
  * Opening the menu only rotates the glyph. The svg box is not the measurement:
  * the glyph's ink is off-centre in that box, and a 180 degree turn moves it.
  *
- * The path stays a translation of Material's expand_more outline. The painted
- * pixels of the closed and open glyphs share a centre at device scales 1, 2 and 3.
+ * The path stays a translation of Material's expand_more outline, and its
+ * polygon centroid stays within one unit of the viewBox centre. Coverage-weighted
+ * painted mass, closed against open, stays within 0.25 CSS px at device scales
+ * 1, 2 and 3. The method is briefs/split-chevron-mass-check.mjs.
  */
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
@@ -18,8 +20,12 @@ import { launchChromium } from "./browser-profile";
 const root = resolve(import.meta.dir, "..");
 const scratch = join(root, "tmp", "check-split-button-chevron");
 const sizes = ["xs", "s", "m", "l", "xl"] as const;
-/** Ink centre against the trailing button's centre, closed and open. */
-const TOLERANCE = 0.25;
+/** Closed and open painted mass, in CSS px. */
+const MASS_TOLERANCE = 0.25;
+/** Polygon centroid against the viewBox centre, in path units. */
+const CENTROID_TOLERANCE = 1;
+/** viewBox 0 -960 960 960. */
+const VIEWBOX_CENTRE = { x: 480, y: -480 };
 /** Material expand_more, viewBox 0 -960 960 960. A pure translation is allowed. */
 const OFFICIAL_CHEVRON = "M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z";
 
@@ -61,6 +67,43 @@ for (let i = 0; i < official.length; i++) {
   }
 }
 console.log(`chevron outline: official expand_more translated by ${dx ?? 0}, ${dy ?? 0}`);
+
+const vertices: Array<[number, number]> = [];
+let cursorX = 0;
+let cursorY = 0;
+for (const command of actual) {
+  if (command.op === "Z" || command.op === "z") continue;
+  const relative = command.op === command.op.toLowerCase();
+  assert(command.op.toLowerCase() === "m" || command.op.toLowerCase() === "l", `chevron command ${command.op} is not part of the official outline`);
+  for (let n = 0; n < command.nums.length; n += 2) {
+    const nextX = command.nums[n]!;
+    const nextY = command.nums[n + 1]!;
+    cursorX = relative ? cursorX + nextX : nextX;
+    cursorY = relative ? cursorY + nextY : nextY;
+    vertices.push([cursorX, cursorY]);
+  }
+}
+const first = vertices[0];
+const last = vertices[vertices.length - 1];
+if (first && last && first[0] === last[0] && first[1] === last[1]) vertices.pop();
+let twice = 0;
+let centroidX = 0;
+let centroidY = 0;
+for (let i = 0; i < vertices.length; i++) {
+  const [x1, y1] = vertices[i]!;
+  const [x2, y2] = vertices[(i + 1) % vertices.length]!;
+  const cross = x1 * y2 - x2 * y1;
+  twice += cross;
+  centroidX += (x1 + x2) * cross;
+  centroidY += (y1 + y2) * cross;
+}
+centroidX /= 3 * twice;
+centroidY /= 3 * twice;
+const centroidDx = centroidX - VIEWBOX_CENTRE.x;
+const centroidDy = centroidY - VIEWBOX_CENTRE.y;
+console.log(`chevron centroid: ${centroidDx.toFixed(3)}, ${centroidDy.toFixed(3)} units from the viewBox centre`);
+assert(Math.abs(centroidDx) <= CENTROID_TOLERANCE && Math.abs(centroidDy) <= CENTROID_TOLERANCE,
+  `chevron centroid is ${centroidDx}, ${centroidDy} units from the viewBox centre`);
 
 const css = sass.compileString(`@use "components/button"; @use "utilities/ripple"; @use "components/split-button";`, {
   loadPaths: [join(root, "src/styles")],
@@ -191,27 +234,16 @@ try {
     );
   }
 
-  const off = rows.filter((row) => Math.abs(row.dx) > TOLERANCE || Math.abs(row.dy) > TOLERANCE);
-  assert.deepEqual(
-    off,
-    [],
-    `chevron ink is off the trailing button by more than ${TOLERANCE}px`,
-  );
-  const shifted: string[] = [];
-  for (const closedRow of rows.filter((row) => row.state === "closed")) {
-    const openRow = rows.find((row) => row.state === "open" && row.size === closedRow.size && row.dir === closedRow.dir);
-    assert(openRow, `missing open measurement for ${closedRow.dir} ${closedRow.size}`);
-    if (Math.abs(closedRow.dx - openRow.dx) > TOLERANCE || Math.abs(closedRow.dy - openRow.dy) > TOLERANCE) {
-      shifted.push(`${closedRow.dir} ${closedRow.size}: closed ${closedRow.dx},${closedRow.dy} open ${openRow.dx},${openRow.dy}`);
-    }
-  }
-  assert.deepEqual(shifted, [], "closed and open chevron centres differ");
-  console.log("split button chevron: ink stays on the trailing-button centre, and only rotates");
+  const closedRows = rows.filter((row) => row.state === "closed");
+  const openRows = rows.filter((row) => row.state === "open");
+  assert(closedRows.length > 0 && closedRows.every((row) => row.rotate !== "180deg"), "a closed chevron is already rotated");
+  assert(openRows.length === closedRows.length && openRows.every((row) => row.rotate === "180deg"), "opening the menu did not rotate the chevron");
+  console.log("split button chevron: opening rotates every glyph");
 
-  // The painted glyph. Rotating the svg re-rasterises an odd device-pixel
-  // height onto the neighbouring pixel. The centre here is the ink bounds of
-  // a screenshot, in device pixels, and closed and open must share it.
-  const paint = async (scale: number) => {
+  // Coverage-weighted painted mass, the method in
+  // briefs/split-chevron-mass-check.mjs. The weight is the colour delta, and
+  // the same clip is read closed and open.
+  const mass = async (scale: number) => {
     const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 1600 }, deviceScaleFactor: scale });
     await page.goto(`http://127.0.0.1:${server.port}/`);
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
@@ -221,72 +253,82 @@ try {
       });
     });
     const buttons = page.locator(".mtrl-split-button__trailing");
-    const bad: string[] = [];
-    for (let i = 0; i < await buttons.count(); i++) {
+    const count = await buttons.count();
+    const labels: string[] = [];
+    const clips: Array<{ x: number; y: number; width: number; height: number }> = [];
+    for (let i = 0; i < count; i++) {
       const button = buttons.nth(i);
-      await button.scrollIntoViewIfNeeded();
-      const label = await button.evaluate((node) => {
+      labels.push(await button.evaluate((node) => {
         const host = node.closest(".mtrl-split-button") as HTMLElement;
         return `${host.dataset.dir} ${host.dataset.size}`;
-      });
-      const centre = async (open: boolean) => {
-        await button.evaluate((node, isOpen) => {
-          node.closest(".mtrl-split-button")?.classList.toggle("mtrl-split-button--expanded", isOpen);
-        }, open);
-        const box = await button.boundingBox();
-        assert(box, `${label} has no box`);
-        const buf = await page.screenshot({
-          clip: { x: box.x, y: box.y, width: Math.floor(box.width), height: Math.floor(box.height) },
-        });
-        return page.evaluate(async (src) => {
-          const image = new Image();
-          image.src = `data:image/png;base64,${src}`;
-          await image.decode();
-          const canvas = document.createElement("canvas");
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const context = canvas.getContext("2d");
-          if (!context) return null;
-          context.drawImage(image, 0, 0);
-          const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-          const width = canvas.width;
-          const height = canvas.height;
-          const sample = 4 * (Math.floor(height * 0.15) * width + Math.floor(width * 0.1));
-          const bg = [data[sample] ?? 0, data[sample + 1] ?? 0, data[sample + 2] ?? 0];
-          let left = width;
-          let right = 0;
-          let top = height;
-          let bottom = 0;
-          for (let y = Math.floor(height * 0.25); y < height * 0.75; y++) {
-            for (let x = Math.floor(width * 0.2); x < width * 0.8; x++) {
-              const p = 4 * (y * width + x);
-              const delta = Math.abs((data[p] ?? 0) - bg[0]) + Math.abs((data[p + 1] ?? 0) - bg[1]) + Math.abs((data[p + 2] ?? 0) - bg[2]);
-              if (delta > 120) {
-                left = Math.min(left, x);
-                right = Math.max(right, x + 1);
-                top = Math.min(top, y);
-                bottom = Math.max(bottom, y + 1);
-              }
-            }
+      }));
+      const box = await button.boundingBox();
+      assert(box, `${labels[i]} has no box`);
+      clips.push({ x: Math.round(box.x), y: Math.round(box.y), width: Math.round(box.width), height: Math.round(box.height) });
+    }
+    const weigh = async (buf: Buffer) => page.evaluate(async (src) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${src}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d");
+      if (!context) return null;
+      context.drawImage(image, 0, 0);
+      const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      const width = canvas.width;
+      const height = canvas.height;
+      const sample = 4 * (Math.floor(height * 0.2) * width + Math.floor(width / 2));
+      const bg = [data[sample] ?? 0, data[sample + 1] ?? 0, data[sample + 2] ?? 0];
+      let weight = 0;
+      let massX = 0;
+      let massY = 0;
+      for (let y = Math.floor(height * 0.25); y < height * 0.75; y++) {
+        for (let x = Math.floor(width * 0.2); x < width * 0.8; x++) {
+          const p = 4 * (y * width + x);
+          const delta = Math.abs((data[p] ?? 0) - bg[0]) + Math.abs((data[p + 1] ?? 0) - bg[1]) + Math.abs((data[p + 2] ?? 0) - bg[2]);
+          if (delta > 12) {
+            weight += delta;
+            massX += delta * (x + 0.5);
+            massY += delta * (y + 0.5);
           }
-          if (right <= left || bottom <= top) return null;
-          return { dx: (left + right - width) / 2, dy: (top + bottom - height) / 2 };
-        }, buf.toString("base64"));
-      };
-      const closedInk = await centre(false);
-      const openInk = await centre(true);
-      assert(closedInk && openInk, `paint scale ${scale} ${label} found no ink`);
-      if (closedInk.dx !== openInk.dx || closedInk.dy !== openInk.dy) {
-        bad.push(`${label} device-px ${closedInk.dx - openInk.dx} ${closedInk.dy - openInk.dy}`);
+        }
+      }
+      if (weight === 0) return null;
+      return { x: massX / weight - width / 2, y: massY / weight - height / 2 };
+    }, buf.toString("base64"));
+    const closedMass = [];
+    for (const clip of clips) closedMass.push(await weigh(await page.screenshot({ clip })));
+    const closedRotated = await page.evaluate(() => [...document.querySelectorAll(".mtrl-split-button__chevron")].filter((svg) => getComputedStyle(svg).rotate === "180deg").length);
+    await page.evaluate(() => {
+      for (const root of document.querySelectorAll(".mtrl-split-button")) root.classList.add("mtrl-split-button--expanded");
+    });
+    const openRotated = await page.evaluate(() => [...document.querySelectorAll(".mtrl-split-button__chevron")].filter((svg) => getComputedStyle(svg).rotate === "180deg").length);
+    assert.equal(closedRotated, 0, `mass scale ${scale}: a closed chevron is already rotated`);
+    assert.equal(openRotated, count, `mass scale ${scale}: opening did not rotate every chevron`);
+    const openMass = [];
+    for (const clip of clips) openMass.push(await weigh(await page.screenshot({ clip })));
+    const bad: string[] = [];
+    let worst = 0;
+    for (let i = 0; i < count; i++) {
+      const closedInk = closedMass[i];
+      const openInk = openMass[i];
+      assert(closedInk && openInk, `mass scale ${scale} ${labels[i]} found no ink`);
+      const shiftX = (openInk.x - closedInk.x) / scale;
+      const shiftY = (openInk.y - closedInk.y) / scale;
+      worst = Math.max(worst, Math.abs(shiftX), Math.abs(shiftY));
+      if (Math.abs(shiftX) > MASS_TOLERANCE || Math.abs(shiftY) > MASS_TOLERANCE) {
+        bad.push(`${labels[i]} ${shiftX.toFixed(3)},${shiftY.toFixed(3)}`);
       }
     }
     await page.close();
-    assert.deepEqual(bad, [], `paint scale ${scale}: closed and open pixels differ`);
-    console.log(`paint scale ${scale}: closed and open share a device pixel`);
+    assert.deepEqual(bad, [], `mass scale ${scale}: closed and open mass differ by more than ${MASS_TOLERANCE}px`);
+    console.log(`mass scale ${scale}: worst closed-to-open shift ${worst.toFixed(3)} CSS px`);
   };
-  await paint(1);
-  await paint(2);
-  await paint(3);
+  await mass(1);
+  await mass(2);
+  await mass(3);
 } finally {
   await browser.close();
   server.stop(true);
