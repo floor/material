@@ -382,28 +382,36 @@ export const withInput =
       });
     }
 
-    // Leading icon click - expand or collapse
+    // Leading icon: the bar's way into the field, and the view's way back.
+    // With expandOnFocus off, activating it in the bar takes focus into the
+    // input and leaves the view closed: otherwise a list-filter search could
+    // be opened into an empty suggestions view and its scrim by a click or a
+    // key on the icon, though focus itself was asked not to open it.
+    const activateLeadingIcon = (): void => {
+      if (component.states?.isExpanded?.()) {
+        component.states.collapse();
+        return;
+      }
+
+      if (config.expandOnFocus === false) {
+        input.focus();
+        return;
+      }
+
+      component.states?.expand();
+    };
+
     if (leadingIcon) {
       leadingIcon.addEventListener("click", (e: MouseEvent) => {
         e.preventDefault();
-
-        if (component.states?.isExpanded?.()) {
-          component.states.collapse();
-        } else {
-          component.states?.expand();
-        }
+        activateLeadingIcon();
       });
 
       // Keyboard support for leading icon
       leadingIcon.addEventListener("keydown", (e: KeyboardEvent) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-
-          if (component.states?.isExpanded?.()) {
-            component.states.collapse();
-          } else {
-            component.states?.expand();
-          }
+          activateLeadingIcon();
         }
       });
     }

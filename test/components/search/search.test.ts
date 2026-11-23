@@ -255,6 +255,38 @@ describe('the focused state', () => {
   // The class and the expansion are separate: expandOnFocus drives one, the
   // focused state the other, and a search that does not expand is still
   // focused.
+  // expandOnFocus: false keeps the search in its bar: focusing it does not
+  // open the view. The leading icon is the focus affordance of the bar, so
+  // activating it takes focus into the input and leaves the view closed too —
+  // a list-filter search cannot be opened into an empty suggestions view and
+  // its scrim by a click or a key on the icon.
+  test('expandOnFocus: false leaves the view closed when the leading icon is activated', async () => {
+    const search = await mount({ expandOnFocus: false, collapseOnBlur: false, suggestions: ['Apple'] });
+    const icon = search.element.querySelector<HTMLElement>('.mtrl-search__leading-icon')!;
+
+    icon.click();
+    await tick(30);
+    expect(search.isExpanded()).toBe(false);
+    expect(search.element.classList.contains('mtrl-search--view')).toBe(false);
+
+    icon.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await tick(30);
+    expect(search.isExpanded()).toBe(false);
+
+    icon.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    await tick(30);
+    expect(search.isExpanded()).toBe(false);
+  });
+
+  // With the default, the icon still opens the view: the fix only changes the
+  // configured-off case.
+  test('the leading icon still opens the view when expandOnFocus is on', async () => {
+    const search = await mount({ collapseOnBlur: false, suggestions: ['Apple'] });
+    search.element.querySelector<HTMLElement>('.mtrl-search__leading-icon')!.click();
+    await tick(30);
+    expect(search.isExpanded()).toBe(true);
+  });
+
   test('the focused state is set whether or not the search expands', async () => {
     const expanding = await mount({ expandOnFocus: true, collapseOnBlur: false });
 

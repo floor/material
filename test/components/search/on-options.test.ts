@@ -88,7 +88,10 @@ test("onExpand and onCollapse match their listeners for the methods and the lead
   const expanded = optionPair();
   const collapsed = optionPair();
   const states: string[] = [];
+  // The icon expands only when expansion on focus is allowed; with it off it
+  // takes focus into the input and leaves the view to the consumer.
   const search = create({
+    expandOnFocus: true,
     onExpand: (event) => expanded.option(event),
     onCollapse: (event) => collapsed.option(event),
   });
