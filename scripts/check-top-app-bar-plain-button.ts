@@ -20,7 +20,7 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { baseElementsStyles } from "./style-manifest";
 import { assertRollbackBeats } from "./preupgrade-specificity";
@@ -77,9 +77,9 @@ type Row = {
   decoyAfter: string;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const context = await browser.newContext({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
+  const context = await browser.browser()!.newContext({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
   const page = await context.newPage();
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
