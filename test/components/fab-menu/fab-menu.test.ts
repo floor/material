@@ -80,6 +80,8 @@ describe("fab menu structure", () => {
     const m = make();
     expect(items(m).map((el) => el.textContent)).toEqual(["Reply", "Forward", "Archive"]);
     expect(items(m).every((el) => el.tabIndex === -1)).toBe(true);
+    expect(items(m).every((el) => el.classList.contains("mtrl-fab-menu__item") && el.classList.contains("mtrl-button"))).toBe(true);
+    expect(items(m).every((el) => el.querySelector(".mtrl-ripple") !== null)).toBe(true);
     expect(items(m)[0].querySelector(".mtrl-fab-menu__item-icon")).not.toBeNull();
     expect(items(m)[1].querySelector(".mtrl-fab-menu__item-icon")).toBeNull();
   });
@@ -549,6 +551,36 @@ describe("fab menu presentation", () => {
 });
 
 describe("fab menu cleanup", () => {
+  test("destroy removes each item button, its ripple and its press listener", () => {
+    const m = make();
+    const element = m.element;
+    const item = items(m)[0]!;
+    const add = document.addEventListener;
+    const remove = document.removeEventListener;
+    let presses = 0;
+    document.addEventListener = ((name: string, listener: EventListener, options?: boolean | AddEventListenerOptions) => {
+      if (name === "pointerup") presses += 1;
+      add.call(document, name, listener, options);
+    }) as typeof document.addEventListener;
+    document.removeEventListener = ((name: string, listener: EventListener, options?: boolean | EventListenerOptions) => {
+      if (name === "pointerup") presses -= 1;
+      remove.call(document, name, listener, options);
+    }) as typeof document.removeEventListener;
+    try {
+      item.dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true, clientX: 4, clientY: 4 }));
+      expect(presses).toBeGreaterThan(0);
+      expect(item.querySelector(".mtrl-ripple-wave")).not.toBeNull();
+      m.destroy();
+      menu = null;
+      expect(presses).toBe(0);
+      expect(element.querySelector(".mtrl-ripple")).toBeNull();
+      expect(element.querySelector("[role=menuitem]")).toBeNull();
+    } finally {
+      document.addEventListener = add;
+      document.removeEventListener = remove;
+    }
+  });
+
   test("destroy removes the element and the outside-press and resize listeners", () => {
     setMedia(() => false);
     const m = make({ presentation: "auto" });

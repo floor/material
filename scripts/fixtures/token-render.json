@@ -982,49 +982,63 @@
    true
   ],
   [
-   "6:button.mtrl-fab-menu__item",
+   "6:button.mtrl-button.mtrl-fab-menu__item",
    "9999px 9999px 9999px 9999px",
    "Roboto, sans-serif",
    true,
    true
   ],
   [
-   "7:span.mtrl-fab-menu__item-content",
-   "0px 0px 0px 0px",
-   "Roboto, sans-serif",
-   false,
-   true
-  ],
-  [
-   "8:span.mtrl-fab-menu__item-icon",
-   "0px 0px 0px 0px",
-   "Roboto, sans-serif",
-   false,
-   true
-  ],
-  [
-   "9:span.mtrl-fab-menu__item-text",
-   "0px 0px 0px 0px",
-   "Roboto, sans-serif",
-   false,
-   true
-  ],
-  [
-   "10:button.mtrl-fab-menu__item",
+   "7:div.mtrl-ripple",
    "9999px 9999px 9999px 9999px",
    "Roboto, sans-serif",
    true,
    true
   ],
   [
-   "11:span.mtrl-fab-menu__item-content",
+   "8:span.mtrl-fab-menu__item-content",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "12:span.mtrl-fab-menu__item-text",
+   "9:span.mtrl-fab-menu__item-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:span.mtrl-fab-menu__item-text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "11:button.mtrl-button.mtrl-fab-menu__item",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "12:div.mtrl-ripple",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "13:span.mtrl-fab-menu__item-content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "14:span.mtrl-fab-menu__item-text",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,

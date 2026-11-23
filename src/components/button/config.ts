@@ -1,8 +1,6 @@
 // src/components/button/config.ts
-import {
-  createComponentConfig,
-  createElementConfig,
-} from "../../core/config/component";
+import { PREFIX } from "../../core/config";
+import { createComponentConfig, createElementConfig } from "../../core/config/component";
 import { ButtonConfig } from "./types";
 import {
   BUTTON_VARIANTS,
@@ -36,12 +34,37 @@ export const defaultConfig: ButtonConfig = {
  * by createComponentConfig.
  *
  * @param {ButtonConfig} config - User provided configuration
+ * @param {boolean} isolated - Internal. Build from the button defaults plus
+ *   this config. The public button registry is not read and not written.
  * @returns {ButtonConfig} Complete configuration with defaults applied
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: ButtonConfig = {}): ButtonConfig =>
-  createComponentConfig(defaultConfig, config, "button") as ButtonConfig;
+/**
+ * The same merge as `createComponentConfig`, without reading the public registry.
+ * An item build uses this so a public button default does not reach it.
+ */
+const isolatedButtonConfig = (config: ButtonConfig): ButtonConfig => {
+  const userClassName = config.className !== undefined ? config.className : config.class;
+  const defaultClassName =
+    defaultConfig.className !== undefined ? defaultConfig.className : defaultConfig.class;
+  const merged: ButtonConfig & { prefix: string } = {
+    ...defaultConfig,
+    ...config,
+    componentName: "button",
+    prefix: PREFIX,
+    className: userClassName !== undefined ? userClassName : defaultClassName,
+  };
+  if ("class" in merged && merged.className !== undefined) {
+    delete merged.class;
+  }
+  return merged;
+};
+
+export const createBaseConfig = (config: ButtonConfig = {}, isolated = false): ButtonConfig =>
+  (isolated
+    ? isolatedButtonConfig(config)
+    : createComponentConfig(defaultConfig, config, "button")) as ButtonConfig;
 
 /**
  * Generates element configuration for the Button component.

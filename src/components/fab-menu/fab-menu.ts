@@ -10,6 +10,7 @@ import { activeElementOf } from "../../core/dom/focus";
 import { setHTML } from "../../core/dom/html";
 import { getIcon } from "../../core/icons/registry";
 import { warnDev } from "../../core/utils/warn";
+import { composeButton } from "../button/compose";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
 import { createConfig, CLOSE_ICON } from "./config";
@@ -126,9 +127,19 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   list.setAttribute("aria-labelledby", button.id);
   list.setAttribute("inert", "");
   const entries = items.map((item) => {
-    const element = document.createElement("button");
-    element.type = "button";
-    element.className = `${block}__item`;
+    // The list item is a button, so it takes the button's ripple and state
+    // layers. The pill, the content and the item class stay the item's.
+    // composeButton is that button without the progress chunk: an item never
+    // shows one. The third argument builds this one item from the button's
+    // own defaults. The public registry is not read or written, so
+    // createButton and setComponentDefaults keep working during the build.
+    const itemButton = composeButton({
+      variant: "text",
+      size: "m",
+      class: `${block}__item`,
+    }, undefined, true);
+    resources.add(() => itemButton.destroy());
+    const element = itemButton.element;
     element.setAttribute("role", "menuitem");
     element.tabIndex = -1;
     // The item is the pill, whose width reveals it; its content keeps its
@@ -253,7 +264,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   // (the closed items are laid out at no width, their content overflowing).
   const measure = () =>
     entries.forEach(({ element }) => {
-      const content = element.firstElementChild as HTMLElement;
+      // The ripple is the button's first child. The width is the content's.
+      const content = element.querySelector(`.${block}__item-content`) as HTMLElement;
       element.style.setProperty(`--${PREFIX}-fab-menu-item-width`, `${content.offsetWidth}px`);
     });
 
