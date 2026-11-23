@@ -706,7 +706,13 @@ $component: "#{$prefix}-menu";
 
     // High contrast mode
     @include m.high-contrast {
-        border: 1px solid CurrentColor;
+        // The popover reset above clears the border for a top-layer menu; the
+        // forced-colours edge is restated on the popover too, where the reset
+        // carries one more specific selector than the bare class
+        &,
+        &[popover] {
+            border: 1px solid CurrentColor;
+        }
 
         .#{$component}__group {
             border: 1px solid CurrentColor;

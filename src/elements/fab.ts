@@ -22,7 +22,7 @@
 import createFab from "../components/fab";
 import type { FabComponent, FabConfig } from "../components/fab/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
-import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
+import { buttonAria, buttonForm, setupFormButton, typeAttribute } from "./form-button";
 import { FLOATING_HOST_STYLES } from "./floating-placement";
 
 const fabSpec = {
@@ -41,11 +41,12 @@ const fabSpec = {
     placement: { type: "string", config: "placement" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
+    ...buttonAria,
     "aria-label": { type: "string", config: "ariaLabel" },
   },
   methods: ["lower", "raise"] as const,
   form: buttonForm<FabComponent>(),
-  setup: submitOnClick,
+  setup: setupFormButton,
 } satisfies ElementSpec<FabComponent>;
 
 export const fabElement = defineElement<FabComponent>(fabSpec);

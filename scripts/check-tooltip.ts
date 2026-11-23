@@ -463,4 +463,59 @@ try {
   await writeFile(`${artifacts}/report.json`, JSON.stringify({ rows, placements: placementRows, collision: collisionRows, scrolled: scrolledRows, container: containerRows, offset: offsetRows, failures, errors }, null, 2));
   assert.deepEqual(failures, []);
   console.log(JSON.stringify({ variants: variants.length, positions: positions.length, modes: 2, checks: rows.length, collision: collisionRows.length, scrolled: scrolledRows.length, container: containerRows.length, offset: offsetRows.length, errors }, null, 2));
+  const touchPage = await browser.browser()!.newPage({ hasTouch: true, reducedMotion: "reduce" });
+  await touchPage.goto(`http://127.0.0.1:${server.port}`);
+  await touchPage.waitForFunction(() => window.ready);
+  await touchPage.evaluate(() => window.mountTooltip({ visible: false, text: "Help", showDelay: 0, hideDelay: 0 }));
+  const visible = () => touchPage.evaluate(() => window.tooltip.isVisible());
+  const anchor = (await touchPage.locator("#target").boundingBox())!;
+  const cdp = await touchPage.context().newCDPSession(touchPage);
+  const hold = () => cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart", touchPoints: [{ x: anchor.x + anchor.width / 2, y: anchor.y + anchor.height / 2 }],
+  });
+  const release = () => cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  // Advance the touch timers only when the check asks. Runner scheduling
+  // between CDP input and the assertion must not consume the visible window.
+  const clockStart = Date.now();
+  await touchPage.clock.install({ time: clockStart });
+  await touchPage.clock.pauseAt(clockStart + 60_000);
+  await hold();
+  await touchPage.clock.runFor(100);
+  await release();
+  await touchPage.clock.runFor(600);
+  const quickTap = await visible();
+  // A release can give an unfocused anchor focus before its click arrives.
+  await touchPage.evaluate(() => document.querySelector<HTMLButtonElement>("#target")!.blur());
+  await hold();
+  await touchPage.clock.runFor(600);
+  const duringHold = await visible();
+  // Chromium can leave the mouse hover target before dispatching touch release.
+  await touchPage.evaluate(() => document.querySelector("#target")!.dispatchEvent(new MouseEvent("mouseleave")));
+  await release();
+  const afterRelease = await visible();
+  await touchPage.clock.runFor(1500);
+  const afterExpiry = await visible();
+  await hold();
+  await touchPage.clock.runFor(600);
+  await release();
+  const beforeOutside = await visible();
+  await touchPage.touchscreen.tap(790, 590);
+  const afterOutside = await visible();
+  // Programmatic tooltips keep the existing lifetime, including outside taps.
+  await touchPage.evaluate(() => window.tooltip.show(true));
+  await touchPage.clock.runFor(1600);
+  await touchPage.touchscreen.tap(790, 590);
+  const explicitAfterOutside = await visible();
+  await touchPage.keyboard.press("Escape");
+  const afterEscape = await visible();
+  await touchPage.mouse.move(anchor.x + anchor.width / 2, anchor.y + anchor.height / 2);
+  await touchPage.clock.runFor(1600);
+  const hoverAfterTimeout = await visible();
+
+  const touch = { quickTap, duringHold, afterRelease, afterExpiry, beforeOutside, afterOutside, explicitAfterOutside, afterEscape, hoverAfterTimeout };
+  console.log(JSON.stringify({ touch }));
+  assert.deepEqual(
+    touch,
+    { quickTap: false, duringHold: true, afterRelease: true, afterExpiry: false, beforeOutside: true, afterOutside: false, explicitAfterOutside: true, afterEscape: false, hoverAfterTimeout: true },
+  );
 } finally { await browser.close(); server.stop(true); }

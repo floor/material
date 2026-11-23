@@ -1,26 +1,13 @@
 // src/styles/elements/_drawer.scss
-// <m-drawer> before upgrade: the sheet's height, with a place per
-// <m-drawer-item>, which is drawn on upgrade. Closed, the upgraded drawer
-// keeps that height with nothing in it; open, its sheet is painted.
-@use '../abstract/functions' as f;
-@use '../abstract/theme' as t;
+// <m-drawer> before upgrade: the rule set it shares with
+// <m-navigation-drawer>, the element's name.
 @use 'config' as c;
+@use 'shared-drawer' as s;
 
-// As components/_drawer.scss: 12px above and below 56px items.
 @include c.host('drawer') {
-  display: block;
-  flex-shrink: 0;
-  padding: 12px 0;
-
-  &[open] {
-    background-color: t.color('surface');
-  }
+  @include s.host;
 }
 
 @include c.declarations('drawer') {
-  display: block;
-  // As components/_drawer.scss: 4dp a step, floored at the 36dp item the
-  // dense option has always used.
-  height: f.density(56px, 36px);
-  overflow: hidden;
+  @include s.declarations;
 }

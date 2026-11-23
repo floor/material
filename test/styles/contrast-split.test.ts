@@ -315,9 +315,18 @@ describe("explicit contrast levels are opt-in", () => {
     // Collapsed trailing-icon buttons keep equal insets: two specificity arms (+60 B, CI 43961554964).
     // Side sheet: pressed close layer and a 1px outline-variant inner border (+184 B, CI 44396908315).
     // A disabled field in error paints its helper and counter on-surface (+397 B, CI 44393533911).
+    // A bare top app bar button keeps a 16px inline margin so a 16px leading
+    // button's 48px target ends at the margin edge, and an author class still
+    // matches. The light-DOM selectors stay in the top app bar sheet. The same
+    // compilation is the element shadow sheet, so it also carries
+    // ::slotted()::before and the pressed rule with :active inside ::slotted().
+    // The shared document base does not. This pin is the locked Sass 1.85.1
+    // compressed compile (styles/base/_plain-slot-button.scss,
+    // styles/components/_top-app-bar.scss).
+    // Drawer disclosures add child padding, state layers and group motion.
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "a2cb8d2729bb828ff788991dc38f46df32e32496db3cebd272bf46637d1d96d4",
-      length: 549642,
+      sha256: "f6a9740be20c9a0a2a27abd61a91f173aff9856986cafd8088b3a89a8ddc743f",
+      length: 554415,
     });
   });
 

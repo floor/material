@@ -1,13 +1,16 @@
 // Public drawer events match state, item activation and root forwarding.
-import createDrawer, { type DrawerComponent, type DrawerEvents, type DrawerSelectEvent, type DrawerItemConfig } from "../../src/components/drawer";
+import createDrawer, { type DrawerComponent, type DrawerEvents, type DrawerSelectEvent, type DrawerItemConfig, type DrawerSectionEvent } from "../../src/components/drawer";
 import { getApiConfig } from "../../src/components/drawer/config";
 import { DRAWER_EVENTS } from "../../src/components/drawer/constants";
+import { DrawerItem } from "../../src/react/drawer-item";
+import type { DrawerElement, DrawerSpec } from "../../src/elements/drawer";
+import type { ElementEvents } from "../../src/elements/define";
 import type { ForwardedEventPayload } from "../../src/core/dom";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 const drawer = createDrawer();
-export const names: Equals<keyof DrawerEvents, "open" | "close" | "select" | "click" | "keydown"> = true;
+export const names: Equals<keyof DrawerEvents, "open" | "close" | "select" | "expand" | "collapse" | "click" | "keydown"> = true;
 export const openHasNoPayload: Equals<Parameters<DrawerEvents["open"]>, []> = true;
 export const closeHasNoPayload: Equals<Parameters<DrawerEvents["close"]>, []> = true;
 export const selection: Equals<Parameters<DrawerEvents["select"]>[0], DrawerSelectEvent> = true;
@@ -65,3 +68,8 @@ export const adapterAcceptsOptionalItems: Equals<
 > = true;
 
 export const modelGetter: Equals<ReturnType<DrawerComponent["getValue"]>, string | null> = true;
+
+export const expansion: Equals<Parameters<DrawerEvents["expand"]>[0], DrawerSectionEvent> = true;
+export const displacement: Equals<ElementEvents<DrawerSpec>["collapse"], CustomEvent<{ value: string; expanded: boolean }>> = true;
+export const expandedIds: Equals<ReturnType<DrawerElement["getExpandedSections"]>, string[]> = true;
+export const link: Pick<Parameters<typeof DrawerItem>[0], "href" | "expanded"> = { href: "/docs", expanded: true };

@@ -45,7 +45,7 @@ await mkdir(directory, { recursive: true });
 const CLEAR = 32;
 // Placed at the viewport's top edge whatever the stage does. Its surface has no
 // hover state; the check below still refuses a control of it under the pointer.
-const AT_ORIGIN = ["top-app-bar"];
+const AT_ORIGIN = ["app-bar", "top-app-bar"];
 /**
  * What is under the resting pointer: the page itself, the fixture's surface, one of
  * its controls, or something else. Anything but the page counts, inside the host or

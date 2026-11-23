@@ -235,6 +235,19 @@ test("menu items and search suggestions are included in the synchronous server t
   expect(searchTree.querySelector("strong")?.textContent).toBe("App");
 });
 
+test("a closed dialog and snackbar render inert in the server tree", () => {
+  // The closed state is `inert` on the surface, so a server-rendered closed
+  // dialog or snackbar is out of the accessibility tree and the Tab order
+  // before hydration too; an open one is not marked.
+  const dialog = parsed(renderElement("m-dialog", { headline: "Closed" }, "<p>Body</p>"));
+  const dialogSurface = dialog.querySelector("template")!.content.querySelector(".mtrl-dialog")!;
+  expect(dialogSurface.hasAttribute("inert")).toBe(true);
+
+  const snackbar = parsed(renderElement("m-snackbar", { message: "Saved", action: "Undo" }, ""));
+  const snackbarSurface = snackbar.querySelector("template")!.content.querySelector(".mtrl-snackbar")!;
+  expect(snackbarSurface.hasAttribute("inert")).toBe(true);
+});
+
 test("a toolbar renders its shadow root and writes no roving tabindex", () => {
   const icon = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
   const html = renderElement(
@@ -257,4 +270,24 @@ test("a toolbar renders its shadow root and writes no roving tabindex", () => {
     expect(node, "row present").not.toBeNull();
     expect(node!.hasAttribute("tabindex"), node!.localName).toBe(false);
   }
+});
+
+test("drawer links and initial disclosure state render in the declarative shadow root", () => {
+  const children = '<m-drawer-item value="navigation">Navigation<m-drawer-item value="drawer" href="/drawer">Drawer</m-drawer-item></m-drawer-item>'
+    + '<m-drawer-item value="other" label="Other"><m-drawer-item href="/other">Other destination</m-drawer-item></m-drawer-item>';
+  const html = renderElement("m-drawer", { open: true, value: "drawer" }, children);
+  const host = parsed(html);
+  const root = host.querySelector("template")!.content;
+  const button = root.querySelector("#mtrl-drawer-sec-navigation-btn")!;
+  const panel = root.querySelector("#mtrl-drawer-sec-navigation-panel")!;
+  expect(button.getAttribute("aria-expanded")).toBe("true");
+  expect(button.getAttribute("aria-controls")).toBe(panel.id);
+  expect(button.querySelector(".mtrl-drawer__item-label")?.textContent).toBe("Navigation");
+  expect(panel.getAttribute("aria-labelledby")).toBe(button.id);
+  expect(panel.hasAttribute("inert")).toBe(false);
+  expect(panel.querySelector("a")?.getAttribute("href")).toBe("/drawer");
+  expect(panel.querySelector("a")?.getAttribute("aria-current")).toBe("page");
+  expect(root.querySelector("#mtrl-drawer-sec-other-panel")?.hasAttribute("inert")).toBe(true);
+  expect(host.querySelector('m-drawer-item[value="navigation"]')?.hasAttribute("expanded")).toBe(false);
+  expect(html).toBe(renderElement("m-drawer", { open: true, value: "drawer" }, children));
 });

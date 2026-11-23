@@ -144,7 +144,7 @@ Every component comes three ways:
 |-------|------------|
 | Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
 | Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
-| Navigation | Navigation bar, Navigation rail, Drawer, Tabs, Menu, Top app bar, Bottom app bar |
+| Navigation | Navigation bar, Navigation rail, Navigation drawer, Tabs, Menu, App bar, Bottom app bar (deprecated) |
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
@@ -155,10 +155,16 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Actions | `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar` |
 | Selection and input | `createCheckbox`, `createSwitch`, `createRadios`, `createChips`, `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker` |
 | Chips, one at a time | `createAssistChip`, `createFilterChip`, `createInputChip`, `createSuggestionChip` |
-| Navigation | `createNavigationBar`, `createNavigationRail`, `createDrawer`, `createTabs`, `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar` |
+| Navigation | `createNavigationBar`, `createNavigationRail`, `createNavigationDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar`, `createBottomAppBar` |
 | Containment | `createCard`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet` |
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
+
+Three names change, additively:
+
+- **App bar.** The primary factory is `createAppBar`. The element is `<m-app-bar>` and the adapters are `AppBar`. The old factory `createTopAppBar` stays exported and working, marked deprecated. So do the old types, the `<m-top-app-bar>` element and the `TopAppBar` adapters. No CSS class or token is renamed.
+- **Navigation drawer.** The primary factory is `createNavigationDrawer`. The elements are `<m-navigation-drawer>` and `<m-navigation-drawer-item>`. The adapters are `NavigationDrawer` and `NavigationDrawerItem`. The old factory `createDrawer`, the old types, the `<m-drawer>` elements and the old adapters stay exported and working, marked deprecated.
+- **Bottom app bar.** It is deprecated: Material Design 3 Expressive replaces it with the docked toolbar. Use `createToolbar` with `placement="bottom"`. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available there. The bottom app bar's code does not change.
 
 ### Factory control labels
 
@@ -526,6 +532,17 @@ Attributes are defaults and properties the live state, as on native controls. A 
 | `<m-button>` | `selected` | boolean: the default state, while the `selected` property is the live one |
 | `<m-card>` | `actions-align` | `start`, `center`, `end` (default), `space-between` |
 
+**Button accessibility.** The host forwards `aria-expanded` and `aria-haspopup`
+to the native button. It also forwards `aria-pressed`. This applies to buttons,
+icon buttons, FABs, extended FABs, and the leading action of split buttons.
+For a Material toggle, use its `selected` state to drive `aria-pressed`.
+
+`aria-controls` and `aria-describedby` resolve IDs in the host's document or
+shadow root and pass element references to the native button. The targets must
+be present when the host connects or its ARIA attributes change. Browsers
+without ARIA element reflection expose the button's states independently of
+these cross-shadow relationships.
+
 A card can act as the primary control (`clickable`) or contain child buttons and links. [Material recommends choosing one pattern](https://m3.material.io/components/cards/accessibility). Leave `clickable` off for a card with child actions.
 
 Opt in with `promoteChildActions` or `promote-child-actions` when that clickable card should keep its child actions. The card becomes an article, Tab reaches those children, and the development warning stays off.
@@ -845,8 +862,10 @@ On a declaration child:
 - `icon` on `<m-chip>`
 - `trailing-icon` on `<m-chip>`
 - `avatar` on `<m-chip>` — input chips only, and it takes precedence over `icon`; not a person's name or an image URL
-- `icon` on `<m-drawer-item>`
-- `selected-icon` on `<m-drawer-item>` — while that destination is active
+- `icon` on `<m-navigation-drawer-item>`
+- `selected-icon` on `<m-navigation-drawer-item>` — while that destination is active
+- `icon` on `<m-drawer-item>` — the deprecated name of the same declaration
+- `selected-icon` on `<m-drawer-item>` — the deprecated name, while that destination is active
 - `leading-icon` on `<m-list-item>`
 - `leading-avatar` on `<m-list-item>` — not a person's name or an image URL
 - `trailing-icon` on `<m-list-item>`
@@ -890,6 +909,28 @@ The registry is a fallback below the component's own options. The navigation rai
 The FAB menu's `closeIcon` and the chip's `trailingIcon` also win over the registry, including values supplied through component defaults. The dialog and the select field have no separate glyph option.
 
 A chip's explicit trailing-icon setter wins too. Clearing it restores the registry or built-in glyph captured when that chip was created. The split button's chevron, selection checks and other icon slots keep their existing behavior.
+
+## Navigation drawer links and sections
+
+Set `href` on a navigation drawer destination to render a native link. The active destination has `aria-current="page"`. The browser handles modified clicks and navigation. In a factory `onSelect` handler, a router can cancel navigation through `originalEvent.preventDefault()`.
+
+```html
+<m-navigation-drawer open value="drawer" headline="Components">
+  <m-navigation-drawer-item value="overview" href="/overview">Overview</m-navigation-drawer-item>
+  <m-navigation-drawer-item value="navigation" label="Navigation">
+    <m-navigation-drawer-item value="drawer" href="/components/drawer">Navigation drawer</m-navigation-drawer-item>
+    <m-navigation-drawer-item value="tabs" href="/components/tabs">Tabs</m-navigation-drawer-item>
+  </m-navigation-drawer-item>
+</m-navigation-drawer>
+```
+
+Register the element with `defineNavigationDrawer()` from `material/elements`. The deprecated name is `defineDrawer()`. Import `material/elements/css/drawer` for its shadow styles. React, Vue, Svelte, and Solid navigation drawer adapters accept the same nested declarations. `renderElement` from `material/ssr` renders the initially visible links inside the declarative shadow root. Those links navigate without client JavaScript.
+
+In a factory, give a section an `items` array and its destinations an `href`. Sections support one level of children. A section with no children can still be a static heading with `type: "section"`.
+
+A section opens initially when marked `expanded` or when it contains the active destination. Factory `expanded: false` allows an initially collapsed section. Selecting one of its children later opens it automatically. The inline-start arrow returns focus to the header, and the inline-end arrow opens a section or enters its first enabled child.
+
+Use `expandSection(id)` and `collapseSection(id)` to change visibility. Call `toggleSection(id)` to switch between the two states. Read it with `isSectionExpanded(id)` or `getExpandedSections()`. The `expand` and `collapse` events report section state separately from destination selection. Set `--mtrl-drawer-child-indent` to change the child padding from its 28 px default.
 
 ## Bottom app bar compatibility entry
 
@@ -956,11 +997,11 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.5 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
 | `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.3 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 131.4 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 133.5 kB |
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |
-| `material/styles`, the full stylesheet | 59.8 kB |
+| `material/styles`, the full stylesheet | 60.5 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).

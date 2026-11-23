@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.15.1",
+  "version": "3.16.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -589,6 +589,8 @@
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts && bun run scripts/check-menu-hidden-opener.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
     "app-bar-conformance:check": "bun run scripts/check-app-bar-conformance.ts",
+    "top-app-bar:check": "bun run scripts/check-top-app-bar-plain-button.ts",
+    "closed-surfaces:check": "bun run scripts/check-closed-dialog-snackbar.ts",
     "divider-sheet-conformance:check": "bun run scripts/check-divider-sheet-conformance.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts && bun run scripts/check-icon-registry-expand-more.ts",
     "listbox:check": "bun run scripts/check-listbox.ts && bun run scripts/check-listbox-rtl.ts && bun run scripts/check-listbox-forced-colors.ts",
@@ -654,7 +656,7 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "solid-js": ">=1.8",
+    "solid-js": ">=1.8 <2",
     "svelte": ">=5",
     "vue": ">=3.4.20"
   },

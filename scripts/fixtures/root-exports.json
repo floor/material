@@ -1,5 +1,15 @@
 [
   {
+    "name": "AppBarComponent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "AppBarConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "AssistChipConfig",
     "kind": "type",
     "status": "public"
@@ -207,6 +217,11 @@
     "status": "public"
   },
   {
+    "name": "createAppBar",
+    "kind": "value",
+    "status": "public"
+  },
+  {
     "name": "createAssistChip",
     "kind": "value",
     "status": "public"
@@ -295,7 +310,8 @@
   {
     "name": "createDrawer",
     "kind": "value",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "createExtendedFab",
@@ -344,6 +360,11 @@
   },
   {
     "name": "createNavigationBar",
+    "kind": "value",
+    "status": "public"
+  },
+  {
+    "name": "createNavigationDrawer",
     "kind": "value",
     "status": "public"
   },
@@ -435,7 +456,8 @@
   {
     "name": "createTopAppBar",
     "kind": "value",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DatePickerComponent",
@@ -475,32 +497,50 @@
   {
     "name": "DrawerComponent",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DrawerConfig",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
+  },
+  {
+    "name": "DrawerEvents",
+    "kind": "type",
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DrawerItemConfig",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DrawerPosition",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
+  },
+  {
+    "name": "DrawerSectionEvent",
+    "kind": "type",
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DrawerSelectEvent",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "DrawerVariant",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "ExtendedFabComponent",
@@ -699,6 +739,46 @@
   },
   {
     "name": "NavigationBarSelectEvent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerComponent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerEvents",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerItemConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerPosition",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerSectionEvent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerSelectEvent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationDrawerVariant",
     "kind": "type",
     "status": "public"
   },
@@ -1030,12 +1110,14 @@
   {
     "name": "TopAppBarComponent",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "TopAppBarConfig",
     "kind": "type",
-    "status": "public"
+    "status": "deprecated",
+    "where": "declaration"
   },
   {
     "name": "TrustedHTMLLike",

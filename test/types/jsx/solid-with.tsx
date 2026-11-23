@@ -3,6 +3,7 @@
 import type {} from "../../../src/solid/jsx";
 import type { JSX } from "solid-js";
 import type { ElementEvents } from "../../../src/elements";
+import type { DrawerSpec } from "../../../src/elements/drawer";
 import type { ToolbarSpec } from "../../../src/elements/toolbar";
 import type { SnackbarSpec } from "../../../src/elements/snackbar";
 
@@ -42,3 +43,17 @@ export const snackbar = <m-snackbar focus-shortcut="F8" on:focus={(event) => {
   // @ts-expect-error -- the element focus event has a null payload
   void event.detail.value;
 }} />;
+
+
+export const drawer = <m-drawer on:expand={event => {
+  const fromDrawer: ElementEvents<DrawerSpec>["expand"] = event;
+  void fromDrawer;
+  void event.detail.value.toUpperCase();
+}} on:collapse={event => {
+  const expanded: boolean = event.detail.expanded;
+  void expanded;
+}}>
+  <m-drawer-item value="components" expanded>
+    <m-drawer-item href="/components/drawer">Drawer</m-drawer-item>
+  </m-drawer-item>
+</m-drawer>;

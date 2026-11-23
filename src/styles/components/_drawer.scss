@@ -411,7 +411,7 @@ $default-width: 360px;
         // HOVER / FOCUS / PRESSED STATES
         // ======================================================================
 
-        &:hover:not([disabled]) {
+        &:hover:not(:is([disabled], [aria-disabled="true"])) {
             color: t.color("on-surface");
 
             .#{$component}__active-indicator::after {
@@ -430,7 +430,7 @@ $default-width: 360px;
             }
         }
 
-        &:active:not([disabled]) {
+        &:active:not(:is([disabled], [aria-disabled="true"])) {
             color: t.color("on-surface");
 
             // A rippled item leaves the press to its ripple.
@@ -445,13 +445,15 @@ $default-width: 360px;
         // ======================================================================
 
         &--active,
-        &--active:hover:not([disabled]),
+        &--active:hover:not(:is([disabled], [aria-disabled="true"])),
         &--active:focus-visible,
-        &--active:active:not([disabled]) {
+        &--active:active:not(:is([disabled], [aria-disabled="true"])),
+        &--has-active:not(.#{$component}__item--expanded) {
             color: t.color("on-secondary-container");
         }
 
-        &--active {
+        &--active,
+        &--has-active:not(.#{$component}__item--expanded) {
             .#{$component}__active-indicator::before {
                 opacity: 1;
                 transform: scaleX(1);
@@ -471,11 +473,69 @@ $default-width: 360px;
         // DISABLED STATE
         // ======================================================================
 
-        &[disabled] {
+        &:is([disabled], [aria-disabled="true"]) {
             cursor: default;
             opacity: 0.38;
             pointer-events: none;
         }
+    }
+
+    &__group,
+    &__group-items-inner {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__group-items {
+        display: grid;
+        grid-template-rows: 0fr;
+        visibility: hidden;
+        transition:
+            m.spring(grid-template-rows, default-spatial),
+            visibility 0s linear v.motion("spring-default-spatial-duration");
+    }
+
+    &__group--expanded > &__group-items {
+        grid-template-rows: 1fr;
+        visibility: visible;
+        transition: m.spring(grid-template-rows, default-spatial), visibility 0s;
+    }
+
+    &__group-items-inner {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    &__item--child {
+        padding-inline-start: calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px));
+        padding-inline-end: 24px;
+    }
+
+    &__item-chevron {
+        display: grid;
+        place-items: center;
+        position: relative;
+        z-index: 2;
+        flex: none;
+        width: 24px;
+        height: 24px;
+        margin-inline-start: auto;
+        transform: rotate(0deg);
+        transition: m.spring(transform, fast-spatial);
+
+        svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+    }
+
+    &__item--expanded &__item-chevron {
+        transform: rotate(180deg);
+    }
+
+    &__item-badge + &__item-chevron {
+        margin-inline-start: 0;
     }
 
     // ========================================================================
@@ -582,6 +642,10 @@ $default-width: 360px;
         padding: 0 16px 0 24px;
     }
 
+    @include m.rtl-selector('.#{$component}__item--child') {
+        padding: 0 calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px)) 0 24px;
+    }
+
     // ========================================================================
     // REDUCED MOTION
     // ========================================================================
@@ -603,6 +667,9 @@ $default-width: 360px;
         }
 
         &__item,
+        &__item-chevron,
+        &__group-items,
+        &__group--expanded > &__group-items,
         &__item::before,
         &__active-indicator,
         // The pill and state layer rules are two classes deep, so their switch
@@ -623,7 +690,8 @@ $default-width: 360px;
         }
 
         &__item {
-            &--active {
+            &--active,
+            &--has-active:not(.#{$component}__item--expanded) {
                 .#{$component}__active-indicator {
                     outline: 2px solid Highlight;
                     outline-offset: -2px;

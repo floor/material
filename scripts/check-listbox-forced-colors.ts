@@ -11,7 +11,7 @@ import { baseStyles } from "./style-manifest";
 import { compileThemeSources, inBaseLayer, styleLayerOrder } from "./build-styles";
 import type { ListboxComponent } from "../src/components/listbox/types";
 
-declare global { interface Window { contrastListbox: ListboxComponent } }
+declare global { interface Window { contrastListbox: ListboxComponent; readListbox: () => { forced: boolean; box: Record<string, string>; options: Array<Record<string, string>>; palette: Record<string, string>; active: number } } }
 const artifacts = "analysis/listbox-forced-colors";
 await mkdir(artifacts, { recursive: true });
 const pkg = await Bun.file("package.json").json() as { name: string; version: string };
@@ -30,7 +30,7 @@ import createListbox from ${JSON.stringify(resolve("src/components/listbox/index
 const control = document.createElement('div'); control.id = 'control'; document.body.append(control);
 window.contrastListbox = createListbox({control, ariaLabel:'Country', value:'a', options:[
 {id:'a',text:'Alpha'}, {id:'b',text:'Beta',disabled:true}, {id:'c',text:'Charlie'}]});
-window.contrastListbox.open();` }));
+` }));
   } }],
 });
 assert(entry.success, String(entry.logs));
@@ -46,21 +46,36 @@ try {
       await page.setContent(`<!doctype html><html data-theme="baseline"><style>${base}${css}</style><body>
 <span id="palette" style="forced-color-adjust:none;background:Highlight;color:HighlightText;border:1px solid GrayText"></span></body></html>`);
       await page.addScriptTag({ content: code });
-      const read = () => page.evaluate(() => {
-        const box = window.contrastListbox.element;
-        const all = [...box.querySelectorAll<HTMLElement>('[role="option"]')];
-        const style = (element: Element) => {
-          const s = getComputedStyle(element);
-          return { color: s.color, background: s.backgroundColor, borderWidth: s.borderTopWidth,
-            borderStyle: s.borderTopStyle, borderColor: s.borderTopColor, shadow: s.boxShadow,
-            outlineWidth: s.outlineWidth, outlineStyle: s.outlineStyle };
+      // One reader, installed in the page: the row needs it inside the single
+      // task that opens the popup and sends the key.
+      await page.evaluate(() => {
+        window.readListbox = () => {
+          const box = window.contrastListbox.element;
+          const all = [...box.querySelectorAll<HTMLElement>('[role="option"]')];
+          const style = (element: Element) => {
+            const s = getComputedStyle(element);
+            return { color: s.color, background: s.backgroundColor, borderWidth: s.borderTopWidth,
+              borderStyle: s.borderTopStyle, borderColor: s.borderTopColor, shadow: s.boxShadow,
+              outlineWidth: s.outlineWidth, outlineStyle: s.outlineStyle };
+          };
+          return { forced: matchMedia('(forced-colors: active)').matches, box: style(box), options: all.map(style),
+            palette: style(document.querySelector('#palette')!), active: all.findIndex(row => row.id === document.querySelector('#control')!.getAttribute('aria-activedescendant')) };
         };
-        return { forced: matchMedia('(forced-colors: active)').matches, box: style(box), options: all.map(style),
-          palette: style(document.querySelector('#palette')!), active: all.findIndex(row => row.id === document.querySelector('#control')!.getAttribute('aria-activedescendant')) };
       });
-      const selected = await read();
-      await page.locator('#control').press('ArrowDown');
-      const navigated = await read();
+      const read = () => page.evaluate(() => window.readListbox());
+      // The popup dismisses itself on an outside focus change, a scroll or a
+      // resize by design, and a runner can deliver one between "open it" and
+      // "press a key": the key then lands on a closed popup, which opens on the
+      // selected option instead of moving past the disabled one. The open, the
+      // first read and the key happen in ONE task, so the key the component
+      // receives is the one this row is about. Every assertion is unchanged.
+      const { selected, navigated } = await page.evaluate(() => {
+        const control = document.querySelector('#control')!;
+        window.contrastListbox.open();
+        const selected = window.readListbox();
+        control.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+        return { selected, navigated: window.readListbox() };
+      });
       await page.evaluate(() => window.contrastListbox.setValue('b'));
       const selectedDisabled = await read();
       await page.screenshot({ path: `${artifacts}/${colorScheme}.png` });

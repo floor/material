@@ -81,10 +81,26 @@
     }
   ],
   "bottom-app-bar-toolbar": [
-    { "name": "BottomAppBarToolbarComponent", "kind": "type", "status": "deprecated" },
-    { "name": "BottomAppBarToolbarConfig", "kind": "type", "status": "deprecated" },
-    { "name": "createBottomAppBarToolbar", "kind": "value", "status": "public" },
-    { "name": "default", "kind": "value", "status": "public" }
+    {
+      "name": "BottomAppBarToolbarComponent",
+      "kind": "type",
+      "status": "deprecated"
+    },
+    {
+      "name": "BottomAppBarToolbarConfig",
+      "kind": "type",
+      "status": "deprecated"
+    },
+    {
+      "name": "createBottomAppBarToolbar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
   ],
   "bottom-app-bar/constants": [
     {
@@ -1234,45 +1250,95 @@
     {
       "name": "createDrawer",
       "kind": "value",
+      "status": "deprecated"
+    },
+    {
+      "name": "createNavigationDrawer",
+      "kind": "value",
       "status": "public"
     },
     {
       "name": "default",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerComponent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerEvents",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerItemConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerPosition",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
+    },
+    {
+      "name": "DrawerSectionEvent",
+      "kind": "type",
+      "status": "deprecated"
     },
     {
       "name": "DrawerSelectEvent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "DrawerVariant",
+      "kind": "type",
+      "status": "deprecated"
+    },
+    {
+      "name": "NavigationDrawerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerSectionEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerSelectEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationDrawerVariant",
       "kind": "type",
       "status": "public"
     }
@@ -3947,14 +4013,29 @@
   ],
   "top-app-bar": [
     {
-      "name": "createTopAppBar",
+      "name": "AppBarComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "AppBarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createAppBar",
       "kind": "value",
       "status": "public"
     },
     {
+      "name": "createTopAppBar",
+      "kind": "value",
+      "status": "deprecated"
+    },
+    {
       "name": "default",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TOP_APP_BAR_CLASSES",
@@ -3979,12 +4060,12 @@
     {
       "name": "TopAppBarComponent",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     },
     {
       "name": "TopAppBarConfig",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated"
     }
   ],
   "top-app-bar/constants": [
