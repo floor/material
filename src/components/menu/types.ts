@@ -250,7 +250,13 @@ export interface MenuConfig {
   offset?: number;
 
   /**
-   * Whether the menu should automatically flip position to stay in viewport
+   * Whether the menu may take the other side of its opener to stay in the
+   * viewport. `true` (the default) keeps the preferred side while the menu
+   * fits there, otherwise opens on the side with more room and caps the
+   * height to it, so a long list scrolls. `false` keeps the preferred side —
+   * a list that does not fit there is capped and scrolls, and one that fits
+   * is unaffected — and a submenu keeps the side it was asked for. A menu
+   * that fits is placed on its preferred side either way.
    * @default true
    */
   autoFlip?: boolean;
