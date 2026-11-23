@@ -114,3 +114,6 @@ AGENTS.md
 
 # CI-only comparator builds
 scripts/fixtures/comparators/.generated/
+
+# Chromium's worktree profile (scripts/browser-profile.ts)
+.chrome-profile/

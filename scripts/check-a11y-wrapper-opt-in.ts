@@ -6,7 +6,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 interface Component { element: HTMLElement; getValue(): unknown; setValue(value: string | number | boolean): unknown }
@@ -30,11 +31,11 @@ const cases = [
   { id: "slider", factory: "createSlider", role: "slider", label: "Volume", config: { value: 40 } },
   { id: "range", factory: "createSlider", role: "slider", label: "Volume", config: { range: true, value: 30, secondValue: 70 } },
 ];
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 let passed = 0;
 const failures: string[] = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   const cdp = await page.context().newCDPSession(page);

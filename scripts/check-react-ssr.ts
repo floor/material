@@ -4,7 +4,8 @@
 // Known limit: material/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { clientAttributes, comparableAttributes, liveAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
@@ -36,7 +37,7 @@ const mtrlWarnings = async <T>(run: () => Promise<T>): Promise<{ result: T; warn
     console.warn = original;
   }
 };
-const browser = await chromium.launch();
+const browser = await launchChromium();
 const summaries: object[] = [];
 const contextFailures: string[] = [];
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {
@@ -81,7 +82,7 @@ try {
         } });
         try {
           const shadows = await (async () => {
-            const inert = await browser.newPage({ javaScriptEnabled: false });
+            const inert = await browser.browser()!.newPage({ javaScriptEnabled: false });
             try {
               await inert.goto(server.url.href);
               return await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id => {
@@ -322,7 +323,7 @@ try {
       return new Response(`<!doctype html><div id="root">${html}</div><script type="module" src="/client.js"></script>`, { headers: { "Content-Type": "text/html" } });
     } });
     try {
-      const inert = await browser.newPage({ javaScriptEnabled: false });
+      const inert = await browser.browser()!.newPage({ javaScriptEnabled: false });
       await inert.goto(server.url.href);
       assert.deepEqual(await inert.evaluate(() => ["button", "switch", "tabs", "card", "nested"].map(id => !!document.getElementById(id)?.shadowRoot)), [true, true, true, true, true]);
       assert.deepEqual(await inert.evaluate(() => [0, 1, 2].map(index => {
