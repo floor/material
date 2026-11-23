@@ -727,6 +727,7 @@
     ".mtrl-fab-menu",
     ".mtrl-fab-menu button.mtrl-fab-menu__item",
     ".mtrl-fab-menu button.mtrl-fab-menu__item:active",
+    ".mtrl-fab-menu button.mtrl-fab-menu__item:focus-visible",
     ".mtrl-fab-menu button.mtrl-fab-menu__item:hover,.mtrl-fab-menu button.mtrl-fab-menu__item:focus-visible,.mtrl-fab-menu button.mtrl-fab-menu__item:active",
     ".mtrl-fab-menu--bottom-end",
     ".mtrl-fab-menu--bottom-end,.mtrl-fab-menu--bottom-start",

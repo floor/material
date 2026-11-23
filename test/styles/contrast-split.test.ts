@@ -328,9 +328,11 @@ describe("explicit contrast levels are opt-in", () => {
     // full sheet's selector gains :not(.mtrl-ripple) (+18 B, CI 45139254856).
     // List items are buttons. Their own state layers leave, and the pill
     // rules that beat the button sheet take their place (−80 B).
+    // The button's outward focus ring is clipped by the list, so the item
+    // draws the same 3px secondary ring inside the pill (+126 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b1b240760654665cdffa107f206eedef0b98d652662e4ad0563571e8e93249e0",
-      length: 554353,
+      sha256: "c3902f041da36a1a2a5339c5bf01dd7f5afbbc8a40174f6921f78086ac789776",
+      length: 554479,
     });
   });
 

@@ -256,6 +256,14 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
     &:active {
       border-radius: v.shape('full');
     }
+
+    // The button's ring is 3dp outside the pill. The list scrolls and the
+    // item clips its label, so that ring is cut. The same 3dp secondary ring
+    // sits inside the pill, where both can keep it.
+    &:focus-visible {
+      outline: 3px solid t.color('secondary');
+      outline-offset: -3px;
+    }
   }
 
   // The content keeps its natural width, anchored to the end: while the item

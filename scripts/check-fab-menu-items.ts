@@ -16,6 +16,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { chromium, type Page } from "playwright";
 import * as sass from "sass";
 
@@ -144,11 +145,11 @@ try {
 
   const open = async () => {
     const box = await page.evaluate(() => {
-      const rect = fab().getBoundingClientRect();
+      const rect = (window as unknown as { fab: () => HTMLElement }).fab().getBoundingClientRect();
       return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
     });
     await page.mouse.click(box.x, box.y);
-    await page.waitForFunction(() => root().classList.contains("mtrl-fab-menu--open"));
+    await page.waitForFunction(() => (window as unknown as { root: () => HTMLElement }).root().classList.contains("mtrl-fab-menu--open"));
     await settle();
   };
 
@@ -387,7 +388,14 @@ try {
     const html = ownerPage(pageCss, bundle);
     mkdirSync(dirname(briefPath), { recursive: true });
     writeFileSync(briefPath, html);
-    await page.setContent(html, { waitUntil: "load" });
+    errors.length = 0;
+    const network: string[] = [];
+    const onRequest = (request: { url: () => string }) => {
+      const url = request.url();
+      if (url.startsWith("http:") || url.startsWith("https:")) network.push(url);
+    };
+    page.on("request", onRequest);
+    await page.goto(pathToFileURL(briefPath).href);
     await page.emulateMedia({ reducedMotion: "reduce", colorScheme: "light", forcedColors: "none" });
     const brief = await page.evaluate(() => {
       const menus = Array.from(document.querySelectorAll<HTMLElement>(".mtrl-fab-menu"));
@@ -409,7 +417,10 @@ try {
     await page.click("#dir");
     const dir = await page.evaluate(() => document.documentElement.dir);
     if (dark !== "dark" || dir !== "rtl") throw new Error(`owner controls: theme=${dark} dir=${dir}`);
-    console.log(`owner page: ${briefPath}`);
+    page.off("request", onRequest);
+    if (errors.length) throw new Error(`owner page errors: ${errors.join("\n")}`);
+    if (network.length) throw new Error(`owner page network: ${network.join("\n")}`);
+    console.log(`owner page: ${briefPath} errors=0 network=0`);
   }
 } finally {
   await context.close();
@@ -432,6 +443,10 @@ function ownerPage(css: string, script: string): string {
       <h2>${size} · ${color}</h2>
       <div class="slot" data-size="${size}" data-color="${color}"></div>
     </section>`)).join("");
+  // The bundle carries a NUL inside a character class. An HTML parser drops
+  // that byte, so the class becomes an out-of-order range and the page never
+  // defines mtrl. Base64 is only ASCII, and the script is decoded in the page.
+  const payload = Buffer.from(script, "utf8").toString("base64");
   return `<!DOCTYPE html>
 <html lang="en" data-theme="baseline">
 <head>
@@ -454,7 +469,12 @@ main { display: flex; flex-wrap: wrap; gap: 32px; padding: 24px; }
   <button class="control" id="dir" type="button">RTL</button>
 </header>
 <main>${menus}</main>
-<script>${script}</script>
+<script>
+const code = new TextDecoder().decode(Uint8Array.from(atob(${JSON.stringify(payload)}), (c) => c.charCodeAt(0)));
+const bundle = document.createElement("script");
+bundle.text = code;
+document.body.append(bundle);
+</script>
 <script>
 const icon = ${JSON.stringify(icon)};
 const items = [

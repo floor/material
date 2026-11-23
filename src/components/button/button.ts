@@ -1,21 +1,7 @@
 // src/components/button/button.ts
-import { pipe } from "../../core/compose";
-import { createBase, withElement } from "../../core/compose/component";
-import {
-  withEvents,
-  withText,
-  withIcon,
-  withVariant,
-  withSize,
-  withRipple,
-  withDisabled,
-  withLifecycle,
-} from "../../core/compose/features";
 import { withProgress } from "./features/progress";
-import { withToggle } from "./features/toggle";
-import { withAPI } from "./api";
+import { composeButton } from "./compose";
 import { ButtonConfig, ButtonComponent } from "./types";
-import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
 /**
  * Creates a new Button component with the specified configuration.
@@ -80,31 +66,11 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
  * @category Components
  */
 const createButton = (config: ButtonConfig = {}): ButtonComponent => {
-  const baseConfig = createBaseConfig(config);
   try {
-    const button = pipe(
-      createBase,
-      withEvents(),
-      withElement(getElementConfig(baseConfig)),
-      withVariant(baseConfig),
-      withSize(baseConfig),
-      withText(baseConfig),
-      withIcon(baseConfig),
-      withDisabled(baseConfig),
-      withToggle(baseConfig),
-      withRipple(baseConfig),
-      withLifecycle(),
-      withProgress(baseConfig),
-      (component) => {
-        if (baseConfig.shape && component.element) {
-          const className = `${baseConfig.prefix}-${baseConfig.componentName}--${baseConfig.shape}`;
-          component.element.classList.add(className);
-        }
-        return component;
-      },
-      (comp) => withAPI(getApiConfig(comp))(comp)
-    )(baseConfig);
-    return button;
+    // withProgress no-ops unless progress or loading is set, and its import()
+    // of the progress component stays on this module. composeButton is the
+    // same button without that edge.
+    return composeButton(config, withProgress as (config: ButtonConfig) => (component: ButtonComponent) => ButtonComponent);
   } catch (error) {
     console.error("Button creation error:", error);
     throw new Error(`Failed to create button: ${(error as Error).message}`);

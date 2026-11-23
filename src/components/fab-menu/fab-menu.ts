@@ -10,7 +10,7 @@ import { activeElementOf } from "../../core/dom/focus";
 import { setHTML } from "../../core/dom/html";
 import { getIcon } from "../../core/icons/registry";
 import { warnDev } from "../../core/utils/warn";
-import createButton from "../button";
+import { composeButton } from "../button/compose";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
 import { createConfig, CLOSE_ICON } from "./config";
@@ -129,7 +129,9 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   const entries = items.map((item) => {
     // The list item is a button, so it takes the button's ripple and state
     // layers. The pill, the content and the item class stay the item's.
-    const itemButton = createButton({
+    // composeButton is that button without the progress chunk: an item never
+    // shows one, and createButton's public behaviour is unchanged.
+    const itemButton = composeButton({
       variant: "text",
       size: "m",
       class: `${block}__item`,
