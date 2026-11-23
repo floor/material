@@ -157,14 +157,15 @@ const openFab = async (page: Page): Promise<void> => {
 
 /** Everything a case asserts about an open list. */
 const listState = (page: Page) => page.evaluate(() => {
-  const h = (window as unknown as { h: { root: () => HTMLElement; list: () => HTMLElement; items: () => HTMLElement[]; box: (e: HTMLElement) => unknown } }).h;
+  const h = (window as unknown as { h: { root: () => HTMLElement; list: () => HTMLElement; items: () => HTMLElement[] } }).h;
   const root = h.root();
   const list = h.list();
   const items = h.items();
+  const rect = list.getBoundingClientRect();
   return {
     down: root.classList.contains("mtrl-fab-menu--list-down"),
     start: root.classList.contains("mtrl-fab-menu--list-start"),
-    box: h.box(list),
+    box: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
     viewport: [window.innerWidth, window.innerHeight],
     scrolls: list.scrollHeight > list.clientHeight + 1,
     delays: items.map((item) => item.style.getPropertyValue("--mtrl-fab-menu-delay")),
@@ -278,8 +279,8 @@ try {
     holder.append(opener);
     stage.append(holder);
     const w = window as unknown as {
-      mtrl: { createMenu: (c: Record<string, unknown>) => { element: HTMLElement; open: () => void } };
-      menu: { open: () => void; destroy: () => void };
+      mtrl: { createMenu: (c: Record<string, unknown>) => { element: HTMLElement; open: () => void; destroy: () => void } };
+      menu: { element: HTMLElement; open: () => void; destroy: () => void };
     };
     const items = Array.from({ length: 10 }, (_, index) => ({ id: `i${index}`, text: `Item ${index}` }));
     w.menu = w.mtrl.createMenu({
@@ -485,7 +486,7 @@ async function proveOwnerPage(url: string, report: (message: string) => void): P
     page.on("request", (request) => { if (!request.url().startsWith("file:") && !request.url().startsWith("data:")) requests.push(request.url()); });
     page.on("pageerror", (error) => failures.push(error.message));
     await page.goto(url, { waitUntil: "load" });
-    await page.waitForFunction(() => !!window.demo);
+    await page.waitForFunction(() => !!(window as unknown as { demo?: unknown }).demo);
     // Open every FAB menu list, then a menu and the select, and measure.
     const clipped = await page.evaluate(async () => {
       const state = (window as unknown as { demo: { fabMenus: { open: () => void }[] } }).demo;
