@@ -1,2 +1,0 @@
-
-import "./timepicker.css";

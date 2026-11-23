@@ -1,2 +1,0 @@
-
-import "./side-sheet.css";

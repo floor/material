@@ -1,2 +1,0 @@
-import { SLIDER_COLORS, SLIDER_EVENTS, SLIDER_SIZES, } from "./constants.js";
-export { SLIDER_COLORS, SLIDER_EVENTS, SLIDER_SIZES };

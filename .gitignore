@@ -117,3 +117,6 @@ scripts/fixtures/comparators/.generated/
 
 # The MD2 check's scratch builds
 .md2-check-*/
+
+# Scratch trees a check leaves while it runs
+.mtrl-doc-proof-*/

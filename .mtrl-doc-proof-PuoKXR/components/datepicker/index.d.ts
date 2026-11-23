@@ -1,2 +1,0 @@
-export { default, default as createDatePicker } from "./datepicker.js";
-export type { DatePickerConfig, DatePickerComponent, DatePickerEvents, DatePickerValue, DatePickerValueOf, DatePickerInput, DatePickerChangePayload, DatePickerLoadErrorPayload, DatePickerVisibilityPayload, DatePickerTapPayload, DatePickerSwipePayload, DatePickerVariant, DatePickerView, DatePickerSelectionMode, CalendarAPI, } from "./types.js";

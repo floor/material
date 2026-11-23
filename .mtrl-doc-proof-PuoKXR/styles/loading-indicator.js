@@ -1,2 +1,0 @@
-
-import "./loading-indicator.css";

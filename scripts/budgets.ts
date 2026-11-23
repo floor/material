@@ -59,13 +59,13 @@ export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, soli
 // The readable, comment-stripped dist: at the 865,000 ceiling the package job
 // measured 863,703 B packed (1,297 B spare) where the base packed 882,799, as
 // 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
-export const TARBALL_BYTES = 934_000; // The MD2 look: CI 45139913506 measured 924,225 B packed, plus 1% rounded up to the next 1,000 B.
+export const TARBALL_BYTES = 920_000;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts. The lean listbox entry's six
 // files measure 5,127,470 B in CI, 1,265 files; measured + 1%, up to the next 1,000,
 // is 5,179,000. Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
-export const UNPACKED_BYTES = 5_287_200; // The MD2 look on main: CI 45139913506 measured 5,287,199 B unpacked, rounded up to the next 10 B.
+export const UNPACKED_BYTES = 5_238_020; // App bar and navigation drawer names: CI 45039895300 measured 5,238,010 B unpacked, rounded up to the next 10 B.
 
 /** check-slider.ts: its own build of the slider element entry. */
 export const SLIDER_INLINE_GZIP = 13_400;

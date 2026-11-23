@@ -1,5 +1,0 @@
-"use client";
-import "material/elements/css/text-field";
-import { textFieldElement, defineTextField } from "../elements/text-field.js";
-import { createComponent } from "./create.js";
-export const TextField = /*#__PURE__*/ createComponent(textFieldElement.spec, defineTextField, "TextField");

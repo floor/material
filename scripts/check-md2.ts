@@ -286,7 +286,7 @@ try {
     };
   });
   check("elements/app bar host adopts the md2 sheet", elementBar !== null && elementBar.adopted, elementBar);
-  equal("elements/app bar height", elementBar === null ? null : pixel(elementBar.height), 56);
+  equal("elements/app bar height", elementBar === null ? null : pixel(elementBar.height), 64);
   equal("elements/app bar roles", elementBar === null ? null : [elementBar.background, elementBar.colour], ["rgb(98, 0, 238)", "rgb(255, 255, 255)"]);
   await elements.close();
 
