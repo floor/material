@@ -1,0 +1,2 @@
+
+import "./slider.css";

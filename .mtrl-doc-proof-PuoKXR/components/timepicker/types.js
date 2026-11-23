@@ -1,0 +1,20 @@
+export var TIME_PICKER_TYPE;
+(function (TIME_PICKER_TYPE) {
+    TIME_PICKER_TYPE["DIAL"] = "dial";
+    TIME_PICKER_TYPE["INPUT"] = "input";
+})(TIME_PICKER_TYPE || (TIME_PICKER_TYPE = {}));
+export var TIME_PICKER_ORIENTATION;
+(function (TIME_PICKER_ORIENTATION) {
+    TIME_PICKER_ORIENTATION["VERTICAL"] = "vertical";
+    TIME_PICKER_ORIENTATION["HORIZONTAL"] = "horizontal";
+})(TIME_PICKER_ORIENTATION || (TIME_PICKER_ORIENTATION = {}));
+export var TIME_FORMAT;
+(function (TIME_FORMAT) {
+    TIME_FORMAT["AMPM"] = "12h";
+    TIME_FORMAT["MILITARY"] = "24h";
+})(TIME_FORMAT || (TIME_FORMAT = {}));
+export var TIME_PERIOD;
+(function (TIME_PERIOD) {
+    TIME_PERIOD["AM"] = "AM";
+    TIME_PERIOD["PM"] = "PM";
+})(TIME_PERIOD || (TIME_PERIOD = {}));

@@ -1,0 +1,124 @@
+import { ElementComponent } from "../../core/compose/index.js";
+/**
+ * FAB position type for Bottom App Bar
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use the toolbar's fabPosition: 'start' or 'end'. A
+ * centred FAB is not yet available on the docked toolbar.
+ */
+export type FabPosition = 'center' | 'end';
+/**
+ * Configuration options for Bottom App Bar component
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use ToolbarConfig with
+ * { variant: 'docked', placement: 'bottom' }; each option here names its
+ * toolbar replacement. A centred FAB, adding a FAB after creation, a custom
+ * transition duration and a custom tag are not yet available on the docked
+ * toolbar. Removal is parked until Material Design v4.
+ */
+export interface BottomAppBarConfig {
+    /**
+ * Element to use for the container
+ * @default 'div'
+ * @deprecated The docked toolbar renders a div; a custom tag is not yet
+ * available on the docked toolbar.
+ */
+    tag?: string;
+    /**
+ * Whether to show FAB in the bottom bar
+ * @default false
+ * @deprecated Pass the FAB as fab to createToolbar, or use slot="fab" on
+ * m-toolbar.
+ */
+    hasFab?: boolean;
+    /**
+ * FAB position in bottom bar
+ * @default 'end'
+ * @deprecated Use the toolbar's fabPosition: 'start' or 'end'. A centred
+ * FAB ('center') is not yet available on the docked toolbar.
+ */
+    fabPosition?: FabPosition;
+    /**
+ * Additional CSS classes to apply
+ * @deprecated Use the toolbar's class option; the classes it applies are
+ * its own.
+ */
+    class?: string;
+    /**
+ * Whether to enable auto-hide on scroll
+ * @default false
+ * @deprecated Use scrollBehavior: 'exit' on createToolbar. Its threshold is
+ * set with scrollThreshold (default 40; the bottom app bar used 10), and a
+ * hidden toolbar is also inert.
+ */
+    autoHide?: boolean;
+    /**
+ * Transition duration for show/hide in ms
+ * @default 300
+ * @deprecated The docked toolbar transitions with the motion tokens; a
+ * custom transition duration is not yet available on the docked toolbar.
+ */
+    transitionDuration?: number;
+    /**
+ * Called with the new visibility when it changes.
+ * @deprecated Listen for the toolbar's show and hide events with
+ * toolbar.on('show', handler) and toolbar.on('hide', handler).
+ */
+    onVisibilityChange?: (visible: boolean) => void;
+    /**
+ * Component prefix for class names
+ * @default 'mtrl'
+ * @deprecated Never took effect: the prefix is fixed at build time. The
+ * docked toolbar has no per-instance prefix option either.
+ */
+    prefix?: string;
+    /**
+ * Component name for class generation
+ * @deprecated Never took effect: the component name is fixed per component.
+ * The docked toolbar's name is fixed too.
+ */
+    componentName?: string;
+}
+/**
+ * Bottom App Bar component interface
+ * @deprecated Material Design 3 Expressive replaces the bottom app bar with
+ * the docked toolbar. Use ToolbarComponent from createToolbar with
+ * { variant: 'docked', placement: 'bottom' }; each method names its toolbar
+ * replacement. Removal is parked until Material Design v4.
+ */
+export interface BottomAppBarComponent extends ElementComponent {
+    /**
+ * Adds an action button to the bottom bar
+ * @param button
+ * @deprecated Use toolbar.add(item), which returns the item's element.
+ */
+    addAction(button: HTMLElement): this;
+    /**
+ * Adds a floating action button to the bottom bar
+ * @param fab
+ * @deprecated Pass fab to createToolbar's config. Adding a FAB after
+ * creation is not yet available on the docked toolbar.
+ */
+    addFab(fab: HTMLElement): this;
+    /**
+ * Shows the bottom bar
+ * @deprecated Use toolbar.show().
+ */
+    show(): this;
+    /**
+ * Hides the bottom bar
+ * @deprecated Use toolbar.hide(), which also takes the toolbar out of the
+ * focus order with inert.
+ */
+    hide(): this;
+    /**
+ * Checks if the bottom bar is visible
+ * @deprecated Use toolbar.isVisible().
+ */
+    isVisible: () => boolean;
+    /**
+ * Get the actions container element
+ * @deprecated Use toolbar.bar (the element with the toolbar role) or
+ * toolbar.getItems().
+ */
+    getActionsContainer: () => HTMLElement;
+}

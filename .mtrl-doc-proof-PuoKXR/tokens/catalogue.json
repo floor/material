@@ -1,0 +1,2521 @@
+{
+ "schemaVersion": 2,
+ "catalogueRevision": 1,
+ "packageVersion": "3.16.0",
+ "sourceCommit": "67193307f585f6aa726450df8d064b9c0f8bd7a4",
+ "inputsDigest": "213e912bedc071bb879f5be3445246da97c3f00d703490870d4ec4c316d347c2",
+ "emissionsDigest": "c74aff0d07fa37a3d68585f4b12eb0329e3537e4da89b25e7a1feee3ce5ecb52",
+ "reasons": [
+  {
+   "code": "color-context-only",
+   "text": "role semantics retained from the color system page (context-only source); values are generated per theme, so no universal value is claimed and none is verified"
+  },
+  {
+   "code": "library-internal",
+   "text": "library-internal property; no Material claim is made about it"
+  },
+  {
+   "code": "runtime-provided",
+   "text": "library-specific property provided at runtime; no Material claim is made about it"
+  },
+  {
+   "code": "shape-full-realization",
+   "text": "the page defines Full as fully rounded corners, no dp value; 9999px is the library's CSS realization, recorded as a transformation"
+  },
+  {
+   "code": "shape-step-dp",
+   "text": "the step's dp value read from the corner radius scale page, realized 1dp = 1px"
+  },
+  {
+   "code": "state-source-unread",
+   "text": "no specification page for the state-layer opacities has been read; recorded emitted, not verified"
+  },
+  {
+   "code": "typeface-assignment",
+   "text": "the role's face assignment read from the type-scale page's face guidance"
+  },
+  {
+   "code": "typescale-line-height",
+   "text": "the role's line height read from the expanded token module"
+  },
+  {
+   "code": "typescale-role-semantics",
+   "text": "value and role semantics read from the type-scale page"
+  },
+  {
+   "code": "typescale-size",
+   "text": "the role's size read from the expanded token module"
+  },
+  {
+   "code": "typescale-tracking",
+   "text": "the role's tracking read from the expanded token module"
+  },
+  {
+   "code": "typescale-weight",
+   "text": "the role's weight read from the expanded token module"
+  }
+ ],
+ "sources": [
+  {
+   "id": "m3-tokens-overview",
+   "url": "https://m3.material.io/foundations/design-tokens/overview",
+   "section": "Classes of tokens; Parts of a token name",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text",
+   "status": "read",
+   "digest": "Material Design has three classes of tokens: reference, system, and component.\nAll reference tokens start with the prefix ref; they make up all of the style options available, usually point to a static value, and don't change based on context.\nAll system tokens start with the prefix sys; they are decisions and roles that systematize the design language for a specific theme or context, and this is where theming occurs.\nComponent tokens (prefix comp) are in development.\nA token's value can be another token. Example identifiers shown: md.ref.palette.secondary90, md.comp.fab.primary.container.color.",
+   "digestSha256": "6e28416fac009c586b94deb715e000704990553ef84797d36d5a2d9e87ad70e9"
+  },
+  {
+   "id": "m3-shape-scale",
+   "url": "https://m3.material.io/styles/shape/corner-radius-scale",
+   "section": "Corner radius scale",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text, including the collapsed token module lists",
+   "status": "read",
+   "digest": "The Material 3 shape system uses a size-based scale with ten styles:\nNone - 0dp; Extra small - 4dp; Small - 8dp; Medium - 12dp; Large - 16dp; Large increased - 20dp; Extra large - 28dp; Extra large increased - 32dp; Extra extra large - 48dp; Full - fully rounded corners.\nThe token module lists the same ten steps as corner values (0dp … 48dp) and the shape names (No rounding … Fully rounded), without md.* identifiers in the rendered text.\nBoth symmetric and asymmetric shapes use the same 10-step scale.",
+   "digestSha256": "6a35ec61717d777a9b74aa04354d76aea74d978f2db975f363ee34c0b99a9320"
+  },
+  {
+   "id": "m3-type-scale",
+   "url": "https://m3.material.io/styles/typography/type-scale-tokens",
+   "section": "Type scale tokens (baseline set, token module values); Customize the typeface",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text, token module folders expanded in the page",
+   "status": "read",
+   "digest": "Material 3 has one type scale containing two sets of type styles: 15 baseline and 15 emphasized, both following the same scale from Display Large to Label Small.\nEach of the 30 styles has a single token; baseline and emphasized naming shown on the page: md.sys.typescale.display-large and md.sys.typescale.emphasized.display-large.\nBaseline values read from the expanded token module (font, weight, size, tracking, line height):\nDisplay Large Roboto 400 57pt -0.25pt 64pt; Display Medium Roboto 400 45pt 0pt 52pt; Display Small Roboto 400 36pt 0pt 44pt.\nHeadline Large Roboto 400 32pt 0pt 40pt; Headline Medium Roboto 400 28pt 0pt 36pt; Headline Small Roboto 400 24pt 0pt 32pt.\nTitle Large Roboto 400 22pt 0pt 28pt; Title Medium Roboto 500 16pt 0.15pt 24pt; Title Small Roboto 500 14pt 0.1pt 20pt.\nBody Large Roboto 400 16pt 0.5pt 24pt; Body Medium Roboto 400 14pt 0.25pt 20pt; Body Small Roboto 400 12pt 0.4pt 16pt.\nLabel Large Roboto 500 14pt 0.1pt 20pt; Label Medium Roboto 500 12pt 0.5pt 16pt; Label Small Roboto 500 11pt 0.5pt 16pt.\nTypeface guidance: the brand typeface is used for larger type styles, like Headline and Display; the plain typeface is used for smaller type styles, like Body and Label; Roboto is the default for both typefaces.",
+   "digestSha256": "89f3beaaaa99f4cdf023eb46c20a9bbc235b8dfa3ce90ee365103e3d360e5f0f"
+  },
+  {
+   "id": "m3-color-roles",
+   "url": "https://m3.material.io/styles/color/the-color-system",
+   "section": "What are color roles?; General concepts",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text",
+   "status": "context-only",
+   "digest": "There are 26 standard color roles organized into six groups: primary, secondary, tertiary, error, surface, and outline.\nRoles are implemented in design and code through tokens.\nNaming concepts: Surface for backgrounds and large low-emphasis areas; Primary, Secondary, Tertiary as accent roles; Container as a fill for foreground elements, not for text or icons; On-roles a color for text or icons on top of its paired parent color; Variant a lower-emphasis alternative.\nThe color system is built on accessible color pairings providing an accessible minimum 3:1 contrast.\nNo exact color value is claimed: palettes are generated per theme, and this page states roles, not universal hex values.",
+   "digestSha256": "2b98e968e469d7f65b613aa9adcafb6dd91f2c431c748019e22da118bea87e6b"
+  },
+  {
+   "id": "m3-motion-tokens",
+   "url": "https://m3.material.io/styles/motion/easing-and-duration/tokens-specs",
+   "section": "Tokens (Easing; Duration)",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text, token tables",
+   "status": "read",
+   "digest": "In the expressive update, components and motion use the motion physics system (springs); the easing and duration system is still used for transitions but is no longer maintained.\nCSS easing values: md.sys.motion.easing.emphasized is N/A for CSS (use Standard as a fallback); emphasized.decelerate cubic-bezier(0.05, 0.7, 0.1, 1.0); emphasized.accelerate cubic-bezier(0.3, 0.0, 0.8, 0.15); standard cubic-bezier(0.2, 0.0, 0, 1.0); standard.decelerate cubic-bezier(0, 0, 0, 1); standard.accelerate cubic-bezier(0.3, 0, 1, 1).\nDurations: short1 50ms, short2 100ms, short3 150ms, short4 200ms; medium1 250ms, medium2 300ms, medium3 350ms, medium4 400ms; long1 450ms, long2 500ms, long3 550ms, long4 600ms; extra-long1 700ms, extra-long2 800ms, extra-long3 900ms, extra-long4 1000ms.",
+   "digestSha256": "f713cbfb356eeecc8b336eb8190615ae93d688422dc17430a8d7c89bd847d113"
+  },
+  {
+   "id": "m3-motion-physics",
+   "url": "https://m3.material.io/styles/motion/overview/how-it-works",
+   "section": "Motion physics",
+   "readDate": "2026-11-10",
+   "generation": "rendered site text",
+   "status": "context-only",
+   "digest": "The expressive update moves components and motion to a physics system using springs.\nScheme selection (expressive vs standard) is separate from the token name.\nNo numerical spring parameters were verified from this page.",
+   "digestSha256": "813100a15a40e6dd9d563dcc5a2e34279dcafdcc15e89e285bbd03a5f16e0ae1"
+  }
+ ],
+ "tokens": [
+  {
+   "cssName": "--mtrl-bottom-sheet-peek-height",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-carousel-corner",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-carousel-fade",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-carousel-inset",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-drawer-child-indent",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-drawer-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-delay",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-exit",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-item-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-container-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-shape",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-shape-active",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-shape-hover",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-shape-outer",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-segmented-gap",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-navigation-bar-count",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-navigation-rail-expanded-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-left",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-max-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-min-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-top",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-container-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-handle-height",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-on-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-split-button-inner-shape",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-split-button-inner-shape-active",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-tabs-indicator-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-prefix-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-suffix-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-x",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-y",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-toolbar-shape",
+   "m3Id": null,
+   "family": "library",
+   "group": "consumer-provided",
+   "verification": "not-applicable",
+   "reason": "runtime-provided",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-density",
+   "m3Id": null,
+   "family": "library",
+   "group": "density",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-gap",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-height",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-height-scale",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-icon",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-inner-corner",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-pressed-corner",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-group-radius",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-shape",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-shape-pressed",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-shape-selected",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-button-text-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-chip-checkmark-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-chip-label-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-chip-leading-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-chip-trailing-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-bleed-first-left",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-bleed-first-right",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-bleed-last-left",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-bleed-last-right",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-day-layer",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-end",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-flip",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-grid-inset",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-datepicker-start",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-compact",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-gap",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-height",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-icon-size",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-padding",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-extended-fab-radius",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-close",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-item",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-margin",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-on-close",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-fab-menu-on-item",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-icon-size",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-selected-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-selected-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-shape-pressed",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-shape-selected",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-icon-button-standard-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-list-item-offset",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-loading-indicator-size",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-label",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-selected-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-selected-disabled-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-selected-label",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-menu-supporting",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-navigation-bar-dot-shift",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-search-layer",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-side-sheet-direction",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-active-opacity",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-active-tick-opacity",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-inactive-opacity",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-inactive-track-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-tick-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-tick-opacity",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-slider-track-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-split-button-corner",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-split-button-corner-active",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-split-button-pill",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-switch-layer-start",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-switch-thumb-start",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-end",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-outline-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-outline-width",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-prefix-space",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-start",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-text-field-suffix-space",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-angle",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-digits-in",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-digits-out",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-label",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-layer",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-time-picker-radius",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-toolbar-container",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-toolbar-content",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-toolbar-dir",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-toolbar-margin",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-tooltip-arrow-color",
+   "m3Id": null,
+   "family": "library",
+   "group": "component-hook",
+   "verification": "not-applicable",
+   "reason": "library-internal",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-ref-typeface-brand",
+   "m3Id": null,
+   "family": "reference",
+   "group": "typeface",
+   "verification": "verified",
+   "reason": "typescale-role-semantics",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-ref-typeface-plain",
+   "m3Id": null,
+   "family": "reference",
+   "group": "typeface",
+   "verification": "verified",
+   "reason": "typescale-role-semantics",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-color-background",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-error",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-error-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-info",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-inverse-on-surface",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-inverse-primary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-inverse-surface",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-error",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-error-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-info",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-primary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-primary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-primary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-primary-fixed-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-secondary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-secondary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-secondary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-secondary-fixed-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-success",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-surface",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-surface-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-tertiary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-tertiary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-tertiary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-tertiary-fixed-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-on-warning",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-outline",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-outline-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-primary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-primary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-primary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-primary-fixed-dim",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-scrim",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-secondary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-secondary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-secondary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-secondary-fixed-dim",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-shadow",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-success",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-bright",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-container-high",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-container-highest",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-container-low",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-container-lowest",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-dim",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-surface-variant",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-tertiary",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-tertiary-container",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-tertiary-fixed",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-tertiary-fixed-dim",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-color-warning",
+   "m3Id": null,
+   "family": "system",
+   "group": "color",
+   "verification": "unverified",
+   "reason": "color-context-only",
+   "source": "m3-color-roles"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-extra-extra-large",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-extra-large",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-extra-large-increased",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-extra-small",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-full",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-full-realization",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-large",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-large-increased",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-medium",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-none",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-shape-corner-small",
+   "m3Id": null,
+   "family": "system",
+   "group": "shape",
+   "verification": "verified",
+   "reason": "shape-step-dp",
+   "source": "m3-shape-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-state-dragged-state-layer-opacity",
+   "m3Id": null,
+   "family": "system",
+   "group": "state",
+   "verification": "unverified",
+   "reason": "state-source-unread",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-sys-state-focus-state-layer-opacity",
+   "m3Id": null,
+   "family": "system",
+   "group": "state",
+   "verification": "unverified",
+   "reason": "state-source-unread",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-sys-state-hover-state-layer-opacity",
+   "m3Id": null,
+   "family": "system",
+   "group": "state",
+   "verification": "unverified",
+   "reason": "state-source-unread",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-sys-state-pressed-state-layer-opacity",
+   "m3Id": null,
+   "family": "system",
+   "group": "state",
+   "verification": "unverified",
+   "reason": "state-source-unread",
+   "source": null
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-large-font",
+   "m3Id": "md.sys.typescale.body-large.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-large-font-size",
+   "m3Id": "md.sys.typescale.body-large.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-large-font-weight",
+   "m3Id": "md.sys.typescale.body-large.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-large-letter-spacing",
+   "m3Id": "md.sys.typescale.body-large.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-large-line-height",
+   "m3Id": "md.sys.typescale.body-large.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-medium-font",
+   "m3Id": "md.sys.typescale.body-medium.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-medium-font-size",
+   "m3Id": "md.sys.typescale.body-medium.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-medium-font-weight",
+   "m3Id": "md.sys.typescale.body-medium.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-medium-letter-spacing",
+   "m3Id": "md.sys.typescale.body-medium.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-medium-line-height",
+   "m3Id": "md.sys.typescale.body-medium.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-small-font",
+   "m3Id": "md.sys.typescale.body-small.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-small-font-size",
+   "m3Id": "md.sys.typescale.body-small.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-small-font-weight",
+   "m3Id": "md.sys.typescale.body-small.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-small-letter-spacing",
+   "m3Id": "md.sys.typescale.body-small.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-body-small-line-height",
+   "m3Id": "md.sys.typescale.body-small.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-large-font",
+   "m3Id": "md.sys.typescale.display-large.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-large-font-size",
+   "m3Id": "md.sys.typescale.display-large.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-large-font-weight",
+   "m3Id": "md.sys.typescale.display-large.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-large-letter-spacing",
+   "m3Id": "md.sys.typescale.display-large.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-large-line-height",
+   "m3Id": "md.sys.typescale.display-large.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-medium-font",
+   "m3Id": "md.sys.typescale.display-medium.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-medium-font-size",
+   "m3Id": "md.sys.typescale.display-medium.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-medium-font-weight",
+   "m3Id": "md.sys.typescale.display-medium.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-medium-letter-spacing",
+   "m3Id": "md.sys.typescale.display-medium.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-medium-line-height",
+   "m3Id": "md.sys.typescale.display-medium.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-small-font",
+   "m3Id": "md.sys.typescale.display-small.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-small-font-size",
+   "m3Id": "md.sys.typescale.display-small.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-small-font-weight",
+   "m3Id": "md.sys.typescale.display-small.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-small-letter-spacing",
+   "m3Id": "md.sys.typescale.display-small.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-display-small-line-height",
+   "m3Id": "md.sys.typescale.display-small.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-large-font",
+   "m3Id": "md.sys.typescale.headline-large.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-large-font-size",
+   "m3Id": "md.sys.typescale.headline-large.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-large-font-weight",
+   "m3Id": "md.sys.typescale.headline-large.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-large-letter-spacing",
+   "m3Id": "md.sys.typescale.headline-large.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-large-line-height",
+   "m3Id": "md.sys.typescale.headline-large.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-medium-font",
+   "m3Id": "md.sys.typescale.headline-medium.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-medium-font-size",
+   "m3Id": "md.sys.typescale.headline-medium.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-medium-font-weight",
+   "m3Id": "md.sys.typescale.headline-medium.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-medium-letter-spacing",
+   "m3Id": "md.sys.typescale.headline-medium.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-medium-line-height",
+   "m3Id": "md.sys.typescale.headline-medium.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-small-font",
+   "m3Id": "md.sys.typescale.headline-small.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-small-font-size",
+   "m3Id": "md.sys.typescale.headline-small.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-small-font-weight",
+   "m3Id": "md.sys.typescale.headline-small.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-small-letter-spacing",
+   "m3Id": "md.sys.typescale.headline-small.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-headline-small-line-height",
+   "m3Id": "md.sys.typescale.headline-small.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-large-font",
+   "m3Id": "md.sys.typescale.label-large.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-large-font-size",
+   "m3Id": "md.sys.typescale.label-large.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-large-font-weight",
+   "m3Id": "md.sys.typescale.label-large.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-large-letter-spacing",
+   "m3Id": "md.sys.typescale.label-large.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-large-line-height",
+   "m3Id": "md.sys.typescale.label-large.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-medium-font",
+   "m3Id": "md.sys.typescale.label-medium.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-medium-font-size",
+   "m3Id": "md.sys.typescale.label-medium.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-medium-font-weight",
+   "m3Id": "md.sys.typescale.label-medium.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-medium-letter-spacing",
+   "m3Id": "md.sys.typescale.label-medium.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-medium-line-height",
+   "m3Id": "md.sys.typescale.label-medium.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-small-font",
+   "m3Id": "md.sys.typescale.label-small.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-small-font-size",
+   "m3Id": "md.sys.typescale.label-small.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-small-font-weight",
+   "m3Id": "md.sys.typescale.label-small.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-small-letter-spacing",
+   "m3Id": "md.sys.typescale.label-small.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-label-small-line-height",
+   "m3Id": "md.sys.typescale.label-small.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-large-font",
+   "m3Id": "md.sys.typescale.title-large.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-large-font-size",
+   "m3Id": "md.sys.typescale.title-large.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-large-font-weight",
+   "m3Id": "md.sys.typescale.title-large.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-large-letter-spacing",
+   "m3Id": "md.sys.typescale.title-large.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-large-line-height",
+   "m3Id": "md.sys.typescale.title-large.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-medium-font",
+   "m3Id": "md.sys.typescale.title-medium.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-medium-font-size",
+   "m3Id": "md.sys.typescale.title-medium.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-medium-font-weight",
+   "m3Id": "md.sys.typescale.title-medium.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-medium-letter-spacing",
+   "m3Id": "md.sys.typescale.title-medium.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-medium-line-height",
+   "m3Id": "md.sys.typescale.title-medium.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-small-font",
+   "m3Id": "md.sys.typescale.title-small.font",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typeface-assignment",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-small-font-size",
+   "m3Id": "md.sys.typescale.title-small.font-size",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-size",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-small-font-weight",
+   "m3Id": "md.sys.typescale.title-small.font-weight",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-weight",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-small-letter-spacing",
+   "m3Id": "md.sys.typescale.title-small.letter-spacing",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-tracking",
+   "source": "m3-type-scale"
+  },
+  {
+   "cssName": "--mtrl-sys-typescale-title-small-line-height",
+   "m3Id": "md.sys.typescale.title-small.line-height",
+   "family": "system",
+   "group": "typescale",
+   "verification": "verified",
+   "reason": "typescale-line-height",
+   "source": "m3-type-scale"
+  }
+ ],
+ "gaps": [
+  {
+   "id": "sys.motion.easing",
+   "m3Id": null,
+   "source": "m3-motion-tokens",
+   "support": "unsupported",
+   "supportReason": "Material's easing tokens are not emitted as custom properties: the library compiles its easing curves into transition declarations as Sass constants. The source page itself marks md.sys.motion.easing.emphasized N/A for CSS, and the easing-and-duration system as no longer maintained in the expressive update",
+   "emissions": []
+  },
+  {
+   "id": "sys.motion.duration",
+   "m3Id": null,
+   "source": "m3-motion-tokens",
+   "support": "unsupported",
+   "supportReason": "Material's sixteen duration tokens (short1 50ms through extra-long4 1000ms) are not emitted as custom properties; durations compile into transition declarations as literals",
+   "emissions": []
+  },
+  {
+   "id": "sys.motion.spring",
+   "m3Id": "md.sys.motion.spring.fast.spatial.*",
+   "source": "m3-motion-physics",
+   "support": "unsupported",
+   "supportReason": "the expressive motion physics system defines spring tokens by scheme and movement category; the library implements sampled CSS spring curves as Sass constants, which are not verbatim specification tokens and are not emitted as custom properties",
+   "emissions": []
+  },
+  {
+   "id": "sys.typescale.emphasized",
+   "m3Id": "md.sys.typescale.emphasized.display-large",
+   "source": "m3-type-scale",
+   "support": "unsupported",
+   "supportReason": "the expressive update adds fifteen emphasized type styles; the library emits the fifteen baseline styles only, so no emphasized token row exists",
+   "emissions": []
+  },
+  {
+   "id": "sys.typescale.language-height",
+   "m3Id": null,
+   "source": "m3-type-scale",
+   "support": "unsupported",
+   "supportReason": "the type scale can adapt line heights by language height category; the library emits one fixed line height per role and no language-height tokens",
+   "emissions": []
+  },
+  {
+   "id": "ref.palette",
+   "m3Id": "md.ref.palette.secondary90",
+   "source": "m3-tokens-overview",
+   "support": "unsupported",
+   "supportReason": "Material's reference palette tokens are not emitted: colour ships as generated per-theme system roles (create-theme), which is where Material places theming, and no static palette layer is exposed",
+   "emissions": []
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+import "material/elements/css/loading-indicator";
+import { loadingIndicatorElement, defineLoadingIndicator } from "../elements/loading-indicator.js";
+import { createComponent } from "./create.js";
+export const MLoadingIndicator = /*#__PURE__*/ createComponent(loadingIndicatorElement.spec, defineLoadingIndicator, "MLoadingIndicator");

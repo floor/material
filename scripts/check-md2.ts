@@ -108,6 +108,9 @@ try {
     await page.waitForFunction(() => document.documentElement.dataset.fixtures === "ready");
     if (direction === "rtl") await page.evaluate(() => { document.documentElement.dir = "rtl"; });
     await page.waitForFunction(() => document.documentElement.dir === "rtl" || document.documentElement.dir === "");
+    // The look's transitions (the button's corner spring, the shadows) still
+    // run when the fixtures report ready; read the settled values.
+    await page.waitForTimeout(400);
     return page;
   };
   /** One element's computed style, by camelCase property. */
@@ -273,16 +276,18 @@ try {
   // change with the rename, so <m-app-bar> and <m-top-app-bar> are one look.
   const elementBar = await elements.evaluate(() => {
     const host = document.querySelector("#el-bar") as HTMLElement;
-    const style = getComputedStyle(host);
+    const bar = host.shadowRoot?.querySelector(".mtrl-top-app-bar");
+    if (!bar) return null;
+    const style = getComputedStyle(bar);
     return {
       height: style.height, colour: style.color, background: style.backgroundColor,
-      adopted: host.shadowRoot !== null && (host.shadowRoot.adoptedStyleSheets.length > 0
-        || host.shadowRoot.querySelector("style[data-md2]") !== null),
+      adopted: host.shadowRoot!.adoptedStyleSheets.length > 0
+        || host.shadowRoot!.querySelector("style[data-md2]") !== null,
     };
   });
-  check("elements/app bar host adopts the md2 sheet", elementBar.adopted, elementBar);
-  equal("elements/app bar height", pixel(elementBar.height), 56);
-  equal("elements/app bar roles", [elementBar.background, elementBar.colour], ["rgb(98, 0, 238)", "rgb(255, 255, 255)"]);
+  check("elements/app bar host adopts the md2 sheet", elementBar !== null && elementBar.adopted, elementBar);
+  equal("elements/app bar height", elementBar === null ? null : pixel(elementBar.height), 56);
+  equal("elements/app bar roles", elementBar === null ? null : [elementBar.background, elementBar.colour], ["rgb(98, 0, 238)", "rgb(255, 255, 255)"]);
   await elements.close();
 
   // --- Without the sheet: none of those measures holds, so the check reads it. ---

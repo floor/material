@@ -1,0 +1,265 @@
+import type { EventCallback } from "../../core/state/emitter.js";
+import type { TextFieldTrailingPayload } from "./features/trailing-icon.js";
+export type { TextFieldTrailingPayload };
+/** Available TextField variants */
+export type TextFieldVariant = "filled" | "outlined";
+/** TextField variant constants */
+export declare const TEXT_FIELD_VARIANTS: {
+    readonly FILLED: "filled";
+    readonly OUTLINED: "outlined";
+};
+/** Available TextField states */
+export type TextFieldStates = "active" | "inactive" | "disabled";
+/** Available TextField density levels */
+export type TextFieldDensity = "default" | "compact";
+/** TextField density constants */
+export declare const TEXT_FIELD_DENSITY: {
+    readonly DEFAULT: "default";
+    readonly COMPACT: "compact";
+};
+/** Available TextField types */
+export type TextFieldTypes = "text" | "password" | "email" | "number" | "tel" | "url" | "search" | "multiline";
+/** TextField type constants */
+export declare const TEXT_FIELD_TYPES: {
+    readonly TEXT: "text";
+    readonly PASSWORD: "password";
+    readonly EMAIL: "email";
+    readonly NUMBER: "number";
+    readonly TEL: "tel";
+    readonly URL: "url";
+    readonly SEARCH: "search";
+    readonly MULTILINE: "multiline";
+};
+/** Configuration interface for the TextField component */
+export interface TextFieldConfig {
+    /** Input type (text, password, email, etc.) */
+    type?: TextFieldTypes | string;
+    /** Visual variant (filled, outlined) */
+    variant?: TextFieldVariant | string;
+    /** Density level (default, compact) */
+    density?: TextFieldDensity | string;
+    /** Input name attribute */
+    name?: string;
+    /** Label text */
+    label?: string;
+    /** Accessible name for the input; the visible label is the fallback. */
+    ariaLabel?: string;
+    /**
+ * Put ariaLabel only on the input/handle, omitting the generated wrapper label.
+ * @default false
+ */
+    controlLabelOnly?: boolean;
+    /** Initial value */
+    value?: string;
+    /** Placeholder text */
+    placeholder?: string;
+    /** Whether input is required; the label gets an asterisk */
+    required?: boolean;
+    /** No asterisk on a required field: M3 lets a form whose fields are mostly */
+    noAsterisk?: boolean;
+    /** Whether text field is disabled */
+    disabled?: boolean;
+    /** Whether text field is readonly */
+    readonly?: boolean;
+    /** Maximum input length */
+    maxLength?: number;
+    /** Input pattern for validation */
+    pattern?: string;
+    /** Autocomplete attribute */
+    autocomplete?: string;
+    /** The virtual keyboard a touch device shows for the input (its `inputmode`): `"numeric"` a digits keypad, `"email"` one with `@` and `.`, `"none"` no keyboard at all where the page provides its own. */
+    inputMode?: "none" | "text" | "decimal" | "numeric" | "tel" | "search" | "email" | "url";
+    /** What the virtual keyboard's Enter key says (the input's `enterkeyhint`): the step a form's flow expects next, such as "next" or "done". */
+    enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
+    /** Leading icon HTML content. */
+    leadingIcon?: string;
+    /** Trailing icon HTML content. */
+    trailingIcon?: string;
+    /** Makes the trailing icon a button with this accessible name (clear, show password, …), emitting `trailing` when activated. */
+    trailingIconLabel?: string;
+    /** `trailing` listener registered at creation. */
+    onTrailingClick?: TextFieldEvents["trailing"];
+    /** Supporting text content */
+    supportingText?: string;
+    /** Whether supporting text indicates an error */
+    error?: boolean;
+    /** Prefix text to display before the input */
+    prefixText?: string;
+    /** Suffix text to display after the input */
+    suffixText?: string;
+    /** Additional CSS classes */
+    class?: string;
+    /** Prefix for class names */
+    prefix?: string;
+    /** Component name */
+    componentName?: string;
+}
+/** Payload emitted by native input/change and autofill detection. */
+export interface TextFieldValuePayload {
+    value: string;
+    isEmpty: boolean;
+    isAutofilled: boolean;
+}
+/** Focus and blur report whether the input is empty, without a native event. */
+export interface TextFieldFocusPayload {
+    isEmpty: boolean;
+}
+/** Events emitted by the text input feature. */
+export interface TextFieldEvents {
+    /** The trailing icon button was activated (`trailingIconLabel`) */
+    trailing: (payload: TextFieldTrailingPayload) => void;
+    input: (payload: TextFieldValuePayload) => void;
+    change: (payload: TextFieldValuePayload) => void;
+    focus: (payload: TextFieldFocusPayload) => void;
+    blur: (payload: TextFieldFocusPayload) => void;
+}
+/** TextField component interface */
+export interface TextFieldComponent {
+    /** The root element of the text field */
+    element: HTMLElement;
+    /** The container: label, input, outline, icons and affixes, above the supporting text row. */
+    field: HTMLElement;
+    /** The input element */
+    input: HTMLInputElement | HTMLTextAreaElement;
+    /** Gets the text field's value */
+    getValue: () => string;
+    /** Sets the text field's value */
+    setValue: (value: string) => TextFieldComponent;
+    /** Sets an attribute on the input element */
+    setAttribute: (name: string, value: string) => TextFieldComponent;
+    /** Gets an attribute from the input element */
+    getAttribute: (name: string) => string | null;
+    /** Removes an attribute from the input element */
+    removeAttribute: (name: string) => TextFieldComponent;
+    /** Sets the text field's variant (filled or outlined) */
+    setVariant: (variant: TextFieldVariant) => TextFieldComponent;
+    /** Gets the text field's current variant */
+    getVariant: () => TextFieldVariant;
+    /** Sets the text field's label text */
+    setLabel: (text: string) => TextFieldComponent;
+    /** Gets the text field's label text */
+    getLabel: () => string;
+    /** Leading icon element (if present) */
+    leadingIcon: HTMLElement | null;
+    /** Sets the leading icon HTML content */
+    setLeadingIcon: (html: string) => TextFieldComponent;
+    /** Removes the leading icon */
+    removeLeadingIcon: () => TextFieldComponent;
+    /** Trailing icon element (if present) */
+    trailingIcon: HTMLElement | null;
+    /** Sets the trailing icon HTML content */
+    /** Sets the trailing icon. */
+    setTrailingIcon: (html: string, label?: string) => TextFieldComponent;
+    /** Removes the trailing icon */
+    removeTrailingIcon: () => TextFieldComponent;
+    /** Makes the field required or optional, the label's asterisk with it */
+    setRequired: (required: boolean) => TextFieldComponent;
+    /** Whether the field is required */
+    isRequired: () => boolean;
+    /** Supporting text element (if present) */
+    supportingTextElement: HTMLElement | null;
+    /** Sets the supporting text content */
+    setSupportingText: (text: string, isError?: boolean) => TextFieldComponent;
+    /** Removes the supporting text */
+    removeSupportingText: () => TextFieldComponent;
+    /** Prefix text element (if present) */
+    prefixTextElement: HTMLElement | null;
+    /** Sets the prefix text content */
+    setPrefixText: (text: string) => TextFieldComponent;
+    /** Removes the prefix text */
+    removePrefixText: () => TextFieldComponent;
+    /** Suffix text element (if present) */
+    suffixTextElement: HTMLElement | null;
+    /** Sets the suffix text content */
+    setSuffixText: (text: string) => TextFieldComponent;
+    /** Removes the suffix text */
+    removeSuffixText: () => TextFieldComponent;
+    /** Manually update element positions (useful after DOM changes) */
+    updatePositions: () => TextFieldComponent;
+    /** Sets the error state of the text field */
+    setError: (error: boolean, message?: string) => TextFieldComponent;
+    /** Gets the current error state */
+    isError: () => boolean;
+    /** Sets the density of the text field */
+    setDensity: (density: TextFieldDensity | string) => TextFieldComponent;
+    /** Gets the current density setting */
+    getDensity: () => string;
+    /** Subscribes to input state events; keyboard events use input.addEventListener. */
+    on: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;
+    /** Removes event listener */
+    off: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;
+    /** Enables the text field */
+    enable: () => TextFieldComponent;
+    /** Disables the text field */
+    disable: () => TextFieldComponent;
+    /** Whether the text field is disabled */
+    isDisabled: () => boolean;
+    /** Destroys the text field component and cleans up resources */
+    destroy: () => void;
+}
+/** API options interface */
+export interface ApiOptions {
+    disabled: {
+        enable: () => void;
+        disable: () => void;
+        isDisabled: () => boolean;
+    };
+    lifecycle: {
+        destroy: () => void;
+    };
+}
+/** Base component interface */
+export interface BaseComponent {
+    element: HTMLElement;
+    /** The prefixed class name, from createBase */
+    getClass: (name: string) => string;
+    input?: HTMLInputElement | HTMLTextAreaElement;
+    config?: {
+        prefix?: string;
+        componentName?: string;
+    };
+    getValue?: () => string;
+    setValue?: (value: string) => void;
+    setAttribute?: (name: string, value: string) => void;
+    getAttribute?: (name: string) => string | null;
+    removeAttribute?: (name: string) => void;
+    label?: {
+        setText: (content: string) => void;
+        getText: () => string;
+    };
+    leadingIcon?: HTMLElement | null;
+    setLeadingIcon?: (html: string) => void;
+    removeLeadingIcon?: () => void;
+    trailingIcon?: HTMLElement | null;
+    setTrailingIcon?: (html: string, label?: string) => void;
+    removeTrailingIcon?: () => void;
+    supportingTextElement?: HTMLElement | null;
+    setSupportingText?: (text: string, isError?: boolean) => void;
+    removeSupportingText?: () => void;
+    prefixTextElement?: HTMLElement | null;
+    setPrefixText?: (text: string) => void;
+    removePrefixText?: () => void;
+    suffixTextElement?: HTMLElement | null;
+    setSuffixText?: (text: string) => void;
+    removeSuffixText?: () => void;
+    updateElementPositions?: () => void;
+    on?: (event: string, handler: EventCallback) => void;
+    off?: (event: string, handler: EventCallback) => void;
+    disabled?: {
+        enable: () => void;
+        disable: () => void;
+        isDisabled: () => boolean;
+    };
+    lifecycle?: {
+        destroy: () => void;
+    };
+    errorState?: boolean;
+    setError?: (error: boolean, message?: string) => void;
+    isError?: () => boolean;
+}
+/** Registers TextFieldConfig with the global defaults map, so `setComponentDefaults("text-field", ...)` is typed without core importing anything from this component. */
+declare module "../../core/config/global" {
+    interface ComponentConfigMap {
+        "text-field"?: Partial<TextFieldConfig>;
+    }
+}

@@ -1,0 +1,2 @@
+/*! material v3.16.0 | MIT */
+@layer mtrl.preupgrade{m-carousel:not(:defined){display:block}m-carousel:not(:defined)>*{visibility:hidden;display:none}[data-mtrl-ssr]:not(:defined):not(#\0),[data-mtrl-ssr]:not(:defined):not(#\0)::before,[data-mtrl-ssr]:not(:defined):not(#\0)::after,[data-mtrl-ssr]:not(:defined):not(#\0) > :defined{all:revert-layer}}

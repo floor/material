@@ -1,0 +1,2 @@
+/*! material v3.16.0 | MIT */
+@layer mtrl.preupgrade{m-navigation-drawer:not(:defined){display:block;flex-shrink:0;padding:12px 0}m-navigation-drawer:not(:defined)[open]{background-color:var(--mtrl-sys-color-surface)}m-navigation-drawer:not(:defined)>*{visibility:hidden;display:block;min-height:max(36px, 56px + 4px * var(--mtrl-density, 0));overflow:hidden}[data-mtrl-ssr]:not(:defined):not(#\0),[data-mtrl-ssr]:not(:defined):not(#\0)::before,[data-mtrl-ssr]:not(:defined):not(#\0)::after,[data-mtrl-ssr]:not(:defined):not(#\0) > :defined{all:revert-layer}}

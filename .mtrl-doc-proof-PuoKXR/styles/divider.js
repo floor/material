@@ -1,0 +1,2 @@
+
+import "./divider.css";

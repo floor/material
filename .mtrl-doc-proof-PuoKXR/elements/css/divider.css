@@ -1,0 +1,1 @@
+.mtrl-divider{display:block;border:none;margin:0;padding:0;background-color:var(--mtrl-sys-color-outline-variant)}.mtrl-divider--horizontal{width:100%;height:1px}.mtrl-divider--vertical{height:100%;width:1px;display:inline-block}.mtrl-divider--full-width{width:100%}.mtrl-list .mtrl-divider{margin:8px 0}.mtrl-card .mtrl-divider{margin:8px 0}
