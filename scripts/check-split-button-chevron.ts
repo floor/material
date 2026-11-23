@@ -7,21 +7,25 @@
  * the glyph's ink is off-centre in that box, and a 180 degree turn moves it.
  *
  * The path stays a translation of Material's expand_more outline, and its
- * polygon centroid stays within one unit of the viewBox centre. Coverage-weighted
- * painted mass, closed against open, stays within 0.25 CSS px at device scales
- * 1, 2 and 3. The method is briefs/split-chevron-mass-check.mjs.
+ * polygon centroid stays within one unit of the viewBox centre. The svg box
+ * sits on the trailing button's centre, closed and open, in both directions.
+ * Coverage-weighted painted mass, closed against open, stays within 0.25 CSS
+ * px at device scales 1, 2 and 3. The method is briefs/split-chevron-mass-check.mjs.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as sass from "sass";
 import { launchChromium } from "./browser-profile";
 
 const root = resolve(import.meta.dir, "..");
-const scratch = join(root, "tmp", "check-split-button-chevron");
+mkdirSync(join(root, "tmp"), { recursive: true });
+const scratch = mkdtempSync(join(root, "tmp", "check-split-button-chevron-"));
 const sizes = ["xs", "s", "m", "l", "xl"] as const;
 /** Closed and open painted mass, in CSS px. */
 const MASS_TOLERANCE = 0.25;
+/** SVG box centre against the trailing button centre, in CSS px. */
+const BOX_TOLERANCE = 0.25;
 /** Polygon centroid against the viewBox centre, in path units. */
 const CENTROID_TOLERANCE = 1;
 /** viewBox 0 -960 960 960. */
@@ -111,8 +115,6 @@ const css = sass.compileString(`@use "components/button"; @use "utilities/ripple
   logger: sass.Logger.silent,
 }).css;
 
-rmSync(scratch, { recursive: true, force: true });
-mkdirSync(scratch, { recursive: true });
 const build = await Bun.build({
   entrypoints: [join(root, "src/components/split-button/index.ts")],
   outdir: scratch,
@@ -238,7 +240,13 @@ try {
   const openRows = rows.filter((row) => row.state === "open");
   assert(closedRows.length > 0 && closedRows.every((row) => row.rotate !== "180deg"), "a closed chevron is already rotated");
   assert(openRows.length === closedRows.length && openRows.every((row) => row.rotate === "180deg"), "opening the menu did not rotate the chevron");
-  console.log("split button chevron: opening rotates every glyph");
+  const offCentre = rows.filter((row) => Math.abs(row.boxDx) > BOX_TOLERANCE || Math.abs(row.boxDy) > BOX_TOLERANCE);
+  assert.deepEqual(
+    offCentre.map((row) => `${row.state} ${row.dir} ${row.size} ${row.boxDx} ${row.boxDy}`),
+    [],
+    `chevron svg is off the trailing button by more than ${BOX_TOLERANCE}px`,
+  );
+  console.log("split button chevron: the svg stays on the trailing-button centre, and opening rotates it");
 
   // Coverage-weighted painted mass, the method in
   // briefs/split-chevron-mass-check.mjs. The weight is the colour delta, and
