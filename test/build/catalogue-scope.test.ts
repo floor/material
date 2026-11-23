@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
 import { styleManifestDependenciesOnly } from "../../scripts/catalogue-scope";
 
@@ -25,5 +26,23 @@ describe("catalogue identity scope", () => {
     expect(styleManifestDependenciesOnly(withProfile, changedProfile)).toBe(false);
     const changedEdge = withProfile.replace('["fab", "menu"]', '["button", "fab", "menu"]');
     expect(styleManifestDependenciesOnly(withProfile, changedEdge)).toBe(true);
+  });
+
+  test("an opt-in component dependency stays catalogue data", () => {
+    const withListbox = `${manifest}  listbox: { source: "components/listbox", dependencies: [], optIn: true, sharedLeaves: ["menu/features/registry"] },\n`;
+    const changed = withListbox.replace(
+      'listbox: { source: "components/listbox", dependencies: []',
+      'listbox: { source: "components/listbox", dependencies: ["menu"]',
+    );
+    expect(styleManifestDependenciesOnly(withListbox, changed)).toBe(false);
+    const changedEdge = withListbox.replace('["fab", "menu"]', '["button", "fab", "menu"]');
+    expect(styleManifestDependenciesOnly(withListbox, changedEdge)).toBe(true);
+    const manifestFile = readFileSync(new URL("../../scripts/style-manifest.ts", import.meta.url), "utf8");
+    const listbox = manifestFile.replace(
+      'listbox: { source: "components/listbox", dependencies: []',
+      'listbox: { source: "components/listbox", dependencies: ["menu"]',
+    );
+    expect(listbox).not.toBe(manifestFile);
+    expect(styleManifestDependenciesOnly(manifestFile, listbox)).toBe(false);
   });
 });
