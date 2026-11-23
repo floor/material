@@ -91,7 +91,7 @@ const round = (n: number) => Math.round(n * 1000) / 1000;
 
 const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 1400 }, deviceScaleFactor: 1 });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 1400 }, deviceScaleFactor: 1 });
   await page.goto(`http://127.0.0.1:${server.port}/`);
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
 
