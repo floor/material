@@ -107,7 +107,11 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
       box-shadow $spatial;
 
 
-    > * {
+    // The icon and the close icon share the cell. The ripple stays out of
+    // it: as a grid item its containing block is the grid area, whose start
+    // edge is the centred icon's, so a press at the centre draws the wave
+    // off the pointer. Outside the grid it fills the button.
+    > *:not(.#{base.$prefix}-ripple) {
       grid-area: 1 / 1;
     }
 

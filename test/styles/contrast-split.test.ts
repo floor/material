@@ -324,9 +324,11 @@ describe("explicit contrast levels are opt-in", () => {
     // compressed compile (styles/base/_plain-slot-button.scss,
     // styles/components/_top-app-bar.scss).
     // Drawer disclosures add child padding, state layers and group motion.
+    // The FAB menu button keeps the ripple out of the icon cell, so the
+    // full sheet's selector gains :not(.mtrl-ripple) (+18 B, CI 45139254856).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "f6a9740be20c9a0a2a27abd61a91f173aff9856986cafd8088b3a89a8ddc743f",
-      length: 554415,
+      sha256: "85c34a880c0bb460bb9239aa5864fc832ae25b534763cb943189624382b1bc89",
+      length: 554433,
     });
   });
 
