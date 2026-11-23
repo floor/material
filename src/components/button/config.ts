@@ -2,6 +2,7 @@
 import {
   createComponentConfig,
   createElementConfig,
+  mergeComponentConfig,
 } from "../../core/config/component";
 import { ButtonConfig } from "./types";
 import {
@@ -37,19 +38,15 @@ export const defaultConfig: ButtonConfig = {
  *
  * @param {ButtonConfig} config - User provided configuration
  * @param {boolean} isolated - Internal. Build from the button defaults plus
- *   this config, and do not read the public button registry. The registry
- *   itself is left untouched.
+ *   this config. The public button registry is not read and not written.
  * @returns {ButtonConfig} Complete configuration with defaults applied
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: ButtonConfig = {}, isolated = false): ButtonConfig => {
-  // The lookup name is not "button", so setComponentDefaults("button", ...)
-  // stays where the app put it. The part is still a button once built.
-  const base = createComponentConfig(defaultConfig, config, isolated ? "button\0" : "button") as ButtonConfig;
-  if (isolated) base.componentName = "button";
-  return base;
-};
+export const createBaseConfig = (config: ButtonConfig = {}, isolated = false): ButtonConfig =>
+  (isolated
+    ? mergeComponentConfig(defaultConfig, {}, config, "button")
+    : createComponentConfig(defaultConfig, config, "button")) as ButtonConfig;
 
 /**
  * Generates element configuration for the Button component.
