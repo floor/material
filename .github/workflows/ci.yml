@@ -231,6 +231,9 @@ jobs:
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check
+          - group: fab-menu-position
+            browsers: chromium
+            checks: fab-menu-position:check
           - group: fab-menu-items
             browsers: chromium
             checks: fab-menu-items:check
