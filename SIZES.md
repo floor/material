@@ -32,7 +32,7 @@ these rows drift from a fresh measurement.
 | divider | 9.8 KB | 3.8 KB | +0.7 KB |  |
 | drawer | 27.5 KB | 9.9 KB | +6.9 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
-| fab-menu | 22.2 KB | 8.2 KB | +5.2 KB | +10.6 KB |
+| fab-menu | 29.9 KB | 10.4 KB | +7.4 KB | +17.0 KB |
 | extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
 | icon-button | 18.7 KB | 6.3 KB | +3.3 KB |  |
 | list | 20.5 KB | 7.2 KB | +4.2 KB |  |
