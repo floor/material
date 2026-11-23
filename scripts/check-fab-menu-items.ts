@@ -5,6 +5,7 @@
  * keys, focus returning to the FAB, the width reveal anchored at the end,
  * the colour sets, the 56dp height, both directions, and forced colours.
  * destroy() takes the button, its ripple and the press listener with it.
+ * A public button default does not reach an item. createButton still takes it.
  *
  * The pressed state is a ripple at the point of input
  * (https://m3.material.io/foundations/interaction/states/applying-states,
@@ -17,8 +18,9 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { chromium, type Page } from "playwright";
+import type { Page } from "playwright";
 import * as sass from "sass";
+import { launchChromium } from "./browser-profile";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const briefFlag = process.argv.indexOf("--brief");
@@ -80,9 +82,7 @@ type Dir = "ltr" | "rtl";
 type Color = "primary" | "secondary" | "tertiary";
 type Box = { x: number; y: number; width: number; height: number };
 
-const userDataDir = resolve(repoRoot, ".bun/fab-menu-items-profile");
-mkdirSync(userDataDir, { recursive: true });
-const context = await chromium.launchPersistentContext(userDataDir, {
+const context = await launchChromium({
   headless: true,
   viewport: { width: 1100, height: 800 },
   reducedMotion: "reduce",
@@ -379,6 +379,144 @@ try {
   }, icon);
   console.log(`MEASURE select ${selected}`);
   if (selected !== "forward") fail(`select emitted ${selected}`);
+
+  // Public button defaults stay on createButton. An item is built from the
+  // button's own defaults, in both the factory and the element.
+  const defaults = await page.evaluate(async (icon) => {
+    const mtrl = (window as unknown as {
+      mtrl: {
+        setComponentDefaults: (name: string, config: Record<string, unknown>) => void;
+        clearGlobalDefaults: () => void;
+        createButton: (config?: Record<string, unknown>) => { element: HTMLButtonElement; destroy: () => void };
+        createFabMenu: (config: Record<string, unknown>) => {
+          element: HTMLElement;
+          destroy: () => void;
+          on: (name: string, handler: () => void) => void;
+        };
+      };
+    }).mtrl;
+    const stage = document.getElementById("stage")!;
+    const read = (root: ParentNode) => Array.from(root.querySelectorAll<HTMLButtonElement>("[role=menuitem]"));
+    const mount = () => {
+      stage.replaceChildren();
+      const factoryForm = document.createElement("form");
+      const elementForm = document.createElement("form");
+      const counts = { factorySelects: 0, elementSelects: 0, factorySubmits: 0, elementSubmits: 0 };
+      factoryForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        counts.factorySubmits += 1;
+      });
+      elementForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        counts.elementSubmits += 1;
+      });
+      const menu = mtrl.createFabMenu({
+        icon, ariaLabel: "Compose", presentation: "list", placement: "none",
+        items: [{ id: "reply", text: "Reply", icon }, { id: "forward", text: "Forward", icon }],
+      });
+      menu.on("select", () => { counts.factorySelects += 1; });
+      factoryForm.append(menu.element);
+      const host = document.createElement("m-fab-menu");
+      host.setAttribute("presentation", "list");
+      host.setAttribute("aria-label", "Compose");
+      host.setAttribute("icon", icon);
+      host.addEventListener("select", () => { counts.elementSelects += 1; });
+      for (const item of [{ id: "reply", text: "Reply" }, { id: "forward", text: "Forward" }]) {
+        const declared = document.createElement("m-fab-menu-item");
+        declared.setAttribute("value", item.id);
+        declared.textContent = item.text;
+        host.append(declared);
+      }
+      elementForm.append(host);
+      stage.append(factoryForm, elementForm);
+      const open = (fab: HTMLElement | null) => fab?.click();
+      open(menu.element.querySelector(".mtrl-fab"));
+      open(host.shadowRoot?.querySelector(".mtrl-fab") ?? null);
+      return {
+        menu,
+        host,
+        factory: read(menu.element),
+        element: read(host.shadowRoot!),
+        counts,
+      };
+    };
+    // A disabled button refuses focus. The element renders in a shadow root,
+    // and its list stays hidden until the open frame, so the focus is read
+    // from that root after the list is visible.
+    const focusable = (item: HTMLButtonElement) => {
+      const root = item.getRootNode() as Document | ShadowRoot;
+      item.focus();
+      return root.activeElement === item;
+    };
+
+    mtrl.setComponentDefaults("button", { disabled: true });
+    const disabledMount = mount();
+    await new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    const publicDisabled = mtrl.createButton();
+    const disabled = {
+      factoryDisabled: disabledMount.factory.map((item) => item.disabled),
+      elementDisabled: disabledMount.element.map((item) => item.disabled),
+      factoryFocused: focusable(disabledMount.factory[0]!),
+      elementFocused: focusable(disabledMount.element[0]!),
+      publicDisabled: publicDisabled.element.disabled,
+    };
+    disabledMount.factory[1]!.click();
+    disabledMount.element[1]!.click();
+    const disabledCounts = { ...disabledMount.counts };
+    publicDisabled.destroy();
+    disabledMount.menu.destroy();
+
+    mtrl.setComponentDefaults("button", { type: "submit" });
+    const typeMount = mount();
+    const publicType = mtrl.createButton();
+    typeMount.factory[1]!.click();
+    typeMount.element[1]!.click();
+    const typed = {
+      factoryType: typeMount.factory.map((item) => item.getAttribute("type")),
+      elementType: typeMount.element.map((item) => item.getAttribute("type")),
+      publicType: publicType.element.getAttribute("type"),
+      ...typeMount.counts,
+    };
+    publicType.destroy();
+    typeMount.menu.destroy();
+
+    mtrl.setComponentDefaults("button", { ariaLabel: "Global button" });
+    const labelMount = mount();
+    const publicLabel = mtrl.createButton();
+    const labelled = {
+      factoryLabel: labelMount.factory.map((item) => item.getAttribute("aria-label")),
+      elementLabel: labelMount.element.map((item) => item.getAttribute("aria-label")),
+      publicLabel: publicLabel.element.getAttribute("aria-label"),
+    };
+    publicLabel.destroy();
+    labelMount.menu.destroy();
+    mtrl.clearGlobalDefaults();
+    stage.replaceChildren();
+    return { disabled, disabledCounts, typed, labelled };
+  }, icon);
+  console.log(`MEASURE defaults ${JSON.stringify(defaults)}`);
+  const itemUntouched = (values: boolean[]) => values.length === 2 && values.every((value) => value === false);
+  if (!itemUntouched(defaults.disabled.factoryDisabled) || !itemUntouched(defaults.disabled.elementDisabled)) {
+    fail(`button disabled reached an item: ${JSON.stringify(defaults.disabled)}`);
+  }
+  if (!defaults.disabled.factoryFocused || !defaults.disabled.elementFocused || !defaults.disabled.publicDisabled) {
+    fail(`disabled focus: ${JSON.stringify(defaults.disabled)}`);
+  }
+  if (defaults.disabledCounts.factorySelects !== 1 || defaults.disabledCounts.elementSelects !== 1) {
+    fail(`disabled select: ${JSON.stringify(defaults.disabledCounts)}`);
+  }
+  const typeButton = (values: Array<string | null>) => values.length === 2 && values.every((value) => value === "button");
+  if (!typeButton(defaults.typed.factoryType) || !typeButton(defaults.typed.elementType) || defaults.typed.publicType !== "submit") {
+    fail(`button type: ${JSON.stringify(defaults.typed)}`);
+  }
+  if (defaults.typed.factorySelects !== 1 || defaults.typed.elementSelects !== 1
+    || defaults.typed.factorySubmits !== 0 || defaults.typed.elementSubmits !== 0) {
+    fail(`submit: ${JSON.stringify(defaults.typed)}`);
+  }
+  const noLabel = (values: Array<string | null>) => values.length === 2 && values.every((value) => value === null);
+  if (!noLabel(defaults.labelled.factoryLabel) || !noLabel(defaults.labelled.elementLabel) || defaults.labelled.publicLabel !== "Global button") {
+    fail(`button name: ${JSON.stringify(defaults.labelled)}`);
+  }
 
   assert.equal(errors.length, 0, errors.join("\n"));
   assert.equal(failures.length, 0, failures.join("\n"));

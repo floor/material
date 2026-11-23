@@ -6,6 +6,7 @@ import { createBase, withElement } from "../../core/compose/component";
 import { withEvents, withLifecycle } from "../../core/compose/features";
 import { getCleanup } from "../../core/compose/cleanup";
 import { PREFIX } from "../../core/config";
+import { getComponentDefaults, setComponentDefaults } from "../../core/config/global";
 import { activeElementOf } from "../../core/dom/focus";
 import { setHTML } from "../../core/dom/html";
 import { getIcon } from "../../core/icons/registry";
@@ -131,12 +132,21 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     // The list item is a button, so it takes the button's ripple and state
     // layers. The pill, the content and the item class stay the item's.
     // composeButton is that button without the progress chunk: an item never
-    // shows one, and createButton's public behaviour is unchanged.
-    const itemButton = composeButton({
-      variant: "text",
-      size: "m",
-      class: `${block}__item`,
-    });
+    // shows one. The public button defaults are lifted off for this build
+    // and put back: an item is not a button the page configured, and
+    // createButton still reads them.
+    const buttonDefaults = getComponentDefaults("button");
+    setComponentDefaults("button", {});
+    let itemButton;
+    try {
+      itemButton = composeButton({
+        variant: "text",
+        size: "m",
+        class: `${block}__item`,
+      });
+    } finally {
+      setComponentDefaults("button", buttonDefaults);
+    }
     resources.add(() => itemButton.destroy());
     const element = itemButton.element;
     element.setAttribute("role", "menuitem");
