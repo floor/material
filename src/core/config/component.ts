@@ -39,20 +39,29 @@ export interface BaseComponentConfig {
 }
 
 /**
- * Merges a component's own defaults, a defaults object, and the call.
- * The defaults object is chosen by the caller. `createComponentConfig` passes
- * the public registry. An internal part passes an empty object, so that build
- * does not read the registry and does not write it either.
+ * Creates a base configuration for any component
+ * Automatically merges global defaults if available
  *
- * Not part of the public entry. Callers inside the library import it from
- * this module.
+ * @param {T} defaults - Default configuration for the component
+ * @param {Partial<T>} userConfig - User provided configuration
+ * @param {string} componentName - The name of the component
+ * @returns {T} Complete configuration with defaults applied
+ *
+ * @example
+ * // In button/config.ts
+ * export const createBaseConfig = (config: ButtonConfig = {}) =>
+ *   createComponentConfig(defaultConfig, config, 'button');
  */
-export const mergeComponentConfig = <T extends BaseComponentConfig & object>(
+export const createComponentConfig = <T extends BaseComponentConfig & object>(
   defaults: T,
-  globalDefaults: object | undefined,
-  userConfig: Partial<T>,
+  userConfig: Partial<T> = {},
   componentName: string,
 ): T & { componentName: string; prefix: string } => {
+  // Get global defaults for this component (if any)
+  const globalDefaults = getComponentDefaults(
+    componentName as keyof ComponentConfigMap,
+  );
+
   // First check for className, fall back to class
   const userClassName =
     userConfig.className !== undefined
@@ -83,32 +92,6 @@ export const mergeComponentConfig = <T extends BaseComponentConfig & object>(
 
   return config;
 };
-
-/**
- * Creates a base configuration for any component
- * Automatically merges global defaults if available
- *
- * @param {T} defaults - Default configuration for the component
- * @param {Partial<T>} userConfig - User provided configuration
- * @param {string} componentName - The name of the component
- * @returns {T} Complete configuration with defaults applied
- *
- * @example
- * // In button/config.ts
- * export const createBaseConfig = (config: ButtonConfig = {}) =>
- *   createComponentConfig(defaultConfig, config, 'button');
- */
-export const createComponentConfig = <T extends BaseComponentConfig & object>(
-  defaults: T,
-  userConfig: Partial<T> = {},
-  componentName: string,
-): T & { componentName: string; prefix: string } =>
-  mergeComponentConfig(
-    defaults,
-    getComponentDefaults(componentName as keyof ComponentConfigMap),
-    userConfig,
-    componentName,
-  );
 
 
 /**
