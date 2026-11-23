@@ -409,12 +409,46 @@ try {
       };
     });
     console.log(`MEASURE brief menus=${brief.menus} open=${brief.open} items=${brief.items} buttons=${brief.buttons} height=${brief.height}`);
-    if (brief.menus !== 9 || brief.open !== 9 || brief.items !== 18 || brief.buttons !== 18 || brief.height !== "56px") {
+    if (brief.menus !== 9 || brief.open !== 0 || brief.items !== 18 || brief.buttons !== 18 || brief.height !== "56px") {
       throw new Error(`owner page: ${JSON.stringify(brief)}`);
     }
+    await page.evaluate(async () => {
+      for (const fab of document.querySelectorAll<HTMLElement>(".mtrl-fab")) fab.click();
+      await new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    });
+    const clip = () => page.evaluate(() => {
+      const width = window.innerWidth;
+      const labels = Array.from(document.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item-text"));
+      const outside = labels.flatMap((label) => {
+        const box = label.getBoundingClientRect();
+        const problems: string[] = [];
+        if (box.width < 1) problems.push("empty");
+        if (box.left < -0.5) problems.push(`left ${box.left.toFixed(1)}`);
+        if (box.right > width + 0.5) problems.push(`right ${box.right.toFixed(1)}`);
+        return problems.length ? [`${label.textContent ?? ""} ${problems.join(" ")}`] : [];
+      });
+      return {
+        open: document.querySelectorAll(".mtrl-fab-menu--open").length,
+        outside,
+      };
+    });
+    const ltr = await clip();
+    console.log(`MEASURE brief ltr open=${ltr.open} outside=${ltr.outside.length}`);
+    if (ltr.open !== 9 || ltr.outside.length) throw new Error(`owner page ltr: ${JSON.stringify(ltr)}`);
+    // The direction control is a press outside the menus, so they close.
+    await page.click("#dir");
+    await page.evaluate(async () => {
+      for (const fab of document.querySelectorAll<HTMLElement>(".mtrl-fab")) {
+        const menu = fab.closest(".mtrl-fab-menu");
+        if (menu && !menu.classList.contains("mtrl-fab-menu--open")) fab.click();
+      }
+      await new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    });
+    const rtl = await clip();
+    console.log(`MEASURE brief rtl open=${rtl.open} outside=${rtl.outside.length}`);
+    if (rtl.open !== 9 || rtl.outside.length) throw new Error(`owner page rtl: ${JSON.stringify(rtl)}`);
     await page.click("#theme");
     const dark = await page.evaluate(() => document.documentElement.getAttribute("data-theme-mode"));
-    await page.click("#dir");
     const dir = await page.evaluate(() => document.documentElement.dir);
     if (dark !== "dark" || dir !== "rtl") throw new Error(`owner controls: theme=${dark} dir=${dir}`);
     page.off("request", onRequest);
@@ -458,9 +492,9 @@ body { margin: 0; font: 14px/1.4 sans-serif; background: var(--mtrl-sys-color-su
 header { display: flex; gap: 12px; align-items: center; padding: 16px 24px; position: sticky; top: 0; background: var(--mtrl-sys-color-surface); }
 button.control { font: inherit; padding: 8px 12px; }
 main { display: flex; flex-wrap: wrap; gap: 32px; padding: 24px; }
-.case { width: 280px; position: relative; }
+.case { width: 320px; position: relative; }
 .case h2 { margin: 0 0 12px; font-size: 14px; font-weight: 500; }
-.slot { position: relative; height: 260px; display: flex; align-items: flex-end; }
+.slot { position: relative; height: 280px; display: flex; align-items: flex-end; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -491,7 +525,6 @@ for (const slot of document.querySelectorAll(".slot")) {
     items,
   });
   slot.append(menu.element);
-  menu.open();
 }
 document.getElementById("theme").addEventListener("click", () => {
   const root = document.documentElement;

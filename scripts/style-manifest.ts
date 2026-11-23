@@ -39,7 +39,7 @@ export const componentStyles: Record<
   button: { source: "components/button", dependencies: ["progress"] },
   "button-group": { source: "components/button-group", dependencies: ["button", "icon-button"] },
   fab: { source: "components/fab", dependencies: [] },
-  "fab-menu": { source: "components/fab-menu", dependencies: ["fab", "menu"] },
+  "fab-menu": { source: "components/fab-menu", dependencies: ["button", "fab", "menu"] },
   "extended-fab": { source: "components/extended-fab", dependencies: [] },
   "icon-button": { source: "components/icon-button", dependencies: [] },
   card: { source: "components/card", dependencies: ["button"] },
