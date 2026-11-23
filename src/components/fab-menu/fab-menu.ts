@@ -13,6 +13,7 @@ import { warnDev } from "../../core/utils/warn";
 import { composeButton } from "../button/compose";
 import createFab from "../fab";
 import type { FabVariant } from "../fab/types";
+import { fitVertically } from "../../core/dom/placement";
 import { createConfig, CLOSE_ICON } from "./config";
 import { staggerDelays } from "./stagger";
 import {
@@ -248,8 +249,11 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   // ---- The list presentation
 
   const reduced = () => matches("(prefers-reduced-motion: reduce)");
-  const stagger = (opening: boolean): number => {
-    const delays = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
+  const stagger = (opening: boolean, downward = false): number => {
+    // A list opening below the FAB shows its nearest item first too, and that
+    // item is the first in document order there, so the delays reverse.
+    const byDistance = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
+    const delays = downward ? [...byDistance].reverse() : byDistance;
     entries.forEach(({ element }, index) => element.style.setProperty(`--${PREFIX}-fab-menu-delay`, `${delays[index]}ms`));
     return Math.max(0, ...delays);
   };
@@ -267,12 +271,54 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
       element.style.setProperty(`--${PREFIX}-fab-menu-item-width`, `${content.offsetWidth}px`);
     });
 
+  /**
+   * Where the list opens, decided once per opening: above the FAB while it
+   * fits there, otherwise on the side with more room (the shared vertical
+   * rule), scrolling only when neither side holds it; and on the end side
+   * while it stays inside the window, otherwise on the start side. The
+   * placement classes say which; nothing moves it while it is open.
+   */
+  const placeList = (): boolean => {
+    const fab = root.getBoundingClientRect();
+    // Without layout (a tree that has not been rendered) the list keeps the
+    // upward opening it has always had.
+    if (fab.height === 0) return false;
+    const above = fab.top - FAB_MENU_LIST_GAP - WINDOW_MARGIN;
+    const below = window.innerHeight - fab.bottom - FAB_MENU_LIST_GAP - WINDOW_MARGIN;
+    // The list's own height, measured while closed: the items are laid out
+    // at their full 56dp, only their width is held at 0.
+    const fit = fitVertically({ preferred: "top", height: list.scrollHeight, above, below });
+    const downward = fit.side === "bottom";
+    root.classList.toggle(`${block}--list-down`, downward);
+    root.classList.toggle(`${block}--list-start`, crossesStart(fab));
+    // Upward, the room above is the ceiling it has always had; downward, only
+    // when that side cannot hold it.
+    list.style.maxHeight = downward
+      ? fit.maxHeight === null ? "" : `${fit.maxHeight}px`
+      : above > 0 ? `${above}px` : "";
+    return downward;
+  };
+
+  /** Whether the list, at its widest, would cross the window's start edge. */
+  const crossesStart = (fab: DOMRect): boolean => {
+    const width = widest();
+    if (width === 0) return false;
+    return getComputedStyle(root).direction === "rtl"
+      ? fab.left + width > window.innerWidth - WINDOW_MARGIN
+      : fab.right - width < WINDOW_MARGIN;
+  };
+
+  /** The widest item, as it will be revealed (its content's width). */
+  const widest = (): number =>
+    entries.reduce((widest, { element }) => {
+      const content = element.querySelector(`.${block}__item-content`) as HTMLElement | null;
+      return Math.max(widest, content?.offsetWidth ?? 0);
+    }, 0);
+
   const openList = () => {
     measure();
-    stagger(true);
-    // The items scroll behind the close button when the window is short.
-    const top = root.getBoundingClientRect().top;
-    list.style.maxHeight = top > 0 ? `${Math.max(0, top - FAB_MENU_LIST_GAP - WINDOW_MARGIN)}px` : "";
+    const downward = placeList();
+    stagger(true, downward);
     list.removeAttribute("inert");
     root.classList.add(`${block}--open`);
     document.addEventListener("pointerdown", onOutside, true);
@@ -288,6 +334,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     const hadFocus = list.contains(activeElementOf(list));
     list.setAttribute("inert", "");
     root.classList.remove(`${block}--open`);
+    root.classList.remove(`${block}--list-down`, `${block}--list-start`);
     document.removeEventListener("pointerdown", onOutside, true);
     if (restoreFocus || hadFocus) button.focus();
     setOpened(false);

@@ -193,6 +193,38 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
     }
   }
 
+  // Opening downward (the list does not fit above and there is more room
+  // below): it hangs under the FAB instead. Its items still run nearest to
+  // the FAB first, which is the first in document order here.
+  &--list-down .#{$component}__list {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+
+  // Opening on the start side, when the end side would cross the window's
+  // start edge: the alignment bottom-start already uses.
+  &--list-start {
+    .#{$component}__list {
+      @include d.sides(0, auto);
+      align-items: flex-start;
+    }
+
+    .#{$component}__item {
+      justify-content: flex-start;
+    }
+  }
+
+  // The placement class and the direction marker are the same element here:
+  // the runtime writes mtrl-rtl on this root, and dir="rtl" may sit on it.
+  &--list-start {
+    @include d.arms-self-only {
+      .#{$component}__list {
+        right: 0;
+        left: auto;
+      }
+    }
+  }
+
   &--menu .#{$component}__list {
     display: none;
   }
