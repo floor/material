@@ -330,9 +330,12 @@ describe("explicit contrast levels are opt-in", () => {
     // rules that beat the button sheet take their place (−80 B).
     // The button's outward focus ring is clipped by the list, so the item
     // draws the same 3px secondary ring inside the pill (+126 B).
+    // The list opens on the side with room below the FAB and from the start
+    // edge when its widest item would cross the window's start
+    // (styles/components/_fab-menu.scss: --list-down, --list-start; +269 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "c3902f041da36a1a2a5339c5bf01dd7f5afbbc8a40174f6921f78086ac789776",
-      length: 554479,
+      sha256: "22ce804e728c4d5e3d7d5c11632f8f80173222c56b5ff36b44b0d03c402f5b14",
+      length: 554748,
     });
   });
 
