@@ -26,7 +26,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build } from "vite";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture } from "./package-fixture";
 import * as coreTheme from "../src/core/theme";
 
@@ -67,12 +68,12 @@ div[data-theme]{padding:8px 16px;margin:4px 0;border-radius:8px;background:var(-
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 let fixture: Awaited<ReturnType<typeof createPackageFixture>> | undefined;
 
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);

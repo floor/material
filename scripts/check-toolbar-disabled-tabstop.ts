@@ -3,7 +3,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { baseStyles, componentStyles, resolveStyleDependencies } from "./style-manifest";
 import type createToolbar from "../src/components/toolbar";
@@ -29,11 +30,11 @@ window.disabledTabstop = {create, destroy(){}};` }));
   } }],
 });
 assert(built.success, String(built.logs));
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 const rows: unknown[] = [];
 try {
   for (const mode of ["factory", "slotted-native", "slotted-element"] as const) {
-    const page = await browser.newPage({ reducedMotion: "reduce" });
+    const page = await browser.browser()!.newPage({ reducedMotion: "reduce" });
     try {
       const errors: string[] = [];
       page.on("pageerror", e => errors.push(e.message));

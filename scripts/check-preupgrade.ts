@@ -34,7 +34,8 @@
 //   bun run build && bun run scripts/check-preupgrade.ts [element…]
 
 import assert from "node:assert/strict";
-import { chromium, type Frame, type Page } from "playwright";
+import { type Frame, type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves, type KnownMove } from "./preupgrade-moves";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
@@ -371,7 +372,7 @@ const labelPlace = (result: Result): string => {
 };
 
 const measure = async (path: string, preupgrade: boolean, hosts: string, script: string, item?: PreupgradeCase): Promise<[Snapshot, Snapshot]> => {
-  const p = await browser.newPage({ viewport: { width: (item?.width ?? STAGE_WIDTH) + 40, height: 800 } });
+  const p = await browser.browser()!.newPage({ viewport: { width: (item?.width ?? STAGE_WIDTH) + 40, height: 800 } });
   const errors: string[] = [];
   p.on("pageerror", (error) => errors.push(error.message));
   try {
@@ -615,7 +616,7 @@ const report = (results: Result[], checkMoves: boolean, control = false): string
   return failed;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
   // Every element has a default case.
   const kebab = (name: string): string => name.replace(/[A-Z]/g, (ch) => `-${ch.toLowerCase()}`);
@@ -671,7 +672,7 @@ try {
   let buttonMove = 0;
   let switchMove = 0;
   if (!only.length) {
-    const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+    const p = await browser.browser()!.newPage({ viewport: { width: 400, height: 800 } });
     try {
       await p.goto(`http://127.0.0.1:${server.port}/one`);
       await settle(p);
@@ -715,7 +716,7 @@ try {
   // Phase B: the stylesheet is loaded and the script is still held back.
   // A rendered host must not take the pre-upgrade paint; a bare host must.
   if (!only.length) {
-    const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+    const p = await browser.browser()!.newPage({ viewport: { width: 400, height: 800 } });
     try {
       await p.goto(`http://127.0.0.1:${server.port}/phase-b`);
       await settle(p);
@@ -849,7 +850,7 @@ try {
   // upgraded host is not rendered), and stays form-associated: the same page
   // proves the value reaches a real form and reads back.
   if (!only.length || only.includes("text-field")) {
-    const p = await browser.newPage({ viewport: { width: 900, height: 800 } });
+    const p = await browser.browser()!.newPage({ viewport: { width: 900, height: 800 } });
     try {
       await p.goto(`http://127.0.0.1:${server.port}/secret`);
       await settle(p);

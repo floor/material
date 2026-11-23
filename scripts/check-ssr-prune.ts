@@ -10,6 +10,7 @@
 // superset, so no match there still proves no match for the original).
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
+import { launchChromium } from "./browser-profile";
 import { chromium, firefox, webkit } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -43,7 +44,11 @@ const page = `<!doctype html><html><head><meta charset="utf-8"><style>body{margi
   rendered.map(entry => `<section class="case" data-element="${entry.element}">${entry.html}</section>`).join("\n") +
   `</main></body></html>`;
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(page, { headers: { "Content-Type": "text/html" } }) });
-const browser = await ({ chromium, firefox, webkit })[engine].launch();
+// Chromium keeps its profile inside the worktree (browser-profile.ts); the
+// other engines launch as before.
+const browser = engine === "chromium"
+  ? (await launchChromium()).browser()!
+  : await ({ chromium, firefox, webkit })[engine].launch();
 type Result = { element: string; root: boolean; served: number; full: number; dropped: number; selectors: number; failures: string[] };
 let equal = 0;
 let failures = 0;

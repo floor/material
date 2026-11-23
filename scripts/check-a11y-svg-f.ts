@@ -19,7 +19,8 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium, type CDPSession } from "playwright";
+import { type CDPSession } from "playwright";
+import { launchChromium } from "./browser-profile";
 
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" data-icon="menu"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>`;
 const SAVE = `<svg viewBox="0 0 24 24"><title>Save</title><path d="M0 0h24v24H0z"/></svg>`;
@@ -100,9 +101,9 @@ const server = Bun.serve({
   },
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, colorScheme: "light" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1280, height: 900 }, colorScheme: "light" });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(server.url.href);

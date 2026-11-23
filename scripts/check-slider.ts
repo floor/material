@@ -3,7 +3,8 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { gzipSync } from "node:zlib";
 import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
@@ -65,15 +66,15 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
     window.slider=createSlider(config);host.append(window.slider.element);
   };window.ready=true;</script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => window.ready);
   await checkSliderNames(page, artifacts);
-  const old = reference ? await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" }) : null;
+  const old = reference ? await browser.browser()!.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" }) : null;
   if (old) { await old.goto(`http://127.0.0.1:${server.port}/?reference`); await old.waitForFunction(() => window.ready); }
   const scenarios: (SliderConfig & { name: string })[] = [
     { name: "single", value: 35 }, { name: "minimum", value: 0 }, { name: "maximum", value: 100 },
@@ -289,7 +290,7 @@ try {
   // Motion, with the slider's own transitions: a tap settles on the default spatial
   // spring (peaks about 270ms in, about 1.5% over, settled by 450ms), which the M3 sliders
   // video approaches (about 300ms, 3-5%); nothing moves on the first render or in a drag.
-  const moving = await browser.newPage({ viewport: { width: 600, height: 250 } });
+  const moving = await browser.browser()!.newPage({ viewport: { width: 600, height: 250 } });
   moving.on("pageerror", error => errors.push(error.message));
   await moving.goto(`http://127.0.0.1:${server.port}/?motion`);
   await moving.waitForFunction(() => window.ready);
@@ -486,7 +487,7 @@ try {
   // not cross the boundary and the RTL element kept every LTR position.
   const elementErrors: string[] = [];
   const elementBoxes = async (dir: "ltr" | "rtl") => {
-    const elementPage = await browser.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
+    const elementPage = await browser.browser()!.newPage({ viewport: { width: 600, height: 250 }, reducedMotion: "reduce" });
     elementPage.on("pageerror", error => elementErrors.push(error.message));
     await elementPage.goto(`http://127.0.0.1:${server.port}/element?dir=${dir}`);
     await elementPage.waitForFunction(() => window.elementReady);

@@ -29,7 +29,8 @@
 //   bun run scripts/check-tabs.ts
 
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { tabsResponsive } from "../src/components/tabs/responsive";
 import { checkTabsSSRName } from "./check-tabs-ssr-name";
 
@@ -157,11 +158,11 @@ type Geometry = {
   indicatorPosition: string;
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 try {
-  const page = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);
@@ -408,7 +409,7 @@ try {
   // The element route: `<m-tab badge="8">` reads the badge into the same
   // factory's config, but the tabs live in the host's shadow root — counted
   // deep, shadow roots included, as the reported defect was counted.
-  const elementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const elementPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
   const elementErrors: string[] = [];
   elementPage.on("pageerror", (error) => elementErrors.push(error.message));
   await elementPage.goto(`http://127.0.0.1:${server.port}/element`);
@@ -469,7 +470,7 @@ try {
   await page.waitForTimeout(300);
   const iconAdded = await badgeOf();
 
-  const iconElementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const iconElementPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
   iconElementPage.on("pageerror", (error) => elementErrors.push(error.message));
   await iconElementPage.goto(`http://127.0.0.1:${server.port}/element-icon`);
   await iconElementPage.waitForFunction(() =>
@@ -488,7 +489,7 @@ try {
   const elementRtl: Array<{ name: string; direction: string; expected: "ltr" | "rtl"; m: Measured | undefined }> = [];
   for (const where of ["html", "container"]) {
     for (const stackedRow of [false, true]) {
-      const rtlPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+      const rtlPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
       rtlPage.on("pageerror", (error) => elementErrors.push(error.message));
       await rtlPage.goto(`http://127.0.0.1:${server.port}/element?dir=${where}${stackedRow ? "&icon" : ""}`);
       await rtlPage.waitForFunction(() =>
@@ -706,7 +707,7 @@ try {
 
   // The element route: the tabs live in the host's shadow root and the name
   // must be computed through it.
-  const nameElementPage = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  const nameElementPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
   nameElementPage.on("pageerror", (error) => elementErrors.push(error.message));
   await nameElementPage.goto(`http://127.0.0.1:${server.port}/element`);
   await nameElementPage.waitForFunction(() =>
@@ -727,7 +728,7 @@ try {
   // paint between the built layout and the responsive one. The first frame the
   // group can be painted in is sampled after insertion, and the stylesheet has
   // to agree with the classes by then.
-  const responsivePage = await browser.newPage({ viewport: { width: 400, height: 600 } });
+  const responsivePage = await browser.browser()!.newPage({ viewport: { width: 400, height: 600 } });
   const responsiveErrors: string[] = [];
   responsivePage.on("pageerror", (error) => responsiveErrors.push(error.message));
   await responsivePage.goto(`http://127.0.0.1:${server.port}/responsive`);

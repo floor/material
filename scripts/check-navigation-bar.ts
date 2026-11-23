@@ -9,7 +9,8 @@
 // hide on scroll with and without reduced motion, and teardown.
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type { NavigationBarComponent, NavigationBarConfig } from "../src/components/navigation-bar/types";
 
 declare global {
@@ -119,10 +120,10 @@ const measure = (page: Page) => page.evaluate(() => {
 const near = (actual: number, expected: number, label: string, tolerance = 0.5) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${label}: ${actual} (expected ${expected})`);
 
-const browser = await chromium.launch();
+const browser = await launchChromium();
 try {
   for (const stylesheet of ["full", "selective"]) {
-    const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+    const page = await browser.browser()!.newPage({ viewport: { width: 1000, height: 700 } });
     await page.goto(`${server.url.href}${stylesheet === "selective" ? "?selective" : ""}`);
     await page.waitForFunction(() => typeof window.mountBar === "function");
 
@@ -182,7 +183,7 @@ try {
     await page.close();
   }
 
-  const page = await browser.newPage({ viewport: { width: 400, height: 600 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 400, height: 600 } });
   await page.goto(server.url.href);
   await page.waitForFunction(() => typeof window.mountBar === "function");
 
@@ -249,7 +250,7 @@ try {
   assert.deepEqual(await badgeState(), { gone: false, name: "Count, 7", text: "7" }, "a count after the empty values shows again");
 
   // The element, through its shadow root
-  const elementPage = await browser.newPage({ viewport: { width: 400, height: 600 } });
+  const elementPage = await browser.browser()!.newPage({ viewport: { width: 400, height: 600 } });
   const elementErrors: string[] = [];
   elementPage.on("pageerror", (error) => elementErrors.push(error.message));
   await elementPage.goto(`${server.url.href}element`);

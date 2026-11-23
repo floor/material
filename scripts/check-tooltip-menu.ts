@@ -14,7 +14,8 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { TOOLTIP_DEFAULTS } from "../src/components/tooltip/constants";
 import { componentStyles } from "./style-manifest";
@@ -66,9 +67,9 @@ const server = Bun.serve({
 
 type Box = { top: number; left: number; width: number; height: number };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(server.url.href);
