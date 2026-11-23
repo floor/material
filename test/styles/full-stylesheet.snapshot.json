@@ -758,7 +758,7 @@
     ".mtrl-fab.mtrl-fab--lowered:hover",
     ".mtrl-fab.mtrl-fab-menu__fab",
     ".mtrl-fab.mtrl-fab-menu__fab .mtrl-fab__icon,.mtrl-fab.mtrl-fab-menu__fab .mtrl-fab-menu__close",
-    ".mtrl-fab.mtrl-fab-menu__fab>*",
+    ".mtrl-fab.mtrl-fab-menu__fab>*:not(.mtrl-ripple)",
     ".mtrl-fab:active",
     ".mtrl-fab:active:not(:has(>.mtrl-ripple))::before",
     ".mtrl-fab:disabled,.mtrl-fab.mtrl-fab--disabled",
