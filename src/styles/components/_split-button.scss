@@ -216,6 +216,15 @@ $gap: 2px;
         translate: 0 0;
         rotate: 180deg;
       }
+
+      // The closed nudge is a direction arm, and that arm outranks the rule
+      // above. Open, the corner is round, so the icon sits on the centre in
+      // both directions.
+      @include m.rtl {
+        .#{$component}__chevron {
+          translate: 0 0;
+        }
+      }
     }
   }
 
