@@ -246,6 +246,9 @@ jobs:
           - group: button-profile
             browsers: chromium
             checks: button-profile:check
+          - group: md2
+            browsers: chromium
+            checks: md2:check
           - group: listbox
             browsers: chromium firefox webkit
             checks: listbox:check

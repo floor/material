@@ -32,6 +32,74 @@ export function elementStyleModule(name: string, _css: string, imports: string[]
 }
 
 /** One pre-upgrade file: the banner and the rules in `@layer mtrl.preupgrade`. */
+/**
+ * The MD2 look's module: the sheet as a string, the shadow adoption runtime,
+ * and the document sheet import. A page that imports `material/styles/md2`
+ * gets the document rules with the import and, for the elements, the same
+ * rules adopted into the shadow roots of hosts flagged `data-style="md2"`.
+ * Nothing here runs unless the module is imported.
+ */
+export function md2StyleModule(css: string): string {
+  return `import "./md2.css";
+
+/** The MD2 sheet, as text: the same rules the document file carries. */
+export const md2Css = ${JSON.stringify(css)};
+
+const adopt = (root) => {
+  if (root.adoptedStyleSheets.includes(sheet)) return;
+  root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+};
+
+const sheet = (() => {
+  if (typeof CSSStyleSheet === "undefined" || !("replaceSync" in CSSStyleSheet.prototype)) return null;
+  try {
+    const next = new CSSStyleSheet();
+    next.replaceSync(md2Css);
+    return next;
+  } catch {
+    return null;
+  }
+})();
+
+/**
+ * Adopts the MD2 sheet into one element's shadow root, flagged or not: the
+ * caller decides which hosts it wants. Idempotent, and a no-op on a host
+ * without a shadow root yet.
+ */
+export function applyMd2(host) {
+  const root = host.shadowRoot;
+  if (!root) return;
+  if (sheet) {
+    adopt(root);
+    return;
+  }
+  if (root.querySelector("style[data-md2]")) return;
+  const style = host.ownerDocument.createElement("style");
+  style.setAttribute("data-md2", "");
+  style.textContent = md2Css;
+  root.append(style);
+}
+
+const scan = () => {
+  for (const host of document.querySelectorAll('[data-style="md2"]')) applyMd2(host);
+};
+
+const observe = () => {
+  scan();
+  // A host upgrades after it is in the page (its shadow root arrives in
+  // connectedCallback), so the observer runs the scan again on every change.
+  new MutationObserver(scan).observe(document.documentElement, {
+    subtree: true, childList: true, attributes: true, attributeFilter: ["data-style"],
+  });
+};
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", observe, { once: true });
+  else observe();
+}
+`;
+}
+
 export function preupgradeStylesheet(rules: string, banner: string): string {
   return `${banner}\n${preupgradeSheet(rules)}\n`;
 }
@@ -201,6 +269,14 @@ export async function buildStyles(outdir: string, banner: string) {
   await emit("styles/typography", typographyStyles, typographyDependencies);
   await emitExplicit(`styles/${contrastStyle}`, "baseline", true);
   await emit("styles/utilities", utilityStyles);
+  // The MD2 look: opt-in, unlayered, and its own asset. It is not part of the
+  // full stylesheet or of any default entry, so a page that does not import it
+  // ships no rule of it.
+  const md2Css = sass.compileString(`@use "md2";`, options).css;
+  await writeFile(`${outdir}/styles/md2.css`, `${banner}\n${md2Css}\n`);
+  await writeFile(`${outdir}/styles/md2.js`, md2StyleModule(md2Css));
+  await writeFile(`${outdir}/styles/md2.d.ts`, await readFile("src/styles/md2.ts", "utf8"));
+  await writeFile(`${outdir}/styles/md2.css.d.ts`, "export {};\n");
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }

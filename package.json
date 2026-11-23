@@ -512,6 +512,14 @@
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/solid.js",
       "default": "./dist/ssr/solid.js"
+    },
+    "./styles/md2": {
+      "types": "./dist/styles/md2.d.ts",
+      "import": "./dist/styles/md2.js"
+    },
+    "./styles/md2.css": {
+      "types": "./dist/styles/md2.css.d.ts",
+      "default": "./dist/styles/md2.css"
     }
   },
   "files": [
@@ -645,7 +653,8 @@
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
     "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
     "comparators:check": "bun run scripts/check-comparators.ts",
-    "button-profile:check": "bun run scripts/check-button-profile.ts"
+    "button-profile:check": "bun run scripts/check-button-profile.ts",
+    "md2:check": "bun run scripts/check-md2.ts"
   },
   "repository": {
     "type": "git",

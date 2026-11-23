@@ -18,7 +18,7 @@ import type { OutputFile } from "./inventory";
 
 /** The selective `styles/*` entries, in manifest order. */
 export const styleEntries = [
-  "base", "base-elements", "base-lite", "typography", contrastStyle, "utilities",
+  "base", "base-elements", "base-lite", "typography", contrastStyle, "utilities", "md2",
   ...Object.keys(componentStyles),
   ...Object.keys(optionalStyleProfiles),
 ];
