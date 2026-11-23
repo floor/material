@@ -17,6 +17,24 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.1] - 2026-11-23
+
+The FAB menu now uses real buttons and opens where it fits on screen, and the top app bar takes the app bar name.
+
+### Added
+
+- **App bar and navigation drawer names.** Material Design 3's Expressive update renamed the top app bar to the app bar, and names the drawer the navigation drawer. `createAppBar`, `AppBarConfig` and `AppBarComponent`, the `<m-app-bar>` element and the `AppBar` adapters join their `TopAppBar` counterparts, and `createNavigationDrawer`, the `NavigationDrawer*` types, the `<m-navigation-drawer>` and `<m-navigation-drawer-item>` elements and the `NavigationDrawer` and `NavigationDrawerItem` adapters join the drawer's. Everything is additive: `createTopAppBar`, `createDrawer`, the old types, elements and adapters stay exported and working, marked `@deprecated`, and no CSS class or token is renamed. `createBottomAppBar` and its types are marked `@deprecated` in favour of `createToolbar` with `variant="docked" placement="bottom"`; the bottom app bar's code does not change.
+
+### Fixed
+
+- Button elements now forward expanded, popup, and pressed states to their native controls. Browsers with ARIA element reflection also expose controls and description relationships across the shadow boundary.
+- **The FAB menu's list closes on the side it opened.** A list below the FAB was leaving from the top and jumping back above the button while its items were still going. It now stays where it opened, and the item farthest from the button leaves first.
+- **FAB menu items.** Each list item is a button, built from the button's own defaults. A public button default does not reach it. A press draws the ripple at that point. The focus ring sits inside the pill. The pill, the label and the motion stay as they are.
+- **The FAB menu's list opens where the window has room, and `autoFlip` is honoured.** The list hung above the FAB alone, and a FAB near the top of a short window cut it; it now opens above while it fits there, otherwise on the side with more room, reaching into the page from the start edge with the stagger reversed, and scrolling only when neither side holds it. Menus and selects documented `autoFlip` but their positioner never read it; `autoFlip: false` now keeps the preferred side — capped, so the list scrolls — and `true` places exactly as before, for main menus and submenus. A menu that fits is placed exactly as it was.
+- **FAB menu ripple.** A press at the centre of the button draws the wave on that point. The icon and the close icon still share one cell.
+- **`expandOnFocus: false` on search holds for the leading icon.** Activating the bar's search button — by click, Enter or Space — took focus into the input and opened the view, suggestions and scrim, although focus alone was asked not to open it; a list-filter search could be opened into its empty suggestions view by a stray activation. The icon now opens the view only when expansion on focus is allowed, and otherwise takes focus into the input and leaves the view closed. Programmatic `expand()`, the view's back arrow and every default configuration behave as before.
+- Under forced colours a menu or dialog in the top layer keeps its edge: the popover and dialog resets that clear the border no longer outrank the forced-colours rule (https://m3.material.io/components/menus/guidelines).
+
 ## [3.16.0] - 2026-11-19
 
 ### Added
@@ -7353,7 +7371,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.1...HEAD
+[3.16.1]: https://github.com/floor/material/compare/v3.16.0...v3.16.1
 [3.16.0]: https://github.com/floor/material/compare/v3.15.3...v3.16.0
 [3.15.3]: https://github.com/floor/material/compare/v3.15.2...v3.15.3
 [3.15.2]: https://github.com/floor/material/compare/v3.15.1...v3.15.2
