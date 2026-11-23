@@ -67,7 +67,7 @@ const fabMenuSpec = {
   // `config` below supplies the host and the items
   create: (config) => create(config as unknown as FabMenuConfig & { host: HTMLElement }),
   // The menu presentation's menu renders in this shadow root, next to the FAB
-  styles: ["fab", "menu", "fab-menu"],
+  styles: ["button", "fab", "menu", "fab-menu"],
   attributes: {
     // Applied in the attribute callback, where the events it causes are not
     // dispatched. The menu reflecting its own state changes nothing.

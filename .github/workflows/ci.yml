@@ -231,6 +231,9 @@ jobs:
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check
+          - group: fab-menu-items
+            browsers: chromium
+            checks: fab-menu-items:check
           - group: app-bar-conformance
             browsers: chromium
             checks: app-bar-conformance:check top-app-bar:check

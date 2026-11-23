@@ -224,23 +224,37 @@ $swap: v.spring-delay-scale('spring-fast-spatial-duration', 48ms);
     cursor: pointer;
     overflow: hidden;
     opacity: 0;
+    // The button's own minimum is wider than a closed item.
+    min-width: 0;
     transition:
       opacity $effects,
       width $spatial;
     transition-delay: var(--#{$component}-delay, 0ms);
+  }
 
-    &:hover {
-      @include m.state-layer(currentColor, 'hover');
-    }
+  // The item is a button. Where the button sheet is more specific, the pill
+  // stays: full corner, the colour set, no lift, and a press does not square it.
+  // Hover, focus and the press come from the button's state layer and ripple.
+  button.#{$component}__item {
+    gap: 0;
+    height: 56px;
+    padding: 0;
+    border: none;
+    border-radius: v.shape('full');
+    background-color: var(--#{$component}-item);
+    color: var(--#{$component}-on-item);
+    box-shadow: none;
+    @include m.typography('title-medium');
 
-    &:focus-visible {
-      @include m.state-layer(currentColor, 'focus');
-      outline: 2px solid t.color('secondary');
-      outline-offset: -2px;
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--#{$component}-item);
+      box-shadow: none;
     }
 
     &:active {
-      @include m.state-layer(currentColor, 'pressed');
+      border-radius: v.shape('full');
     }
   }
 

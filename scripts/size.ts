@@ -135,7 +135,7 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   // (menu/inner, its symbol module, is the only menu module still initial).
   "split-button": ["button"],
   toolbar: ["button", "icon-button"],
-  "fab-menu": ["fab"],
+  "fab-menu": ["button", "fab"],
 };
 
 export const SCENARIO_DEFS = [

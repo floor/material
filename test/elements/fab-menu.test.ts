@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 import { defineFabMenu, type FabMenuElement } from "../../src/elements/fab-menu";
 import { registerStyles } from "../../src/elements/styles";
 
-registerStyles({ ripple: "", fab: "", menu: "", "fab-menu": "" });
+registerStyles({ ripple: "", button: "", fab: "", menu: "", "fab-menu": "" });
 defineFabMenu();
 
 afterEach(() => {

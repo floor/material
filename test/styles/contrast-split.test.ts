@@ -326,9 +326,11 @@ describe("explicit contrast levels are opt-in", () => {
     // Drawer disclosures add child padding, state layers and group motion.
     // The FAB menu button keeps the ripple out of the icon cell, so the
     // full sheet's selector gains :not(.mtrl-ripple) (+18 B, CI 45139254856).
+    // List items are buttons. Their own state layers leave, and the pill
+    // rules that beat the button sheet take their place (−80 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "85c34a880c0bb460bb9239aa5864fc832ae25b534763cb943189624382b1bc89",
-      length: 554433,
+      sha256: "b1b240760654665cdffa107f206eedef0b98d652662e4ad0563571e8e93249e0",
+      length: 554353,
     });
   });
 
