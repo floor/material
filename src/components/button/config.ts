@@ -36,12 +36,20 @@ export const defaultConfig: ButtonConfig = {
  * by createComponentConfig.
  *
  * @param {ButtonConfig} config - User provided configuration
+ * @param {boolean} isolated - Internal. Build from the button defaults plus
+ *   this config, and do not read the public button registry. The registry
+ *   itself is left untouched.
  * @returns {ButtonConfig} Complete configuration with defaults applied
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: ButtonConfig = {}): ButtonConfig =>
-  createComponentConfig(defaultConfig, config, "button") as ButtonConfig;
+export const createBaseConfig = (config: ButtonConfig = {}, isolated = false): ButtonConfig => {
+  // The lookup name is not "button", so setComponentDefaults("button", ...)
+  // stays where the app put it. The part is still a button once built.
+  const base = createComponentConfig(defaultConfig, config, isolated ? "button\0" : "button") as ButtonConfig;
+  if (isolated) base.componentName = "button";
+  return base;
+};
 
 /**
  * Generates element configuration for the Button component.

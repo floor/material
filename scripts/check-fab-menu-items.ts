@@ -492,7 +492,72 @@ try {
     labelMount.menu.destroy();
     mtrl.clearGlobalDefaults();
     stage.replaceChildren();
-    return { disabled, disabledCounts, typed, labelled };
+
+    // The first item's button element is the second button the menu creates
+    // (the FAB is the first). A button created there still sees the app's
+    // defaults, and a defaults write there is still there afterwards.
+    const reenter = (route: "factory" | "element") => {
+      mtrl.setComponentDefaults("button", { disabled: true, ariaLabel: "Global button" });
+      const orig = document.createElement.bind(document);
+      const previous = document.createElement;
+      let buttons = 0;
+      const during = { saw: false, disabled: false, label: null as string | null };
+      document.createElement = ((tag: string, options?: ElementCreationOptions) => {
+        const el = orig(tag, options);
+        if (tag === "button" && ++buttons === 2) {
+          const made = mtrl.createButton();
+          during.saw = true;
+          during.disabled = made.element.disabled;
+          during.label = made.element.getAttribute("aria-label");
+          made.destroy();
+          mtrl.setComponentDefaults("button", { ariaLabel: "Updated" });
+        }
+        return el;
+      }) as typeof document.createElement;
+      let items: HTMLButtonElement[] = [];
+      try {
+        stage.replaceChildren();
+        if (route === "factory") {
+          const menu = mtrl.createFabMenu({
+            icon, ariaLabel: "Compose", presentation: "list", placement: "none",
+            items: [{ id: "reply", text: "Reply", icon }, { id: "forward", text: "Forward", icon }],
+          });
+          stage.append(menu.element);
+          items = read(menu.element);
+          menu.destroy();
+        } else {
+          const host = document.createElement("m-fab-menu");
+          host.setAttribute("presentation", "list");
+          host.setAttribute("aria-label", "Compose");
+          host.setAttribute("icon", icon);
+          for (const item of [{ id: "reply", text: "Reply" }, { id: "forward", text: "Forward" }]) {
+            const declared = document.createElement("m-fab-menu-item");
+            declared.setAttribute("value", item.id);
+            declared.textContent = item.text;
+            host.append(declared);
+          }
+          stage.append(host);
+          items = read(host.shadowRoot!);
+          host.remove();
+        }
+      } finally {
+        document.createElement = previous;
+      }
+      const after = mtrl.createButton();
+      const report = {
+        during,
+        afterDisabled: after.element.disabled,
+        afterLabel: after.element.getAttribute("aria-label"),
+        itemDisabled: items.map((item) => item.disabled),
+        itemLabel: items.map((item) => item.getAttribute("aria-label")),
+      };
+      after.destroy();
+      mtrl.clearGlobalDefaults();
+      stage.replaceChildren();
+      return report;
+    };
+    const reentered = { factory: reenter("factory"), element: reenter("element") };
+    return { disabled, disabledCounts, typed, labelled, reentered };
   }, icon);
   console.log(`MEASURE defaults ${JSON.stringify(defaults)}`);
   const itemUntouched = (values: boolean[]) => values.length === 2 && values.every((value) => value === false);
@@ -516,6 +581,18 @@ try {
   const noLabel = (values: Array<string | null>) => values.length === 2 && values.every((value) => value === null);
   if (!noLabel(defaults.labelled.factoryLabel) || !noLabel(defaults.labelled.elementLabel) || defaults.labelled.publicLabel !== "Global button") {
     fail(`button name: ${JSON.stringify(defaults.labelled)}`);
+  }
+  for (const route of ["factory", "element"] as const) {
+    const again = defaults.reentered[route];
+    if (!again.during.saw || !again.during.disabled || again.during.label !== "Global button") {
+      fail(`${route} re-entrant button: ${JSON.stringify(again.during)}`);
+    }
+    if (again.afterDisabled || again.afterLabel !== "Updated") {
+      fail(`${route} re-entrant write: ${JSON.stringify(again)}`);
+    }
+    if (!itemUntouched(again.itemDisabled) || !noLabel(again.itemLabel)) {
+      fail(`${route} re-entrant items: ${JSON.stringify(again)}`);
+    }
   }
 
   assert.equal(errors.length, 0, errors.join("\n"));
