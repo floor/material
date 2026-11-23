@@ -2,10 +2,9 @@
 /**
  * The split button's chevron ink, not its svg box.
  *
- * Closed, the ink sits on the button's vertical centre and keeps the optical
- * nudge toward the flat edge. Open, after the turn, the ink is on the button's
- * centre on both axes. The svg box is not the measurement: the glyph's ink is
- * off-centre in that box, and a 180 degree turn moves it.
+ * Closed and open, the ink sits on the trailing button's centre on both axes.
+ * Opening the menu only rotates the glyph. The svg box is not the measurement:
+ * the glyph's ink is off-centre in that box, and a 180 degree turn moves it.
  */
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
@@ -16,7 +15,7 @@ import { launchChromium } from "./browser-profile";
 const root = resolve(import.meta.dir, "..");
 const scratch = join(root, "tmp", "check-split-button-chevron");
 const sizes = ["xs", "s", "m", "l", "xl"] as const;
-/** Open must sit on the button centre, and closed must sit on its vertical centre. */
+/** Ink centre against the trailing button's centre, closed and open. */
 const TOLERANCE = 0.25;
 
 const css = sass.compileString(`@use "components/button"; @use "utilities/ripple"; @use "components/split-button";`, {
@@ -148,16 +147,22 @@ try {
     );
   }
 
-  const off = rows.filter((row) => {
-    if (row.state === "open") return Math.abs(row.dx) > TOLERANCE || Math.abs(row.dy) > TOLERANCE;
-    return Math.abs(row.dy) > TOLERANCE;
-  });
+  const off = rows.filter((row) => Math.abs(row.dx) > TOLERANCE || Math.abs(row.dy) > TOLERANCE);
   assert.deepEqual(
     off,
     [],
     `chevron ink is off the trailing button by more than ${TOLERANCE}px`,
   );
-  console.log("split button chevron: open ink is centred, closed ink is on the vertical centre");
+  const shifted: string[] = [];
+  for (const closedRow of rows.filter((row) => row.state === "closed")) {
+    const openRow = rows.find((row) => row.state === "open" && row.size === closedRow.size && row.dir === closedRow.dir);
+    assert(openRow, `missing open measurement for ${closedRow.dir} ${closedRow.size}`);
+    if (Math.abs(closedRow.dx - openRow.dx) > TOLERANCE || Math.abs(closedRow.dy - openRow.dy) > TOLERANCE) {
+      shifted.push(`${closedRow.dir} ${closedRow.size}: closed ${closedRow.dx},${closedRow.dy} open ${openRow.dx},${openRow.dy}`);
+    }
+  }
+  assert.deepEqual(shifted, [], "closed and open chevron centres differ");
+  console.log("split button chevron: ink stays on the trailing-button centre, and only rotates");
 } finally {
   await browser.close();
   server.stop(true);
