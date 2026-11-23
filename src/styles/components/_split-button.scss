@@ -65,11 +65,12 @@ $gap: 2px;
   // to about a fiftieth of a pixel and the split reads as a square cut.
   // Half the height is the same pill and leaves the inner corner alone.
   //
-  // The size classes set the three radii; a root without one keeps the
-  // default size's values, which is the size the factory defaults to.
+  // The size classes set the radii and the closed nudge; a root without one
+  // keeps the default size's values, which is the size the factory defaults to.
   --#{$component}-pill: #{math.div(map.get($sizes, "s", "height"), 2)};
   --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($sizes, "s", "inner")});
   --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($sizes, "s", "inner-active")});
+  --#{$component}-nudge: #{map.get($sizes, "s", "offset")};
 
   .#{$button} {
     transition:
@@ -85,6 +86,7 @@ $gap: 2px;
       --#{$component}-pill: #{math.div(map.get($spec, "height"), 2)};
       --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($spec, "inner")});
       --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($spec, "inner-active")});
+      --#{$component}-nudge: #{map.get($spec, "offset")};
 
       .#{$button} {
         height: map.get($spec, "height");
@@ -117,13 +119,6 @@ $gap: 2px;
         .#{$component}__chevron {
           width: map.get($spec, "icon");
           height: map.get($spec, "icon");
-          translate: calc(-1 * #{map.get($spec, "offset")}) 0;
-        }
-
-        @include m.rtl {
-          .#{$component}__chevron {
-            translate: map.get($spec, "offset") 0;
-          }
         }
       }
     }
@@ -208,22 +203,16 @@ $gap: 2px;
   }
 
   // ---------------------------------------------------------------------------
-  // Open: the inner corner rounds off and the chevron turns over
+  // Open: the inner corner rounds off and the chevron turns over. The closed
+  // nudge is a direction arm, so open sets the distance to zero and both arms
+  // read it. Open, the corner is round and the icon sits on the centre.
   // ---------------------------------------------------------------------------
   &--expanded {
+    --#{$component}-nudge: 0px;
+
     .#{$component}__trailing {
       .#{$component}__chevron {
-        translate: 0 0;
         rotate: 180deg;
-      }
-
-      // The closed nudge is a direction arm, and that arm outranks the rule
-      // above. Open, the corner is round, so the icon sits on the centre in
-      // both directions.
-      @include m.rtl {
-        .#{$component}__chevron {
-          translate: 0 0;
-        }
       }
     }
   }
@@ -235,9 +224,14 @@ $gap: 2px;
   &__chevron {
     display: block;
     flex: none;
+    translate: calc(-1 * var(--#{$component}-nudge)) 0;
     transition:
       rotate v.motion("duration-medium1") v.motion("easing-standard"),
       translate v.motion("duration-medium1") v.motion("easing-standard");
+
+    @include m.rtl {
+      translate: var(--#{$component}-nudge) 0;
+    }
   }
 
   // ---------------------------------------------------------------------------
