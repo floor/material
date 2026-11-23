@@ -3,7 +3,8 @@
 // directions. Runs against dist, independently of any application or website.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import type { NavigationRailComponent } from "../src/components/navigation-rail/types";
 import type { NavigationRailElement } from "../src/elements/navigation-rail";
 import type { ExtendedFabElement } from "../src/elements/extended-fab";
@@ -38,7 +39,7 @@ export async function checkRailHeaderFab(): Promise<void> {
 </head><body><div id="stage"></div><div id="outside"></div><script type="module" src="/fixture.js"></script></body></html>`,
     { headers: { "Content-Type": "text/html" } });
   } });
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   const failures: string[] = [];
   let checks = 0;
   const verify = (name: string, condition: boolean): void => {
@@ -46,7 +47,7 @@ export async function checkRailHeaderFab(): Promise<void> {
     if (!condition) failures.push(name);
   };
   try {
-    const page = await browser.newPage({ reducedMotion: "reduce", viewport: { width: 900, height: 800 } });
+    const page = await browser.browser()!.newPage({ reducedMotion: "reduce", viewport: { width: 900, height: 800 } });
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     const measure = async (name: string, expanded: boolean): Promise<void> => {

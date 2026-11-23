@@ -9,7 +9,8 @@
 //   bun run build && bun run scripts/check-vue.ts
 
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
 
 // Development builds, so Vue reports hydration mismatches and warnings.
@@ -42,7 +43,7 @@ type Win = Window & {
   };
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 const run = async (): Promise<void> => {

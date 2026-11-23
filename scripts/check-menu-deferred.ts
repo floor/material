@@ -5,7 +5,8 @@ import { copyFile, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/
 import { dirname, join, resolve } from "node:path";
 import { build } from "vite";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
-import { chromium, type Page, type Route } from "playwright";
+import { type Page, type Route } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 import type { DeferredMenuComponent, DeferredMenuConfig } from "../src/components/menu/deferred";
 import type { MenuComponent } from "../src/components/menu/types";
@@ -40,7 +41,7 @@ const cases = ["factory", "eager", "element", "diagnostic", "initial-eager"] as 
 const outputs = new Map<string, { directory: string; gates: string[]; initial: string[] }>();
 const artifacts = resolve("analysis/browser/menu-deferred");
 await mkdir(artifacts, { recursive: true });
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 const results: string[] = [];
 const record = (result: string): void => { results.push(result); console.log(`menu-deferred: ${result}`); };
 try {
@@ -175,7 +176,7 @@ console.log(JSON.stringify({customPreupgrade:preupgradeStyles('lazy-test'),close
   } });
   try {
     const fresh = async (kind = "factory", query = "") => {
-      const context = await browser.newContext({ reducedMotion: "reduce" });
+      const context = await browser.browser()!.newContext({ reducedMotion: "reduce" });
       const page = await context.newPage();
       const errors: string[] = [];
       page.on("pageerror", error => errors.push(String(error)));

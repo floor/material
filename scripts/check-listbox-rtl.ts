@@ -3,7 +3,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { baseStyles } from "./style-manifest";
 import { compileThemeSources, inBaseLayer, styleLayerOrder } from "./build-styles";
 import type { ListboxComponent } from "../src/components/listbox/types";
@@ -22,10 +23,10 @@ options:[{id:'a',text:'Alpha'}, {id:'b',text:'Beta'}, {id:'c',text:'Charlie'}]})
   } }],
 });
 assert(entry.success, String(entry.logs));
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 const errors: string[] = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 1000, height: 700 }, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1000, height: 700 }, reducedMotion: "reduce" });
   page.on("pageerror", error => errors.push(error.message));
   await page.setContent(`<!doctype html><html dir="ltr"><style>${css}
 #control{width:160px;margin:100px 300px} [role="listbox"]{min-width:240px!important}

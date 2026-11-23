@@ -392,4 +392,27 @@ async function checkSearchVariants(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open({});
   assert.equal(await page.locator(".mtrl-search__content").evaluate(el => getComputedStyle(el).animationName), "none", "no reveal with reduced motion");
+
+  // expandOnFocus: false holds for the bar's search button: a click, Enter and
+  // Space each take focus into the input and leave the view closed, so a
+  // list-filter search cannot be opened into an empty suggestions view.
+  await mount(page, { expandOnFocus: false, collapseOnBlur: false, suggestions: ["Apple"], placeholder: "Filter" });
+  for (const activation of ["click", "Enter", "Space"] as const) {
+    await page.locator(".mtrl-search__leading-icon").focus();
+    if (activation === "click") await page.locator(".mtrl-search__leading-icon").click();
+    else await page.keyboard.press(activation);
+    const state = await page.evaluate(() => ({
+      view: !!document.querySelector(".mtrl-search--view"),
+      input: document.activeElement?.className === "mtrl-search__input",
+    }));
+    assert.deepEqual(state, { view: false, input: true },
+      `expandOnFocus: false, ${activation} on the leading icon: focus moves into the input and the view stays closed`);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.evaluate(() => (window as unknown as SearchWindow).search.collapse());
+  }
+  // With the default, the same activation still opens the view.
+  await mount(page, { collapseOnBlur: false, suggestions: ["Apple"], placeholder: "Filter" });
+  await page.locator(".mtrl-search__leading-icon").click();
+  await opened(page);
+  assert.equal(await page.locator(".mtrl-search--view").count(), 1, "the leading icon opens the view when expansion on focus is allowed");
 }
