@@ -33,7 +33,8 @@ const cases: Record<string, Case> = {
   navigationBar: { markup: `<m-navigation-bar><m-navigation-bar-item value="a" icon='${icon}'>Alpha</m-navigation-bar-item><m-navigation-bar-item value="b" icon='${icon}'>Beta</m-navigation-bar-item></m-navigation-bar>`, event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
   navigationRail: { markup: `<m-navigation-rail><m-navigation-rail-item value="a" icon='${icon}'>Alpha</m-navigation-rail-item><m-navigation-rail-item value="b" icon='${icon}'>Beta</m-navigation-rail-item></m-navigation-rail>`, event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
   drawer: { markup: choices("drawer", "drawer-item"), event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
-  topAppBar: {}, bottomAppBar: {},
+  navigationDrawer: { markup: choices("navigation-drawer", "navigation-drawer-item"), event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
+  appBar: {}, topAppBar: {}, bottomAppBar: {},
   buttonGroup: { markup: '<m-button-group selection="single" value="a"><m-button-group-item value="a">Alpha</m-button-group-item><m-button-group-item value="b">Beta</m-button-group-item></m-button-group>', event: "change", getter: "value", factoryEvent: "change", action: `host.component.buttons[1].element.click()` },
   chips: { markup: choices("chips", "chip"), event: "change", getter: "value", factoryEvent: "change", action: `host.component.getChips()[1].element.click()` },
   list: { markup: choices("list", "list-item"), event: "change", getter: "value", action: click('[data-id="b"]') },
@@ -53,7 +54,7 @@ const cases: Record<string, Case> = {
 
 const declarations: Record<string, string> = {
   tab: "tabs", radio: "radios", navigationBarItem: "navigationBar", navigationRailItem: "navigationRail",
-  drawerItem: "drawer", buttonGroupItem: "buttonGroup", chip: "chips", listItem: "list",
+  drawerItem: "drawer", navigationDrawerItem: "navigationDrawer", buttonGroupItem: "buttonGroup", chip: "chips", listItem: "list",
   carouselItem: "carousel", menuItem: "menu", fabMenuItem: "fabMenu", selectOption: "select",
   searchSuggestion: "search",
 };

@@ -365,7 +365,8 @@ $shadow-scope: ':host([data-style="md2"])';
   }
 
   // ---------------------------------------------------------------------------
-  // Top app bar: 56px regular (64px from 600px up), 128px prominent, a 20sp
+  // App bar (`<m-app-bar>`, and the deprecated `<m-top-app-bar>` the same classes
+  // serve): 56px regular (64px from 600px up), 128px prominent, a 20sp
   // title at MD2's 32px line and 0.25px tracking, primary-on-on-primary
   // regular colour, and a 4dp scrolled shadow.
   // ---------------------------------------------------------------------------

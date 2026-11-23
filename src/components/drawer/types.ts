@@ -9,18 +9,21 @@ import { BaseComponentConfig } from "../../core/config/component";
  * @remarks
  * - standard: Inline drawer, can be permanently visible or toggled. Best for expanded+ window sizes.
  * - modal: Overlay drawer with scrim. Best for compact/medium window sizes.
+ * @deprecated use `NavigationDrawerVariant`. Removal in 4.0.
  */
 export type DrawerVariant = "standard" | "modal";
 
 /**
  * Drawer position — which edge the drawer anchors to
  * @category Components
+ * @deprecated use `NavigationDrawerPosition`. Removal in 4.0.
  */
 export type DrawerPosition = "start" | "end";
 
 /**
  * Configuration for a navigation destination item
  * @category Components
+ * @deprecated use `NavigationDrawerItemConfig`. Removal in 4.0.
  */
 export interface DrawerItemConfig {
   /** Item type — defaults to 'item' if omitted */
@@ -63,6 +66,7 @@ export interface DrawerItemConfig {
 /**
  * Event detail emitted when a drawer item is selected
  * @category Components
+ * @deprecated use `NavigationDrawerSelectEvent`. Removal in 4.0.
  */
 export interface DrawerSelectEvent {
   /** The selected item's id */
@@ -77,7 +81,10 @@ export interface DrawerSelectEvent {
   originalEvent: Event;
 }
 
-/** The new state of a drawer disclosure section. */
+/**
+ * The new state of a drawer disclosure section.
+ * @deprecated use `NavigationDrawerSectionEvent`. Removal in 4.0.
+ */
 export interface DrawerSectionEvent {
   id: string;
   value: string;
@@ -86,7 +93,10 @@ export interface DrawerSectionEvent {
   originalEvent?: Event;
 }
 
-/** Events emitted by drawer state, navigation items and root DOM forwarding. */
+/**
+ * Events emitted by drawer state, navigation items and root DOM forwarding.
+ * @deprecated use `NavigationDrawerEvents`. Removal in 4.0.
+ */
 export interface DrawerEvents {
   open: () => void;
   close: () => void;
@@ -101,6 +111,7 @@ export interface DrawerEvents {
 /**
  * Configuration interface for the Drawer component
  * @category Components
+ * @deprecated use `NavigationDrawerConfig`. Removal in 4.0.
  */
 export interface DrawerConfig extends BaseComponentConfig {
   /**
@@ -226,6 +237,7 @@ export interface DrawerConfig extends BaseComponentConfig {
 /**
  * Drawer component interface — public API
  * @category Components
+ * @deprecated use `NavigationDrawerComponent`. Removal in 4.0.
  */
 export interface DrawerComponent {
   /** The drawer's root DOM element */
@@ -353,3 +365,20 @@ export interface DrawerComponent {
     destroy: () => void;
   };
 }
+
+/** The navigation drawer's config; the drawer is the navigation drawer. */
+export type NavigationDrawerConfig = DrawerConfig;
+/** The navigation drawer's component. */
+export type NavigationDrawerComponent = DrawerComponent;
+/** The navigation drawer's variant. */
+export type NavigationDrawerVariant = DrawerVariant;
+/** The navigation drawer's position. */
+export type NavigationDrawerPosition = DrawerPosition;
+/** The navigation drawer's item config. */
+export type NavigationDrawerItemConfig = DrawerItemConfig;
+/** The navigation drawer's select event detail. */
+export type NavigationDrawerSelectEvent = DrawerSelectEvent;
+/** The navigation drawer's section event detail. */
+export type NavigationDrawerSectionEvent = DrawerSectionEvent;
+/** The navigation drawer's events. */
+export type NavigationDrawerEvents = DrawerEvents;

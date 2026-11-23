@@ -312,13 +312,17 @@ try {
       const name = key.slice(13); // remove "./components/"
       const module = await import(\`material/components/\${name}\`);
       assert.equal(typeof module.default, "function", \`\${key} default is not a function\`);
+      // A component names its factory at least once, and a deprecated name
+      // is the same binding, so a subpath may export several names equal to
+      // default; each is checked against the root.
       const namedExports = Object.keys(module).filter(k => k !== "default" && module[k] === module.default);
-      assert.equal(namedExports.length, 1, \`\${key} must have exactly one named export equal to default, found \${namedExports.join(',')}\`);
-      const k = namedExports[0];
-      if (rootless.has(name)) {
-        assert.equal(esm[k], undefined, \`\${key} is rootless by design but the root exports \${k}\`);
-      } else {
-        assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
+      assert(namedExports.length >= 1, \`\${key} exports none of its default by name\`);
+      for (const k of namedExports) {
+        if (rootless.has(name)) {
+          assert.equal(esm[k], undefined, \`\${key} is rootless by design but the root exports \${k}\`);
+        } else {
+          assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
+        }
       }
     }
 

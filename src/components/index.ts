@@ -26,7 +26,7 @@ export { createAssistChip, createFilterChip, createInputChip, createSuggestionCh
 export { default as createDatePicker } from "./datepicker";
 export { default as createDialog } from "./dialog";
 export { createDivider } from "./divider";
-export { default as createDrawer } from "./drawer";
+export { default as createDrawer, createNavigationDrawer } from "./drawer";
 export { default as createFab } from "./fab";
 export { default as createFabMenu } from "./fab-menu";
 export { default as createExtendedFab } from "./extended-fab";
@@ -54,7 +54,7 @@ export { createTab } from "./tabs/tab";
 export { default as createTextField } from "./text-field";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
-export { default as createTopAppBar } from "./top-app-bar";
+export { default as createTopAppBar, createAppBar } from "./top-app-bar";
 export { default as createTooltip } from "./tooltip";
 
 // Card content components
@@ -145,7 +145,7 @@ export type { DatePickerConfig, DatePickerComponent, DatePickerVariant } from ".
 // Dialog
 export type { DialogConfig, DialogComponent } from "./dialog/types";
 
-// Drawer
+// Drawer (navigation drawer)
 export type {
   DrawerConfig,
   DrawerComponent,
@@ -154,7 +154,17 @@ export type {
   DrawerItemConfig,
   DrawerSelectEvent,
   DrawerSectionEvent,
+  DrawerEvents,
+  NavigationDrawerConfig,
+  NavigationDrawerComponent,
+  NavigationDrawerVariant,
+  NavigationDrawerPosition,
+  NavigationDrawerItemConfig,
+  NavigationDrawerSelectEvent,
+  NavigationDrawerSectionEvent,
+  NavigationDrawerEvents,
 } from "./drawer/types";
+
 
 // Divider
 export type { DividerConfig } from "./divider/config";
@@ -277,10 +287,12 @@ export type {
 } from "./toolbar/types";
 export type { ToolbarVariant } from "./toolbar/constants";
 
-// Top App Bar
+// App bar (top app bar)
 export type {
   TopAppBarConfig,
   TopAppBarComponent,
+  AppBarConfig,
+  AppBarComponent,
 } from "./top-app-bar/types";
 
 // Tooltip

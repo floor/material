@@ -30,7 +30,7 @@ import createButton from 'material/components/button';
 import createTextField from 'material/components/text-field';
 import createCard from 'material/components/card';
 import createSwitch from 'material/components/switch';
-import createTopAppBar from 'material/components/top-app-bar';
+import createAppBar from 'material/components/top-app-bar';
 const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
 const put = (id, element) => { element.id = id; document.body.append(element); };
 put('b-filled', createButton({ text: 'Continue', variant: 'filled' }).element);
@@ -49,13 +49,14 @@ outlined.element.id = 'card-outlined';
 document.body.append(outlined.element);
 put('sw-off', createSwitch({ label: 'Off' }).element);
 put('sw-on', createSwitch({ label: 'On', checked: true }).element);
-put('bar', createTopAppBar({ title: 'Inbox' }).element);
-put('bar-medium', createTopAppBar({ title: 'Prominent', type: 'medium' }).element);
+put('bar', createAppBar({ title: 'Inbox' }).element);
+put('bar-medium', createAppBar({ title: 'Prominent', type: 'medium' }).element);
 import 'material/elements/css';
 import { defineAll } from 'material/elements';
 defineAll();
 document.body.insertAdjacentHTML('beforeend',
-  '<m-button id="el-button" data-style="md2">Element</m-button>');
+  '<m-button id="el-button" data-style="md2">Element</m-button>' +
+  '<m-app-bar id="el-bar" data-style="md2">Element bar</m-app-bar>');
 document.documentElement.dataset.fixtures = 'ready';
 `;
 
@@ -268,6 +269,20 @@ try {
   check("elements/host adopts the md2 sheet", elementButton !== null && elementButton.adopted, elementButton);
   equal("elements/button height", pixel(elementButton!.height), 36);
   equal("elements/button radius", pixel(elementButton!.radius), 4);
+  // The app bar's new element name reaches the same rules: the classes did not
+  // change with the rename, so <m-app-bar> and <m-top-app-bar> are one look.
+  const elementBar = await elements.evaluate(() => {
+    const host = document.querySelector("#el-bar") as HTMLElement;
+    const style = getComputedStyle(host);
+    return {
+      height: style.height, colour: style.color, background: style.backgroundColor,
+      adopted: host.shadowRoot !== null && (host.shadowRoot.adoptedStyleSheets.length > 0
+        || host.shadowRoot.querySelector("style[data-md2]") !== null),
+    };
+  });
+  check("elements/app bar host adopts the md2 sheet", elementBar.adopted, elementBar);
+  equal("elements/app bar height", pixel(elementBar.height), 56);
+  equal("elements/app bar roles", [elementBar.background, elementBar.colour], ["rgb(98, 0, 238)", "rgb(255, 255, 255)"]);
   await elements.close();
 
   // --- Without the sheet: none of those measures holds, so the check reads it. ---

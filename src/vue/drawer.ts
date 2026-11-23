@@ -4,4 +4,5 @@ import "material/elements/css/drawer";
 import { drawerElement, defineDrawer, type DrawerSpec, type DrawerElement } from "../elements/drawer";
 import { createComponent, type MComponent } from "./create";
 
+/** @deprecated Material Design 3 names this the navigation drawer. Use MNavigationDrawer instead. */
 export const MDrawer: MComponent<DrawerSpec, DrawerElement> = /*#__PURE__*/ createComponent(drawerElement.spec, defineDrawer, "MDrawer");

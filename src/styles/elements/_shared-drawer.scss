@@ -1,0 +1,26 @@
+// src/styles/elements/_shared-drawer.scss
+// The navigation drawer's pre-upgrade rules, for <m-navigation-drawer> and
+// (deprecated) <m-drawer>: the sheet's height, with a place per item, which is
+// drawn on upgrade. Closed, the upgraded drawer keeps that height with nothing
+// in it; open, its sheet is painted.
+@use '../abstract/functions' as f;
+@use '../abstract/theme' as t;
+
+// As components/_drawer.scss: 12px above and below 56px items.
+@mixin host {
+  display: block;
+  flex-shrink: 0;
+  padding: 12px 0;
+
+  &[open] {
+    background-color: t.color('surface');
+  }
+}
+
+@mixin declarations {
+  display: block;
+  // As components/_drawer.scss: 4dp a step, floored at the 36dp item the
+  // dense option has always used.
+  min-height: f.density(56px, 36px);
+  overflow: hidden;
+}
