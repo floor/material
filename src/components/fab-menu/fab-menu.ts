@@ -299,13 +299,18 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     return downward;
   };
 
-  /** Whether the list, at its widest, would cross the window's start edge. */
+  /**
+   * Whether the list, at its widest, would cross the window's start edge. It
+   * keeps its end alignment while its end edge stays inside the window; the
+   * test is the window's edge itself, so a list that fits is not moved for a
+   * margin's few pixels.
+   */
   const crossesStart = (fab: DOMRect): boolean => {
     const width = widest();
     if (width === 0) return false;
     return getComputedStyle(root).direction === "rtl"
-      ? fab.left + width > window.innerWidth - WINDOW_MARGIN
-      : fab.right - width < WINDOW_MARGIN;
+      ? fab.left + width > window.innerWidth
+      : fab.right - width < 0;
   };
 
   /** The widest item, as it will be revealed (its content's width). */
