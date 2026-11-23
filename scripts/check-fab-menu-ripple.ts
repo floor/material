@@ -17,9 +17,8 @@
  * button (https://m3.material.io/components/fab-menu/specs, read 2026-11-23).
  */
 import assert from "node:assert/strict";
-import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
@@ -80,9 +79,7 @@ type Row = {
   padding: string;
 };
 
-const userDataDir = resolve(repoRoot, ".bun/fab-menu-ripple-profile");
-mkdirSync(userDataDir, { recursive: true });
-const context = await chromium.launchPersistentContext(userDataDir, {
+const context = await launchChromium({
   headless: true,
   viewport: { width: 900, height: 700 },
   reducedMotion: "reduce",
