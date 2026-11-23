@@ -5,8 +5,9 @@
  * items animates on the SlowEffects spring (damping ratio 1, stiffness 800;
  * ExpressiveMotionTokens), as an Int with a visibility threshold of 1, and an
  * item shows while `index >= count - visible` (FloatingActionButtonMenu.kt).
- * Opening, the items appear nearest the FAB first; closing, the top one
- * leaves first.
+ * Opening, the items appear nearest the FAB first; closing, the farthest one
+ * leaves first. The delays are for a list above the FAB, where the last item
+ * is the nearest. A list below the FAB reverses them.
  *
  * A critically damped spring from `from` to `to` is
  *   x(t) = to + (from - to)(1 + ωt)e^(-ωt),  ω = √stiffness.

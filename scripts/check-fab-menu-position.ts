@@ -6,7 +6,9 @@
  * with more room (the shared vertical rule in src/core/dom/placement.ts),
  * scrolling only when neither side holds it; and on the end side while it
  * stays inside the window, otherwise on the start side. A list that fits is
- * placed exactly as before. The decision is taken once per opening.
+ * placed exactly as before. The decision is taken once per opening, and the
+ * close keeps it: the list stays on that side while the items leave, and the
+ * item farthest from the FAB leaves first.
  *
  * Menus and selects have read `autoFlip` in their types but not their
  * positioner; both now keep the preferred side when it is `false`, capped so
@@ -381,6 +383,69 @@ try {
   await openFab(page);
   const elementState = await listState(page);
   assert(inside(elementState.box, 900, 700), "element: the list stays inside the window");
+
+  // A downward list closes where it opened. Reduced motion zeroes every delay,
+  // which would hide the stagger, so this case runs with motion on.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  await mountCorner(page, "top-start", "factory");
+  await openFab(page);
+  const closing = await page.evaluate(() => {
+    const h = (window as unknown as { h: { fab: () => HTMLElement; list: () => HTMLElement; root: () => HTMLElement; items: () => HTMLElement[] } }).h;
+    const fab = h.fab().getBoundingClientRect();
+    const before = h.list().getBoundingClientRect();
+    const root = h.root();
+    h.fab().click();
+    const after = h.list().getBoundingClientRect();
+    return {
+      down: root.classList.contains("mtrl-fab-menu--list-down"),
+      start: root.classList.contains("mtrl-fab-menu--list-start"),
+      open: root.classList.contains("mtrl-fab-menu--open"),
+      fabBottom: fab.bottom,
+      before: { x: before.x, y: before.y },
+      after: { x: after.x, y: after.y },
+      delays: h.items().map((item) => Number.parseFloat(item.style.getPropertyValue("--mtrl-fab-menu-delay"))),
+    };
+  });
+  assert.equal(closing.open, false, "close: the list has closed");
+  assert.equal(closing.down, true, "close: the list stays below the FAB while it leaves");
+  assert.equal(closing.start, true, "close: the list keeps the start side while it leaves");
+  assert(Math.abs(closing.after.x - closing.before.x) < 1 && Math.abs(closing.after.y - closing.before.y) < 1, `close: the list does not jump (${JSON.stringify(closing.before)} -> ${JSON.stringify(closing.after)})`);
+  assert(closing.after.y >= closing.fabBottom - 1, `close: the list remains below the FAB (${closing.after.y} vs ${closing.fabBottom})`);
+  assert(closing.delays.at(-1)! < closing.delays[0]!, `close: the farthest item leaves first (${closing.delays.join(", ")})`);
+
+  // Reopen during the close: the next open decides the side again.
+  await openFab(page);
+  const reopened = await listState(page);
+  const reopenedDelays = reopened.delays.map((value) => Number.parseFloat(value));
+  assert.equal(reopened.down, true, "reopen: the list opens downward again");
+  assert(reopenedDelays[0]! < reopenedDelays.at(-1)!, `reopen: the nearest item shows first (${reopened.delays.join(", ")})`);
+
+  // The window grew while the list was open, so closing changes the presentation.
+  // The placement classes may remain; the next list opening decides them again.
+  await page.setViewportSize({ width: 500, height: 700 });
+  await mountCorner(page, "top-end", "factory", { presentation: "auto" });
+  await openFab(page);
+  assert.equal((await listState(page)).down, true, "auto: a narrow window opens the list downward");
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.evaluate(() => (window as unknown as { h: { fab: () => HTMLElement } }).h.fab().click());
+  const presented = await page.evaluate(() => {
+    const root = (window as unknown as { h: { root: () => HTMLElement } }).h.root();
+    return {
+      menu: root.classList.contains("mtrl-fab-menu--menu"),
+      list: root.classList.contains("mtrl-fab-menu--list"),
+    };
+  });
+  assert.equal(presented.menu, true, "auto: closing into a wide window presents the menu");
+  assert.equal(presented.list, false, "auto: the list presentation is gone");
+  await page.setViewportSize({ width: 500, height: 700 });
+  // The viewport change does not dispatch resize on its own. The component follows resize.
+  await page.evaluate(() => window.dispatchEvent(new Event("resize")));
+  await openFab(page);
+  assert.equal((await listState(page)).down, true, "auto: back in a narrow window the list opens downward");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 900, height: 700 });
 
   assert.deepEqual(errors, [], "no page errors");
   if (failures.length === 0) console.log("fab menu position: all cases pass");

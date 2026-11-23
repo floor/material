@@ -249,9 +249,13 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   // ---- The list presentation
 
   const reduced = () => matches("(prefers-reduced-motion: reduce)");
+  // The side this opening chose. The close keeps it, so the items leave where
+  // they appeared; the next open decides again.
+  let opensDownward = false;
   const stagger = (opening: boolean, downward = false): number => {
-    // A list opening below the FAB shows its nearest item first too, and that
-    // item is the first in document order there, so the delays reverse.
+    // Distance is from the FAB. Above it the last item is the nearest; below
+    // it the first is. Reversing puts the nearest first on open and the
+    // farthest first on close, in either direction.
     const byDistance = reduced() ? entries.map(() => 0) : staggerDelays(entries.length, opening);
     const delays = downward ? [...byDistance].reverse() : byDistance;
     entries.forEach(({ element }, index) => element.style.setProperty(`--${PREFIX}-fab-menu-delay`, `${delays[index]}ms`));
@@ -276,7 +280,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
    * fits there, otherwise on the side with more room (the shared vertical
    * rule), scrolling only when neither side holds it; and on the end side
    * while it stays inside the window, otherwise on the start side. The
-   * placement classes say which; nothing moves it while it is open.
+   * placement classes say which. They stay through the close, so the list does
+   * not jump while the items are still leaving, and the next open rewrites them.
    */
   const placeList = (): boolean => {
     const fab = root.getBoundingClientRect();
@@ -322,8 +327,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   const openList = () => {
     measure();
-    const downward = placeList();
-    stagger(true, downward);
+    opensDownward = placeList();
+    stagger(true, opensDownward);
     list.removeAttribute("inert");
     root.classList.add(`${block}--open`);
     document.addEventListener("pointerdown", onOutside, true);
@@ -332,14 +337,14 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   function closeList(restoreFocus: boolean) {
     if (!opened) return;
-    const last = stagger(false);
+    // The farthest item leaves first, on the side this opening chose.
+    const last = stagger(false, opensDownward);
     list.style.setProperty(`--${PREFIX}-fab-menu-exit`, `${last + FAB_MENU_ITEM_EXIT}ms`);
     // document.activeElement stops at the shadow host, so an item focused
     // inside the element would look unfocused and stay in the inert list.
     const hadFocus = list.contains(activeElementOf(list));
     list.setAttribute("inert", "");
     root.classList.remove(`${block}--open`);
-    root.classList.remove(`${block}--list-down`, `${block}--list-start`);
     document.removeEventListener("pointerdown", onOutside, true);
     if (restoreFocus || hadFocus) button.focus();
     setOpened(false);
