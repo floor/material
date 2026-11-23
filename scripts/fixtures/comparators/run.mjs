@@ -1,6 +1,6 @@
 // CI-only production builds and browser probes. No upstream sources are built.
 import assert from 'node:assert/strict';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, join, dirname, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,9 +30,16 @@ const provenance = { adapter, package: spec.package, version: installed(spec.pac
 await writeFile(join(artifact, 'provenance.json'), JSON.stringify(provenance, null, 2));
 const results = [];
 let failed = false;
+// The comparator's Chromium writes stay inside the checkout: each launch takes
+// its own `run-<unique>` profile directory under the worktree's
+// `.chrome-profile/` (passed by the CI wrapper), removed when the browser
+// closes, so no launch contends for a folder and no state crosses runs.
+const profileRoot = process.env.CHROMIUM_PROFILE_ROOT;
+assert.ok(profileRoot, 'comparator browser probes launch with a worktree profile root');
+await mkdir(profileRoot, { recursive: true });
 for (const scenario of ['button', 'app']) {
   const directory = join(artifact, scenario); await mkdir(directory, { recursive: true });
-  let browser, server, context;
+  let profileDir, server, context;
   const result = { ...provenance, scenario, status: 'not-run', missing: scenario === 'app' ? spec.missing : [], checks: [], outcomes: {}, requests: [], assets: [] };
   try {
     const generated = join(root, '.generated', adapter, scenario); await mkdir(generated, { recursive: true });
@@ -82,8 +89,9 @@ for (const scenario of ['button', 'app']) {
     const closure = startupClosure(records, ['index.html']);
     server = await preview({ root: generated, configFile: false, envDir: false, logLevel: 'error', build: { outDir: join(directory, 'dist') }, preview: { host: '127.0.0.1', port: 0, strictPort: false } });
     const address = server.httpServer.address(); const origin = `http://127.0.0.1:${address.port}`;
-    browser = await chromium.launch({ headless: true }); result.browser = browser.version();
-    context = await browser.newContext({ viewport: { width: 1100, height: 900 }, reducedMotion: 'no-preference', locale: 'en-US', colorScheme: 'light' });
+    profileDir = await mkdtemp(join(profileRoot, 'run-'));
+    context = await chromium.launchPersistentContext(profileDir, { headless: true, viewport: { width: 1100, height: 900 }, reducedMotion: 'no-preference', locale: 'en-US', colorScheme: 'light' });
+    result.browser = context.browser().version();
     await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
     const page = await context.newPage(); page.setDefaultTimeout(10000);
     const errors = [], startup = new Set(), interaction = new Set(); result.errors = errors; let phase = 'startup';
@@ -246,7 +254,7 @@ for (const scenario of ['button', 'app']) {
   } catch (error) { result.status = 'fail'; result.error = String(error.stack ?? error); failed = true; console.error(`${adapter}/${scenario}: ${result.error}`); }
   finally {
     if (context) { await context.tracing.stop({ path: join(directory, 'trace.zip') }); await context.close(); }
-    if (browser) await browser.close();
+    if (profileDir) await rm(profileDir, { recursive: true, force: true });
     if (server) await new Promise(resolve => { server.httpServer.closeAllConnections?.(); server.httpServer.close(resolve); });
     await writeFile(join(directory, 'result.json'), JSON.stringify(result, null, 2)); results.push(result);
     console.log(JSON.stringify({ adapter, scenario, status: result.status, coverage: result.coverage, sizes: result.sizes?.initial }));

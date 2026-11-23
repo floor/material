@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
+import { launchChromium } from "./browser-profile";
 /** Browser coverage for the standalone MD3 drawer. Run after build. */
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { chromium } from 'playwright';
 import { renderElement } from '../dist/ssr/index.js';
 import type { DrawerComponent, DrawerConfig } from '../src/components/drawer/types';
 
@@ -52,9 +52,9 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   window.mountDrawer = config => { window.drawer?.destroy(); window.drawer=createDrawer({headline:'Mail',items:[{id:'inbox',label:'Inbox',badge:'24',active:true},{id:'sent',label:'Sent'},{type:'divider'},{type:'section',label:'Labels'},{id:'family',label:'Family'}],...config});document.body.append(window.drawer.element); };
   document.querySelector('#opener').onclick=()=>window.drawer.open();</script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
 } });
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1040, height: 720 }, reducedMotion: 'reduce' });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1040, height: 720 }, reducedMotion: 'reduce' });
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.port}`);
@@ -116,7 +116,7 @@ try {
   assert.equal(await page.locator('main[inert]').count(), 0);
   assert.deepEqual(errors, []);
   const url = (variant: string): string => `http://127.0.0.1:${server.port}/sections?variant=${variant}`;
-  const still = await browser.newPage({ javaScriptEnabled: false, reducedMotion: "reduce" });
+  const still = await browser.browser()!.newPage({ javaScriptEnabled: false, reducedMotion: "reduce" });
   await still.goto(url("server"));
   const before = still.getByRole("button", { name: "Navigation", exact: true });
   assert.equal(await before.getAttribute("id"), "mtrl-drawer-sec-navigation-btn");

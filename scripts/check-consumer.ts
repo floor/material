@@ -6,6 +6,7 @@ import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build, preview, type Manifest } from "vite";
 import { chromium, type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { CONSUMER_INITIAL_GZIP } from "./budgets";
 import { createPackageFixture } from "./package-fixture";
 
@@ -14,7 +15,7 @@ const { directory } = fixture;
 const artifacts = resolve("analysis/browser");
 await rm(artifacts, { recursive: true, force: true });
 await mkdir(artifacts, { recursive: true });
-let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+let browser: Awaited<ReturnType<typeof chromium.launchPersistentContext>> | undefined;
 let server: Awaited<ReturnType<typeof preview>> | undefined;
 const scenarios = [
   { name: "button", component: "button" },
@@ -270,8 +271,8 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   const address = server.httpServer.address();
   assert(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
-  browser = await chromium.launch();
-  const context = await browser.newContext({ viewport: { width: 1040, height: 900 }, reducedMotion: "reduce", deviceScaleFactor: 1 });
+  browser = await launchChromium();
+  const context = await browser.browser()!.newContext({ viewport: { width: 1040, height: 900 }, reducedMotion: "reduce", deviceScaleFactor: 1 });
   const errors: string[] = [];
   context.on("page", page => {
     page.on("pageerror", error => errors.push(error.message));
@@ -307,7 +308,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   await afterSetItems;
   await flatPage.close();
   // A context of its own, so the chunk is not already in the cache
-  const nestedContext = await browser.newContext({ reducedMotion: "reduce" });
+  const nestedContext = await browser.browser()!.newContext({ reducedMotion: "reduce" });
   const nestedPage = await nestedContext.newPage();
   nestedPage.on("pageerror", error => errors.push(error.message));
   nestedPage.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
@@ -416,7 +417,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   await page.keyboard.press("Space");
   assert(await unchecked.isChecked(), "Keyboard checkbox interaction failed");
   await page.close();
-  const report = { vite: sizes, browser: await browser.version(), comparisons, retaken, failures, errors };
+  const report = { vite: sizes, browser: await browser.browser()!.version(), comparisons, retaken, failures, errors };
   await writeFile(join(artifacts, "report.json"), JSON.stringify(report, null, 2));
   assert.deepEqual(errors, [], "Browser errors occurred");
   assert.deepEqual(failures, [], "Full/selective CSS mismatches (see analysis/browser)");

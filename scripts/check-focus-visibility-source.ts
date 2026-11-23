@@ -1,7 +1,8 @@
 /** Source runner for red/green measurements without a package build. CI also exercises the packed elements. */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 import { checkFocusVisibility } from "./check-focus-visibility";
@@ -25,9 +26,9 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   return new URL(request.url).pathname === "/entry.js" ? new Response(js, { headers: { "Content-Type": "text/javascript" } })
     : new Response(`<!doctype html><html data-theme="baseline"><head><style>${css}</style></head><body><main id="host"></main><script type="module" src="/entry.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.browser()!.newPage({ viewport: { width: 1280, height: 900 } });
   page.on("pageerror", error => console.error(error));
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as { ready: boolean }).ready);

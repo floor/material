@@ -9,7 +9,8 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { transformAsync } from "@babel/core";
 import { parseHTML } from "linkedom";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
@@ -292,7 +293,7 @@ for (const item of defaults) {
   });
 }
 
-const browser = await chromium.launch();
+const browser = await launchChromium();
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
@@ -305,7 +306,7 @@ const server = Bun.serve({
   },
 });
 try {
-  const inert = await browser.newPage({ javaScriptEnabled: false });
+  const inert = await browser.browser()!.newPage({ javaScriptEnabled: false });
   await inert.goto(server.url.href);
   const before = await inert.evaluate(() => [...document.querySelectorAll("[id^='host-']")].map((node) => ({
     id: node.id,
@@ -456,13 +457,13 @@ const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request)
   const required = new URL(request.url).searchParams.get("required") === "true";
   return new Response(`<!doctype html><html><head>${head}</head><body><div id="root">${required ? contextHTML.required : contextHTML.default}</div><script type="module" src="/client.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const contextBrowser = await chromium.launch();
+const contextBrowser = await launchChromium();
 try {
   for (const required of [false, true]) {
     const label = required ? "required" : "default-valued";
     const expected = required ? "required provider" : "from provider";
     const url = `${contextServer.url.href}?required=${required}`;
-    const inert = await contextBrowser.newPage({ javaScriptEnabled: false });
+    const inert = await contextBrowser.browser()!.newPage({ javaScriptEnabled: false });
     try {
       const response = await inert.goto(url);
       try {

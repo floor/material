@@ -16,7 +16,8 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium, type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
+import type { Page } from "playwright";
 import * as sass from "sass";
 
 const repoRoot = resolve(process.argv[2] ?? resolve(import.meta.dir, ".."));
@@ -47,9 +48,9 @@ const bundleBuild = await Bun.build({
 });
 assert(bundleBuild.success, String(bundleBuild.logs));
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const page: Page = await browser.newPage({ viewport: { width: 900, height: 620 } });
+  const page: Page = await browser.browser()!.newPage({ viewport: { width: 900, height: 620 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setContent(`<!DOCTYPE html><html lang="en" data-theme="baseline"><head><meta charset="utf-8"></head><body></body></html>`);

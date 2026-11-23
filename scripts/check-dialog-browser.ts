@@ -1,6 +1,7 @@
 /** Dialog mounting and keyboard access in a browser that implements inert. */
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type createDialog from "../src/components/dialog";
 
 const mounts = ["unmoved", "body", "nested", "container", "detached", "top"] as const;
@@ -375,9 +376,9 @@ if (import.meta.main) {
   for (const mount of selected) assert(mount === "focus" || mount === "hidden" || mounts.includes(mount as Mount), `Unknown mount: ${mount}`);
   const bundle = await Bun.build({ entrypoints: ["src/components/dialog/index.ts"], target: "browser" });
   assert(bundle.success, String(bundle.logs));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium({ headless: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+    const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     await page.setContent("<!doctype html><html><body></body></html>");

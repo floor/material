@@ -31,7 +31,8 @@
 //
 //   bun run build && bun run scripts/check-rtl-direction.ts
 import assert from "node:assert/strict";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 
 const WIDTH = 600;
@@ -734,9 +735,9 @@ export async function checkRtlDirection(browser: Browser): Promise<void> {
 }
 
 if (import.meta.main) {
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   try {
-    await checkRtlDirection(browser);
+    await checkRtlDirection(browser.browser()!);
   } finally {
     await browser.close();
   }

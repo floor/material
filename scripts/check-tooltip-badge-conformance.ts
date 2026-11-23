@@ -1,6 +1,6 @@
 /** Browser checks for tooltip and badge conformance using the component sheets. */
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { baseStyles } from "./style-manifest";
 
@@ -16,9 +16,9 @@ const { outputs, success, logs } = await Bun.build({
   format: "iife",
 });
 assert(success, String(logs));
-const browser = await chromium.launch();
+const browser = await launchChromium();
 try {
-  const page = await browser.newPage({ hasTouch: true, reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ hasTouch: true, reducedMotion: "reduce" });
   await page.setContent('<button id="anchor">Anchor</button><button id="outside">Outside</button><div id="badge" style="font-family:monospace"><span class="label-small-reference">5</span></div>');
   await page.addStyleTag({ content: css + "\n.mtrl-tooltip { transition: none; }" });
   await page.addScriptTag({ content: await outputs[0]!.text() });

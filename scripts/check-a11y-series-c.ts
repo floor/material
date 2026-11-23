@@ -12,7 +12,8 @@
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles, resolveStyleDependencies } from "./style-manifest";
 
@@ -93,9 +94,9 @@ const bundleBuild = await Bun.build({
 assert(bundleBuild.success, String(bundleBuild.logs));
 const bundleJs = await bundleBuild.outputs[0]!.text();
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 try {
-  const context = await browser.newContext({
+  const context = await browser.browser()!.newContext({
     viewport: { width: 1024, height: 768 },
   });
   const page = await context.newPage();

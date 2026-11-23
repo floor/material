@@ -1,7 +1,8 @@
 // Server-rendered tab names, measured before any client library runs.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+
+import { launchChromium } from "./browser-profile";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createSSRApp, h } from "vue";
@@ -41,9 +42,9 @@ export async function checkTabsSSRName(): Promise<void> {
       headers: { "Content-Type": "text/html" },
     });
   } });
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   try {
-    const page = await browser.newPage({ javaScriptEnabled: false });
+    const page = await browser.browser()!.newPage({ javaScriptEnabled: false });
     await page.goto(String(server.url));
     const rows = await page.evaluate(entries => entries.map(entry => {
       const host = document.getElementById(entry)!;

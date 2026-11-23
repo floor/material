@@ -9,7 +9,8 @@
 //   bun run build && bun run scripts/check-react.ts
 
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { launchChromium } from "./browser-profile";
 import type { BunPlugin } from "bun";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
 import { clientAttributes, comparableAttributes, liveAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
@@ -51,7 +52,7 @@ type Win = Window & {
   };
 };
 
-const browser = await chromium.launch({ headless: true });
+const browser = await launchChromium({ headless: true });
 let checks = 0;
 
 // Every module of material/react is a client module, so a React Server Component

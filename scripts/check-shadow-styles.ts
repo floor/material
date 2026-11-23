@@ -18,7 +18,7 @@
 // the whole element bundle 1,797 times.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+import { launchChromium } from "./browser-profile";
 import { elements } from "../dist/elements/index.js";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import type { ShadowStylesAPI } from "./fixtures/shadow-styles";
@@ -43,11 +43,11 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   return new Response('<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head><body><script type="module" src="/fixture.js"></script></body></html>', { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await chromium.launch();
+const browser = await launchChromium();
 const report = [];
 const seen = new Set<string>();
 try {
-  const page = await browser.newPage({ reducedMotion: "reduce" });
+  const page = await browser.browser()!.newPage({ reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(server.url.href);
