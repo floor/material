@@ -144,7 +144,7 @@ Every component comes three ways:
 |-------|------------|
 | Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
 | Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
-| Navigation | Navigation bar, Navigation rail, Navigation drawer, Tabs, Menu, App bar, Bottom app bar (deprecated) |
+| Navigation | Navigation bar, Navigation rail, Navigation drawer, Tabs, Menu, App bar |
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
@@ -155,7 +155,7 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Actions | `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar` |
 | Selection and input | `createCheckbox`, `createSwitch`, `createRadios`, `createChips`, `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker` |
 | Chips, one at a time | `createAssistChip`, `createFilterChip`, `createInputChip`, `createSuggestionChip` |
-| Navigation | `createNavigationBar`, `createNavigationRail`, `createNavigationDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar`, `createBottomAppBar` |
+| Navigation | `createNavigationBar`, `createNavigationRail`, `createNavigationDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar` |
 | Containment | `createCard`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet` |
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
