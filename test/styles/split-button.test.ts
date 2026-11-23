@@ -135,26 +135,22 @@ describe('split button stylesheet', () => {
     }
   });
 
-  test('the chevron is sized per size and sits off centre until the menu opens', () => {
+  test('the chevron is sized per size and is not shifted', () => {
     const icons: Record<string, string> = { xs: '22px', s: '22px', m: '26px', l: '38px', xl: '50px' };
     for (const [size, icon] of Object.entries(icons)) {
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing .mtrl-split-button__chevron`, 'width')).toBe(icon);
-    }
-    const offsets: Record<string, string> = { xs: '1px', s: '1px', m: '2px', l: '3px', xl: '6px' };
-    for (const [size, offset] of Object.entries(offsets)) {
-      expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing .mtrl-split-button__chevron`, 'translate')).toBe(`calc(-1 * ${offset}) 0`);
-      // and it mirrors in right-to-left, unless a nearer ltr subtree owns it
-      expect(value(`[dir=rtl] .mtrl-split-button--${size} .mtrl-split-button__trailing:not(:where(.mtrl-ltr, .mtrl-ltr *)) .mtrl-split-button__chevron`, 'translate')).toBe(`${offset} 0`);
+      expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing .mtrl-split-button__chevron`, 'translate')).toBeUndefined();
     }
   });
 
-  test('open: the inner corner rounds off, the icon centres and the chevron turns over', () => {
+  test('open: the inner corner rounds off and the chevron turns over', () => {
     // The trailing half's inner corner takes the pill, which is the same on
-    // either side, so one rule serves both directions.
+    // either side, so one rule serves both directions. The chevron stays where
+    // it is and only rotates.
     expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing', '--mtrl-split-button-corner'))
       .toBe('var(--mtrl-split-button-pill)');
     expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'rotate')).toBe('180deg');
-    expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'translate')).toBe('0 0');
+    expect(value('.mtrl-split-button--expanded .mtrl-split-button__trailing .mtrl-split-button__chevron', 'translate')).toBeUndefined();
   });
 
   test('each half keeps its logical corners in the adopted sheets', () => {
