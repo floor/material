@@ -444,6 +444,53 @@ try {
   await page.evaluate(() => window.dispatchEvent(new Event("resize")));
   await openFab(page);
   assert.equal((await listState(page)).down, true, "auto: back in a narrow window the list opens downward");
+
+  // A list on the start side, and a list below the FAB, in both directions:
+  // each label keeps its left and top through the whole close.
+  const closeTracks: Array<["ltr" | "rtl", Corner, boolean, boolean]> = [
+    ["ltr", "top-start", true, true],
+    ["ltr", "top-end", true, false],
+    ["rtl", "top-end", true, true],
+    ["rtl", "top-start", true, false],
+  ];
+  for (const [dir, corner, down, start] of closeTracks) {
+    await page.setViewportSize({ width: 900, height: 700 });
+    await page.evaluate((direction) => { document.documentElement.dir = direction; }, dir);
+    await mountCorner(page, corner, "factory");
+    await openFab(page);
+    await page.waitForTimeout(700);
+    const track = await page.evaluate(async () => {
+      const h = (window as unknown as { h: { fab: () => HTMLElement; root: () => HTMLElement } }).h;
+      const root = h.root();
+      const labels = Array.from(root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item-text"));
+      const origin = labels.map((node) => {
+        const box = node.getBoundingClientRect();
+        return { left: box.left, top: box.top };
+      });
+      h.fab().click();
+      let maxLeft = 0;
+      let maxTop = 0;
+      const started = performance.now();
+      while (performance.now() - started < 700) {
+        await new Promise<void>((done) => requestAnimationFrame(() => done()));
+        labels.forEach((node, index) => {
+          const box = node.getBoundingClientRect();
+          maxLeft = Math.max(maxLeft, Math.abs(box.left - origin[index]!.left));
+          maxTop = Math.max(maxTop, Math.abs(box.top - origin[index]!.top));
+        });
+      }
+      return {
+        down: root.classList.contains("mtrl-fab-menu--list-down"),
+        start: root.classList.contains("mtrl-fab-menu--list-start"),
+        maxLeft,
+        maxTop,
+      };
+    });
+    const label = `${dir}/${corner}`;
+    assert.equal(track.down, down, `${label}: the list is below the FAB`);
+    assert.equal(track.start, start, `${label}: the start-side placement`);
+    assert(track.maxLeft < 1 && track.maxTop < 1, `${label}: a label moved during the close (left ${track.maxLeft.toFixed(1)}, top ${track.maxTop.toFixed(1)})`);
+  }
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 900, height: 700 });
 
