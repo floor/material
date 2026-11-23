@@ -588,6 +588,7 @@
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts",
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts && bun run scripts/check-menu-hidden-opener.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
+    "fab-menu-ripple:check": "bun run scripts/check-fab-menu-ripple.ts",
     "app-bar-conformance:check": "bun run scripts/check-app-bar-conformance.ts",
     "top-app-bar:check": "bun run scripts/check-top-app-bar-plain-button.ts",
     "closed-surfaces:check": "bun run scripts/check-closed-dialog-snackbar.ts",
