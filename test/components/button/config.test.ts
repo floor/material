@@ -8,7 +8,7 @@ const calls: ButtonConfig[] = [
   { variant: "text", size: "m", class: "mtrl-fab-menu__item" },
   { className: "named" },
   { class: "from-class", className: "from-name" },
-  { class: ["one", "two"] },
+  { className: ["one", "two"] },
   { disabled: true, type: "submit", ariaLabel: "Label" },
 ];
 
