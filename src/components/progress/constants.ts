@@ -55,9 +55,19 @@ export const PROGRESS_COLORS = {
   INDICATOR: "sys-color-primary",
   TRACK: "sys-color-secondary-container",
   STOP: "sys-color-primary",
-  /** Not an M3 role: the buffer is this library's own extension */
-  BUFFER: "sys-color-primary-container",
+  /**
+   * The buffer is this library's own extension, not an M3 role. It reads as
+   * the on-surface role at BUFFER_TINT over the track: primary-container sat at
+   * the track's own lightness (1.00:1 both schemes), so the buffer could not be
+   * seen; on-surface at 22% is 1.56-1.70:1 from the track and 3.19-3.25:1 from
+   * the active indicator across the baseline, a generated and a hand-written
+   * theme, light and dark.
+   */
+  BUFFER: "sys-color-on-surface",
 } as const;
+
+/** How much of the on-surface role the buffer carries over the track */
+export const PROGRESS_BUFFER_TINT = 0.22;
 
 export const PROGRESS_MEASUREMENTS = {
   LINEAR: {
