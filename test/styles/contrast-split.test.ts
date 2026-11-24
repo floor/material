@@ -336,9 +336,12 @@ describe("explicit contrast levels are opt-in", () => {
     // When neither alignment keeps the list inside the window it shifts just
     // enough through the --mtrl-fab-menu-shift custom property the list
     // consumes (styles/components/_fab-menu.scss: translate; +44 B).
+    // The chevron stays on the trailing button's centre and only rotates.
+    // The closed nudge and its direction arm leave
+    // (styles/components/_split-button.scss; −2,243 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "48e35a5c2b928f1637315e59265906d6838be5032869a647bcff4bf011597774",
-      length: 554792,
+      sha256: "bd94e65b66dd2fc78b69d9f0a3e8a7284be617fa4259370dee28c64cf5d67c49",
+      length: 552549,
     });
   });
 

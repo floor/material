@@ -144,7 +144,7 @@ Every component comes three ways:
 |-------|------------|
 | Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
 | Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
-| Navigation | Navigation bar, Navigation rail, Navigation drawer, Tabs, Menu, App bar, Bottom app bar (deprecated) |
+| Navigation | Navigation bar, Navigation rail, Navigation drawer, Tabs, Menu, App bar |
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
@@ -155,7 +155,7 @@ Each component has a page on [md3.io](https://md3.io/components/) with a playgro
 | Actions | `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar` |
 | Selection and input | `createCheckbox`, `createSwitch`, `createRadios`, `createChips`, `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker` |
 | Chips, one at a time | `createAssistChip`, `createFilterChip`, `createInputChip`, `createSuggestionChip` |
-| Navigation | `createNavigationBar`, `createNavigationRail`, `createNavigationDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar`, `createBottomAppBar` |
+| Navigation | `createNavigationBar`, `createNavigationRail`, `createNavigationDrawer`, `createTabs`, `createTab`, `createMenu`, `createAppBar` |
 | Containment | `createCard`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet` |
 | Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
 | Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
@@ -1001,7 +1001,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |
-| `material/styles`, the full stylesheet | 60.5 kB |
+| `material/styles`, the full stylesheet | 60.4 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).

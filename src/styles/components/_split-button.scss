@@ -30,8 +30,7 @@ $component: "#{base.$prefix}-split-button";
 $button: "#{base.$prefix}-button";
 
 // height, leading start/end space, trailing space, icon, inner corner,
-// inner corner when hovered or pressed, and how far the chevron sits from
-// the centre while the menu is closed.
+// and inner corner when hovered or pressed.
 //
 // The resting inner corner keeps the token value at the two small sizes,
 // where the spec's own renders show it at about an eighth of the height, and
@@ -40,11 +39,11 @@ $button: "#{base.$prefix}-button";
 // corner is a fourteenth of a 56dp button. Set
 // `--<prefix>-split-button-inner-shape` to go back to the token value.
 $sizes: (
-  "xs": (height: 32px, lead-start: 12px, lead-end: 10px, trail: 13px, icon: 22px, inner: v.shape("extra-small"), inner-active: v.shape("small"), offset: 1px),
-  "s":  (height: 40px, lead-start: 16px, lead-end: 12px, trail: 13px, icon: 22px, inner: v.shape("extra-small"), inner-active: v.shape("medium"), offset: 1px),
-  "m":  (height: 56px, lead-start: 24px, lead-end: 24px, trail: 15px, icon: 26px, inner: v.shape("small"), inner-active: v.shape("medium"), offset: 2px),
-  "l":  (height: 96px, lead-start: 48px, lead-end: 48px, trail: 29px, icon: 38px, inner: v.shape("medium"), inner-active: v.shape("large-increased"), offset: 3px),
-  "xl": (height: 136px, lead-start: 64px, lead-end: 64px, trail: 43px, icon: 50px, inner: v.shape("large"), inner-active: v.shape("large-increased"), offset: 6px)
+  "xs": (height: 32px, lead-start: 12px, lead-end: 10px, trail: 13px, icon: 22px, inner: v.shape("extra-small"), inner-active: v.shape("small")),
+  "s":  (height: 40px, lead-start: 16px, lead-end: 12px, trail: 13px, icon: 22px, inner: v.shape("extra-small"), inner-active: v.shape("medium")),
+  "m":  (height: 56px, lead-start: 24px, lead-end: 24px, trail: 15px, icon: 26px, inner: v.shape("small"), inner-active: v.shape("medium")),
+  "l":  (height: 96px, lead-start: 48px, lead-end: 48px, trail: 29px, icon: 38px, inner: v.shape("medium"), inner-active: v.shape("large-increased")),
+  "xl": (height: 136px, lead-start: 64px, lead-end: 64px, trail: 43px, icon: 50px, inner: v.shape("large"), inner-active: v.shape("large-increased"))
 );
 
 // The space between the two halves, at every size (BetweenSpace)
@@ -99,9 +98,8 @@ $gap: 2px;
         min-width: 48px;
       }
 
-      // The trailing button is symmetrical, so its icon is nudged towards the
-      // flat edge to sit optically centred; while the menu is open the corner
-      // is round and the icon centres properly
+      // The trailing button carries the chevron, centred in the button. Opening
+      // the menu only rotates it.
       .#{$component}__trailing {
         padding-inline: map.get($spec, "trail");
         // Its width is its padding and its icon, not the button's own minimum
@@ -117,13 +115,6 @@ $gap: 2px;
         .#{$component}__chevron {
           width: map.get($spec, "icon");
           height: map.get($spec, "icon");
-          translate: calc(-1 * #{map.get($spec, "offset")}) 0;
-        }
-
-        @include m.rtl {
-          .#{$component}__chevron {
-            translate: map.get($spec, "offset") 0;
-          }
         }
       }
     }
@@ -208,12 +199,12 @@ $gap: 2px;
   }
 
   // ---------------------------------------------------------------------------
-  // Open: the inner corner rounds off and the chevron turns over
+  // Open: the chevron turns over. It is already on the centre, so nothing
+  // here moves it.
   // ---------------------------------------------------------------------------
   &--expanded {
     .#{$component}__trailing {
       .#{$component}__chevron {
-        translate: 0 0;
         rotate: 180deg;
       }
     }
@@ -226,9 +217,7 @@ $gap: 2px;
   &__chevron {
     display: block;
     flex: none;
-    transition:
-      rotate v.motion("duration-medium1") v.motion("easing-standard"),
-      translate v.motion("duration-medium1") v.motion("easing-standard");
+    transition: rotate v.motion("duration-medium1") v.motion("easing-standard");
   }
 
   // ---------------------------------------------------------------------------
