@@ -339,9 +339,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The chevron stays on the trailing button's centre and only rotates.
     // The closed nudge and its direction arm leave
     // (styles/components/_split-button.scss; −2,243 B).
+    // The carousel's scroller refuses elastic overscroll, so a Mac trackpad
+    // cannot displace the strip behind the layout's back
+    // (styles/components/_carousel.scss: overscroll-behavior; −6 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "bd94e65b66dd2fc78b69d9f0a3e8a7284be617fa4259370dee28c64cf5d67c49",
-      length: 552549,
+      sha256: "8d56e47d29a4f7d7e920dab2b2b7c28542b76851b3ed250219eae84212e96ec5",
+      length: 552543,
     });
   });
 

@@ -594,7 +594,7 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
   // The Mac trackpad's elastic overscroll displaces the strip in the
   // compositor while scrollLeft stays clamped — the layout never knows. The
   // scroller refuses the displacement outright.
-  await page.evaluate(({ route, dir, image }) => {
+  await page.evaluate(({ dir, image }) => {
     document.documentElement.dir = dir;
     document.body.replaceChildren();
     const mark = (host: HTMLElement) => { host.id = "drag-carousel"; host.style.cssText = "width:760px;height:240px"; };
@@ -604,7 +604,7 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
     });
     mark(carousel.element);
     document.body.append(carousel.element);
-  }, { route: "factory", dir: "ltr", image });
+  }, { dir: "ltr", image });
   await page.waitForFunction(() => {
     const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
     return !!scroller && scroller.scrollWidth > 760;
