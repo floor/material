@@ -12,7 +12,7 @@
 
 import { getThemeColor } from "../../../core/utils";
 import { onThemeChange } from "../../../core/utils/theme";
-import { PROGRESS_BUFFER_TINT, PROGRESS_COLORS } from "../constants";
+import { PROGRESS_COLORS } from "../constants";
 
 export interface ProgressColors {
   indicator: string;
@@ -20,6 +20,9 @@ export interface ProgressColors {
   stop: string;
   buffer: string;
 }
+
+/** How much of the on-surface role the buffer carries over the track */
+const BUFFER_TINT = 0.22;
 
 /** A colour as `#rrggbb`, or null when it is a form this mix does not read */
 const parseHex = (color: string): [number, number, number] | null => {
@@ -42,7 +45,7 @@ const FALLBACKS: ProgressColors = {
   indicator: "#6750A4",
   track: "#E8DEF8",
   stop: "#6750A4",
-  buffer: mix("#1D1B20", "#E8DEF8", PROGRESS_BUFFER_TINT),
+  buffer: mix("#1D1B20", "#E8DEF8", BUFFER_TINT),
 };
 
 const read = (element: Element): ProgressColors => {
@@ -53,7 +56,7 @@ const read = (element: Element): ProgressColors => {
     stop: getThemeColor(PROGRESS_COLORS.STOP, { element, fallback: FALLBACKS.stop }),
     // The buffer's tint is painted over the track: the opaque equivalent keeps
     // the canvas free of alpha compositing when the bar is drawn.
-    buffer: mix(getThemeColor(PROGRESS_COLORS.BUFFER, { element, fallback: "#1D1B20" }), track, PROGRESS_BUFFER_TINT),
+    buffer: mix(getThemeColor(PROGRESS_COLORS.BUFFER, { element, fallback: "#1D1B20" }), track, BUFFER_TINT),
   };
 };
 
