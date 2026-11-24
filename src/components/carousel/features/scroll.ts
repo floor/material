@@ -179,16 +179,29 @@ export const withScroll = (config: CarouselConfig) =>
       lastStyles = new WeakMap();
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
-      // The item layer is the viewport: sticky-pinned at the inline start (or
-      // the top when vertical) and sized to the container, so the scroll
-      // offset never reaches an item's transform (see layout()).
-      if (vertical) {
+      // The item layer is the viewport for the contained variants:
+      // sticky-pinned at the inline start (or the top when vertical) and sized
+      // to the container, so the scroll offset never reaches an item's
+      // transform (see layout()). The uncontained strip moves natively with
+      // the track and keeps that: its layer is a plain static box, so an item's
+      // position is the scrolled coordinate space and a scroll shows before
+      // any handler runs.
+      if (variant === CAROUSEL_VARIANTS.UNCONTAINED) {
+        layer.style.position = "static";
+        layer.style.width = "";
+        layer.style.height = "";
+        layer.style.top = "";
+        layer.style.left = "";
+        layer.style.right = "";
+      } else if (vertical) {
+        layer.style.position = "";
         layer.style.width = "100%";
         layer.style.height = `${containerSize}px`;
         layer.style.top = "0";
         layer.style.left = "0";
         layer.style.right = "";
       } else {
+        layer.style.position = "";
         layer.style.width = `${containerSize}px`;
         layer.style.height = "100%";
         layer.style.top = "0";
@@ -260,12 +273,10 @@ export const withScroll = (config: CarouselConfig) =>
 
       for (let i = 0; i < count; i++) {
         const el = slideElements[i]!;
-        // Uncontained items flow with the scroll; under the pinned layer the
-        // physical result of the scrolled track (start * sign - scrollLeft,
-        // i.e. (start - position) * sign) is reproduced by subtracting the
-        // logical offset. Contained items are placed in container coordinates
-        // only: the layer is already the viewport.
-        let start = isUncontained ? padding + i * unit - position : padding + i * unit;
+        // Uncontained items flow with the scroll in the track's own
+        // coordinate space (their layer is static). Contained items are
+        // placed in container coordinates only: their layer is the viewport.
+        let start = padding + i * unit;
         let inset = 0;
         let fade = 1;
         let offscreen = false;
