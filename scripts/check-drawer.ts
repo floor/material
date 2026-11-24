@@ -368,7 +368,8 @@ try {
   // fading on the menu's opacity timing, with no spring overshoot; the
   // chevron turns on the same duration. Sampled per frame below.
   const motionPage = await browser.browser()!.newPage({ viewport: { width: 640, height: 800 } });
-  motionPage.on('pageerror', error => errors.push(error.message));
+  const motionErrors: string[] = [];
+  motionPage.on('pageerror', error => motionErrors.push(error.message));
   await motionPage.goto(`http://127.0.0.1:${server.port}`);
   await motionPage.waitForFunction(() => !!window.mountDrawer);
   await motionPage.evaluate(() => window.mountDrawer({
@@ -442,6 +443,7 @@ try {
   assert.ok(at100.scale > 0.5, `the emphasized curve starts fast: past half at ~100ms of 250 (scale ${at100.scale.toFixed(2)})`);
   const at250 = frames.find(f => f.t >= 250)!;
   assert.ok(at250.scale > 0.96, `the reveal is settled at 250ms like the menu (scale ${at250.scale.toFixed(2)})`);
+  assert.deepEqual(motionErrors, [], 'no page errors on the motion page');
   await motionPage.close();
 
   // ========================================================================
