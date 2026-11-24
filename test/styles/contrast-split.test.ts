@@ -342,9 +342,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The carousel's scroller refuses elastic overscroll, so a Mac trackpad
     // cannot displace the strip behind the layout's back
     // (styles/components/_carousel.scss: overscroll-behavior; −6 B).
+    // The carousel's items live in a layer pinned to the scroller's viewport,
+    // so an item's transform no longer carries the scroll offset and a painted
+    // offset the main thread has not read cannot move the strip
+    // (styles/components/_carousel.scss: __layer; +429 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "8d56e47d29a4f7d7e920dab2b2b7c28542b76851b3ed250219eae84212e96ec5",
-      length: 552543,
+      sha256: "99a85581168dfa63b435be403b7d2c31a1ca4148effa432dcf1f32b3ea33e449",
+      length: 552972,
     });
   });
 
