@@ -69,10 +69,9 @@ $component: "#{base.$prefix}-bottom-sheet";
         // (a block edge: the pair mirrors to itself, no direction arm)
         @include d.corners($start-start: v.shape("extra-large"), $start-end: v.shape("extra-large"), $arm: false);
         // Level 1 (DockedStandardContainerElevation), plus a shadow of the
-        // sheet's own colour below it. The colour shadow is listed first so
-        // it paints over the elevation: the elevation's blur would otherwise
-        // draw the sheet's bottom edge while the spring overshoots.
-        box-shadow: 0 m.$sheet-overshoot-guard 0 0 t.color("surface-container-low"), f.get-elevation(1);
+        // sheet's own colour below it to cover the gap the spring's overshoot
+        // opens at the bottom edge
+        box-shadow: f.get-elevation(1), 0 m.$sheet-overshoot-guard 0 0 t.color("surface-container-low");
 
         // Hidden by default: translated fully out of view. Compose's
         // BottomSheet shows on the default spatial spring and hides on fast
@@ -155,12 +154,10 @@ $component: "#{base.$prefix}-bottom-sheet";
         .#{$component}__container {
             // the peek height, showing what the sheet holds without covering
             // the page: the factory's peekHeight, or its content up to half
-            // the screen. Both open states are translateY(0), so the height
-            // is what changes between them and it has to share the spring,
-            // or a release from one to the other snaps.
+            // the screen
             transform: translateY(0);
             max-height: var(--#{$component}-peek-height, 50%);
-            transition: m.spring(transform, default-spatial), m.spring(max-height, default-spatial);
+            transition: m.spring(transform, default-spatial);
         }
 
         .#{$component}__scrim {
@@ -174,7 +171,7 @@ $component: "#{base.$prefix}-bottom-sheet";
         .#{$component}__container {
             transform: translateY(0);
             max-height: 100%;
-            transition: m.spring(transform, default-spatial), m.spring(max-height, default-spatial);
+            transition: m.spring(transform, default-spatial);
             // level with the top of the screen, the corners square off
             // (DockedMinimizedContainerShape is CornerNone)
             &:where(.#{$component}--full-height *) {

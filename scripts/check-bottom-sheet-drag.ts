@@ -326,6 +326,31 @@ try {
   await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   assert(touchDuring.top < touchBefore.top - 60, `touch did not move the sheet (${touchBefore.top} -> ${touchDuring.top})`);
 
+  // Ten steps over 500ms leave the release on the last move, and that move is
+  // just over 100ms after the one before it. 90px down from expanded is past
+  // the 56px threshold at about 130px/s, so it settles on partial.
+  await mount("factory", "standard", "partial");
+  const sparseUp = await handleCenter();
+  await page.mouse.move(sparseUp.x, sparseUp.y);
+  await page.mouse.down();
+  for (let step = 1; step <= 10; step += 1) {
+    await page.mouse.move(sparseUp.x, sparseUp.y - 12 * step);
+    await page.waitForTimeout(40);
+  }
+  await page.mouse.up();
+  await page.waitForTimeout(900);
+  assert.equal((await read()).state, "expanded", "the upward drag did not expand");
+  const sparseDown = await handleCenter();
+  await page.mouse.move(sparseDown.x, sparseDown.y);
+  await page.mouse.down();
+  for (let step = 1; step <= 10; step += 1) {
+    await page.mouse.move(sparseDown.x, sparseDown.y + 9 * step);
+    await page.waitForTimeout(50);
+  }
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  assert.equal((await read()).state, "partial", "a sparse 90px downward drag settled expanded");
+
   // The opening spring peaks at 1.015, which lifts the sheet by 1.5% of its
   // own height. The colour shadow has to cover that gap. On the old paint
   // order the elevation sits on top of it and darkens the first pixels.

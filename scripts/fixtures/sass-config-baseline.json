@@ -50,7 +50,7 @@
     "components/bottom-sheet/bottom-sheet.js": "a6d10c3f55224f7a128f36d86df7ce3755d73d781a3b5b68d4aef982841e6b18",
     "components/bottom-sheet/config.js": "21dee5aefac774cd2a23912da4bc7f9286da35511bb7f564067a3283e58413d0",
     "components/bottom-sheet/constants.js": "2f71fdb637c57ea27f61b6a7772843b94819589300193db045c1a5320898691c",
-    "components/bottom-sheet/features/drag.js": "34072153e01de5276358929724a46e5b5a8e933724105bcd57f95a291d477503",
+    "components/bottom-sheet/features/drag.js": "60f9ed21f54dc9d9ade8fec2b35c3d695ba1e04fa30f358540858d7cd832e6d8",
     "components/bottom-sheet/features/index.js": "467a6e177afdf4f41523bc0daa59a4afcefe5a046ccf27c2e06c9d743ad41eb7",
     "components/bottom-sheet/features/state.js": "74d534d3f3a197daa6fc65f7fbce0029ce8f036ee39d41b33666f1c07ff400b7",
     "components/bottom-sheet/features/structure.js": "eeaf9a55c833ac3d2826155a2d55468833565611a22cd91c71c051fb17527fe1",
