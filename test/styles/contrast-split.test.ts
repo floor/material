@@ -339,9 +339,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The chevron stays on the trailing button's centre and only rotates.
     // The closed nudge and its direction arm leave
     // (styles/components/_split-button.scss; −2,243 B).
+    // The bottom sheet's open states share the spatial spring, and the colour
+    // shadow is listed ahead of the elevation
+    // (styles/components/_bottom-sheet.scss; +378 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "bd94e65b66dd2fc78b69d9f0a3e8a7284be617fa4259370dee28c64cf5d67c49",
-      length: 552549,
+      sha256: "96e673e277ca1e75f7830882ec3eabf72f892b43cdd74f918d1147cc43c79e2b",
+      length: 552927,
     });
   });
 

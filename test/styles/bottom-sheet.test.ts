@@ -26,9 +26,10 @@ describe('bottom sheet stylesheet', () => {
   test('the container is surface-container-low at level 1', () => {
     expect(value('.mtrl-bottom-sheet__container', 'background-color')).toBe('var(--mtrl-sys-color-surface-container-low)');
     expect(value('.mtrl-bottom-sheet__container', 'color')).toBe('var(--mtrl-sys-color-on-surface)');
-    // DockedStandardContainerElevation is Level1; the solid shadow after it
-    // covers the gap the opening spring's overshoot leaves at the bottom edge
-    expect(value('.mtrl-bottom-sheet__container', 'box-shadow')).toBe('0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0 32px 0 0 var(--mtrl-sys-color-surface-container-low)');
+    // DockedStandardContainerElevation is Level1. The solid shadow is listed
+    // first so it paints over that elevation and covers the gap the opening
+    // spring's overshoot leaves at the bottom edge.
+    expect(value('.mtrl-bottom-sheet__container', 'box-shadow')).toBe('0 32px 0 0 var(--mtrl-sys-color-surface-container-low), 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15)');
   });
 
   test('only the top corners round, at extra-large', () => {
