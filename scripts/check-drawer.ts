@@ -169,6 +169,65 @@ try {
   near(specGeometry.badge.right, specGeometry.badged.right - 24, 'badge ends 24dp inside the indicator');
 
   // ========================================================================
+  // DENSITY SWEEP: the chevron holds the diagram placement at every density
+  // ========================================================================
+  // The item shrinks 4dp a step with --mtrl-density (56px down to the 36px
+  // floor, styles/components/_drawer.scss f.density) while the chevron box
+  // stays a fixed 24x24 in the centred flex row: its end inset (24dp) and
+  // vertical centre must not move at any compact step
+  // (m3.material.io/foundations/designing/structure/density, read 2026-11-24).
+  for (const density of [0, -1, -2, -3, -4, -5] as const) {
+    await page.evaluate((d) => {
+      document.documentElement.dir = 'ltr';
+      window.mountDrawer({
+        variant: 'standard', open: true,
+        items: [
+          { id: 'inbox', label: 'Inbox' },
+          { type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
+          { id: 'archive', label: 'Archive', badge: '12' },
+        ],
+      });
+      (window as unknown as { drawer: { element: HTMLElement } }).drawer.element.style.setProperty('--mtrl-density', String(d));
+    }, density);
+    await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+    await page.waitForTimeout(60);
+    const row = await page.evaluate(() => {
+      const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+      const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+      const ib = header.getBoundingClientRect();
+      const cb = chevron.getBoundingClientRect();
+      return { height: ib.height, endInset: ib.right - cb.right, cyDelta: (cb.y + cb.height / 2) - (ib.y + ib.height / 2) };
+    });
+    const expectedHeight = 56 + 4 * density;
+    near(row.height, expectedHeight, `density ${density}: item height follows density`);
+    near(row.endInset, 24, `density ${density}: chevron end inset inside the indicator`);
+    near(row.cyDelta, 0, `density ${density}: chevron vertical centre`);
+  }
+  // The dense option is the density scale's last step through the component.
+  await page.evaluate(() => {
+    window.mountDrawer({
+      variant: 'standard', open: true, dense: true,
+      items: [
+        { id: 'inbox', label: 'Inbox' },
+        { type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
+        { id: 'archive', label: 'Archive', badge: '12' },
+      ],
+    });
+  });
+  await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+  await page.waitForTimeout(60);
+  const denseRow = await page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+    const ib = header.getBoundingClientRect();
+    const cb = chevron.getBoundingClientRect();
+    return { height: ib.height, endInset: ib.right - cb.right, cyDelta: (cb.y + cb.height / 2) - (ib.y + ib.height / 2) };
+  });
+  near(denseRow.height, 36, 'dense option: item height at the density floor');
+  near(denseRow.endInset, 24, 'dense option: chevron end inset inside the indicator');
+  near(denseRow.cyDelta, 0, 'dense option: chevron vertical centre');
+
+  // ========================================================================
   // PARENT CUE: the section of the active child keeps a hover state layer
   // ========================================================================
   // The header of the section that owns the active destination shows the
