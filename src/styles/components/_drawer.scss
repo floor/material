@@ -519,15 +519,15 @@ $default-width: 360px;
         // the flip by the same duration, so the shrink is seen before the
         // rows leave the tree.
         transition:
-            grid-template-rows var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')}) v.motion("easing-emphasized"),
-            visibility 0s linear var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')});
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility 0s linear v.motion("duration-medium1");
     }
 
     &__group--expanded > &__group-items {
         grid-template-rows: 1fr;
         visibility: visible;
         transition:
-            grid-template-rows var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')}) v.motion("easing-emphasized"),
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
             visibility 0s;
     }
 
@@ -577,7 +577,7 @@ $default-width: 360px;
         transform: rotate(0deg);
         // The chevron turns on the same duration and curve the section
         // opens with, so the rotation and the reveal read as one motion.
-        transition: transform var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')}) v.motion("easing-emphasized");
+        transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
 
         svg {
             width: 24px;

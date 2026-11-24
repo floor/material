@@ -642,13 +642,10 @@ $component: "#{$prefix}-menu";
     // This is the expressive active state the spec describes.
     // -------------------------------------------------------------------------
     &--vertical {
-        // The same runtime duration the shared reveal reads, so a page can
-        // slow the vertical variant without a rebuild.
-        $reveal-duration: var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')});
         transition:
-            transform $reveal-duration v.motion("easing-emphasized"),
-            opacity $reveal-duration v.motion("easing-emphasized"),
-            visibility $reveal-duration,
+            transform v.motion("duration-medium1") v.motion("easing-emphasized"),
+            opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility v.motion("duration-medium1"),
             border-radius v.motion("spring-fast-spatial-duration")
                 v.motion("spring-fast-spatial-easing");
 

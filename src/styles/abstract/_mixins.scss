@@ -574,22 +574,17 @@ $sheet-overshoot-guard: 32px;
   transform: scaleY(if($open, 1, 0));
   transform-origin: top center;
   opacity: if($open, 1, 0);
-  // The duration reads the runtime token with the compiled value as its
-  // fallback, so a page can slow the reveal (a comparison harness sets
-  // --mtrl-sys-motion-duration-medium1) without a rebuild. A caller that
-  // hides its closed surface with visibility adds it to the same
-  // transition: opening turns visible at once (the discrete change has no
-  // effect until the end, and the transform carries the reveal), closing
-  // stays visible until the end, so the shrink is seen.
-  $duration: var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')});
+  // A caller that hides its closed surface with visibility adds it to the
+  // same transition: opening turns visible at once (the transform carries
+  // the reveal), closing stays visible until the end, so the shrink is seen.
   @if $withVisibility {
     transition:
-      transform $duration v.motion("easing-emphasized"),
-      opacity $duration v.motion("easing-emphasized"),
-      visibility $duration;
+      transform v.motion("duration-medium1") v.motion("easing-emphasized"),
+      opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
+      visibility v.motion("duration-medium1");
   } @else {
     transition:
-      transform $duration v.motion("easing-emphasized"),
-      opacity $duration v.motion("easing-emphasized");
+      transform v.motion("duration-medium1") v.motion("easing-emphasized"),
+      opacity v.motion("duration-medium1") v.motion("easing-emphasized");
   }
 }
