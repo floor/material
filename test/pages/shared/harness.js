@@ -23,6 +23,17 @@
 /** @type {{slow: boolean, measures: {measure: () => string, el: HTMLElement}[]}} */
 const state = { slow: false, measures: [] };
 
+/** The human names the header and the drawer rows carry. */
+const HUMAN = {
+  drawer: "Navigation drawer",
+  "split-button": "Split button",
+  "fab-menu": "FAB menu",
+  carousel: "Carousel",
+  "bottom-sheet": "Bottom sheet",
+  progress: "Progress",
+  slider: "Slider",
+};
+
 /** The component pages, grouped the way the rail groups them. */
 const GROUPS = [
   { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu"] },
@@ -59,7 +70,7 @@ const railLink = (page) => `/components/${page}/`;
 
 const buildShell = (options, commit) => {
   const bar = document.createElement("m-app-bar");
-  bar.setAttribute("headline", options.name);
+  bar.setAttribute("headline", HUMAN[options.name] ?? options.name);
   bar.setAttribute("no-scroll", "");
   bar.setAttribute("no-compress", "");
   bar.setAttribute("aria-label", "Test pages");
@@ -82,13 +93,27 @@ const buildShell = (options, commit) => {
     toolbar.append(el);
     return el;
   };
-  button("Dark", () => {
-    const dark = document.documentElement.dataset.themeMode !== "dark";
+  const switch_ = (label, on) => {
+    const el = document.createElement("m-switch");
+    el.setAttribute("label", label);
+    if (on) el.setAttribute("checked", "");
+    return el;
+  };
+  const darkSwitch = switch_("Dark");
+  darkSwitch.addEventListener("change", () => {
+    const dark = darkSwitch.checked;
     document.documentElement.dataset.themeMode = dark ? "dark" : "light";
   });
-  button("RTL", () => {
-    document.documentElement.dir = document.documentElement.dir === "rtl" ? "ltr" : "rtl";
+  const rtlSwitch = switch_("RTL");
+  rtlSwitch.addEventListener("change", () => {
+    document.documentElement.dir = rtlSwitch.checked ? "rtl" : "ltr";
   });
+  const slowSwitch = switch_("Slow motion (5x)");
+  slowSwitch.addEventListener("change", () => {
+    state.slow = slowSwitch.checked;
+    sweep();
+  });
+  toolbar.append(darkSwitch, rtlSwitch);
   if (options.toolbar?.density) {
     const select = document.createElement("select");
     for (const density of [0, -1, -2, -3, -4, -5]) {
@@ -103,20 +128,20 @@ const buildShell = (options, commit) => {
     });
     toolbar.append(select);
   }
-  const slowButton = button("Slow motion: off", () => {
-    state.slow = !state.slow;
-    slowButton.textContent = state.slow ? "Slow motion: on (5x)" : "Slow motion: off";
-    sweep();
-  });
+  toolbar.append(slowSwitch);
   if (options.toolbar?.forms) {
     for (const form of options.toolbar.forms) {
-      button(form.label, () => {
+      const el = document.createElement("m-button");
+      el.setAttribute("type", "text");
+      el.textContent = form.label;
+      el.addEventListener("click", () => {
         for (const other of options.toolbar.forms) {
           if (other !== form) other.render();
         }
         form.render();
         rerender();
       });
+      toolbar.append(el);
     }
   }
   bar.append(toolbar);
@@ -130,14 +155,14 @@ const buildShell = (options, commit) => {
     const item = document.createElement("m-navigation-rail-item");
     item.setAttribute("value", group.label);
     item.setAttribute("label", group.label);
-    item.setAttribute("icon", group.icon);
+    item.setAttribute("icon", ICONS[group.icon]);
     item.setAttribute("href", railLink(group.pages[0]));
-    item.setAttribute("badge", String(group.pages.length));
     rail.append(item);
   }
   const drawer = document.createElement("m-drawer");
   drawer.setAttribute("open", "");
   drawer.id = "tp-drawer";
+  drawer.style.setProperty("--mtrl-drawer-width", "280px");
   const currentInGroup = (pages) => pages.includes(current);
   for (const group of GROUPS) {
     const item = document.createElement("m-drawer-item");
@@ -148,7 +173,7 @@ const buildShell = (options, commit) => {
       const child = document.createElement("m-drawer-item");
       child.setAttribute("value", page);
       child.setAttribute("href", railLink(page));
-      child.textContent = page;
+      child.textContent = HUMAN[page] ?? page;
       item.append(child);
     }
     drawer.append(item);
@@ -176,10 +201,14 @@ export async function initPage(options) {
   await import("/dist/elements/css/drawer.js");
   await import("/dist/elements/css/navigation-rail.js");
   await import("/dist/elements/css/top-app-bar.js");
-  const { defineDrawer, defineNavigationRail, defineAppBar } = await import("/dist/elements/index.js");
+  await import("/dist/elements/css/switch.js");
+  await import("/dist/elements/css/button.js");
+  const { defineDrawer, defineNavigationRail, defineAppBar, defineSwitch, defineButton } = await import("/dist/elements/index.js");
   defineDrawer();
   defineNavigationRail();
   defineAppBar();
+  defineSwitch();
+  defineButton();
 
   const commit = await fetch("/__commit").then((r) => r.text()).catch(() => "unknown");
   const { content } = buildShell(options, commit);
@@ -187,6 +216,13 @@ export async function initPage(options) {
   header.className = "tp-commit";
   header.textContent = `built from ${commit}`;
   content.append(header);
+  // The page's own markup (index.html's list) moves into the content
+  // column, so nothing renders above or below the shell.
+  const shell = document.querySelector(".tp-shell");
+  for (const node of [...document.body.childNodes]) {
+    if (node === shell || node.tagName === "SCRIPT" || node.tagName === "M-APP-BAR") continue;
+    if (node.nodeType === 1 || node.nodeType === 3) content.append(node);
+  }
   armSlowMotion(document);
   document.querySelectorAll("*").forEach((el) => { if (el.shadowRoot) armSlowMotion(el.shadowRoot); });
   setInterval(() => {
