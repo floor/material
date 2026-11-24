@@ -100,6 +100,17 @@ try {
   }));
   assert.equal(indicatorMotion.pill, '0s', `The active pill still transitions under reduced motion: ${indicatorMotion.pill}`);
   assert.equal(indicatorMotion.state, '0s', `The state layer still transitions under reduced motion: ${indicatorMotion.state}`);
+  // The section motion joins the instant set: the sub items and the panel
+  // switch without the grow/fade.
+  await page.evaluate(() => window.mountDrawer({
+    variant: 'standard', open: true,
+    items: [{ type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family' }, { id: 'work', label: 'Work' }] }],
+  }));
+  const childMotion = await page.locator('.mtrl-drawer__group .mtrl-drawer__item--child').first().evaluate(el => ({
+    duration: getComputedStyle(el).transitionDuration,
+    height: getComputedStyle(el).height,
+  }));
+  assert.equal(childMotion.duration.split(', ')[0], '0s', `A sub item still grows under reduced motion: ${childMotion.duration}`);
   await page.click('#outside');
   assert.equal(await page.locator('#outside').evaluate(el => el === document.activeElement), true);
   await page.evaluate(() => window.mountDrawer({ variant: 'modal' }));
@@ -347,6 +358,80 @@ try {
   assert.equal(rotated.transform, 'matrix(1, 0, 0, 1, 0, 0)', 'the collapsed section turned the chevron back');
   near(rotated.inset, 24, 'collapsed chevron: ink still ends 24dp inside the indicator');
   if (rotated.badgeGap !== null) near(rotated.badgeGap, 0, 'collapsed chevron: ink end lands on the badge text end');
+
+  // ========================================================================
+  // SECTION MOTION: the open/close follows the menu's timing
+  // ========================================================================
+  // The menu reveals with transform scaleY + opacity on duration-medium1
+  // (250ms) + easing-emphasized (styles/components/_menu.scss). The drawer
+  // section runs the same timing: the panel's height opens and closes on it
+  // and each sub item GROWS from 0 to full — height and pill together —
+  // fading on the menu's opacity timing, with no spring overshoot; the
+  // chevron turns on the same duration. Sampled per frame below.
+  const motionPage = await browser.browser()!.newPage({ viewport: { width: 640, height: 800 } });
+  motionPage.on('pageerror', error => errors.push(error.message));
+  await motionPage.goto(`http://127.0.0.1:${server.port}`);
+  await motionPage.waitForFunction(() => !!window.mountDrawer);
+  await motionPage.evaluate(() => window.mountDrawer({
+    variant: 'standard', open: true,
+    items: [
+      { id: 'inbox', label: 'Inbox' },
+      { type: 'section', id: 'labels', label: 'Labels', expanded: false, items: [{ id: 'family', label: 'Family' }, { id: 'work', label: 'Work' }] },
+      { id: 'archive', label: 'Archive', badge: '12' },
+    ],
+  }));
+  await motionPage.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+  const timing = await motionPage.evaluate(() => {
+    const item = document.querySelector('.mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__item--child') as HTMLElement;
+    const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+    const itemStyle = getComputedStyle(item);
+    const panelStyle = getComputedStyle(panel);
+    const chevronStyle = getComputedStyle(document.querySelector('[data-id="labels"] .mtrl-drawer__item-chevron')!);
+    return {
+      itemHeight: itemStyle.height,
+      itemTransition: itemStyle.transitionProperty,
+      itemDuration: itemStyle.transitionDuration,
+      itemEasing: itemStyle.transitionTimingFunction,
+      panelDuration: panelStyle.transitionDuration,
+      chevronDuration: chevronStyle.transitionDuration,
+      chevronEasing: chevronStyle.transitionTimingFunction,
+    };
+  });
+  assert.equal(timing.itemHeight, '0px', 'a closed sub item holds height 0');
+  assert.ok(timing.itemTransition.includes('height') && timing.itemTransition.includes('opacity'),
+    `sub items transition height and opacity: ${timing.itemTransition}`);
+  assert.equal(timing.itemDuration.split(', ')[0], '0.25s', `sub items take the menu's duration-medium1: ${timing.itemDuration}`);
+  assert.ok(timing.itemEasing.startsWith('cubic-bezier(0.3, 0, 0, 1)'), `sub items take the menu's emphasized curve: ${timing.itemEasing}`);
+  assert.equal(timing.panelDuration.split(', ')[0], '0.25s', `the panel opens on the menu's duration: ${timing.panelDuration}`);
+  assert.equal(timing.chevronDuration, '0.25s', `the chevron turns on the same duration: ${timing.chevronDuration}`);
+  assert.equal(timing.chevronEasing, 'cubic-bezier(0.3, 0, 0, 1)', `the chevron turns on the emphasized curve: ${timing.chevronEasing}`);
+  const frames = await motionPage.evaluate(async () => {
+    const rows: Array<{ t: number; panel: number; itemH: number; op: number }> = [];
+    document.querySelector('[data-id="labels"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+    const item = panel.querySelector('.mtrl-drawer__item--child') as HTMLElement;
+    const start = performance.now();
+    await new Promise<void>((done) => {
+      const tick = () => {
+        const t = performance.now() - start;
+        rows.push({ t, panel: panel.getBoundingClientRect().height, itemH: item.getBoundingClientRect().height, op: parseFloat(getComputedStyle(item).opacity) });
+        if (t < 450) requestAnimationFrame(tick); else done();
+      };
+      requestAnimationFrame(tick);
+    });
+    return rows;
+  });
+  assert.ok(frames.length >= 8, `the open was sampled per frame (${frames.length} frames)`);
+  assert.ok(frames[0]!.itemH < 12, `the sub item starts growing from near 0 (${frames[0]!.itemH.toFixed(1)})`);
+  assert.equal(Math.round(frames[frames.length - 1]!.itemH), 56, 'the sub item reaches its full height');
+  assert.ok(frames[frames.length - 1]!.op > 0.95, 'the sub item fades in to full opacity');
+  const maxPanel = Math.max(...frames.map(f => f.panel));
+  assert.ok(maxPanel <= 112.5, `no spring overshoot on the panel height (max ${maxPanel.toFixed(1)})`);
+  const at100 = frames.find(f => f.t >= 100)!;
+  assert.ok(at100.itemH > 28, `the emphasized curve starts fast: past half at ~100ms of 250 (${at100.itemH.toFixed(1)})`);
+  const at250 = frames.find(f => f.t >= 250)!;
+  assert.ok(at250.itemH > 54, `the item is settled at 250ms like the menu (${at250.itemH.toFixed(1)})`);
+  await motionPage.close();
 
   // ========================================================================
   // PARENT CUE: the section of the active child keeps a hover state layer

@@ -507,20 +507,52 @@ $default-width: 360px;
         display: grid;
         grid-template-rows: 0fr;
         visibility: hidden;
+        // The panel's height opens and closes on the menu's timing
+        // (m3.material.io/components/menu guidelines read 2026-11-24; the
+        // menu's own reveal is styles/components/_menu.scss: transform
+        // scaleY + opacity, duration-medium1, easing-emphasized) — no
+        // spring, so the content below moves with the same curve the menu
+        // draws.
         transition:
-            m.spring(grid-template-rows, default-spatial),
-            visibility 0s linear v.motion("spring-default-spatial-duration");
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility 0s linear v.motion("duration-medium1");
     }
 
     &__group--expanded > &__group-items {
         grid-template-rows: 1fr;
         visibility: visible;
-        transition: m.spring(grid-template-rows, default-spatial), visibility 0s;
+        transition:
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility 0s;
     }
 
     &__group-items-inner {
         min-height: 0;
         overflow: hidden;
+    }
+
+    // The sub items grow and shrink like the menu's scale reveal (the
+    // owner's words): each child item's height — and its active-indicator
+    // pill with it — grows from 0 to full while the panel opens and shrinks
+    // back when it closes, fading on the menu's opacity timing. Heights are
+    // layout, so the items never overlap, and at rest nothing is clipped
+    // (no transform, the full pill and the focus ring). The touch target
+    // leaves with the item: a hidden row keeps no 48px hit area.
+    &__group .#{$component}__item--child {
+        transition:
+            height v.motion("duration-medium1") v.motion("easing-emphasized"),
+            min-height v.motion("duration-medium1") v.motion("easing-emphasized"),
+            opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+    }
+
+    &__group:not(.#{$component}__group--expanded) .#{$component}__item--child {
+        height: 0;
+        min-height: 0;
+        opacity: 0;
+
+        &::after {
+            display: none;
+        }
     }
 
     &__item--child {
@@ -551,7 +583,9 @@ $default-width: 360px;
         // property mirrors itself in RTL.
         margin-inline-end: -6px;
         transform: rotate(0deg);
-        transition: m.spring(transform, fast-spatial);
+        // The chevron turns on the same duration and curve the section
+        // opens with, so the rotation and the reveal read as one motion.
+        transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
 
         svg {
             width: 24px;
@@ -701,6 +735,10 @@ $default-width: 360px;
         &__group--expanded > &__group-items,
         &__item::before,
         &__active-indicator,
+        // The child items' grow/shrink and the panel's switch are two and
+        // three classes deep, so they need that specificity to win.
+        &__group &__item--child,
+        &__group:not(.#{$component}__group--expanded) &__item--child::after,
         // The pill and state layer rules are two classes deep, so their switch
         // has to match that specificity to win over the transitions above.
         &__item &__active-indicator::before,
