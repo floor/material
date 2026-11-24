@@ -86,18 +86,19 @@ const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "
 
 /**
  * Where a value sits along a track `width` wide, from its fraction of the range,
- * as CSS, so a handle stays in place when the track resizes. A continuous
- * slider spans the whole track (`inset` is 0), so its ends meet the rounded
- * corners. A discrete one insets every step, the first and the last included,
- * by the track's corner radius: the handle centre lands on the stop, and the
- * end stops sit in from the pill
- * (https://m3.material.io/components/sliders/guidelines — "The slider handle snaps
- * to the closest stop.").
+ * as CSS, so a handle stays in place when the track resizes. With no inset it
+ * is the fraction across the whole track, which the track's own pieces use. With
+ * the track's corner radius it insets every step, the first and the last
+ * included: the handle centre lands on the stop, and the end stops sit in from
+ * the pill (https://m3.material.io/components/sliders/guidelines — "The slider
+ * handle snaps to the closest stop."). The handle always reads it this way, and
+ * the track's pieces on a discrete slider.
  */
-const trackPositionCss = (fraction: number, inset: number): string =>
-  inset
-    ? `calc(${fraction * 100}% + ${inset * (1 - 2 * fraction)}px)`
-    : `${fraction * 100}%`;
+const trackPositionCss = (fraction: number, inset: number): string => {
+  if (!inset) return `${fraction * 100}%`;
+  const offset = inset * (1 - 2 * fraction);
+  return `calc(${fraction * 100}% ${offset < 0 ? "-" : "+"} ${Math.abs(offset)}px)`;
+};
 
 /** A distance along the track: `f` of its length, plus `p` pixels. No measured width. */
 type Along = { f: number; p: number };
@@ -566,15 +567,21 @@ export const withController =
   // UI RENDERING FUNCTIONS
   //=============================================================================
 
-  // A discrete slider insets every step, ends included, by the track's corner
-  // radius; a continuous one spans the whole track (see trackPositionCss).
-  // Read at each use: a right-to-left layout is known only once the slider is placed.
+  // The track's own pieces: a discrete one insets every step, ends included,
+  // by the track's corner radius; a continuous one spans the whole track (see
+  // trackPositionCss). Read at each use: a right-to-left layout is known only
+  // once the slider is placed.
   const axisNow = () => getAxis(config, isRtl(component.element));
   const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
 
-  // Percentage plus the inset stays aligned when the container resizes.
+  // The handle (and its bubble) keeps that space from the track's ends whether
+  // the slider is continuous or discrete: at min and max its centre sits the
+  // track's corner radius in from the end, on the first and the last stop of a
+  // discrete slider and on the same inset for a continuous one, so no press
+  // leaves the handle half on the track's rounded end. The track's pieces still
+  // span the whole width; the value the pointer maps to is unchanged.
   const visualPosition = (value: number) =>
-    trackPositionCss(fractionOf(value, state.min, state.max), inset());
+    trackPositionCss(fractionOf(value, state.min, state.max), getExternalTrackRadius(component.getSize?.() ?? config.size));
 
   /**
    * Gets slider value from a position on the track
