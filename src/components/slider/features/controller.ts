@@ -662,6 +662,17 @@ export const withController =
       if (secondValueBubble) place(secondValueBubble, state.secondValue, bubbleTransform(axis));
     }
 
+    // The pressed handle narrows to 2dp (PressedHandleWidth) for as long as the
+    // press lasts, whichever part of the slider it landed on: a press on the
+    // track is a press on the slider, and the handle it moves is the one that
+    // shows it. The stylesheet's `:active` only reaches a press on the handle
+    // itself, and `--dragging` waits for the drag threshold to pass.
+    const pressedClass = component.getClass("slider__handle--pressed");
+    handle.classList.toggle(pressedClass, !!state.pressed && state.activeHandle === "first");
+    if (secondHandle) {
+      secondHandle.classList.toggle(pressedClass, !!state.pressed && state.activeHandle === "second");
+    }
+
     // Update ARIA attributes
     updateHandleAria(handle, state.value);
     if (config.range && secondHandle && state.secondValue !== null) {
@@ -884,12 +895,15 @@ export const withController =
     document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("touchmove", handleMouseMove, { passive: false });
     document.addEventListener("touchend", handleMouseUp);
+    // A cancelled touch is a release: without it the handle would stay pressed.
+    document.addEventListener("touchcancel", handleMouseUp);
   };
   const stopFollowing = () => {
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
     document.removeEventListener("touchmove", handleMouseMove);
     document.removeEventListener("touchend", handleMouseUp);
+    document.removeEventListener("touchcancel", handleMouseUp);
   };
 
   /**
@@ -997,14 +1011,17 @@ export const withController =
       // Add event listeners but don't start dragging yet
       followPointer();
 
-      // Don't set pressed state for track clicks
-      state.pressed = false;
+      // A press that starts an interaction shows the pressed handle: the
+      // handle narrows until the release, as it does when pressed directly.
+      state.pressed = true;
+      render();
 
       emitEvent(SLIDER_EVENTS.START, e);
     } else {
-      // For non-centered sliders, start drag but don't set pressed since it's a track click
+      // For non-centered sliders the drag starts here; the press shows the
+      // pressed handle until the release, track press or not.
       state.dragging = false;
-      state.pressed = false; // Don't set pressed for track clicks
+      state.pressed = true;
       hasActualDragStarted = false;
 
       // Show bubble

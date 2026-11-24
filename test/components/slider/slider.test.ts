@@ -355,6 +355,58 @@ describe('slider appearance', () => {
   });
 });
 
+describe('slider pressed state', () => {
+  const PRESSED = 'mtrl-slider__handle--pressed';
+  const containerOf = (slider: { element: HTMLElement }) =>
+    slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+  const layout = (slider: { element: HTMLElement }) => {
+    const container = containerOf(slider);
+    container.getBoundingClientRect = () => ({ width: 300, height: 48, top: 0, left: 0, right: 300, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
+  };
+
+  test('a press on the inactive track presses the handle until the release', async () => {
+    const slider = await mount({ value: 20, step: 10 });
+    layout(slider);
+    const [handle] = handles(slider);
+    containerOf(slider).dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));
+    expect(handle.classList.contains(PRESSED)).toBe(true);
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 240, bubbles: true }));
+    expect(handle.classList.contains(PRESSED)).toBe(false);
+  });
+
+  test('a press on the active track presses the handle too', async () => {
+    const slider = await mount({ value: 80, step: 10 });
+    layout(slider);
+    const [handle] = handles(slider);
+    containerOf(slider).dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 60, bubbles: true }));
+    expect(slider.getValue()).toBe(20);
+    expect(handle.classList.contains(PRESSED)).toBe(true);
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 60, bubbles: true }));
+    expect(handle.classList.contains(PRESSED)).toBe(false);
+  });
+
+  test('a press on the handle presses it, and a range presses only the one held', async () => {
+    const slider = await mount({ range: true, value: 20, secondValue: 80 });
+    layout(slider);
+    const [first, second] = handles(slider);
+    second!.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));
+    expect(second!.classList.contains(PRESSED)).toBe(true);
+    expect(first!.classList.contains(PRESSED)).toBe(false);
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 240, bubbles: true }));
+    expect(second!.classList.contains(PRESSED)).toBe(false);
+  });
+
+  test('a cancelled touch releases the press', async () => {
+    const slider = await mount({ value: 20, step: 10 });
+    layout(slider);
+    const [handle] = handles(slider);
+    containerOf(slider).dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));
+    expect(handle.classList.contains(PRESSED)).toBe(true);
+    document.dispatchEvent(new dom.window.Event('touchcancel', { bubbles: true }));
+    expect(handle.classList.contains(PRESSED)).toBe(false);
+  });
+});
+
 describe('slider label and icon', () => {
   test('an icon added later follows the existing BEM label', async () => {
     const slider = await mount({ label: 'Volume' });
