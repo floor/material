@@ -343,7 +343,8 @@ export const withScroll = (config: CarouselConfig) =>
     const handleFocusIn = (e: FocusEvent): void => {
       // A pointer press focuses the slide under it, and goTo there would
       // scroll the carousel away from a pointer that is holding it — the
-      // press may be a drag. The keyboard keeps its follow-focus.
+      // press may be a drag. The click after the release selects the slide
+      // instead; the keyboard keeps its follow-focus.
       if (dragging) return;
       const index = indexOf(e.target);
       if (index >= 0 && index !== currentIndex) goTo(index);
@@ -466,6 +467,17 @@ export const withScroll = (config: CarouselConfig) =>
         dragged = false;
         e.preventDefault();
         e.stopPropagation();
+        return;
+      }
+      // A click on a slide selects it. The slide resolves from the composed
+      // path: the element's shadow boundary sits between this listener and
+      // the item, where closest() and focus do not reach. Selection happens
+      // on the click, after the release, so a press never scrolls. No
+      // preventDefault here, so a link inside the slide still opens.
+      const slide = (e.composedPath() as EventTarget[]).find((node) => slideElements.includes(node as HTMLElement)) as HTMLElement | undefined;
+      if (slide) {
+        const index = slideElements.indexOf(slide);
+        if (index !== currentIndex) goTo(index);
       }
     };
 
