@@ -53,6 +53,8 @@
 
     --#{$prefix}-sys-color-outline: #85736c;
     --#{$prefix}-sys-color-outline-variant: #d7c1ba;
+    --#{$prefix}-sys-color-shadow: #000000;
+    --#{$prefix}-sys-color-scrim: #000000;
     // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
     // inverse-primary P80), from this theme's neutral and primary palettes.
     --#{$prefix}-sys-color-inverse-surface: #3a2e27;
@@ -99,6 +101,8 @@
 
         --#{$prefix}-sys-color-outline: #a08c85;
         --#{$prefix}-sys-color-outline-variant: #53433c;
+        --#{$prefix}-sys-color-shadow: #000000;
+        --#{$prefix}-sys-color-scrim: #000000;
         // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
         // inverse-primary P40).
         --#{$prefix}-sys-color-inverse-surface: #ede0d9;

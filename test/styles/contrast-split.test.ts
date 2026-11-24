@@ -339,16 +339,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The chevron stays on the trailing button's centre and only rotates.
     // The closed nudge and its direction arm leave
     // (styles/components/_split-button.scss; −2,243 B).
-    // The carousel's scroller refuses elastic overscroll, so a Mac trackpad
-    // cannot displace the strip behind the layout's back
-    // (styles/components/_carousel.scss: overscroll-behavior; −6 B).
-    // The carousel's items live in a layer pinned to the scroller's viewport,
-    // so an item's transform no longer carries the scroll offset and a painted
-    // offset the main thread has not read cannot move the strip
-    // (styles/components/_carousel.scss: __layer; +429 B).
+    // The bottom sheet's open states share the spatial spring, and the colour
+    // shadow is listed ahead of the elevation
+    // (styles/components/_bottom-sheet.scss; +378 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "99a85581168dfa63b435be403b7d2c31a1ca4148effa432dcf1f32b3ea33e449",
-      length: 552972,
+      sha256: "57b004fbe52396b1c9010060d0d3e25f8e4722fa0c7dcf91ac4a626944989971",
+      length: 553577,
     });
   });
 
