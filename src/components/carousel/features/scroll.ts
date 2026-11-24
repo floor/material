@@ -341,6 +341,10 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handleFocusIn = (e: FocusEvent): void => {
+      // A pointer press focuses the slide under it, and goTo there would
+      // scroll the carousel away from a pointer that is holding it — the
+      // press may be a drag. The keyboard keeps its follow-focus.
+      if (dragging) return;
       const index = indexOf(e.target);
       if (index >= 0 && index !== currentIndex) goTo(index);
     };
@@ -381,23 +385,58 @@ export const withScroll = (config: CarouselConfig) =>
       dragScrollStart = scroller[vertical ? "scrollTop" : "scrollLeft"];
       restoreSnap();
       element.dataset.settling = "true";
-      scroller.setPointerCapture(e.pointerId);
+    };
+
+    /**
+     * One idempotent end for every way a drag stops without its release: a
+     * cancelled pointer, the capture lost (a context menu over a slide
+     * releases it without any cancel event), the buttons read 0 on a move,
+     * or the window blurring. Snap and data-dragging restore every time, and
+     * a drag ended this way sends no click, so `dragged` must not outlive it
+     * — the next real click on a slide must work.
+     */
+    const endDrag = (): void => {
+      if (!dragging) return;
+      dragging = false;
+      dragged = false;
+      delete element.dataset.dragging;
+      restoreSnap();
     };
 
     const handlePointerMove = (e: PointerEvent): void => {
       if (!dragging) return;
+      // The release may go unseen — outside the window, into a menu that
+      // took the mouse. The first move with no button down ends the drag
+      // instead of following a mouse the user no longer holds.
+      if (e.buttons === 0) {
+        if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
+        endDrag();
+        return;
+      }
       const position = vertical ? e.clientY : e.clientX;
       const delta = position - dragStart;
       if (!dragged && Math.abs(delta) < DRAG_THRESHOLD) return;
-      dragged = true;
+      if (!dragged) {
+        // The capture starts here, not at the press: a press that never
+        // becomes a drag must leave the pointer with the slide, or the
+        // rerouted click would keep every link and button inside a slide
+        // from working.
+        dragged = true;
+        scroller.setPointerCapture(e.pointerId);
+      }
       element.dataset.dragging = "true";
       const dt = e.timeStamp - dragLastTime;
-      if (dt > 0) dragVelocity = ((position - dragLast) / dt) * sign;
+      // The pointer's own rate: a leftward flick advances in either
+      // direction, physical in RTL too since the write above carries the
+      // sign.
+      if (dt > 0) dragVelocity = (position - dragLast) / dt;
       dragLast = position;
       dragLastTime = e.timeStamp;
-      // No rtl term: the drag follows the pointer physically, and the
-      // mirrored gesture (right-drag advances) meets the mirrored range.
-      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta;
+      // The sign keeps the strip under the pointer in both directions: RTL's
+      // scrollLeft range is negated (0 at the reading origin, negative as the
+      // strip advances), so without it the strip moved opposite the pointer
+      // there and every drag felt backwards.
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta * sign;
       e.preventDefault();
     };
 
@@ -431,6 +470,14 @@ export const withScroll = (config: CarouselConfig) =>
         e.preventDefault();
         e.stopPropagation();
       }
+    };
+
+    // The slides carry real images and links, which the browser would drag
+    // natively — its ghost takes the gesture and its own drag out of the
+    // carousel's hands. Inside the carousel, the drag is the carousel's;
+    // links still open by click.
+    const handleDragStart = (e: DragEvent): void => {
+      e.preventDefault();
     };
 
     // ── Opt-in mouse wheel ──────────────────────────────────────
@@ -559,8 +606,11 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("pointerdown", handlePointerDown);
     scroller.addEventListener("pointermove", handlePointerMove);
     scroller.addEventListener("pointerup", handlePointerUp);
-    scroller.addEventListener("pointercancel", handlePointerUp);
+    scroller.addEventListener("pointercancel", endDrag);
+    scroller.addEventListener("lostpointercapture", endDrag);
+    scroller.addEventListener("dragstart", handleDragStart);
     scroller.addEventListener("click", handleClick, true);
+    window.addEventListener("blur", endDrag);
     reduceMotion?.addEventListener?.("change", rebuild);
 
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(rebuild) : null;
@@ -598,8 +648,11 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("pointerdown", handlePointerDown);
         scroller.removeEventListener("pointermove", handlePointerMove);
         scroller.removeEventListener("pointerup", handlePointerUp);
-        scroller.removeEventListener("pointercancel", handlePointerUp);
+        scroller.removeEventListener("pointercancel", endDrag);
+        scroller.removeEventListener("lostpointercapture", endDrag);
+        scroller.removeEventListener("dragstart", handleDragStart);
         scroller.removeEventListener("click", handleClick, true);
+        window.removeEventListener("blur", endDrag);
         destroy?.();
       },
     };

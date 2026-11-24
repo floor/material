@@ -573,3 +573,157 @@ export async function checkCarouselUncontained(
   assert.deepEqual(failures, [], `uncontained carousel browser regressions:\n${failures.join("\n")}`);
 }
 
+
+/** The readouts every drag-release scenario asserts, read from one root. */
+type DragState = { dragging: boolean; settling: boolean; snap: string; left: number; hash: string };
+
+const image = "data:image/gif;base64,R0lGODlhAQABAIAAAP8AAAAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+
+/**
+ * Every way a mouse drag stops leaves the carousel working: moving the mouse
+ * afterwards never scrolls it, the snap points are back, and the next click
+ * works. The scenarios are the ways a release goes missing — a context menu
+ * over a slide (which releases the pointer capture without any cancel event,
+ * leaving the drag unanchored, so a release outside the scroller never
+ * arrives), the window blurring mid-drag, and the plain drags over a slide's
+ * image and over the slide's own link. LTR and RTL, factory and element.
+ */
+export async function checkCarouselDragRelease(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  for (const route of ["factory", "element"] as const) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      const label = `drag release ${route}/${dir}`;
+      await page.evaluate(({ route, dir, image }) => {
+        document.documentElement.dir = dir;
+        document.body.replaceChildren();
+        const mark = (host: HTMLElement) => { host.id = "drag-carousel"; host.style.cssText = "width:760px;height:240px"; };
+        if (route === "factory") {
+          const state = window as unknown as CarouselWindow;
+          const carousel = state.createCarousel({
+            variant: "multi-browse", itemWidth: 200,
+            slides: Array.from({ length: 8 }, (_, i) => ({
+              title: `Slide ${i}`, image, width: 200, height: 160,
+              ...(i === 0 ? { buttonUrl: "#go", buttonText: "Open" } : {}),
+            })),
+          });
+          mark(carousel.element);
+          document.body.append(carousel.element);
+        } else {
+          const host = document.createElement("m-carousel");
+          host.setAttribute("variant", "multi-browse");
+          host.setAttribute("item-width", "200");
+          for (let i = 0; i < 8; i++) {
+            const item = document.createElement("m-carousel-item");
+            item.setAttribute("src", image);
+            item.setAttribute("alt", `Slide ${i}`);
+            item.setAttribute("width", "200");
+            item.setAttribute("height", "160");
+            if (i === 0) { item.setAttribute("button-text", "Open"); item.setAttribute("button-url", "#go"); }
+            host.append(item);
+          }
+          mark(host);
+          document.body.append(host);
+        }
+      }, { route, dir, image });
+      await page.waitForFunction(() => {
+        const host = document.querySelector("m-carousel");
+        const scroller = (host?.shadowRoot ?? document).querySelector<HTMLElement>(".mtrl-carousel__scroller");
+        return !!scroller && scroller.scrollWidth > 760;
+      });
+      const state = async (): Promise<DragState> => page.evaluate(() => {
+        const host = document.querySelector("m-carousel");
+        const scope: ParentNode = host?.shadowRoot ?? document;
+        const root = scope.querySelector(".mtrl-carousel") as HTMLElement;
+        const scroller = scope.querySelector(".mtrl-carousel__scroller") as HTMLElement;
+        return {
+          dragging: "dragging" in root.dataset,
+          settling: "settling" in root.dataset,
+          snap: scroller.style.scrollSnapType || getComputedStyle(scroller).scrollSnapType,
+          left: scroller.scrollLeft,
+          hash: window.location.hash,
+        };
+      });
+      const links = (where: string, after: DragState): void => {
+        assert.equal(after.dragging, false, `${label}, ${where}: data-dragging is cleared`);
+        assert.equal(after.settling, false, `${label}, ${where}: the settle marker is cleared`);
+        assert.equal(after.snap, "x mandatory", `${label}, ${where}: the snap points are back`);
+        assert.equal(after.hash, "#go", `${label}, ${where}: the next click works`);
+      };
+      const clickLink = async (): Promise<void> => {
+        await page.evaluate(() => { window.location.hash = ""; });
+        await page.locator("#drag-carousel .mtrl-carousel__button").first().click();
+      };
+      const movesDontScroll = async (where: string, before: DragState): Promise<void> => {
+        await page.mouse.move(380, 120);
+        await page.mouse.move(500, 120, { steps: 4 });
+        assert.equal((await state()).left, before.left, `${label}, ${where}: moving the mouse does not scroll`);
+      };
+
+      // A press without a drag moves nothing and keeps the slide's link
+      // clickable: the capture only starts once the drag passes its
+      // threshold, and press-focus never scrolls the carousel.
+      await page.mouse.move(380, 120);
+      const beforePress = await state();
+      await page.mouse.down();
+      await page.waitForTimeout(120);
+      await page.mouse.up();
+      const afterPress = await state();
+      assert.equal(afterPress.left, beforePress.left, `${label}: a press does not scroll`);
+      assert.equal(afterPress.dragging, false, `${label}: a press leaves no drag state`);
+      await clickLink();
+      assert.equal((await state()).hash, "#go", `${label}: a press keeps the link clickable`);
+
+      // A context menu over a slide releases the capture without a cancel
+      // event; the release outside the scroller then never reaches it.
+      await page.mouse.move(380, 120);
+      await page.mouse.down();
+      await page.mouse.move(300, 120, { steps: 4 });
+      await page.mouse.down({ button: "right" });
+      await page.mouse.up({ button: "right" });
+      await page.mouse.move(60, 560, { steps: 4 });
+      await page.mouse.up();
+      let after = await state();
+      await clickLink();
+      after = await state();
+      links("context menu", after);
+      await movesDontScroll("context menu", after);
+
+      // The window blurring mid-drag ends it; the late release is inert.
+      await page.mouse.move(380, 120);
+      await page.mouse.down();
+      await page.mouse.move(300, 120, { steps: 4 });
+      await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+      await page.mouse.move(60, 560, { steps: 4 });
+      await page.mouse.up();
+      after = await state();
+      await clickLink();
+      after = await state();
+      links("window blur", after);
+      await movesDontScroll("window blur", after);
+
+      // The plain drags release normally: over the slide's image the fling
+      // settles and the snap returns; over the slide's link no native drag
+      // takes the gesture, and the link is clickable again.
+      for (const on of ["image", "link"] as const) {
+        await page.mouse.move(380, 120);
+        await page.mouse.down();
+        await page.mouse.move(300, 120, { steps: 4 });
+        await page.mouse.up();
+        const dragged = await state();
+        assert.ok(dragged.left * (dir === "ltr" ? 1 : -1) > 40, `${label}, ${on}: the drag follows the pointer (${dragged.left})`);
+        await page.waitForFunction(() => {
+          const host = document.querySelector("m-carousel");
+          const scope: ParentNode = host?.shadowRoot ?? document;
+          return !((scope.querySelector(".mtrl-carousel") as HTMLElement).dataset.settling ?? "");
+        }, undefined, { timeout: 2000 }).catch(() => {});
+        after = await state();
+        assert.equal(after.dragging, false, `${label}, ${on}: data-dragging is cleared`);
+        assert.equal(after.snap, "x mandatory", `${label}, ${on}: the snap points are back`);
+        await movesDontScroll(on, after);
+        await clickLink();
+        assert.equal((await state()).hash, "#go", `${label}, ${on}: the next click works`);
+      }
+    }
+  }
+}
