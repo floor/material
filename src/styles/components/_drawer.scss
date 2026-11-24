@@ -543,6 +543,13 @@ $default-width: 360px;
         width: 24px;
         height: 24px;
         margin-inline-start: auto;
+        // The shipped expand_more glyph's ink is 12 units wide, centred in
+        // the 24-unit box (x 6..18 of the viewBox), so the box end sits
+        // 6px before the ink end. Pull the box 6px toward the reading
+        // direction's end so the ink — not the box — ends 24dp inside the
+        // indicator, on the line where a badge's text ends. The logical
+        // property mirrors itself in RTL.
+        margin-inline-end: -6px;
         transform: rotate(0deg);
         transition: m.spring(transform, fast-spatial);
 

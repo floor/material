@@ -162,7 +162,7 @@ try {
   near(specGeometry.header.left, specGeometry.content.left + 12, 'indicator start inset from the content edge (active indicator padding 12dp)');
   near(specGeometry.header.labelLeft, specGeometry.header.left + 16, 'top-level label starts 16dp inside the indicator (diagram start padding)');
   near(specGeometry.header.right, specGeometry.content.right - 12, 'indicator end inset from the content edge (active indicator padding 12dp)');
-  near(specGeometry.chevron.right, specGeometry.header.right - 24, 'chevron ends 24dp inside the indicator (diagram end padding)');
+  near(specGeometry.chevron.right, specGeometry.header.right - 18, 'chevron box ends 18dp inside the indicator (24dp ink line - 6px ink margin)');
   near(specGeometry.child.left, specGeometry.content.left + 12 + 12, 'child pill starts the indent further in than the parent (m3 site shift)');
   near(specGeometry.childLabel.left, specGeometry.child.left + 16, 'child label starts 16dp inside its own pill');
   near(specGeometry.childLabel.right, specGeometry.child.right - 24, "selected pill's end padding 24dp (diagram)");
@@ -183,7 +183,7 @@ try {
         variant: 'standard', open: true,
         items: [
           { id: 'inbox', label: 'Inbox' },
-          { type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
+          { type: 'section', id: 'labels', label: 'Labels', badge: '24', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
           { id: 'archive', label: 'Archive', badge: '12' },
         ],
       });
@@ -200,8 +200,41 @@ try {
     });
     const expectedHeight = 56 + 4 * density;
     near(row.height, expectedHeight, `density ${density}: item height follows density`);
-    near(row.endInset, 24, `density ${density}: chevron end inset inside the indicator`);
+    near(row.endInset, 18, `density ${density}: chevron box end inset inside the indicator (24dp ink line - 6px ink margin)`);
     near(row.cyDelta, 0, `density ${density}: chevron vertical centre`);
+    // The painted ink, not the box: the shipped chevron's ink is 12 units
+    // wide centred in the 24-unit box, so its reading-direction end must
+    // land on the indicator's 24dp line, where a badge's text ends on a
+    // chevron-less row. Both corners go through the screen matrix — the
+    // expanded header rotates the glyph 180 degrees about its centre, and
+    // the symmetric glyph keeps its screen extent, so the reading-side end
+    // is the larger (LTR) or smaller (RTL) of the two mapped corners.
+    const ink = await page.evaluate(() => {
+      const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+      const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+      const svg = chevron.querySelector('svg') as SVGSVGElement;
+      const path = svg.querySelector('path') as SVGPathElement;
+      const badged = document.querySelector('[data-id="archive"]') as HTMLElement;
+      const bbox = path.getBBox();
+      const ltr = document.documentElement.dir !== 'rtl';
+      const svgEl = svg;
+      const screenX = (x: number) => {
+        const point = svgEl.createSVGPoint();
+        point.x = x;
+        point.y = bbox.y + bbox.height / 2;
+        return point.matrixTransform(path.getScreenCTM()!).x;
+      };
+      const end = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
+      const start = Math.min(screenX(bbox.x), screenX(bbox.x + bbox.width));
+      const inkEnd = ltr ? end : start;
+      const indicatorEnd = ltr ? header.getBoundingClientRect().right : header.getBoundingClientRect().left;
+      const badgeEnd = ltr ? badged.querySelector('.mtrl-drawer__item-badge')!.getBoundingClientRect().right
+        : badged.querySelector('.mtrl-drawer__item-badge')!.getBoundingClientRect().left;
+      const inset = ltr ? indicatorEnd - inkEnd : inkEnd - indicatorEnd;
+      return { inset, badgeGap: ltr ? badgeEnd - inkEnd : inkEnd - badgeEnd };
+    });
+    near(ink.inset, 24, `density ${density}: chevron ink ends 24dp inside the indicator`);
+    near(ink.badgeGap, 0, `density ${density}: chevron ink end lands on the badge text end`);
   }
   // The dense option is the density scale's last step through the component.
   await page.evaluate(() => {
@@ -224,8 +257,96 @@ try {
     return { height: ib.height, endInset: ib.right - cb.right, cyDelta: (cb.y + cb.height / 2) - (ib.y + ib.height / 2) };
   });
   near(denseRow.height, 36, 'dense option: item height at the density floor');
-  near(denseRow.endInset, 24, 'dense option: chevron end inset inside the indicator');
+  near(denseRow.endInset, 18, 'dense option: chevron box end inset inside the indicator');
   near(denseRow.cyDelta, 0, 'dense option: chevron vertical centre');
+  // RTL mirrors through the logical properties: same numbers, mirrored side.
+  for (const density of [0, -5] as const) {
+    await page.evaluate((d) => {
+      document.documentElement.dir = 'rtl';
+      window.mountDrawer({
+        variant: 'standard', open: true,
+        items: [
+          { id: 'inbox', label: 'Inbox' },
+          { type: 'section', id: 'labels', label: 'Labels', badge: '24', items: [{ id: 'family', label: 'Family', active: true }] },
+          { id: 'archive', label: 'Archive', badge: '12' },
+        ],
+      });
+      (window as unknown as { drawer: { element: HTMLElement } }).drawer.element.style.setProperty('--mtrl-density', String(d));
+    }, density);
+    await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+    await page.waitForTimeout(60);
+    const row = await page.evaluate(() => {
+      const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+      const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+      const ib = header.getBoundingClientRect();
+      const cb = chevron.getBoundingClientRect();
+      return { height: ib.height, endInset: cb.left - ib.left, cyDelta: (cb.y + cb.height / 2) - (ib.y + ib.height / 2) };
+    });
+    near(row.height, 56 + 4 * density, `density ${density} RTL: item height follows density`);
+    near(row.endInset, 18, `density ${density} RTL: chevron box end inset inside the indicator`);
+    near(row.cyDelta, 0, `density ${density} RTL: chevron vertical centre`);
+    const ink = await page.evaluate(() => {
+      const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+      const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+      const svg = chevron.querySelector('svg') as SVGSVGElement;
+      const path = svg.querySelector('path') as SVGPathElement;
+      const badged = document.querySelector('[data-id="archive"]') as HTMLElement;
+      const bbox = path.getBBox();
+      const screenX = (x: number) => {
+        const point = svg.createSVGPoint();
+        point.x = x;
+        point.y = bbox.y + bbox.height / 2;
+        return point.matrixTransform(path.getScreenCTM()!).x;
+      };
+      const inkEnd = Math.min(screenX(bbox.x), screenX(bbox.x + bbox.width));
+      const badgeEnd = badged.querySelector('.mtrl-drawer__item-badge')!.getBoundingClientRect().left;
+      return { inset: inkEnd - header.getBoundingClientRect().left, badgeGap: inkEnd - badgeEnd };
+    });
+    near(ink.inset, 24, `density ${density} RTL: chevron ink ends 24dp inside the indicator`);
+    near(ink.badgeGap, 0, `density ${density} RTL: chevron ink end lands on the badge text end`);
+  }
+  // Open the section rotates the chevron 180 degrees about its centre; the
+  // glyph is symmetric, so the ink's horizontal extent — and the alignment
+  // with the badge text — holds through the turn. Both states are asserted.
+  await page.evaluate(() => {
+    document.documentElement.dir = 'ltr';
+    window.mountDrawer({
+      variant: 'standard', open: true, dense: true,
+      items: [
+        { type: 'section', id: 'labels', label: 'Labels', badge: '24', items: [{ id: 'family', label: 'Family', active: true }] },
+        { id: 'archive', label: 'Archive', badge: '12' },
+      ],
+    });
+  });
+  await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+  await page.waitForTimeout(60);
+  const inkOf = () => page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+    const svg = chevron.querySelector('svg') as SVGSVGElement;
+    const path = svg.querySelector('path') as SVGPathElement;
+    const bbox = path.getBBox();
+    const screenX = (x: number) => {
+      const point = svg.createSVGPoint();
+      point.x = x;
+      point.y = bbox.y + bbox.height / 2;
+      return point.matrixTransform(path.getScreenCTM()!).x;
+    };
+    const inkEnd = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
+    const badged = document.querySelector('[data-id="archive"]') as HTMLElement | null;
+    const badgeEnd = badged ? badged.querySelector('.mtrl-drawer__item-badge')!.getBoundingClientRect().right : null;
+    return { inset: header.getBoundingClientRect().right - inkEnd, badgeGap: badgeEnd === null ? null : badgeEnd - inkEnd, transform: getComputedStyle(chevron).transform };
+  });
+  let rotated = await inkOf();
+  assert.equal(rotated.transform, 'matrix(-1, 0, 0, -1, 0, 0)', 'the expanded section rotated its chevron');
+  near(rotated.inset, 24, 'expanded (rotated) chevron: ink still ends 24dp inside the indicator');
+  if (rotated.badgeGap !== null) near(rotated.badgeGap, 0, 'expanded (rotated) chevron: ink end lands on the badge text end');
+  await page.click('[data-id="labels"]');
+  await page.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
+  rotated = await inkOf();
+  assert.equal(rotated.transform, 'matrix(1, 0, 0, 1, 0, 0)', 'the collapsed section turned the chevron back');
+  near(rotated.inset, 24, 'collapsed chevron: ink still ends 24dp inside the indicator');
+  if (rotated.badgeGap !== null) near(rotated.badgeGap, 0, 'collapsed chevron: ink end lands on the badge text end');
 
   // ========================================================================
   // PARENT CUE: the section of the active child keeps a hover state layer
@@ -247,6 +368,18 @@ try {
   });
   for (const mode of ['light', 'dark'] as const) {
     await page.evaluate((m) => { document.documentElement.dataset.themeMode = m; }, mode);
+    await page.evaluate(() => {
+      window.mountDrawer({
+        variant: 'standard', open: true,
+        items: [
+          { id: 'inbox', label: 'Inbox' },
+          { type: 'section', id: 'labels', label: 'Labels', badge: '24', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
+          { id: 'archive', label: 'Archive', badge: '12' },
+        ],
+      });
+    });
+    await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+    await page.waitForTimeout(60);
     // Starts expanded (the selected child auto-expands its section); collapse it.
     await page.click('[data-id="labels"]');
     await page.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
