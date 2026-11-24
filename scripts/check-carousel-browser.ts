@@ -591,6 +591,30 @@ const image = "data:image/gif;base64,R0lGODlhAQABAIAAAP8AAAAAACH5BAAAAAAALAAAAAA
 export async function checkCarouselDragRelease(page: Page): Promise<void> {
   await page.setViewportSize({ width: 800, height: 600 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  // The Mac trackpad's elastic overscroll displaces the strip in the
+  // compositor while scrollLeft stays clamped — the layout never knows. The
+  // scroller refuses the displacement outright.
+  await page.evaluate(({ route, dir, image }) => {
+    document.documentElement.dir = dir;
+    document.body.replaceChildren();
+    const mark = (host: HTMLElement) => { host.id = "drag-carousel"; host.style.cssText = "width:760px;height:240px"; };
+    const carousel = (window as unknown as CarouselWindow).createCarousel({
+      variant: "multi-browse", itemWidth: 200,
+      slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}`, image, width: 200, height: 160 })),
+    });
+    mark(carousel.element);
+    document.body.append(carousel.element);
+  }, { route: "factory", dir: "ltr", image });
+  await page.waitForFunction(() => {
+    const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+    return !!scroller && scroller.scrollWidth > 760;
+  });
+  const overscroll = await page.evaluate(() => {
+    const scroller = document.querySelector(".mtrl-carousel__scroller")!;
+    return { x: getComputedStyle(scroller).overscrollBehaviorX, y: getComputedStyle(scroller).overscrollBehaviorY };
+  });
+  assert.equal(overscroll.x, "none", "the horizontal scroller refuses elastic overscroll");
+
   for (const route of ["factory", "element"] as const) {
     for (const dir of ["ltr", "rtl"] as const) {
       const label = `drag release ${route}/${dir}`;
@@ -667,9 +691,13 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
       const beforePress = await state();
       await page.mouse.down();
       await page.waitForTimeout(120);
+      // The strip must not move while the pointer holds it — the jump bug
+      // scrolled on the press itself. The release may navigate to the slide
+      // (a click selects it); only the held press is asserted here.
+      const duringPress = await state();
       await page.mouse.up();
       const afterPress = await state();
-      assert.equal(afterPress.left, beforePress.left, `${label}: a press does not scroll`);
+      assert.equal(duringPress.left, beforePress.left, `${label}: a held press does not scroll`);
       assert.equal(afterPress.dragging, false, `${label}: a press leaves no drag state`);
       await clickLink();
       assert.equal((await state()).hash, "#go", `${label}: a press keeps the link clickable`);

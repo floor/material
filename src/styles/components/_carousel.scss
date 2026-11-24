@@ -33,7 +33,12 @@ $component: '#{base.$prefix}-carousel';
     height: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    overscroll-behavior-x: contain;
+    // none, not contain: contain keeps the local rubber band, whose
+    // compositor displacement leaves the JS layout behind — the strip
+    // slides sideways out of its own keylines on a Mac trackpad. none ends
+    // the displacement (and the browser's back-swipe from the carousel);
+    // the page still scrolls vertically over it.
+    overscroll-behavior-x: none;
     scrollbar-width: none;
     cursor: grab;
 
@@ -63,7 +68,7 @@ $component: '#{base.$prefix}-carousel';
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-x: auto;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
   }
 
   // Sized by the component to the scroll range; holds the snap points and the items
