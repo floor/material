@@ -314,7 +314,12 @@ $default-width: 360px;
         flex-shrink: 0;
         height: f.density(56px, 36px);
         margin: 0 12px;
-        padding: 0 24px 0 16px;
+        // The drawer's content padding is 28dp on both sides
+        // (m3.material.io/components/navigation-drawer/specs, read
+        // 2026-11-24), the indicator's own padding is 12dp, so the item's
+        // content sits 16dp inside the indicator at each end — the trailing
+        // chevron and badge mirror the leading icon.
+        padding: 0 16px;
         gap: 12px;
         border: none;
         border-radius: v.shape('full'); // NavigationDrawerTokens active-indicator-shape
@@ -447,13 +452,11 @@ $default-width: 360px;
         &--active,
         &--active:hover:not(:is([disabled], [aria-disabled="true"])),
         &--active:focus-visible,
-        &--active:active:not(:is([disabled], [aria-disabled="true"])),
-        &--has-active:not(.#{$component}__item--expanded) {
+        &--active:active:not(:is([disabled], [aria-disabled="true"])) {
             color: t.color("on-secondary-container");
         }
 
-        &--active,
-        &--has-active:not(.#{$component}__item--expanded) {
+        &--active {
             .#{$component}__active-indicator::before {
                 opacity: 1;
                 transform: scaleX(1);
@@ -467,6 +470,21 @@ $default-width: 360px;
             .#{$component}__item-label {
                 font-weight: 700;
             }
+        }
+
+        // ======================================================================
+        // PARENT OF THE ACTIVE CHILD
+        // ======================================================================
+
+        // A section whose child is the active destination keeps a persistent
+        // state layer at the hover opacity, so the group that owns the
+        // current view stays findable while the section is open or
+        // collapsed. The child carries the active indicator: no pill here and
+        // no weight change. Hover and press still give their own feedback on
+        // top — their rules are more specific, so the pressed and focused
+        // opacities win over this floor.
+        &--has-active .#{$component}__active-indicator::after {
+            opacity: v.state("hover-state-layer-opacity");
         }
 
         // ======================================================================
@@ -508,7 +526,7 @@ $default-width: 360px;
 
     &__item--child {
         padding-inline-start: calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px));
-        padding-inline-end: 24px;
+        padding-inline-end: 16px;
     }
 
     &__item-chevron {
@@ -638,13 +656,8 @@ $default-width: 360px;
     // RTL — item padding direction
     // ========================================================================
 
-    @include m.rtl-selector('.#{$component}__item') {
-        padding: 0 16px 0 24px;
-    }
-
-    @include m.rtl-selector('.#{$component}__item--child') {
-        padding: 0 calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px)) 0 24px;
-    }
+    // The item's paddings are logical (start tracks the reading direction)
+    // and the base padding is symmetric, so RTL needs no physical mirror.
 
     // ========================================================================
     // REDUCED MOTION
@@ -690,8 +703,11 @@ $default-width: 360px;
         }
 
         &__item {
+            // Forced colors hide state layers, so the outline is the parent
+            // cue there: it marks the group that owns the active child, open
+            // or collapsed, as the persistent layer does in normal modes.
             &--active,
-            &--has-active:not(.#{$component}__item--expanded) {
+            &--has-active {
                 .#{$component}__active-indicator {
                     outline: 2px solid Highlight;
                     outline-offset: -2px;

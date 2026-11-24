@@ -115,6 +115,122 @@ try {
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   assert.equal(await page.locator('main[inert]').count(), 0);
   assert.deepEqual(errors, []);
+
+  // ========================================================================
+  // SPEC GEOMETRY: the chevron and the selected pill's end padding
+  // ========================================================================
+  // m3.material.io/components/navigation-drawer/specs, Measurements (read
+  // 2026-11-24): left padding 28dp, right padding 28dp, active indicator
+  // padding 12dp. The item carries the indicator, so its trailing content —
+  // the section chevron, a badge, and a selected label's end — sits
+  // 28 - 12 = 16dp inside the item's end edge, mirroring the leading icon.
+  await page.evaluate(() => {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.dataset.theme = 'baseline';
+    document.documentElement.dataset.themeMode = 'light';
+    window.mountDrawer({
+      variant: 'standard', open: true,
+      items: [
+        { id: 'inbox', label: 'Inbox' },
+        { type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family', active: true }, { id: 'work', label: 'Work' }] },
+        { id: 'archive', label: 'Archive', badge: '12' },
+      ],
+    });
+  });
+  await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+  const near = (a: number, b: number, label: string) => assert.ok(Math.abs(a - b) <= 0.5, `${label}: ${a.toFixed(1)} vs ${b.toFixed(1)}`);
+  const specGeometry = await page.evaluate(() => {
+    const box = (root: Element, selector: string) => (root.querySelector(selector) as HTMLElement).getBoundingClientRect();
+    // The sheet keeps a 1px scrollbar gutter under overflow-y: auto, so the
+    // spec's 28dp is measured from the content edge (the items container).
+    const content = document.querySelector('.mtrl-drawer__items')!;
+    const header = document.querySelector('[data-id="labels"]')!;
+    const selected = document.querySelector('[data-id="family"]')!;
+    const badged = document.querySelector('[data-id="archive"]')!;
+    return {
+      content: content.getBoundingClientRect(),
+      header: header.getBoundingClientRect(),
+      chevron: box(header, '.mtrl-drawer__item-chevron'),
+      selected: selected.getBoundingClientRect(),
+      selectedLabel: box(selected, '.mtrl-drawer__item-label'),
+      badged: badged.getBoundingClientRect(),
+      badge: box(badged, '.mtrl-drawer__item-badge'),
+    };
+  });
+  near(specGeometry.header.right, specGeometry.content.right - 12, 'indicator end inset from the content edge (active indicator padding 12dp)');
+  near(specGeometry.chevron.right, specGeometry.header.right - 16, 'chevron end inset inside the item (28dp drawer padding - 12dp indicator padding)');
+  near(specGeometry.chevron.right, specGeometry.content.right - 28, 'drawer right padding 28dp from the content edge');
+  near(specGeometry.selectedLabel.right, specGeometry.selected.right - 16, 'selected pill end padding 16dp');
+  near(specGeometry.badge.right, specGeometry.badged.right - 16, 'badge end inset inside the item');
+
+  // ========================================================================
+  // PARENT CUE: the section of the active child keeps a hover state layer
+  // ========================================================================
+  // The header of the section that owns the active destination shows the
+  // hover state layer persistently — open or collapsed — with no pill and
+  // no weight change; the child carries the active indicator.
+  const readCue = () => page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const indicator = header.querySelector('.mtrl-drawer__active-indicator')!;
+    const hover = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mtrl-sys-state-hover-state-layer-opacity'));
+    return {
+      hover,
+      layer: getComputedStyle(indicator, '::after').opacity,
+      pill: getComputedStyle(indicator, '::before').opacity,
+      weight: getComputedStyle(header.querySelector('.mtrl-drawer__item-label')!).fontWeight,
+      hasActive: header.classList.contains('mtrl-drawer__item--has-active'),
+    };
+  });
+  for (const mode of ['light', 'dark'] as const) {
+    await page.evaluate((m) => { document.documentElement.dataset.themeMode = m; }, mode);
+    // Starts expanded (the selected child auto-expands its section); collapse it.
+    await page.click('[data-id="labels"]');
+    await page.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
+    let cue = await readCue();
+    assert.equal(cue.hasActive, true, 'collapsed header of the selected child carries the cue state');
+    assert.equal(cue.layer, String(cue.hover), `${mode}: collapsed header shows the hover state layer`);
+    assert.equal(cue.pill, '0', `${mode}: collapsed header has no pill`);
+    assert.notEqual(cue.weight, '700', `${mode}: collapsed header label weight unchanged`);
+    await page.click('[data-id="labels"]');
+    await page.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'true');
+    cue = await readCue();
+    assert.equal(cue.layer, String(cue.hover), `${mode}: open header shows the same persistent layer`);
+    assert.equal(cue.pill, '0', `${mode}: open header has no pill`);
+    assert.notEqual(cue.weight, '700', `${mode}: open header label weight unchanged`);
+  }
+  // Selecting outside clears the cue; re-selecting the child restores it.
+  await page.click('[data-id="archive"]');
+  await page.waitForFunction(() => !document.querySelector('[data-id="labels"]')?.classList.contains('mtrl-drawer__item--has-active'));
+  assert.equal((await readCue()).layer, '0', 'cue clears when the selection moves outside the section');
+  await page.click('[data-id="family"]');
+  await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]')?.classList.contains('mtrl-drawer__item--has-active'));
+  assert.equal((await readCue()).layer, String((await readCue()).hover), 'cue returns with the selected child');
+  // Hover and press still give their own feedback on top of the floor.
+  const headerColors = await page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const indicator = header.querySelector('.mtrl-drawer__active-indicator')!;
+    return { rest: getComputedStyle(indicator, '::after').backgroundColor };
+  });
+  await page.hover('[data-id="labels"]');
+  await page.waitForFunction(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    return header.matches(':hover');
+  });
+  const hoverColor = await page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    return getComputedStyle(header.querySelector('.mtrl-drawer__active-indicator')!, '::after').backgroundColor;
+  });
+  assert.notEqual(hoverColor, headerColors.rest, 'hover still shifts the state layer colour over the cue');
+  // The focus ring is untouched by the cue.
+  await page.locator('[data-id="inbox"]').focus();
+  await page.keyboard.press('Tab');
+  const focused = await page.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    return { matches: header.matches(':focus-visible'), width: getComputedStyle(header).outlineWidth, style: getComputedStyle(header).outlineStyle };
+  });
+  assert.equal(focused.matches, true, 'the header takes keyboard focus');
+  assert.equal(`${focused.style} ${focused.width}`, 'solid 3px', 'header focus ring unchanged');
+
   const url = (variant: string): string => `http://127.0.0.1:${server.port}/sections?variant=${variant}`;
   const still = await browser.browser()!.newPage({ javaScriptEnabled: false, reducedMotion: "reduce" });
   await still.goto(url("server"));
@@ -193,7 +309,32 @@ try {
     assert.deepEqual(await updatedCard.evaluate(node => {
       const style = getComputedStyle(node);
       return [style.paddingLeft, style.paddingRight];
-    }), ["24px", "44px"]);
+    }), ["16px", "44px"]);
+    // Parent cue on the element form too. After the reflection above the
+    // active child is "Card" in Containment: Containment shows the cue and
+    // Navigation — the previous parent — has cleared it.
+    const cueOf = (button: ReturnType<typeof sheet.getByRole>) => button.evaluate(node => {
+      node.blur();
+      const indicator = node.querySelector('.mtrl-drawer__active-indicator')!;
+      const hover = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mtrl-sys-state-hover-state-layer-opacity'));
+      return {
+        hover,
+        layer: getComputedStyle(indicator, '::after').opacity,
+        pill: getComputedStyle(indicator, '::before').opacity,
+        weight: getComputedStyle(node.querySelector('.mtrl-drawer__item-label')!).fontWeight,
+        hasActive: node.classList.contains('mtrl-drawer__item--has-active'),
+      };
+    });
+    const containmentCue = await cueOf(sheet.getByRole("button", { name: "Containment" }));
+    assert.equal(containmentCue.hasActive, true, variant);
+    assert.equal(containmentCue.layer, String(containmentCue.hover), `${variant}: element header shows the persistent layer`);
+    assert.equal(containmentCue.pill, '0', `${variant}: element header has no pill`);
+    assert.notEqual(containmentCue.weight, '700', `${variant}: element header label weight unchanged`);
+    assert.equal((await cueOf(sheet.getByRole("button", { name: "Navigation", exact: true }))).hasActive, false, `${variant}: the former parent cleared its cue`);
+    await page.evaluate(() => { document.documentElement.dataset.themeMode = 'dark'; });
+    assert.equal(await cueOf(sheet.getByRole("button", { name: "Containment" })).then(c => c.layer),
+      String(containmentCue.hover), `${variant}: layer persists in dark`);
+    await page.evaluate(() => { document.documentElement.dataset.themeMode = 'light'; });
     await containment.focus();
     await page.keyboard.press("ArrowLeft");
     assert.equal(await updatedCard.evaluate(node => node.matches(":focus")), true);
