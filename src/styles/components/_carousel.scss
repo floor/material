@@ -33,7 +33,12 @@ $component: '#{base.$prefix}-carousel';
     height: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    overscroll-behavior-x: contain;
+    // none, not contain: contain keeps the local rubber band, whose
+    // compositor displacement leaves the JS layout behind — the strip
+    // slides sideways out of its own keylines on a Mac trackpad. none ends
+    // the displacement (and the browser's back-swipe from the carousel);
+    // the page still scrolls vertically over it.
+    overscroll-behavior-x: none;
     scrollbar-width: none;
     cursor: grab;
 
@@ -63,7 +68,7 @@ $component: '#{base.$prefix}-carousel';
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-x: auto;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
   }
 
   // Sized by the component to the scroll range; holds the snap points and the items
@@ -74,6 +79,15 @@ $component: '#{base.$prefix}-carousel';
 
   &--vertical &__track {
     width: 100%;
+  }
+
+  // The items' viewport layer: sticky pins it to the scroller's viewport, so
+  // an item's transform is its placement and never carries the scroll offset.
+  // The component sizes it to the container and picks the pinned edge.
+  &__layer {
+    position: sticky;
+    top: 0;
+    left: 0;
   }
 
   &__snap {

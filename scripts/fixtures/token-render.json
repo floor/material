@@ -732,35 +732,35 @@
    true
   ],
   [
-   "4:div.mtrl-carousel__item",
-   "28px 28px 28px 28px",
-   "Roboto, sans-serif",
-   true,
-   true
-  ],
-  [
-   "5:div",
+   "4:div.mtrl-carousel__layer",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "6:div.mtrl-carousel__item",
+   "5:div.mtrl-carousel__item",
    "28px 28px 28px 28px",
    "Roboto, sans-serif",
    true,
    true
   ],
   [
-   "7:div",
+   "6:div",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "8:div.mtrl-carousel__snap",
+   "7:div.mtrl-carousel__item",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "8:div",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
@@ -768,6 +768,13 @@
   ],
   [
    "9:div.mtrl-carousel__snap",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:div.mtrl-carousel__snap",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
