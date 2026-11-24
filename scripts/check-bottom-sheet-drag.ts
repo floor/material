@@ -4,8 +4,9 @@
  * The handle follows the pointer both ways. Release uses the last 100ms of
  * the gesture and Compose's AnchoredDraggable computeTarget (56px, 125px/s).
  * Partial and expanded differ by max-height, and that change animates from
- * the released position. A missed release (blur, context menu, lost capture,
- * mouse buttons already up) still settles.
+ * the released position. A missed release (cancel, blur, context menu, lost
+ * capture, mouse buttons already up) settles at velocity 0 on the nearest
+ * anchor. Only a pointerup uses the gesture speed.
  *
  * Sources read 2026-11-24:
  * https://m3.material.io/components/bottom-sheets/guidelines
@@ -226,7 +227,7 @@ try {
     await settled();
     assert.equal((await read()).state, "hidden", `${api} ${variant} drag past partial settled ${(await read()).state}`);
 
-    await mount(api, variant, "expanded");
+    await mount(api, variant, "partial");
     const down = await handleCenter();
     await page.mouse.move(down.x, down.y);
     await page.mouse.down();
@@ -240,6 +241,7 @@ try {
     const stuck = await read();
     assert.equal(stuck.transition, "", `${api} ${variant} stayed mid-drag after a context menu`);
     assert.equal(stuck.transform, "", `${api} ${variant} kept a transform after a context menu`);
+    assert.equal(stuck.state, "partial", `${api} ${variant} a context menu dismissed the sheet`);
     await page.mouse.up();
   }
 
@@ -275,27 +277,53 @@ try {
   assert.equal(released.transition, "", "a release outside the window left the drag stuck");
   assert.notEqual(released.state, "", "a release outside the window left no state");
 
-  await mount("factory", "standard", "expanded");
+  await mount("factory", "standard", "partial");
   const blur = await handleCenter();
   await page.mouse.move(blur.x, blur.y);
   await page.mouse.down();
-  await page.mouse.move(blur.x, blur.y + 36);
+  await page.mouse.move(blur.x, blur.y + 40);
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
   await frames(3);
   assert.equal((await read()).transition, "", "blurring the window left the sheet mid-drag");
+  assert.equal((await read()).state, "partial", "blurring the window dismissed the sheet");
   await page.mouse.up();
 
   await mount("factory", "standard", "partial");
   const lost = await handleCenter();
   await page.mouse.move(lost.x, lost.y);
   await page.mouse.down();
-  await page.mouse.move(lost.x, lost.y + 30);
+  await page.mouse.move(lost.x, lost.y + 40);
   await page.evaluate(() => {
     document.querySelector(".mtrl-bottom-sheet__handle")?.dispatchEvent(new Event("lostpointercapture"));
   });
   await frames(3);
   assert.equal((await read()).transition, "", "a lost pointer capture left the sheet mid-drag");
+  assert.equal((await read()).state, "partial", "a lost pointer capture dismissed the sheet");
   await page.mouse.up();
+
+  // 40px down from partial is a flick if the cancel keeps the gesture speed,
+  // and the nearest anchor if the speed is zero.
+  for (const kind of ["cancel", "buttons"] as const) {
+    await mount("factory", "standard", "partial");
+    const start = await handleCenter();
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x, start.y + 40);
+    await page.evaluate(({ kind, y }) => {
+      const handle = document.querySelector(".mtrl-bottom-sheet__handle") as HTMLElement;
+      let pointerId = 1;
+      for (let n = 1; n < 8; n += 1) if (handle.hasPointerCapture(n)) pointerId = n;
+      const init = { pointerId, clientY: y, bubbles: true, pointerType: "mouse" };
+      handle.dispatchEvent(kind === "cancel"
+        ? new PointerEvent("pointercancel", init)
+        : new PointerEvent("pointermove", { ...init, buttons: 0 }));
+    }, { kind, y: start.y + 40 });
+    await frames(3);
+    const cancelled = await read();
+    assert.equal(cancelled.transition, "", `a ${kind} left the sheet mid-drag`);
+    assert.equal(cancelled.state, "partial", `a ${kind} dismissed the sheet`);
+    await page.mouse.up();
+  }
 
   await mount("factory", "modal", "partial");
   await page.mouse.click(400, 16);

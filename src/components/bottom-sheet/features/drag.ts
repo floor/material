@@ -103,13 +103,16 @@ export const withDrag = () => <C extends DragComponent>(component: C) => {
     offset = Math.min(Math.max(from + clientY - y0, 0), Math.max(full, 0));
     place(offset);
   };
-  const finish = (clientY?: number): void => {
+  // A cancel, a lost capture, a blur, or a mouse move with no button has no
+  // release. Those settle at velocity 0, on the nearest anchor. Only pointerup
+  // may use the gesture speed, so a missed release cannot flick the sheet shut.
+  const finish = (clientY?: number, flick = true): void => {
     if (!dragging) return;
     dragging = false;
     try { handle.releasePointerCapture(id); } catch { /* already released */ }
     if (clientY != null) note(clientY);
     const { at, name } = states();
-    const next = name[at.indexOf(aim(at, offset, speedOf(samples, performance.now())))] ?? EXPANDED;
+    const next = name[at.indexOf(aim(at, offset, flick ? speedOf(samples, performance.now()) : 0))] ?? EXPANDED;
     samples = [];
     if (travel > 4) { dragged = true; setTimeout(() => { dragged = false; }, 0); }
     const previous = state.getState();
@@ -138,11 +141,11 @@ export const withDrag = () => <C extends DragComponent>(component: C) => {
   };
   const move = (event: PointerEvent): void => {
     if (!dragging || event.pointerId !== id) return;
-    if (event.pointerType === "mouse" && event.buttons === 0) finish(event.clientY);
+    if (event.pointerType === "mouse" && event.buttons === 0) finish(event.clientY, false);
     else note(event.clientY);
   };
   const up = (event: PointerEvent): void => { if (event.pointerId === id) finish(event.clientY); };
-  const end = (): void => finish();
+  const end = (): void => finish(undefined, false);
   const label = (): void => handle.setAttribute("aria-label", state.getState() === EXPANDED ? "Close sheet" : "Expand sheet");
   const onClick = (): void => {
     if (dragged) { dragged = false; return; }
@@ -155,14 +158,14 @@ export const withDrag = () => <C extends DragComponent>(component: C) => {
   component.on?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
   const pairs: [string, EventListener][] = [
     ["pointerdown", down as EventListener], ["pointermove", move as EventListener],
-    ["pointerup", up as EventListener], ["pointercancel", up as EventListener],
+    ["pointerup", up as EventListener], ["pointercancel", end],
     ["lostpointercapture", end], ["contextmenu", end], ["click", onClick],
   ];
   for (const [type, fn] of pairs) handle.addEventListener(type, fn);
   view?.addEventListener("blur", end);
   return { ...component, drag: { release: () => {
     const pending = dragging;
-    finish();
+    finish(undefined, false);
     if (!pending) clear();
     for (const [type, fn] of pairs) handle.removeEventListener(type, fn);
     view?.removeEventListener("blur", end);
