@@ -1014,6 +1014,57 @@ export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
     await page.mouse.move(box.x, 2, { steps: 4 });
     await page.mouse.up();
     await page.waitForTimeout(600);
+    // The outside button swallows pointerup/pointercancel at its own node: the
+    // release must still reach the carousel through the window's capture
+    // phase, or snapping stays off.
+    const stopped = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel")!;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+      const button = document.createElement("button");
+      button.id = "outside-stopper";
+      button.style.cssText = "position:fixed;left:0;top:300px;width:100%;height:80px;z-index:10";
+      for (const type of ["pointerup", "pointercancel"] as const) {
+        button.addEventListener(type, (e) => e.stopPropagation());
+      }
+      document.body.append(button);
+      return {
+        settling: root.hasAttribute("data-settling"),
+        snap: getComputedStyle(scroller).scrollSnapType,
+      };
+    });
+    // Press in the strip near its top, leave it onto the stopper, release there.
+    const scrollerBox = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const r = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.getBoundingClientRect();
+      return { x: r.x + r.width / 2, top: r.y };
+    });
+    const scrollerBottom = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      return scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.getBoundingClientRect().bottom;
+    });
+    await page.mouse.move(scrollerBox.x, scrollerBottom - 20);
+    await page.mouse.down();
+    await page.mouse.move(scrollerBox.x, 330, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    const afterStop = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel")!;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+      document.getElementById("outside-stopper")?.remove();
+      return {
+        settling: root.hasAttribute("data-settling"),
+        snap: getComputedStyle(scroller).scrollSnapType,
+      };
+    });
+    assert.equal(afterStop.settling, false, `${label}: an outside element that stops propagation cannot hold the release (before ${JSON.stringify(stopped)})`);
+    assert.equal(afterStop.snap, "x mandatory", `${label}: snapping is back after the stopped release`);
+
     const state = await page.evaluate(() => {
       const host = document.querySelector("m-carousel");
       const scope: ParentNode = host?.shadowRoot ?? document;
@@ -1039,5 +1090,87 @@ export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
     await page.waitForTimeout(120);
     await page.locator("#outside-carousel .mtrl-carousel__button").first().click();
     assert.equal(await page.evaluate(() => window.location.hash), "#go", `${label}: a press keeps the link clickable`);
+  }
+}
+
+/**
+ * Only the pointer that started a drag ends it: a touch released elsewhere
+ * while the mouse still holds the strip is not the mouse's release.
+ */
+export async function checkCarouselMixedPointers(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
+  for (const route of ["factory", "element"] as const) {
+    const label = `mixed pointers ${route}`;
+    await page.evaluate(({ route }) => {
+      document.documentElement.dir = "ltr";
+      document.body.replaceChildren();
+      if (route === "factory") {
+        const carousel = (window as unknown as CarouselWindow).createCarousel({
+          variant: "multi-browse", itemWidth: 200,
+          slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })),
+        });
+        carousel.element.id = "mixed-carousel";
+        carousel.element.style.cssText = "width:760px;height:240px";
+        document.body.append(carousel.element);
+      } else {
+        const host = document.createElement("m-carousel");
+        host.id = "mixed-carousel";
+        host.setAttribute("variant", "multi-browse");
+        host.setAttribute("item-width", "200");
+        host.style.cssText = "width:760px;height:240px;display:block";
+        for (let i = 0; i < 8; i++) {
+          const item = document.createElement("m-carousel-item");
+          item.setAttribute("alt", `Slide ${i}`);
+          host.append(item);
+        }
+        document.body.append(host);
+      }
+    }, { route });
+    await waitFor(page, "the carousel to lay its slides out", () => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+      return !!scroller && scroller.scrollWidth > 760;
+    });
+    const box = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const r = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    await page.mouse.move(box.x, box.y);
+    await page.mouse.down();
+    await page.mouse.move(box.x - 80, box.y, { steps: 4 });
+    const during = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel")!;
+      return { dragging: root.hasAttribute("data-dragging") };
+    });
+    assert.equal(during.dragging, true, `${label}: the mouse drag is live`);
+    // An unrelated touch release elsewhere.
+    await page.evaluate(() => {
+      window.dispatchEvent(new PointerEvent("pointerup", { pointerId: 977, pointerType: "touch", bubbles: false }));
+    });
+    const afterTouch = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel")!;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+      return { dragging: root.hasAttribute("data-dragging"), snap: getComputedStyle(scroller).scrollSnapType };
+    });
+    assert.equal(afterTouch.dragging, true, `${label}: a touch released elsewhere keeps the mouse drag alive`);
+    assert.notEqual(afterTouch.snap, "x mandatory", `${label}: snapping stays off while the mouse still holds the strip`);
+    await page.mouse.up();
+    await page.waitForTimeout(700);
+    const end = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel")!;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+      return { dragging: root.hasAttribute("data-dragging"), settling: root.hasAttribute("data-settling"), snap: getComputedStyle(scroller).scrollSnapType };
+    });
+    assert.equal(end.dragging, false, `${label}: the mouse's own release ends the drag`);
+    assert.equal(end.snap, "x mandatory", `${label}: snapping returns after the mouse's release`);
   }
 }

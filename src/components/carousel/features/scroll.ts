@@ -385,6 +385,9 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Mouse drag (touch and trackpad scroll natively) ─────────
 
     let dragging = false;
+    // The pointer that started the drag: a release of any other pointer (a
+    // second mouse, a touch elsewhere) is not this drag's release.
+    let dragPointer: number | null = null;
     let dragged = false;
     let dragStart = 0;
     let dragScrollStart = 0;
@@ -406,6 +409,7 @@ export const withScroll = (config: CarouselConfig) =>
       clearPending();
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
+      dragPointer = e.pointerId;
       lastWheel = -Infinity;
       dragged = false;
       dragStart = vertical ? e.clientY : e.clientX;
@@ -428,9 +432,12 @@ export const withScroll = (config: CarouselConfig) =>
      * a drag ended this way sends no click, so `dragged` must not outlive it
      * — the next real click on a slide must work.
      */
-    const endDrag = (): void => {
+    const endDrag = (e?: Event): void => {
       if (!dragging) return;
+      // Only the pointer that started the drag ends it.
+      if (e && dragPointer !== null && "pointerId" in e && (e as PointerEvent).pointerId !== dragPointer) return;
       dragging = false;
+      dragPointer = null;
       dragged = false;
       delete element.dataset.dragging;
       restoreSnap();
@@ -438,12 +445,13 @@ export const withScroll = (config: CarouselConfig) =>
 
     const handlePointerMove = (e: PointerEvent): void => {
       if (!dragging) return;
+      if (dragPointer !== null && e.pointerId !== dragPointer) return;
       // The release may go unseen — outside the window, into a menu that
       // took the mouse. The first move with no button down ends the drag
       // instead of following a mouse the user no longer holds.
       if (e.buttons === 0) {
         if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
-        endDrag();
+        endDrag(e);
         return;
       }
       const position = vertical ? e.clientY : e.clientX;
@@ -472,7 +480,10 @@ export const withScroll = (config: CarouselConfig) =>
 
     const handlePointerUp = (e: PointerEvent): void => {
       if (!dragging) return;
+      // A release of another pointer is not this drag's release.
+      if (dragPointer !== null && e.pointerId !== dragPointer) return;
       dragging = false;
+      dragPointer = null;
       if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
       delete element.dataset.dragging;
       if (!dragged) {
@@ -649,11 +660,13 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("pointerup", handlePointerUp);
     // A press released outside the scroller before the capture starts reaches
     // the scroller no event: the pointerup lands on whatever is under it. The
-    // window sees it, so snapping comes back even for a press that never
-    // became a drag; a drag with capture sends both, and the handler is
-    // idempotent.
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", endDrag);
+    // window sees it in the capture phase, so snapping comes back even for a
+    // press that never became a drag — and an element under the pointer that
+    // stops propagation cannot hold the release back. A drag with capture
+    // sends both, the handler is idempotent, and only the pointer that started
+    // the drag counts.
+    window.addEventListener("pointerup", handlePointerUp, { capture: true });
+    window.addEventListener("pointercancel", endDrag, { capture: true });
     scroller.addEventListener("pointercancel", endDrag);
     scroller.addEventListener("lostpointercapture", endDrag);
     scroller.addEventListener("dragstart", handleDragStart);
@@ -696,8 +709,8 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("pointerdown", handlePointerDown);
         scroller.removeEventListener("pointermove", handlePointerMove);
         scroller.removeEventListener("pointerup", handlePointerUp);
-        window.removeEventListener("pointerup", handlePointerUp);
-        window.removeEventListener("pointercancel", endDrag);
+        window.removeEventListener("pointerup", handlePointerUp, { capture: true });
+        window.removeEventListener("pointercancel", endDrag, { capture: true });
         scroller.removeEventListener("pointercancel", endDrag);
         scroller.removeEventListener("lostpointercapture", endDrag);
         scroller.removeEventListener("dragstart", handleDragStart);
