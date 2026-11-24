@@ -1,14 +1,10 @@
 // src/components/bottom-sheet/features/drag.ts
 
 import { BottomSheetState } from "../types";
-import {
-  BOTTOM_SHEET_DEFAULTS,
-  BOTTOM_SHEET_EVENTS,
-  BOTTOM_SHEET_STATES,
-} from "../constants";
+import { BOTTOM_SHEET_DEFAULTS, BOTTOM_SHEET_EVENTS, BOTTOM_SHEET_STATES } from "../constants";
+import { PREFIX } from "../../../core/config";
 
 interface DragComponent {
-  getClass: (name: string) => string;
   emit: (event: string, data?: unknown) => unknown;
   on?: (event: string, handler: () => void) => unknown;
   off?: (event: string, handler: () => void) => unknown;
@@ -21,120 +17,158 @@ interface DragComponent {
   };
 }
 
+const { EXPANDED, PARTIAL, HIDDEN } = BOTTOM_SHEET_STATES;
+const { POSITIONAL_THRESHOLD: POS, VELOCITY_THRESHOLD: FAST } = BOTTOM_SHEET_DEFAULTS;
+
 /**
- * Dragging the sheet between its heights.
- *
- * Where the sheet settles follows Compose's rule: a drag past the positional
- * threshold moves to the next anchor, and a flick past the velocity threshold
- * does the same however short it was, so a quick flick works without having to
- * cover the distance.
+ * px/s, positive downward. Still for 100ms is zero. Until then the slope is
+ * the last movement, so a sparse event rate still counts. A gesture starts
+ * from an empty list.
  */
-export const withDrag =
-  () =>
-  <C extends DragComponent>(component: C) => {
-    const { structure, state } = component;
-    const handle = structure.handle;
+const speedOf = (samples: { t: number; y: number }[], now: number): number => {
+  let i = samples.length - 1;
+  const last = samples[i];
+  if (!last || i < 1) return 0;
+  while (i > 0 && samples[i - 1]!.y === last.y) i -= 1;
+  const end = samples[i]!;
+  if (i === 0 || now - end.t >= 100) return 0;
+  let j = i - 1;
+  while (j > 0 && end.t - samples[j - 1]!.t <= 100) j -= 1;
+  return (end.y - samples[j]!.y) / Math.max(end.t - samples[j]!.t, 1) * 1000;
+};
 
-    // No handle means nothing indicates the sheet is draggable, so it is not
-    if (!handle) return { ...component, drag: { release: () => {} } };
-
-    let startY = 0;
-    let startTime = 0;
-    let offset = 0;
-    let dragging = false;
-    /** The pointer moved the sheet, so the click that follows is not a press */
-    let dragged = false;
-
-    // Activating the handle does what Compose's does: a partially
-    // open sheet expands, an expanded one closes, a hidden one opens. Its name
-    // says which, for the state it is in.
-    const label = (): void => {
-      handle.setAttribute("aria-label", state.getState() === BOTTOM_SHEET_STATES.EXPANDED ? "Close sheet" : "Expand sheet");
-    };
-    const onClick = (): void => {
-      if (dragged) {
-        dragged = false;
-        return;
-      }
-      const current = state.getState();
-      if (current === BOTTOM_SHEET_STATES.EXPANDED) state.close();
-      else if (current === BOTTOM_SHEET_STATES.PARTIAL) state.setState(BOTTOM_SHEET_STATES.EXPANDED);
-      else state.open();
-    };
-    label();
-    component.on?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
-
-    /** Where a drag ends up, given how far and how fast it went */
-    const settle = (distance: number, velocity: number): BottomSheetState => {
-      const current = state.getState();
-      const far = Math.abs(distance) >= BOTTOM_SHEET_DEFAULTS.POSITIONAL_THRESHOLD;
-      const fast = Math.abs(velocity) >= BOTTOM_SHEET_DEFAULTS.VELOCITY_THRESHOLD;
-      if (!far && !fast) return current;
-
-      const downwards = distance > 0;
-      if (current === BOTTOM_SHEET_STATES.EXPANDED) {
-        return downwards ? BOTTOM_SHEET_STATES.PARTIAL : BOTTOM_SHEET_STATES.EXPANDED;
-      }
-      return downwards ? BOTTOM_SHEET_STATES.HIDDEN : BOTTOM_SHEET_STATES.EXPANDED;
-    };
-
-    const onPointerDown = (event: PointerEvent): void => {
-      dragging = true;
-      startY = event.clientY;
-      startTime = Date.now();
-      offset = 0;
-      handle.setPointerCapture?.(event.pointerId);
-      // the sheet should track the finger exactly, not ease behind it
-      structure.container.style.transition = "none";
-      component.emit(BOTTOM_SHEET_EVENTS.DRAG_START);
-    };
-
-    const onPointerMove = (event: PointerEvent): void => {
-      if (!dragging) return;
-      offset = event.clientY - startY;
-      // upward drag is bounded: the sheet cannot go above its expanded height
-      const shown = Math.max(offset, 0);
-      structure.container.style.transform = `translateY(${shown}px)`;
-    };
-
-    const onPointerUp = (event: PointerEvent): void => {
-      if (!dragging) return;
-      dragging = false;
-      handle.releasePointerCapture?.(event.pointerId);
-
-      const elapsed = Math.max(Date.now() - startTime, 1);
-      const velocity = (offset / elapsed) * 1000; // px per second
-
-      structure.container.style.transition = "";
-      structure.container.style.transform = "";
-      dragged = Math.abs(offset) > 4;
-
-      const previous = state.getState();
-      const next = settle(offset, velocity);
-
-      if (next === BOTTOM_SHEET_STATES.HIDDEN) state.close();
-      else state.setState(next);
-
-      component.emit(BOTTOM_SHEET_EVENTS.DRAG_END, { state: next, previous });
-    };
-
-    handle.addEventListener("pointerdown", onPointerDown);
-    handle.addEventListener("pointermove", onPointerMove);
-    handle.addEventListener("pointerup", onPointerUp);
-    handle.addEventListener("pointercancel", onPointerUp);
-    handle.addEventListener("click", onClick);
-
-    return {
-      ...component,
-      drag: {
-        release: () => {
-          handle.removeEventListener("pointerdown", onPointerDown);
-          handle.removeEventListener("pointermove", onPointerMove);
-          handle.removeEventListener("pointerup", onPointerUp);
-          handle.removeEventListener("pointercancel", onPointerUp);
-          handle.removeEventListener("click", onClick);
-          component.off?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
-        },
-      },
-    };
+/** Compose AnchoredDraggable.computeTarget. Offsets grow downward. */
+const aim = (at: number[], offset: number, velocity: number): number => {
+  let nearest = 0;
+  for (const point of at) if (Math.abs(point - offset) < Math.abs(nearest - offset)) nearest = point;
+  const step = (up: boolean): number => {
+    if (up) return at.find((point) => point >= offset - 0.5) ?? at[at.length - 1]!;
+    for (let index = at.length - 1; index >= 0; index -= 1) if (at[index]! <= offset + 0.5) return at[index]!;
+    return at[0]!;
   };
+  if (velocity === 0) return nearest;
+  const forward = velocity > 0;
+  if (Math.abs(velocity) >= FAST) return step(forward);
+  const behind = step(!forward);
+  return Math.abs(behind - offset) >= POS ? step(forward) : behind;
+};
+
+/** Drag between the peek and the full height, and settle with Compose's rule. */
+export const withDrag = () => <C extends DragComponent>(component: C) => {
+  const { structure, state } = component;
+  const handle = structure.handle;
+  const node = structure.container;
+  if (!handle) return { ...component, drag: { release: () => {} } };
+  const style = node.style;
+  const view = handle.ownerDocument.defaultView;
+  let id = -1, y0 = 0, from = 0, offset = 0, full = 0, peek = 0;
+  let dragging = false, travel = 0, dragged = false, gesture = 0;
+  let samples: { t: number; y: number }[] = [];
+  const states = () => {
+    const span = Math.max(full - peek, 0);
+    const at = [0];
+    const name: BottomSheetState[] = [EXPANDED];
+    if (span > 1) { at.push(span); name.push(PARTIAL); }
+    if (full > span + 1) { at.push(full); name.push(HIDDEN); }
+    return { at, name };
+  };
+  const place = (next: number): void => {
+    if (full <= 0) return;
+    const span = Math.max(full - peek, 0);
+    style.maxHeight = `${next <= span ? full - next : peek}px`;
+    style.transform = `translateY(${next <= span ? 0 : next - span}px)`;
+  };
+  const clear = (): void => { style.transition = style.maxHeight = style.transform = ""; };
+  const settle = (next: BottomSheetState, token: number): void => {
+    void node.offsetHeight;
+    requestAnimationFrame(() => {
+      if (token !== gesture) return;
+      const reduced = view?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+      style.transition = style.transform = "";
+      if (reduced || next !== HIDDEN) { style.maxHeight = ""; return; }
+      requestAnimationFrame(() => {
+        if (token !== gesture) return;
+        const pending = (node.getAnimations?.() ?? []).filter((animation) => animation.playState === "running");
+        const drop = (): void => { if (token === gesture) style.maxHeight = ""; };
+        if (!pending.length) drop();
+        else void Promise.all(pending.map((animation) => animation.finished.then(drop, drop)));
+      });
+    });
+  };
+  const note = (clientY: number): void => {
+    const now = performance.now();
+    samples.push({ t: now, y: clientY });
+    if (samples.length > 12) samples.shift();
+    travel = Math.max(travel, Math.abs(clientY - y0));
+    offset = Math.min(Math.max(from + clientY - y0, 0), Math.max(full, 0));
+    place(offset);
+  };
+  // A cancel, a lost capture, a blur, or a mouse move with no button has no
+  // release. Those settle at velocity 0, on the nearest anchor. Only pointerup
+  // may use the gesture speed, so a missed release cannot flick the sheet shut.
+  const finish = (clientY?: number, flick = true): void => {
+    if (!dragging) return;
+    dragging = false;
+    try { handle.releasePointerCapture(id); } catch { /* already released */ }
+    if (clientY != null) note(clientY);
+    const { at, name } = states();
+    const next = name[at.indexOf(aim(at, offset, flick ? speedOf(samples, performance.now()) : 0))] ?? EXPANDED;
+    samples = [];
+    if (travel > 4) { dragged = true; setTimeout(() => { dragged = false; }, 0); }
+    const previous = state.getState();
+    if (next === HIDDEN) state.close();
+    else state.setState(next);
+    component.emit(BOTTOM_SHEET_EVENTS.DRAG_END, { state: next, previous });
+    settle(next, gesture);
+  };
+  const down = (event: PointerEvent): void => {
+    const root = node.parentElement;
+    if (dragging || event.button !== 0 || !root) return;
+    gesture += 1; dragging = true; id = event.pointerId; y0 = event.clientY; travel = 0; samples = [];
+    const seen = node.getBoundingClientRect();
+    const rootBox = root.getBoundingClientRect();
+    for (const animation of node.getAnimations?.() ?? []) animation.cancel();
+    style.transition = "none";
+    const heightOf = (value: string): number => { style.maxHeight = value; return node.getBoundingClientRect().height; };
+    full = heightOf("100%");
+    peek = heightOf(`var(--${PREFIX}-bottom-sheet-peek-height, 50%)`);
+    from = Math.min(Math.max(seen.top - (rootBox.bottom - full), 0), Math.max(full, 0));
+    offset = from;
+    place(offset);
+    note(event.clientY);
+    try { handle.setPointerCapture(event.pointerId); } catch { /* tests have no pointer */ }
+    component.emit(BOTTOM_SHEET_EVENTS.DRAG_START);
+  };
+  const move = (event: PointerEvent): void => {
+    if (!dragging || event.pointerId !== id) return;
+    if (event.pointerType === "mouse" && event.buttons === 0) finish(event.clientY, false);
+    else note(event.clientY);
+  };
+  const up = (event: PointerEvent): void => { if (event.pointerId === id) finish(event.clientY); };
+  const end = (): void => finish(undefined, false);
+  const label = (): void => handle.setAttribute("aria-label", state.getState() === EXPANDED ? "Close sheet" : "Expand sheet");
+  const onClick = (): void => {
+    if (dragged) { dragged = false; return; }
+    const current = state.getState();
+    if (current === EXPANDED) state.close();
+    else if (current === PARTIAL) state.setState(EXPANDED);
+    else state.open();
+  };
+  label();
+  component.on?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
+  const pairs: [string, EventListener][] = [
+    ["pointerdown", down as EventListener], ["pointermove", move as EventListener],
+    ["pointerup", up as EventListener], ["pointercancel", end],
+    ["lostpointercapture", end], ["contextmenu", end], ["click", onClick],
+  ];
+  for (const [type, fn] of pairs) handle.addEventListener(type, fn);
+  view?.addEventListener("blur", end);
+  return { ...component, drag: { release: () => {
+    const pending = dragging;
+    finish(undefined, false);
+    if (!pending) clear();
+    for (const [type, fn] of pairs) handle.removeEventListener(type, fn);
+    view?.removeEventListener("blur", end);
+    component.off?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
+  } } };
+};
