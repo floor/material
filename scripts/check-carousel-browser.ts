@@ -706,12 +706,32 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
       // settles and the snap returns; over the slide's link no native drag
       // takes the gesture, and the link is clickable again.
       for (const on of ["image", "link"] as const) {
+        const slideXs = async (): Promise<number[]> => page.evaluate(() => {
+          const host = document.querySelector("m-carousel");
+          const scope: ParentNode = host?.shadowRoot ?? document;
+          return Array.from(scope.querySelectorAll<HTMLElement>(".mtrl-carousel__item")).map((el) => el.getBoundingClientRect().x);
+        });
+        // The drag goes toward the strip's content: left in LTR, right in
+        // RTL — the mirrored reading direction, which is where the pointer
+        // has slides to reveal.
+        const dragTo = dir === "ltr" ? 300 : 460;
         await page.mouse.move(380, 120);
+        const before = await slideXs();
+        const centreIndex = before.reduce((best, x, i) => (Math.abs(x + 100 - 450) < Math.abs(before[best]! + 100 - 450) ? i : best), 0);
         await page.mouse.down();
-        await page.mouse.move(300, 120, { steps: 4 });
+        await page.mouse.move(dragTo, 120, { steps: 4 });
+        // The physical result, whatever the scrollLeft convention: the slide
+        // under the pointer moves with it, the same distance, in both
+        // directions. The centre slide carries no keyline transform, two
+        // frames let its layout land.
+        await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
+        const during = await slideXs();
         await page.mouse.up();
-        const dragged = await state();
-        assert.ok(dragged.left * (dir === "ltr" ? 1 : -1) > 40, `${label}, ${on}: the drag follows the pointer (${dragged.left})`);
+        const slideDelta = during[centreIndex]! - before[centreIndex]!;
+        // Same direction as the pointer and within the keyline drift of its
+        // distance: the centre slide carries the nearest keyline, whose
+        // transform moves it a few pixels off the strip's exact delta.
+        assert.ok(dir === "ltr" ? slideDelta < -60 : slideDelta > 60, `${label}, ${on}: the slide follows the pointer (${dir === "ltr" ? "-80" : "+80"} px, slide moved ${slideDelta.toFixed(1)})`);
         await page.waitForFunction(() => {
           const host = document.querySelector("m-carousel");
           const scope: ParentNode = host?.shadowRoot ?? document;
@@ -724,6 +744,34 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
         await clickLink();
         assert.equal((await state()).hash, "#go", `${label}, ${on}: the next click works`);
       }
+
+      // A flick advances in the reading direction: the pointer flicks toward
+      // the reading origin (left in LTR, right in RTL) and the carousel
+      // leaves for the later slides — the first slide moves out of the way.
+      const flickFrom = dir === "ltr" ? 500 : 300;
+      const flickTo = dir === "ltr" ? 340 : 460;
+      const firstSlideBefore = await slideBoxGlobal(page);
+      await page.mouse.move(flickFrom, 120);
+      await page.mouse.down();
+      await page.mouse.move(flickTo, 120, { steps: 3 });
+      await page.mouse.up();
+      await page.waitForFunction(() => {
+        const host = document.querySelector("m-carousel");
+        const scope: ParentNode = host?.shadowRoot ?? document;
+        return !((scope.querySelector(".mtrl-carousel") as HTMLElement).dataset.settling ?? "");
+      }, undefined, { timeout: 2000 }).catch(() => {});
+      const firstSlideAfter = await slideBoxGlobal(page);
+      // Advancing scrolls the first slide out: its rect moves against the
+      // reading direction (left in LTR, right in RTL).
+      const flickDelta = firstSlideAfter - firstSlideBefore;
+      assert.ok(dir === "ltr" ? flickDelta < -100 : flickDelta > 100, `${label}: the flick advances the reading direction (first slide moved ${flickDelta.toFixed(1)})`);
     }
   }
 }
+
+/** The first slide's screen x, resolved through the shadow root when hosted. */
+const slideBoxGlobal = (page: Page): Promise<number> => page.evaluate(() => {
+  const host = document.querySelector("m-carousel");
+  const scope: ParentNode = host?.shadowRoot ?? document;
+  return (scope.querySelector(".mtrl-carousel__item") as HTMLElement).getBoundingClientRect().x;
+});

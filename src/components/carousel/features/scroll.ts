@@ -426,17 +426,14 @@ export const withScroll = (config: CarouselConfig) =>
       }
       element.dataset.dragging = "true";
       const dt = e.timeStamp - dragLastTime;
-      // The pointer's own rate: a leftward flick advances in either
-      // direction, physical in RTL too since the write above carries the
-      // sign.
-      if (dt > 0) dragVelocity = (position - dragLast) / dt;
+      // dragVelocity is logical (* sign at its source): the velocity that
+      // advances is negative in either direction.
+      if (dt > 0) dragVelocity = ((position - dragLast) / dt) * sign;
       dragLast = position;
       dragLastTime = e.timeStamp;
-      // The sign keeps the strip under the pointer in both directions: RTL's
-      // scrollLeft range is negated (0 at the reading origin, negative as the
-      // strip advances), so without it the strip moved opposite the pointer
-      // there and every drag felt backwards.
-      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta * sign;
+      // No rtl term: the drag follows the pointer physically, and the
+      // mirrored gesture (right-drag advances) meets the mirrored range.
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta;
       e.preventDefault();
     };
 
