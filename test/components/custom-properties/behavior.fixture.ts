@@ -69,6 +69,9 @@ for (const prefix of [PREFIX]) {
     expect(propertyNames(carousel.element)).toEqual([`--${prefix}-carousel-corner`]);
     expect(carousel.element.style.getPropertyValue(`--${prefix}-carousel-corner`)).toBe('19px');
     for (const item of carousel.element.querySelectorAll<HTMLElement>(`.${prefix}-carousel__item`)) {
+      // An item past the keyline list is not drawn at all: its fade and inset
+      // describe no visible box, so only the drawn items carry them.
+      if (item.style.visibility === 'hidden') continue;
       expect(propertyNames(item)).toEqual([`--${prefix}-carousel-inset`, `--${prefix}-carousel-fade`]);
       expect(Number(item.style.getPropertyValue(`--${prefix}-carousel-fade`))).toBeGreaterThanOrEqual(0);
     }

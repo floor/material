@@ -281,6 +281,7 @@ export const withScroll = (config: CarouselConfig) =>
           // neither is one whose visible width would round to nothing.
           offscreen = placement.beyondList || Math.round(visible) <= 0 ||
             placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
+
           inset = Math.max(0, (itemSize - visible) / 2);
           if (fadeRange > 0) fade = Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange));
         }
