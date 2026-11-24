@@ -814,24 +814,115 @@ const slideBoxGlobal = (page: Page): Promise<number> => page.evaluate(() => {
  */
 export async function checkCarouselViewportLayer(page: Page): Promise<void> {
   await page.setViewportSize({ width: 800, height: 600 });
+  const cases = [
+    { route: "factory", dir: "ltr", vertical: false },
+    { route: "factory", dir: "rtl", vertical: false },
+    { route: "element", dir: "ltr", vertical: false },
+    { route: "element", dir: "rtl", vertical: false },
+    { route: "factory", dir: "ltr", vertical: true },
+    { route: "element", dir: "ltr", vertical: true },
+  ] as const;
+  for (const { route, dir, vertical } of cases) {
+    const label = `viewport layer ${route}/${dir}${vertical ? "/vertical" : ""}`;
+    await page.evaluate(({ route, dir, vertical }) => {
+      document.documentElement.dir = dir;
+      document.body.replaceChildren();
+      const variant = vertical ? "full-screen" : "multi-browse";
+      if (route === "factory") {
+        const config: Record<string, unknown> = { variant, slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })) };
+        if (!vertical) config.itemWidth = 200;
+        const carousel = (window as unknown as CarouselWindow).createCarousel(config as never);
+        carousel.element.id = "layer-carousel";
+        carousel.element.style.cssText = "width:760px;height:240px";
+        document.body.append(carousel.element);
+      } else {
+        const host = document.createElement("m-carousel");
+        host.id = "layer-carousel";
+        host.setAttribute("variant", variant);
+        if (!vertical) host.setAttribute("item-width", "200");
+        host.style.cssText = "width:760px;height:240px;display:block";
+        for (let i = 0; i < 8; i++) {
+          const item = document.createElement("m-carousel-item");
+          item.setAttribute("alt", `Slide ${i}`);
+          host.append(item);
+        }
+        document.body.append(host);
+      }
+    }, { route, dir, vertical });
+    await waitFor(page, "the carousel to lay its slides out", () => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+      return !!scroller && (scroller.scrollWidth > 760 || scroller.scrollHeight > 240);
+    });
+    const result = await page.evaluate(({ vertical }) => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+      const items = Array.from(scope.querySelectorAll<HTMLElement>(".mtrl-carousel__item"));
+      const axis = vertical ? "y" : "x";
+      const before = items.map((el) => el.getBoundingClientRect()[axis]);
+      const from = vertical ? scroller.scrollTop : scroller.scrollLeft;
+      // The signed offset: RTL grows negatively, so a bare +120 clamps to 0
+      // and the assertion would compare the same position with itself.
+      const rtl = getComputedStyle(scroller).direction === "rtl";
+      const to = from + (rtl && !vertical ? -120 : 120);
+      // Vertical cases take snapping out of the write for the moment it is
+      // measured: the property under test is the offset's reach into the
+      // items, and restoring it afterwards leaves the carousel as it was.
+      const snapped = scroller.style.scrollSnapType;
+      if (vertical) scroller.style.scrollSnapType = "none";
+      if (vertical) scroller.scrollTop = to;
+      else scroller.scrollLeft = to;
+      const after = items.map((el) => el.getBoundingClientRect()[axis]);
+      const now = vertical ? scroller.scrollTop : scroller.scrollLeft;
+      if (vertical) { scroller.scrollTop = from; scroller.style.scrollSnapType = snapped; }
+      else scroller.scrollLeft = from;
+      return {
+        scrollMoved: Math.abs(now - from),
+        moved: Math.max(...before.map((v, i) => Math.abs(after[i]! - v))),
+      };
+    }, { vertical });
+    // The offset really moved: otherwise this compares one position with itself.
+    assert.ok(result.scrollMoved > 1, `${label}: the offset moved the scroller (${result.scrollMoved.toFixed(1)} px)`);
+    // The layer is pinned, so the items stay put; before it they moved the
+    // full 120 px with the offset.
+    assert.ok(result.moved < 2, `${label}: items stay put when the offset moves (moved ${result.moved.toFixed(1)} px)`);
+    await waitFor(page, "the restored offset to lay out", () => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel");
+      return !root?.hasAttribute("data-settling");
+    });
+  }
+}
+
+/**
+ * The uncontained strip lives in the scrolled coordinate space: a synchronous
+ * offset (before any scroll handler can run) moves its items by that offset,
+ * because the user's gesture shows before any script. The contained variants
+ * are the opposite, and checkCarouselViewportLayer holds that side.
+ */
+export async function checkCarouselUncontainedSpace(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
   for (const route of ["factory", "element"] as const) {
     for (const dir of ["ltr", "rtl"] as const) {
-      const label = `viewport layer ${route}/${dir}`;
+      const label = `uncontained space ${route}/${dir}`;
       await page.evaluate(({ route, dir }) => {
         document.documentElement.dir = dir;
         document.body.replaceChildren();
         if (route === "factory") {
           const carousel = (window as unknown as CarouselWindow).createCarousel({
-            variant: "multi-browse", itemWidth: 200,
+            variant: "uncontained", itemWidth: 200,
             slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })),
           });
-          carousel.element.id = "layer-carousel";
+          carousel.element.id = "space-carousel";
           carousel.element.style.cssText = "width:760px;height:240px";
           document.body.append(carousel.element);
         } else {
           const host = document.createElement("m-carousel");
-          host.id = "layer-carousel";
-          host.setAttribute("variant", "multi-browse");
+          host.id = "space-carousel";
+          host.setAttribute("variant", "uncontained");
           host.setAttribute("item-width", "200");
           host.style.cssText = "width:760px;height:240px;display:block";
           for (let i = 0; i < 8; i++) {
@@ -842,7 +933,7 @@ export async function checkCarouselViewportLayer(page: Page): Promise<void> {
           document.body.append(host);
         }
       }, { route, dir });
-      await waitFor(page, "the carousel to lay its slides out", () => {
+      await waitFor(page, "the uncontained strip to lay its slides out", () => {
         const host = document.querySelector("m-carousel");
         const scope: ParentNode = host?.shadowRoot ?? document;
         const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
@@ -853,24 +944,100 @@ export async function checkCarouselViewportLayer(page: Page): Promise<void> {
         const scope: ParentNode = host?.shadowRoot ?? document;
         const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
         const items = Array.from(scope.querySelectorAll<HTMLElement>(".mtrl-carousel__item"));
+        const rtl = getComputedStyle(scroller).direction === "rtl";
         const before = items.map((el) => el.getBoundingClientRect().x);
         const from = scroller.scrollLeft;
-        // Synchronous, so the scroll handler (and its layout) has not run:
-        // this is the offset the compositor paints while the DOM is behind.
-        scroller.scrollLeft = from + 120;
+        scroller.scrollLeft = from + (rtl ? -120 : 120);
         const after = items.map((el) => el.getBoundingClientRect().x);
+        const now = scroller.scrollLeft;
         scroller.scrollLeft = from;
-        return Math.max(...before.map((x, i) => Math.abs(after[i]! - x)));
+        return { scrollMoved: Math.abs(now - from), moved: Math.max(...before.map((v, i) => Math.abs(after[i]! - v))) };
       });
-      // The layer is pinned, so the items stay put; before it they moved the
-      // full 120 px with the offset.
-      assert.ok(moved < 2, `${label}: items stay put when the offset moves (moved ${moved.toFixed(1)} px)`);
-      await waitFor(page, "the restored offset to lay out", () => {
-        const host = document.querySelector("m-carousel");
-        const scope: ParentNode = host?.shadowRoot ?? document;
-        const root = scope.querySelector<HTMLElement>(".mtrl-carousel");
-        return !root?.hasAttribute("data-settling");
-      });
+      assert.ok(moved.scrollMoved > 1, `${label}: the offset moved the scroller (${moved.scrollMoved.toFixed(1)} px)`);
+      assert.ok(moved.moved > 100, `${label}: the items move with the offset before any handler runs (${moved.moved.toFixed(1)} px)`);
     }
+  }
+}
+
+/**
+ * A press released outside the scroller before the capture starts reaches it
+ * no event at all, so the release is observed on the window: snapping comes
+ * back and the settle marker clears, and a press that never became a drag
+ * still leaves the slide's link clickable.
+ */
+export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
+  for (const route of ["factory", "element"] as const) {
+    const label = `outside release ${route}`;
+    await page.evaluate(({ route }) => {
+      document.documentElement.dir = "ltr";
+      document.body.replaceChildren();
+      if (route === "factory") {
+        const carousel = (window as unknown as CarouselWindow).createCarousel({
+          variant: "multi-browse", itemWidth: 200,
+          slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}`, ...(i === 0 ? { buttonUrl: "#go", buttonText: "Open" } : {}) })),
+        });
+        carousel.element.id = "outside-carousel";
+        carousel.element.style.cssText = "width:760px;height:240px";
+        document.body.append(carousel.element);
+      } else {
+        const host = document.createElement("m-carousel");
+        host.id = "outside-carousel";
+        host.setAttribute("variant", "multi-browse");
+        host.setAttribute("item-width", "200");
+        host.style.cssText = "width:760px;height:240px;display:block";
+        for (let i = 0; i < 8; i++) {
+          const item = document.createElement("m-carousel-item");
+          item.setAttribute("alt", `Slide ${i}`);
+          if (i === 0) { item.setAttribute("button-text", "Open"); item.setAttribute("button-url", "#go"); }
+          host.append(item);
+        }
+        document.body.append(host);
+      }
+    }, { route });
+    await waitFor(page, "the carousel to lay its slides out", () => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+      return !!scroller && scroller.scrollWidth > 760;
+    });
+    // Press near the top of the strip, leave it straight up (no horizontal
+    // travel, so no drag and no capture), release above it.
+    const box = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const r = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.getBoundingClientRect();
+      return { x: r.x + r.width / 2, top: r.y };
+    });
+    await page.mouse.move(box.x, box.top + 20);
+    await page.mouse.down();
+    await page.mouse.move(box.x, 2, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    const state = await page.evaluate(() => {
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      const root = scope.querySelector<HTMLElement>(".mtrl-carousel");
+      const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+      return {
+        settling: root?.hasAttribute("data-settling") ?? false,
+        dragging: root?.hasAttribute("data-dragging") ?? false,
+        snap: scroller ? getComputedStyle(scroller).scrollSnapType : "-",
+        left: scroller?.scrollLeft ?? -1,
+      };
+    });
+    assert.equal(state.settling, false, `${label}: the settle marker clears after an outside release (left ${state.left})`);
+    assert.equal(state.dragging, false, `${label}: no drag is left behind`);
+    assert.equal(state.snap, "x mandatory", `${label}: snapping is back after an outside release`);
+    // The press never dragged, so the slide's link still works.
+    await page.evaluate(() => {
+      window.location.hash = "";
+      const host = document.querySelector("m-carousel");
+      const scope: ParentNode = host?.shadowRoot ?? document;
+      scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")?.scrollTo({ left: 0, behavior: "instant" });
+    });
+    await page.waitForTimeout(120);
+    await page.locator("#outside-carousel .mtrl-carousel__button").first().click();
+    assert.equal(await page.evaluate(() => window.location.hash), "#go", `${label}: a press keeps the link clickable`);
   }
 }

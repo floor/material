@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
-import { checkCarouselWheel, checkCarouselUncontained, checkCarouselDragRelease, checkCarouselViewportLayer } from "./check-carousel-browser";
+import { checkCarouselWheel, checkCarouselUncontained, checkCarouselDragRelease, checkCarouselViewportLayer, checkCarouselUncontainedSpace, checkCarouselOutsideRelease } from "./check-carousel-browser";
 import * as sass from "sass";
 
 const bundle = await Bun.build({
@@ -91,6 +91,14 @@ try {
   console.log("Checking carousel viewport layer...");
   await checkCarouselViewportLayer(page);
   console.log("Carousel viewport layer checks passed.");
+
+  console.log("Checking carousel uncontained space...");
+  await checkCarouselUncontainedSpace(page);
+  console.log("Carousel uncontained space check passed.");
+
+  console.log("Checking carousel outside release...");
+  await checkCarouselOutsideRelease(page);
+  console.log("Carousel outside release check passed.");
 
   console.log("Checking carousel drag release...");
   await checkCarouselDragRelease(page);

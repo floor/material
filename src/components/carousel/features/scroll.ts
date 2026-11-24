@@ -647,6 +647,13 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("pointerdown", handlePointerDown);
     scroller.addEventListener("pointermove", handlePointerMove);
     scroller.addEventListener("pointerup", handlePointerUp);
+    // A press released outside the scroller before the capture starts reaches
+    // the scroller no event: the pointerup lands on whatever is under it. The
+    // window sees it, so snapping comes back even for a press that never
+    // became a drag; a drag with capture sends both, and the handler is
+    // idempotent.
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", endDrag);
     scroller.addEventListener("pointercancel", endDrag);
     scroller.addEventListener("lostpointercapture", endDrag);
     scroller.addEventListener("dragstart", handleDragStart);
@@ -689,6 +696,8 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("pointerdown", handlePointerDown);
         scroller.removeEventListener("pointermove", handlePointerMove);
         scroller.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", endDrag);
         scroller.removeEventListener("pointercancel", endDrag);
         scroller.removeEventListener("lostpointercapture", endDrag);
         scroller.removeEventListener("dragstart", handleDragStart);
