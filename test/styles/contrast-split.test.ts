@@ -347,8 +347,8 @@ describe("explicit contrast levels are opt-in", () => {
     // child, and the RTL physical padding mirrors went away with the
     // symmetric paddings (styles/components/_drawer.scss; −760 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "100392e7bd1329dded831d1e8e8c79a1a7427071b60d9e52b6442b63d830980b",
-      length: 552817,
+      sha256: "c0808fdf1ace77ab72f4f971dab2bb2730756d1750a05ee899beff3825e54463",
+      length: 552862,
     });
   });
 

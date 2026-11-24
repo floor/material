@@ -70,7 +70,7 @@ export const withScroll = (config: CarouselConfig) =>
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
 
-    const { element, scroller, track, slideElements } = component;
+    const { element, scroller, track, layer, slideElements } = component;
     const prefix = component.getClass("carousel");
     const snapClass = `${prefix}__snap`;
     element.classList.toggle(`${prefix}--snap`, snap);
@@ -179,6 +179,35 @@ export const withScroll = (config: CarouselConfig) =>
       lastStyles = new WeakMap();
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
+      // The item layer is the viewport for the contained variants:
+      // sticky-pinned at the inline start (or the top when vertical) and sized
+      // to the container, so the scroll offset never reaches an item's
+      // transform (see layout()). The uncontained strip moves natively with
+      // the track and keeps that: its layer is a plain static box, so an item's
+      // position is the scrolled coordinate space and a scroll shows before
+      // any handler runs.
+      if (variant === CAROUSEL_VARIANTS.UNCONTAINED) {
+        layer.style.position = "static";
+        layer.style.width = "";
+        layer.style.height = "";
+        layer.style.top = "";
+        layer.style.left = "";
+        layer.style.right = "";
+      } else if (vertical) {
+        layer.style.position = "";
+        layer.style.width = "100%";
+        layer.style.height = `${containerSize}px`;
+        layer.style.top = "0";
+        layer.style.left = "0";
+        layer.style.right = "";
+      } else {
+        layer.style.position = "";
+        layer.style.width = `${containerSize}px`;
+        layer.style.height = "100%";
+        layer.style.top = "0";
+        layer.style.left = rtl ? "auto" : "0";
+        layer.style.right = rtl ? "0" : "auto";
+      }
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
       if (containerSize <= 0 || count === 0) {
         strategy = null;
@@ -244,6 +273,9 @@ export const withScroll = (config: CarouselConfig) =>
 
       for (let i = 0; i < count; i++) {
         const el = slideElements[i]!;
+        // Uncontained items flow with the scroll in the track's own
+        // coordinate space (their layer is static). Contained items are
+        // placed in container coordinates only: their layer is the viewport.
         let start = padding + i * unit;
         let inset = 0;
         let fade = 1;
@@ -251,7 +283,7 @@ export const withScroll = (config: CarouselConfig) =>
         if (!isUncontained) {
           const placement = placeItem(strategy, keylines!, i, scrollOffset);
           const visible = Math.max(0, Math.min(itemSize, placement.size));
-          start = placement.center - itemSize / 2 + position;
+          start = placement.center - itemSize / 2;
           offscreen = placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
           inset = Math.max(0, (itemSize - visible) / 2);
           if (fadeRange > 0) fade = Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange));
@@ -341,6 +373,11 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handleFocusIn = (e: FocusEvent): void => {
+      // A pointer press focuses the slide under it, and goTo there would
+      // scroll the carousel away from a pointer that is holding it — the
+      // press may be a drag. The click after the release selects the slide
+      // instead; the keyboard keeps its follow-focus.
+      if (dragging) return;
       const index = indexOf(e.target);
       if (index >= 0 && index !== currentIndex) goTo(index);
     };
@@ -348,6 +385,9 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Mouse drag (touch and trackpad scroll natively) ─────────
 
     let dragging = false;
+    // The pointer that started the drag: a release of any other pointer (a
+    // second mouse, a touch elsewhere) is not this drag's release.
+    let dragPointer: number | null = null;
     let dragged = false;
     let dragStart = 0;
     let dragScrollStart = 0;
@@ -369,6 +409,7 @@ export const withScroll = (config: CarouselConfig) =>
       clearPending();
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
+      dragPointer = e.pointerId;
       lastWheel = -Infinity;
       dragged = false;
       dragStart = vertical ? e.clientY : e.clientX;
@@ -381,17 +422,53 @@ export const withScroll = (config: CarouselConfig) =>
       dragScrollStart = scroller[vertical ? "scrollTop" : "scrollLeft"];
       restoreSnap();
       element.dataset.settling = "true";
-      scroller.setPointerCapture(e.pointerId);
+    };
+
+    /**
+     * One idempotent end for every way a drag stops without its release: a
+     * cancelled pointer, the capture lost (a context menu over a slide
+     * releases it without any cancel event), the buttons read 0 on a move,
+     * or the window blurring. Snap and data-dragging restore every time, and
+     * a drag ended this way sends no click, so `dragged` must not outlive it
+     * — the next real click on a slide must work.
+     */
+    const endDrag = (e?: Event): void => {
+      if (!dragging) return;
+      // Only the pointer that started the drag ends it.
+      if (e && dragPointer !== null && "pointerId" in e && (e as PointerEvent).pointerId !== dragPointer) return;
+      dragging = false;
+      dragPointer = null;
+      dragged = false;
+      delete element.dataset.dragging;
+      restoreSnap();
     };
 
     const handlePointerMove = (e: PointerEvent): void => {
       if (!dragging) return;
+      if (dragPointer !== null && e.pointerId !== dragPointer) return;
+      // The release may go unseen — outside the window, into a menu that
+      // took the mouse. The first move with no button down ends the drag
+      // instead of following a mouse the user no longer holds.
+      if (e.buttons === 0) {
+        if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
+        endDrag(e);
+        return;
+      }
       const position = vertical ? e.clientY : e.clientX;
       const delta = position - dragStart;
       if (!dragged && Math.abs(delta) < DRAG_THRESHOLD) return;
-      dragged = true;
+      if (!dragged) {
+        // The capture starts here, not at the press: a press that never
+        // becomes a drag must leave the pointer with the slide, or the
+        // rerouted click would keep every link and button inside a slide
+        // from working.
+        dragged = true;
+        scroller.setPointerCapture(e.pointerId);
+      }
       element.dataset.dragging = "true";
       const dt = e.timeStamp - dragLastTime;
+      // dragVelocity is logical (* sign at its source): the velocity that
+      // advances is negative in either direction.
       if (dt > 0) dragVelocity = ((position - dragLast) / dt) * sign;
       dragLast = position;
       dragLastTime = e.timeStamp;
@@ -403,7 +480,10 @@ export const withScroll = (config: CarouselConfig) =>
 
     const handlePointerUp = (e: PointerEvent): void => {
       if (!dragging) return;
+      // A release of another pointer is not this drag's release.
+      if (dragPointer !== null && e.pointerId !== dragPointer) return;
       dragging = false;
+      dragPointer = null;
       if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
       delete element.dataset.dragging;
       if (!dragged) {
@@ -430,7 +510,26 @@ export const withScroll = (config: CarouselConfig) =>
         dragged = false;
         e.preventDefault();
         e.stopPropagation();
+        return;
       }
+      // A click on a slide selects it. The slide resolves from the composed
+      // path: the element's shadow boundary sits between this listener and
+      // the item, where closest() and focus do not reach. Selection happens
+      // on the click, after the release, so a press never scrolls. No
+      // preventDefault here, so a link inside the slide still opens.
+      const slide = (e.composedPath() as EventTarget[]).find((node) => slideElements.includes(node as HTMLElement)) as HTMLElement | undefined;
+      if (slide) {
+        const index = slideElements.indexOf(slide);
+        if (index !== currentIndex) goTo(index);
+      }
+    };
+
+    // The slides carry real images and links, which the browser would drag
+    // natively — its ghost takes the gesture and its own drag out of the
+    // carousel's hands. Inside the carousel, the drag is the carousel's;
+    // links still open by click.
+    const handleDragStart = (e: DragEvent): void => {
+      e.preventDefault();
     };
 
     // ── Opt-in mouse wheel ──────────────────────────────────────
@@ -559,8 +658,20 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("pointerdown", handlePointerDown);
     scroller.addEventListener("pointermove", handlePointerMove);
     scroller.addEventListener("pointerup", handlePointerUp);
-    scroller.addEventListener("pointercancel", handlePointerUp);
+    // A press released outside the scroller before the capture starts reaches
+    // the scroller no event: the pointerup lands on whatever is under it. The
+    // window sees it in the capture phase, so snapping comes back even for a
+    // press that never became a drag — and an element under the pointer that
+    // stops propagation cannot hold the release back. A drag with capture
+    // sends both, the handler is idempotent, and only the pointer that started
+    // the drag counts.
+    window.addEventListener("pointerup", handlePointerUp, { capture: true });
+    window.addEventListener("pointercancel", endDrag, { capture: true });
+    scroller.addEventListener("pointercancel", endDrag);
+    scroller.addEventListener("lostpointercapture", endDrag);
+    scroller.addEventListener("dragstart", handleDragStart);
     scroller.addEventListener("click", handleClick, true);
+    window.addEventListener("blur", endDrag);
     reduceMotion?.addEventListener?.("change", rebuild);
 
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(rebuild) : null;
@@ -598,8 +709,13 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("pointerdown", handlePointerDown);
         scroller.removeEventListener("pointermove", handlePointerMove);
         scroller.removeEventListener("pointerup", handlePointerUp);
-        scroller.removeEventListener("pointercancel", handlePointerUp);
+        window.removeEventListener("pointerup", handlePointerUp, { capture: true });
+        window.removeEventListener("pointercancel", endDrag, { capture: true });
+        scroller.removeEventListener("pointercancel", endDrag);
+        scroller.removeEventListener("lostpointercapture", endDrag);
+        scroller.removeEventListener("dragstart", handleDragStart);
         scroller.removeEventListener("click", handleClick, true);
+        window.removeEventListener("blur", endDrag);
         destroy?.();
       },
     };
