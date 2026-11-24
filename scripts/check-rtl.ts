@@ -500,8 +500,8 @@ try {
     "the modal drawer's start/end sheets are not mirrored (LTR start, RTL start, LTR end, RTL end)",
   );
   assert.equal(ltr.drawerStart!.sheet.width, 360);
-  assert.deepEqual(ltr.drawerStart!.padding, { left: 16, right: 16 });
-  assert.deepEqual(rtl.drawerStart!.padding, { left: 16, right: 16 });
+  assert.deepEqual(ltr.drawerStart!.padding, { left: 16, right: 24 });
+  assert.deepEqual(rtl.drawerStart!.padding, { left: 24, right: 16 });
   assert.deepEqual(ltr.drawerStart!.icon, { x: 28, width: 24 });
   assert.equal(rtl.drawerStart!.icon.x, 548);
   assert.deepEqual(ltr.bottom!.padding, { left: 4, right: 16 });
@@ -569,7 +569,7 @@ try {
 
   console.log(
     `Passed RTL: ${Object.keys(ltr).length} fixtures measured in LTR and RTL, every box mirrored ` +
-      `(drawer start sheet 0→240, drawer item padding 16/16 both ways, icon x 28→548, bottom padding 4/16→16/4, ` +
+      `(drawer start sheet 0→240, drawer item padding 16/24→24/16, icon x 28→548, bottom padding 4/16→16/4, ` +
       `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), a runtime dir change followed, ` +
       `a subtree's nearer dir won both ways (factory drawer closed at x ${ltrCase.sheet} in an ltr subtree of an RTL page, ` +
       `${rtlCase.sheet} in an rtl subtree of an LTR page), and the bundled sheet mirrored its class-based markup ` +

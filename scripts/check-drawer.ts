@@ -117,13 +117,14 @@ try {
   assert.deepEqual(errors, []);
 
   // ========================================================================
-  // SPEC GEOMETRY: the chevron and the selected pill's end padding
+  // SPEC GEOMETRY: the item's paddings inside the active indicator
   // ========================================================================
-  // m3.material.io/components/navigation-drawer/specs, Measurements (read
-  // 2026-11-24): left padding 28dp, right padding 28dp, active indicator
-  // padding 12dp. The item carries the indicator, so its trailing content —
-  // the section chevron, a badge, and a selected label's end — sits
-  // 28 - 12 = 16dp inside the item's end edge, mirroring the leading icon.
+  // m3.material.io/components/navigation-drawer/specs, the anatomy diagram
+  // (read 2026-11-24): the item's content starts 16dp inside the indicator,
+  // and the trailing content — the section chevron, a badge, and a selected
+  // label's end — sits 24dp inside the indicator's end; the indicator itself
+  // is 12dp from the drawer's edge (the spec table's active indicator
+  // padding). The owner set these values in the decision of 2026-11-24.
   await page.evaluate(() => {
     document.documentElement.dir = 'ltr';
     document.documentElement.dataset.theme = 'baseline';
@@ -140,28 +141,32 @@ try {
   await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
   const near = (a: number, b: number, label: string) => assert.ok(Math.abs(a - b) <= 0.5, `${label}: ${a.toFixed(1)} vs ${b.toFixed(1)}`);
   const specGeometry = await page.evaluate(() => {
-    const box = (root: Element, selector: string) => (root.querySelector(selector) as HTMLElement).getBoundingClientRect();
     // The sheet keeps a 1px scrollbar gutter under overflow-y: auto, so the
-    // spec's 28dp is measured from the content edge (the items container).
+    // spec's paddings are measured from the content edge (the items container).
     const content = document.querySelector('.mtrl-drawer__items')!;
+    const rect = (el: Element) => el.getBoundingClientRect();
     const header = document.querySelector('[data-id="labels"]')!;
-    const selected = document.querySelector('[data-id="family"]')!;
+    const child = document.querySelector('[data-id="family"]')!;
     const badged = document.querySelector('[data-id="archive"]')!;
+    const headerBox = rect(header);
     return {
-      content: content.getBoundingClientRect(),
-      header: header.getBoundingClientRect(),
-      chevron: box(header, '.mtrl-drawer__item-chevron'),
-      selected: selected.getBoundingClientRect(),
-      selectedLabel: box(selected, '.mtrl-drawer__item-label'),
-      badged: badged.getBoundingClientRect(),
-      badge: box(badged, '.mtrl-drawer__item-badge'),
+      content: rect(content),
+      header: { left: headerBox.left, right: headerBox.right, labelLeft: rect(header.querySelector('.mtrl-drawer__item-label')!).left },
+      chevron: rect(header.querySelector('.mtrl-drawer__item-chevron')!),
+      child: rect(child),
+      childLabel: rect(child.querySelector('.mtrl-drawer__item-label')!),
+      badged: rect(badged),
+      badge: rect(badged.querySelector('.mtrl-drawer__item-badge')!),
     };
   });
+  near(specGeometry.header.left, specGeometry.content.left + 12, 'indicator start inset from the content edge (active indicator padding 12dp)');
+  near(specGeometry.header.labelLeft, specGeometry.header.left + 16, 'top-level label starts 16dp inside the indicator (diagram start padding)');
   near(specGeometry.header.right, specGeometry.content.right - 12, 'indicator end inset from the content edge (active indicator padding 12dp)');
-  near(specGeometry.chevron.right, specGeometry.header.right - 16, 'chevron end inset inside the item (28dp drawer padding - 12dp indicator padding)');
-  near(specGeometry.chevron.right, specGeometry.content.right - 28, 'drawer right padding 28dp from the content edge');
-  near(specGeometry.selectedLabel.right, specGeometry.selected.right - 16, 'selected pill end padding 16dp');
-  near(specGeometry.badge.right, specGeometry.badged.right - 16, 'badge end inset inside the item');
+  near(specGeometry.chevron.right, specGeometry.header.right - 24, 'chevron ends 24dp inside the indicator (diagram end padding)');
+  near(specGeometry.child.left, specGeometry.content.left + 12 + 12, 'child pill starts the indent further in than the parent (m3 site shift)');
+  near(specGeometry.childLabel.left, specGeometry.child.left + 16, 'child label starts 16dp inside its own pill');
+  near(specGeometry.childLabel.right, specGeometry.child.right - 24, "selected pill's end padding 24dp (diagram)");
+  near(specGeometry.badge.right, specGeometry.badged.right - 24, 'badge ends 24dp inside the indicator');
 
   // ========================================================================
   // PARENT CUE: the section of the active child keeps a hover state layer
@@ -309,7 +314,9 @@ try {
     assert.deepEqual(await updatedCard.evaluate(node => {
       const style = getComputedStyle(node);
       return [style.paddingLeft, style.paddingRight];
-    }), ["16px", "44px"]);
+    // The child's paddings are the top level's 16/24; the indent is a
+    // logical margin, so in RTL the physical paddings swap.
+    }), ["24px", "16px"]);
     // Parent cue on the element form too. After the reflection above the
     // active child is "Card" in Containment: Containment shows the cue and
     // Navigation — the previous parent — has cleared it.

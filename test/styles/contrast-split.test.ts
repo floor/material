@@ -345,10 +345,10 @@ describe("explicit contrast levels are opt-in", () => {
     // The drawer item pads both ends 16px at the spec paddings, the parent
     // cue keeps a persistent hover layer on the section of the selected
     // child, and the RTL physical padding mirrors went away with the
-    // symmetric paddings (styles/components/_drawer.scss; −760 B).
+    // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B vs main).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "c0808fdf1ace77ab72f4f971dab2bb2730756d1750a05ee899beff3825e54463",
-      length: 552862,
+      sha256: "ccbfb8d11a56ea6897ddfbc9041faf75e198854272fb671ea4b921f55bf29581",
+      length: 553145,
     });
   });
 

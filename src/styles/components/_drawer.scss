@@ -314,12 +314,11 @@ $default-width: 360px;
         flex-shrink: 0;
         height: f.density(56px, 36px);
         margin: 0 12px;
-        // The drawer's content padding is 28dp on both sides
-        // (m3.material.io/components/navigation-drawer/specs, read
-        // 2026-11-24), the indicator's own padding is 12dp, so the item's
-        // content sits 16dp inside the indicator at each end — the trailing
-        // chevron and badge mirror the leading icon.
-        padding: 0 16px;
+        // The m3 diagram's item paddings, the owner's decision of
+        // 2026-11-24: 16dp from the start inside the indicator, 24dp before
+        // the trailing content at the end; the indicator itself sits 12dp
+        // from the drawer's edge.
+        padding: 0 24px 0 16px;
         gap: 12px;
         border: none;
         border-radius: v.shape('full'); // NavigationDrawerTokens active-indicator-shape
@@ -525,8 +524,14 @@ $default-width: 360px;
     }
 
     &__item--child {
-        padding-inline-start: calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px));
-        padding-inline-end: 16px;
+        // The child's active indicator starts further in than the parent's,
+        // like the drawer on m3.material.io itself (measured 2026-11-24:
+        // child rows 12px deeper at the start, the pill's end unmoved). The
+        // label keeps the top-level 16dp start padding inside its own pill,
+        // so the shift is a margin, not a padding. The indent token's
+        // default reproduces the measured 12px shift.
+        margin-inline-start: calc(12px + var(--#{base.$prefix}-drawer-child-indent, 12px));
+        width: calc(100% - 24px - var(--#{base.$prefix}-drawer-child-indent, 12px));
     }
 
     &__item-chevron {
@@ -656,8 +661,12 @@ $default-width: 360px;
     // RTL — item padding direction
     // ========================================================================
 
-    // The item's paddings are logical (start tracks the reading direction)
-    // and the base padding is symmetric, so RTL needs no physical mirror.
+    // The asymmetric paddings mirror in RTL: the 24dp end padding goes to
+    // the reading direction's end side. The child indent is a logical
+    // margin and mirrors itself.
+    @include m.rtl-selector('.#{$component}__item') {
+        padding: 0 16px 0 24px;
+    }
 
     // ========================================================================
     // REDUCED MOTION
