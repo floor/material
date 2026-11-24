@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>navigation-drawer</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createDrawer } from "/dist/components/drawer/index.js";
+import { defineDrawer } from "/dist/elements/index.js";
+import "/dist/elements/css/drawer.js";
+defineDrawer();
+
+let render = () => {};
+const host = () => document.getElementById("tp-main");
+
+const items = [
+  { id: "inbox", label: "Inbox", badge: "24" },
+  { type: "section", id: "labels", label: "Labels", items: [
+    { id: "family", label: "Family", active: true }, { id: "work", label: "Work" },
+  ] },
+  { type: "section", id: "more", label: "More", expanded: false, items: [
+    { id: "social", label: "Social" }, { id: "updates", label: "Updates" },
+  ] },
+  { id: "archive", label: "Archive", badge: "12" },
+];
+
+const mountFactory = (container) => {
+  const drawer = createDrawer({ headline: "Mail", variant: "standard", open: true, items });
+  container.append(drawer.element);
+  return drawer.element;
+};
+const mountElement = (container) => {
+  const host = document.createElement("m-drawer");
+  host.setAttribute("open", "");
+  host.setAttribute("value", "family");
+  host.innerHTML = `
+    <m-drawer-item value="inbox">Inbox</m-drawer-item>
+    <m-drawer-item value="labels">Labels
+      <m-drawer-item value="family">Family</m-drawer-item>
+      <m-drawer-item value="work">Work</m-drawer-item>
+    </m-drawer-item>
+    <m-drawer-item value="more">More
+      <m-drawer-item value="social">Social</m-drawer-item>
+      <m-drawer-item value="updates">Updates</m-drawer-item>
+    </m-drawer-item>
+    <m-drawer-item value="archive">Archive</m-drawer-item>`;
+  container.append(host);
+  return host;
+};
+
+const mountMenu = (container) => {
+  const button = document.createElement("button");
+  button.id = "menu-opener";
+  button.textContent = "Open the menu";
+  container.append(button);
+  import("/dist/components/menu/index.js").then(({ createMenu }) => {
+    createMenu({ opener: "#menu-opener", items: [
+      { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
+    ] });
+  });
+};
+
+await initPage({
+  name: "navigation-drawer",
+  toolbar: {
+    density: true,
+    forms: [
+      { label: "Factory", render: () => render() },
+      { label: "Element", render: () => render() },
+    ],
+  },
+});
+
+const variants = section(host(), "Variants & sizes");
+scenario(variants, {
+  title: "Standard drawer with sections",
+  lookFor: "the sheet's 360 dp width, the section rows and their chevrons",
+  expected: "rows at the density height; the chevron's ink ends on the badge text's 24 dp line",
+  measure: () => {
+    const root = host();
+    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
+    const header = shadow.querySelector('[data-id="labels"]') ;
+    const chevron = header?.querySelector(".mtrl-drawer__item-chevron") ;
+    const svg = chevron?.querySelector("svg") ;
+    const path = svg?.querySelector("path") ;
+    if (!header || !chevron || !path) return "open the section to measure";
+    const ib = header.getBoundingClientRect();
+    const cb = chevron.getBoundingClientRect();
+    const bbox = path.getBBox();
+    const screenX = (x) => { const p = svg.createSVGPoint(); p.x = x; p.y = bbox.y + bbox.height / 2; return p.matrixTransform(path.getScreenCTM()).x; };
+    const inkEnd = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
+    return `item h ${ib.height.toFixed(0)} · chevron box end inset ${(ib.right - cb.right).toFixed(1)} (ink 24) · ink end inset ${(ib.right - inkEnd).toFixed(1)}`;
+  },
+  mount: (body) => { const row = document.createElement("div"); body.append(row); render = () => { row.innerHTML = ""; mountFactory(row); }; render(); },
+});
+
+const states = section(host(), "States");
+scenario(states, {
+  title: "Parent cue and selected pill",
+  lookFor: "the Labels header keeps a faint persistent layer while its child Family is selected",
+  expected: "the header shows the hover-opacity state layer, no pill, no bold; the child carries the pill",
+  measure: () => {
+    const root = host();
+    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
+    const header = shadow?.querySelector('[data-id="labels"]') ;
+    const indicator = header?.querySelector(".mtrl-drawer__active-indicator") ;
+    if (!indicator) return "open the section to measure";
+    return `cue layer opacity ${getComputedStyle(indicator, "::after").opacity} · pill opacity ${getComputedStyle(indicator, "::before").opacity}`;
+  },
+  mount: () => {},
+});
+
+const interaction = section(host(), "Interaction");
+scenario(interaction, {
+  title: "Section open/close next to the menu",
+  lookFor: "the rows scale from their top edge with a fade, the same motion as the menu",
+  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse",
+  mount: (body) => {
+    const row = document.createElement("div");
+    row.className = "tp-row";
+    const drawerBox = document.createElement("div");
+    drawerBox.style.width = "360px";
+    const menuBox = document.createElement("div");
+    row.append(drawerBox, menuBox);
+    body.append(row);
+    render = () => { drawerBox.innerHTML = ""; mountFactory(drawerBox); };
+    render();
+    mountMenu(menuBox);
+  },
+});
+
+const edge = section(host(), "Edge cases");
+scenario(edge, {
+  title: "RTL and density",
+  lookFor: "mirrored paddings and indent; the child pill starts the indent further in",
+  expected: "child label 16 dp inside its own pill at every density and direction",
+  measure: () => {
+    const root = host();
+    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
+    const child = shadow?.querySelector('[data-id="family"]') ;
+    const label = child?.querySelector(".mtrl-drawer__item-label") ;
+    if (!child || !label) return "open the section to measure";
+    const cb = child.getBoundingClientRect();
+    const lb = label.getBoundingClientRect();
+    const rtl = document.documentElement.dir === "rtl";
+    return `child pill ${rtl ? "left" : "left"} inset ${(rtl ? cb.left - lb.left : lb.left - cb.left).toFixed(1)} · end padding ${(rtl ? lb.left - cb.left : cb.right - lb.right).toFixed(1)} · dir ${document.documentElement.dir}`;
+  },
+  mount: () => {},
+});
+</script>
+</body>
+</html>

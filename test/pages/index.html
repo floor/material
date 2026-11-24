@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Material test pages</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<main>
+<h1 style="margin:0;font-size:22px">Component test pages</h1>
+<p style="color:var(--mtrl-sys-color-on-surface-variant,#555);font-size:13px">Build first (<code>bun run build</code>) and serve (<code>bun run test:pages</code>). Every page carries the same toolbar — light/dark, RTL, density, slow motion — and the same section order.</p>
+<ul>
+<li><a href="components/split-button/">split-button</a> — sizes, both directions; the chevron's painted centre readout, closed and open</li>
+<li><a href="components/fab-menu/">fab-menu</a> — every placement; the long-list fit-then-shift readout</li>
+<li><a href="components/carousel/">carousel</a> — drag, flick, trackpad overscroll; the scroll readout with ghost lines</li>
+<li><a href="components/bottom-sheet/">bottom-sheet</a> — standard and modal; drag and settle with the state/offset/velocity readout</li>
+<li><a href="components/drawer/">drawer</a> — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu</li>
+<li><a href="components/progress/">progress</a> — buffer colour candidates, value scrubbing</li>
+<li><a href="components/slider/">slider</a> — the handle on the tick scale, pressed handle, ends readout</li>
+</ul>
+</main>
+<script type="module">
+import { initPage } from "/shared/harness.js";
+await initPage({ name: "component test pages" });
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>split-button</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createSplitButton } from "/dist/components/split-button/index.js";
+await initPage({ name: "split-button" });
+const main = document.getElementById("tp-main");
+
+const sizes = ["xs", "s", "m", "l", "xl"];
+const build = (size, dir) => {
+  const split = createSplitButton({ text: "Save", size, trailingLabel: "More" });
+  split.element.dataset.size = size;
+  split.element.dataset.dir = dir;
+  return split.element;
+};
+const mountRow = (body, dir) => {
+  const row = document.createElement("div");
+  row.className = "tp-row";
+  row.dir = dir;
+  for (const size of sizes) row.append(build(size, dir));
+  body.append(row);
+  return row;
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Sizes, both directions",
+  lookFor: "every size in LTR and RTL, the two halves as one pill",
+  expected: "the pair reads as one control; the chevron sits in the trailing half",
+  mount: (body) => { mountRow(body, "ltr"); mountRow(body, "rtl"); },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Hover, focus, pressed, disabled",
+  lookFor: "the inner corner grows on hover; the state layers do not leak across the gap",
+  expected: "the halves stay flat; no shadow floats over the neighbour",
+  mount: (body) => { mountRow(body, "ltr"); },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Open and close both halves",
+  lookFor: "the menu opens; the trailing button's corner rounds off; the chevron turns",
+  expected: "the chevron turns about its centre of mass — the painted mass stays put",
+  measure: () => {
+    const rows = [...document.querySelectorAll(".tp-row")];
+    const out = [];
+    for (const root of document.querySelectorAll(".mtrl-split-button")) {
+      const button = root.querySelector(".mtrl-split-button__trailing");
+      const svg = root.querySelector(".mtrl-split-button__chevron");
+      const path = svg?.querySelector("path");
+      if (!button || !path) continue;
+      const bb = button.getBoundingClientRect();
+      const bbox = path.getBBox();
+      const p = svg.createSVGPoint();
+      p.x = bbox.x + bbox.width / 2;
+      p.y = bbox.y + bbox.height / 2;
+      const ink = p.matrixTransform(path.getScreenCTM());
+      out.push(`${root.dataset.size}/${root.dataset.dir}: ink dx ${(ink.x - (bb.x + bb.width / 2)).toFixed(2)} dy ${(ink.y - (bb.y + bb.height / 2)).toFixed(2)}`);
+    }
+    return out.join(" · ") || rows.length + " rows mounted";
+  },
+  mount: (body) => { mountRow(body, "ltr"); },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "RTL and dark",
+  lookFor: "mirrored corners; the chevron stays centred",
+  expected: "identical centre offsets in RTL",
+  mount: (body) => { mountRow(body, "rtl"); },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>slider</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createSlider } from "/dist/components/slider/index.js";
+await initPage({ name: "slider", toolbar: { density: true } });
+const main = document.getElementById("tp-main");
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Discrete tick scale",
+  lookFor: "the handle snaps to the ticks; the value bubble follows",
+  expected: "the handle centre sits on the tick centre",
+  measure: () => {
+    const handle = document.querySelector(".mtrl-slider__handle");
+    const ticks = document.querySelector(".mtrl-slider__tick");
+    if (!handle || !ticks) return "no slider mounted";
+    return "handle and ticks mounted";
+  },
+  mount: (body) => {
+    const s = createSlider({ min: 0, max: 10, value: 4, ticks: true });
+    body.append(s.element);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Pressed and focused handle",
+  lookFor: "the pressed handle's state layer; the focus ring",
+  expected: "the layers do not clip at the track's ends",
+  mount: (body) => {
+    const s = createSlider({ min: 0, max: 10, value: 2 });
+    body.append(s.element);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Keyboard and drag",
+  lookFor: "the arrows step a tick; the drag follows the pointer",
+  expected: "the value bubble reads the same as the handle position",
+  measure: () => {
+    const handle = document.querySelector(".mtrl-slider__handle");
+    if (!handle) return "no handle";
+    const r = handle.getBoundingClientRect();
+    return `handle centre ${r.left.toFixed(1)}..${r.right.toFixed(1)} at y ${r.top.toFixed(1)}`;
+  },
+  mount: (body) => {
+    const s = createSlider({ min: 0, max: 10, value: 6 });
+    body.append(s.element);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "Ends, RTL, density",
+  lookFor: "the handle's ends reach the track's ends without clipping; RTL mirrors",
+  expected: "the |Δ| between handle centre and tick centre stays under 0.5 px",
+  measure: () => {
+    const handle = document.querySelector(".mtrl-slider__handle");
+    const track = document.querySelector(".mtrl-slider__track");
+    if (!handle || !track) return "no slider mounted";
+    const hb = handle.getBoundingClientRect();
+    const tb = track.getBoundingClientRect();
+    return `handle at ${hb.left.toFixed(1)} on track ${tb.left.toFixed(1)}..${tb.right.toFixed(1)} · dir ${document.documentElement.dir}`;
+  },
+  mount: (body) => {
+    const s = createSlider({ min: 0, max: 10, value: 10, ticks: true });
+    body.append(s.element);
+  },
+});
+</script>
+</body>
+</html>

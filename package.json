@@ -525,6 +525,7 @@
   ],
   "scripts": {
     "build": "bun run scripts/build.ts",
+    "test:pages": "bun run scripts/serve-test-pages.ts",
     "prepublishOnly": "bun run build",
     "lint": "bunx eslint src scripts --ext .ts,.tsx",
     "lint:fix": "bunx eslint src scripts --ext .ts,.tsx --fix",
