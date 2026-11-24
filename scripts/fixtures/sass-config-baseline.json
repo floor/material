@@ -203,7 +203,7 @@
     "components/progress/constants.js": "905ad87f8db1bdd9ad3ed3426ae0544eedfa43136036b9e0e31a2940462148f4",
     "components/progress/features/canvas.js": "41e65644031917c35d80c128eec7b3404a5171469f224381c03bd17141cc2e3c",
     "components/progress/features/circular.js": "1f8f479b018b238fd18be7b901c69a837d010d3f5bd53de5ae877e2d15b8879a",
-    "components/progress/features/colors.js": "bd2192b8a7f7f2b0f39bf107730f193088c553eb7084239a63e799c76c5ebe36",
+    "components/progress/features/colors.js": "d00e6d29a73c20e4033b5d4303c22d004d9bcc8da264fd551f1dbc43ab0dac27",
     "components/progress/features/linear.js": "a23be2073f7a1d89a523c2103f8a8601d6c76b5ae212764aaf97f9ea41f0d29a",
     "components/progress/features/motion.js": "3548f96bd6296d39a1be748f51d3cb25f38e28bf0c3d921f6da3699a2bcb2b16",
     "components/progress/features/state.js": "fc4baa68cd6eeff796accd28805d35cc15b2668d2bc3adc203e54f09bd00848f",
