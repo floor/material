@@ -273,7 +273,14 @@ export const withScroll = (config: CarouselConfig) =>
           const placement = placeItem(strategy, keylines!, i, scrollOffset);
           const visible = Math.max(0, Math.min(itemSize, placement.size));
           start = placement.center - itemSize / 2;
-          offscreen = placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
+          // An item past the outermost keyline is not a slot the layout
+          // describes: its size comes from extrapolation, so a layout painted
+          // against a different offset than the one it was computed for would
+          // draw it as a sliver inside the window — the collapsed comb. It is
+          // never drawn: the keyline list itself carries the peeking item, and
+          // neither is one whose visible width would round to nothing.
+          offscreen = placement.beyondList || Math.round(visible) <= 0 ||
+            placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
           inset = Math.max(0, (itemSize - visible) / 2);
           if (fadeRange > 0) fade = Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange));
         }

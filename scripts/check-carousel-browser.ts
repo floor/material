@@ -675,7 +675,16 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
         assert.equal(after.hash, "#go", `${label}, ${where}: the next click works`);
       };
       const clickLink = async (): Promise<void> => {
-        await page.evaluate(() => { window.location.hash = ""; });
+        // The link rides the first slide: bring it into the window before the
+        // click. An item outside the keyline list is not drawn, so a click on
+        // one is not a scenario a person can perform.
+        await page.evaluate(() => {
+          window.location.hash = "";
+          const host = document.querySelector("m-carousel");
+          const scope: ParentNode = host?.shadowRoot ?? document;
+          scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")?.scrollTo({ left: 0, behavior: "instant" });
+        });
+        await page.waitForTimeout(120);
         await page.locator("#drag-carousel .mtrl-carousel__button").first().click();
       };
       const movesDontScroll = async (where: string, before: DragState): Promise<void> => {
@@ -873,4 +882,69 @@ export async function checkCarouselViewportLayer(page: Page): Promise<void> {
       });
     }
   }
+}
+
+/**
+ * Past the keyline list an item has no slot: its size is extrapolation, and a
+ * layout painted against a different offset than the one it was computed for
+ * drew it as a 4-10 px sliver inside the window — the collapsed comb. Such an
+ * item is not drawn at all; the keyline list itself carries the peeking one.
+ * The stale layout is held on purpose: every item's inline layout is captured
+ * at one offset, the strip scrolls 400 px, and the captured layout is put back
+ * on every frame until the count is read.
+ */
+export async function checkCarouselSliverGuard(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.evaluate(() => {
+    document.documentElement.dir = "ltr";
+    document.body.replaceChildren();
+    const carousel = (window as unknown as CarouselWindow).createCarousel({
+      variant: "multi-browse", itemWidth: 200,
+      slides: Array.from({ length: 14 }, (_, i) => ({ title: `Slide ${i}` })),
+    });
+    carousel.element.id = "sliver-carousel";
+    carousel.element.style.cssText = "width:760px;height:240px";
+    document.body.append(carousel.element);
+  });
+  await waitFor(page, "the carousel to lay its slides out", () => {
+    const scroller = document.querySelector<HTMLElement>("#sliver-carousel .mtrl-carousel__scroller");
+    return !!scroller && scroller.scrollWidth > 760;
+  });
+  const slivers = await page.evaluate(async () => {
+    const scroller = document.querySelector<HTMLElement>("#sliver-carousel .mtrl-carousel__scroller")!;
+    const items = Array.from(scroller.querySelectorAll<HTMLElement>(".mtrl-carousel__item"));
+    const capture = (): { transform: string; clip: string; vis: string }[] =>
+      items.map((el) => ({ transform: el.style.transform, clip: el.style.clipPath, vis: el.style.visibility }));
+    scroller.scrollTo({ left: 400, behavior: "instant" });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const held = capture();
+    scroller.scrollTo({ left: 800, behavior: "instant" });
+    const restore = () => {
+      items.forEach((el, i) => { el.style.transform = held[i]!.transform; el.style.clipPath = held[i]!.clip; el.style.visibility = held[i]!.vis; });
+    };
+    await new Promise<void>((resolve) => {
+      let frames = 0;
+      const hold = () => {
+        restore();
+        if (++frames < 3) requestAnimationFrame(hold);
+        else resolve();
+      };
+      requestAnimationFrame(hold);
+    });
+    const box = scroller.getBoundingClientRect();
+    const count = items.filter((el) => {
+      const style = getComputedStyle(el);
+      if (style.visibility === "hidden" || style.display === "none") return false;
+      const r = el.getBoundingClientRect();
+      const inset = /inset\(\s*[^ ]+\s+([\d.]+)px/.exec(style.clipPath)?.[1];
+      const vis = r.width - 2 * (inset ? parseFloat(inset) : 0);
+      const x = r.x + (inset ? parseFloat(inset) : 0);
+      return x < box.right && x + vis > box.left && vis <= 14;
+    }).length;
+    scroller.scrollLeft = 0;
+    return count;
+  });
+  // At most the one peeking keyline item at an edge; before the guard the
+  // extrapolated run drew six slivers into the window.
+  assert.ok(slivers <= 1, `a stale layout draws at most one sliver (drew ${slivers})`);
 }

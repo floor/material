@@ -134,6 +134,18 @@ describe('carousel strategy', () => {
     expect(third.size).toBeLessThan(first.size);
   });
 
+  test('an item past the outermost keyline is flagged, so layout never draws its sliver', () => {
+    const scrollOffset = -snapPositionOffset(strategy, 0, 10);
+    const keylines = keylinesForScrollOffset(strategy, scrollOffset, maxScrollOffset(strategy, 10));
+    // The first item sits inside the list; an item far past the last keyline
+    // has no slot, and its size would be extrapolation (4-10 px) — the comb a
+    // stale layout used to draw.
+    const first = placeItem(strategy, keylines, 0, scrollOffset);
+    expect(first.beyondList).toBe(false);
+    const far = placeItem(strategy, keylines, 9, scrollOffset);
+    expect(far.beyondList).toBe(true);
+  });
+
   test('an invalid strategy snaps at zero', () => {
     const empty = createStrategy([], 0, 8, 16, 16);
     expect(empty.valid).toBe(false);
