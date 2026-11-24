@@ -70,7 +70,7 @@ export const withScroll = (config: CarouselConfig) =>
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
 
-    const { element, scroller, track, slideElements } = component;
+    const { element, scroller, track, layer, slideElements } = component;
     const prefix = component.getClass("carousel");
     const snapClass = `${prefix}__snap`;
     element.classList.toggle(`${prefix}--snap`, snap);
@@ -179,6 +179,22 @@ export const withScroll = (config: CarouselConfig) =>
       lastStyles = new WeakMap();
       count = slideElements.length;
       containerSize = vertical ? scroller.clientHeight : scroller.clientWidth;
+      // The item layer is the viewport: sticky-pinned at the inline start (or
+      // the top when vertical) and sized to the container, so the scroll
+      // offset never reaches an item's transform (see layout()).
+      if (vertical) {
+        layer.style.width = "100%";
+        layer.style.height = `${containerSize}px`;
+        layer.style.top = "0";
+        layer.style.left = "0";
+        layer.style.right = "";
+      } else {
+        layer.style.width = `${containerSize}px`;
+        layer.style.height = "100%";
+        layer.style.top = "0";
+        layer.style.left = rtl ? "auto" : "0";
+        layer.style.right = rtl ? "0" : "auto";
+      }
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
       if (containerSize <= 0 || count === 0) {
         strategy = null;
@@ -244,14 +260,19 @@ export const withScroll = (config: CarouselConfig) =>
 
       for (let i = 0; i < count; i++) {
         const el = slideElements[i]!;
-        let start = padding + i * unit;
+        // Uncontained items flow with the scroll; under the pinned layer the
+        // physical result of the scrolled track (start * sign - scrollLeft,
+        // i.e. (start - position) * sign) is reproduced by subtracting the
+        // logical offset. Contained items are placed in container coordinates
+        // only: the layer is already the viewport.
+        let start = isUncontained ? padding + i * unit - position : padding + i * unit;
         let inset = 0;
         let fade = 1;
         let offscreen = false;
         if (!isUncontained) {
           const placement = placeItem(strategy, keylines!, i, scrollOffset);
           const visible = Math.max(0, Math.min(itemSize, placement.size));
-          start = placement.center - itemSize / 2 + position;
+          start = placement.center - itemSize / 2;
           offscreen = placement.center + visible / 2 < -itemSize || placement.center - visible / 2 > containerSize + itemSize;
           inset = Math.max(0, (itemSize - visible) / 2);
           if (fadeRange > 0) fade = Math.min(1, Math.max(0, (visible - strategy.minItemSize) / fadeRange));

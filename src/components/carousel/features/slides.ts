@@ -14,8 +14,10 @@ export interface SlidesComponent {
   getClass: (name: string) => string;
   /** Scroll container holding the track */
   scroller: HTMLElement;
-  /** Positioned parent of the items */
+  /** Positioned parent of the items' viewport layer; holds the snap points */
   track: HTMLElement;
+  /** Viewport-sized layer the items live in, pinned by the stylesheet */
+  layer: HTMLElement;
   slides: SlidesAPI;
   slideElements: HTMLElement[];
   /** Registers the callback run when items are added or removed (the scroll feature rebuilds) */
@@ -30,6 +32,15 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
   scroller.className = `${prefix}__scroller`;
   const track = document.createElement("div");
   track.className = `${prefix}__track`;
+  // The items sit in a layer the stylesheet pins to the scroller's viewport
+  // (position: sticky, sized by the scroll feature). An item's transform is
+  // then its placement only: the scroll offset never enters it, so a painted
+  // offset the main thread has not read cannot move the strip against its
+  // keylines. The track keeps the width that gives the scroller its range and
+  // carries the snap points.
+  const layer = document.createElement("div");
+  layer.className = `${prefix}__layer`;
+  track.appendChild(layer);
   scroller.appendChild(track);
   component.element.appendChild(scroller);
 
@@ -119,10 +130,10 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
       const el = createSlideElement(slide, at);
       slideData.splice(at, 0, slide);
       if (at < slideElements.length) {
-        track.insertBefore(el, slideElements[at]!);
+        layer.insertBefore(el, slideElements[at]!);
         slideElements.splice(at, 0, el);
       } else {
-        track.appendChild(el);
+        layer.appendChild(el);
         slideElements.push(el);
       }
       changed();
@@ -130,7 +141,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     },
     removeSlide(index) {
       if (index < 0 || index >= slideElements.length) return slides;
-      track.removeChild(slideElements[index]!);
+      layer.removeChild(slideElements[index]!);
       slideElements.splice(index, 1);
       slideData.splice(index, 1);
       changed();
@@ -150,6 +161,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
 
   enhanced.scroller = scroller;
   enhanced.track = track;
+  enhanced.layer = layer;
   enhanced.slides = slides;
   enhanced.slideElements = slideElements;
   enhanced.onSlidesChanged = (handler) => {
@@ -160,7 +172,7 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
     const el = createSlideElement(slide, i);
     slideData.push(slide);
     slideElements.push(el);
-    track.appendChild(el);
+    layer.appendChild(el);
   });
   relabel();
 

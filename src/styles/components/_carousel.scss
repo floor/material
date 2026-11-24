@@ -81,6 +81,15 @@ $component: '#{base.$prefix}-carousel';
     width: 100%;
   }
 
+  // The items' viewport layer: sticky pins it to the scroller's viewport, so
+  // an item's transform is its placement and never carries the scroll offset.
+  // The component sizes it to the container and picks the pinned edge.
+  &__layer {
+    position: sticky;
+    top: 0;
+    left: 0;
+  }
+
   &__snap {
     position: absolute;
     top: 0;

@@ -803,3 +803,74 @@ const slideBoxGlobal = (page: Page): Promise<number> => page.evaluate(() => {
   const scope: ParentNode = host?.shadowRoot ?? document;
   return (scope.querySelector(".mtrl-carousel__item") as HTMLElement).getBoundingClientRect().x;
 });
+
+/**
+ * The items live in a layer the stylesheet pins to the scroller's viewport, so
+ * their transforms never carry the scroll offset: an offset the main thread has
+ * not laid out yet moves nothing. An offset written synchronously, before the
+ * scroll handler runs, leaves every item's box where it was — before the layer
+ * it moved them by the offset, the displacement the painted strip showed on a
+ * trackpad when the compositor ran ahead of the layout.
+ */
+export async function checkCarouselViewportLayer(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 800, height: 600 });
+  for (const route of ["factory", "element"] as const) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      const label = `viewport layer ${route}/${dir}`;
+      await page.evaluate(({ route, dir }) => {
+        document.documentElement.dir = dir;
+        document.body.replaceChildren();
+        if (route === "factory") {
+          const carousel = (window as unknown as CarouselWindow).createCarousel({
+            variant: "multi-browse", itemWidth: 200,
+            slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })),
+          });
+          carousel.element.id = "layer-carousel";
+          carousel.element.style.cssText = "width:760px;height:240px";
+          document.body.append(carousel.element);
+        } else {
+          const host = document.createElement("m-carousel");
+          host.id = "layer-carousel";
+          host.setAttribute("variant", "multi-browse");
+          host.setAttribute("item-width", "200");
+          host.style.cssText = "width:760px;height:240px;display:block";
+          for (let i = 0; i < 8; i++) {
+            const item = document.createElement("m-carousel-item");
+            item.setAttribute("alt", `Slide ${i}`);
+            host.append(item);
+          }
+          document.body.append(host);
+        }
+      }, { route, dir });
+      await waitFor(page, "the carousel to lay its slides out", () => {
+        const host = document.querySelector("m-carousel");
+        const scope: ParentNode = host?.shadowRoot ?? document;
+        const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+        return !!scroller && scroller.scrollWidth > 760;
+      });
+      const moved = await page.evaluate(() => {
+        const host = document.querySelector("m-carousel");
+        const scope: ParentNode = host?.shadowRoot ?? document;
+        const scroller = scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
+        const items = Array.from(scope.querySelectorAll<HTMLElement>(".mtrl-carousel__item"));
+        const before = items.map((el) => el.getBoundingClientRect().x);
+        const from = scroller.scrollLeft;
+        // Synchronous, so the scroll handler (and its layout) has not run:
+        // this is the offset the compositor paints while the DOM is behind.
+        scroller.scrollLeft = from + 120;
+        const after = items.map((el) => el.getBoundingClientRect().x);
+        scroller.scrollLeft = from;
+        return Math.max(...before.map((x, i) => Math.abs(after[i]! - x)));
+      });
+      // The layer is pinned, so the items stay put; before it they moved the
+      // full 120 px with the offset.
+      assert.ok(moved < 2, `${label}: items stay put when the offset moves (moved ${moved.toFixed(1)} px)`);
+      await waitFor(page, "the restored offset to lay out", () => {
+        const host = document.querySelector("m-carousel");
+        const scope: ParentNode = host?.shadowRoot ?? document;
+        const root = scope.querySelector<HTMLElement>(".mtrl-carousel");
+        return !root?.hasAttribute("data-settling");
+      });
+    }
+  }
+}
