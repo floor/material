@@ -17,6 +17,30 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.2] - 2026-11-24
+
+The carousel keeps its keylines through a trackpad scroll and every drag ends
+cleanly, the bottom sheet follows the drag, the split button's chevron turns
+about its own mass, the drawer's items take the diagram's padding with inset
+children and a parent cue, and the hand-written themes carry their shadow and
+scrim roles.
+
+### Fixed
+
+- **Bottom sheet drag.** The sheet follows the pointer in both directions and settles from the speed at the end of the drag, including when the pointer events are sparse. A release that the handle misses settles on the nearest anchor — which can be hidden when the sheet was dragged most of the way down — rather than flicking or sticking. The change between the peek height and the full height animates from where the finger let go.
+- **Bottom sheet edge.** The sheet-coloured shadow paints over the elevation, so the opening spring does not show the bottom edge.
+- **Carousel mouse drag.** Every way a drag stops now ends it: a context menu over a slide releases the pointer capture without a cancel event, a release outside the scroller never arrived, and the drag lived on — moving the mouse teleported the strip, the snap points stayed off and the next click was swallowed. A press no longer scrolls the carousel, links and buttons inside slides receive their clicks again, and the strip follows the pointer in both directions.
+- **Carousel strip against its keylines.** In contained carousels the items now sit in a layer pinned to the scroller's viewport, so an item's transform is its placement and never carries the scroll offset; the uncontained strip keeps moving natively with the scroller. A painted offset the main thread has not laid out yet — a Mac trackpad's momentum, the compositor ahead of the layout — no longer moves the strip, which showed as slides squeezed into slivers with a blank stretch of track.
+- **Navigation drawer item layout.** An item's padding follows the navigation drawer diagram (https://m3.material.io/components/navigation-drawer/specs): 16 dp at the start and 24 dp before its trailing content. A child item is inset 12 px and keeps that padding, and the header of a section holding the selected item keeps its hover-tone highlight.
+- **Split button chevron.** The trailing icon turns about its centre of mass. Opening the menu only rotates it, and the painted mass stays put.
+- **Theme color roles.** The hand-written themes (ocean, forest, spring, sunset, autumn) declare the shadow and scrim color roles in their light and dark blocks, as the generated themes do — a standalone theme stylesheet no longer leaves both roles empty, which dropped elevation shadows and scrim backgrounds.
+
+Release measurements: the push-to-main package job after #454
+([run 45396147403](https://github.com/floor/material/actions/runs/45396147403))
+measures **920,314 B** compressed, **5,241,852 B** unpacked and **1,302 files**,
+with **135,160 B** of gzip-compressed root JavaScript and **132,103 B** for the
+every-component scenario.
+
 ## [3.16.1] - 2026-11-23
 
 The FAB menu now uses real buttons and opens where it fits on screen, and the top app bar takes the app bar name.
@@ -7371,7 +7395,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.2...HEAD
+[3.16.2]: https://github.com/floor/material/compare/v3.16.1...v3.16.2
 [3.16.1]: https://github.com/floor/material/compare/v3.16.0...v3.16.1
 [3.16.0]: https://github.com/floor/material/compare/v3.15.3...v3.16.0
 [3.15.3]: https://github.com/floor/material/compare/v3.15.2...v3.15.3
