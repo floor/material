@@ -95,7 +95,49 @@ try {
     }
   }
   assert.deepEqual(errors, [], "no page errors");
-  console.log("theme roles: shadow and scrim declared and painting in all six themes, light and dark");
+
+  // The standalone path: a consumer loading one packed per-theme file gets
+  // that sheet alone — the :where(:root) defaults of the base layer do not
+  // ride along, so an undeclared role is empty and every effect built from
+  // it is invalid at computed-value time. A probe element carries a
+  // box-shadow and a color-mix background built from the two roles.
+  for (const theme of ["ocean", "forest", "spring", "sunset", "autumn"] as const) {
+    const sheet = compile(`themes/${theme}`);
+    for (const mode of ["light", "dark"] as const) {
+      const state = await page.evaluate(({ theme, mode, sheet }) => {
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        // The full-sheet style element from the shared-sheet phase goes too:
+        // a standalone consumer loads nothing else.
+        document.getElementById("themes")?.remove();
+        let style = document.getElementById("standalone");
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "standalone";
+          document.head.append(style);
+        }
+        style.textContent = sheet;
+        const probe = document.createElement("div");
+        probe.style.cssText = "position:absolute;top:-9999px;box-shadow:0 4px 8px var(--mtrl-sys-color-shadow);background:color-mix(in srgb, var(--mtrl-sys-color-scrim) 60%, transparent)";
+        document.body.append(probe);
+        const rootStyle = getComputedStyle(document.documentElement);
+        const result = {
+          shadow: rootStyle.getPropertyValue("--mtrl-sys-color-shadow").trim(),
+          scrim: rootStyle.getPropertyValue("--mtrl-sys-color-scrim").trim(),
+          box: getComputedStyle(probe).boxShadow,
+          mixed: getComputedStyle(probe).backgroundColor,
+        };
+        probe.remove();
+        return result;
+      }, { theme, mode, sheet });
+      const label = `${theme}/${mode} standalone`;
+      assert.equal(state.shadow, "#000000", `${label}: --mtrl-sys-color-shadow is "${state.shadow}"`);
+      assert.equal(state.scrim, "#000000", `${label}: --mtrl-sys-color-scrim is "${state.scrim}"`);
+      assert.notEqual(state.box, "none", `${label}: the probe's box-shadow paints`);
+      assert.ok(!/rgba\(0, 0, 0, 0\)|transparent/.test(state.mixed), `${label}: the color-mix scrim paints (${state.mixed})`);
+    }
+  }
+  console.log("theme roles: shadow and scrim declared and painting in all six themes, light and dark, full sheet and standalone");
 } finally {
   await browser.close();
   server.stop(true);
