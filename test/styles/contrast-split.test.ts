@@ -277,7 +277,7 @@ describe("explicit contrast levels are opt-in", () => {
     // The drawer's active pill and hover/focus/pressed state layer are painted
     // by the active indicator's `::before` and `::after`, which the
     // reduced-motion switch also reaches, so the item keeps its 48dp touch
-    // target unclipped (styles/components/_drawer.scss) and the section open/close and the sub items' grow/shrink take the menu's timing (duration-medium1 + easing-emphasized; +99 B).
+    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B total).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -347,8 +347,8 @@ describe("explicit contrast levels are opt-in", () => {
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b63440229050d808e94068c10c9b616574f7a76d7b2fdbdc3a287daf86762bd5",
-      length: 553267,
+      sha256: "f9522934a7e8ac7b1ff4052a4c5c832809f7f9e5af4eb80a97623285056eba37",
+      length: 553333,
     });
   });
 

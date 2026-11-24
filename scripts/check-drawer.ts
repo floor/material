@@ -106,11 +106,10 @@ try {
     variant: 'standard', open: true,
     items: [{ type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family' }, { id: 'work', label: 'Work' }] }],
   }));
-  const childMotion = await page.locator('.mtrl-drawer__group .mtrl-drawer__item--child').first().evaluate(el => ({
+  const revealMotion = await page.locator('.mtrl-drawer__group-items-inner').first().evaluate(el => ({
     duration: getComputedStyle(el).transitionDuration,
-    height: getComputedStyle(el).height,
   }));
-  assert.equal(childMotion.duration.split(', ')[0], '0s', `A sub item still grows under reduced motion: ${childMotion.duration}`);
+  assert.equal(revealMotion.duration.split(', ')[0], '0s', `The section reveal still animates under reduced motion: ${revealMotion.duration}`);
   await page.click('#outside');
   assert.equal(await page.locator('#outside').evaluate(el => el === document.activeElement), true);
   await page.evaluate(() => window.mountDrawer({ variant: 'modal' }));
@@ -382,39 +381,44 @@ try {
   }));
   await motionPage.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
   const timing = await motionPage.evaluate(() => {
-    const item = document.querySelector('.mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__item--child') as HTMLElement;
+    const inner = document.querySelector('.mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__group-items-inner') as HTMLElement;
     const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
-    const itemStyle = getComputedStyle(item);
+    const innerStyle = getComputedStyle(inner);
     const panelStyle = getComputedStyle(panel);
     const chevronStyle = getComputedStyle(document.querySelector('[data-id="labels"] .mtrl-drawer__item-chevron')!);
     return {
-      itemHeight: itemStyle.height,
-      itemTransition: itemStyle.transitionProperty,
-      itemDuration: itemStyle.transitionDuration,
-      itemEasing: itemStyle.transitionTimingFunction,
+      closedTransform: innerStyle.transform,
+      closedOpacity: innerStyle.opacity,
+      innerTransition: innerStyle.transitionProperty,
+      innerDuration: innerStyle.transitionDuration,
+      innerEasing: innerStyle.transitionTimingFunction,
       panelDuration: panelStyle.transitionDuration,
       chevronDuration: chevronStyle.transitionDuration,
       chevronEasing: chevronStyle.transitionTimingFunction,
     };
   });
-  assert.equal(timing.itemHeight, '0px', 'a closed sub item holds height 0');
-  assert.ok(timing.itemTransition.includes('height') && timing.itemTransition.includes('opacity'),
-    `sub items transition height and opacity: ${timing.itemTransition}`);
-  assert.equal(timing.itemDuration.split(', ')[0], '0.25s', `sub items take the menu's duration-medium1: ${timing.itemDuration}`);
-  assert.ok(timing.itemEasing.startsWith('cubic-bezier(0.3, 0, 0, 1)'), `sub items take the menu's emphasized curve: ${timing.itemEasing}`);
-  assert.equal(timing.panelDuration.split(', ')[0], '0.25s', `the panel opens on the menu's duration: ${timing.panelDuration}`);
+  // The menu's mechanism, shared through the mixin: closed, the container
+  // holds scaleY(0) and opacity 0 from its top-centre origin.
+  assert.equal(timing.closedTransform, 'matrix(1, 0, 0, 0, 0, 0)', `a closed section holds the menu's scaleY(0): ${timing.closedTransform}`);
+  assert.equal(timing.closedOpacity, '0', 'a closed section holds opacity 0');
+  assert.ok(timing.innerTransition.includes('transform') && timing.innerTransition.includes('opacity'),
+    `the container transitions transform and opacity: ${timing.innerTransition}`);
+  assert.equal(timing.innerDuration.split(', ')[0], '0.25s', `the container takes the menu's duration-medium1: ${timing.innerDuration}`);
+  assert.ok(timing.innerEasing.startsWith('cubic-bezier(0.3, 0, 0, 1)'), `the container takes the menu's emphasized curve: ${timing.innerEasing}`);
+  assert.equal(timing.panelDuration.split(', ')[0], '0.25s', `the panel pushes the content below on the menu's duration: ${timing.panelDuration}`);
   assert.equal(timing.chevronDuration, '0.25s', `the chevron turns on the same duration: ${timing.chevronDuration}`);
   assert.equal(timing.chevronEasing, 'cubic-bezier(0.3, 0, 0, 1)', `the chevron turns on the emphasized curve: ${timing.chevronEasing}`);
   const frames = await motionPage.evaluate(async () => {
-    const rows: Array<{ t: number; panel: number; itemH: number; op: number }> = [];
+    const rows: Array<{ t: number; panel: number; innerH: number; scale: number; op: number }> = [];
     document.querySelector('[data-id="labels"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
-    const item = panel.querySelector('.mtrl-drawer__item--child') as HTMLElement;
+    const inner = panel.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
     const start = performance.now();
     await new Promise<void>((done) => {
       const tick = () => {
         const t = performance.now() - start;
-        rows.push({ t, panel: panel.getBoundingClientRect().height, itemH: item.getBoundingClientRect().height, op: parseFloat(getComputedStyle(item).opacity) });
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(inner).transform);
+        rows.push({ t, panel: panel.getBoundingClientRect().height, innerH: inner.getBoundingClientRect().height, scale: matrix.d, op: parseFloat(getComputedStyle(inner).opacity) });
         if (t < 450) requestAnimationFrame(tick); else done();
       };
       requestAnimationFrame(tick);
@@ -422,15 +426,22 @@ try {
     return rows;
   });
   assert.ok(frames.length >= 8, `the open was sampled per frame (${frames.length} frames)`);
-  assert.ok(frames[0]!.itemH < 12, `the sub item starts growing from near 0 (${frames[0]!.itemH.toFixed(1)})`);
-  assert.equal(Math.round(frames[frames.length - 1]!.itemH), 56, 'the sub item reaches its full height');
-  assert.ok(frames[frames.length - 1]!.op > 0.95, 'the sub item fades in to full opacity');
+  assert.ok(frames[0]!.innerH < 20, `the container starts growing from near 0 (${frames[0]!.innerH.toFixed(1)})`);
+  assert.equal(Math.round(frames[frames.length - 1]!.innerH), 112, 'the container reaches its full height (two 56dp rows)');
+  assert.ok(frames[frames.length - 1]!.op > 0.95, 'the container fades in to full opacity');
+  // The menu's coupling: opacity rides the scale fraction on every frame.
+  const coupled = frames.every(f => Math.abs(f.op - f.scale) <= 0.01);
+  assert.ok(coupled, 'opacity rides the scale fraction on every frame, as the menu reads');
+  // The grid row below pushes on the same curve: the panel height fraction
+  // matches the container's scale fraction.
+  const pushed = frames.every(f => Math.abs(f.panel / 112 - f.scale) <= 0.03);
+  assert.ok(pushed, 'the panel height follows the same curve as the reveal');
   const maxPanel = Math.max(...frames.map(f => f.panel));
   assert.ok(maxPanel <= 112.5, `no spring overshoot on the panel height (max ${maxPanel.toFixed(1)})`);
   const at100 = frames.find(f => f.t >= 100)!;
-  assert.ok(at100.itemH > 28, `the emphasized curve starts fast: past half at ~100ms of 250 (${at100.itemH.toFixed(1)})`);
+  assert.ok(at100.scale > 0.5, `the emphasized curve starts fast: past half at ~100ms of 250 (scale ${at100.scale.toFixed(2)})`);
   const at250 = frames.find(f => f.t >= 250)!;
-  assert.ok(at250.itemH > 54, `the item is settled at 250ms like the menu (${at250.itemH.toFixed(1)})`);
+  assert.ok(at250.scale > 0.96, `the reveal is settled at 250ms like the menu (scale ${at250.scale.toFixed(2)})`);
   await motionPage.close();
 
   // ========================================================================
@@ -558,6 +569,8 @@ try {
     await containment.focus();
     await page.keyboard.press("ArrowRight");
     assert.equal(await containment.getAttribute("aria-expanded"), "true");
+    // The reveal runs 250ms; the child row becomes focusable as it opens.
+    await page.waitForTimeout(300);
     await page.keyboard.press("ArrowRight");
     const card = sheet.getByRole("link", { name: "Card" });
     assert.equal(await card.evaluate(node => node.matches(":focus")), true);
