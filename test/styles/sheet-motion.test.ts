@@ -159,7 +159,7 @@ describe('side sheet', () => {
 describe('bottom sheet', () => {
   test('shows on the spatial spring in either open state and hides on fast effects', () => {
     for (const state of ['partial', 'expanded']) {
-      expect(value('bottom-sheet', `.mtrl-bottom-sheet--${state} .mtrl-bottom-sheet__container`, 'transition')).toBe(on('transform', 'default-spatial'));
+      expect(value('bottom-sheet', `.mtrl-bottom-sheet--${state} .mtrl-bottom-sheet__container`, 'transition')).toBe(`${on('transform', 'default-spatial')}, ${on('max-height', 'default-spatial')}`);
       expect(value('bottom-sheet', `.mtrl-bottom-sheet--${state} .mtrl-bottom-sheet__scrim`, 'transition')).toBe(`${on('opacity', 'default-effects')}, visibility 0s`);
     }
     expect(value('bottom-sheet', '.mtrl-bottom-sheet__container', 'transition')).toBe(on('transform', 'fast-effects'));
