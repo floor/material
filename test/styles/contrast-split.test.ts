@@ -343,8 +343,8 @@ describe("explicit contrast levels are opt-in", () => {
     // shadow is listed ahead of the elevation
     // (styles/components/_bottom-sheet.scss; +378 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "96e673e277ca1e75f7830882ec3eabf72f892b43cdd74f918d1147cc43c79e2b",
-      length: 552927,
+      sha256: "57b004fbe52396b1c9010060d0d3e25f8e4722fa0c7dcf91ac4a626944989971",
+      length: 553577,
     });
   });
 
