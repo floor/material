@@ -49,13 +49,12 @@ $component: "#{$prefix}-menu";
     // from, on the same duration and curve. The reveal's transform, origin,
     // opacity and timing are the shared mixin (abstract/_mixins.scss) the
     // drawer's sections use too, so the two cannot drift.
-    @include m.reveal-motion;
+    @include m.reveal-motion($withVisibility: true);
     pointer-events: none;
     // Closed, the menu is out of the tab order and the accessibility tree: an
     // <m-menu> keeps its closed menu in its shadow root, where its first item
     // was a tab stop. A transition keeps it visible while it moves either way.
     visibility: hidden;
-    transition: visibility v.motion("duration-medium1");
 
     // A top-layer menu is a popover (`layer: "top"`). The browser's popover
     // defaults centre it in the viewport inside a border; the menu places
@@ -643,10 +642,13 @@ $component: "#{$prefix}-menu";
     // This is the expressive active state the spec describes.
     // -------------------------------------------------------------------------
     &--vertical {
+        // The same runtime duration the shared reveal reads, so a page can
+        // slow the vertical variant without a rebuild.
+        $reveal-duration: var(--#{base.$prefix}-sys-motion-duration-medium1, #{v.motion('duration-medium1')});
         transition:
-            transform v.motion("duration-medium1") v.motion("easing-emphasized"),
-            opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
-            visibility v.motion("duration-medium1"),
+            transform $reveal-duration v.motion("easing-emphasized"),
+            opacity $reveal-duration v.motion("easing-emphasized"),
+            visibility $reveal-duration,
             border-radius v.motion("spring-fast-spatial-duration")
                 v.motion("spring-fast-spatial-easing");
 
