@@ -57,11 +57,11 @@ export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, soli
 // The readable, comment-stripped dist: at the 865,000 ceiling the package job
 // measured 863,703 B packed (1,297 B spare) where the base packed 882,799, as
 // 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
-// The carousel viewport layer, then the review fixes (outside release, uncontained space): 920,358 B packed with Node 22.23.3 / npm 10.9.9 in CI 45375536439.
-// Owner decision 2026-11-24: 920,360, the next 10 B. It follows
+// The carousel viewport layer, then the review fixes (outside release, uncontained space, the release's own pointer): 920,429 B packed with Node 22.23.3 / npm 10.9.9 in CI 45379802301.
+// Owner decision 2026-11-24: 920,430, the next 10 B. It follows
 // The bottom sheet drag: 920,016 B packed with Node 22.23.5 / npm 10.9.11.
 // Owner decision 2026-11-24: 920,020, the next 10 B.
-export const TARBALL_BYTES = 920_360;
+export const TARBALL_BYTES = 920_430;
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts. The lean listbox entry's six
