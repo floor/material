@@ -244,7 +244,11 @@ export const withTracks =
     // except at a short end.
     const width = lengthOf(container.getBoundingClientRect(), axis) || 0;
     const corner = getExternalTrackRadius(size);
-    const inset = config.ticks ? corner : 0;
+    // The pieces are split around the handle where it is drawn: the handle keeps
+    // the corner inset at both ends whether the slider is continuous or has
+    // ticks, so the gaps and the mask follow that scale too. The pointer still
+    // maps across the whole track (getValueFromPosition).
+    const inset = corner;
     const fraction = (value: number) => fractionOf(value, state.min, state.max);
     // trackPosition, as a fraction plus pixels. The inset stays on at the ends,
     // so a segment that follows the handle stops on the same centre as the tick.
@@ -306,21 +310,16 @@ export const withTracks =
     }
     // A standard slider has no inactive piece at the start of the track.
     const standard = !config.centered && !(config.range && state.secondValue !== null);
-    // A discrete slider's pieces stop at the end ticks. Compose's drawTrack keeps
-    // its corner threshold for the ends whenever the slider has tick fractions,
-    // even where short pieces are otherwise kept: a piece that would only fill the
-    // inset before the first tick or after the last one is dropped, so the end tick
-    // is the track's visual end (Slider.kt drawTrack,
-    // `tickFractions.isNotEmpty()`). A continuous track has no ticks to stop at:
-    // its end pieces keep their ends, and a piece shorter than the corner radius
-    // has its radii scaled to fit (as Skia's RoundRect does), so no end has to be
-    // dropped to avoid a sliver.
-    if (config.ticks) {
-      parts.forEach((part) => {
-        if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
-        else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
-      });
-    }
+    // The pieces stop at the ends' inset. Compose's drawTrack keeps a corner
+    // threshold for the ends (Slider.kt drawTrack): a piece that would only fill
+    // the inset before the first tick or after the last one is dropped, so an end
+    // of track is the visual end. The threshold holds for every slider here,
+    // because the handle keeps that inset whether or not there are ticks — a
+    // stub beyond a handle at the maximum would otherwise hang past it.
+    parts.forEach((part) => {
+      if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
+      else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
+    });
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);

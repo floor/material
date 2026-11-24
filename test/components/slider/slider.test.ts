@@ -543,9 +543,9 @@ describe('slider track geometry', () => {
     const slider = createSlider({ value: 40 });
     const [, active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment'));
     expect(active!.style.left).toBe('0px');
-    expect(active!.style.width).toBe('calc(40% - 8px)');
-    expect(inactive!.style.left).toBe('calc(40% + 8px)');
-    expect(inactive!.style.width).toBe('calc(60% - 8px)');
+    expect(active!.style.width).toBe('calc(40% - 6.4px)');
+    expect(inactive!.style.left).toBe('calc(40% + 9.6px)');
+    expect(inactive!.style.width).toBe('calc(60% - 9.6px)');
     const end = slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__dot')[1]!;
     expect(end.hidden).toBe(false);
     expect(end.style.left).toBe('calc(100% - 8px)');
@@ -582,12 +582,13 @@ describe('slider track geometry', () => {
     // because the track clipped its pieces and a rounded sliver would show; each
     // piece now carries its own corners, and the browser scales them to fit.
     const low = await sized({ value: 3 });
-    expect(segments(low)[1]!.width).toBe('calc(3% - 8px)');
+    expect(segments(low)[1]!.width).toBe('calc(3% - 0.48px)');
     // value 96: the inactive track runs 296 to 300, out to the track's end and stop.
     const high = await sized({ value: 96 });
-    expect(segments(high)[2]!.width).toBe('calc(4% - 8px)');
+    expect(segments(high)[2]!.width).toBe('calc(4% - 0.64px)');
     expect(dots(high)).toEqual([null, 'calc(100% - 8px)']);
-    // a range whose low handle sits inside its own gap still has no start piece.
+    // A range whose low handle sits inside its own gap still has no start piece:
+    // it would only fill the end's inset, so the threshold drops it.
     const range = await sized({ range: true, value: 2, secondValue: 80 });
     expect(segments(range)[0]!.width).toBe('0px');
     expect(dots(range)).toEqual([null, 'calc(100% - 8px)']);
@@ -602,9 +603,9 @@ describe('slider track geometry', () => {
   test('a range slider: active between the handles, a stop at each end', async () => {
     const slider = await sized({ range: true, value: 20, secondValue: 80 });
     expect(segments(slider)).toEqual([
-      { left: '0px', width: 'calc(20% - 8px)', active: false },
-      { left: 'calc(20% + 8px)', width: 'calc(60% - 16px)', active: true },
-      { left: 'calc(80% + 8px)', width: 'calc(20% - 8px)', active: false },
+      { left: '0px', width: 'calc(20% - 3.2px)', active: false },
+      { left: 'calc(20% + 12.8px)', width: 'calc(60% - 25.6px)', active: true },
+      { left: 'calc(80% + 3.2px)', width: 'calc(20% - 3.2px)', active: false },
     ]);
     expect(dots(slider)).toEqual(['4px', 'calc(100% - 8px)']);
   });
@@ -613,14 +614,14 @@ describe('slider track geometry', () => {
     const above = await sized({ centered: true, min: -50, max: 50, value: 25 });
     expect(segments(above)).toEqual([
       { left: '0px', width: 'calc(50% - 8px)', active: false },
-      { left: '50%', width: 'calc(25% - 8px)', active: true },
-      { left: 'calc(75% + 8px)', width: 'calc(25% - 8px)', active: false },
+      { left: '50%', width: 'calc(25% - 12px)', active: true },
+      { left: 'calc(75% + 4px)', width: 'calc(25% - 4px)', active: false },
     ]);
     expect(dots(above)).toEqual(['4px', 'calc(100% - 8px)']);
     const below = await sized({ centered: true, min: -50, max: 50, value: -25 });
     expect(segments(below)).toEqual([
-      { left: '0px', width: 'calc(25% - 8px)', active: false },
-      { left: 'calc(25% + 8px)', width: 'calc(25% - 8px)', active: true },
+      { left: '0px', width: 'calc(25% - 4px)', active: false },
+      { left: 'calc(25% + 12px)', width: 'calc(25% - 12px)', active: true },
       { left: 'calc(50% + 8px)', width: 'calc(50% - 8px)', active: false },
     ]);
   });
@@ -733,7 +734,7 @@ describe('slider inset icon', () => {
   test('moves to the inactive track when the active one is too short', async () => {
     // value 5: the handle at 15px, the inactive track from 23px.
     const slider = await sized({ size: 'M', value: 5, insetIcon: VOLUME });
-    expect(icon(slider).style.left).toBe('calc(5% + 18px)');
+    expect(icon(slider).style.left).toBe('calc(5% + 28.8px)');
     expect(icon(slider).classList.contains('mtrl-slider__inset-icon--inactive')).toBe(true);
   });
 
@@ -801,7 +802,7 @@ describe('vertical slider', () => {
 
   test('runs top to bottom with topToBottom', async () => {
     const slider = await sized({ value: 25, topToBottom: true });
-    expect(segments(slider, 'top')).toEqual([{ start: '0px', length: 'calc(25% - 8px)' }, { start: 'calc(25% + 8px)', length: 'calc(75% - 8px)' }]);
+    expect(segments(slider, 'top')).toEqual([{ start: '0px', length: 'calc(25% - 4px)' }, { start: 'calc(25% + 12px)', length: 'calc(75% - 12px)' }]);
     expect(handles(slider)[0]!.style.top).toBe('calc(25% + 4px)');
   });
 
@@ -901,8 +902,8 @@ describe('slider keys, range limits and RTL', () => {
     expect(handle.style.right).toBe('calc(25% + 4px)');
     expect(handle.style.left).toBe('auto');
     const [, active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment'));
-    expect([active!.style.right, active!.style.width, active!.style.left]).toEqual(['0px', 'calc(25% - 8px)', '']);
-    expect([inactive!.style.right, inactive!.style.width]).toEqual(['calc(25% + 8px)', 'calc(75% - 8px)']);
+    expect([active!.style.right, active!.style.width, active!.style.left]).toEqual(['0px', 'calc(25% - 4px)', '']);
+    expect([inactive!.style.right, inactive!.style.width]).toEqual(['calc(25% + 12px)', 'calc(75% - 12px)']);
   });
 
   test('in RTL ArrowRight lowers and ArrowLeft raises; ArrowUp still raises', async () => {
