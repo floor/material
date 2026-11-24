@@ -204,7 +204,14 @@ describe('dialog', () => {
 describe('the sheets keep no fixed-duration curve', () => {
   test('drawer, side sheet and bottom sheet move only on springs', () => {
     for (const name of ['drawer', 'side-sheet', 'bottom-sheet']) {
-      const transitions = Array.from(sheets[name].matchAll(/transition:\s*([^;]+);/g), (m) => m[1])
+      // The drawer's section reveal takes the menu's fixed-duration
+      // mechanism on the owner's decision (the rows scale from their top
+      // edge with a fade, PR #458); the guard covers the sheet's own
+      // movement — the sliding panel that pushes the page.
+      const scope = name === 'drawer'
+        ? [...sheets[name].matchAll(/\.mtrl-drawer__sheet\{[^}]*\}/g)].map((m) => m[0]).join('\n')
+        : sheets[name];
+      const transitions = Array.from(scope.matchAll(/transition:\s*([^;]+);/g), (m) => m[1])
         .filter((t) => /\b(transform|opacity|width|visibility)\b/.test(t));
       for (const transition of transitions) {
         expect(transition, `${name}: ${transition.slice(0, 60)}`).not.toContain('cubic-bezier');

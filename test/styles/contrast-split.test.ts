@@ -277,7 +277,7 @@ describe("explicit contrast levels are opt-in", () => {
     // The drawer's active pill and hover/focus/pressed state layer are painted
     // by the active indicator's `::before` and `::after`, which the
     // reduced-motion switch also reaches, so the item keeps its 48dp touch
-    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B) and the reveal's visibility timing moves into the shared mixin as a parameter (styles/abstract/_mixins.scss; +11 B).
+    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B) and the reveal's visibility timing moves into the shared mixin as a parameter (styles/abstract/_mixins.scss; +11 B) and the menu's visible state flips only the values (−12 B).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -347,8 +347,8 @@ describe("explicit contrast levels are opt-in", () => {
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "dfe50fd49559cad6859e3b1cff9292fc3768b8b5b5aa468a5cc3df9838e4ec77",
-      length: 553322,
+      sha256: "7b5ac41420b547f35eb2c4544ce4a0fbc2db18d6d3e9100d4d5949b9570ab72b",
+      length: 553199,
     });
   });
 

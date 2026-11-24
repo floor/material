@@ -65,9 +65,12 @@ $component: "#{$prefix}-menu";
         border: 0;
     }
 
-    // Visible state
+    // Visible state: only the values flip — the base rule's single
+    // transition carries both directions (the shared mixin holds the closed
+    // values and the timing, so the two cannot drift).
     &--visible {
-        @include m.reveal-motion($open: true);
+        transform: scaleY(1);
+        opacity: 1;
         pointer-events: auto;
         visibility: visible;
     }
