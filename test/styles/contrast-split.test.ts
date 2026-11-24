@@ -342,9 +342,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The bottom sheet's open states share the spatial spring, and the colour
     // shadow is listed ahead of the elevation
     // (styles/components/_bottom-sheet.scss; +378 B).
+    // The drawer item pads both ends 16px at the spec paddings, the parent
+    // cue keeps a persistent hover layer on the section of the selected
+    // child, and the RTL physical padding mirrors went away with the
+    // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B vs main).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "39b105e4aa512d4d689788df2bad02006d622501cdb839a0c5270fb65bbc934a",
-      length: 553622,
+      sha256: "ccbfb8d11a56ea6897ddfbc9041faf75e198854272fb671ea4b921f55bf29581",
+      length: 553145,
     });
   });
 

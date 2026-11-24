@@ -314,6 +314,10 @@ $default-width: 360px;
         flex-shrink: 0;
         height: f.density(56px, 36px);
         margin: 0 12px;
+        // The m3 diagram's item paddings, the owner's decision of
+        // 2026-11-24: 16dp from the start inside the indicator, 24dp before
+        // the trailing content at the end; the indicator itself sits 12dp
+        // from the drawer's edge.
         padding: 0 24px 0 16px;
         gap: 12px;
         border: none;
@@ -447,13 +451,11 @@ $default-width: 360px;
         &--active,
         &--active:hover:not(:is([disabled], [aria-disabled="true"])),
         &--active:focus-visible,
-        &--active:active:not(:is([disabled], [aria-disabled="true"])),
-        &--has-active:not(.#{$component}__item--expanded) {
+        &--active:active:not(:is([disabled], [aria-disabled="true"])) {
             color: t.color("on-secondary-container");
         }
 
-        &--active,
-        &--has-active:not(.#{$component}__item--expanded) {
+        &--active {
             .#{$component}__active-indicator::before {
                 opacity: 1;
                 transform: scaleX(1);
@@ -467,6 +469,21 @@ $default-width: 360px;
             .#{$component}__item-label {
                 font-weight: 700;
             }
+        }
+
+        // ======================================================================
+        // PARENT OF THE ACTIVE CHILD
+        // ======================================================================
+
+        // A section whose child is the active destination keeps a persistent
+        // state layer at the hover opacity, so the group that owns the
+        // current view stays findable while the section is open or
+        // collapsed. The child carries the active indicator: no pill here and
+        // no weight change. Hover and press still give their own feedback on
+        // top — their rules are more specific, so the pressed and focused
+        // opacities win over this floor.
+        &--has-active .#{$component}__active-indicator::after {
+            opacity: v.state("hover-state-layer-opacity");
         }
 
         // ======================================================================
@@ -507,8 +524,14 @@ $default-width: 360px;
     }
 
     &__item--child {
-        padding-inline-start: calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px));
-        padding-inline-end: 24px;
+        // The child's active indicator starts further in than the parent's,
+        // like the drawer on m3.material.io itself (measured 2026-11-24:
+        // child rows 12px deeper at the start, the pill's end unmoved). The
+        // label keeps the top-level 16dp start padding inside its own pill,
+        // so the shift is a margin, not a padding. The indent token's
+        // default reproduces the measured 12px shift.
+        margin-inline-start: calc(12px + var(--#{base.$prefix}-drawer-child-indent, 12px));
+        width: calc(100% - 24px - var(--#{base.$prefix}-drawer-child-indent, 12px));
     }
 
     &__item-chevron {
@@ -638,12 +661,11 @@ $default-width: 360px;
     // RTL — item padding direction
     // ========================================================================
 
+    // The asymmetric paddings mirror in RTL: the 24dp end padding goes to
+    // the reading direction's end side. The child indent is a logical
+    // margin and mirrors itself.
     @include m.rtl-selector('.#{$component}__item') {
         padding: 0 16px 0 24px;
-    }
-
-    @include m.rtl-selector('.#{$component}__item--child') {
-        padding: 0 calc(16px + var(--#{base.$prefix}-drawer-child-indent, 28px)) 0 24px;
     }
 
     // ========================================================================
@@ -690,8 +712,11 @@ $default-width: 360px;
         }
 
         &__item {
+            // Forced colors hide state layers, so the outline is the parent
+            // cue there: it marks the group that owns the active child, open
+            // or collapsed, as the persistent layer does in normal modes.
             &--active,
-            &--has-active:not(.#{$component}__item--expanded) {
+            &--has-active {
                 .#{$component}__active-indicator {
                     outline: 2px solid Highlight;
                     outline-offset: -2px;
