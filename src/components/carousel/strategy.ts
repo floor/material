@@ -51,8 +51,6 @@ export interface Strategy {
 export interface ItemPlacement {
   /** Visible size of the item along the axis */
   size: number;
-  /** True when the item lies past the outermost keyline: not a slot the list describes */
-  beyondList: boolean;
   /** Centre of the visible part, in container coordinates */
   center: number;
   /** Interpolated keyline the item sits on */
@@ -298,5 +296,5 @@ export const placeItem = (s: Strategy, keylines: KeylineList, index: number, scr
     // Past the outermost keylines: keep drifting with the scroll
     center += (unadjustedCenter - keyline.unadjustedOffset) / keyline.size;
   }
-  return { size: keyline.size, center, keyline, beyondList: before === after };
+  return { size: keyline.size, center, keyline };
 };
