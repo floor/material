@@ -184,11 +184,27 @@ const buildShell = (options, commit) => {
   document.body.append(bar, shell);
   drawer.setAttribute("value", current);
 
+  // The drawer component pins its width inline on the root inside the
+  // shadow; the shell's 280px column asserts itself after the upgrade so
+  // the sheet fills its column and never slides over the content.
+  requestAnimationFrame(() => {
+    const root = drawer.shadowRoot?.querySelector(".mtrl-drawer");
+    if (root) root.style.setProperty("--mtrl-drawer-width", "280px");
+  });
+
   const setDocking = () => {
     const docked = matchMedia("(min-width: 1600px)").matches;
     shell.classList.toggle("tp-docked", docked);
-    if (docked) drawer.removeAttribute("modal");
-    else drawer.setAttribute("modal", "");
+    if (docked) {
+      // Docked: the drawer holds its own column, always open.
+      drawer.removeAttribute("modal");
+      drawer.setAttribute("open", "");
+    } else {
+      // Modal below 1600px: the drawer overlays and starts closed — the
+      // app bar's menu button opens it — so the content column is clear.
+      drawer.setAttribute("modal", "");
+      drawer.removeAttribute("open");
+    }
   };
   setDocking();
   matchMedia("(min-width: 1600px)").addEventListener("change", setDocking);

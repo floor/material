@@ -2,14 +2,13 @@
 * { box-sizing: border-box; }
 body { font: 15px/1.5 system-ui; margin: 0; }
 
-.tp-shell { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 64px); }
+.tp-shell { display: grid; grid-template-columns: 96px 1fr; min-height: calc(100vh - 64px); }
 .tp-shell.tp-docked { grid-template-columns: 96px 280px 1fr; }
 .tp-shell > m-navigation-rail { grid-column: 1; position: sticky; top: 64px; height: calc(100vh - 64px); }
-.tp-shell > m-drawer { grid-column: 2; position: sticky; top: 64px; height: calc(100vh - 64px); }
+.tp-shell.tp-docked > m-drawer { grid-column: 2; position: sticky; top: 64px; height: calc(100vh - 64px); }
 .tp-shell:not(.tp-docked) > m-drawer { position: fixed; inset-inline-start: 0; top: 64px; z-index: 30; }
-.tp-shell:not(.tp-docked) > m-drawer:not([open]) { display: none; }
 
-#tp-main { grid-column: 1; padding: 16px 24px 48px; max-width: 1200px; }
+#tp-main { grid-column: 2; padding: 16px 24px 48px; max-width: 1200px; }
 .tp-docked #tp-main { grid-column: 3; }
 .tp-commit { color: var(--mtrl-sys-color-on-surface-variant, #666); font-size: 13px; margin-bottom: 8px; }
 
