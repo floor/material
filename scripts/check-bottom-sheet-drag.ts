@@ -150,7 +150,7 @@ try {
       host.shadowRoot!.append(style);
       if (open === "expanded") host.setAttribute("expanded", "");
       host.setAttribute("open", "");
-      state.sheet = { destroy: () => host.remove() };
+      state.sheet = { destroy: () => host.remove() } as Sheet;
     }, { api, variant, open });
     await frames(2);
     // A dialog enters in a later frame, so its open spring actually runs.
