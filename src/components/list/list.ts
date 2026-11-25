@@ -15,9 +15,10 @@ import type { ListComponent, ListConfig, ListItem } from "./types";
  * with Material item anatomy and built-in selection capabilities.
  *
  * `variant` is the list's style. `'standard'` (the default) is the baseline
- * list: no container, square rows in every state. `'segmented'` is the
- * expressive list: each row paints its own container colour and shape, with
- * a gap between rows; the list itself has no background and no radius.
+ * list: no container, square rows, and a selected row with 16px corners.
+ * `'segmented'` is the expressive list: each row paints its own container
+ * colour and shape, with a gap between rows; the list itself has no
+ * background and no radius.
  *
  * A segmented list reads five custom properties, named as the button's
  * `--mtrl-button-shape` and `--mtrl-button-shape-pressed`:

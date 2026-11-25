@@ -116,7 +116,7 @@ export interface ListSlot {
 export interface ListItem {
   /** Structural entries are rendered but never selectable. */
   kind?: "item" | "divider" | "subheader";
-  /** Insets a divider to the text column (72px from the leading edge). */
+  /** Insets a divider: 16px from the start, 24px from the end. */
   inset?: boolean;
   /** One headline line plus optional overline/supporting lines. Inferred when omitted. */
   lines?: 1 | 2 | 3;
