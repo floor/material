@@ -1,0 +1,20 @@
+## Cause
+
+The owner asked for the drawer sub menu to open and close like the menu, with the sub items growing and shrinking. Measured per frame on 3.16.2: the menu reveals its container with `transform: scaleY(0→1)` from `transform-origin: top center` plus an opacity fade on `duration-medium1` (250 ms) + `easing-emphasized` `cubic-bezier(0.3, 0, 0, 1)`, closing the same in reverse; the drawer's panel instead grew on the spatial spring while the sub items were static — height 56, opacity 1 at every sampled frame.
+
+## Mechanism (owner-approved)
+
+The panel's height IS the reveal: `grid-template-rows 0fr↔1fr` on `duration-medium1` + `easing-emphasized` (no spring) — the content below moves with the same curve the menu draws — and the rows **fade with it, keeping their full height inside the panel while the panel clips them**. The visible height therefore follows the menu's curve exactly; a scale on the inner compounded with the panel's clip (Orion measured the visible content at 61.5% while the panel was at the menu's 78.4%, because the interpolated fr track resolves the inner's box as the eased fraction squared) and was removed.
+
+The panel's visibility flips visible at once on expansion (a row is focusable the instant its section opens) and the collapse delays the flip by the same duration so the shrink is seen. An expanded header keeps a 1 px space over its panel (the header's cue no longer touches the first child's pill). The chevron turns on the same duration and curve. Reduced motion: instant. No new API.
+
+## Check
+
+`scripts/check-drawer.ts`: per-frame panel height (fraction per frame, no overshoot, fast start, settled at 250 ms), the fade riding the same curve, the rows never squishing, the painted bottom edge probed with `elementFromPoint` on every sampled frame (the rows paint to the panel's visible bottom — the menu's fraction), the keyboard focus transfer back-to-back on a motion-enabled page and immediately on a reduced-motion page from a fully closed panel, the sheet-motion guard (whitespace-tolerant, covers the sheet's opening and closing transform and the standard root's width), and the reduced-motion instant open. Fails on main-equivalent trees; green here.
+
+m3.material.io/components/menu guidelines, read 2026-11-24.
+
+- The owner comparison (the section-reveal scenario with the live fractions readout and the shared slow-motion switch) will be on #460's drawer page, `test/pages/components/drawer/`; that page is pending, so this PR ships without an owner page of its own.
+
+**Agent:** GLM 5.3 · implementer
+
