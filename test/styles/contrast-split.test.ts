@@ -277,7 +277,7 @@ describe("explicit contrast levels are opt-in", () => {
     // The drawer's active pill and hover/focus/pressed state layer are painted
     // by the active indicator's `::before` and `::after`, which the
     // reduced-motion switch also reaches, so the item keeps its 48dp touch
-    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B) and the reveal's visibility timing moves into the shared mixin as a parameter (styles/abstract/_mixins.scss; +11 B) and the menu's visible state flips only the values (−12 B).
+    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B) and the reveal's visibility timing moves into the shared mixin as a parameter (styles/abstract/_mixins.scss; +11 B) and the menu's visible state flips only the values (−12 B) and the section reveal de-compounds — the panel's height is the reveal and the rows fade without scaling (−164 B).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -347,8 +347,8 @@ describe("explicit contrast levels are opt-in", () => {
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "a47c4b19f6a4c8471e5c985409afbc9cc86ba412cc885cc59370cb10f9975761",
-      length: 553269,
+      sha256: "eb31bdaa1d3e2039cdbe793b8ae0c85cf25bd4a6e89c410ba564c8dc51ffb63b",
+      length: 553035,
     });
   });
 
