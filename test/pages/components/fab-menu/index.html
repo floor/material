@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>fab-menu</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createFabMenu } from "/dist/components/fab-menu/index.js";
+await initPage({ name: "fab-menu", toolbar: { density: true } });
+const main = document.getElementById("tp-main");
+
+const placements = ["bottom-end", "bottom-start", "none"];
+const items = Array.from({ length: 6 }, (_, i) => ({ id: `i${i}`, text: `Action ${i + 1}` }));
+const longItems = items;
+/** The interaction scenario's own long-list menu; the edge case keeps its own. */
+let interactionMenu = null;
+const mount = (body, placement, longList, presentation) => {
+  const box = document.createElement("div");
+  box.style.cssText = "position:relative;padding:24px;min-height:200px;display:flex;align-items:flex-end;justify-content:flex-end";
+  body.append(box);
+  const menu = createFabMenu({
+    icon: "<svg viewBox='0 0 24 24' width='24' height='24' fill='currentColor'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>",
+    ariaLabel: `FAB menu, ${placement}`,
+    placement,
+    items: longList ? longItems : items.slice(0, 3),
+    ...(presentation ? { presentation } : {}),
+  });
+  // The factory's element carries the FAB and the menu: mount it as-is.
+  box.append(menu.element);
+  return menu;
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Every placement",
+  lookFor: "the menu opens on the FAB's placement side, inside the window",
+  expected: "no placement crosses the viewport edge",
+  mount: (body) => { for (const p of placements) mount(body, p, false); },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Hover, focus, disabled items",
+  lookFor: "state layers on items; a disabled item does not react",
+  expected: "the disabled item keeps its opacity and skips focus",
+  mount: (body) => { mount(body, "top-end", false); },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Long list: fit then shift",
+  lookFor: "the menu fits the window; when it cannot, it shifts just enough",
+  expected: "the shift readout shows the correction the list consumed",
+  measure: () => {
+    const root = interactionMenu?.element;
+    const list = root?.querySelector(".mtrl-fab-menu__list");
+    if (!root || !list) return "open the long-list FAB menu to measure";
+    const r = list.getBoundingClientRect();
+    if (r.width === 0) return "press the FAB above to open the long list and measure it";
+    return `list ${r.width.toFixed(0)}x${r.height.toFixed(0)} at ${r.left.toFixed(0)},${r.top.toFixed(0)} · shift var ${getComputedStyle(list).translate}`;
+  },
+  mount: (body) => { interactionMenu = mount(body, "bottom-end", true, "list"); },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "RTL and dark",
+  lookFor: "mirrored placement; the same fit-then-shift behaviour",
+  expected: "identical corrections mirrored",
+  mount: (body) => { mount(body, "top-start", true, "list"); },
+});
+</script>
+</body>
+</html>

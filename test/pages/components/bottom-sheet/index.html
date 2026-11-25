@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>bottom-sheet</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createBottomSheet } from "/dist/components/bottom-sheet/index.js";
+await initPage({ name: "bottom-sheet", toolbar: { density: true } });
+const main = document.getElementById("tp-main");
+
+const mounts = [];
+const mount = (body, variant) => {
+  const box = document.createElement("div");
+  box.style.cssText = "position:relative;height:420px;overflow:hidden";
+  const opener = document.createElement("button");
+  opener.textContent = variant === "modal" ? "Open modal sheet" : "Open standard sheet";
+  box.append(opener);
+  body.append(box);
+  const sheet = createBottomSheet({ variant, content: "Drag the handle — the sheet settles on the nearest anchor from the release speed." });
+  sheet.element.style.position = "absolute";
+  box.append(sheet.element);
+  opener.addEventListener("click", () => sheet.open());
+  mounts.push(sheet);
+  return sheet;
+};
+
+const variants = section(main, "Variants & sizes");
+let interactionSheet = null;
+scenario(variants, {
+  title: "Standard and modal",
+  lookFor: "the peek height; the modal's scrim",
+  expected: "both open to the peek and drag to full",
+  mount: (body) => {
+    interactionSheet = mount(body, "standard");
+    mount(body, "modal");
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Peek, full, hidden",
+  lookFor: "the label under each sheet tracks its state",
+  expected: "state names match the geometry",
+  measure: () => {
+    return mounts.map((sheet, i) => `#${i} ${sheet.getState()}`).join(" · ") || "no sheets";
+  },
+  mount: () => {},
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Drag and settle",
+  lookFor: "the sheet follows the pointer and settles from the release speed",
+  expected: "settles on the nearest anchor; a release between anchors never sticks",
+  measure: () => {
+    if (!interactionSheet) return "no sheet mounted";
+    const r = interactionSheet.element.getBoundingClientRect();
+    return `state ${interactionSheet.getState()} · offset ${r.top.toFixed(1)}px · height ${r.height.toFixed(0)}px`;
+  },
+  mount: (body) => { interactionSheet = mount(body, "standard"); },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "RTL, dark, sparse events",
+  lookFor: "the drag mirrors; sparse pointer events still settle",
+  expected: "no stuck sheet in either direction",
+  mount: (body) => { mount(body, "modal"); },
+});
+</script>
+</body>
+</html>

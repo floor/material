@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>zoom</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/shared/harness.css">
+<style>
+  /* The container the owner asked for: CSS zoom, not density. */
+  .zp-preview { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; padding: 16px; border: 1px dashed var(--md-sys-color-outline, #79747e); }
+  .zp-cell { display: grid; gap: 6px; justify-items: start; }
+  .zp-cell > span { font: 11px/1.4 monospace; opacity: .7; }
+  .zp-controls { display: flex; gap: 8px; align-items: center; margin: 8px 0 16px; }
+  .zp-controls output { font: 12px/1.4 monospace; }
+  /* An anchored menu/tooltip/dialog's surface lives outside the container:
+     the dashed box shows where the zoomed box ends. */
+  .zp-anchor { position: relative; }
+</style>
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "/shared/harness.js";
+import { createButton } from "/dist/components/button/index.js";
+import { createIconButton } from "/dist/components/icon-button/index.js";
+import { createFab } from "/dist/components/fab/index.js";
+import { createSwitch } from "/dist/components/switch/index.js";
+import { createCheckbox } from "/dist/components/checkbox/index.js";
+import { createSlider } from "/dist/components/slider/index.js";
+import { createTextField } from "/dist/components/text-field/index.js";
+import { createSelect } from "/dist/components/select/index.js";
+import { createMenu } from "/dist/components/menu/index.js";
+import { createTooltip } from "/dist/components/tooltip/index.js";
+import { createCarousel } from "/dist/components/carousel/index.js";
+import { createDialog } from "/dist/components/dialog/index.js";
+import { createSnackbar } from "/dist/components/snackbar/index.js";
+import createTabs from "/dist/components/tabs/index.js";
+await initPage({ name: "slider" });
+const main = document.getElementById("tp-main");
+
+const ZOOMS = [1, 0.85, 0.7, 0.5];
+const slides = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+  image: `/components/carousel/slides/slide-${((n - 1) % 6) + 1}.svg`,
+  alt: `Landscape ${n}`,
+  title: `Landscape ${n}`,
+}));
+
+/** One zoomed preview: every component the owner listed, inside one box. */
+const preview = (parent, zoom) => {
+  const box = document.createElement("div");
+  box.className = "zp-preview";
+  box.style.zoom = String(zoom);
+  box.dataset.zoom = String(zoom);
+  box.style.width = `${Math.round(900 / zoom)}px`;
+  parent.append(box);
+  const cell = (label, element, extra = {}) => {
+    const wrap = document.createElement("div");
+    wrap.className = "zp-cell";
+    const name = document.createElement("span");
+    name.textContent = label;
+    wrap.append(element, name);
+    if (extra.height) wrap.style.height = extra.height;
+    box.append(wrap);
+    return wrap;
+  };
+
+  const button = createButton({ label: "Button" });
+  cell("button", button.element);
+
+  const iconButton = createIconButton({ icon: "favorite", label: "Favourite" });
+  cell("icon button", iconButton.element);
+
+  const fab = createFab({ icon: "add", label: "Add" });
+  cell("fab", fab.element);
+
+  const badges = document.createElement("div");
+  badges.style.cssText = "display:flex;gap:12px;align-items:center";
+  const chipLabel = document.createElement("span");
+  chipLabel.textContent = "assist chip";
+  badges.append(createButton({ label: "Filter", variant: "tonal" }).element);
+  cell("chips (tonal buttons here)", badges);
+
+  const switchEl = createSwitch({ label: "Switch" });
+  cell("switch", switchEl.element);
+
+  const checkbox = createCheckbox({ label: "Checkbox" });
+  cell("checkbox", checkbox.element);
+
+  const slider = createSlider({ value: 40, label: "Volume" });
+  slider.element.style.width = "220px";
+  cell("slider", slider.element);
+
+  const field = createTextField({ label: "Text field" });
+  field.element.style.width = "200px";
+  cell("text field", field.element);
+
+  const select = createSelect({ label: "Select", options: ["One", "Two", "Three"] });
+  select.element.style.width = "200px";
+  cell("select", select.element);
+
+  const opener = createButton({ label: "Open menu" });
+  const menu = createMenu({ opener: opener.element, items: [{ text: "One" }, { text: "Two" }] });
+  opener.element.addEventListener("click", () => menu.open(opener.element));
+  cell("menu (click)", opener.element);
+
+  const tipTarget = createIconButton({ icon: "info", label: "Info" });
+  const tooltip = createTooltip({ text: "A tooltip" });
+  tooltip.setTarget(tipTarget.element);
+  cell("tooltip (hover)", tipTarget.element);
+
+  const tabsHost = document.createElement("div");
+  const tabs = createTabs({ tabs: [{ label: "One" }, { label: "Two" }, { label: "Three" }] });
+  tabsHost.append(tabs.element);
+  cell("tabs", tabsHost);
+
+  const carousel = createCarousel({ variant: "multi-browse", gap: 8, padding: 16, slides });
+  const carouselBox = document.createElement("div");
+  carouselBox.style.cssText = "width:520px;height:180px";
+  carouselBox.append(carousel.element);
+  cell("carousel (drag it)", carouselBox, { height: "220px" });
+
+  const dialogButton = createButton({ label: "Open dialog" });
+  const dialog = createDialog({ title: "Dialog" });
+  dialogButton.element.addEventListener("click", () => dialog.open());
+  cell("dialog (click)", dialogButton.element);
+
+  const snackbarButton = createButton({ label: "Show snackbar" });
+  snackbarButton.element.addEventListener("click", () => { const bar = createSnackbar({ message: "Saved" }); bar.open(); });
+  cell("snackbar (click)", snackbarButton.element);
+
+  return box;
+};
+
+const controls = section(main, "Zoom control");
+const row = document.createElement("div");
+row.className = "zp-controls";
+const label = document.createElement("span");
+label.textContent = "Preview zoom:";
+const selectEl = document.createElement("select");
+for (const z of ZOOMS) {
+  const option = document.createElement("option");
+  option.value = String(z);
+  option.textContent = `${z}×`;
+  selectEl.append(option);
+}
+selectEl.value = "0.7";
+const readout = document.createElement("output");
+row.append(label, selectEl, readout);
+const host = document.createElement("div");
+row.after(host);
+controls.append(row);
+
+let current = preview(host, 0.7);
+const update = () => {
+  const zoom = Number(selectEl.value);
+  host.replaceChildren();
+  current = preview(host, zoom);
+  readout.textContent = `zoom: ${getComputedStyle(current).zoom}`;
+};
+selectEl.addEventListener("change", update);
+update();
+
+const notes = section(main, "What to look for");
+scenario(notes, {
+  title: "One component set, four zooms",
+  lookFor: "the whole set shrinking together, captions and all, and the dashed box holding every component",
+  expected: "at 0.7 and 0.5 the components draw at that fraction of their size; a menu, tooltip or dialog still opens next to its trigger and at the same visual scale",
+  mount: (body) => {
+    const p = document.createElement("p");
+    p.textContent = "Open the menu, hover the tooltip and open the dialog at 1× and at 0.7×, then compare where the surface sits and how large it is against its trigger.";
+    body.append(p);
+  },
+  measure: () => {
+    const surfaces = [...document.querySelectorAll(".mtrl-menu, .mtrl-tooltip, .mtrl-snackbar")];
+    const open = surfaces.filter((el) => el.getBoundingClientRect().height > 0);
+    const dialog = document.querySelector("dialog[open]");
+    return `open surfaces: ${open.length + (dialog ? 1 : 0)} · preview zoom ${getComputedStyle(current).zoom}`;
+  },
+});
+</script>
+</body>
+</html>
