@@ -153,7 +153,11 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       const button = w.mtrl.createButton({ label: "Open" });
       button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
       button.element.id = "probe-opener";
-      document.querySelector("#zoom")!.append(button.element);
+      // Room above the opener: the 48 px viewport-top clamp is a viewport
+      // constant and would otherwise shove the menu down and hide the offset.
+      const spacer = document.createElement("div");
+      spacer.style.height = "200px";
+      document.querySelector("#zoom")!.append(spacer, button.element);
       const menu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
       (window as any).probeMenu = menu;
     });
