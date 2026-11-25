@@ -45,8 +45,8 @@ const server = Bun.serve({
 });
 
 /** One drag in page-side pointer events, so the coordinates are the page's own under zoom. */
-const dragBy = async (page: Page, startLeft: number, dx: number) =>
-  page.evaluate(async ({ startLeft, dx }) => {
+const dragBy = async (page: Page, dx: number) =>
+  page.evaluate(async ({ dx }) => {
     const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
     const box = scroller.getBoundingClientRect();
     const y = box.top + box.height / 2;
@@ -67,7 +67,7 @@ const dragBy = async (page: Page, startLeft: number, dx: number) =>
     send("pointerup", x0 + dx, 0);
     await new Promise((r) => setTimeout(r, 300));
     return { before, after: scroller.scrollLeft };
-  }, { startLeft, dx });
+  }, { dx });
 
 const run = async (browser: Browser, engine: string) => {
   const page = await browser.newPage({ viewport: { width: 900, height: 400 } });
@@ -88,12 +88,10 @@ const run = async (browser: Browser, engine: string) => {
       host.append(carousel.element);
     }, { zoom, image });
     await page.waitForTimeout(400);
-    const before = await page.evaluate(() => {
-      const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
-      scroller.scrollLeft = 200;
-      return scroller.scrollLeft;
+    await page.evaluate(() => {
+      document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.scrollLeft = 200;
     });
-    const moved = await dragBy(page, before, -120);
+    const moved = await dragBy(page, -120);
     // What the viewport saw: the scroller's own pixels times the zoom.
     const visible = (moved.after - moved.before) * zoom;
     rows.push(`${zoom}: ${visible.toFixed(1)} px seen`);
@@ -131,7 +129,7 @@ const run = async (browser: Browser, engine: string) => {
     await new Promise((r2) => setTimeout(r2, 900));
     return scroller.scrollLeft;
   });
-  const clickedDrag = await dragBy(page, afterClick, -120);
+  const clickedDrag = await dragBy(page, -120);
   const clickSeen = clickedDrag.after - clickedDrag.before;
   console.log(`${engine} click-then-drag zoom 1: ${clickSeen.toFixed(1)} px moved (from ${afterClick.toFixed(1)})`);
   assert(Math.abs(clickSeen - 120) <= 12, `${engine} click-then-drag zoom 1: a 120 px drag moves 120 px (${clickSeen.toFixed(1)} px)`);
