@@ -222,7 +222,7 @@ scenario(interaction, {
     note.style.margin = "4px 0 0";
     note.style.fontSize = "12px";
     note.style.opacity = "0.7";
-    note.textContent = "This page runs the build it is served from: until #458 merges, it shows main's motion, where the panel springs and the rows stay still. Merge #458 or serve its branch build to watch the pair together. The rows grow inside the panel and the panel clips them; the fade rides the same tokens.";
+    note.textContent = "The section reveal is the shipped one (#458): the panel's clipped height grows on duration-medium1 + easing-emphasized with the fade on the same tokens, and the rows keep their full height inside it. The menu's scaleY and the drawer's visible height should stay together frame for frame.";
     interactionBox.append(both, note);
   },
 });
