@@ -1,3 +1,3 @@
 Section: Fixed
 
-**Drawer sections open and close on the menu's reveal.** A section's rows scale from their top edge with a fade — the menu's own mechanism, shared through one mixin so the two cannot drift — on duration-medium1 with the emphasized curve and no spring, growing when the section opens and shrinking when it closes; the rows below move with the same curve, the chevron turns on the same duration, and reduced motion stays instant.
+**Drawer sections open and close on the menu's motion.** A section's panel height opens and closes on the menu's timing — duration-medium1 with the emphasized curve and no spring — the rows fade with it and keep their full height inside the panel while the panel clips them, so the visible height follows the menu's curve exactly; the content below moves with the same curve, the chevron turns on the same duration, and reduced motion stays instant.

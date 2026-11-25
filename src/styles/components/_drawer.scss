@@ -507,6 +507,7 @@ $default-width: 360px;
         display: grid;
         grid-template-rows: 0fr;
         visibility: hidden;
+        overflow: hidden;
         // The panel's height opens and closes on the menu's timing
         // (m3.material.io/components/menu guidelines read 2026-11-24; the
         // menu's own reveal is styles/components/_menu.scss: transform
@@ -539,14 +540,15 @@ $default-width: 360px;
     }
 
     &__group-items-inner {
+        // min-height: 0 lets the track shrink below the rows' height, and
+        // height: 100% pins the inner's box to the track's used size, so
+        // the painted clip never lags the panel during fractional sizing
+        // (the rows keep full height and the PANEL clips them — the inner's
+        // own box cut the bottom of the rows while the panel was already at
+        // the menu's fraction). The fade rides the same tokens as the
+        // panel's height.
         min-height: 0;
-        overflow: hidden;
-        // The panel's height is the reveal: its grid fraction follows the
-        // menu's curve (duration-medium1 + easing-emphasized, the same
-        // tokens the menu's scaleY reads), so what the eye sees matches the
-        // menu's visible fraction per frame. The inner carries only the
-        // fade — a scale here would compound with the panel's clip and the
-        // visible box would run ahead of the menu's curve.
+        height: 100%;
         opacity: 0;
         transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
     }

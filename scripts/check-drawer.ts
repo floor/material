@@ -415,7 +415,7 @@ try {
   assert.equal(timing.chevronDuration, '0.25s', `the chevron turns on the same duration: ${timing.chevronDuration}`);
   assert.equal(timing.chevronEasing, 'cubic-bezier(0.3, 0, 0, 1)', `the chevron turns on the emphasized curve: ${timing.chevronEasing}`);
   const frames = await motionPage.evaluate(async () => {
-    const rows: Array<{ t: number; panel: number; fraction: number; op: number; rowH: number }> = [];
+    const rows: Array<{ t: number; panel: number; paintedRow: boolean; fraction: number; op: number; rowH: number }> = [];
     document.querySelector('[data-id="labels"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
     const inner = panel.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
@@ -426,7 +426,11 @@ try {
       const tick = () => {
         const t = performance.now() - start;
         const panelH = panel.getBoundingClientRect().height;
-        rows.push({ t, panel: panelH, fraction: +(panelH / 112).toFixed(3), op: parseFloat(getComputedStyle(inner).opacity), rowH: +row.getBoundingClientRect().height.toFixed(1) });
+        const probeY = panel.getBoundingClientRect().top + panelH - 2;
+        const probeX = panel.getBoundingClientRect().left + panel.getBoundingClientRect().width / 2;
+        const hit = document.elementFromPoint(probeX, probeY);
+        const paintedRow = !!hit?.closest(".mtrl-drawer__item");
+        rows.push({ t, panel: panelH, paintedRow, fraction: +(panelH / 112).toFixed(3), op: parseFloat(getComputedStyle(inner).opacity), rowH: +row.getBoundingClientRect().height.toFixed(1) });
         if (t < 450) requestAnimationFrame(tick); else done();
       };
       requestAnimationFrame(tick);
@@ -444,6 +448,13 @@ try {
   // panel's height fraction on every frame (the menu reads the same pair).
   const coupled = frames_rows.every(f => Math.abs(f.op - f.fraction) <= 0.03);
   assert.ok(coupled, 'the opacity fraction rides the height fraction on every frame, as the menu reads');
+  // The painted clip is the panel: the rows must be painted all the way to
+  // the panel's visible bottom on every sampled frame — the menu's fraction
+  // is the panel's height fraction (paired-normalised below), so hit-testing
+  // at the panel's bottom edge proves the painted height follows the menu
+  // exactly (Orion's inner-clip defect hid the bottom band).
+  const painted = frames_rows.filter(f => f.panel > 40).every(f => f.paintedRow);
+  assert.ok(painted, "the rows paint to the panel's visible bottom on every frame");
   const maxPanel = Math.max(...frames_rows.map(f => f.panel));
   assert.ok(maxPanel <= 112.5, `no spring overshoot on the panel height (max ${maxPanel.toFixed(1)})`);
   const at100 = frames_rows.find(f => f.t >= 100)!;
@@ -466,6 +477,13 @@ try {
     (document.querySelector('[data-id="labels"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
   await motionPage.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
+  // Start from a fully closed section: the collapsing panel keeps visible
+  // for the close's duration, and its rows would be mid-shrink under the
+  // keys — wait until the panel's computed visibility actually hides.
+  await motionPage.waitForFunction(() => {
+    const panel = document.querySelector(".mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__group-items") as HTMLElement | null;
+    return panel ? getComputedStyle(panel).visibility === "hidden" : true;
+  });
   const midReveal = await motionPage.evaluate(() => {
     (document.querySelector('[data-id="labels"]') as HTMLElement).focus();
     const start = performance.now();

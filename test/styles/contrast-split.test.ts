@@ -352,8 +352,8 @@ describe("explicit contrast levels are opt-in", () => {
     // The slider's pressed handle joins the 2px width rule (+38 B;
     // styles/components/_slider.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "75ee92018f2a009be3437bd95734f8e477c3e1d58b03ec2337fdeb1faf28faa0",
-      length: 553375,
+      sha256: "4f4ce382974b3b4c91c53299155cae4e766dbf727f89f89ea32c6d3f452ae850",
+      length: 553387,
     });
   });
 
