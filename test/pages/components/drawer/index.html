@@ -35,8 +35,11 @@ const items = [
   { id: "archive", label: "Archive", badge: "12" },
 ];
 
+/** Each scenario's factory instance, keyed by its box, for the section API. */
+const factoryInstances = new WeakMap();
 const mountFactory = (container) => {
   const drawer = createDrawer({ headline: "Mail", variant: "standard", open: true, items });
+  factoryInstances.set(container, drawer);
   container.append(drawer.element);
   return drawer.element;
 };
@@ -165,6 +168,35 @@ const drawerRoot = () => {
   if (element) return element.shadowRoot ?? element;
   return liveDrawer?.querySelector(".mtrl-drawer") ?? null;
 };
+// The drawer's own section API: toggling through it emits no DOM click, so the
+// menu's document dismissal never sees one (a header.click() did, and lost the
+// menu a third of the way into a slowed close).
+const drawerComponent = () => {
+  const element = liveDrawer?.querySelector("m-drawer");
+  if (element?.component) return element.component;
+  return liveDrawer ? factoryInstances.get(liveDrawer) : null;
+};
+const sectionExpanded = () => {
+  const component = drawerComponent();
+  if (component?.isSectionExpanded) return component.isSectionExpanded("labels");
+  const header = drawerRoot()?.querySelector('[data-id="labels"]');
+  return header
+    ? header.getAttribute("aria-expanded") !== null
+      ? header.getAttribute("aria-expanded") === "true"
+      : header.classList.contains("mtrl-drawer__item--expanded")
+    : false;
+};
+const toggleSection = () => {
+  const component = drawerComponent();
+  if (component?.toggleSection) { component.toggleSection("labels"); return; }
+  // The public component API carries expand/collapse/isSectionExpanded.
+  if (component?.expandSection && component?.collapseSection && component?.isSectionExpanded) {
+    if (component.isSectionExpanded("labels")) component.collapseSection("labels");
+    else component.expandSection("labels");
+    return;
+  }
+  drawerRoot()?.querySelector('[data-id="labels"]')?.click();
+};
 const fractions = () => {
   const root = drawerRoot();
   const group = root?.querySelector(".mtrl-drawer__group-items");
@@ -205,13 +237,7 @@ scenario(interaction, {
       liveDrawer = drawerBox;
       // Start collapsed, with the menu closed: the comparison's first press
       // then runs both motions the same way (open), the second both closed.
-      const header = drawerRoot()?.querySelector('[data-id="labels"]');
-      const expanded = header
-        ? header.getAttribute("aria-expanded") !== null
-          ? header.getAttribute("aria-expanded") === "true"
-          : header.classList.contains("mtrl-drawer__item--expanded")
-        : false;
-      if (expanded) header?.click();
+      if (sectionExpanded()) toggleSection();
     };
     painters.add(paint);
     paint();
@@ -233,6 +259,10 @@ scenario(interaction, {
     // visibility class (the same transition the component uses), keeps the
     // element present for the whole curve, and tells the component once the
     // transition has ended.
+    // A close in progress is owned by the control: its settle step is kept so
+    // a reversal can finish it before reopening — otherwise the drawer moves
+    // while the menu still believes it is open.
+    let pendingClose = null;
     const closeMenuAfterItsCurve = () => {
       const element = menu?.element;
       if (!element) return;
@@ -242,8 +272,10 @@ scenario(interaction, {
       const settle = () => {
         if (finished) return;
         finished = true;
+        if (pendingClose === settle) pendingClose = null;
         menu?.close?.();
       };
+      pendingClose = settle;
       element.addEventListener("transitionend", settle, { once: true });
       // A reduced-motion run fires no transition; settle the state anyway.
       setTimeout(settle, 2000);
@@ -254,18 +286,14 @@ scenario(interaction, {
       // The menu dismisses on a document click; this control is not its opener,
       // so its own click would close what it just opened. Keep it local.
       event.stopPropagation();
-      const header = drawerRoot()?.querySelector('[data-id="labels"]');
-      header?.click();
+      // A reversal during a deferred close finishes that close first: the
+      // menu's state and its painted class move together, then both motions
+      // start from the same state.
+      pendingClose?.();
+      toggleSection();
       // The menu follows the section's new state, so both motions run the same
-      // way at once and the two fractions can be read against each other. The
-      // element form carries aria-expanded; the factory marks the item with its
-      // expanded class, so both are read rather than assuming one.
-      const expanded = header
-        ? header.getAttribute("aria-expanded") !== null
-          ? header.getAttribute("aria-expanded") === "true"
-          : header.classList.contains("mtrl-drawer__item--expanded")
-        : false;
-      if (expanded) menu?.open?.(); else closeMenuAfterItsCurve();
+      // way at once and the two fractions can be read against each other.
+      if (sectionExpanded()) menu?.open?.(); else closeMenuAfterItsCurve();
     });
     const note = document.createElement("p");
     note.style.margin = "4px 0 0";
