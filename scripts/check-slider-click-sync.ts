@@ -81,7 +81,12 @@ const geometry = (page: Page) =>
     const element = document.querySelector<HTMLElement>(".mtrl-slider")!;
     const pieces = [...element.querySelectorAll<HTMLElement>(".mtrl-slider__segment")].slice(1).map((piece) => `${piece.style.left}|${piece.style.width}`);
     const handle = element.querySelector<HTMLElement>('[role="slider"]')!;
-    return { pieces, handle: handle.style.left, pressed: handle.classList.contains("mtrl-slider__handle--pressed") };
+    return {
+      pieces,
+      handle: handle.style.left,
+      pressed: handle.classList.contains("mtrl-slider__handle--pressed"),
+      bar: parseFloat(getComputedStyle(handle, "::before").width),
+    };
   });
 
 /** Every frame of the settle: the handle against both piece edges, in the page. */
@@ -145,6 +150,11 @@ const run = async (browser: Browser, engine: string) => {
   await page.waitForTimeout(50);
   const released = await geometry(page);
   assert(!before.pressed && held.pressed && !released.pressed, `${engine}: the press and its release toggle the pressed handle`);
+  // The handle narrows to 2 dp for as long as any press inside the component
+  // lasts — the owner's requirement, and the press state #459 introduced.
+  assert.equal(before.bar, 4, `${engine}: the handle is 4 px at rest (measured ${before.bar} px)`);
+  assert.equal(held.bar, 2, `${engine}: a held track press narrows the handle to 2 px (measured ${held.bar} px)`);
+  assert.equal(released.bar, 4, `${engine}: the release widens the handle to 4 px (measured ${released.bar} px)`);
   assert.deepEqual(
     held.pieces,
     released.pieces,
