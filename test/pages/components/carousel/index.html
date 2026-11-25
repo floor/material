@@ -16,8 +16,11 @@ import { createCarousel } from "/dist/components/carousel/index.js";
 await initPage({ name: "carousel" });
 const main = document.getElementById("tp-main");
 
+// Served files, not data: URLs: the component refuses a src whose scheme is
+// not an allowed navigable one (core/utils/url.ts), and a `data:` image is
+// stripped — which left every slide blank.
 const slides = Array.from({ length: 6 }, (_, i) => ({
-  image: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='640' height='300'><rect width='640' height='300' fill='hsl(${i * 55} 45% 55%)'/><text x='50%' y='50%' fill='white' font-size='48' text-anchor='middle' dominant-baseline='middle'>Slide ${i + 1}</text></svg>`)}`,
+  image: `slides/slide-${i + 1}.svg`,
   alt: `Slide ${i + 1}`,
 }));
 
