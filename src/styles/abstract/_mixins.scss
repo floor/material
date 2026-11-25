@@ -564,3 +564,27 @@ $sheet-overshoot-guard: 32px;
     @content;
   }
 }
+
+// The menu's reveal, shared so a drawer section cannot drift from it: the
+// surface grows from its top edge with a fade — transform and opacity ride
+// the same duration and curve (duration-medium1, easing-emphasized). The
+// menu keeps its visibility and pointer-events on its own rules; a caller
+// that hides the closed surface does the same.
+@mixin reveal-motion($open: false, $withVisibility: false) {
+  transform: scaleY(if($open, 1, 0));
+  transform-origin: top center;
+  opacity: if($open, 1, 0);
+  // A caller that hides its closed surface with visibility adds it to the
+  // same transition: opening turns visible at once (the transform carries
+  // the reveal), closing stays visible until the end, so the shrink is seen.
+  @if $withVisibility {
+    transition:
+      transform v.motion("duration-medium1") v.motion("easing-emphasized"),
+      opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
+      visibility v.motion("duration-medium1");
+  } @else {
+    transition:
+      transform v.motion("duration-medium1") v.motion("easing-emphasized"),
+      opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+  }
+}

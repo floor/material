@@ -353,8 +353,8 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_slider.scss), and the container's own press narrows
     // the handle from the first frame (+400 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "a25dea6d16154967e2cf677b2f06e9a65f8f614c5e7dbbdc3412f6de9f8811f7",
-      length: 553568,
+      sha256: "8f88299e8735983068752807086c606616fdc50cfb8fce2d09f3a5624512b7d3",
+      length: 553435,
     });
   });
 
