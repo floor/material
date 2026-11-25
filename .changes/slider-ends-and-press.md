@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Slider ends and press.** The handle's range — and with it the ticks, the track's pieces and the pointer's mapping — stays 6 px from the track's ends at every size, on both axes and in both directions, whether the slider is continuous or has ticks, so at the minimum and the maximum the handle sits on the first and the last tick. Turning ticks on after the slider is made no longer leaves the handle at the position it had without them. A press on the handle, the active track or the inactive track shows the pressed 2 dp handle until the release, and a cancelled touch releases it too.
