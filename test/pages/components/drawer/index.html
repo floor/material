@@ -197,6 +197,41 @@ const toggleSection = () => {
   }
   drawerRoot()?.querySelector('[data-id="labels"]')?.click();
 };
+// The two motions start a frame or two apart, so their fractions at one wall
+// time differ while the curves agree: each transition is recorded against its
+// own local time, and the readout compares one motion's fraction with the
+// other's at the same local time (interpolated between frames).
+const tracks = { menu: [], drawer: [] };
+let trackStart = null;
+const record = (track, startTime, localTime, value) => {
+  if (startTime !== trackStart) {
+    tracks.menu.length = 0;
+    tracks.drawer.length = 0;
+    trackStart = startTime;
+  }
+  const list = tracks[track];
+  if (list.length && localTime <= list[list.length - 1].t) return;
+  list.push({ t: localTime, value });
+};
+const atLocal = (track, localTime) => {
+  const list = tracks[track];
+  for (let i = 1; i < list.length; i++) {
+    if (list[i].t >= localTime) {
+      const a = list[i - 1];
+      const b = list[i];
+      const span = b.t - a.t;
+      const ratio = span > 0 ? (localTime - a.t) / span : 0;
+      return a.value + (b.value - a.value) * ratio;
+    }
+  }
+  return null;
+};
+const transitionTime = (element, property) => {
+  const animation = element?.getAnimations?.().find((entry) => entry.transitionProperty === property);
+  if (!animation || animation.currentTime === null) return null;
+  return { start: Number(animation.startTime ?? 0), local: Number(animation.currentTime), started: animation.startTime !== null };
+};
+
 const fractions = () => {
   const root = drawerRoot();
   const group = root?.querySelector(".mtrl-drawer__group-items");
@@ -213,14 +248,35 @@ const fractions = () => {
   const menuScale = transform && transform !== "none" ? new DOMMatrixReadOnly(transform).d : null;
   const show = (value) => (value === null ? "–" : value.toFixed(3));
   const moving = (value) => value !== null && value > 0.02 && value < 0.98;
-  const inStep = moving(menuScale) && moving(drawer) && Math.abs(menuScale - drawer) <= 0.02;
-  return `menu scaleY ${show(menuScale)} · drawer visible height ${drawer.toFixed(3)}${inStep ? " · in step" : ""}`;
+  const timing = {
+    menu: transitionTime(menuElement, "transform"),
+    drawer: transitionTime(group, "grid-template-rows") ?? transitionTime(group, "height"),
+  };
+  if (timing.menu?.started && timing.drawer?.started) {
+    const start = Math.min(timing.menu.start, timing.drawer.start);
+    record("menu", start, timing.menu.local, menuScale ?? 0);
+    record("drawer", start, timing.drawer.local, drawer);
+  }
+  const skew = timing.menu?.started && timing.drawer?.started ? Math.abs(timing.menu.start - timing.drawer.start) : null;
+  // Both curves at one local time: what "the same motion" means here, where the
+  // two transitions do not start on the same frame.
+  let equalLocal = null;
+  if (moving(menuScale) && moving(drawer) && timing.menu?.started && timing.drawer?.started) {
+    const local = Math.min(timing.menu.local, timing.drawer.local);
+    const menuAt = atLocal("menu", local);
+    const drawerAt = atLocal("drawer", local);
+    if (menuAt !== null && drawerAt !== null) equalLocal = Math.abs(menuAt - drawerAt);
+  }
+  const parts = [`menu scaleY ${show(menuScale)}`, `drawer visible height ${drawer.toFixed(3)}`];
+  if (skew !== null) parts.push(`starts ${skew.toFixed(0)} ms apart`);
+  if (equalLocal !== null) parts.push(`at equal local time Δ ${equalLocal.toFixed(3)}`);
+  return parts.join(" · ");
 };
 
 scenario(interaction, {
   title: "Section open/close next to the menu",
   lookFor: "the rows scale from their top edge with a fade, the same motion as the menu",
-  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse; the readout's two fractions stay together frame for frame",
+  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse; the two transitions start a frame or two apart, and at equal local times their fractions agree",
   measure: fractions,
   mount: (body) => {
     body.append(interactionBox);
