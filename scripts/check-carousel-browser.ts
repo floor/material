@@ -597,6 +597,57 @@ export async function checkCarouselUncontained(
     await wheelToEnd(false);
     await wheelToEnd(true);
 
+    // --- Contained wheel keeps its own keyline indexes ---
+    // The tie-break is uncontained-only: a contained wheel that passes a
+    // keyline must not walk to the next snap at the same position (a 412 px
+    // multi-browse wheel went 2/4 -> 3/4 at one 178 px offset before the
+    // loop was scoped).
+    await page.evaluate(() => {
+      const state = window as unknown as CarouselWindow;
+      // The uncontained carousel stays in the tree — the keyboard block
+      // below navigates it; the contained carousel mounts beside it.
+      document.body.style.cssText = "display:block;margin:0;padding:0";
+      const carousel = state.createCarousel({
+        variant: "multi-browse",
+        wheel: true,
+        itemWidth: 200,
+        slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })),
+      });
+      carousel.element.id = "contained-wheel-carousel";
+      carousel.element.style.cssText = "width:412px;height:240px";
+      document.body.append(carousel.element);
+      // The change events ride the component's own emitter.
+      (window as unknown as { containedCarousel: CarouselComponent }).containedCarousel = carousel;
+      (window as unknown as { containedChanges: number[] }).containedChanges = [];
+      carousel.on("change", (payload) => {
+        (window as unknown as { containedChanges: number[] }).containedChanges.push(payload.value);
+      });
+    });
+    await waitFor(page, "the contained carousel to lay out", () => {
+      const el = document.querySelector<HTMLElement>("#contained-wheel-carousel .mtrl-carousel__scroller")!;
+      return el.scrollWidth > 400;
+    });
+    for (let i = 0; i < 12; i++) {
+      await page.evaluate(() => {
+        const scroller = document.querySelector<HTMLElement>("#contained-wheel-carousel .mtrl-carousel__scroller")!;
+        scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: 240, bubbles: true, cancelable: true }));
+      });
+      await page.waitForTimeout(60);
+    }
+    await page.waitForTimeout(1300);
+    const containedWheel = await page.evaluate(() => ({
+      changes: (window as unknown as { containedChanges: number[] }).containedChanges,
+    }));
+    const containedLast = containedWheel.changes[containedWheel.changes.length - 1];
+    console.log(`[contained check] Wheel sequence: ${JSON.stringify(containedWheel.changes)} — last ${containedLast}`);
+    if (containedLast === undefined || containedLast < 0 || containedLast > 7) {
+      failures.push(`Contained wheel sequence leaves the index at ${containedLast} (expected a keyline index within 0..7)`);
+    }
+    const containedDuplicates = containedWheel.changes.slice(0, -1).filter((v, i) => v === containedWheel.changes[i + 1] && v === containedLast);
+    if (containedDuplicates.length > 0) {
+      failures.push(`Contained wheel repeated the final index ${containedLast} mid-sequence (the tie loop walked it)`);
+    }
+
     // --- Keyboard navigation & focus reachability check ---
     await page.evaluate(() => {
       (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);

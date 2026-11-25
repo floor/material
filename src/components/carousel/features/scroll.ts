@@ -660,7 +660,9 @@ export const withScroll = (config: CarouselConfig) =>
       // The capped end ties several snaps to the range: the wheel names the
       // item actually in view — the last of the tied snaps (the backward
       // scan already starts there), so a wheel to the end reads 24 / 24.
-      if (direction > 0) {
+      // Uncontained only: contained snaps are distinct, and the loop would
+      // walk a contained wheel past its own keyline (2 / 4 became 3 / 4).
+      if (variant === CAROUSEL_VARIANTS.UNCONTAINED && direction > 0) {
         while (index + 1 < count && snapPositions[index + 1] === snapPositions[index]) index++;
       }
       const target = snapPositions[index]!;
