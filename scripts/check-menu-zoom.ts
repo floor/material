@@ -244,7 +244,7 @@ const run = async (browser: Browser, engine: string) => {
   console.log(`${engine} rtl: ${rtlRows.join(" | ")}`);
 
   // A menu written inside a positioned host that is not at the viewport
-  // origin, without a container (FLO-1567): the placement is in the host's
+  // origin, without a container: the placement is in the host's
   // space, so the host's distance comes out before the write, at every zoom
   // and in both directions. A top-layer menu is placed by its own rule and
   // must not move.
@@ -260,9 +260,14 @@ const run = async (browser: Browser, engine: string) => {
         const button = w.mtrl.createButton({ label: "Open" });
         button.element.id = "opener";
         button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
-        button.element.style.cssText = "position:absolute;left:60px;top:40px";
+        // The opener is wider than the menu (120 against ~112), so the
+        // placement is the plain start one and not the RTL flip.
+        button.element.style.cssText = "position:absolute;left:60px;top:40px;width:120px";
         host.append(button.element);
         const menu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "Alpha" }, { text: "Beta" }] });
+        // The menu goes into the host: that is what makes the host its
+        // offsetParent, which is the space the placement writes in.
+        host.append(menu.element);
         await new Promise((r) => setTimeout(r, 250));
         const opener = button.element.getBoundingClientRect();
         menu.open();
