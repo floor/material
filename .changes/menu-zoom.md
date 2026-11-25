@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Menu and select in a zoomed document.** `zoom` scales the used values, so `getBoundingClientRect()` reports zoomed viewport pixels while `style.left/top/width` inside the zoomed subtree are local pixels. A menu copied its opener's rect straight into those styles, so under `zoom` it landed at the zoom times its offset — at 0.5 it opened at half its anchor's coordinates, over the field, and a select's listbox was half its field's width (md3.io, 2026-11-25). Both are placed and sized through the element's effective zoom now (`rect.width / offsetWidth`), so a menu keeps its opener's edge and its gap at 1, 0.7 and 0.5 and a listbox is always its field's width.
