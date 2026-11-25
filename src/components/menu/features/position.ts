@@ -7,6 +7,20 @@ import { MenuConfig, MenuFeatureHost } from "../types";
  * Menu position helper
  * Provides functions for positioning menus and submenus
  */
+/**
+ * The CSS `zoom` in effect where an element is laid out. A rect reports
+ * zoomed viewport pixels while `style.left/top/width` inside a zoomed subtree
+ * are local pixels, so a value taken from a rect must be divided by this
+ * before it is written: without it a menu placed from its opener's rect lands
+ * at the zoom times its offset — half the anchor's coordinates at 0.5, which
+ * md3.io measured (2026-11-25).
+ */
+const effectiveZoom = (element: HTMLElement): number => {
+  const width = element.getBoundingClientRect().width;
+  const local = element.offsetWidth;
+  return width > 0 && local > 0 ? width / local : 1;
+};
+
 export const createPositioner = (
   component: MenuFeatureHost,
   config: MenuConfig,
@@ -67,6 +81,8 @@ export const createPositioner = (
 
     // Get opener measurements first (needed for width calculation)
     const openerRect = openerElement.getBoundingClientRect();
+    // One division for every rect value written as a local style below.
+    const zoom = effectiveZoom(openerElement);
     // A submenu aligns vertically with the item that opened it and horizontally
     // with the menu surface that item sits in, so the vertical menu's 4dp
     // inline container padding does not pull the submenu 4dp inside the parent.
@@ -360,12 +376,12 @@ export const createPositioner = (
     // Skip viewport edge checks when inside a container
     if (hasContainer) {
       // For container-based positioning, just apply the calculated positions
-      menuElement.style.top = `${top}px`;
-      menuElement.style.left = `${left}px`;
+      menuElement.style.top = `${top / zoom}px`;
+      menuElement.style.left = `${left / zoom}px`;
 
       // For 'width: 100%' configuration, match the opener width
       if (config.width === "100%" && !isSubmenu) {
-        menuElement.style.width = `${openerRect.width}px`;
+        menuElement.style.width = `${openerRect.width / zoom}px`;
       }
 
       return; // Exit early for container-based menus
@@ -389,7 +405,7 @@ export const createPositioner = (
 
     // For 'width: 100%' configuration, match the opener width
     if (config.width === "100%" && !isSubmenu) {
-      menuElement.style.width = `${openerRect.width}px`;
+      menuElement.style.width = `${openerRect.width / zoom}px`;
     }
 
     // Apply final positions, ensuring menu stays within viewport
@@ -397,8 +413,8 @@ export const createPositioner = (
     const finalTop = Math.max(minTopSpacing + scrollY, top);
     const finalLeft = Math.max(16 + scrollX, left);
 
-    menuElement.style.top = `${finalTop}px`;
-    menuElement.style.left = `${finalLeft}px`;
+    menuElement.style.top = `${finalTop / zoom}px`;
+    menuElement.style.left = `${finalLeft / zoom}px`;
 
     // Make sure menu doesn't extend past right edge
     if (finalLeft - scrollX + menuRect.width > viewportWidth - 16) {
