@@ -183,7 +183,7 @@
     "components/menu/features/layer.js": "566b6bb9861eee67da0026c4cdcb696ffe06e6c7ae8de35d9e98462ae88cbc45",
     "components/menu/features/loader.js": "85743a1785a3678ab1ba912e6b6b61d93903ee4296361abee6c7c43710e095cc",
     "components/menu/features/opener.js": "e376721bbc086c2c6e3d3a239bffb960d96fb3f8ec618d0cb6e214f2b205b64c",
-    "components/menu/features/position.js": "8a6c0c2bfb56bc8d9dcd2cf15ad07bc1bdef928144bc615eae69f5480c47754c",
+    "components/menu/features/position.js": "dc98e2ea9ad1c46988d141798e2289220b8742d6d434a9f256bed5993e1cba67",
     "components/menu/features/registry.js": "492c02a4ff64ef203120d0003f2e2e80ac2db45cbe9fc1133bebae30e3b2a0b2",
     "components/menu/features/submenu.js": "9d3ca970b4c18c94b352f84c87574d7bb5db8bc8ecadcee5284e790020887274",
     "components/menu/features/tasks.js": "3158f5f97c52e545d1a0161d7a084e7977bc54c9602f187a12d457adb065368e",
