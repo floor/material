@@ -21,8 +21,14 @@ export interface ProgressColors {
   buffer: string;
 }
 
-/** How much of the on-surface role the buffer carries over the track */
-const BUFFER_TINT = 0.22;
+/**
+ * How much of the on-surface role the buffer carries over the track. The owner
+ * lightened it (2026-11-25): at 22% the sunset theme's light scheme put the
+ * buffer at 2.74:1 from the active indicator, under 3:1; 17% is the highest
+ * tint that clears 3:1 there (3.04:1, painted) while keeping the buffer at its
+ * most visible against the track (1.40:1 baseline light, 1.52:1 dark).
+ */
+const BUFFER_TINT = 0.17;
 
 /** A colour as `#rrggbb`, or null when it is a form this mix does not read */
 const parseHex = (color: string): [number, number, number] | null => {

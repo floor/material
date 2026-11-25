@@ -6,11 +6,15 @@
  *
  * The buffer was painted in primary-container over a secondary-container
  * track: both roles sit at the same lightness, so the band measured 1.00:1 in
- * both schemes and could not be seen. It is now the on-surface role at 22%
- * over the track (this library's extension, not an M3 role). The check paints
- * the indicator in the light and the dark baseline scheme, flat and wavy, and
- * reads the canvas: the buffer band against the track must clear 1.5:1 and the
- * active indicator against the buffer 3:1.
+ * both schemes and could not be seen. It is now the on-surface role at 17%
+ * over the track (this library's extension, not an M3 role), lightened by the
+ * owner's decision of 2026-11-25 so that the sunset theme's light scheme keeps
+ * the buffer 3:1 from the active indicator. The check paints the indicator in
+ * the light and the dark baseline scheme, flat and wavy, and reads the canvas:
+ * the active indicator against the buffer must clear 3:1, and the buffer band
+ * against the track its floor — 1.35:1, under the 1.5 the 22% tint reached,
+ * because the buffer and the track are the same lightness once the 3:1 floor
+ * is met.
  *
  *   bun run scripts/check-progress-buffer.ts
  */
@@ -64,16 +68,29 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
 
+  // The baseline scheme and the sunset theme: sunset's light pair is the
+  // tightest of the themes measured (3.04:1 at the 17% tint), so the floor is
+  // held where it is hardest.
   const schemes = {
-    light: {
+    "baseline light": {
       "--mtrl-sys-color-primary": "#6750a4",
       "--mtrl-sys-color-secondary-container": "#e8def8",
       "--mtrl-sys-color-on-surface": "#1d1b20",
     },
-    dark: {
+    "baseline dark": {
       "--mtrl-sys-color-primary": "#d0bcff",
       "--mtrl-sys-color-secondary-container": "#4a4458",
       "--mtrl-sys-color-on-surface": "#e6e0e9",
+    },
+    "sunset light": {
+      "--mtrl-sys-color-primary": "#b34700",
+      "--mtrl-sys-color-secondary-container": "#ffdbd0",
+      "--mtrl-sys-color-on-surface": "#201a18",
+    },
+    "sunset dark": {
+      "--mtrl-sys-color-primary": "#ffb686",
+      "--mtrl-sys-color-secondary-container": "#5d3f30",
+      "--mtrl-sys-color-on-surface": "#f0dfd9",
     },
   };
   for (const [scheme, vars] of Object.entries(schemes)) {
@@ -102,7 +119,7 @@ try {
       const bufferTrack = contrast(sample.buffer, sample.track);
       const activeBuffer = contrast(sample.active, sample.buffer);
       assert.ok(
-        bufferTrack >= 1.5,
+        bufferTrack >= 1.35,
         `${scheme}/${shape}: the buffer reads against the track (${bufferTrack.toFixed(2)}:1, buffer ${sample.buffer} track ${sample.track})`,
       );
       assert.ok(
