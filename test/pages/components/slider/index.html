@@ -171,8 +171,13 @@ scenario(states, {
     focusButton.addEventListener("click", () => focused.slider.element.querySelector('[role="slider"]')?.focus({ preventScroll: false }));
     const pressButton = document.createElement("button");
     pressButton.textContent = "Press the sample";
-    pressButton.addEventListener("pointerdown", () => pressed.slider.element.querySelector('[role="slider"]')?.classList.add("mtrl-slider__handle--pressed"));
-    pressButton.addEventListener("pointerup", () => pressed.slider.element.querySelector('[role="slider"]')?.classList.remove("mtrl-slider__handle--pressed"));
+    const sampleHandle = () => pressed.slider.element.querySelector('[role="slider"]');
+    pressButton.addEventListener("pointerdown", () => sampleHandle()?.classList.add("mtrl-slider__handle--pressed"));
+    // The release may land anywhere: a pointer lifted off the button never
+    // reaches it, and the sample would stay pressed.
+    const release = () => sampleHandle()?.classList.remove("mtrl-slider__handle--pressed");
+    document.addEventListener("pointerup", release);
+    document.addEventListener("pointercancel", release);
     const controls = document.createElement("div");
     controls.style.cssText = "display:flex;gap:8px;margin:0 0 8px";
     controls.append(focusButton, pressButton);
