@@ -545,10 +545,10 @@ export async function checkCarouselUncontained(
     }
 
     // --- Wheel to the end reads the last index (normal and reduced motion) ---
-    // Orion: a trusted wheel to the end left the counter at 22 / 24 — the
-    // forward scan picked the first of the capped tie snaps. The scan now
-    // resolves to the last tied snap; both motion settings must read 23
-    // (0-based) after a wheel to the capped end.
+    // A trusted wheel to the end left the counter at 22 / 24 — the forward
+    // scan picked the first of the capped tie snaps. The scan now resolves
+    // to the last tied snap; both motion settings must read 23 (0-based)
+    // after a wheel to the capped end.
     const wheelToEnd = async (reduced: boolean) => {
       await page.evaluate(() => {
         (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);
