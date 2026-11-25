@@ -15,8 +15,11 @@
  *    the release. This one is engine-independent and runs on Chromium.
  * 2. Every frame of the settle keeps the gap: the handle's centre is the pieces'
  *    edge less/plus one gap, within half a pixel, from the first frame to the
- *    last. Runs on Chromium, and on WebKit where it is installed, because that
- *    is the engine whose transitions the desync showed in.
+ *    last. The press is held across frames before it is released, as a person's
+ *    click is: Playwright's mouse.click sends down and up in one frame, and the
+ *    engine then commits only the released geometry and hides the restart. Runs
+ *    on Chromium — the owner's engine, Chrome on macOS — and on WebKit where it
+ *    is installed.
  *
  *   bun run scripts/check-slider-click-sync.ts
  */
@@ -110,8 +113,29 @@ const run = async (browser: Browser, engine: string) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  // 1. A press and its release change no piece's geometry.
+  // 1. Every frame of the settle keeps the handle one gap from each piece edge.
+  // A click is a press held over frames and then released, not a down and an up
+  // in one frame: the held state has to be committed for a restart to happen.
   let point = await mount(page);
+  await startFrames(page);
+  await page.waitForTimeout(30);
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await page.waitForTimeout(60);
+  await page.mouse.up();
+  await page.waitForTimeout(1200);
+  const frames = (await stopFrames(page)).filter((frame) => frame.activeEnd !== null && frame.inactiveStart !== null && frame.settling);
+  assert(frames.length >= 8, `${engine}: ${frames.length} frames of the settle were sampled`);
+  let worstBefore = 0;
+  let worstAfter = 0;
+  for (const frame of frames) {
+    worstBefore = Math.max(worstBefore, Math.abs(frame.handle - frame.activeEnd! - GAP));
+    worstAfter = Math.max(worstAfter, Math.abs(frame.inactiveStart! - frame.handle - GAP));
+  }
+  assert(worstBefore <= 0.5, `${engine}: the handle left the active piece's end by ${worstBefore.toFixed(2)} px on a frame, where the gap is ${GAP}`);
+  assert(worstAfter <= 0.5, `${engine}: the inactive piece started ${worstAfter.toFixed(2)} px from the handle on a frame, where the gap is ${GAP}`);
+  // 2. A press and its release change no piece's geometry.
+  point = await mount(page);
   const before = await geometry(page);
   await page.mouse.move(point.x, point.y);
   await page.mouse.down();
@@ -127,22 +151,6 @@ const run = async (browser: Browser, engine: string) => {
     `${engine}: the release re-laid the track's pieces out while the settle ran (held ${JSON.stringify(held.pieces)} → released ${JSON.stringify(released.pieces)})`,
   );
 
-  // 2. Every frame of the settle keeps the handle one gap from each piece edge.
-  point = await mount(page);
-  await startFrames(page);
-  await page.waitForTimeout(30);
-  await page.mouse.click(point.x, point.y);
-  await page.waitForTimeout(1200);
-  const frames = (await stopFrames(page)).filter((frame) => frame.activeEnd !== null && frame.inactiveStart !== null && frame.settling);
-  assert(frames.length >= 8, `${engine}: ${frames.length} frames of the settle were sampled`);
-  let worstBefore = 0;
-  let worstAfter = 0;
-  for (const frame of frames) {
-    worstBefore = Math.max(worstBefore, Math.abs(frame.handle - frame.activeEnd! - GAP));
-    worstAfter = Math.max(worstAfter, Math.abs(frame.inactiveStart! - frame.handle - GAP));
-  }
-  assert(worstBefore <= 0.5, `${engine}: the handle left the active piece's end by ${worstBefore.toFixed(2)} px on a frame, where the gap is ${GAP}`);
-  assert(worstAfter <= 0.5, `${engine}: the inactive piece started ${worstAfter.toFixed(2)} px from the handle on a frame, where the gap is ${GAP}`);
   assert.deepEqual(errors, [], `${engine}: no uncaught page errors`);
   await page.close();
   return { engine, frames: frames.length, worstBefore, worstAfter };
