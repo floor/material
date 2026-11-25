@@ -1,38 +1,13 @@
 // src/components/menu/features/position.ts
 
 import { fitVertically } from "../../../core/dom/placement";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import { MenuConfig, MenuFeatureHost } from "../types";
 
 /**
  * Menu position helper
  * Provides functions for positioning menus and submenus
  */
-/**
- * The CSS `zoom` in effect where an element is laid out (CSS Viewport,
- * https://drafts.csswg.org/css-viewport/#zoom-property). A rect reports zoomed
- * viewport pixels while `style.left/top/width` inside a zoomed subtree are
- * local pixels, so a value taken from a rect must be divided by this before it
- * is written: without it a menu placed from its opener's rect lands at the
- * zoom times its offset — half the anchor's coordinates at 0.5, which md3.io
- * measured (2026-11-25).
- *
- * `currentCSSZoom` is the engine's own answer and is exactly 1 when nothing is
- * zoomed. A rect-over-`offsetWidth` ratio is not: `offsetWidth` rounds to whole
- * pixels, so a fractional-width opener reports 1.0036 and the menu shifts a
- * pixel on an ordinary page. Where the property is missing the computed `zoom`
- * of the element and each ancestor multiply, and a transform never counts.
- */
-const effectiveZoom = (element: HTMLElement): number => {
-  const native = (element as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom;
-  if (typeof native === "number" && native > 0) return native;
-  let zoom = 1;
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    const view = node.ownerDocument.defaultView;
-    const value = parseFloat(view?.getComputedStyle(node).zoom ?? "1");
-    if (Number.isFinite(value) && value > 0) zoom *= value;
-  }
-  return zoom;
-};
 
 export const createPositioner = (
   component: MenuFeatureHost,
