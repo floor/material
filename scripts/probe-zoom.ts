@@ -154,13 +154,18 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       await new Promise((r) => setTimeout(r, 350));
       const surface = (w.probeMenu.element as HTMLElement | undefined)?.getBoundingClientRect();
       if (!surface) return null;
-      return { openerBottom: opener.bottom, menuTop: surface.top, menuHeight: surface.height, openerHeight: opener.height, inZoom: (w.probeMenu.element as HTMLElement).closest("#zoom") !== null };
+      return {
+        openerBottom: opener.bottom, menuTop: surface.top, menuHeight: surface.height, openerHeight: opener.height,
+        inZoom: (w.probeMenu.element as HTMLElement).closest("#zoom") !== null,
+        openerAt: `${opener.left.toFixed(0)},${opener.top.toFixed(0)}`,
+        menuAt: `${surface.left.toFixed(0)},${surface.top.toFixed(0)}`,
+      };
     });
     rows.push({
       probe: `${engine} menu gap under its opener`,
       zoom,
       expected: "the same gap at every zoom",
-      measured: menu ? `gap ${(menu.menuTop - menu.openerBottom).toFixed(1)} px; menu ${menu.menuHeight.toFixed(0)} px tall vs opener ${menu.openerHeight.toFixed(0)}; in the zoom container: ${menu.inZoom}` : "no menu surface",
+      measured: menu ? `gap ${(menu.menuTop - menu.openerBottom).toFixed(1)} px; menu ${menu.menuHeight.toFixed(0)} px tall vs opener ${menu.openerHeight.toFixed(0)}; anchor at ${menu.openerAt}, menu at ${menu.menuAt}; in the zoom container: ${menu.inZoom}` : "no menu surface",
       delta: menu ? menu.menuTop - menu.openerBottom : null,
     });
 
@@ -189,6 +194,31 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       expected: "the same gap at every zoom",
       measured: tip ? `gap ${(tip.targetTop - tip.tipBottom).toFixed(1)} px; tooltip ${tip.tipHeight.toFixed(0)} px vs target ${tip.targetHeight.toFixed(0)}; in the zoom container: ${tip.inZoom}` : "no tooltip",
       delta: tip ? tip.targetTop - tip.tipBottom : null,
+    });
+
+    // 3b. A select's listbox over its field.
+    await mount(page, zoom, () => {
+      const w = window as any;
+      const select = w.mtrl.createSelect({ label: "Pick", options: [{ id: "one", text: "One" }, { id: "two", text: "Two" }, { id: "three", text: "Three" }] });
+      select.element.id = "probe-select";
+      (window as any).probeSelect = select;
+      document.querySelector("#zoom")!.append(select.element);
+    });
+    const listbox = await page.evaluate(async () => {
+      const w = window as any;
+      const field = document.querySelector<HTMLElement>("#probe-select")!.getBoundingClientRect();
+      w.probeSelect.open();
+      await new Promise((r) => setTimeout(r, 350));
+      const surface = document.querySelector<HTMLElement>(".mtrl-select__menu, .mtrl-menu")?.getBoundingClientRect();
+      if (!surface) return null;
+      return { fieldWidth: field.width, menuWidth: surface.width, fieldAt: `${field.left.toFixed(0)},${field.top.toFixed(0)}`, menuAt: `${surface.left.toFixed(0)},${surface.top.toFixed(0)}` };
+    });
+    rows.push({
+      probe: `${engine} select listbox over its field`,
+      zoom,
+      expected: "the listbox as wide as the field",
+      measured: listbox ? `listbox ${listbox.menuWidth.toFixed(0)} px wide vs field ${listbox.fieldWidth.toFixed(0)}; field at ${listbox.fieldAt}, listbox at ${listbox.menuAt}` : "no listbox",
+      delta: listbox ? Math.abs(listbox.menuWidth - listbox.fieldWidth) : null,
     });
 
     // 4. The slider's value for a click at 25, 50 and 75 per cent of the track.

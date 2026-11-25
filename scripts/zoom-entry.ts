@@ -10,7 +10,6 @@ import { createMenu } from "../src/components/menu/index.ts";
 import { createTooltip } from "../src/components/tooltip/index.ts";
 import { createCarousel } from "../src/components/carousel/index.ts";
 import { createDialog } from "../src/components/dialog/index.ts";
-/* eslint-disable @typescript-eslint/no-explicit-any -- the page reads these off the window. */
 const w = window as any;
 w.mtrl = { createButton, createIconButton, createFab, createSwitch, createCheckbox, createSlider, createTextField, createSelect, createMenu, createTooltip, createCarousel, createDialog };
 w.ready = true;
