@@ -14,6 +14,8 @@ await initPage({ name: "split-button" });
 const main = document.getElementById("tp-main");
 
 const sizes = ["xs", "s", "m", "l", "xl"];
+/** The interaction scenario's own row: the readout measures those buttons. */
+let interactionRow = null;
 const build = (size, dir) => {
   const split = createSplitButton({
     text: "Save",
@@ -60,24 +62,57 @@ scenario(interaction, {
   lookFor: "the menu opens; the trailing button's corner rounds off; the chevron turns",
   expected: "the chevron turns about its centre of mass — the painted mass stays put",
   measure: () => {
-    const rows = [...document.querySelectorAll(".tp-row")];
+    // The painted centre is the glyph polygon's centroid, not its bounding-box
+    // centre: the box centre reads a real 0.275 px shift as zero (the same
+    // method as scripts/check-split-button-chevron.ts).
+    const centroidOf = (path) => {
+      const d = path.getAttribute("d") ?? "";
+      const vertices = [];
+      let x = 0;
+      let y = 0;
+      for (const match of d.matchAll(/([MmLlHhVvZz])([^MmLlHhVvZz]*)/g)) {
+        const op = match[1];
+        if (op.toLowerCase() === "z") continue;
+        const relative = op === op.toLowerCase();
+        const nums = [...match[2].matchAll(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi)].map((n) => Number(n[0]));
+        for (let i = 0; i + 1 < nums.length; i += 2) {
+          x = relative ? x + nums[i] : nums[i];
+          y = relative ? y + nums[i + 1] : nums[i + 1];
+          vertices.push([x, y]);
+        }
+      }
+      const first = vertices[0];
+      const last = vertices[vertices.length - 1];
+      if (first && last && first[0] === last[0] && first[1] === last[1]) vertices.pop();
+      let twice = 0;
+      let cx = 0;
+      let cy = 0;
+      for (let i = 0; i < vertices.length; i++) {
+        const [x1, y1] = vertices[i];
+        const [x2, y2] = vertices[(i + 1) % vertices.length];
+        const cross = x1 * y2 - x2 * y1;
+        twice += cross;
+        cx += (x1 + x2) * cross;
+        cy += (y1 + y2) * cross;
+      }
+      const point = path.ownerSVGElement.createSVGPoint();
+      point.x = cx / (3 * twice);
+      point.y = cy / (3 * twice);
+      return point.matrixTransform(path.getScreenCTM());
+    };
     const out = [];
-    for (const root of document.querySelectorAll(".mtrl-split-button")) {
+    for (const root of (interactionRow?.querySelectorAll(".mtrl-split-button") ?? [])) {
       const button = root.querySelector(".mtrl-split-button__trailing");
       const svg = root.querySelector(".mtrl-split-button__chevron");
       const path = svg?.querySelector("path");
       if (!button || !path) continue;
       const bb = button.getBoundingClientRect();
-      const bbox = path.getBBox();
-      const p = svg.createSVGPoint();
-      p.x = bbox.x + bbox.width / 2;
-      p.y = bbox.y + bbox.height / 2;
-      const ink = p.matrixTransform(path.getScreenCTM());
+      const ink = centroidOf(path);
       out.push(`${root.dataset.size}/${root.dataset.dir}: ink dx ${(ink.x - (bb.x + bb.width / 2)).toFixed(2)} dy ${(ink.y - (bb.y + bb.height / 2)).toFixed(2)}`);
     }
-    return out.join(" · ") || rows.length + " rows mounted";
+    return out.join(" · ") || "no split buttons mounted yet";
   },
-  mount: (body) => { mountRow(body, "ltr"); },
+  mount: (body) => { interactionRow = mountRow(body, "ltr"); },
 });
 
 const edge = section(main, "Edge cases");

@@ -16,8 +16,9 @@ const main = document.getElementById("tp-main");
 const placements = ["bottom-end", "bottom-start", "none"];
 const items = Array.from({ length: 6 }, (_, i) => ({ id: `i${i}`, text: `Action ${i + 1}` }));
 const longItems = items;
-let longMenu = null;
-const mount = (body, placement, longList) => {
+/** The interaction scenario's own long-list menu; the edge case keeps its own. */
+let interactionMenu = null;
+const mount = (body, placement, longList, presentation) => {
   const box = document.createElement("div");
   box.style.cssText = "position:relative;padding:24px;min-height:200px;display:flex;align-items:flex-end;justify-content:flex-end";
   body.append(box);
@@ -26,10 +27,10 @@ const mount = (body, placement, longList) => {
     ariaLabel: `FAB menu, ${placement}`,
     placement,
     items: longList ? longItems : items.slice(0, 3),
+    ...(presentation ? { presentation } : {}),
   });
   // The factory's element carries the FAB and the menu: mount it as-is.
   box.append(menu.element);
-  if (longList) longMenu = menu;
   return menu;
 };
 
@@ -55,13 +56,14 @@ scenario(interaction, {
   lookFor: "the menu fits the window; when it cannot, it shifts just enough",
   expected: "the shift readout shows the correction the list consumed",
   measure: () => {
-    const root = longMenu?.element;
+    const root = interactionMenu?.element;
     const list = root?.querySelector(".mtrl-fab-menu__list");
     if (!root || !list) return "open the long-list FAB menu to measure";
     const r = list.getBoundingClientRect();
+    if (r.width === 0) return "press the FAB above to open the long list and measure it";
     return `list ${r.width.toFixed(0)}x${r.height.toFixed(0)} at ${r.left.toFixed(0)},${r.top.toFixed(0)} · shift var ${getComputedStyle(list).translate}`;
   },
-  mount: (body) => { mount(body, "bottom-end", true); },
+  mount: (body) => { interactionMenu = mount(body, "bottom-end", true, "list"); },
 });
 
 const edge = section(main, "Edge cases");
@@ -69,7 +71,7 @@ scenario(edge, {
   title: "RTL and dark",
   lookFor: "mirrored placement; the same fit-then-shift behaviour",
   expected: "identical corrections mirrored",
-  mount: (body) => { mount(body, "top-start", true); },
+  mount: (body) => { mount(body, "top-start", true, "list"); },
 });
 </script>
 </body>
