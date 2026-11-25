@@ -1,6 +1,7 @@
 /* test/pages/shared/harness.css — the shell and page chrome. */
 * { box-sizing: border-box; }
-body { font: 15px/1.5 system-ui; margin: 0; }
+body { font: 15px/1.5 system-ui; margin: 0; padding-top: 64px; /* the app bar sits above the shell */ }
+html { scroll-padding-top: 64px; }
 
 .tp-shell { display: grid; grid-template-columns: 96px 1fr; min-height: calc(100vh - 64px); }
 .tp-shell.tp-docked { grid-template-columns: 96px 280px 1fr; }
@@ -19,3 +20,9 @@ body { font: 15px/1.5 system-ui; margin: 0; }
 .tp-body { margin: 12px 0; }
 .tp-measure { margin: 6px 0 0; font: 13px/1.4 ui-monospace, monospace; color: var(--mtrl-sys-color-primary, #333); min-height: 1em; }
 .tp-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+/* The slider page's tick guides: green at every tick, red at the ends. */
+.tp-guides { position: absolute; inset: 0; pointer-events: none; }
+.tp-guide { position: absolute; width: 1px; background: #0b7; opacity: 0.85; }
+.tp-guide-end { width: 2px; background: #e00; }
+.tp-readout { font: 13px/1.4 ui-monospace, monospace; color: var(--mtrl-sys-color-primary, #333); margin-top: 6px; }

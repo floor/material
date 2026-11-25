@@ -10,23 +10,101 @@
 <script type="module">
 import { initPage, section, scenario } from "/shared/harness.js";
 import { createSlider } from "/dist/components/slider/index.js";
-await initPage({ name: "slider", toolbar: { density: true } });
+await initPage({ name: "slider" });
 const main = document.getElementById("tp-main");
+
+const sizes = ["xs", "s", "m", "l", "xl"];
+const CORNERS = { xs: 8, s: 8, m: 12, l: 16, xl: 28 };
+const cornerOf = (element) => {
+  const name = sizes.find((n) => element.classList.contains("mtrl-slider--" + n));
+  return CORNERS[name] ?? 12;
+};
+
+// One slider cell: the slider, the tick guides drawn over it (green lines,
+// red at the ends), and a per-slider readout of the handle vs its tick.
+const items = [];
+const cell = (body, config) => {
+  const box = document.createElement("div");
+  box.style.cssText = "position:relative;padding:20px 16px";
+  body.append(box);
+  const slider = createSlider(config);
+  box.append(slider.element);
+  const guides = document.createElement("div");
+  guides.className = "tp-guides";
+  box.append(guides);
+  const readout = document.createElement("div");
+  readout.className = "tp-readout";
+  box.append(readout);
+  items.push({ slider, box, guides, readout });
+  return slider;
+};
+
+const drawGuides = (item) => {
+  const { slider, box, guides } = item;
+  const element = slider.element;
+  const container = element.querySelector(".mtrl-slider__container");
+  const track = element.querySelector(".mtrl-slider__track");
+  const handle = element.querySelector('[role="slider"]');
+  if (!container || !track || !handle) return null;
+  const c = container.getBoundingClientRect();
+  const t = track.getBoundingClientRect();
+  const hb = handle.getBoundingClientRect();
+  const rtl = getComputedStyle(element).direction === "rtl";
+  const inset = cornerOf(element);
+  const steps = Number(handle.getAttribute("aria-valuemax")) - Number(handle.getAttribute("aria-valuemin"));
+  const span = t.width - 2 * inset;
+  const handleAt = rtl ? t.right - (hb.x + hb.width / 2) : hb.x + hb.width / 2 - t.left;
+  const stops = [...Array(steps + 1)].map((_, k) => inset + (span * k) / steps);
+  const nearest = stops.reduce((best, s) => (Math.abs(s - handleAt) < Math.abs(best - handleAt) ? s : best), stops[0]);
+  const delta = Math.abs(nearest - handleAt);
+  const ticksElement = element.querySelector(".mtrl-slider__ticks");
+  const hasTicks = ticksElement ? getComputedStyle(ticksElement).display !== "none" && !ticksElement.hidden : false;
+  guides.replaceChildren();
+  const originX = t.left - box.getBoundingClientRect().left;
+  const originY = t.top - box.getBoundingClientRect().top;
+  for (let k = 0; k < stops.length; k++) {
+    const guide = document.createElement("div");
+    guide.className = "tp-guide" + (k === 0 || k === stops.length - 1 ? " tp-guide-end" : "");
+    guide.style.left = (originX + stops[k]) + "px";
+    guide.style.top = (originY + t.height / 2 - 14) + "px";
+    guide.style.height = "28px";
+    guides.append(guide);
+  }
+  return {
+    readout: hasTicks
+      ? `handle ${handleAt.toFixed(1)} · tick ${stops.indexOf(nearest)} ${nearest.toFixed(1)} · |Δ| ${delta.toFixed(2)} px`
+      : `handle ${handleAt.toFixed(1)} · corner inset ${inset.toFixed(1)} (no ticks)`,
+    delta: hasTicks ? delta : 0,
+  };
+};
 
 const variants = section(main, "Variants & sizes");
 scenario(variants, {
-  title: "Discrete tick scale",
-  lookFor: "the handle snaps to the ticks; the value bubble follows",
-  expected: "the handle centre sits on the tick centre",
+  title: "Discrete tick scale, every size",
+  lookFor: "the handle's centre sits on its tick; the green guides mark every tick, red at the ends",
+  expected: "|Δ| under 0.5 px on every slider with ticks",
   measure: () => {
-    const handle = document.querySelector(".mtrl-slider__handle");
-    const ticks = document.querySelector(".mtrl-slider__tick");
-    if (!handle || !ticks) return "no slider mounted";
-    return "handle and ticks mounted";
+    let worst = 0;
+    const per = [];
+    for (const item of items) {
+      const result = drawGuides(item);
+      if (!result) continue;
+      worst = Math.max(worst, result.delta);
+      per.push(result.readout);
+    }
+    return per.join(" · ") + ` · worst |Δ| ${worst.toFixed(2)} px`;
   },
   mount: (body) => {
-    const s = createSlider({ min: 0, max: 10, value: 4, ticks: true });
-    body.append(s.element);
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-direction:column;gap:8px";
+    body.append(row);
+    for (const size of sizes) {
+      const label = document.createElement("p");
+      label.style.cssText = "margin:0;font-size:12px;color:var(--mtrl-sys-color-on-surface-variant,#555)";
+      label.textContent = size.toUpperCase();
+      row.append(label);
+      cell(row, { min: 0, max: 10, value: 4, ticks: true, size });
+    }
   },
 });
 
@@ -36,8 +114,10 @@ scenario(states, {
   lookFor: "the pressed handle's state layer; the focus ring",
   expected: "the layers do not clip at the track's ends",
   mount: (body) => {
-    const s = createSlider({ min: 0, max: 10, value: 2 });
-    body.append(s.element);
+    const focused = cell(body, { min: 0, max: 10, value: 2 });
+    focused.element.querySelector('[role="slider"]')?.focus();
+    const pressed = cell(body, { min: 0, max: 10, value: 8 });
+    pressed.element.querySelector('[role="slider"]')?.classList.add("mtrl-slider__handle--pressed");
   },
 });
 
@@ -47,35 +127,44 @@ scenario(interaction, {
   lookFor: "the arrows step a tick; the drag follows the pointer",
   expected: "the value bubble reads the same as the handle position",
   measure: () => {
-    const handle = document.querySelector(".mtrl-slider__handle");
-    if (!handle) return "no handle";
-    const r = handle.getBoundingClientRect();
-    return `handle centre ${r.left.toFixed(1)}..${r.right.toFixed(1)} at y ${r.top.toFixed(1)}`;
+    const item = items[items.length - 1];
+    const result = item ? drawGuides(item) : null;
+    return result ? result.readout : "no slider mounted";
   },
   mount: (body) => {
-    const s = createSlider({ min: 0, max: 10, value: 6 });
-    body.append(s.element);
+    cell(body, { min: 0, max: 10, value: 6, ticks: true });
   },
 });
 
 const edge = section(main, "Edge cases");
 scenario(edge, {
-  title: "Ends, RTL, density",
-  lookFor: "the handle's ends reach the track's ends without clipping; RTL mirrors",
-  expected: "the |Δ| between handle centre and tick centre stays under 0.5 px",
+  title: "Ends at minimum and maximum",
+  lookFor: "the handle's centre ON the end ticks, one corner radius in from the track's end",
+  expected: "the handle does not overhang the track",
   measure: () => {
-    const handle = document.querySelector(".mtrl-slider__handle");
-    const track = document.querySelector(".mtrl-slider__track");
-    if (!handle || !track) return "no slider mounted";
-    const hb = handle.getBoundingClientRect();
-    const tb = track.getBoundingClientRect();
-    return `handle at ${hb.left.toFixed(1)} on track ${tb.left.toFixed(1)}..${tb.right.toFixed(1)} · dir ${document.documentElement.dir}`;
+    let worst = 0;
+    const per = [];
+    for (const item of items) {
+      const result = drawGuides(item);
+      if (!result) continue;
+      worst = Math.max(worst, result.delta);
+      per.push(result.readout);
+    }
+    return per.join(" · ") + ` · worst |Δ| ${worst.toFixed(2)} px`;
   },
   mount: (body) => {
-    const s = createSlider({ min: 0, max: 10, value: 10, ticks: true });
-    body.append(s.element);
+    const note = document.createElement("p");
+    note.style.cssText = "margin:0 0 8px;font-size:13px;color:var(--mtrl-sys-color-error,#b00)";
+    note.textContent = "These pages show main's code: the ends look like the old defect until the slider-ends fix (#459) merges.";
+    body.append(note);
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-direction:column;gap:8px";
+    body.append(row);
+    cell(row, { min: 0, max: 10, value: 0, ticks: true, size: "xs" });
+    cell(row, { min: 0, max: 10, value: 10, ticks: true, size: "xl" });
   },
 });
+
 </script>
 </body>
 </html>
