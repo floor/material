@@ -148,7 +148,9 @@ export const withScroll = (config: CarouselConfig) =>
       let bestDistance = Number.MAX_VALUE;
       snapPositions.forEach((snapPosition, i) => {
         const distance = Math.abs(position - snapPosition);
-        if (distance < bestDistance) {
+        // At the capped end several snaps share the range: the readout names
+        // the item that is actually in view — the last of the ties.
+        if (distance <= bestDistance) {
           bestDistance = distance;
           best = i;
         }
@@ -224,8 +226,18 @@ export const withScroll = (config: CarouselConfig) =>
 
       const unit = strategy.itemSize + strategy.gap;
       scrollOffsetAtStart = isUncontained ? 0 : -snapPositionOffset(strategy, 0, count);
+      // Uncontained: the scroll ends where the content ends — the last item
+      // flush with the end edge plus the trailing padding — instead of at
+      // the last item's snap position, which would pull that item to the
+      // start edge and leave an empty space after it wider than an item.
+      // The snap positions beyond the end cap to the range, so goTo(last),
+      // the wheel, the drag and the readout all settle on the same edge.
+      const contentLength = padding + count * unit + padding - strategy.gap;
+      const maxScroll = isUncontained ? Math.max(0, contentLength - containerSize) : Number.MAX_SAFE_INTEGER;
       snapPositions = slideElements.map((_, i) =>
-        isUncontained ? i * unit : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
+        isUncontained
+          ? Math.min(i * unit, maxScroll)
+          : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
       );
       const scrollRange = Math.max(0, snapPositions[count - 1] ?? 0);
 

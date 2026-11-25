@@ -505,6 +505,44 @@ export async function checkCarouselUncontained(
       failures.push(`Slide 10: row terminates before container right edge: rightmost visible item right is ${rightmost10.toFixed(2)} px vs container ${slide10.containerWidth} px`);
     }
 
+    // --- End-of-content check: the last item flush with the end edge ---
+    // goTo(last) must settle at the content end: no empty space wider than
+    // the end padding after the last item, and the last item not clipped by
+    // the trailing edge. Fails on main, where the range ran to the last
+    // item's snap position and pulled it to the start edge (RTL showed
+    // ~728 px of empty space; LTR clipped the item 111 px past the edge).
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(23);
+    });
+    await waitFor(page, "the scroll to settle at the capped end", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+      const items = [...document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")];
+      const last = items[items.length - 1]!;
+      const lb = last.getBoundingClientRect();
+      const sb = el.getBoundingClientRect();
+      return Math.abs((sb.right - lb.right) - 16) < 1;
+    });
+    const endCheck = await page.evaluate(() => {
+      const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+      const items = [...document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")];
+      const last = items[items.length - 1]!;
+      const sb = scroller.getBoundingClientRect();
+      const lb = last.getBoundingClientRect();
+      return {
+        emptyAfter: +(sb.right - lb.right).toFixed(2),
+        scrollLeft: scroller.scrollLeft,
+        maxScroll: scroller.scrollWidth - scroller.clientWidth,
+        overhang: +(lb.right - sb.right).toFixed(2),
+      };
+    });
+    console.log(`[uncontained check] End: emptyAfter=${endCheck.emptyAfter}, overhang=${endCheck.overhang}, scrollLeft=${endCheck.scrollLeft}, maxScroll=${endCheck.maxScroll}`);
+    if (endCheck.emptyAfter < 15.5 || endCheck.emptyAfter > 16.5) {
+      failures.push(`End: the last item is not flush with the end edge — ${endCheck.emptyAfter.toFixed(2)} px of empty space after it (expected the 16 px end padding)`);
+    }
+    if (endCheck.overhang > 0.5) {
+      failures.push(`End: the last item overhangs the container edge by ${endCheck.overhang.toFixed(2)} px`);
+    }
+
     // --- Keyboard navigation & focus reachability check ---
     await page.evaluate(() => {
       (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);
