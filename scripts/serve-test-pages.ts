@@ -43,11 +43,13 @@ const server = Bun.serve({
     const path = url.pathname.replace(/^\/+/, "");
     if (path === "__commit") return new Response(await headSha, { headers: { "Content-Type": "text/plain" } });
     // Only the test pages and the built library are served — the checkout
-    // itself is not reachable. The pages reference the build with a
-    // /dist/... prefix; dist/ maps that prefix onto the build directory.
-    for (const base of [pages, resolve(root, "dist")]) {
-      const mapped = base === pages ? path : path.replace(/^dist\//, "");
-      const file = resolve(base, mapped);
+    // itself is not reachable. The pages reference the build only through the
+    // /dist/ prefix: a path outside it never reaches the build directory, so
+    // nothing there is reachable under an unprefixed alias.
+    const candidates = [resolve(pages, path)];
+    if (path.startsWith("dist/")) candidates.push(resolve(root, "dist", path.slice("dist/".length)));
+    for (const file of candidates) {
+      const base = file.startsWith(pages) ? pages : resolve(root, "dist");
       if (!file.startsWith(base)) continue;
       const served = await serveFile(file);
       if (served) return served;
@@ -58,4 +60,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`test pages on http://127.0.0.1:${server.port}/ (commit ${headSha}) — dist must be built: bun run build`);
+console.log(`test pages on http://127.0.0.1:${server.port}/ (commit ${await headSha}) — dist must be built: bun run build`);
