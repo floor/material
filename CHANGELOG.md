@@ -17,6 +17,20 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.5] - 2026-11-25
+
+A carousel drag after a click settles at the release position, and uncontained carousels stop at the end of their content.
+
+### Fixed
+
+- **Carousel drag after a click.** A pointer gesture moves focus to the slide under it, and the carousel's focus-follow — meant for the keyboard — took that focus as a selection: after a click, a drag, and the focus the release left on the leading slide, the strip glided back to the clicked slide even with snapping off. A drag's end now disarms focus-following until the next press or key, so a drag rests where it is released (snapping on still settles on the nearest snap), while a click still selects its slide and Tab, the arrows and Home/End keep their follow-focus.
+- **Carousel uncontained end of content.** Navigating to the last item no longer scrolls it to the start edge: the uncontained scroll range caps at the content length minus the viewport, so the last item settles flush with the end edge plus the trailing padding — in both directions — and the readout names the item actually in view at the capped end.
+
+Release measurements: the push-to-main package job measures **921,141 B**
+compressed, **5,246,966 B** unpacked and **1,302 files**, with **135,484 B**
+of gzip-compressed root JavaScript and **132,396 B** for the every-component
+scenario ([run 45687409445](https://github.com/floor/material/actions/runs/45687409445/job/139464080742)).
+
 ## [3.16.4] - 2026-11-25
 
 Drawer sections follow the menu's motion with 1 px under expanded headers, and the slider track keeps its gap as the pressed handle narrows.
@@ -7429,7 +7443,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.5...HEAD
+[3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5
 [3.16.4]: https://github.com/floor/material/compare/v3.16.3...v3.16.4
 [3.16.3]: https://github.com/floor/material/compare/v3.16.2...v3.16.3
 [3.16.2]: https://github.com/floor/material/compare/v3.16.1...v3.16.2
