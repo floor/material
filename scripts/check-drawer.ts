@@ -452,7 +452,7 @@ try {
   // the panel's visible bottom on every sampled frame — the menu's fraction
   // is the panel's height fraction (paired-normalised below), so hit-testing
   // at the panel's bottom edge proves the painted height follows the menu
-  // exactly (Orion's inner-clip defect hid the bottom band).
+  // exactly (the inner-clip defect found in review hid the bottom band).
   const painted = frames_rows.filter(f => f.panel > 40).every(f => f.paintedRow);
   assert.ok(painted, "the rows paint to the panel's visible bottom on every frame");
   const maxPanel = Math.max(...frames_rows.map(f => f.panel));
