@@ -14,8 +14,14 @@ import { defineDrawer } from "/dist/elements/index.js";
 import "/dist/elements/css/drawer.js";
 defineDrawer();
 
-let renderFactory = () => {};
-let renderElement = () => {};
+// Both forms, one per scenario: the toolbar's Factory / Element switch repaints
+// every scenario with the chosen form, and each scenario measures its own box.
+// (A single shared callback let the interaction's mount overwrite the
+// variant's, so the switch repainted one scenario and the Element button
+// repainted the factory.)
+let form = "factory";
+const painters = new Set();
+const repaint = () => { for (const paint of painters) paint(); };
 const host = () => document.getElementById("tp-main");
 
 const items = [
@@ -70,72 +76,103 @@ await initPage({
   toolbar: {
     density: true,
     forms: [
-      { label: "Factory", render: () => renderFactory() },
-      { label: "Element", render: () => renderElement() },
+      { label: "Factory", render: () => { form = "factory"; repaint(); } },
+      { label: "Element", render: () => { form = "element"; repaint(); } },
     ],
   },
 });
 
+/** One scenario's drawer, in the chosen form. */
+const mountIn = (box) => {
+  box.replaceChildren();
+  (form === "element" ? mountElement : mountFactory)(box);
+  return box;
+};
+
 const variants = section(host(), "Variants & sizes");
+const variantBox = document.createElement("div");
 scenario(variants, {
   title: "Standard drawer with sections",
   lookFor: "the sheet's 360 dp width, the section rows and their chevrons",
   expected: "rows at the density height; the chevron's ink ends on the badge text's 24 dp line",
   measure: () => {
-    const root = host();
-    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
-    const header = shadow.querySelector('[data-id="labels"]') ;
-    const chevron = header?.querySelector(".mtrl-drawer__item-chevron") ;
-    const svg = chevron?.querySelector("svg") ;
-    const path = svg?.querySelector("path") ;
+    const shadow = variantBox.querySelector("m-drawer")?.shadowRoot ?? variantBox;
+    const header = shadow.querySelector('[data-id="labels"]');
+    const chevron = header?.querySelector(".mtrl-drawer__item-chevron");
+    const svg = chevron?.querySelector("svg");
+    const path = svg?.querySelector("path");
     if (!header || !chevron || !path) return "open the section to measure";
     const ib = header.getBoundingClientRect();
     const cb = chevron.getBoundingClientRect();
     const bbox = path.getBBox();
     const screenX = (x) => { const p = svg.createSVGPoint(); p.x = x; p.y = bbox.y + bbox.height / 2; return p.matrixTransform(path.getScreenCTM()).x; };
+    const inkStart = Math.min(screenX(bbox.x), screenX(bbox.x + bbox.width));
     const inkEnd = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
-    return `item h ${ib.height.toFixed(0)} · chevron box end inset ${(ib.right - cb.right).toFixed(1)} (ink 24) · ink end inset ${(ib.right - inkEnd).toFixed(1)}`;
+    // The inset that matters is from the reading direction's end: the right in
+    // LTR, the left in RTL. Reading only the right edge reported 299 px in RTL
+    // where the chevron's ink ends 24 px from the item's start side.
+    const rtl = getComputedStyle(header).direction === "rtl";
+    const boxInset = rtl ? cb.left - ib.left : ib.right - cb.right;
+    const inkInset = rtl ? inkStart - ib.left : ib.right - inkEnd;
+    return `item h ${ib.height.toFixed(0)} · chevron box ${rtl ? "start" : "end"} inset ${boxInset.toFixed(1)} (ink 24) · ink ${rtl ? "start" : "end"} inset ${inkInset.toFixed(1)}`;
   },
-  mount: (body) => { const row = document.createElement("div"); body.append(row); renderFactory = () => { row.innerHTML = ""; mountFactory(row); }; renderFactory(); },
+  mount: (body) => {
+    body.append(variantBox);
+    const paint = () => mountIn(variantBox);
+    painters.add(paint);
+    paint();
+  },
 });
 
 const states = section(host(), "States");
+const stateBox = document.createElement("div");
 scenario(states, {
   title: "Parent cue and selected pill",
   lookFor: "the Labels header keeps a faint persistent layer while its child Family is selected",
   expected: "the header shows the hover-opacity state layer, no pill, no bold; the child carries the pill",
   measure: () => {
-    const root = host();
-    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
-    const header = shadow?.querySelector('[data-id="labels"]') ;
-    const indicator = header?.querySelector(".mtrl-drawer__active-indicator") ;
+    const shadow = stateBox.querySelector("m-drawer")?.shadowRoot ?? stateBox;
+    const header = shadow?.querySelector('[data-id="labels"]');
+    const indicator = header?.querySelector(".mtrl-drawer__active-indicator");
     if (!indicator) return "open the section to measure";
     return `cue layer opacity ${getComputedStyle(indicator, "::after").opacity} · pill opacity ${getComputedStyle(indicator, "::before").opacity}`;
   },
-  mount: () => {},
+  mount: (body) => {
+    body.append(stateBox);
+    const paint = () => mountIn(stateBox);
+    painters.add(paint);
+    paint();
+  },
 });
 
 const interaction = section(host(), "Interaction");
 
-// The live fractions, the same pair the owner's comparison reads: the menu's
-// scaleY against the drawer's visible height, each as a fraction of its open
-// state. This page loads the local build, so until #458 merges it shows main's
-// motion (the panel springs while the rows stay still) — merge #458 or use its
-// branch build to see the matched pair.
-let drawerFull = 0;
+// The comparison the owner reads: one control starts both motions, and the
+// readout samples them every frame (the harness ticks the readouts with
+// requestAnimationFrame). The drawer's fraction is against the content height
+// measured now — `scrollHeight` — so a density change moves the denominator
+// with it; a running maximum would read the open drawer as a fraction of its
+// tallest state and drift downwards as the density goes from 0 to −5.
+const interactionBox = document.createElement("div");
+let menu = null;
 let liveDrawer = null;
 const fractions = () => {
   const group = liveDrawer?.querySelector(".mtrl-drawer__group-items");
+  const inner = liveDrawer?.querySelector(".mtrl-drawer__group-items-inner");
+  // The rows keep their full height inside the clipped panel, so their sum is
+  // the denominator at the current density — not a running maximum, and not
+  // the clipped inner's scrollHeight (0 while closed).
+  const rows = inner ? [...inner.children].reduce((sum, row) => sum + row.getBoundingClientRect().height, 0) : 0;
+  const full = rows > 0 ? rows : inner?.scrollHeight ?? 0;
   const panel = group ? group.getBoundingClientRect().height : 0;
-  if (panel > drawerFull) drawerFull = panel;
-  const drawer = drawerFull > 0 ? panel / drawerFull : 0;
-  const menuElement = document.querySelector(".mtrl-menu");
+  const drawer = full > 0 ? Math.min(1, panel / full) : 0;
+  const menuElement = liveDrawer ? document.querySelector(".mtrl-menu") : null;
   const transform = menuElement ? getComputedStyle(menuElement).transform : "none";
-  const menu = transform && transform !== "none" ? new DOMMatrixReadOnly(transform).d : null;
+  const menuScale = transform && transform !== "none" ? new DOMMatrixReadOnly(transform).d : null;
   const show = (value) => (value === null ? "–" : value.toFixed(3));
   const moving = (value) => value !== null && value > 0.02 && value < 0.98;
-  const inStep = moving(menu) && moving(drawer) && Math.abs(menu - drawer) <= 0.02;
-  return `menu scaleY ${show(menu)} · drawer visible height ${drawer.toFixed(3)}${inStep ? " · in step" : ""}`;
+  const inStep = moving(menuScale) && moving(drawer) && Math.abs(menuScale - drawer) <= 0.02;
+  return `menu scaleY ${show(menuScale)} · drawer visible height ${drawer.toFixed(3)}${inStep ? " · in step" : ""}`;
 };
 
 scenario(interaction, {
@@ -144,53 +181,62 @@ scenario(interaction, {
   expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse; the readout's two fractions stay together frame for frame",
   measure: fractions,
   mount: (body) => {
+    body.append(interactionBox);
     const row = document.createElement("div");
     row.className = "tp-row";
     const drawerBox = document.createElement("div");
     drawerBox.style.width = "360px";
     const menuBox = document.createElement("div");
     row.append(drawerBox, menuBox);
-    body.append(row);
-    renderFactory = () => { drawerBox.innerHTML = ""; mountFactory(drawerBox); };
-    renderFactory();
-    liveDrawer = drawerBox;
-    mountMenu(menuBox);
-    // The two motions, one press each, so the fractions can be watched together.
-    const buttons = document.createElement("div");
-    buttons.style.display = "flex";
-    buttons.style.gap = "8px";
-    buttons.style.margin = "8px 0";
-    const sectionButton = document.createElement("button");
-    sectionButton.textContent = "Open / close the section";
-    sectionButton.addEventListener("click", () => {
+    interactionBox.append(row);
+    const paint = () => {
+      drawerBox.replaceChildren();
+      (form === "element" ? mountElement : mountFactory)(drawerBox);
+      liveDrawer = drawerBox;
+    };
+    painters.add(paint);
+    paint();
+    const opener = document.createElement("button");
+    opener.id = "menu-opener";
+    opener.textContent = "Open the menu";
+    menuBox.append(opener);
+    import("/dist/components/menu/index.js").then(({ createMenu }) => {
+      menu = createMenu({ opener: "#menu-opener", items: [
+        { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
+      ] });
+    });
+    // One control starts both, driven through the components' own API so the
+    // menu is not dismissed as an outside press before the section moves.
+    const both = document.createElement("button");
+    both.textContent = "Open / close both";
+    both.addEventListener("click", () => {
       const drawer = drawerBox.querySelector(".mtrl-drawer");
       const header = (drawer?.shadowRoot ?? drawer)?.querySelector('[data-id="labels"]') ?? drawer?.querySelector(".mtrl-drawer__item");
       header?.click();
+      // The menu follows the section's new state, so both motions run the same
+      // way at once and the two fractions can be read against each other.
+      const expanded = header?.getAttribute("aria-expanded") === "true";
+      if (expanded) menu?.open?.(); else menu?.close?.();
     });
-    const menuButton = document.createElement("button");
-    menuButton.textContent = "Open / close the menu";
-    menuButton.addEventListener("click", () => menuBox.querySelector("#menu-opener")?.click());
-    buttons.append(sectionButton, menuButton);
-    body.append(buttons);
     const note = document.createElement("p");
     note.style.margin = "4px 0 0";
     note.style.fontSize = "12px";
     note.style.opacity = "0.7";
-    note.textContent = "This page runs the build it is served from: until #458 merges, it shows main's motion, where the panel springs and the rows stay still. Merge #458 or serve its branch build to watch the pair together.";
-    body.append(note);
+    note.textContent = "This page runs the build it is served from: until #458 merges, it shows main's motion, where the panel springs and the rows stay still. Merge #458 or serve its branch build to watch the pair together. The rows grow inside the panel and the panel clips them; the fade rides the same tokens.";
+    interactionBox.append(both, note);
   },
 });
 
 const edge = section(host(), "Edge cases");
+const edgeBox = document.createElement("div");
 scenario(edge, {
   title: "RTL and density",
   lookFor: "mirrored paddings and indent; the child pill starts the indent further in",
-  expected: "child label 16 dp inside its own pill at every density and direction",
+  expected: "the insets mirror with the direction and follow the density",
   measure: () => {
-    const root = host();
-    const shadow = root.querySelector("m-drawer")?.shadowRoot ?? root;
-    const child = shadow?.querySelector('[data-id="family"]') ;
-    const label = child?.querySelector(".mtrl-drawer__item-label") ;
+    const shadow = edgeBox.querySelector("m-drawer")?.shadowRoot ?? edgeBox;
+    const child = shadow.querySelector('[data-id="family"]');
+    const label = child?.querySelector(".mtrl-drawer__item-label");
     if (!child || !label) return "open the section to measure";
     const cb = child.getBoundingClientRect();
     const lb = label.getBoundingClientRect();
@@ -199,7 +245,12 @@ scenario(edge, {
     const endInset = rtl ? lb.left - cb.left : cb.right - lb.right;
     return `child pill start inset ${startInset.toFixed(1)} (12 + the indent) · end padding ${endInset.toFixed(1)} · dir ${document.documentElement.dir}`;
   },
-  mount: () => {},
+  mount: (body) => {
+    body.append(edgeBox);
+    const paint = () => mountIn(edgeBox);
+    painters.add(paint);
+    paint();
+  },
 });
 </script>
 </body>
