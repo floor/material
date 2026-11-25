@@ -355,6 +355,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handleKeyDown = (e: KeyboardEvent): void => {
+      ignorePointerFocus = false;
       stopWheel();
       const from = indexOf(e.target);
       if (from < 0) return;
@@ -378,6 +379,10 @@ export const withScroll = (config: CarouselConfig) =>
       // press may be a drag. The click after the release selects the slide
       // instead; the keyboard keeps its follow-focus.
       if (dragging) return;
+      if (ignorePointerFocus) {
+        ignorePointerFocus = false;
+        return;
+      }
       const index = indexOf(e.target);
       if (index >= 0 && index !== currentIndex) goTo(index);
     };
@@ -385,6 +390,14 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Mouse drag (touch and trackpad scroll natively) ─────────
 
     let dragging = false;
+    // A pointer gesture moves focus to the slide under it (the press's
+    // default action), and that focus is not the keyboard's follow-focus:
+    // taken as one, it scrolls the strip back to the slide the gesture
+    // started on after every drag — the release's own focus, or the clicked
+    // slide's, glides the strip home with snapping off (owner, 2026-11-25).
+    // The next press or key clears the guard, so a click still selects by its
+    // click and Tab, the arrows and Home/End keep their follow-focus.
+    let ignorePointerFocus = false;
     // The pointer that started the drag: a release of any other pointer (a
     // second mouse, a touch elsewhere) is not this drag's release.
     let dragPointer: number | null = null;
@@ -407,6 +420,7 @@ export const withScroll = (config: CarouselConfig) =>
     const handlePointerDown = (e: PointerEvent): void => {
       stopWheel();
       clearPending();
+      ignorePointerFocus = false;
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
       dragPointer = e.pointerId;
@@ -438,6 +452,7 @@ export const withScroll = (config: CarouselConfig) =>
       if (e && dragPointer !== null && "pointerId" in e && (e as PointerEvent).pointerId !== dragPointer) return;
       dragging = false;
       dragPointer = null;
+      if (dragged) ignorePointerFocus = true;
       dragged = false;
       delete element.dataset.dragging;
       restoreSnap();
@@ -490,6 +505,8 @@ export const withScroll = (config: CarouselConfig) =>
         restoreSnap();
         return;
       }
+      // The release focuses the slide it happened on: not a selection.
+      ignorePointerFocus = true;
       if (snap) {
         let target = nearestIndex(scrollPosition());
         // dragVelocity is logical (* sign at its source): the velocity that
@@ -672,6 +689,12 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("dragstart", handleDragStart);
     scroller.addEventListener("click", handleClick, true);
     window.addEventListener("blur", endDrag);
+    // A Tab into the carousel from outside sends its keydown elsewhere: the
+    // guard must not swallow that focus, so the window sees every key.
+    const clearPointerFocus = (): void => {
+      ignorePointerFocus = false;
+    };
+    window.addEventListener("keydown", clearPointerFocus, { capture: true });
     reduceMotion?.addEventListener?.("change", rebuild);
 
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(rebuild) : null;
@@ -716,6 +739,7 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("dragstart", handleDragStart);
         scroller.removeEventListener("click", handleClick, true);
         window.removeEventListener("blur", endDrag);
+        window.removeEventListener("keydown", clearPointerFocus, { capture: true });
         destroy?.();
       },
     };
