@@ -373,6 +373,7 @@
     "core/dom/placement.js": "ce580a982e599f8c96ef24f3067574be04227075a9ae17a911daeaabe32bb99a",
     "core/dom/roving.js": "5f9c6c76e600478f62f618f33770f09883d88df4cf3906d2c001efb3e685106d",
     "core/dom/utils.js": "9f6b1c8728320c432865da7b64ed1521515355a945613e86922cdd5ecb200b77",
+    "core/dom/zoom.js": "ff117f66acb0264164f8776777c7297bc5e84a0841f4d1ab37b13f825b45e624",
     "core/icons/index.js": "e6cd679b3862469e343086373c66d4e75e38905e1b06f4ca562633bdb86c9639",
     "core/icons/registry.js": "a8637b8a196049c8f4225faea9f9cb9f098199cea1acd58aff5047e2b5f263ef",
     "core/index.js": "bfee9d9b6dd69ed2db601301624c0585ce11423c051d0af43620802f149d1117",
