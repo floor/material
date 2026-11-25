@@ -59,7 +59,7 @@ export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, soli
 // 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
 // The bottom sheet drag: 920,016 B packed with Node 22.23.5 / npm 10.9.11.
 // Owner decision 2026-11-24: 920,020, the next 10 B.
-export const TARBALL_BYTES = 920_470; // The drawer section reveal: 920,460 B measured in CI 45492158985, one 10-byte round over.
+export const TARBALL_BYTES = 920_510; // The drawer section reveal + the expanded header space: 920,502 B measured in CI 45530425746, one 10-byte round over.
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts. The lean listbox entry's six
