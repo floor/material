@@ -540,15 +540,14 @@ $default-width: 360px;
     }
 
     &__group-items-inner {
-        // min-height: 0 lets the track shrink below the rows' height, and
-        // height: 100% pins the inner's box to the track's used size, so
-        // the painted clip never lags the panel during fractional sizing
-        // (the rows keep full height and the PANEL clips them — the inner's
-        // own box cut the bottom of the rows while the panel was already at
-        // the menu's fraction). The fade rides the same tokens as the
-        // panel's height.
+        // min-height: 0 lets the track shrink below the rows' height. The
+        // clip is the panel's overflow: hidden above — during fractional
+        // grid sizing the inner's own box lags the panel (the interpolated
+        // fr track resolves the inner's height as the eased fraction
+        // squared), and an inner clip cut the bottom of the rows while the
+        // panel was already at the menu's fraction. The fade rides the same
+        // tokens as the panel's height.
         min-height: 0;
-        height: 100%;
         opacity: 0;
         transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
     }
