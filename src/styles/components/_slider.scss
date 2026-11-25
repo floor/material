@@ -211,10 +211,16 @@ $component: '#{base.$prefix}-slider';
     }
     
     // PressedHandleWidth and FocusHandleWidth: 2dp, half the resting 4dp.
+    // `--pressed` is the controller's state, set by a press anywhere on the
+    // slider (the track included) and cleared on release or cancel; the
+    // container's own `:active` narrows the handle from the first frame of any
+    // press inside the component, before a render has run.
     .#{$component}--dragging &::before,
     &:active::before,
     &:focus-visible::before,
-    &--focused::before {
+    &--focused::before,
+    &--pressed::before,
+    .#{$component}__container:active &::before {
       width: 2px;
     }
 

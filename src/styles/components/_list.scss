@@ -2,7 +2,7 @@
 // 8px vertical padding (12px for three-line rows). ListTokens.kt supplies roles/media.
 //
 // Two variants. Standard (the default) is the baseline list: no container,
-// square rows in every state. Segmented is the expressive list, as Compose's
+// square rows, and a selected row that is a 16px pill. Segmented is the expressive list, as Compose's
 // SegmentedListItem: each row paints its own colour and shape, a gap apart.
 // The list itself has no background and no radius in either.
 //
@@ -79,8 +79,8 @@ $component: "#{base.$prefix}-list";
       background: t.color("primary-container"); color: t.color("on-primary-container");
       @include m.typography("title-medium");
     }
-    // Leading media share one slot in the lists spec (leading media, image or
-    // video), and its shape token is the same 8px step for both.
+    // Leading media share one slot (image or video). Segmented uses the 8px
+    // expressive step. A standard list overrides the leading slot to square.
     &--image { width: 56px; height: 56px; overflow: hidden; border-radius: v.shape('small'); }
     &--video { width: 100px; height: 56px; overflow: hidden; border-radius: v.shape('small'); }
     &--avatar, &--image, &--video {
@@ -156,6 +156,19 @@ $component: "#{base.$prefix}-list";
   }
   // Slotted controls are siblings of the row action and remain independently operable.
   &__item :is(button, input, select, textarea, a, [contenteditable="true"], [data-list-control]):not(.#{$component}__action) { position: relative; z-index: 1; }
+  // Standard selected row. Lists specs, shape morphing, read 2026-11-25: a
+  // selected item is 16dp on every corner. An unselected standard row stays
+  // square. The action and its state layer inherit this radius. There is no
+  // corner transition on the row, so selection does not add one. The four
+  // segmented shape properties stay on the segmented variant.
+  &:not(&--segmented) > &__content > &__item#{&}__item--selected {
+    border-radius: v.shape('large');
+  }
+  // Standard leading image is square (Compose ItemLeadingImageShape,
+  // CornerNone). Standard leading video follows that slot. Segmented keeps
+  // the 8px above (ItemLeadingImageExpressiveShape and ItemLeadingVideoShape).
+  &:not(&--segmented) &__leading--image,
+  &:not(&--segmented) &__leading--video { border-radius: 0; }
   // Segmented. The child combinators keep a list nested in a row out of it.
   &--segmented > &__content {
     gap: var(--#{base.$prefix}-list-segmented-gap, 2px);
@@ -207,8 +220,10 @@ $component: "#{base.$prefix}-list";
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-surface"); }
     .#{$component}__text, .#{$component}__leading, .#{$component}__trailing, .#{$component}__radio { opacity: 0.38; }
   }
+  // Specs table, read 2026-11-25: full width, or inset 16dp at the start and
+  // 24dp at the end, with nothing above or below. Logical margins mirror.
   &__divider { height: 1px; min-height: 1px; background: t.color("outline-variant"); margin-block: 0; }
-  &__divider--inset { margin-inline-start: 72px; margin-inline-end: 16px; }
+  &__divider--inset { margin-inline-start: 16px; margin-inline-end: 24px; }
   &__subheader { @include m.typography("label-large"); color: t.color("on-surface-variant"); padding: 16px 16px 8px; }
   &__empty { @include m.typography("body-medium"); color: t.color("on-surface-variant"); padding: 16px; }
 }

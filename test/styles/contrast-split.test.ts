@@ -122,10 +122,10 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss).
-    // The list's two variants: standard has no container and square rows;
-    // segmented rows read six list custom properties that the list does not
-    // declare, so they inherit, with keyboard focus on the row action
-    // (styles/components/_list.scss).
+    // The list's two variants: standard has no container, square rows, and a
+    // selected row of 16px; segmented rows read six list custom properties
+    // that the list does not declare, so they inherit, with keyboard focus on
+    // the row action (styles/components/_list.scss).
     // A single-select listbox option carries a 20px radio ring in its leading
     // or trailing slot and fills it when selected; the option itself takes the
     // row's state layer and a pointer cursor, and a focused option rounds a
@@ -346,9 +346,15 @@ describe("explicit contrast levels are opt-in", () => {
     // cue keeps a persistent hover layer on the section of the selected
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
+    // A selected standard list row is 16px on every corner, an inset divider
+    // is 16px then 24px, and a standard leading image or video is square
+    // (styles/components/_list.scss; +302 B on the slider sheet).
+    // The slider's pressed handle joins the 2px width rule (+38 B;
+    // styles/components/_slider.scss), and the container's own press narrows
+    // the handle from the first frame (+400 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "afa135e4748e8275c5776b808319d5a6f6111edf043d2be8c666b282f7a1ef0b",
-      length: 553168,
+      sha256: "a25dea6d16154967e2cf677b2f06e9a65f8f614c5e7dbbdc3412f6de9f8811f7",
+      length: 553568,
     });
   });
 
