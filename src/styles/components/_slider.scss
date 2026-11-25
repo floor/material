@@ -287,7 +287,10 @@ $component: '#{base.$prefix}-slider';
   $settle-length: m.spring(width, default-spatial), m.spring(height, default-spatial);
   &--settling {
     .#{$component}__handle, .#{$component}__inset-icon { transition: $settle-position; }
-    .#{$component}__segment { transition: $settle-position, $settle-length; }
+    // box-shadow rides the same spring: a pressed handle's 1px extension of
+    // each piece's inner edge animates with the value change and never restarts
+    // the piece's own position or length.
+    .#{$component}__segment { transition: $settle-position, $settle-length, m.spring(box-shadow, default-spatial); }
     .#{$component}__value { transition: $settle-position, $bubble-transition; }
     .#{$component}__value--visible { transition: $settle-position, $bubble-transition-visible; }
   }

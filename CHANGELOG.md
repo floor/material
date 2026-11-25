@@ -25,12 +25,12 @@ Drawer sections follow the menu's motion with 1 px under expanded headers, and t
 
 - **Navigation drawer expanded header space.** An expanded section header keeps a 1px space over its panel, so the header's parent cue no longer touches the first child's pill; collapsed sections are unchanged and the reveal motion does not jump.
 - **Drawer sections open and close on the menu's motion.** A section's panel height opens and closes on the menu's timing — duration-medium1 with the emphasized curve and no spring — the rows fade with it and keep their full height inside the panel while the panel clips them, so the visible height follows the menu's curve exactly; the content below moves with the same curve, the chevron turns on the same duration, and reduced motion stays instant.
-- **Slider pressed gap.** The track pieces move toward the narrowed handle during a press, keeping their gap measured from the handle's edge.
+- **Slider pressed gap.** The track's gap is measured from the handle's edge, so a handle that narrows on a press (4 dp to 2 dp) brings each piece of track 1 px closer for as long as the press lasts, and they move back on the release. The pieces grow by that pixel as a painted edge on the side facing the handle, not as a new layout, so their settle spring for the value change is never restarted — the click that used to leave the pieces behind stays in step.
 
-Release measurements: the push-to-main package job measures **920,696 B**
-compressed, **5,244,299 B** unpacked and **1,302 files**, with **135,170 B**
-of gzip-compressed root JavaScript and **132,120 B** for the every-component
-scenario ([run 45593393034](https://github.com/floor/material/actions/runs/45593393034/job/139133644579)).
+Release measurements: the push-to-main package job measures **920,946 B**
+compressed, **5,246,018 B** unpacked and **1,302 files**, with **135,364 B**
+of gzip-compressed root JavaScript and **132,289 B** for the every-component
+scenario ([run 45613154458](https://github.com/floor/material/actions/runs/45613154458/job/139202307058)).
 
 ## [3.16.3] - 2026-11-25
 
