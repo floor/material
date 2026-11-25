@@ -122,10 +122,10 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss).
-    // The list's two variants: standard has no container and square rows;
-    // segmented rows read six list custom properties that the list does not
-    // declare, so they inherit, with keyboard focus on the row action
-    // (styles/components/_list.scss).
+    // The list's two variants: standard has no container, square rows, and a
+    // selected row of 16px; segmented rows read six list custom properties
+    // that the list does not declare, so they inherit, with keyboard focus on
+    // the row action (styles/components/_list.scss).
     // A single-select listbox option carries a 20px radio ring in its leading
     // or trailing slot and fills it when selected; the option itself takes the
     // row's state layer and a pointer cursor, and a focused option rounds a
@@ -277,7 +277,7 @@ describe("explicit contrast levels are opt-in", () => {
     // The drawer's active pill and hover/focus/pressed state layer are painted
     // by the active indicator's `::before` and `::after`, which the
     // reduced-motion switch also reaches, so the item keeps its 48dp touch
-    // target unclipped (styles/components/_drawer.scss) and the section open/close and the section reveal moves onto the menu's shared mixin — transform scaleY + opacity on the group's inner, the grid row only pushes the content below (duration-medium1 + easing-emphasized; +66 B) and the reveal's visibility timing moves into the shared mixin as a parameter (styles/abstract/_mixins.scss; +11 B) and the menu's visible state flips only the values (−12 B) and the section reveal de-compounds — the panel's height is the reveal and the rows fade without scaling (−164 B).
+    // target unclipped (styles/components/_drawer.scss).
     // The card's loading, expandable and swipeable rules and their spinner
     // keyframes are gone: the module that made their markup stopped shipping
     // in 3.3.3, and no source emits it (styles/components/_card.scss).
@@ -346,9 +346,14 @@ describe("explicit contrast levels are opt-in", () => {
     // cue keeps a persistent hover layer on the section of the selected
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
+    // A selected standard list row is 16px on every corner, an inset divider
+    // is 16px then 24px, and a standard leading image or video is square
+    // (styles/components/_list.scss; +302 B on the slider sheet).
+    // The slider's pressed handle joins the 2px width rule (+38 B;
+    // styles/components/_slider.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "eb31bdaa1d3e2039cdbe793b8ae0c85cf25bd4a6e89c410ba564c8dc51ffb63b",
-      length: 553035,
+      sha256: "75ee92018f2a009be3437bd95734f8e477c3e1d58b03ec2337fdeb1faf28faa0",
+      length: 553375,
     });
   });
 

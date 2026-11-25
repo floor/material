@@ -211,10 +211,14 @@ $component: '#{base.$prefix}-slider';
     }
     
     // PressedHandleWidth and FocusHandleWidth: 2dp, half the resting 4dp.
+    // `--pressed` is the controller's state, set by a press anywhere on the
+    // slider (the track included) and cleared on release or cancel; `:active`
+    // alone only reaches a press that landed on the handle itself.
     .#{$component}--dragging &::before,
     &:active::before,
     &:focus-visible::before,
-    &--focused::before {
+    &--focused::before,
+    &--pressed::before {
       width: 2px;
     }
 

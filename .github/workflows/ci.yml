@@ -246,6 +246,9 @@ jobs:
           - group: divider-sheet-conformance
             browsers: chromium
             checks: divider-sheet-conformance:check
+          - group: list-conformance
+            browsers: chromium
+            checks: list-conformance:check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check
