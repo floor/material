@@ -202,6 +202,46 @@ const run = async (browser: Browser, engine: string) => {
     `${engine}: a transform-scaled ancestor is not a zoom (menu left ${transformed.styleLeft.toFixed(1)} against the opener's ${transformed.offsetLeft.toFixed(1)})`,
   );
 
+  // Right to left: a menu wider than its opener flips start to end, and its
+  // right edge must meet the opener's right edge at every zoom.
+  const rtlRows: string[] = [];
+  for (const zoom of [1, 0.7, 0.5]) {
+    await page.evaluate((z) => {
+      document.documentElement.style.zoom = String(z);
+      // The direction on the host keeps the opener mid-page: on the document
+      // it would sit against the right edge, where the 16 px margin clamps
+      // the menu and hides the placement.
+      document.querySelector<HTMLElement>("#host")!.dir = "rtl";
+    }, zoom);
+    const rtl = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { createButton: (c: unknown) => { element: HTMLElement }; createMenu: (c: unknown) => { element: HTMLElement; open: () => void } }; probeMenu?: { element: HTMLElement; open: () => void } };
+      const host = document.querySelector("#host")!;
+      host.replaceChildren();
+      const spacer = document.createElement("div");
+      spacer.style.height = "200px";
+      const button = w.mtrl.createButton({ label: "Open" });
+      button.element.id = "opener";
+      button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
+      button.element.style.width = "120px";
+      host.append(spacer, button.element);
+      w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "A much longer menu item than the opener" }, { text: "Two" }] });
+      await new Promise((r) => setTimeout(r, 250));
+      const opener = button.element.getBoundingClientRect();
+      w.probeMenu.open();
+      await new Promise((r) => setTimeout(r, 400));
+      const menu = w.probeMenu.element.getBoundingClientRect();
+      return { openerRight: opener.right, openerLeft: opener.left, menuRight: menu.right, menuLeft: menu.left, menuWidth: menu.width };
+    });
+    rtlRows.push(`${zoom}: right ${rtl.menuRight.toFixed(1)}/${rtl.openerRight.toFixed(1)} (left ${rtl.menuLeft.toFixed(1)}/${rtl.openerLeft.toFixed(1)}, w ${rtl.menuWidth.toFixed(1)})`);
+    console.log(`${engine} rtl zoom ${zoom}: ${rtlRows.at(-1)}`);
+    assert(
+      Math.abs(rtl.menuRight - rtl.openerRight) <= 2,
+      `${engine} rtl zoom ${zoom}: a wider menu's right edge meets its opener's right (${rtl.menuRight.toFixed(1)} against ${rtl.openerRight.toFixed(1)})`,
+    );
+  }
+  await page.evaluate(() => { document.querySelector<HTMLElement>("#host")!.dir = "ltr"; });
+  console.log(`${engine} rtl: ${rtlRows.join(" | ")}`);
+
   assert.deepEqual(errors, [], `${engine}: no uncaught page errors`);
   await page.close();
   return { engine, rows };
