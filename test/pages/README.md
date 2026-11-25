@@ -15,9 +15,10 @@ bun run test:pages   # serves dist/ + test/pages on http://127.0.0.1:<port>
 
 Then open `http://127.0.0.1:<port>/` — index links every page. Pages load the
 component factories from `dist/components/<name>/index.js` and the sheet from
-`dist/styles.css`, so what they show is always the current build. A static
-server from the repo root works too (`python3 -m http.server`); `file://`
-does not (ESM modules).
+`dist/styles.css`, so what they show is always the current build. Serve with
+`bun run test:pages` specifically: it maps `/shared/` to the harness and
+`/dist/` to the build; a repo-root `python3 -m http.server` has neither
+mapping, and `file://` blocks ESM modules.
 
 ## Pages
 

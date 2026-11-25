@@ -15,7 +15,16 @@ const main = document.getElementById("tp-main");
 
 const sizes = ["xs", "s", "m", "l", "xl"];
 const build = (size, dir) => {
-  const split = createSplitButton({ text: "Save", size, trailingLabel: "More" });
+  const split = createSplitButton({
+    text: "Save",
+    size,
+    trailingLabel: "More",
+    items: [
+      { id: "save-as", text: "Save as…" },
+      { id: "rename", text: "Rename" },
+      { id: "duplicate", text: "Duplicate" },
+    ],
+  });
   split.element.dataset.size = size;
   split.element.dataset.dir = dir;
   return split.element;

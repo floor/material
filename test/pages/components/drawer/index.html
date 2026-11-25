@@ -14,7 +14,8 @@ import { defineDrawer } from "/dist/elements/index.js";
 import "/dist/elements/css/drawer.js";
 defineDrawer();
 
-let render = () => {};
+let renderFactory = () => {};
+let renderElement = () => {};
 const host = () => document.getElementById("tp-main");
 
 const items = [
@@ -69,8 +70,8 @@ await initPage({
   toolbar: {
     density: true,
     forms: [
-      { label: "Factory", render: () => render() },
-      { label: "Element", render: () => render() },
+      { label: "Factory", render: () => renderFactory() },
+      { label: "Element", render: () => renderElement() },
     ],
   },
 });
@@ -95,7 +96,7 @@ scenario(variants, {
     const inkEnd = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
     return `item h ${ib.height.toFixed(0)} · chevron box end inset ${(ib.right - cb.right).toFixed(1)} (ink 24) · ink end inset ${(ib.right - inkEnd).toFixed(1)}`;
   },
-  mount: (body) => { const row = document.createElement("div"); body.append(row); render = () => { row.innerHTML = ""; mountFactory(row); }; render(); },
+  mount: (body) => { const row = document.createElement("div"); body.append(row); renderFactory = () => { row.innerHTML = ""; mountFactory(row); }; renderFactory(); },
 });
 
 const states = section(host(), "States");
@@ -127,8 +128,8 @@ scenario(interaction, {
     const menuBox = document.createElement("div");
     row.append(drawerBox, menuBox);
     body.append(row);
-    render = () => { drawerBox.innerHTML = ""; mountFactory(drawerBox); };
-    render();
+    renderFactory = () => { drawerBox.innerHTML = ""; mountFactory(drawerBox); };
+    renderFactory();
     mountMenu(menuBox);
   },
 });
@@ -147,7 +148,9 @@ scenario(edge, {
     const cb = child.getBoundingClientRect();
     const lb = label.getBoundingClientRect();
     const rtl = document.documentElement.dir === "rtl";
-    return `child pill ${rtl ? "left" : "left"} inset ${(rtl ? cb.left - lb.left : lb.left - cb.left).toFixed(1)} · end padding ${(rtl ? lb.left - cb.left : cb.right - lb.right).toFixed(1)} · dir ${document.documentElement.dir}`;
+    const startInset = rtl ? cb.right - lb.right : lb.left - cb.left;
+    const endInset = rtl ? lb.left - cb.left : cb.right - lb.right;
+    return `child pill start inset ${startInset.toFixed(1)} (12 + the indent) · end padding ${endInset.toFixed(1)} · dir ${document.documentElement.dir}`;
   },
   mount: () => {},
 });

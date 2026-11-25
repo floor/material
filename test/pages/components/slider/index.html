@@ -115,7 +115,7 @@ scenario(states, {
   expected: "the layers do not clip at the track's ends",
   mount: (body) => {
     const focused = cell(body, { min: 0, max: 10, value: 2 });
-    focused.element.querySelector('[role="slider"]')?.focus();
+    focused.element.querySelector('[role="slider"]')?.focus({ preventScroll: true });
     const pressed = cell(body, { min: 0, max: 10, value: 8 });
     pressed.element.querySelector('[role="slider"]')?.classList.add("mtrl-slider__handle--pressed");
   },

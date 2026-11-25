@@ -151,6 +151,12 @@ const buildShell = (options, commit) => {
   const rail = document.createElement("m-navigation-rail");
   rail.setAttribute("no-toggle", "");
   const current = location.pathname.replace(/\/+$/, "").split("/").pop() || options.name;
+  const indexItem = document.createElement("m-navigation-rail-item");
+  indexItem.setAttribute("value", "All pages");
+  indexItem.setAttribute("label", "All pages");
+  indexItem.setAttribute("icon", ICONS.menu);
+  indexItem.setAttribute("href", "/");
+  rail.append(indexItem);
   for (const group of GROUPS) {
     const item = document.createElement("m-navigation-rail-item");
     item.setAttribute("value", group.label);
@@ -185,12 +191,10 @@ const buildShell = (options, commit) => {
   drawer.setAttribute("value", current);
 
   // The drawer component pins its width inline on the root inside the
-  // shadow; the shell's 280px column asserts itself after the upgrade so
-  // the sheet fills its column and never slides over the content.
-  requestAnimationFrame(() => {
-    const root = drawer.shadowRoot?.querySelector(".mtrl-drawer");
-    if (root) root.style.setProperty("--mtrl-drawer-width", "280px");
-  });
+  // shadow at upgrade; the shell asserts its 280px column synchronously
+  // right after the append, so the sheet never paints at 360px first.
+  const drawerRoot = drawer.shadowRoot?.querySelector(".mtrl-drawer");
+  if (drawerRoot) drawerRoot.style.setProperty("--mtrl-drawer-width", "280px");
 
   const setDocking = () => {
     const docked = matchMedia("(min-width: 1600px)").matches;

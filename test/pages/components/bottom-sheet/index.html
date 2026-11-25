@@ -26,14 +26,19 @@ const mount = (body, variant) => {
   box.append(sheet.element);
   opener.addEventListener("click", () => sheet.open());
   mounts.push(sheet);
+  return sheet;
 };
 
 const variants = section(main, "Variants & sizes");
+let interactionSheet = null;
 scenario(variants, {
   title: "Standard and modal",
   lookFor: "the peek height; the modal's scrim",
   expected: "both open to the peek and drag to full",
-  mount: (body) => { mount(body, "standard"); mount(body, "modal"); },
+  mount: (body) => {
+    interactionSheet = mount(body, "standard");
+    mount(body, "modal");
+  },
 });
 
 const states = section(main, "States");
@@ -42,8 +47,7 @@ scenario(states, {
   lookFor: "the label under each sheet tracks its state",
   expected: "state names match the geometry",
   measure: () => {
-    const sheets = [...document.querySelectorAll(".mtrl-bottom-sheet")];
-    return sheets.map((el, i) => `#${i} ${el.classList.contains("mtrl-bottom-sheet--open") ? "open" : "closed"}`).join(" · ") || "no sheets";
+    return mounts.map((sheet, i) => `#${i} ${sheet.getState()}`).join(" · ") || "no sheets";
   },
   mount: () => {},
 });
@@ -54,12 +58,11 @@ scenario(interaction, {
   lookFor: "the sheet follows the pointer and settles from the release speed",
   expected: "settles on the nearest anchor; a release between anchors never sticks",
   measure: () => {
-    const sheet = document.querySelector(".mtrl-bottom-sheet");
-    if (!sheet) return "no sheet mounted";
-    const r = sheet.getBoundingClientRect();
-    return `offset ${r.top.toFixed(1)}px · height ${r.height.toFixed(0)}px`;
+    if (!interactionSheet) return "no sheet mounted";
+    const r = interactionSheet.element.getBoundingClientRect();
+    return `state ${interactionSheet.getState()} · offset ${r.top.toFixed(1)}px · height ${r.height.toFixed(0)}px`;
   },
-  mount: (body) => { mount(body, "standard"); },
+  mount: (body) => { interactionSheet = mount(body, "standard"); },
 });
 
 const edge = section(main, "Edge cases");

@@ -13,16 +13,24 @@ import { createFabMenu } from "/dist/components/fab-menu/index.js";
 await initPage({ name: "fab-menu", toolbar: { density: true } });
 const main = document.getElementById("tp-main");
 
-const placements = ["top-start", "top-end", "top-centre", "bottom-start", "bottom-end", "bottom-centre"];
-const items = Array.from({ length: 12 }, (_, i) => ({ id: `i${i}`, text: `Item ${i + 1}` }));
+const placements = ["bottom-end", "bottom-start", "none"];
+const items = Array.from({ length: 6 }, (_, i) => ({ id: `i${i}`, text: `Action ${i + 1}` }));
+const longItems = items;
+let longMenu = null;
 const mount = (body, placement, longList) => {
   const box = document.createElement("div");
-  box.style.cssText = "position:relative;padding:24px;min-height:180px";
-  const fab = document.createElement("button");
-  fab.textContent = "FAB";
-  box.append(fab);
+  box.style.cssText = "position:relative;padding:24px;min-height:200px;display:flex;align-items:flex-end;justify-content:flex-end";
   body.append(box);
-  createFabMenu({ opener: fab, placement, items: longList ? items : items.slice(0, 4) });
+  const menu = createFabMenu({
+    icon: "<svg viewBox='0 0 24 24' width='24' height='24' fill='currentColor'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>",
+    ariaLabel: `FAB menu, ${placement}`,
+    placement,
+    items: longList ? longItems : items.slice(0, 3),
+  });
+  // The factory's element carries the FAB and the menu: mount it as-is.
+  box.append(menu.element);
+  if (longList) longMenu = menu;
+  return menu;
 };
 
 const variants = section(main, "Variants & sizes");
@@ -47,12 +55,13 @@ scenario(interaction, {
   lookFor: "the menu fits the window; when it cannot, it shifts just enough",
   expected: "the shift readout shows the correction the list consumed",
   measure: () => {
-    const list = document.querySelector(".mtrl-fab-menu__list");
-    if (!list) return "open a long-list menu to measure";
+    const root = longMenu?.element;
+    const list = root?.querySelector(".mtrl-fab-menu__list");
+    if (!root || !list) return "open the long-list FAB menu to measure";
     const r = list.getBoundingClientRect();
     return `list ${r.width.toFixed(0)}x${r.height.toFixed(0)} at ${r.left.toFixed(0)},${r.top.toFixed(0)} · shift var ${getComputedStyle(list).translate}`;
   },
-  mount: (body) => { mount(body, "top-centre", true); },
+  mount: (body) => { mount(body, "bottom-end", true); },
 });
 
 const edge = section(main, "Edge cases");

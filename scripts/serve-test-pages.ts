@@ -5,15 +5,20 @@
 // the repo root and answers /__commit with the commit dist was built
 // from. Requires `bun run build`
 // first; the pages load the component factories from dist/components.
-import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { stat } from "node:fs/promises";
 
 const root = resolve(import.meta.dir, "..");
 const pages = resolve(root, "test/pages");
-const headSha = (() => {
-  try { return execSync(`git -C ${JSON.stringify(root)} rev-parse --short HEAD`).toString().trim(); }
-  catch { return "unknown"; }
+// Build provenance from dist: the token catalogue records the commit the
+// build was made from. Absent (no catalogue, or a stale dist) shows
+// "unknown" — never the checkout HEAD, which may not be what dist holds.
+const headSha = (async () => {
+  try {
+    const catalogue = JSON.parse(await Bun.file(resolve(root, "dist/tokens/catalogue.json")).text());
+    const sha = catalogue.sourceCommit;
+    return typeof sha === "string" && sha ? sha.slice(0, 8) : "unknown";
+  } catch { return "unknown"; }
 })();
 
 const types = new Map([
@@ -36,9 +41,13 @@ const server = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/+/, "");
-    if (path === "__commit") return new Response(headSha, { headers: { "Content-Type": "text/plain" } });
-    for (const base of [pages, root]) {
-      const file = resolve(base, path);
+    if (path === "__commit") return new Response(await headSha, { headers: { "Content-Type": "text/plain" } });
+    // Only the test pages and the built library are served — the checkout
+    // itself is not reachable. The pages reference the build with a
+    // /dist/... prefix; dist/ maps that prefix onto the build directory.
+    for (const base of [pages, resolve(root, "dist")]) {
+      const mapped = base === pages ? path : path.replace(/^dist\//, "");
+      const file = resolve(base, mapped);
       if (!file.startsWith(base)) continue;
       const served = await serveFile(file);
       if (served) return served;
