@@ -11,6 +11,7 @@ import { CarouselConfig, CarouselVariant } from "../types";
 import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../constants";
 import { resolveLayoutDefaults } from "../config";
 import { cornerToken } from "../../../core/theme/shape";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -30,24 +31,6 @@ import type { SlidesComponent } from "./slides";
 
 /** A mouse drag faster than this (px per ms) advances one item in its direction */
 const FLING_VELOCITY = 0.4;
-/**
- * The CSS `zoom` in effect for an element (CSS Viewport,
- * https://drafts.csswg.org/css-viewport/#zoom-property): `currentCSSZoom`
- * where the engine has it — exactly 1 when nothing is zoomed — and otherwise
- * the product of the computed `zoom` of the element and each ancestor. A
- * transform is not a zoom and never counts.
- */
-const effectiveZoom = (element: HTMLElement): number => {
-  const native = (element as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom;
-  if (typeof native === "number" && native > 0) return native;
-  let zoom = 1;
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    const view = node.ownerDocument.defaultView;
-    const value = parseFloat(view?.getComputedStyle(node).zoom ?? "1");
-    if (Number.isFinite(value) && value > 0) zoom *= value;
-  }
-  return zoom;
-};
 
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
@@ -538,8 +521,7 @@ export const withScroll = (config: CarouselConfig) =>
       // in the element's own: under CSS `zoom` the strip otherwise moves the
       // delta times the zoom (120 px dragged moved 92 at 0.7 and 66 at 0.5,
       // md3.io measured 2026-11-25).
-      const zoom = effectiveZoom(scroller);
-      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta / zoom;
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta / effectiveZoom(scroller);
       e.preventDefault();
     };
 

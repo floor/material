@@ -25,6 +25,7 @@ export { setHTML, configureHTML, getHTMLPolicy } from "./html";
 export type { HTMLPolicy, HTMLInput, TrustedHTMLLike } from "./html";
 
 export { activeElementOf, deepActiveElement } from "./focus";
+export { effectiveZoom } from "./zoom";
 
 export { createRoving, isTextEditable } from "./roving";
 export type { Roving, RovingOptions } from "./roving";
