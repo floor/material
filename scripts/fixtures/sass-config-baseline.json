@@ -242,7 +242,7 @@
     "components/slider/config.js": "827ae15da6798af9e2e1c4da490aab0e5c15a59d2b3b4f2f436c02d7c27078c5",
     "components/slider/constants.js": "26b9beba524fc7d507e2b242c7c01db91d2ae653f7edafc4e7df9a0fc1d5af11",
     "components/slider/features/axis.js": "9aa57b841d151046960da3cce1230b41cceacf73d42588b9758d17b5559ec8b7",
-    "components/slider/features/controller.js": "9fe68f11133cb3df148d01c81588326bda7129508d42ec37359b5a967f22aaa9",
+    "components/slider/features/controller.js": "e319cfe3c7fb1fe0cd7263bf095c5d1da0c6bb8478cd63ea481e511b81bbaa6f",
     "components/slider/features/dom.js": "c6fa5b851cc15ebb2d3391bdc1db77f7c70e9c7742d6ede6156cf88ca3d8d4e0",
     "components/slider/features/index.js": "7efa749458cc3eabeb67076642a168ba37822e2d249235687372d6592cf28754",
     "components/slider/features/states.js": "e863c2b81d4a4192d629fc383ce7c2e7cfe03e72b19a526a7c9e4e39c10f58b4",
