@@ -364,8 +364,9 @@ export const withTracks =
       // The piece ending where the pressed gap begins grows toward its end; the
       // piece starting where it ends grows toward its start.
       const colour = active ? `var(--${PREFIX}-slider-track-color)` : `var(--${PREFIX}-slider-inactive-track-color)`;
-      const growEnd = pressedHandle !== null && cmp(end, sub(pressedHandle, pressedGap)) === 0;
-      const growStart = pressedHandle !== null && cmp(start, add(pressedHandle, pressedGap)) === 0;
+      const hasLength = cmp(end, start) > 0;
+      const growEnd = hasLength && pressedHandle !== null && cmp(end, sub(pressedHandle, pressedGap)) === 0;
+      const growStart = hasLength && pressedHandle !== null && cmp(start, add(pressedHandle, pressedGap)) === 0;
       segment.style.boxShadow = growEnd
         ? shadowFor(opposite[axis.start], colour)
         : growStart
