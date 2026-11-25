@@ -313,20 +313,9 @@ export const createPositioner = (
         ? config.container.getBoundingClientRect()
         : { top: 0, left: 0, right: 0, bottom: 0 };
 
-    // The menu is written in its offsetParent's space; a rect is in the
-    // viewport's. A positioned host, or an RTL page whose zoom right-aligns
-    // the body, puts that space away from the origin: without subtracting it
-    // the menu lands at the host's distance under zoom (offset +210 at 0.7
-    // and +350 at 0.5 in a 700 px RTL page, 2026-11-25).
-    const contextElement = menuElement.offsetParent as HTMLElement | null;
-    const contextRect =
-      contextElement && contextElement !== document.body && contextElement !== document.documentElement
-        ? contextElement.getBoundingClientRect()
-        : null;
-
     // Calculate offsets - when in a container, subtract container position
-    const offsetX = hasContainer ? -containerRect.left : scrollX - (contextRect?.left ?? 0);
-    const offsetY = hasContainer ? -containerRect.top : scrollY - (contextRect?.top ?? 0);
+    const offsetX = hasContainer ? -containerRect.left : scrollX;
+    const offsetY = hasContainer ? -containerRect.top : scrollY;
 
     switch (calculatedPosition) {
       case "top-start":
