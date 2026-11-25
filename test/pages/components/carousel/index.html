@@ -20,7 +20,7 @@ const main = document.getElementById("tp-main");
 // not an allowed navigable one (core/utils/url.ts), and a `data:` image is
 // stripped — which left every slide blank.
 const slides = Array.from({ length: 6 }, (_, i) => ({
-  image: `slides/slide-${i + 1}.svg`,
+  image: `/components/carousel/slides/slide-${i + 1}.svg`,
   alt: `Slide ${i + 1}`,
 }));
 

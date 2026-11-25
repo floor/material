@@ -41,6 +41,14 @@ const server = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/+/, "");
+    // A directory route without its slash makes the browser resolve relative
+    // references one level up; redirect it to the trailing-slash form when a
+    // page is what it resolves to (and never the server's own /__commit).
+    if (path && !path.startsWith("_") && !path.endsWith("/") && !path.includes(".")) {
+      const index = resolve(pages, path, "index.html");
+      const exists = await stat(index).then((entry) => entry.isFile()).catch(() => false);
+      if (exists) return Response.redirect(`${url.origin}/${path}/${url.search}`, 308);
+    }
     if (path === "__commit") return new Response(await headSha, { headers: { "Content-Type": "text/plain" } });
     // Only the test pages and the built library are served — the checkout
     // itself is not reachable. The pages reference the build only through the
