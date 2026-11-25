@@ -256,6 +256,10 @@ export async function initPage(options) {
   // The readouts follow the motion frame by frame: a 250 ms reveal is over
   // before a slower interval's first tick.
   const tick = () => {
+    // A root mounted after the slow switch was turned on is not armed by the
+    // transition listeners, so the sweep runs with the readouts: any running
+    // animation is set to the slow rate while the switch is on.
+    if (state.slow) sweep();
     for (const row of state.measures) row.el.textContent = row.measure();
     requestAnimationFrame(tick);
   };
