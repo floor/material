@@ -16,6 +16,9 @@ declare global {
 const artifacts = resolve('analysis/drawer');
 await mkdir(artifacts, { recursive: true });
 const bundle = await Bun.build({ entrypoints: [resolve('src/components/drawer/index.ts')], target: 'browser', minify: true });
+const menuBundle = await Bun.build({ entrypoints: [resolve('src/components/menu/index.ts')], target: 'browser', minify: true, define: { 'process.env.NODE_ENV': '"production"' } });
+assert(menuBundle.success, String(menuBundle.logs));
+const menuJs = await menuBundle.outputs[0].text();
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
 const sections = `
@@ -33,6 +36,7 @@ const shadowDrawer = renderElement("m-drawer", { open: true, value: "drawer" }, 
 const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   const path = new URL(request.url).pathname;
   if (path === '/drawer.js') return new Response(js, { headers: { 'Content-Type': 'text/javascript' } });
+  if (path === '/menu-bundle.js') return new Response(menuJs, { headers: { 'Content-Type': 'text/javascript' } });
   if (path === '/styles.css') return new Response(Bun.file('dist/styles.css'));
   if (path.startsWith("/dist/")) return new Response(Bun.file(path.slice(1)), { headers: { "Content-Type": "text/javascript" } });
   if (path === "/sections") {
@@ -100,6 +104,16 @@ try {
   }));
   assert.equal(indicatorMotion.pill, '0s', `The active pill still transitions under reduced motion: ${indicatorMotion.pill}`);
   assert.equal(indicatorMotion.state, '0s', `The state layer still transitions under reduced motion: ${indicatorMotion.state}`);
+  // The section motion joins the instant set: the sub items and the panel
+  // switch without the grow/fade.
+  await page.evaluate(() => window.mountDrawer({
+    variant: 'standard', open: true,
+    items: [{ type: 'section', id: 'labels', label: 'Labels', items: [{ id: 'family', label: 'Family' }, { id: 'work', label: 'Work' }] }],
+  }));
+  const revealMotion = await page.locator('.mtrl-drawer__group-items-inner').first().evaluate(el => ({
+    duration: getComputedStyle(el).transitionDuration,
+  }));
+  assert.equal(revealMotion.duration.split(', ')[0], '0s', `The section reveal still animates under reduced motion: ${revealMotion.duration}`);
   await page.click('#outside');
   assert.equal(await page.locator('#outside').evaluate(el => el === document.activeElement), true);
   await page.evaluate(() => window.mountDrawer({ variant: 'modal' }));
@@ -347,6 +361,203 @@ try {
   assert.equal(rotated.transform, 'matrix(1, 0, 0, 1, 0, 0)', 'the collapsed section turned the chevron back');
   near(rotated.inset, 24, 'collapsed chevron: ink still ends 24dp inside the indicator');
   if (rotated.badgeGap !== null) near(rotated.badgeGap, 0, 'collapsed chevron: ink end lands on the badge text end');
+
+  // ========================================================================
+  // SECTION MOTION: the open/close follows the menu's timing
+  // ========================================================================
+  // The menu reveals with transform scaleY + opacity on duration-medium1
+  // (250ms) + easing-emphasized (styles/components/_menu.scss). The drawer
+  // section runs the same timing: the panel's height opens and closes on it
+  // and each sub item GROWS from 0 to full — height and pill together —
+  // fading on the menu's opacity timing, with no spring overshoot; the
+  // chevron turns on the same duration. Sampled per frame below.
+  const motionPage = await browser.browser()!.newPage({ viewport: { width: 640, height: 800 } });
+  const motionErrors: string[] = [];
+  motionPage.on('pageerror', error => motionErrors.push(error.message));
+  await motionPage.goto(`http://127.0.0.1:${server.port}`);
+  await motionPage.waitForFunction(() => !!window.mountDrawer);
+  await motionPage.evaluate(() => window.mountDrawer({
+    variant: 'standard', open: true,
+    items: [
+      { id: 'inbox', label: 'Inbox' },
+      { type: 'section', id: 'labels', label: 'Labels', expanded: false, items: [{ id: 'family', label: 'Family' }, { id: 'work', label: 'Work' }] },
+      { id: 'archive', label: 'Archive', badge: '12' },
+    ],
+  }));
+  await motionPage.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
+  const timing = await motionPage.evaluate(() => {
+    const inner = document.querySelector('.mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__group-items-inner') as HTMLElement;
+    const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+    const innerStyle = getComputedStyle(inner);
+    const panelStyle = getComputedStyle(panel);
+    const chevronStyle = getComputedStyle(document.querySelector('[data-id="labels"] .mtrl-drawer__item-chevron')!);
+    return {
+      closedTransform: innerStyle.transform,
+      closedOpacity: innerStyle.opacity,
+      innerTransition: innerStyle.transitionProperty,
+      innerDuration: innerStyle.transitionDuration,
+      innerEasing: innerStyle.transitionTimingFunction,
+      panelDuration: panelStyle.transitionDuration,
+      chevronDuration: chevronStyle.transitionDuration,
+      chevronEasing: chevronStyle.transitionTimingFunction,
+    };
+  });
+  // The panel's height is the reveal and the rows fade on the same tokens:
+  // a scale on the inner would compound with the panel's clip and the
+  // visible box would run ahead of the menu's curve.
+  assert.equal(timing.closedOpacity, '0', 'a closed section holds opacity 0');
+  assert.equal(timing.closedTransform, 'none', 'the rows keep no transform — the height is the reveal');
+  assert.ok(timing.innerTransition.includes('opacity'),
+    `the container fades on the menu's tokens: ${timing.innerTransition}`);
+  assert.equal(timing.innerDuration.split(', ')[0], '0.25s', `the container takes the menu's duration-medium1: ${timing.innerDuration}`);
+  assert.ok(timing.innerEasing.startsWith('cubic-bezier(0.3, 0, 0, 1)'), `the container takes the menu's emphasized curve: ${timing.innerEasing}`);
+  assert.equal(timing.panelDuration.split(', ')[0], '0.25s', `the panel pushes the content below on the menu's duration: ${timing.panelDuration}`);
+  assert.equal(timing.chevronDuration, '0.25s', `the chevron turns on the same duration: ${timing.chevronDuration}`);
+  assert.equal(timing.chevronEasing, 'cubic-bezier(0.3, 0, 0, 1)', `the chevron turns on the emphasized curve: ${timing.chevronEasing}`);
+  const frames = await motionPage.evaluate(async () => {
+    const rows: Array<{ t: number; panel: number; paintedRow: boolean; fraction: number; op: number; rowH: number }> = [];
+    document.querySelector('[data-id="labels"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const panel = document.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+    const inner = panel.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
+    const row = inner.querySelector('.mtrl-drawer__item') as HTMLElement;
+    const full = row.getBoundingClientRect().height;
+    const start = performance.now();
+    await new Promise<void>((done) => {
+      const tick = () => {
+        const t = performance.now() - start;
+        const panelH = panel.getBoundingClientRect().height;
+        const probeY = panel.getBoundingClientRect().top + panelH - 2;
+        const probeX = panel.getBoundingClientRect().left + panel.getBoundingClientRect().width / 2;
+        const hit = document.elementFromPoint(probeX, probeY);
+        const paintedRow = !!hit?.closest(".mtrl-drawer__item");
+        rows.push({ t, panel: panelH, paintedRow, fraction: +(panelH / 112).toFixed(3), op: parseFloat(getComputedStyle(inner).opacity), rowH: +row.getBoundingClientRect().height.toFixed(1) });
+        if (t < 450) requestAnimationFrame(tick); else done();
+      };
+      requestAnimationFrame(tick);
+    });
+    return { rows, full: +full.toFixed(1) };
+  });
+  const frames_rows = frames.rows;
+  assert.ok(frames_rows.length >= 8, `the open was sampled per frame (${frames_rows.length} frames)`);
+  assert.ok(frames_rows[0]!.panel < 20, `the panel starts growing from near 0 (${frames_rows[0]!.panel.toFixed(1)})`);
+  assert.equal(Math.round(frames_rows[frames_rows.length - 1]!.panel), 112, 'the panel reaches its full height (two 56dp rows)');
+  assert.ok(frames_rows[frames_rows.length - 1]!.op > 0.95, 'the rows fade in to full opacity');
+  assert.equal(frames.full, 56, 'the rows keep their full height inside the panel');
+  assert.ok(frames_rows.every(f => f.rowH === frames.full), 'the rows never squish — the height is the reveal');
+  // The fade rides the height's curve: the opacity fraction equals the
+  // panel's height fraction on every frame (the menu reads the same pair).
+  const coupled = frames_rows.every(f => Math.abs(f.op - f.fraction) <= 0.03);
+  assert.ok(coupled, 'the opacity fraction rides the height fraction on every frame, as the menu reads');
+  // The painted clip is the panel: the rows must be painted all the way to
+  // the panel's visible bottom on every sampled frame — the menu's fraction
+  // is the panel's height fraction (paired-normalised below), so hit-testing
+  // at the panel's bottom edge proves the painted height follows the menu
+  // exactly (the inner-clip defect found in review hid the bottom band).
+  const painted = frames_rows.filter(f => f.panel > 40).every(f => f.paintedRow);
+  assert.ok(painted, "the rows paint to the panel's visible bottom on every frame");
+  const maxPanel = Math.max(...frames_rows.map(f => f.panel));
+  assert.ok(maxPanel <= 112.5, `no spring overshoot on the panel height (max ${maxPanel.toFixed(1)})`);
+  const at100 = frames_rows.find(f => f.t >= 100)!;
+  assert.ok(at100.fraction > 0.5, `the emphasized curve starts fast: past half at ~100ms of 250 (fraction ${at100.fraction.toFixed(2)})`);
+  const at250 = frames_rows.find(f => f.t >= 250)!;
+  assert.ok(at250.fraction > 0.96, `the reveal is settled at 250ms like the menu (fraction ${at250.fraction.toFixed(2)})`);
+  // The expanded header keeps a 1px space over its first child, so the
+  // header's pill never touches the child's pill; collapsed sections keep
+  // none. Measured on the painted boxes.
+  const headerGap = await motionPage.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const child = header.parentElement!.querySelector('.mtrl-drawer__group-items .mtrl-drawer__item') as HTMLElement;
+    return child.getBoundingClientRect().top - header.getBoundingClientRect().bottom;
+  });
+  assert.ok(Math.abs(headerGap - 1) <= 0.3, `the expanded header keeps a 1px space over its first child: ${headerGap.toFixed(2)}`);
+  // The keyboard opens the section back-to-back on this motion-enabled
+  // page: the focus transfer asserts immediately, while the reveal is
+  // still running — an opening section's children are focusable at once.
+  await motionPage.evaluate(() => {
+    (document.querySelector('[data-id="labels"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+  await motionPage.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
+  // Start from a fully closed section: the collapsing panel keeps visible
+  // for the close's duration, and its rows would be mid-shrink under the
+  // keys — wait until the panel's computed visibility actually hides.
+  await motionPage.waitForFunction(() => {
+    const panel = document.querySelector(".mtrl-drawer__group:not(.mtrl-drawer__group--expanded) .mtrl-drawer__group-items") as HTMLElement | null;
+    return panel ? getComputedStyle(panel).visibility === "hidden" : true;
+  });
+  const midReveal = await motionPage.evaluate(() => {
+    (document.querySelector('[data-id="labels"]') as HTMLElement).focus();
+    const start = performance.now();
+    const press = () => document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    press();
+    press();
+    const focused = document.activeElement as HTMLElement | null;
+    return {
+      focusedText: focused?.textContent?.trim().slice(0, 12) ?? null,
+      elapsed: +(performance.now() - start).toFixed(1),
+    };
+  });
+  assert.equal(midReveal.focusedText, "Family", `the focus moves into the opening section back-to-back: ${midReveal.focusedText}`);
+  // The expansion began at the first press and the reveal takes 250ms;
+  // the focus transfer landed inside that window, mid-reveal.
+  assert.ok(midReveal.elapsed < 250, `the focus lands within the reveal's 250ms (elapsed ${midReveal.elapsed}ms)`);
+
+  // The visible fraction follows the menu's curve: a menu opens beside the
+  // drawer and both fractions are sampled per frame — the panel's height
+  // fraction matches the menu's scale fraction (the rows keep full height
+  // inside the panel, so nothing compounds).
+  const paired = await motionPage.evaluate(async () => {
+    const menuImport = "./menu-bundle.js";
+    const mod = await import(/* @vite-ignore */ menuImport) as { createMenu: (config: object) => { open: () => void; close: () => void; element: HTMLElement } };
+    const { createMenu } = mod;
+    const opener = document.createElement("button");
+    opener.id = "paired-opener";
+    document.body.append(opener);
+    const menu = createMenu({ opener, items: [{ id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" }] });
+    const labelsHeader = document.querySelector('[data-id="labels"]') as HTMLElement;
+    if (labelsHeader.getAttribute("aria-expanded") === "true") labelsHeader.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 350));
+    const rows: Array<{ t: number; menuFraction: number; panelFraction: number; rowHeight: number; full: number }> = [];
+    // Both motions start from closed in the same tick: the menu opens and
+    // the section expands together.
+    labelsHeader.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    menu.open();
+    const panel = document.querySelector(".mtrl-drawer__group--expanded .mtrl-drawer__group-items") as HTMLElement;
+    const inner = panel.querySelector(".mtrl-drawer__group-items-inner") as HTMLElement;
+    const row = inner.querySelector(".mtrl-drawer__item") as HTMLElement;
+    const full = row.getBoundingClientRect().height;
+    const start = performance.now();
+    await new Promise<void>((done) => {
+      const tick = () => {
+        const t = performance.now() - start;
+        const menuEl = document.querySelector(".mtrl-menu") as HTMLElement | null;
+        const matrix = menuEl ? new DOMMatrixReadOnly(getComputedStyle(menuEl).transform) : null;
+        const menuFraction = matrix ? +matrix.d.toFixed(3) : -1;
+        const panelFraction = panel.getBoundingClientRect().height ? +(panel.getBoundingClientRect().height / 112).toFixed(3) : 0;
+        rows.push({ t: +t.toFixed(0), menuFraction, panelFraction, rowHeight: +row.getBoundingClientRect().height.toFixed(1), full: +full.toFixed(1) });
+        if (t < 450) requestAnimationFrame(tick); else done();
+      };
+      requestAnimationFrame(tick);
+    });
+    // The menu's class flip lands a frame or two after the drawer's click,
+    // so each curve is compared from its own start: the assertion is about
+    // the curve's shape (the same tokens), not the dispatch phase.
+    const menuStart = rows.findIndex(r => r.menuFraction > 0.02);
+    const panelStart = rows.findIndex(r => r.panelFraction > 0.02);
+    const pairedFrames = [];
+    for (let k = 0; menuStart + k < rows.length && panelStart + k < rows.length; k++) {
+      const m = rows[menuStart + k]!;
+      const p = rows[panelStart + k]!;
+      if (m.menuFraction > 0.02 && m.menuFraction < 0.98) pairedFrames.push(Math.abs(m.menuFraction - p.panelFraction));
+    }
+    const drift = pairedFrames.length ? Math.max(...pairedFrames) : -1;
+    const rowFull = rows.every(r => r.rowHeight === r.full);
+    return { sampled: pairedFrames.length, drift: +drift.toFixed(3), rowFull };
+  });
+  assert.ok(paired.sampled >= 4, `both curves sampled mid-motion (${paired.sampled} frames)`);
+  assert.ok(paired.drift <= 0.03, `the panel fraction matches the menu's per frame (worst drift ${paired.drift})`);
+  assert.equal(paired.rowFull, true, "the rows keep their full height inside the panel");
+  assert.deepEqual(motionErrors, [], 'no page errors on the motion page');
+  await motionPage.close();
 
   // ========================================================================
   // PARENT CUE: the section of the active child keeps a hover state layer

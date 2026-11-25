@@ -507,20 +507,53 @@ $default-width: 360px;
         display: grid;
         grid-template-rows: 0fr;
         visibility: hidden;
+        overflow: hidden;
+        // The panel's height opens and closes on the menu's timing
+        // (m3.material.io/components/menu guidelines read 2026-11-24; the
+        // menu's own reveal is styles/components/_menu.scss: transform
+        // scaleY + opacity, duration-medium1, easing-emphasized) — no
+        // spring, so the content below moves with the same curve the menu
+        // draws.
+        // The panel's visibility is the plumbing around the reveal, not part
+        // of it: expanding flips it visible at once — a row has to be
+        // focusable the instant its section opens — and collapsing delays
+        // the flip by the same duration, so the shrink is seen before the
+        // rows leave the tree.
         transition:
-            m.spring(grid-template-rows, default-spatial),
-            visibility 0s linear v.motion("spring-default-spatial-duration");
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility 0s linear v.motion("duration-medium1");
     }
 
     &__group--expanded > &__group-items {
         grid-template-rows: 1fr;
         visibility: visible;
-        transition: m.spring(grid-template-rows, default-spatial), visibility 0s;
+        transition:
+            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility 0s;
+    }
+
+    // An expanded header keeps a 1px space over its panel: the header's
+    // cue/pill no longer touches the first child's pill. A margin, so the
+    // reveal motion does not jump, and collapsed sections are unchanged.
+    &__group--expanded > &__item {
+        margin-block-end: 1px;
     }
 
     &__group-items-inner {
+        // min-height: 0 lets the track shrink below the rows' height. The
+        // clip is the panel's overflow: hidden above — during fractional
+        // grid sizing the inner's own box lags the panel (the interpolated
+        // fr track resolves the inner's height as the eased fraction
+        // squared), and an inner clip cut the bottom of the rows while the
+        // panel was already at the menu's fraction. The fade rides the same
+        // tokens as the panel's height.
         min-height: 0;
-        overflow: hidden;
+        opacity: 0;
+        transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+    }
+
+    &__group--expanded &__group-items-inner {
+        opacity: 1;
     }
 
     &__item--child {
@@ -551,7 +584,9 @@ $default-width: 360px;
         // property mirrors itself in RTL.
         margin-inline-end: -6px;
         transform: rotate(0deg);
-        transition: m.spring(transform, fast-spatial);
+        // The chevron turns on the same duration and curve the section
+        // opens with, so the rotation and the reveal read as one motion.
+        transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
 
         svg {
             width: 24px;
@@ -699,6 +734,8 @@ $default-width: 360px;
         &__item-chevron,
         &__group-items,
         &__group--expanded > &__group-items,
+        &__group-items-inner,
+        &__group--expanded &__group-items-inner,
         &__item::before,
         &__active-indicator,
         // The pill and state layer rules are two classes deep, so their switch

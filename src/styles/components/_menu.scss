@@ -44,23 +44,17 @@ $component: "#{$prefix}-menu";
     // Initial state - hidden with proper transform origin
     display: flex;
     flex-direction: column;
-    opacity: 0;
-    transform-origin: top center;
     // The menu grows in height from its anchor when it opens, and closing is
     // the same motion in reverse: the closed state is the height it opens
-    // from, on the same duration and curve
-    transform: scaleY(0);
+    // from, on the same duration and curve. The reveal's transform, origin,
+    // opacity and timing are the shared mixin (abstract/_mixins.scss) the
+    // drawer's sections use too, so the two cannot drift.
+    @include m.reveal-motion($withVisibility: true);
     pointer-events: none;
     // Closed, the menu is out of the tab order and the accessibility tree: an
     // <m-menu> keeps its closed menu in its shadow root, where its first item
     // was a tab stop. A transition keeps it visible while it moves either way.
     visibility: hidden;
-
-    // Material Design 3 standard animation curve for menus
-    transition:
-        transform v.motion("duration-medium1") v.motion("easing-emphasized"),
-        opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
-        visibility v.motion("duration-medium1");
 
     // A top-layer menu is a popover (`layer: "top"`). The browser's popover
     // defaults centre it in the viewport inside a border; the menu places
@@ -71,10 +65,12 @@ $component: "#{$prefix}-menu";
         border: 0;
     }
 
-    // Visible state
+    // Visible state: only the values flip — the base rule's single
+    // transition carries both directions (the shared mixin holds the closed
+    // values and the timing, so the two cannot drift).
     &--visible {
-        opacity: 1;
         transform: scaleY(1);
+        opacity: 1;
         pointer-events: auto;
         visibility: visible;
     }
