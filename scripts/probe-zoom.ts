@@ -109,7 +109,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       probe: `${engine} ripple under the pointer`,
       zoom,
       expected: "0 px from the press",
-      measured: ripple ? `${(ripple.cx - press.x).toFixed(1)} / ${(ripple.cy - press.y).toFixed(1)} px` : "no ripple element",
+      measured: ripple ? `${(ripple.cx - press.x).toFixed(1)} / ${(ripple.cy - press.y).toFixed(1)} px` : `no ripple element (pressed at ${press.x.toFixed(0)},${press.y.toFixed(0)}; button ${press.r.left.toFixed(0)},${press.r.top.toFixed(0)} ${press.r.width.toFixed(0)}×${press.r.height.toFixed(0)})`,
       delta: ripple ? Math.hypot(ripple.cx - press.x, ripple.cy - press.y) : null,
     });
 
@@ -143,7 +143,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       probe: `${engine} button rect under the zoom`,
       zoom,
       expected: zoom === 1 ? "the button's own size" : "the button's size × the zoom",
-      measured: `${scaling.width.toFixed(1)} × ${scaling.height.toFixed(1)} px, font ${scaling.fontSize}; the rect centre hits: ${scaling.hit}; its label ${scaling.label}`,
+      measured: `${scaling.width.toFixed(1)} × ${scaling.height.toFixed(1)} px, font ${scaling.fontSize}; its label ${scaling.label}`,
       delta: null,
     });
 
