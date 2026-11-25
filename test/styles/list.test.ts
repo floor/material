@@ -1,7 +1,7 @@
 // test/styles/list.test.ts
 //
 // The list stylesheet's two variants. Standard is M3's baseline list: no
-// container, square rows in every state. Segmented is the expressive list
+// container, square rows, and a selected row of 16px. Segmented is the expressive list
 // (Compose ListItemDefaults.segmentedShapes, ListTokens.SegmentedGap): rows
 // paint their own colour and shape, 2px apart.
 import { describe, test, expect, beforeAll } from 'bun:test';
@@ -44,16 +44,34 @@ describe('list stylesheet: the container, both variants', () => {
 });
 
 describe('list stylesheet: standard', () => {
-  test('no rule outside the segmented variant rounds a row, its action or its state layer', () => {
+  test('an unselected row stays square; the selected row is 16px on every corner', () => {
+    const large = 'var(--mtrl-sys-shape-corner-large, 16px)';
+    const selected = '.mtrl-list:not(.mtrl-list--segmented) > .mtrl-list__content > .mtrl-list__item.mtrl-list__item--selected';
+    expect(declared(selected, 'border-radius')).toBe(large);
     const rounding = blocks.filter((block) =>
       /border(-[a-z]+)*-radius\s*:/.test(block.body) &&
       block.selectors.some((selector) =>
-        /\.mtrl-list__(item|action)(?![\w-]*(leading|trailing))/.test(selector) &&
-        !selector.includes('.mtrl-list--segmented') &&
+        /\.mtrl-list__(item|action)/.test(selector) &&
+        !selector.includes('.mtrl-list--segmented >') &&
         !/__(leading|trailing)/.test(selector)));
-    const values = rounding.flatMap((block) => Array.from(block.body.matchAll(/border(?:-[a-z]+)*-radius\s*:\s*([^;]+);/g), (m) => m[1].trim()));
-    // The action and its ::before follow the row: `inherit`, which is 0 on a square row.
-    expect(values.filter((value) => value !== 'inherit')).toEqual([]);
+    const values = rounding.flatMap((block) => block.selectors.flatMap((selector) => {
+      if (selector.includes('.mtrl-list--segmented >') || /__(leading|trailing)/.test(selector)) return [];
+      if (!/\.mtrl-list__(item|action)/.test(selector)) return [];
+      return Array.from(block.body.matchAll(/border(?:-[a-z]+)*-radius\s*:\s*([^;]+);/g), (m) => `${selector} ${m[1].trim()}`);
+    }));
+    expect(values.filter((value) => !value.endsWith(' inherit') && value !== `${selected} ${large}`)).toEqual([]);
+  });
+  test('a standard leading image and video are square; segmented keeps 8px', () => {
+    const small = 'var(--mtrl-sys-shape-corner-small, 8px)';
+    expect(declared('.mtrl-list__leading--image', 'border-radius')).toBe(small);
+    expect(declared('.mtrl-list__leading--video', 'border-radius')).toBe(small);
+    expect(declared('.mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--image', 'border-radius')).toBe('0');
+    expect(declared('.mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--video', 'border-radius')).toBe('0');
+  });
+  test('an inset divider is 16px from the start and 24px from the end', () => {
+    expect(declared('.mtrl-list__divider', 'margin-block')).toBe('0');
+    expect(declared('.mtrl-list__divider--inset', 'margin-inline-start')).toBe('16px');
+    expect(declared('.mtrl-list__divider--inset', 'margin-inline-end')).toBe('24px');
   });
   test('a row paints surface, or --mtrl-list-item-container-color', () => {
     expect(declared('.mtrl-list__item', 'background'))

@@ -59,7 +59,7 @@ export const SSR_ADAPTER_BYTES = { react: 4_400, svelte: 1_600, vue: 1_500, soli
 // 883,000 had carried 1,432 B over 881,568. Owner decision 2026-11-05: 920,000.
 // The bottom sheet drag: 920,016 B packed with Node 22.23.5 / npm 10.9.11.
 // Owner decision 2026-11-24: 920,020, the next 10 B.
-export const TARBALL_BYTES = 920_460; // The theme shadow/scrim roles: 920,027 B measured in CI 45376317783, rounded up to the next 10 B. Owner decision 2026-11-24.
+export const TARBALL_BYTES = 920_570; // The list sheet on the slider main: CI 45536771794 measured 920,561 B packed, the next 10 B. Owner rule: measured + 10 B. The list conformance sheet alone: CI 45528212987 measured 920,502 B packed, the next 10 B. The theme shadow/scrim roles: 920,027 B measured in CI 45376317783, rounded up to the next 10 B. Owner decision 2026-11-24.
 // The root reset for a nested LTR instance, measured under CI's Node 22 / npm 10 packer.
 // Lowered by the build's declaration prune and the prose-free declarations; the row
 // and the rule figure are in check-package-size.ts. The lean listbox entry's six

@@ -6677,7 +6677,8 @@ try {
   // layer (factory, <m-list>): every corner of the row and of its state layer
   // at rest, hovered, keyboard-focused, pressed and selected, on the first, a
   // middle, the last and a single row; the gap between the rows' boxes; the
-  // row's colour; and a list that paints no background. Standard: 0 everywhere.
+  // row's colour; and a list that paints no background. Standard stays square,
+  // except a selected row, which is 16px on every corner.
   {
     const ZERO = "0px 0px 0px 0px";
     const R12 = "12px 12px 12px 12px";
@@ -6826,12 +6827,13 @@ try {
             await page.mouse.down();
             expectLook(`${item} pressed`, await look(listName), { ...rest[listName], [item]: shape(R16) });
             await page.mouse.up();
-            // The press selected the row. Selected is the active shape on every
-            // corner, whatever the row's index, hovered or not.
-            expectLook(`${item} selected and hovered`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            // The press selected the row. Selected is 16px on every corner in
+            // both variants, whatever the row's index, hovered or not. Standard
+            // hover, focus and press stay square.
+            expectLook(`${item} selected and hovered`, await look(listName), { ...rest[listName], [item]: R16 }, item);
             await park();
             await blur();
-            expectLook(`${item} selected`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            expectLook(`${item} selected`, await look(listName), { ...rest[listName], [item]: R16 }, item);
             // A second press deselects it: back to the rest shape of its index.
             await button(listName, item).click();
             await park();
@@ -6841,7 +6843,7 @@ try {
           assert.deepEqual(failures, [], `${where}: the rows' and state layers' corners, the gap and the colours`);
           check(segmented
             ? `list: ${where}, rows 4 / 16 outer / 12 hovered / 16 focused, pressed and selected, 2px apart, on surface-container; a divider and a subheader end a group; the list paints nothing`
-            : `list: ${where}, every corner 0 in every state, no gap, and the list paints nothing`);
+            : `list: ${where}, square rows, a selected row 16px on every corner, no gap, and the list paints nothing`);
         }
       }
     }
