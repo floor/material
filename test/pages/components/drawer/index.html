@@ -116,10 +116,33 @@ scenario(states, {
 });
 
 const interaction = section(host(), "Interaction");
+
+// The live fractions, the same pair the owner's comparison reads: the menu's
+// scaleY against the drawer's visible height, each as a fraction of its open
+// state. This page loads the local build, so until #458 merges it shows main's
+// motion (the panel springs while the rows stay still) — merge #458 or use its
+// branch build to see the matched pair.
+let drawerFull = 0;
+let liveDrawer = null;
+const fractions = () => {
+  const group = liveDrawer?.querySelector(".mtrl-drawer__group-items");
+  const panel = group ? group.getBoundingClientRect().height : 0;
+  if (panel > drawerFull) drawerFull = panel;
+  const drawer = drawerFull > 0 ? panel / drawerFull : 0;
+  const menuElement = document.querySelector(".mtrl-menu");
+  const transform = menuElement ? getComputedStyle(menuElement).transform : "none";
+  const menu = transform && transform !== "none" ? new DOMMatrixReadOnly(transform).d : null;
+  const show = (value) => (value === null ? "–" : value.toFixed(3));
+  const moving = (value) => value !== null && value > 0.02 && value < 0.98;
+  const inStep = moving(menu) && moving(drawer) && Math.abs(menu - drawer) <= 0.02;
+  return `menu scaleY ${show(menu)} · drawer visible height ${drawer.toFixed(3)}${inStep ? " · in step" : ""}`;
+};
+
 scenario(interaction, {
   title: "Section open/close next to the menu",
   lookFor: "the rows scale from their top edge with a fade, the same motion as the menu",
-  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse",
+  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse; the readout's two fractions stay together frame for frame",
+  measure: fractions,
   mount: (body) => {
     const row = document.createElement("div");
     row.className = "tp-row";
@@ -130,7 +153,31 @@ scenario(interaction, {
     body.append(row);
     renderFactory = () => { drawerBox.innerHTML = ""; mountFactory(drawerBox); };
     renderFactory();
+    liveDrawer = drawerBox;
     mountMenu(menuBox);
+    // The two motions, one press each, so the fractions can be watched together.
+    const buttons = document.createElement("div");
+    buttons.style.display = "flex";
+    buttons.style.gap = "8px";
+    buttons.style.margin = "8px 0";
+    const sectionButton = document.createElement("button");
+    sectionButton.textContent = "Open / close the section";
+    sectionButton.addEventListener("click", () => {
+      const drawer = drawerBox.querySelector(".mtrl-drawer");
+      const header = (drawer?.shadowRoot ?? drawer)?.querySelector('[data-id="labels"]') ?? drawer?.querySelector(".mtrl-drawer__item");
+      header?.click();
+    });
+    const menuButton = document.createElement("button");
+    menuButton.textContent = "Open / close the menu";
+    menuButton.addEventListener("click", () => menuBox.querySelector("#menu-opener")?.click());
+    buttons.append(sectionButton, menuButton);
+    body.append(buttons);
+    const note = document.createElement("p");
+    note.style.margin = "4px 0 0";
+    note.style.fontSize = "12px";
+    note.style.opacity = "0.7";
+    note.textContent = "This page runs the build it is served from: until #458 merges, it shows main's motion, where the panel springs and the rows stay still. Merge #458 or serve its branch build to watch the pair together.";
+    body.append(note);
   },
 });
 
