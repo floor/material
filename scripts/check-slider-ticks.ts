@@ -10,10 +10,13 @@
  * the harness screenshots the track and finds the tick dots in the pixels.
  * Their centres are fitted to a line, and every handle centre for every value
  * from min to max must sit on that line within half a pixel — the first and
- * the last value included. A continuous slider must put its handle at min and
- * max on the same two ends of that scale, the corner radius in from the track's
- * ends. The element route (`<m-slider>`, its `ticks` attribute arriving after
- * the element upgraded) is measured the same way.
+ * the last value included. The scale itself is pinned to the owner's decision:
+ * 6 px in from each end of the track at every size, so the first tick and the
+ * handle at the minimum are 6 px in, and the last tick and the handle at the
+ * maximum are 6 px short of the far end. A continuous slider must put its
+ * handle at min and max on the same 6 px. The element route (`<m-slider>`, its
+ * `ticks` attribute arriving after the element upgraded) is measured the same
+ * way.
  *
  * The press check reads the handle's bar (`::before`) width: 4dp at rest, 2dp
  * while a press on the handle, the active track or the inactive track lasts,
@@ -33,6 +36,8 @@ import { directionArmsPrelude, sassOptions } from "./build-styles";
 
 const HOST = 320;
 const STEPS = 10;
+// The owner's end inset for the handle range (2026-11-25), every size.
+const END_INSET = 6;
 // Two device pixels per CSS pixel: a dot's centre is readable to a quarter of a CSS pixel.
 const DPR = 2;
 
@@ -273,6 +278,7 @@ try {
           line: vertical ? Math.round(track.x + track.width / 2 - host.x) : Math.round(track.y + track.height / 2 - host.y),
           // Where the track's start end is in the image, along the axis.
           start: vertical ? Math.round(track.bottom - host.y) : rtl ? Math.round(track.right - host.x) : Math.round(track.x - host.x),
+          length: vertical ? track.height : track.width,
         };
       },
       { vertical, rtl },
@@ -347,6 +353,9 @@ try {
         // The ticks, with the handle out of the picture; then the scale they make.
         const painted = await measure(vertical, rtl);
         const scale = scaleFrom(painted.centres, `${name}: ${painted.centres.length} painted ticks`);
+        // The owner's rule: the value span starts and ends 6 px inside the track.
+        assert(Math.abs(scale.at(0) - END_INSET) <= 0.5, `${name}: the first tick is ${scale.at(0).toFixed(2)} px into the track, where the handle range starts at ${END_INSET} px`);
+        assert(Math.abs(scale.at(STEPS) - (painted.geometry.length - END_INSET)) <= 0.5, `${name}: the last tick is ${scale.at(STEPS).toFixed(2)} px into a ${painted.geometry.length} px track, where the handle range ends at ${painted.geometry.length - END_INSET} px`);
         assert(scale.residual <= 0.35, `${name}: the painted ticks sit on a line (worst ${scale.residual.toFixed(2)} px off)`);
         // Every value, the ends included.
         const handleDistances: string[] = [];
@@ -377,6 +386,13 @@ try {
             Math.abs(where - expected) <= 0.5,
             `${name}: the continuous handle at ${fraction * 100}% sits ${where.toFixed(2)} px into the track where the discrete scale is at ${expected.toFixed(2)} px`,
           );
+          if (fraction === 0 || fraction === 1) {
+            const edge = fraction === 0 ? END_INSET : painted.geometry.length - END_INSET;
+            assert(
+              Math.abs(where - edge) <= 0.5,
+              `${name}: the continuous handle at ${fraction * 100}% sits ${where.toFixed(2)} px into the track, where the owner's ${END_INSET} px inset puts it`,
+            );
+          }
         }
         report.push(`${name}: ticks ${painted.centres.length}, residual ${scale.residual.toFixed(2)} px, handles ${handleDistances.join("/")}`);
       }
@@ -422,6 +438,7 @@ try {
       value: handle.getAttribute("aria-valuenow"),
       handle: Math.round(handle.getBoundingClientRect().x + handle.getBoundingClientRect().width / 2 - track.x),
       track: [Math.round(track.x - box.x), Math.round(track.width)],
+      length: track.width,
     };
   });
   const elementShot = decodePNG(Buffer.from(await elementPage.locator("#host").screenshot()));
@@ -441,6 +458,8 @@ try {
     { track: rgbOf(elementColours.track), tick: rgbOf(elementColours.tick) },
   ).map((centre) => centre / DPR - elementGeometry.start);
   const elementScale = scaleFrom(elementTicks, `element: ${elementTicks.length} painted ticks`);
+  assert(Math.abs(elementScale.at(0) - END_INSET) <= 0.5, `element: the first tick is ${elementScale.at(0).toFixed(2)} px into the track, where the handle range starts at ${END_INSET} px`);
+  assert(Math.abs(elementScale.at(STEPS) - (elementGeometry.length - END_INSET)) <= 0.5, `element: the last tick is ${elementScale.at(STEPS).toFixed(2)} px into a ${elementGeometry.length} px track, where the handle range ends at ${elementGeometry.length - END_INSET} px`);
   // The state the ticks arrive in: nothing has moved the value since, and the
   // handle must already sit on the scale the ticks paint.
   const elementAtRest = await elementPage.evaluate(() => {

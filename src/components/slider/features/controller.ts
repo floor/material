@@ -70,8 +70,8 @@ const getHandleHeight = (size?: SliderSize): number => {
  * size takes the radius of the named size it falls in.
  *
  * It is the corner a piece of track carries where it reaches an end of the
- * slider. On a discrete slider it is also the inset of every value position: the
- * handle and the stops sit that far in from each end of the track.
+ * slider. The values sit on their own scale, HANDLE_END_INSET in from each end,
+ * at every size.
  */
 const getExternalTrackRadius = (size?: SliderSize): number => {
   const trackHeight = getTrackHeight(size);
@@ -80,6 +80,18 @@ const getExternalTrackRadius = (size?: SliderSize): number => {
   if (trackHeight <= SLIDER_SIZES.L) return 16;
   return 28;
 };
+
+/**
+ * How far the handle's range — and with it every tick, the pointer's mapping and
+ * the track's own pieces — stays from the track's two ends, at every size and
+ * whether the slider is continuous or discrete. The owner's decision (2026-11-25)
+ * that fixes it: the value span is 6 px in from each end, so at the minimum and
+ * the maximum the handle sits 6 px from the track's end at every size. Compose
+ * names the same space ActiveHandleLeadingSpace / ActiveHandleTrailingSpace at
+ * 6.0 dp (SliderTokens.kt; the thumb-to-track gap, ThumbTrackGapSize, is that
+ * token too).
+ */
+const HANDLE_END_INSET = 6;
 
 /** The steps of the track's corner radii (M3 shape scale: 8 / 12 / 16 / 28). */
 const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
@@ -96,7 +108,8 @@ const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "
  */
 const trackPositionCss = (fraction: number, inset: number): string => {
   if (!inset) return `${fraction * 100}%`;
-  const offset = inset * (1 - 2 * fraction);
+  // Rounded like alongCss: 6 * (1 - 0.4) is 3.5999999999999996 in binary.
+  const offset = Math.round(inset * (1 - 2 * fraction) * 1e6) / 1e6;
   return `calc(${fraction * 100}% ${offset < 0 ? "-" : "+"} ${Math.abs(offset)}px)`;
 };
 
@@ -245,10 +258,9 @@ export const withTracks =
     const width = lengthOf(container.getBoundingClientRect(), axis) || 0;
     const corner = getExternalTrackRadius(size);
     // The pieces are split around the handle where it is drawn: the handle keeps
-    // the corner inset at both ends whether the slider is continuous or has
-    // ticks, so the gaps and the mask follow that scale too. The pointer still
-    // maps across the whole track (getValueFromPosition).
-    const inset = corner;
+    // HANDLE_END_INSET from both ends whether the slider is continuous or has
+    // ticks, so the gaps, the mask and the pointer's mapping follow that scale.
+    const inset = HANDLE_END_INSET;
     const fraction = (value: number) => fractionOf(value, state.min, state.max);
     // trackPosition, as a fraction plus pixels. The inset stays on at the ends,
     // so a segment that follows the handle stops on the same centre as the tick.
@@ -566,21 +578,19 @@ export const withController =
   // UI RENDERING FUNCTIONS
   //=============================================================================
 
-  // The track's own pieces: a discrete one insets every step, ends included,
-  // by the track's corner radius; a continuous one spans the whole track (see
-  // trackPositionCss). Read at each use: a right-to-left layout is known only
-  // once the slider is placed.
+  // Every value position, on either slider kind and at every size, is
+  // HANDLE_END_INSET in from the track's ends (see that constant): the handle,
+  // the ticks and the pointer's mapping share the one scale. Read at each use: a
+  // right-to-left layout is known only once the slider is placed.
   const axisNow = () => getAxis(config, isRtl(component.element));
-  const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
+  const inset = () => HANDLE_END_INSET;
 
-  // The handle (and its bubble) keeps that space from the track's ends whether
-  // the slider is continuous or discrete: at min and max its centre sits the
-  // track's corner radius in from the end, on the first and the last stop of a
-  // discrete slider and on the same inset for a continuous one, so no press
-  // leaves the handle half on the track's rounded end. The track's pieces still
-  // span the whole width; the value the pointer maps to is unchanged.
+  // The handle (and its bubble) sits on that scale, so at min and max its centre
+  // is 6 px from the track's end and lands on the first and the last tick of a
+  // discrete slider. The pieces span the whole track; the end threshold below
+  // drops a piece that would only fill that inset.
   const visualPosition = (value: number) =>
-    trackPositionCss(fractionOf(value, state.min, state.max), getExternalTrackRadius(component.getSize?.() ?? config.size));
+    trackPositionCss(fractionOf(value, state.min, state.max), HANDLE_END_INSET);
 
   /**
    * Gets slider value from a position on the track

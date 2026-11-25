@@ -255,7 +255,7 @@ describe('slider wiring in the task that creates it', () => {
     container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 150, bubbles: true }));
     document.dispatchEvent(new dom.window.MouseEvent('mousemove', { clientX: 210, bubbles: true }));
     document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 210, bubbles: true }));
-    expect(slider.getValue()).toBe(70);
+    expect(slider.getValue()).toBe(71);
   });
 
   test('a slider disabled from config ignores keys', () => {
@@ -328,10 +328,10 @@ describe('slider appearance', () => {
     // the ticks arrived — on the track's very edge, a step away from the scale.
     const slider = await mount({ step: 10, value: 0 });
     const [handle] = handles(slider);
-    expect(handle.style.left).toBe('calc(0% + 8px)');
+    expect(handle.style.left).toBe('calc(0% + 6px)');
     slider.showTicks(true);
     await wait();
-    expect(handle.style.left).toBe('calc(0% + 8px)');
+    expect(handle.style.left).toBe('calc(0% + 6px)');
     slider.setValue(50);
     expect(handle.style.left).toBe('calc(50% + 0px)');
   });
@@ -543,9 +543,9 @@ describe('slider track geometry', () => {
     const slider = createSlider({ value: 40 });
     const [, active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment'));
     expect(active!.style.left).toBe('0px');
-    expect(active!.style.width).toBe('calc(40% - 6.4px)');
-    expect(inactive!.style.left).toBe('calc(40% + 9.6px)');
-    expect(inactive!.style.width).toBe('calc(60% - 9.6px)');
+    expect(active!.style.width).toBe('calc(40% - 6.8px)');
+    expect(inactive!.style.left).toBe('calc(40% + 9.2px)');
+    expect(inactive!.style.width).toBe('calc(60% - 9.2px)');
     const end = slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__dot')[1]!;
     expect(end.hidden).toBe(false);
     expect(end.style.left).toBe('calc(100% - 8px)');
@@ -562,11 +562,11 @@ describe('slider track geometry', () => {
     expect(handles(slider)[0]!.style.left).toBe('calc(50% + 0px)');
   });
 
-  test('a continuous slider keeps the corner radius of space at both ends', async () => {
+  test('a continuous slider keeps 6px of space at both ends', async () => {
     const min = await sized({ value: 0 });
-    expect(handles(min)[0]!.style.left).toBe('calc(0% + 8px)');
+    expect(handles(min)[0]!.style.left).toBe('calc(0% + 6px)');
     const max = await sized({ value: 100 });
-    expect(handles(max)[0]!.style.left).toBe('calc(100% - 8px)');
+    expect(handles(max)[0]!.style.left).toBe('calc(100% - 6px)');
   });
 
   test('a focused handle narrows to 2px and the gap follows its edge', async () => {
@@ -582,10 +582,10 @@ describe('slider track geometry', () => {
     // because the track clipped its pieces and a rounded sliver would show; each
     // piece now carries its own corners, and the browser scales them to fit.
     const low = await sized({ value: 3 });
-    expect(segments(low)[1]!.width).toBe('calc(3% - 0.48px)');
-    // value 96: the inactive track runs 296 to 300, out to the track's end and stop.
+    expect(segments(low)[1]!.width).toBe('calc(3% - 2.36px)');
+    // value 96: the inactive track runs 290.48 to 300, out to the track's end and stop.
     const high = await sized({ value: 96 });
-    expect(segments(high)[2]!.width).toBe('calc(4% - 0.64px)');
+    expect(segments(high)[2]!.width).toBe('calc(4% - 2.48px)');
     expect(dots(high)).toEqual([null, 'calc(100% - 8px)']);
     // A range whose low handle sits inside its own gap still has no start piece:
     // it would only fill the end's inset, so the threshold drops it.
@@ -603,9 +603,9 @@ describe('slider track geometry', () => {
   test('a range slider: active between the handles, a stop at each end', async () => {
     const slider = await sized({ range: true, value: 20, secondValue: 80 });
     expect(segments(slider)).toEqual([
-      { left: '0px', width: 'calc(20% - 3.2px)', active: false },
-      { left: 'calc(20% + 12.8px)', width: 'calc(60% - 25.6px)', active: true },
-      { left: 'calc(80% + 3.2px)', width: 'calc(20% - 3.2px)', active: false },
+      { left: '0px', width: 'calc(20% - 4.4px)', active: false },
+      { left: 'calc(20% + 11.6px)', width: 'calc(60% - 23.2px)', active: true },
+      { left: 'calc(80% + 4.4px)', width: 'calc(20% - 4.4px)', active: false },
     ]);
     expect(dots(slider)).toEqual(['4px', 'calc(100% - 8px)']);
   });
@@ -614,34 +614,34 @@ describe('slider track geometry', () => {
     const above = await sized({ centered: true, min: -50, max: 50, value: 25 });
     expect(segments(above)).toEqual([
       { left: '0px', width: 'calc(50% - 8px)', active: false },
-      { left: '50%', width: 'calc(25% - 12px)', active: true },
-      { left: 'calc(75% + 4px)', width: 'calc(25% - 4px)', active: false },
+      { left: '50%', width: 'calc(25% - 11px)', active: true },
+      { left: 'calc(75% + 5px)', width: 'calc(25% - 5px)', active: false },
     ]);
     expect(dots(above)).toEqual(['4px', 'calc(100% - 8px)']);
     const below = await sized({ centered: true, min: -50, max: 50, value: -25 });
     expect(segments(below)).toEqual([
-      { left: '0px', width: 'calc(25% - 4px)', active: false },
-      { left: 'calc(25% + 12px)', width: 'calc(25% - 12px)', active: true },
+      { left: '0px', width: 'calc(25% - 5px)', active: false },
+      { left: 'calc(25% + 11px)', width: 'calc(25% - 11px)', active: true },
       { left: 'calc(50% + 8px)', width: 'calc(50% - 8px)', active: false },
     ]);
   });
 
-  test('a discrete slider insets every step by the corner radius, ends included', async () => {
+  test('a discrete slider insets every step, ends included', async () => {
     const slider = await sized({ value: 20, step: 10, ticks: true });
-    // 8 + 0.2 * (300 - 16), minus the 8px gap: calc(20% - 3.2px)
+    // 6 + 0.2 * (300 - 12), minus the 8px gap: calc(20% - 4.4px)
     const active = segments(slider)[1]!;
     expect(active.left).toBe('0px');
-    expect(active.width).toBe('calc(20% - 3.2px)');
+    expect(active.width).toBe('calc(20% - 4.4px)');
     expect(active.active).toBe(true);
-    expect(handles(slider)[0]!.style.left).toBe('calc(20% + 4.8px)');
+    expect(handles(slider)[0]!.style.left).toBe('calc(20% + 3.6px)');
     // Min and max stay on that inset: the handle centre is the end tick, and the
     // track stops one gap (8px) short of it.
     slider.setValue(0);
-    expect(handles(slider)[0]!.style.left).toBe('calc(0% + 8px)');
-    expect(segments(slider)[2]).toEqual({ left: '16px', width: 'calc(100% - 16px)', active: false });
+    expect(handles(slider)[0]!.style.left).toBe('calc(0% + 6px)');
+    expect(segments(slider)[2]).toEqual({ left: '14px', width: 'calc(100% - 14px)', active: false });
     slider.setValue(100);
-    expect(handles(slider)[0]!.style.left).toBe('calc(100% - 8px)');
-    expect(segments(slider)[1]).toEqual({ left: '0px', width: 'calc(100% - 16px)', active: true });
+    expect(handles(slider)[0]!.style.left).toBe('calc(100% - 6px)');
+    expect(segments(slider)[1]).toEqual({ left: '0px', width: 'calc(100% - 14px)', active: true });
   });
 
   test('the corner radius and the handle height follow the size', async () => {
@@ -697,7 +697,7 @@ describe('slider settling', () => {
     const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
     container.getBoundingClientRect = () => ({ width: 300, height: 48, top: 0, left: 0, right: 300, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
     container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));
-    expect(slider.getValue()).toBe(80);
+    expect(slider.getValue()).toBe(81);
     expect(slider.element.classList.contains(SETTLING)).toBe(true);
     document.dispatchEvent(new dom.window.MouseEvent('mousemove', { clientX: 200, bubbles: true }));
     expect(slider.element.classList.contains(SETTLING)).toBe(false);
@@ -734,7 +734,7 @@ describe('slider inset icon', () => {
   test('moves to the inactive track when the active one is too short', async () => {
     // value 5: the handle at 15px, the inactive track from 23px.
     const slider = await sized({ size: 'M', value: 5, insetIcon: VOLUME });
-    expect(icon(slider).style.left).toBe('calc(5% + 28.8px)');
+    expect(icon(slider).style.left).toBe('calc(5% + 23.4px)');
     expect(icon(slider).classList.contains('mtrl-slider__inset-icon--inactive')).toBe(true);
   });
 
@@ -802,15 +802,15 @@ describe('vertical slider', () => {
 
   test('runs top to bottom with topToBottom', async () => {
     const slider = await sized({ value: 25, topToBottom: true });
-    expect(segments(slider, 'top')).toEqual([{ start: '0px', length: 'calc(25% - 4px)' }, { start: 'calc(25% + 12px)', length: 'calc(75% - 12px)' }]);
-    expect(handles(slider)[0]!.style.top).toBe('calc(25% + 4px)');
+    expect(segments(slider, 'top')).toEqual([{ start: '0px', length: 'calc(25% - 5px)' }, { start: 'calc(25% + 11px)', length: 'calc(75% - 11px)' }]);
+    expect(handles(slider)[0]!.style.top).toBe('calc(25% + 3px)');
   });
 
   test('a tap maps its y coordinate onto the value, from the bottom', async () => {
     const slider = await sized({ value: 10 });
     const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
     container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 24, clientY: 60, bubbles: true }));
-    expect(slider.getValue()).toBe(80);
+    expect(slider.getValue()).toBe(81);
     document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 24, clientY: 60, bubbles: true }));
   });
 
@@ -899,11 +899,11 @@ describe('slider keys, range limits and RTL', () => {
   test('in RTL the track runs from the right', async () => {
     const slider = await within({ value: 25 }, 'rtl');
     const handle = handles(slider)[0]!;
-    expect(handle.style.right).toBe('calc(25% + 4px)');
+    expect(handle.style.right).toBe('calc(25% + 3px)');
     expect(handle.style.left).toBe('auto');
     const [, active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment'));
-    expect([active!.style.right, active!.style.width, active!.style.left]).toEqual(['0px', 'calc(25% - 4px)', '']);
-    expect([inactive!.style.right, inactive!.style.width]).toEqual(['calc(25% + 12px)', 'calc(75% - 12px)']);
+    expect([active!.style.right, active!.style.width, active!.style.left]).toEqual(['0px', 'calc(25% - 5px)', '']);
+    expect([inactive!.style.right, inactive!.style.width]).toEqual(['calc(25% + 11px)', 'calc(75% - 11px)']);
   });
 
   test('in RTL ArrowRight lowers and ArrowLeft raises; ArrowUp still raises', async () => {
@@ -923,7 +923,7 @@ describe('slider keys, range limits and RTL', () => {
     const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
     container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 60, bubbles: true }));
     document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 60, bubbles: true }));
-    expect(slider.getValue()).toBe(80);
+    expect(slider.getValue()).toBe(81);
   });
 
   test('top to bottom, ArrowUp and PageUp move toward the top, which is the minimum', async () => {
