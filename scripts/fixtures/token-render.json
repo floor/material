@@ -261,9 +261,9 @@
   ],
   [
    "4:div.mtrl-list__leading.mtrl-list__leading--video",
-   "8px 8px 8px 8px",
+   "0px 0px 0px 0px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [

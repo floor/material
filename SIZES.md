@@ -21,14 +21,14 @@ these rows drift from a fresh measurement.
 | bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
 | bottom-sheet | 21.5 KB | 8.1 KB | +5.0 KB |  |
 | side-sheet | 17.8 KB | 6.6 KB | +3.5 KB |  |
-| button | 21.6 KB | 7.5 KB | +4.4 KB | +7.0 KB |
-| button-group | 36.3 KB | 11.9 KB | +8.8 KB | +7.0 KB |
-| card | 19.9 KB | 6.8 KB | +3.7 KB | +10.0 KB |
+| button | 21.6 KB | 7.5 KB | +4.4 KB | +6.9 KB |
+| button-group | 36.3 KB | 11.9 KB | +8.8 KB | +6.9 KB |
+| card | 19.9 KB | 6.8 KB | +3.7 KB | +9.8 KB |
 | carousel | 32.0 KB | 11.6 KB | +8.6 KB |  |
 | checkbox | 16.4 KB | 5.7 KB | +2.6 KB |  |
 | chips | 28.0 KB | 9.2 KB | +6.1 KB |  |
 | datepicker | 36.4 KB | 12.9 KB | +9.9 KB |  |
-| dialog | 37.3 KB | 12.3 KB | +9.2 KB | +7.0 KB |
+| dialog | 37.3 KB | 12.3 KB | +9.2 KB | +6.9 KB |
 | divider | 9.8 KB | 3.8 KB | +0.7 KB |  |
 | drawer | 27.5 KB | 9.9 KB | +6.9 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
@@ -39,20 +39,20 @@ these rows drift from a fresh measurement.
 | menu | 38.8 KB | 12.6 KB | +9.6 KB | +2.1 KB |
 | navigation-bar | 16.1 KB | 6.0 KB | +2.9 KB |  |
 | navigation-rail | 18.6 KB | 6.8 KB | +3.8 KB |  |
-| progress | 29.2 KB | 10.7 KB | +7.6 KB |  |
+| progress | 28.8 KB | 10.5 KB | +7.4 KB |  |
 | loading-indicator | 22.8 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.2 KB | 9.5 KB | +6.5 KB | +17.3 KB |
+| split-button | 27.2 KB | 9.5 KB | +6.5 KB | +17.1 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.3 KB | 10.9 KB | +7.9 KB |  |
 | select | 40.9 KB | 13.1 KB | +10.0 KB | +10.7 KB |
-| slider | 34.0 KB | 11.9 KB | +8.9 KB |  |
-| snackbar | 36.5 KB | 12.3 KB | +9.2 KB | +7.0 KB |
+| slider | 34.3 KB | 11.9 KB | +8.9 KB |  |
+| snackbar | 36.5 KB | 12.3 KB | +9.2 KB | +6.9 KB |
 | switch | 18.8 KB | 6.2 KB | +3.2 KB |  |
-| tabs | 41.5 KB | 13.5 KB | +10.4 KB | +7.0 KB |
+| tabs | 41.5 KB | 13.5 KB | +10.4 KB | +6.9 KB |
 | text-field | 27.9 KB | 8.7 KB | +5.7 KB |  |
 | timepicker | 32.8 KB | 11.3 KB | +8.3 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 17.9 KB | 6.3 KB | +3.3 KB |  |
-| toolbar | 33.1 KB | 11.2 KB | +8.2 KB | +7.0 KB |
-| all | 406.3 KB | 129.1 KB | +126.1 KB | +2.1 KB |
+| toolbar | 33.1 KB | 11.2 KB | +8.2 KB | +6.9 KB |
+| all | 406.2 KB | 129.0 KB | +126.0 KB | +2.1 KB |
 <!-- /size-table -->

@@ -21,8 +21,10 @@ describe("public configure-once Sass", () => {
     expect((css.match(/--[\w-]+:/g) ?? []).length).toBe(5);
   });
 
-  // main moved because a list item's focus ring sits inside the pill
-  // (styles/components/_fab-menu.scss). The other entries are untouched.
+  // main moved because the slider's pressed handle joins the 2px width rule
+  // (styles/components/_slider.scss) and a standard list's selected row,
+  // divider inset and leading media changed (styles/components/_list.scss).
+  // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {
       const original = compile(`@use "${entry}";`);

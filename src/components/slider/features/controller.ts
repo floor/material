@@ -70,8 +70,8 @@ const getHandleHeight = (size?: SliderSize): number => {
  * size takes the radius of the named size it falls in.
  *
  * It is the corner a piece of track carries where it reaches an end of the
- * slider. On a discrete slider it is also the inset of every value position: the
- * handle and the stops sit that far in from each end of the track.
+ * slider. The values sit on their own scale, HANDLE_END_INSET in from each end,
+ * at every size.
  */
 const getExternalTrackRadius = (size?: SliderSize): number => {
   const trackHeight = getTrackHeight(size);
@@ -81,23 +81,37 @@ const getExternalTrackRadius = (size?: SliderSize): number => {
   return 28;
 };
 
+/**
+ * How far the handle's range — and with it every tick, the pointer's mapping and
+ * the track's own pieces — stays from the track's two ends, at every size and
+ * whether the slider is continuous or discrete. The owner's decision (2026-11-25)
+ * that fixes it: the value span is 6 px in from each end, so at the minimum and
+ * the maximum the handle sits 6 px from the track's end at every size. Compose
+ * names the same space ActiveHandleLeadingSpace / ActiveHandleTrailingSpace at
+ * 6.0 dp (SliderTokens.kt; the thumb-to-track gap, ThumbTrackGapSize, is that
+ * token too).
+ */
+const HANDLE_END_INSET = 6;
+
 /** The steps of the track's corner radii (M3 shape scale: 8 / 12 / 16 / 28). */
 const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
 
 /**
  * Where a value sits along a track `width` wide, from its fraction of the range,
- * as CSS, so a handle stays in place when the track resizes. A continuous
- * slider spans the whole track (`inset` is 0), so its ends meet the rounded
- * corners. A discrete one insets every step, the first and the last included,
- * by the track's corner radius: the handle centre lands on the stop, and the
- * end stops sit in from the pill
- * (https://m3.material.io/components/sliders/guidelines — "The slider handle snaps
- * to the closest stop.").
+ * as CSS, so a handle stays in place when the track resizes. With no inset it
+ * is the fraction across the whole track, which the track's own pieces use. With
+ * the track's corner radius it insets every step, the first and the last
+ * included: the handle centre lands on the stop, and the end stops sit in from
+ * the pill (https://m3.material.io/components/sliders/guidelines — "The slider
+ * handle snaps to the closest stop."). The handle always reads it this way, and
+ * the track's pieces on a discrete slider.
  */
-const trackPositionCss = (fraction: number, inset: number): string =>
-  inset
-    ? `calc(${fraction * 100}% + ${inset * (1 - 2 * fraction)}px)`
-    : `${fraction * 100}%`;
+const trackPositionCss = (fraction: number, inset: number): string => {
+  if (!inset) return `${fraction * 100}%`;
+  // Rounded like alongCss: 6 * (1 - 0.4) is 3.5999999999999996 in binary.
+  const offset = Math.round(inset * (1 - 2 * fraction) * 1e6) / 1e6;
+  return `calc(${fraction * 100}% ${offset < 0 ? "-" : "+"} ${Math.abs(offset)}px)`;
+};
 
 /** A distance along the track: `f` of its length, plus `p` pixels. No measured width. */
 type Along = { f: number; p: number };
@@ -243,7 +257,10 @@ export const withTracks =
     // except at a short end.
     const width = lengthOf(container.getBoundingClientRect(), axis) || 0;
     const corner = getExternalTrackRadius(size);
-    const inset = config.ticks ? corner : 0;
+    // The pieces are split around the handle where it is drawn: the handle keeps
+    // HANDLE_END_INSET from both ends whether the slider is continuous or has
+    // ticks, so the gaps, the mask and the pointer's mapping follow that scale.
+    const inset = HANDLE_END_INSET;
     const fraction = (value: number) => fractionOf(value, state.min, state.max);
     // trackPosition, as a fraction plus pixels. The inset stays on at the ends,
     // so a segment that follows the handle stops on the same centre as the tick.
@@ -305,21 +322,16 @@ export const withTracks =
     }
     // A standard slider has no inactive piece at the start of the track.
     const standard = !config.centered && !(config.range && state.secondValue !== null);
-    // A discrete slider's pieces stop at the end ticks. Compose's drawTrack keeps
-    // its corner threshold for the ends whenever the slider has tick fractions,
-    // even where short pieces are otherwise kept: a piece that would only fill the
-    // inset before the first tick or after the last one is dropped, so the end tick
-    // is the track's visual end (Slider.kt drawTrack,
-    // `tickFractions.isNotEmpty()`). A continuous track has no ticks to stop at:
-    // its end pieces keep their ends, and a piece shorter than the corner radius
-    // has its radii scaled to fit (as Skia's RoundRect does), so no end has to be
-    // dropped to avoid a sliver.
-    if (config.ticks) {
-      parts.forEach((part) => {
-        if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
-        else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
-      });
-    }
+    // The pieces stop at the ends' inset. Compose's drawTrack keeps a corner
+    // threshold for the ends (Slider.kt drawTrack): a piece that would only fill
+    // the inset before the first tick or after the last one is dropped, so an end
+    // of track is the visual end. The threshold holds for every slider here,
+    // because the handle keeps that inset whether or not there are ticks — a
+    // stub beyond a handle at the maximum would otherwise hang past it.
+    parts.forEach((part) => {
+      if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
+      else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
+    });
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);
@@ -566,15 +578,19 @@ export const withController =
   // UI RENDERING FUNCTIONS
   //=============================================================================
 
-  // A discrete slider insets every step, ends included, by the track's corner
-  // radius; a continuous one spans the whole track (see trackPositionCss).
-  // Read at each use: a right-to-left layout is known only once the slider is placed.
+  // Every value position, on either slider kind and at every size, is
+  // HANDLE_END_INSET in from the track's ends (see that constant): the handle,
+  // the ticks and the pointer's mapping share the one scale. Read at each use: a
+  // right-to-left layout is known only once the slider is placed.
   const axisNow = () => getAxis(config, isRtl(component.element));
-  const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
+  const inset = () => HANDLE_END_INSET;
 
-  // Percentage plus the inset stays aligned when the container resizes.
+  // The handle (and its bubble) sits on that scale, so at min and max its centre
+  // is 6 px from the track's end and lands on the first and the last tick of a
+  // discrete slider. The pieces span the whole track; the end threshold below
+  // drops a piece that would only fill that inset.
   const visualPosition = (value: number) =>
-    trackPositionCss(fractionOf(value, state.min, state.max), inset());
+    trackPositionCss(fractionOf(value, state.min, state.max), HANDLE_END_INSET);
 
   /**
    * Gets slider value from a position on the track
@@ -653,6 +669,17 @@ export const withController =
     if (config.range && secondHandle && state.secondValue !== null) {
       place(secondHandle, state.secondValue, handleTransform(axis));
       if (secondValueBubble) place(secondValueBubble, state.secondValue, bubbleTransform(axis));
+    }
+
+    // The pressed handle narrows to 2dp (PressedHandleWidth) for as long as the
+    // press lasts, whichever part of the slider it landed on: a press on the
+    // track is a press on the slider, and the handle it moves is the one that
+    // shows it. The stylesheet's `:active` only reaches a press on the handle
+    // itself, and `--dragging` waits for the drag threshold to pass.
+    const pressedClass = component.getClass("slider__handle--pressed");
+    handle.classList.toggle(pressedClass, !!state.pressed && state.activeHandle === "first");
+    if (secondHandle) {
+      secondHandle.classList.toggle(pressedClass, !!state.pressed && state.activeHandle === "second");
     }
 
     // Update ARIA attributes
@@ -877,12 +904,15 @@ export const withController =
     document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("touchmove", handleMouseMove, { passive: false });
     document.addEventListener("touchend", handleMouseUp);
+    // A cancelled touch is a release: without it the handle would stay pressed.
+    document.addEventListener("touchcancel", handleMouseUp);
   };
   const stopFollowing = () => {
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
     document.removeEventListener("touchmove", handleMouseMove);
     document.removeEventListener("touchend", handleMouseUp);
+    document.removeEventListener("touchcancel", handleMouseUp);
   };
 
   /**
@@ -990,14 +1020,17 @@ export const withController =
       // Add event listeners but don't start dragging yet
       followPointer();
 
-      // Don't set pressed state for track clicks
-      state.pressed = false;
+      // A press that starts an interaction shows the pressed handle: the
+      // handle narrows until the release, as it does when pressed directly.
+      state.pressed = true;
+      render();
 
       emitEvent(SLIDER_EVENTS.START, e);
     } else {
-      // For non-centered sliders, start drag but don't set pressed since it's a track click
+      // For non-centered sliders the drag starts here; the press shows the
+      // pressed handle until the release, track press or not.
       state.dragging = false;
-      state.pressed = false; // Don't set pressed for track clicks
+      state.pressed = true;
       hasActualDragStarted = false;
 
       // Show bubble
