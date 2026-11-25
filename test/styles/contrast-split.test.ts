@@ -350,10 +350,11 @@ describe("explicit contrast levels are opt-in", () => {
     // is 16px then 24px, and a standard leading image or video is square
     // (styles/components/_list.scss; +302 B on the slider sheet).
     // The slider's pressed handle joins the 2px width rule (+38 B;
-    // styles/components/_slider.scss).
+    // styles/components/_slider.scss), and the container's own press narrows
+    // the handle from the first frame (+400 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "803c64d32e9d917a0aad3b6d431b26900a81d627892fed14c6b5bcc57ff6b191",
-      length: 553508,
+      sha256: "0f25c27bdea86ed74737d76c329c9947d0e0441512b08178614d7693cc1b145c",
+      length: 553624,
     });
   });
 

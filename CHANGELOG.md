@@ -17,6 +17,25 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.3] - 2026-11-25
+
+The slider keeps its handle on the tick scale at the six-pixel ends and in step
+with the track's pieces on a click, the drawer's section chevron ends its ink on
+the badge line, and the list's selected row, divider and media follow the spec.
+
+### Fixed
+
+- **Navigation drawer chevron ink line.** The section chevron's visible ink ends on the badge text's 24 dp line inside the indicator, at every density, in both directions, open and closed — the glyph is 12 units wide inside its 24 unit box, so the box now carries a 6 px pull toward the reading direction's end and the ink, not the box, meets the badge line.
+- **Lists: the selected standard row, the divider inset, and leading media.** A selected standard row takes a 16 px corner radius and an unselected row keeps square corners. An inset divider starts 16 px in and ends 24 px in. A standard leading image or video takes square corners at its own size — a standard video slot stays 100 × 56 px — and a segmented one keeps its 8 px.
+- **Slider click.** A click on the track keeps the handle and the track's two pieces in step while they settle. A press used to change the gap the pieces keep from the handle by a pixel, and the release re-laid them out one frame after the handle's spring had started — WebKit ran the two transitions a few milliseconds apart to the end, and Chromium did the same whenever the click held the press across frames — so the pieces visibly left the handle: the active piece reaching past it or the inactive piece starting short. The gap now follows only a settled state (a focused handle), and a check samples every frame of the settle on Chromium and WebKit.
+- **Slider ends and press.** The handle's range — and with it the ticks, the track's pieces and the pointer's mapping — stays 6 px from the track's ends at every size, on both axes and in both directions, whether the slider is continuous or has ticks, so at the minimum and the maximum the handle sits on the first and the last tick. Turning ticks on after the slider is made no longer leaves the handle at the position it had without them. A press on the handle, the active track or the inactive track shows the pressed 2 dp handle until the release, and a cancelled touch releases it too.
+
+Release measurements: the push-to-main package job after #462 measures
+**920,583 B** compressed, **5,244,154 B** unpacked and **1,302 files**, with
+**135,170 B** of gzip-compressed root JavaScript and **132,120 B** for the
+every-component scenario
+([run 45549601611](https://github.com/floor/material/actions/runs/45549601611)).
+
 ## [3.16.2] - 2026-11-24
 
 The carousel keeps its keylines through a trackpad scroll and every drag ends
@@ -7395,7 +7414,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.2...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.3...HEAD
+[3.16.3]: https://github.com/floor/material/compare/v3.16.2...v3.16.3
 [3.16.2]: https://github.com/floor/material/compare/v3.16.1...v3.16.2
 [3.16.1]: https://github.com/floor/material/compare/v3.16.0...v3.16.1
 [3.16.0]: https://github.com/floor/material/compare/v3.15.3...v3.16.0

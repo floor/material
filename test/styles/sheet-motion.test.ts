@@ -203,9 +203,33 @@ describe('dialog', () => {
 
 describe('the sheets keep no fixed-duration curve', () => {
   test('drawer, side sheet and bottom sheet move only on springs', () => {
+    // Expanded CSS puts whitespace before the brace: split the sheet into
+    // selector/body rules tolerating it (the fixed-string scopes above
+    // matched zero rules and guarded nothing).
+    const rulesOf = (css: string): Array<{ selector: string; body: string }> =>
+      [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
     for (const name of ['drawer', 'side-sheet', 'bottom-sheet']) {
-      const transitions = Array.from(sheets[name].matchAll(/transition:\s*([^;]+);/g), (m) => m[1])
+      // The drawer's section reveal takes the menu's fixed-duration
+      // mechanism on the owner's decision (the panel's height opens the
+      // rows, PR #458); the guard covers the sheet's own movement — the
+      // modal sheet's transform (opening AND closing rules) and the
+      // standard drawer root's width, which is what moves the standard
+      // sheet.
+      const scoped = name === 'drawer'
+        ? rulesOf(sheets[name]).filter((rule) =>
+            rule.selector.includes('.mtrl-drawer__sheet') ||
+            (/\.mtrl-drawer--standard/.test(rule.selector) && /\bwidth\b/.test(rule.body)))
+        : rulesOf(sheets[name]);
+      const transitions = scoped.flatMap((rule) =>
+        [...rule.body.matchAll(/transition:\s*([^;]+);/g)].map((m) => m[1]))
         .filter((t) => /\b(transform|opacity|width|visibility)\b/.test(t));
+      if (name === 'drawer') {
+        const transformTransitions = transitions.filter((t) => /\btransform\b/.test(t));
+        const widthTransitions = transitions.filter((t) => /\bwidth\b/.test(t));
+        expect(scoped.length, 'the drawer guard found the sheet rules it scopes').toBeGreaterThan(0);
+        expect(transformTransitions.length, 'the modal sheet transform transitions are scoped (closing and opening)').toBeGreaterThanOrEqual(2);
+        expect(widthTransitions.length, 'the standard root width transitions are scoped').toBeGreaterThanOrEqual(2);
+      }
       for (const transition of transitions) {
         expect(transition, `${name}: ${transition.slice(0, 60)}`).not.toContain('cubic-bezier');
       }

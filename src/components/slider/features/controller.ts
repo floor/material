@@ -241,10 +241,15 @@ export const withTracks =
     value: config.value ?? 0, secondValue: config.secondValue ?? null,
     min: config.min ?? 0, max: config.max ?? 100, step: config.step ?? 1,
   };
+  // The gap a piece of track keeps from the handle follows a *settled* state —
+  // a focused handle, which narrows — and not the press: a press starts and ends
+  // while the settle spring is still running, and re-rendering the pieces with a
+  // 1 px change on the release restarts their width transition a frame after the
+  // handle's left has started (WebKit runs the two apart), so the pieces and the
+  // handle visibly leave step. The pressed handle still narrows; the gap stays.
   const narrowed = (which: "first" | "second") => {
     const handle = which === "first" ? component.handle : component.secondHandle;
-    const pressed = !!state.pressed && (state.activeHandle === which || (!config.range && which === "first"));
-    return pressed || !!handle?.classList.contains(component.getClass("slider__handle--focused"));
+    return !!handle?.classList.contains(component.getClass("slider__handle--focused"));
   };
 
   // Slider.kt drawTrack, horizontal and left to right.
@@ -332,6 +337,23 @@ export const withTracks =
       if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
       else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
     });
+    // A pressed handle narrows to 2dp, and the track's gap is measured from the
+    // handle's edge (SliderTokens.ThumbTrackGapSize, ActiveHandleLeadingSpace
+    // 6dp): the piece beside it grows 1px toward the handle while the press
+    // lasts. The growth is painted as a 1px box-shadow on the inner edge, not
+    // written into left/width, so the pieces' settle spring for the value
+    // change is not restarted — restarting it a frame after the handle's own
+    // is the click desync #462 fixed.
+    const pressedHandle = state.pressed
+      ? state.activeHandle === "second"
+        ? config.range && state.secondValue !== null ? second : null
+        : state.activeHandle === "first" ? first : null
+      : null;
+    const pressedGap = state.activeHandle === "second" ? secondGap : firstGap;
+    const shadowFor = (side: string, colour: string): string => ({
+      left: `-1px 0 0 0 ${colour}`, right: `1px 0 0 0 ${colour}`,
+      top: `0 -1px 0 0 ${colour}`, bottom: `0 1px 0 0 ${colour}`,
+    })[side] ?? "";
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);
@@ -339,6 +361,17 @@ export const withTracks =
       at(segment, alongCss(start));
       segment.style[axis.size] = alongCss(drawn);
       segment.style.borderRadius = radiusOf(start, end);
+      // The piece ending where the pressed gap begins grows toward its end; the
+      // piece starting where it ends grows toward its start.
+      const colour = active ? `var(--${PREFIX}-slider-track-color)` : `var(--${PREFIX}-slider-inactive-track-color)`;
+      const hasLength = cmp(end, start) > 0;
+      const growEnd = hasLength && pressedHandle !== null && cmp(end, sub(pressedHandle, pressedGap)) === 0;
+      const growStart = hasLength && pressedHandle !== null && cmp(start, add(pressedHandle, pressedGap)) === 0;
+      segment.style.boxShadow = growEnd
+        ? shadowFor(opposite[axis.start], colour)
+        : growStart
+          ? shadowFor(axis.start, colour)
+          : "";
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
     // A stop indicator ends each inactive piece that is drawn. With ticks the ends are
