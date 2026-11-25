@@ -531,6 +531,13 @@ $default-width: 360px;
             visibility 0s;
     }
 
+    // An expanded header keeps a 1px space over its panel: the header's
+    // cue/pill no longer touches the first child's pill. A margin, so the
+    // reveal motion does not jump, and collapsed sections are unchanged.
+    &__group--expanded > &__item {
+        margin-block-end: 1px;
+    }
+
     &__group-items-inner {
         min-height: 0;
         overflow: hidden;

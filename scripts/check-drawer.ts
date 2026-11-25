@@ -443,6 +443,15 @@ try {
   assert.ok(at100.scale > 0.5, `the emphasized curve starts fast: past half at ~100ms of 250 (scale ${at100.scale.toFixed(2)})`);
   const at250 = frames.find(f => f.t >= 250)!;
   assert.ok(at250.scale > 0.96, `the reveal is settled at 250ms like the menu (scale ${at250.scale.toFixed(2)})`);
+  // The expanded header keeps a 1px space over its first child, so the
+  // header's pill never touches the child's pill; collapsed sections keep
+  // none. Measured on the painted boxes.
+  const headerGap = await motionPage.evaluate(() => {
+    const header = document.querySelector('[data-id="labels"]') as HTMLElement;
+    const child = header.parentElement!.querySelector('.mtrl-drawer__group-items .mtrl-drawer__item') as HTMLElement;
+    return child.getBoundingClientRect().top - header.getBoundingClientRect().bottom;
+  });
+  assert.ok(Math.abs(headerGap - 1) <= 0.3, `the expanded header keeps a 1px space over its first child: ${headerGap.toFixed(2)}`);
   assert.deepEqual(motionErrors, [], 'no page errors on the motion page');
   await motionPage.close();
 

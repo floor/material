@@ -347,8 +347,8 @@ describe("explicit contrast levels are opt-in", () => {
     // child, and the RTL physical padding mirrors went away with the
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "7b5ac41420b547f35eb2c4544ce4a0fbc2db18d6d3e9100d4d5949b9570ab72b",
-      length: 553199,
+      sha256: "a47c4b19f6a4c8471e5c985409afbc9cc86ba412cc885cc59370cb10f9975761",
+      length: 553269,
     });
   });
 

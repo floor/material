@@ -623,6 +623,7 @@
     ".mtrl-drawer__group,.mtrl-drawer__group-items-inner",
     ".mtrl-drawer__group--expanded .mtrl-drawer__group-items-inner",
     ".mtrl-drawer__group--expanded>.mtrl-drawer__group-items",
+    ".mtrl-drawer__group--expanded>.mtrl-drawer__item",
     ".mtrl-drawer__group-items",
     ".mtrl-drawer__group-items-inner",
     ".mtrl-drawer__headline",
