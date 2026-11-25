@@ -541,17 +541,18 @@ $default-width: 360px;
     &__group-items-inner {
         min-height: 0;
         overflow: hidden;
-        // The sub items grow and shrink through the container's reveal — the
-        // menu's mechanism, shared through the same mixin the menu uses
-        // (abstract/_mixins.scss), so the two cannot drift: the surface
-        // scales from its top edge with a fade on duration-medium1 +
-        // easing-emphasized, and closing is the same motion in reverse. The
-        // grid row above only pushes the content below, on the same timing.
-        @include m.reveal-motion;
+        // The panel's height is the reveal: its grid fraction follows the
+        // menu's curve (duration-medium1 + easing-emphasized, the same
+        // tokens the menu's scaleY reads), so what the eye sees matches the
+        // menu's visible fraction per frame. The inner carries only the
+        // fade — a scale here would compound with the panel's clip and the
+        // visible box would run ahead of the menu's curve.
+        opacity: 0;
+        transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
     }
 
     &__group--expanded &__group-items-inner {
-        @include m.reveal-motion($open: true);
+        opacity: 1;
     }
 
     &__item--child {
@@ -733,7 +734,7 @@ $default-width: 360px;
         &__group-items,
         &__group--expanded > &__group-items,
         &__group-items-inner,
-        &__group--expanded > &__group-items-inner,
+        &__group--expanded &__group-items-inner,
         &__item::before,
         &__active-indicator,
         // The pill and state layer rules are two classes deep, so their switch
