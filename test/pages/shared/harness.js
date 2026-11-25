@@ -192,9 +192,15 @@ const buildShell = (options, commit) => {
 
   // The drawer component pins its width inline on the root inside the
   // shadow at upgrade; the shell asserts its 280px column synchronously
-  // right after the append, so the sheet never paints at 360px first.
-  const drawerRoot = drawer.shadowRoot?.querySelector(".mtrl-drawer");
-  if (drawerRoot) drawerRoot.style.setProperty("--mtrl-drawer-width", "280px");
+  // right after the append, so the sheet never paints at 360px first. A
+  // mode change re-renders the root and pins it again, so the width is
+  // re-applied whenever the docking changes too, and after the frame the
+  // component renders in.
+  const pinWidth = () => {
+    const drawerRoot = drawer.shadowRoot?.querySelector(".mtrl-drawer");
+    if (drawerRoot) drawerRoot.style.setProperty("--mtrl-drawer-width", "280px");
+  };
+  pinWidth();
 
   const setDocking = () => {
     const docked = matchMedia("(min-width: 1600px)").matches;
@@ -209,6 +215,8 @@ const buildShell = (options, commit) => {
       drawer.setAttribute("modal", "");
       drawer.removeAttribute("open");
     }
+    pinWidth();
+    requestAnimationFrame(pinWidth);
   };
   setDocking();
   matchMedia("(min-width: 1600px)").addEventListener("change", setDocking);
@@ -245,9 +253,13 @@ export async function initPage(options) {
   }
   armSlowMotion(document);
   document.querySelectorAll("*").forEach((el) => { if (el.shadowRoot) armSlowMotion(el.shadowRoot); });
-  setInterval(() => {
+  // The readouts follow the motion frame by frame: a 250 ms reveal is over
+  // before a slower interval's first tick.
+  const tick = () => {
     for (const row of state.measures) row.el.textContent = row.measure();
-  }, 400);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
   return content;
 }
 
