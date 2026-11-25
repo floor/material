@@ -17,6 +17,20 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.6] - 2026-11-25
+
+Menus, selects and carousel drags follow the page zoom
+
+### Fixed
+
+- **Carousel drag in a zoomed document.** A pointer delta is in zoomed viewport pixels while the scroller's position is in the element's own, so under a CSS `zoom` the strip moved the drag times the zoom — a 120 px drag moved 92 px at 0.7 and 66 at 0.5 (md3.io, 2026-11-25). The drag now divides its delta by the effective zoom (`currentCSSZoom`, or the computed zoom product where the engine lacks it), so a drag follows the pointer at any zoom.
+- **Menu and select in a zoomed document.** `zoom` scales the used values, so `getBoundingClientRect()` reports zoomed viewport pixels while `style.left/top/width` inside the zoomed subtree are local pixels. A menu copied its opener's rect straight into those styles, so under `zoom` it landed at the zoom times its offset — at 0.5 it opened at half its anchor's coordinates, over the field, and a select's listbox was half its field's width (md3.io, 2026-11-25). Both are placed and sized through the element's effective zoom now (`rect.width / offsetWidth`), so a menu keeps its opener's edge and its gap at 1, 0.7 and 0.5 and a listbox is always its field's width.
+
+Release measurements: the push-to-main package job measures **921,394 B**
+compressed, **5,247,607 B** unpacked and **1,303 files**, with **135,581 B**
+of gzip-compressed root JavaScript and **132,492 B** for the every-component
+scenario ([run 45709712837](https://github.com/floor/material/actions/runs/45709712837/job/139541258266)).
+
 ## [3.16.5] - 2026-11-25
 
 A carousel drag after a click settles at the release position, and uncontained carousels stop at the end of their content.
@@ -7443,7 +7457,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.5...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.6...HEAD
+[3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
 [3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5
 [3.16.4]: https://github.com/floor/material/compare/v3.16.3...v3.16.4
 [3.16.3]: https://github.com/floor/material/compare/v3.16.2...v3.16.3
