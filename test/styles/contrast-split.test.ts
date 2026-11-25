@@ -348,10 +348,12 @@ describe("explicit contrast levels are opt-in", () => {
     // diagram paddings restored (16dp start, 24dp end) and the child indent became a margin — the child pill starts 12px further in with the label at the top-level 16dp inside it (styles/components/_drawer.scss; −477 B) and the chevron pulls 6px toward the end so its ink, not its box, ends on the 24dp line (+23 B; styles/components/_drawer.scss).
     // A selected standard list row is 16px on every corner, an inset divider
     // is 16px then 24px, and a standard leading image or video is square
-    // (styles/components/_list.scss; +302 B, CI 45528212987).
+    // (styles/components/_list.scss; +302 B on the slider sheet).
+    // The slider's pressed handle joins the 2px width rule (+38 B;
+    // styles/components/_slider.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b3f7a2077134cc0605ad79206fcfbaba06acd403d8ecf5ce295cfaeebf399108",
-      length: 553470,
+      sha256: "803c64d32e9d917a0aad3b6d431b26900a81d627892fed14c6b5bcc57ff6b191",
+      length: 553508,
     });
   });
 

@@ -199,7 +199,7 @@ try {
   // clips the track, so a piece shorter than the corner keeps its own end. Before,
   // 10% of an L slider showed no active track and 90% no trailing one, a short piece
   // at an end was cut flat by the track's radius, and the stop sat a whole corner in.
-  const outerCorners = { L: 16, XL: 28 } as const, GAP = 8, WIDTH = 320;
+  const outerCorners = { L: 16, XL: 28 } as const, GAP = 8, WIDTH = 320, END_INSET = 6;
   for (const named of ["L", "XL"] as const) {
     const corner = outerCorners[named];
     for (const value of [0, 5, 10, 50, 90, 95, 100]) {
@@ -207,11 +207,15 @@ try {
       const name = `${named} slider at ${value}%`;
       assert.equal(shown.clip.overflow, "visible", `${name}: the track clips its pieces`);
       assert.equal(shown.clip.radius, "0px", `${name}: the track carries a corner`);
-      // Positions in CSS pixels from the track's start. The front is 0px, the
-      // trailing piece runs to the track's end; both stop one gap from the handle.
-      const front = (WIDTH * value) / 100, [, active, trailing] = shown.segments;
+      // Positions in CSS pixels from the track's start. The front is where the
+      // handle is drawn — the fraction plus the 6 px end inset — and the trailing
+      // piece runs to the track's end; both stop one gap from the handle, and a
+      // piece that would only fill an end's inset is dropped.
+      const fraction = value / 100;
+      const front = WIDTH * fraction + END_INSET * (1 - 2 * fraction), [, active, trailing] = shown.segments;
+      const activeLength = front - GAP <= END_INSET ? 0 : front - GAP;
       near(active!.x, 0, `${name}: active track start`);
-      near(active!.width, Math.max(0, front - GAP), `${name}: active track length`);
+      near(active!.width, activeLength, `${name}: active track length`);
       // Top-left, top-right, bottom-right, bottom-left: a standard slider runs left
       // to right, so the outer corner is on its outer side and 2px at the gap.
       if (active!.width > 0) assert.deepEqual(active!.radius, [`${corner}px`, "2px", "2px", `${corner}px`], `${name}: active track corners`);
@@ -219,7 +223,7 @@ try {
         near(trailing!.x, front + GAP, `${name}: trailing track start`);
         near(trailing!.x + trailing!.width, WIDTH, `${name}: trailing track end`);
         assert.deepEqual(trailing!.radius, ["2px", `${corner}px`, `${corner}px`, "2px"], `${name}: trailing track corners`);
-      } else assert.equal(value, 100, `${name}: the trailing track is missing`);
+      } else assert(value === 0 || value === 100, `${name}: the trailing track is missing`);
       // The stop's centre is 6px from the end of the track at every size, and an end
       // of track with no inactive piece has no stop.
       if (value < 100) {
@@ -238,7 +242,11 @@ try {
       window.slider.setValue(value);
       const track = document.querySelector(".mtrl-slider__track")!.getBoundingClientRect();
       const [active, trailing] = [...document.querySelectorAll(".mtrl-slider__segment")].slice(1).map(segment => segment.getBoundingClientRect());
-      if (active!.left - track.left > 0.5 || track.right - trailing!.right > 0.5) missing.push(value);
+      // When a piece is drawn it reaches its end of the track. It is dropped only
+      // where the 6 px end inset leaves it no room past the end (values 0 to 2
+      // and 98 to 100 on an XL slider, in place of a stub).
+      if (active!.width > 0.1 && active!.left - track.left > 0.5) missing.push(value);
+      if (trailing!.width > 0.1 && track.right - trailing!.right > 0.5) missing.push(value);
       if (value >= 5 && value <= 95 && (active!.width < 0.1 || trailing!.width < 0.1)) missing.push(value);
     }
     return missing;
@@ -248,24 +256,24 @@ try {
   shown = await paint({ value: 50, size: "M", insetIcon: '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>', label: "Volume" });
   assert(shown.icon && !shown.icon.inactive, "inset icon on the active track");
   near(shown.icon.x, 10, "inset icon start"); near(shown.icon.y, 8, "inset icon centring"); near(shown.icon.size, 24, "inset icon size");
-  // ...and 10px into the inactive track when the active one cannot hold it: the handle
-  // at 16, the inactive track from 16 + 8.
+  // ...and 10px into the inactive track when the active one cannot hold it: the
+  // handle at 16 + the 6 px end inset, the inactive track from the handle + 8.
   shown = await paint({ value: 5, size: "M", insetIcon: '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>', label: "Volume" });
   assert(shown.icon?.inactive, "inset icon moves to the inactive track");
-  near(shown.icon!.x, 34, "inset icon on the inactive track");
+  near(shown.icon!.x, 16 + END_INSET * 0.9 + 8 + 10, "inset icon on the inactive track");
   // Vertical: zero at the bottom, the size a thickness, the length the slider's height.
   // A visible label sits above and takes its share of that height, so these carry
   // an accessible name only and the track gets all 240px.
   shown = await paint({ orientation: "vertical", size: "L", value: 60, ariaLabel: "Volume" }, 240);
   assert.equal(shown.handles[0]!.orientation, "vertical");
   near(shown.track.height, 240, "vertical track length"); near(shown.track.width, 56, "vertical track thickness");
-  near(shown.handles[0]!.y, 96, "vertical handle"); near(shown.handles[0]!.x, 28, "vertical handle centring");
+  near(shown.handles[0]!.y, 240 - (144 + END_INSET * (1 - 2 * 0.6)), "vertical handle"); near(shown.handles[0]!.x, 28, "vertical handle centring");
   near(shown.dots[0]!.y, 6, "vertical end stop");
   // A vertical slider turns the corners with its axis: the outer end is the one the
   // axis starts from, which is the bottom unless topToBottom.
   assert.deepEqual(shown.segments[1]!.radius, ["2px", "2px", "16px", "16px"], "vertical track corners");
   shown = await paint({ orientation: "vertical", topToBottom: true, size: "L", value: 25, ariaLabel: "Volume" }, 240);
-  near(shown.handles[0]!.y, 60, "top-to-bottom handle");
+  near(shown.handles[0]!.y, 60 + END_INSET * (1 - 2 * 0.25), "top-to-bottom handle");
   assert.deepEqual(shown.segments[1]!.radius, ["16px", "16px", "2px", "2px"], "top-to-bottom track corners");
 
   // The icon beside the track, level with it, before or after it; the label above or
