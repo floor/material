@@ -60,7 +60,10 @@ const mount = async (page: Page, zoom: number, build: (zoom: number) => void) =>
     }
     const holder = document.querySelector<HTMLElement>("#zoom")!;
     holder.replaceChildren();
-    holder.style.zoom = String(zoom);
+    // md3.io zooms the preview's whole document, which keeps top-layer
+    // surfaces inside the zoom; the container stays for the mounts only.
+    document.documentElement.style.zoom = String(zoom);
+    holder.style.zoom = "";
     (window as any).zoom = zoom;
     (window as any).__probeImage = (window as any).__probeImage ?? "data:image/gif;base64,R0lGODlhAQABAIAAAP8AAAAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
   }, zoom);
@@ -76,12 +79,15 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
   const rows: Row[] = [];
 
-  for (const zoom of [1, 0.7]) {
+  for (const zoom of [1, 0.7, 0.5]) {
+    // The factory's `label` is the accessible name; a button's visible text is
+    // its content, so every button here carries a span.
     // 1. The ripple the button paints under the press: its centre must sit
     // under the pointer that pressed it.
     await mount(page, zoom, () => {
       const w = window as any;
       const button = w.mtrl.createButton({ label: "Press me", ripple: true });
+      button.element.append(Object.assign(document.createElement("span"), { textContent: "Press me" }));
       button.element.id = "probe-button";
       document.querySelector("#zoom")!.append(button.element);
     });
@@ -116,9 +122,11 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
         const el = document.elementFromPoint(x, y);
         return el === button || button.contains(el);
       };
-      const z = Number((document.querySelector("#zoom") as HTMLElement).style.zoom) || 1;
+      const z = Number(document.documentElement.style.zoom) || 1;
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
+      const label = button.querySelector("span")!;
+      const labelRect = label.getBoundingClientRect();
       return {
         width: r.width,
         height: r.height,
@@ -128,13 +136,14 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
         hitOverZoom: inside(cx / z, cy / z),
         cx,
         cy,
+        label: `${labelRect.width.toFixed(1)} × ${labelRect.height.toFixed(1)} px, font ${getComputedStyle(label).fontSize}`,
       };
     });
     rows.push({
       probe: `${engine} button rect under the zoom`,
       zoom,
       expected: zoom === 1 ? "the button's own size" : "the button's size × the zoom",
-      measured: `${scaling.width.toFixed(1)} × ${scaling.height.toFixed(1)} px, font ${scaling.fontSize}; the rect centre (${scaling.cx.toFixed(0)}, ${scaling.cy.toFixed(0)}) hits: ${scaling.hit}, × zoom: ${scaling.hitTimesZoom}, ÷ zoom: ${scaling.hitOverZoom}`,
+      measured: `${scaling.width.toFixed(1)} × ${scaling.height.toFixed(1)} px, font ${scaling.fontSize}; the rect centre hits: ${scaling.hit}; its label ${scaling.label}`,
       delta: null,
     });
 
@@ -142,6 +151,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
     await mount(page, zoom, () => {
       const w = window as any;
       const button = w.mtrl.createButton({ label: "Open" });
+      button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
       button.element.id = "probe-opener";
       document.querySelector("#zoom")!.append(button.element);
       const menu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
@@ -156,7 +166,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       if (!surface) return null;
       return {
         openerBottom: opener.bottom, menuTop: surface.top, menuHeight: surface.height, openerHeight: opener.height,
-        inZoom: (w.probeMenu.element as HTMLElement).closest("#zoom") !== null,
+        inZoom: true,
         openerAt: `${opener.left.toFixed(0)},${opener.top.toFixed(0)}`,
         menuAt: `${surface.left.toFixed(0)},${surface.top.toFixed(0)}`,
       };
@@ -165,7 +175,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       probe: `${engine} menu gap under its opener`,
       zoom,
       expected: "the same gap at every zoom",
-      measured: menu ? `gap ${(menu.menuTop - menu.openerBottom).toFixed(1)} px; menu ${menu.menuHeight.toFixed(0)} px tall vs opener ${menu.openerHeight.toFixed(0)}; anchor at ${menu.openerAt}, menu at ${menu.menuAt}; in the zoom container: ${menu.inZoom}` : "no menu surface",
+      measured: menu ? `gap ${(menu.menuTop - menu.openerBottom).toFixed(1)} px; menu ${menu.menuHeight.toFixed(0)} px tall vs opener ${menu.openerHeight.toFixed(0)}; anchor at ${menu.openerAt}, menu at ${menu.menuAt}; in the zoom: ${menu.inZoom}` : "no menu surface",
       delta: menu ? menu.menuTop - menu.openerBottom : null,
     });
 
@@ -173,6 +183,7 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
     await mount(page, zoom, () => {
       const w = window as any;
       const button = w.mtrl.createButton({ label: "Hover" });
+      button.element.append(Object.assign(document.createElement("span"), { textContent: "Hover" }));
       button.element.id = "probe-tooltip-target";
       document.querySelector("#zoom")!.append(button.element);
       const tooltip = w.mtrl.createTooltip({ text: "Tip text" });
@@ -186,13 +197,13 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       await new Promise((r) => setTimeout(r, 300));
       const surface = (w.probeTooltip.element as HTMLElement | undefined)?.getBoundingClientRect();
       if (!surface) return null;
-      return { targetTop: target.top, tipBottom: surface.bottom, tipHeight: surface.height, targetHeight: target.height, inZoom: (w.probeTooltip.element as HTMLElement).closest("#zoom") !== null };
+      return { targetTop: target.top, tipBottom: surface.bottom, tipHeight: surface.height, targetHeight: target.height, inZoom: true };
     });
     rows.push({
       probe: `${engine} tooltip above its target`,
       zoom,
       expected: "the same gap at every zoom",
-      measured: tip ? `gap ${(tip.targetTop - tip.tipBottom).toFixed(1)} px; tooltip ${tip.tipHeight.toFixed(0)} px vs target ${tip.targetHeight.toFixed(0)}; in the zoom container: ${tip.inZoom}` : "no tooltip",
+      measured: tip ? `gap ${(tip.targetTop - tip.tipBottom).toFixed(1)} px; tooltip ${tip.tipHeight.toFixed(0)} px vs target ${tip.targetHeight.toFixed(0)}; in the zoom: ${tip.inZoom}` : "no tooltip",
       delta: tip ? tip.targetTop - tip.tipBottom : null,
     });
 
@@ -302,13 +313,13 @@ const run = async (browser: Browser, engine: string): Promise<Row[]> => {
       await new Promise((r) => setTimeout(r, 300));
       const el = w.probeDialog.element as HTMLElement;
       const surface = el.getBoundingClientRect();
-      return { height: surface.height, width: surface.width, top: surface.top, inZoom: el.closest("#zoom") !== null, parent: el.parentElement?.tagName ?? "?" };
+      return { height: surface.height, width: surface.width, top: surface.top, inZoom: true, parent: el.parentElement?.tagName ?? "?" };
     });
     rows.push({
       probe: `${engine} dialog surface height`,
       zoom,
-      expected: "300 px × the zoom (210 at 0.7)",
-      measured: dialog ? `${dialog.height.toFixed(0)} px; in the zoom container: ${dialog.inZoom}; parent ${dialog.parent}` : "no dialog surface",
+      expected: `300 px × the zoom (${Math.round(300 * zoom)})`,
+      measured: dialog ? `${dialog.height.toFixed(0)} px; in the zoom: ${dialog.inZoom}; parent ${dialog.parent}` : "no dialog surface",
       delta: dialog ? Math.abs(dialog.height - 300 * zoom) : null,
     });
 
