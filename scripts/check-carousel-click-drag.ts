@@ -63,9 +63,13 @@ const read = (page: Page) =>
 const mount = async (page: Page, snap: boolean) => {
   await page.evaluate(({ snap, image }) => {
     document.querySelector("#host")!.replaceChildren();
+    // The owner's page: multi-browse with captions, gap 8 and padding 16,
+    // every slide a tabindex=0 item, snapping off.
     const carousel = (window as unknown as { createCarousel: (c: unknown) => { element: HTMLElement } }).createCarousel({
-      variant: "multi-browse", snap,
-      slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}`, image, width: 200, height: 160 })),
+      variant: "multi-browse", snap, gap: 8, padding: 16,
+      slides: Array.from({ length: 8 }, (_, i) => ({
+        title: `Highlands ${i}`, description: `Hills under a pale sky, ${i}`, image, width: 200, height: 160,
+      })),
     });
     document.querySelector("#host")!.append(carousel.element);
   }, { snap, image });
