@@ -309,6 +309,7 @@ export async function checkCarouselUncontained(
         gap: 8,
         padding: 16,
         snap: true,
+        wheel: true,
         slides: Array.from({ length: 24 }, (_, i) => ({
           title: `Slide ${i + 1}`,
           description: `Description ${i + 1}`,
@@ -503,6 +504,148 @@ export async function checkCarouselUncontained(
     const rightmost10 = Math.max(...slide10.visibleItems.map(item => item.right));
     if (rightmost10 < slide10.containerWidth) {
       failures.push(`Slide 10: row terminates before container right edge: rightmost visible item right is ${rightmost10.toFixed(2)} px vs container ${slide10.containerWidth} px`);
+    }
+
+    // --- End-of-content check: the last item flush with the end edge ---
+    // goTo(last) must settle at the content end: no empty space wider than
+    // the end padding after the last item, and the last item not clipped by
+    // the trailing edge. Fails on main, where the range ran to the last
+    // item's snap position and pulled it to the start edge (RTL showed
+    // ~728 px of empty space; LTR clipped the item 111 px past the edge).
+    await page.evaluate(() => {
+      (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(23);
+    });
+    await waitFor(page, "the scroll to settle at the capped end", () => {
+      const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+      const items = [...document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")];
+      const last = items[items.length - 1]!;
+      const lb = last.getBoundingClientRect();
+      const sb = el.getBoundingClientRect();
+      return Math.abs((sb.right - lb.right) - 16) < 1;
+    });
+    const endCheck = await page.evaluate(() => {
+      const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+      const items = [...document.querySelectorAll<HTMLElement>("#uncontained-carousel .mtrl-carousel__item")];
+      const last = items[items.length - 1]!;
+      const sb = scroller.getBoundingClientRect();
+      const lb = last.getBoundingClientRect();
+      return {
+        emptyAfter: +(sb.right - lb.right).toFixed(2),
+        scrollLeft: scroller.scrollLeft,
+        maxScroll: scroller.scrollWidth - scroller.clientWidth,
+        overhang: +(lb.right - sb.right).toFixed(2),
+      };
+    });
+    console.log(`[uncontained check] End: emptyAfter=${endCheck.emptyAfter}, overhang=${endCheck.overhang}, scrollLeft=${endCheck.scrollLeft}, maxScroll=${endCheck.maxScroll}`);
+    if (endCheck.emptyAfter < 15.5 || endCheck.emptyAfter > 16.5) {
+      failures.push(`End: the last item is not flush with the end edge — ${endCheck.emptyAfter.toFixed(2)} px of empty space after it (expected the 16 px end padding)`);
+    }
+    if (endCheck.overhang > 0.5) {
+      failures.push(`End: the last item overhangs the container edge by ${endCheck.overhang.toFixed(2)} px`);
+    }
+
+    // --- Wheel to the end reads the last index (normal and reduced motion) ---
+    // A trusted wheel to the end left the counter at 22 / 24 — the forward
+    // scan picked the first of the capped tie snaps. The scan now resolves
+    // to the last tied snap; both motion settings must read 23 (0-based)
+    // after a wheel to the capped end.
+    const wheelToEnd = async (reduced: boolean) => {
+      await page.evaluate(() => {
+        (window as unknown as { uncontainedCarousel: CarouselComponent }).uncontainedCarousel.goTo(0);
+      });
+      await waitFor(page, "the carousel back at the start", () => {
+        const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+        return el.scrollLeft < 1;
+      });
+      await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+      await page.evaluate(() => {
+        // The carousel's change events ride the component's own emitter
+        // (component.on), not a DOM CustomEvent.
+        const carousel = (window as unknown as { uncontainedCarousel: { on(event: string, handler: (payload: { value: number }) => void): void } }).uncontainedCarousel;
+        (window as unknown as { wheelChanges: number[] }).wheelChanges = [];
+        carousel.on("change", (payload) => {
+          (window as unknown as { wheelChanges: number[] }).wheelChanges.push(payload.value);
+        });
+      });
+      // Wheel forward in a loop until the capped end (the component drives
+      // its own scroll from the wheel events; synthetic events reach the
+      // handler the same way trusted ones do).
+      for (let i = 0; i < 40; i++) {
+        await page.evaluate(() => {
+          const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+          scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: 240, bubbles: true, cancelable: true }));
+        });
+        await page.waitForTimeout(40);
+        const atEnd = await page.evaluate(() => {
+          const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
+          return el.scrollLeft >= el.scrollWidth - el.clientWidth - 1;
+        });
+        if (atEnd) break;
+      }
+      await page.waitForTimeout(1300);
+      const wheelState = await page.evaluate(() => ({
+        scroll: document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!.scrollLeft,
+        changes: (window as unknown as { wheelChanges: number[] }).wheelChanges,
+      }));
+      const lastChange = wheelState.changes[wheelState.changes.length - 1];
+      console.log(`[uncontained check] Wheel to the end (${reduced ? "reduced" : "normal"} motion): scroll ${wheelState.scroll}, last change ${lastChange}`);
+      if (lastChange !== 23) {
+        failures.push(`Wheel to the end (${reduced ? "reduced" : "normal"} motion) reads the last change as ${lastChange} (expected 23, the capped end)`);
+      }
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+    };
+    await wheelToEnd(false);
+    await wheelToEnd(true);
+
+    // --- Contained wheel keeps its own keyline indexes ---
+    // The tie-break is uncontained-only: a contained wheel that passes a
+    // keyline must not walk to the next snap at the same position (a 412 px
+    // multi-browse wheel went 2/4 -> 3/4 at one 178 px offset before the
+    // loop was scoped).
+    await page.evaluate(() => {
+      const state = window as unknown as CarouselWindow;
+      // The uncontained carousel stays in the tree — the keyboard block
+      // below navigates it; the contained carousel mounts beside it.
+      document.body.style.cssText = "display:block;margin:0;padding:0";
+      const carousel = state.createCarousel({
+        variant: "multi-browse",
+        wheel: true,
+        itemWidth: 200,
+        slides: Array.from({ length: 8 }, (_, i) => ({ title: `Slide ${i}` })),
+      });
+      carousel.element.id = "contained-wheel-carousel";
+      carousel.element.style.cssText = "width:412px;height:240px";
+      document.body.append(carousel.element);
+      // The change events ride the component's own emitter.
+      (window as unknown as { containedCarousel: CarouselComponent }).containedCarousel = carousel;
+      (window as unknown as { containedChanges: number[] }).containedChanges = [];
+      carousel.on("change", (payload) => {
+        (window as unknown as { containedChanges: number[] }).containedChanges.push(payload.value);
+      });
+    });
+    await waitFor(page, "the contained carousel to lay out", () => {
+      const el = document.querySelector<HTMLElement>("#contained-wheel-carousel .mtrl-carousel__scroller")!;
+      return el.scrollWidth > 400;
+    });
+    for (let i = 0; i < 12; i++) {
+      await page.evaluate(() => {
+        const scroller = document.querySelector<HTMLElement>("#contained-wheel-carousel .mtrl-carousel__scroller")!;
+        scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: 240, bubbles: true, cancelable: true }));
+      });
+      await page.waitForTimeout(60);
+    }
+    await page.waitForTimeout(1300);
+    const containedWheel = await page.evaluate(() => ({
+      changes: (window as unknown as { containedChanges: number[] }).containedChanges,
+    }));
+    const containedLast = containedWheel.changes[containedWheel.changes.length - 1];
+    console.log(`[contained check] Wheel sequence: ${JSON.stringify(containedWheel.changes)} — last ${containedLast}`);
+    if (containedLast === undefined || containedLast < 0 || containedLast > 7) {
+      failures.push(`Contained wheel sequence leaves the index at ${containedLast} (expected a keyline index within 0..7)`);
+    }
+    const containedDuplicates = containedWheel.changes.slice(0, -1).filter((v, i) => v === containedWheel.changes[i + 1] && v === containedLast);
+    if (containedDuplicates.length > 0) {
+      failures.push(`Contained wheel repeated the final index ${containedLast} mid-sequence (the tie loop walked it)`);
     }
 
     // --- Keyboard navigation & focus reachability check ---
