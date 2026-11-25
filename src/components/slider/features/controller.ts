@@ -241,10 +241,15 @@ export const withTracks =
     value: config.value ?? 0, secondValue: config.secondValue ?? null,
     min: config.min ?? 0, max: config.max ?? 100, step: config.step ?? 1,
   };
+  // The gap a piece of track keeps from the handle follows a *settled* state —
+  // a focused handle, which narrows — and not the press: a press starts and ends
+  // while the settle spring is still running, and re-rendering the pieces with a
+  // 1 px change on the release restarts their width transition a frame after the
+  // handle's left has started (WebKit runs the two apart), so the pieces and the
+  // handle visibly leave step. The pressed handle still narrows; the gap stays.
   const narrowed = (which: "first" | "second") => {
     const handle = which === "first" ? component.handle : component.secondHandle;
-    const pressed = !!state.pressed && (state.activeHandle === which || (!config.range && which === "first"));
-    return pressed || !!handle?.classList.contains(component.getClass("slider__handle--focused"));
+    return !!handle?.classList.contains(component.getClass("slider__handle--focused"));
   };
 
   // Slider.kt drawTrack, horizontal and left to right.

@@ -1734,7 +1734,7 @@
     ".mtrl-slider--disabled",
     ".mtrl-slider--disabled .mtrl-slider__handle",
     ".mtrl-slider--disabled .mtrl-slider__handle::before",
-    ".mtrl-slider--dragging .mtrl-slider__handle::before,.mtrl-slider__handle:active::before,.mtrl-slider__handle:focus-visible::before,.mtrl-slider__handle--focused::before,.mtrl-slider__handle--pressed::before",
+    ".mtrl-slider--dragging .mtrl-slider__handle::before,.mtrl-slider__handle:active::before,.mtrl-slider__handle:focus-visible::before,.mtrl-slider__handle--focused::before,.mtrl-slider__handle--pressed::before,.mtrl-slider__container:active .mtrl-slider__handle::before",
     ".mtrl-slider--error",
     ".mtrl-slider--error .mtrl-slider__handle::before",
     ".mtrl-slider--icon",
