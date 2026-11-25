@@ -1114,6 +1114,8 @@
     ".mtrl-list--segmented>.mtrl-list__content>.mtrl-list__item:hover:not(.mtrl-list__item--disabled):not(.mtrl-list__item--selected)",
     ".mtrl-list--segmented>.mtrl-list__content>.mtrl-list__item:last-child,.mtrl-list--segmented>.mtrl-list__content>.mtrl-list__item:has(+:not(.mtrl-list__item))",
     ".mtrl-list--segmented>.mtrl-list__content>.mtrl-list__item:not(.mtrl-list__item--selected)",
+    ".mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--image,.mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--video",
+    ".mtrl-list:not(.mtrl-list--segmented)>.mtrl-list__content>.mtrl-list__item.mtrl-list__item--selected",
     ".mtrl-list__action",
     ".mtrl-list__action::after",
     ".mtrl-list__action::before",
