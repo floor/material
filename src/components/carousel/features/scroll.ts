@@ -144,13 +144,17 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const nearestIndex = (position: number): number => {
+      // Only the uncontained variants clamp their trailing snaps to the
+      // range, so only they can produce snapped ties at the capped end —
+      // the readout names the item actually in view, the last of the ties.
+      // Contained snaps are distinct; the strict comparison keeps their
+      // indexes unchanged.
+      const lastWins = variant === CAROUSEL_VARIANTS.UNCONTAINED;
       let best = 0;
       let bestDistance = Number.MAX_VALUE;
       snapPositions.forEach((snapPosition, i) => {
         const distance = Math.abs(position - snapPosition);
-        // At the capped end several snaps share the range: the readout names
-        // the item that is actually in view — the last of the ties.
-        if (distance <= bestDistance) {
+        if (distance < bestDistance || (lastWins && distance === bestDistance)) {
           bestDistance = distance;
           best = i;
         }
@@ -234,12 +238,22 @@ export const withScroll = (config: CarouselConfig) =>
       // the wheel, the drag and the readout all settle on the same edge.
       const contentLength = padding + count * unit + padding - strategy.gap;
       const maxScroll = isUncontained ? Math.max(0, contentLength - containerSize) : Number.MAX_SAFE_INTEGER;
+      // goTo and the settle check clamp to the range; the track covers the
+      // whole content — the last item extends past its own snap, and a
+      // track cut at the snap would clip it when the viewport is narrower
+      // than an item.
+      // The last item's snap IS the content end: in a viewport narrower
+      // than an item, showing that item unclipped means scrolling past its
+      // natural snap to the end of the content, and the goTo(last), End and
+      // wheel paths must all land on the same edge.
       snapPositions = slideElements.map((_, i) =>
         isUncontained
-          ? Math.min(i * unit, maxScroll)
+          ? i === count - 1
+            ? maxScroll
+            : Math.min(i * unit, maxScroll)
           : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
       );
-      const scrollRange = Math.max(0, snapPositions[count - 1] ?? 0);
+      const scrollRange = isUncontained ? maxScroll : Math.max(0, snapPositions[count - 1] ?? 0);
 
       // Track length and one snap point per item
       track.style[vertical ? "height" : "width"] = `${containerSize + scrollRange}px`;
