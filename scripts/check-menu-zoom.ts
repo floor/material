@@ -134,6 +134,74 @@ const run = async (browser: Browser, engine: string) => {
     );
     rows.push(`select ${zoom}: ${select!.listWidth.toFixed(1)}/${select!.fieldWidth.toFixed(1)}`);
   }
+  // The effective zoom must be exactly 1 on an ordinary page: a fractional
+  // opener width makes a rect/offsetWidth ratio 1.0036, which shifted the menu
+  // a pixel. And a transform never counts as zoom.
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "1";
+  });
+  await page.evaluate(() => {
+    const w = window as unknown as { mtrl: { createButton: (c: unknown) => { element: HTMLElement }; createMenu: (c: unknown) => { element: HTMLElement; open: () => void } }; probeMenu?: { element: HTMLElement; open: () => void } };
+    const host = document.querySelector("#host")!;
+    host.replaceChildren();
+    const spacer = document.createElement("div");
+    spacer.style.height = "200px";
+    const button = w.mtrl.createButton({ label: "Open" });
+    button.element.id = "opener";
+    button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
+    button.element.style.width = "133.7px";
+    host.append(spacer, button.element);
+    w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
+  });
+  await page.waitForTimeout(250);
+  const fractional = await page.evaluate(async () => {
+    const w = window as unknown as { probeMenu: { element: HTMLElement; open: () => void } };
+    const opener = document.querySelector<HTMLElement>("#opener")!.getBoundingClientRect();
+    w.probeMenu.open();
+    await new Promise((r) => setTimeout(r, 400));
+    const menu = w.probeMenu.element.getBoundingClientRect();
+    return { openerLeft: opener.left, openerWidth: opener.width, menuLeft: menu.left, gap: menu.top - opener.bottom };
+  });
+  assert(
+    Math.abs(fractional.menuLeft - fractional.openerLeft) <= 0.5,
+    `${engine}: a fractional-width opener at zoom 1 keeps the menu exactly at its left (${fractional.menuLeft.toFixed(2)} against ${fractional.openerLeft.toFixed(2)}, opener ${fractional.openerWidth.toFixed(2)} px)`,
+  );
+  assert(Math.abs(fractional.gap) <= 1, `${engine}: a fractional-width opener at zoom 1 keeps the gap (${fractional.gap.toFixed(2)} px)`);
+
+  // A transformed ancestor scales the painted result but is not a zoom: the
+  // menu is placed by layout, so it is not divided.
+  await page.evaluate(() => {
+    const w = window as unknown as { mtrl: { createButton: (c: unknown) => { element: HTMLElement }; createMenu: (c: unknown) => { element: HTMLElement; open: () => void } }; probeMenu?: { element: HTMLElement; open: () => void } };
+    const host = document.querySelector("#host")!;
+    host.replaceChildren();
+    const spacer = document.createElement("div");
+    spacer.style.height = "200px";
+    const wrapper = document.createElement("div");
+    wrapper.style.transform = "scale(0.5)";
+    wrapper.style.transformOrigin = "0 0";
+    wrapper.style.width = "400px";
+    const button = w.mtrl.createButton({ label: "Open" });
+    button.element.id = "opener";
+    button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
+    wrapper.append(button.element);
+    host.append(spacer, wrapper);
+    w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
+  });
+  await page.waitForTimeout(250);
+  const transformed = await page.evaluate(async () => {
+    const w = window as unknown as { probeMenu: { element: HTMLElement; open: () => void } };
+    const opener = document.querySelector<HTMLElement>("#opener")!;
+    w.probeMenu.open();
+    await new Promise((r) => setTimeout(r, 400));
+    // The menu is placed in layout pixels: its inline left is the opener's
+    // layout left, not the halved rect left the transform would give.
+    return { styleLeft: parseFloat(w.probeMenu.element.style.left || "0"), offsetLeft: opener.getBoundingClientRect().left };
+  });
+  assert(
+    Math.abs(transformed.styleLeft - transformed.offsetLeft) <= 2,
+    `${engine}: a transform-scaled ancestor is not a zoom (menu left ${transformed.styleLeft.toFixed(1)} against the opener's ${transformed.offsetLeft.toFixed(1)})`,
+  );
+
   assert.deepEqual(errors, [], `${engine}: no uncaught page errors`);
   await page.close();
   return { engine, rows };

@@ -8,17 +8,30 @@ import { MenuConfig, MenuFeatureHost } from "../types";
  * Provides functions for positioning menus and submenus
  */
 /**
- * The CSS `zoom` in effect where an element is laid out. A rect reports
- * zoomed viewport pixels while `style.left/top/width` inside a zoomed subtree
- * are local pixels, so a value taken from a rect must be divided by this
- * before it is written: without it a menu placed from its opener's rect lands
- * at the zoom times its offset — half the anchor's coordinates at 0.5, which
- * md3.io measured (2026-11-25).
+ * The CSS `zoom` in effect where an element is laid out (CSS Viewport,
+ * https://drafts.csswg.org/css-viewport/#zoom-property). A rect reports zoomed
+ * viewport pixels while `style.left/top/width` inside a zoomed subtree are
+ * local pixels, so a value taken from a rect must be divided by this before it
+ * is written: without it a menu placed from its opener's rect lands at the
+ * zoom times its offset — half the anchor's coordinates at 0.5, which md3.io
+ * measured (2026-11-25).
+ *
+ * `currentCSSZoom` is the engine's own answer and is exactly 1 when nothing is
+ * zoomed. A rect-over-`offsetWidth` ratio is not: `offsetWidth` rounds to whole
+ * pixels, so a fractional-width opener reports 1.0036 and the menu shifts a
+ * pixel on an ordinary page. Where the property is missing the computed `zoom`
+ * of the element and each ancestor multiply, and a transform never counts.
  */
 const effectiveZoom = (element: HTMLElement): number => {
-  const width = element.getBoundingClientRect().width;
-  const local = element.offsetWidth;
-  return width > 0 && local > 0 ? width / local : 1;
+  const native = (element as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom;
+  if (typeof native === "number" && native > 0) return native;
+  let zoom = 1;
+  for (let node: Element | null = element; node; node = node.parentElement) {
+    const view = node.ownerDocument.defaultView;
+    const value = parseFloat(view?.getComputedStyle(node).zoom ?? "1");
+    if (Number.isFinite(value) && value > 0) zoom *= value;
+  }
+  return zoom;
 };
 
 export const createPositioner = (
@@ -118,7 +131,10 @@ export const createPositioner = (
     // Apply width to temp menu BEFORE measuring if config specifies 100% width
     // This ensures we measure with the correct width on first open
     if (config.width === "100%" && !isSubmenu) {
-      tempMenu.style.width = `${openerRect.width}px`;
+      // The clone is measured in the zoomed subtree: its width is the opener's
+      // rect width divided back to local pixels, or the menu is zoom-times too
+      // wide at 0.7 and 0.5.
+      tempMenu.style.width = `${openerRect.width / zoom}px`;
     }
 
     // Add it to the DOM temporarily (use container if available for accurate measurement).
