@@ -11,6 +11,7 @@ import { CarouselConfig, CarouselVariant } from "../types";
 import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../constants";
 import { resolveLayoutDefaults } from "../config";
 import { cornerToken } from "../../../core/theme/shape";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -30,6 +31,7 @@ import type { SlidesComponent } from "./slides";
 
 /** A mouse drag faster than this (px per ms) advances one item in its direction */
 const FLING_VELOCITY = 0.4;
+
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
 /** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
@@ -515,7 +517,11 @@ export const withScroll = (config: CarouselConfig) =>
       dragLastTime = e.timeStamp;
       // No rtl term: the drag follows the pointer physically, and the
       // mirrored gesture (right-drag advances) meets the mirrored range.
-      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta;
+      // A pointer delta is in zoomed viewport pixels and the scroll position
+      // in the element's own: under CSS `zoom` the strip otherwise moves the
+      // delta times the zoom (120 px dragged moved 92 at 0.7 and 66 at 0.5,
+      // md3.io measured 2026-11-25).
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta / effectiveZoom(scroller);
       e.preventDefault();
     };
 

@@ -24,7 +24,7 @@ these rows drift from a fresh measurement.
 | button | 21.6 KB | 7.5 KB | +4.4 KB | +6.9 KB |
 | button-group | 36.3 KB | 11.9 KB | +8.8 KB | +6.9 KB |
 | card | 19.9 KB | 6.8 KB | +3.7 KB | +9.8 KB |
-| carousel | 32.4 KB | 11.8 KB | +8.7 KB |  |
+| carousel | 32.6 KB | 11.8 KB | +8.8 KB |  |
 | checkbox | 16.4 KB | 5.7 KB | +2.6 KB |  |
 | chips | 28.0 KB | 9.2 KB | +6.1 KB |  |
 | datepicker | 36.4 KB | 12.9 KB | +9.9 KB |  |
@@ -41,7 +41,7 @@ these rows drift from a fresh measurement.
 | navigation-rail | 18.6 KB | 6.8 KB | +3.8 KB |  |
 | progress | 28.8 KB | 10.5 KB | +7.4 KB |  |
 | loading-indicator | 22.8 KB | 9.3 KB | +6.3 KB |  |
-| split-button | 27.2 KB | 9.6 KB | +6.5 KB | +17.2 KB |
+| split-button | 27.2 KB | 9.5 KB | +6.5 KB | +17.2 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.3 KB | 10.9 KB | +7.9 KB |  |
 | select | 40.9 KB | 13.1 KB | +10.0 KB | +10.8 KB |
