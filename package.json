@@ -586,7 +586,7 @@
     "switch-transition:check": "bun run scripts/check-switch-transition.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
-    "carousel:check": "bun run scripts/check-carousel.ts && bun run scripts/check-carousel-click-drag.ts",
+    "carousel:check": "bun run scripts/check-carousel.ts && bun run scripts/check-carousel-click-drag.ts && bun run scripts/check-carousel-zoom-drag.ts",
     "split-button:check": "bun run scripts/check-split-button-on-demand.ts && bun run scripts/check-split-button-chevron.ts",
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts && bun run scripts/check-menu-hidden-opener.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
