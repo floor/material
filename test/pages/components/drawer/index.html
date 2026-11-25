@@ -111,10 +111,12 @@ scenario(variants, {
     // The inset that matters is from the reading direction's end: the right in
     // LTR, the left in RTL. Reading only the right edge reported 299 px in RTL
     // where the chevron's ink ends 24 px from the item's start side.
+    // Both numbers are from the reading direction's end — the right in LTR,
+    // the left in RTL — so the label reads the same in both.
     const rtl = getComputedStyle(header).direction === "rtl";
     const boxInset = rtl ? cb.left - ib.left : ib.right - cb.right;
     const inkInset = rtl ? inkStart - ib.left : ib.right - inkEnd;
-    return `item h ${ib.height.toFixed(0)} · chevron box ${rtl ? "start" : "end"} inset ${boxInset.toFixed(1)} (ink 24) · ink ${rtl ? "start" : "end"} inset ${inkInset.toFixed(1)}`;
+    return `item h ${ib.height.toFixed(0)} · chevron box end inset ${boxInset.toFixed(1)} (ink 24) · ink end inset ${inkInset.toFixed(1)}`;
   },
   mount: (body) => {
     body.append(variantBox);
@@ -156,9 +158,17 @@ const interaction = section(host(), "Interaction");
 const interactionBox = document.createElement("div");
 let menu = null;
 let liveDrawer = null;
+// The demo is either the factory's own root or the `<m-drawer>` element, whose
+// sections live in its shadow root: the control and the readout both resolve it.
+const drawerRoot = () => {
+  const element = liveDrawer?.querySelector("m-drawer");
+  if (element) return element.shadowRoot ?? element;
+  return liveDrawer?.querySelector(".mtrl-drawer") ?? null;
+};
 const fractions = () => {
-  const group = liveDrawer?.querySelector(".mtrl-drawer__group-items");
-  const inner = liveDrawer?.querySelector(".mtrl-drawer__group-items-inner");
+  const root = drawerRoot();
+  const group = root?.querySelector(".mtrl-drawer__group-items");
+  const inner = root?.querySelector(".mtrl-drawer__group-items-inner");
   // The rows keep their full height inside the clipped panel, so their sum is
   // the denominator at the current density — not a running maximum, and not
   // the clipped inner's scrollHeight (0 while closed).
@@ -193,6 +203,15 @@ scenario(interaction, {
       drawerBox.replaceChildren();
       (form === "element" ? mountElement : mountFactory)(drawerBox);
       liveDrawer = drawerBox;
+      // Start collapsed, with the menu closed: the comparison's first press
+      // then runs both motions the same way (open), the second both closed.
+      const header = drawerRoot()?.querySelector('[data-id="labels"]');
+      const expanded = header
+        ? header.getAttribute("aria-expanded") !== null
+          ? header.getAttribute("aria-expanded") === "true"
+          : header.classList.contains("mtrl-drawer__item--expanded")
+        : false;
+      if (expanded) header?.click();
     };
     painters.add(paint);
     paint();
@@ -207,16 +226,46 @@ scenario(interaction, {
     });
     // One control starts both, driven through the components' own API so the
     // menu is not dismissed as an outside press before the section moves.
+    // The menu's own close removes it from the document on fixed 50 ms and
+    // 300 ms timers, whatever the animations are doing: at 5x slow that is a
+    // third of the way into a 1.25 s curve, so the closing half lost the menu
+    // while the drawer was still 42.5% open. Closing here removes the
+    // visibility class (the same transition the component uses), keeps the
+    // element present for the whole curve, and tells the component once the
+    // transition has ended.
+    const closeMenuAfterItsCurve = () => {
+      const element = menu?.element;
+      if (!element) return;
+      element.classList.remove("mtrl-menu--visible");
+      element.setAttribute("aria-hidden", "true");
+      let finished = false;
+      const settle = () => {
+        if (finished) return;
+        finished = true;
+        menu?.close?.();
+      };
+      element.addEventListener("transitionend", settle, { once: true });
+      // A reduced-motion run fires no transition; settle the state anyway.
+      setTimeout(settle, 2000);
+    };
     const both = document.createElement("button");
     both.textContent = "Open / close both";
-    both.addEventListener("click", () => {
-      const drawer = drawerBox.querySelector(".mtrl-drawer");
-      const header = (drawer?.shadowRoot ?? drawer)?.querySelector('[data-id="labels"]') ?? drawer?.querySelector(".mtrl-drawer__item");
+    both.addEventListener("click", (event) => {
+      // The menu dismisses on a document click; this control is not its opener,
+      // so its own click would close what it just opened. Keep it local.
+      event.stopPropagation();
+      const header = drawerRoot()?.querySelector('[data-id="labels"]');
       header?.click();
       // The menu follows the section's new state, so both motions run the same
-      // way at once and the two fractions can be read against each other.
-      const expanded = header?.getAttribute("aria-expanded") === "true";
-      if (expanded) menu?.open?.(); else menu?.close?.();
+      // way at once and the two fractions can be read against each other. The
+      // element form carries aria-expanded; the factory marks the item with its
+      // expanded class, so both are read rather than assuming one.
+      const expanded = header
+        ? header.getAttribute("aria-expanded") !== null
+          ? header.getAttribute("aria-expanded") === "true"
+          : header.classList.contains("mtrl-drawer__item--expanded")
+        : false;
+      if (expanded) menu?.open?.(); else closeMenuAfterItsCurve();
     });
     const note = document.createElement("p");
     note.style.margin = "4px 0 0";
@@ -236,14 +285,20 @@ scenario(edge, {
   measure: () => {
     const shadow = edgeBox.querySelector("m-drawer")?.shadowRoot ?? edgeBox;
     const child = shadow.querySelector('[data-id="family"]');
+    const indicator = child?.querySelector(".mtrl-drawer__active-indicator");
     const label = child?.querySelector(".mtrl-drawer__item-label");
-    if (!child || !label) return "open the section to measure";
-    const cb = child.getBoundingClientRect();
+    const sheet = shadow.querySelector(".mtrl-drawer");
+    if (!child || !indicator || !label || !sheet) return "open the section to measure";
+    const rtl = getComputedStyle(sheet).direction === "rtl";
+    const ib = indicator.getBoundingClientRect();
+    const sb = sheet.getBoundingClientRect();
     const lb = label.getBoundingClientRect();
-    const rtl = document.documentElement.dir === "rtl";
-    const startInset = rtl ? cb.right - lb.right : lb.left - cb.left;
-    const endInset = rtl ? lb.left - cb.left : cb.right - lb.right;
-    return `child pill start inset ${startInset.toFixed(1)} (12 + the indent) · end padding ${endInset.toFixed(1)} · dir ${document.documentElement.dir}`;
+    // The pill's own inset from the sheet, then the label's from the pill:
+    // measuring the label against the row reported 16 px where the painted
+    // pill sits 24 px in.
+    const pillInset = rtl ? sb.right - ib.right : ib.left - sb.left;
+    const labelInset = rtl ? ib.right - lb.right : lb.left - ib.left;
+    return `pill inset from the sheet ${pillInset.toFixed(1)} · label inset from the pill ${labelInset.toFixed(1)} · dir ${rtl ? "rtl" : "ltr"}`;
   },
   mount: (body) => {
     body.append(edgeBox);
