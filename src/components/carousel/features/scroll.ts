@@ -657,6 +657,12 @@ export const withScroll = (config: CarouselConfig) =>
           break;
         }
       }
+      // The capped end ties several snaps to the range: the wheel names the
+      // item actually in view — the last of the tied snaps (the backward
+      // scan already starts there), so a wheel to the end reads 24 / 24.
+      if (direction > 0) {
+        while (index + 1 < count && snapPositions[index + 1] === snapPositions[index]) index++;
+      }
       const target = snapPositions[index]!;
       // One spring for notches and momentum avoids switching animation engines
       // when a second wheel event arrives. Suspend native snap until landing.
