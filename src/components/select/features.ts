@@ -182,6 +182,10 @@ const setupCombobox = (
   input.setAttribute("aria-expanded", "false");
 
   let active: HTMLElement | null = null;
+  // `open` fires before the menu is positioned. Scrolling then runs against
+  // the uncapped list, and the selected option stays above the popup once
+  // the menu flips and the cap lands. Scroll only after `positioned`.
+  let positioned = false;
   let keyboard = false;
   let pending: "selected" | "first" | "last" = "selected";
   let buffer = "";
@@ -212,7 +216,7 @@ const setupCombobox = (
     });
     if (element) {
       input.setAttribute("aria-activedescendant", element.id);
-      element.scrollIntoView?.({ block: "nearest" });
+      if (positioned) element.scrollIntoView?.({ block: "nearest" });
     } else {
       input.removeAttribute("aria-activedescendant");
     }
@@ -290,8 +294,14 @@ const setupCombobox = (
   };
 
   menu.on("open", () => {
+    positioned = false;
     input.setAttribute("aria-expanded", "true");
     place();
+  });
+
+  menu.on("positioned", () => {
+    positioned = true;
+    active?.scrollIntoView?.({ block: "nearest" });
   });
 
   // The real menu replaces the stand-in when its chunk arrives: the listbox,
@@ -299,6 +309,7 @@ const setupCombobox = (
   menu.whenReady(place);
 
   menu.on("close", () => {
+    positioned = false;
     input.setAttribute("aria-expanded", "false");
     input.removeAttribute("aria-controls");
     setActive(null);

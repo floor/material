@@ -524,6 +524,11 @@ const withController =
       // Add visible class to start the CSS transition
       component.element.classList.add(`${component.getClass("menu--visible")}`);
 
+      // The side and the cap are applied. `open` already fired, before this
+      // delay, and stays there. The select scrolls its active option now,
+      // against the menu that was just placed.
+      component.emit("positioned", { menu: getComponent(), originalEvent: event });
+
       // Step 4: Set up initial focus based on interaction type. A listbox
       // leaves focus on its combobox.
       if (!listbox) focusTimer = tasks.setTimeout(() => {

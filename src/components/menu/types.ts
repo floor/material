@@ -561,6 +561,11 @@ export interface MenuEvents {
   open: (event: MenuEvent) => void;
   close: (event: MenuEvent) => void;
   select: (event: MenuSelectEvent) => void;
+  /**
+   * Fired once the menu has been positioned and capped. `open` still fires
+   * first, before that placement.
+   */
+  positioned: (event: MenuEvent) => void;
 }
 
 /**
