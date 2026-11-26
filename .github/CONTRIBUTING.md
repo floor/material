@@ -78,9 +78,11 @@ difference is a conformance drift.
   (`08ec699d`, see the token extractor in that README) and the page on
   [m3.material.io](https://m3.material.io) with the date you read it. The property tables are not
   public, so the measurement and the sources are the reference.
+- **Read what is already known.** Each component page on [md3.io](https://md3.io/components/)
+  carries a *Known issues* section — the public face of the conformance tables — and the issues
+  labelled `conformance-drift` mirror it here.
 - **Fix what the two agree on**, then add a browser check that fails without the fix and passes
   with it, and quote both runs in the pull request.
-- Known, open drifts are collected under the issues labelled `conformance-drift`.
 
 ## Development Guidelines
 

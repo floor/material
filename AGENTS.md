@@ -96,7 +96,9 @@ $ bun run conformance divider
 ```
 
 Compose tokens come from the pinned AndroidX checkout; `scripts/conformance/README.md` has the
-clone commands and the `COMPOSE_TOKENS_DIR` setup.
+clone commands and the `COMPOSE_TOKENS_DIR` setup. Each component's page on
+[md3.io](https://md3.io/components/) carries its *Known issues* section, the published view of the
+conformance measurements.
 
 ## Material 3 sources and their pins
 
