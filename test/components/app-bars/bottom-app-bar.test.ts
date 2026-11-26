@@ -82,11 +82,14 @@ describe('bottom app bar', () => {
     bar.hide();
     expect(bar.isVisible()).toBe(false);
     expect(bar.element.classList.contains('mtrl-bottom-app-bar--hidden')).toBe(true);
+    expect(bar.element.hasAttribute('inert')).toBe(true);
     bar.hide();
+    expect(bar.element.hasAttribute('inert')).toBe(true);
 
     bar.show();
     expect(bar.isVisible()).toBe(true);
     expect(bar.element.classList.contains('mtrl-bottom-app-bar--hidden')).toBe(false);
+    expect(bar.element.hasAttribute('inert')).toBe(false);
 
     expect(onVisibilityChange.mock.calls.map((call) => call[0])).toEqual([false, true]);
   });
@@ -97,7 +100,9 @@ describe('bottom app bar', () => {
     document.body.append(bar.element);
     await scrollPage(300);
     expect(bar.isVisible()).toBe(false);
+    expect(bar.element.hasAttribute('inert')).toBe(true);
     await scrollPage(100);
+    expect(bar.element.hasAttribute('inert')).toBe(false);
     expect(bar.isVisible()).toBe(true);
     expect(onVisibilityChange.mock.calls.map((call) => call[0])).toEqual([false, true]);
     bar.destroy();
