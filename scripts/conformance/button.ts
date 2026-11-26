@@ -107,27 +107,29 @@ for (const size of ["xs", "s", "m"] as const) {
 }
 
 // Density: M3's scale is 0, −1, −2, −3, four dp a step. Small starts at 40.
-for (const size of ["s", "m"] as const) {
+for (const size of ["xs", "s", "m"] as const) {
   for (const density of [0, -1, -2, -3]) {
     cases.push({ id: `filled/${size}/density ${density}`, density, mount, config: { variant: "filled", size }, parts });
   }
 }
 
-// Both halves of the toggle's shape swap at m: round → square (CornerLarge)
-// and square → pill (SelectedContainerShapeSquare is CornerFull at m).
-for (const shape of ["round", "square"] as const) {
-  cases.push({
-    id: `filled/m/selected (${shape} toggle)`,
-    mount: (mtrl, host, config) => {
-      const { shape: shapeName } = (config ?? {}) as MountOptions;
-      const create = mtrl.createButton as unknown as (settings: Record<string, unknown>) => { element: HTMLElement };
-      const button = create({ text: "Button", variant: "filled", size: "m", shape: shapeName, toggle: true, selected: true });
-      host.append(button.element);
-    },
-    config: { shape },
-    parts: [{ name: "root", selector: ".mtrl-button" }],
-    properties: ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius", "height"],
-  });
+// Both halves of the toggle's shape swap at s and m: round → CornerMedium at
+// s and CornerLarge at m; square → CornerMedium at s and CornerFull at m.
+for (const size of ["xs", "s", "m"] as const) {
+  for (const shape of ["round", "square"] as const) {
+    cases.push({
+      id: `filled/${size}/selected (${shape} toggle)`,
+      mount: (mtrl, host, config) => {
+        const { shape: shapeName, size: sizeName } = (config ?? {}) as MountOptions;
+        const create = mtrl.createButton as unknown as (settings: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ text: "Button", variant: "filled", size: sizeName, shape: shapeName, toggle: true, selected: true });
+        host.append(button.element);
+      },
+      config: { shape, size },
+      parts: [{ name: "root", selector: ".mtrl-button" }],
+      properties: ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius", "height"],
+    });
+  }
 }
 
 // Colours: the five variants' container and label, light and dark.
