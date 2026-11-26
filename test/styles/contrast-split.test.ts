@@ -364,10 +364,12 @@ describe("explicit contrast levels are opt-in", () => {
     // joins the trailing buttons' rule, so a button in either tree is reset
     // and takes that 3px ring and their layers; its layer names
     // OnSurfaceVariant itself, so supplied content keeps its own colour, and
-    // it draws no second outline (styles/components/_search.scss).
+    // it draws no second outline (styles/components/_search.scss). A search
+    // bar with no shown trailing action ends its text 16dp from the edge, and
+    // an empty value's clear button takes no room (+92 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "5b3f3edf0088693c564c5f865fe3a841e489d2b9f147436e5d7dce84e1a8a60a",
-      length: 554918,
+      sha256: "2d494ac4433ff18301455660813e0cabc4ca9bc5018d08451689b51b7345a2bb",
+      length: 555010,
     });
   });
 
