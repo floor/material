@@ -360,10 +360,14 @@ describe("explicit contrast levels are opt-in", () => {
     // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
     // where the control is clipped. The snackbar close stays 2px in
     // inverse-on-surface (styles/abstract/_mixins.scss and the component
-    // sheets; styles/components/_snackbar.scss).
+    // sheets; styles/components/_snackbar.scss). A clickable search avatar
+    // joins the trailing buttons' rule, so a button in either tree is reset
+    // and takes that 3px ring and their layers; its layer names
+    // OnSurfaceVariant itself, so supplied content keeps its own colour, and
+    // it draws no second outline (styles/components/_search.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "45e35d1502c8dd54d7f9c8f5082c480f13637971ec82e54fab74d75637e9e07c",
-      length: 554607,
+      sha256: "5b3f3edf0088693c564c5f865fe3a841e489d2b9f147436e5d7dce84e1a8a60a",
+      length: 554918,
     });
   });
 
