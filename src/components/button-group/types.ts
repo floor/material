@@ -1,6 +1,7 @@
 // src/components/button-group/types.ts
 
 import type { ButtonConfig, ButtonComponent } from "../button/types";
+import type { IconButtonWidth } from "../icon-button/constants";
 
 /**
  * Button group orientation
@@ -80,8 +81,10 @@ export interface ButtonGroupEvent {
 }
 
 /**
- * Configuration for a single button within a button group
- * Extends ButtonConfig but omits properties controlled by the group
+ * Configuration for a single button within a button group.
+ * The group's size and shape apply to every item. `variant` is omitted from
+ * the button config and declared here so an item can override the group's
+ * variant; omitted, the group's variant is the default.
  * @category Components
  */
 interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
@@ -122,6 +125,19 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
    * Value associated with this button
    */
   value?: string;
+
+  /**
+   * This item's variant. Omitted, the group's variant is used. On an
+   * icon-only item, `text` is the icon button's `standard`.
+   */
+  variant?: ButtonGroupVariant;
+
+  /**
+   * Icon-only items: the icon button's width, `narrow`, `default` or `wide`
+   * (m3.material.io icon buttons, specs, read 2026-11-26). A text item
+   * ignores it. The group's size still sets the height.
+   */
+  width?: IconButtonWidth;
   /** Icon shown while selected (toggle buttons). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   selectedIcon?: string;
   /** Initially selected (selection groups only) */

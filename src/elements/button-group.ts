@@ -3,9 +3,12 @@
  * `<m-button-group>` with `<m-button-group-item>` children.
  *
  * Each `<m-button-group-item>` declares one button (`value`, `icon`,
- * `selected-icon`, `aria-label`, `disabled`, `selected`, and its text as the
- * label). The group reads them into the factory's config and updates in place
- * when they change; the children stay where the framework put them.
+ * `selected-icon`, `variant`, `width`, `aria-label`, `disabled`, `selected`,
+ * and its text as the label). `variant` overrides the group's variant for
+ * that item. `width` (`narrow`, `default`, `wide`) applies to an icon-only
+ * item, the same option as the icon button. The group reads them into the
+ * factory's config and updates in place when they change; the children stay
+ * where the framework put them.
  *
  * With `selection="single"` or `"multi"` the buttons toggle. `value` on the
  * group is the default selection (comma-separated in a multi group), which
@@ -26,6 +29,7 @@ import type {
   ButtonGroupChangeEvent, ButtonGroupComponent, ButtonGroupConfig, ButtonGroupDensity, ButtonGroupEvent,
   ButtonGroupItemConfig, ButtonGroupVariant,
 } from "../components/button-group/types";
+import type { IconButtonWidth } from "../components/icon-button/constants";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
@@ -59,6 +63,8 @@ const declaredItems = (host: HTMLElement): Item[] => {
     const base = {
       value,
       icon,
+      variant: (child.getAttribute("variant") ?? undefined) as ButtonGroupVariant | undefined,
+      width: (child.getAttribute("width") ?? undefined) as IconButtonWidth | undefined,
       selectedIcon: child.getAttribute("selected-icon") ?? undefined,
       disabled: child.hasAttribute("disabled"),
       selected: child.hasAttribute("selected"),
@@ -135,6 +141,15 @@ const updateGroup = (host: ElementHost<ButtonGroupComponent>, component: ButtonG
     if (item.text && item.text !== before.text) button.setText(item.text);
     if (item.icon !== before.icon) button.setIcon(item.icon ?? "");
     if (item.ariaLabel !== undefined && item.ariaLabel !== before.ariaLabel) button.setAriaLabel(item.ariaLabel);
+    if (item.variant !== before.variant) {
+      const fallback = host.getAttribute("variant") ?? "outlined";
+      const next = item.variant ?? fallback;
+      button.setVariant(!item.text && item.icon && next === "text" ? "standard" : next);
+    }
+    if (item.width !== before.width) {
+      const adjustable = button as typeof button & { setWidth?: (width: string) => void };
+      adjustable.setWidth?.(item.width ?? "default");
+    }
   }
   applied.set(host, items);
   applyDisabled(host, component, items);
@@ -226,6 +241,16 @@ export const buttonGroupItemDeclaration = {
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Shown on an icon-only item while it is selected. */
     "selected-icon": { type: "string" },
     "aria-label": { type: "string" },
+    /**
+     * Overrides the group's `variant` for this item. Omitted, the item uses
+     * the group's variant.
+     */
+    variant: { type: "string" },
+    /**
+     * Icon-only items: `narrow`, `default` or `wide`, the icon button's width.
+     * A text item ignores it.
+     */
+    width: { type: "string" },
     disabled: { type: "boolean" },
     selected: { type: "boolean" },
   },

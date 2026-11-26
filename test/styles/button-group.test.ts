@@ -35,6 +35,15 @@ describe('button group stylesheet', () => {
     expect(value('.mtrl-button-group > .mtrl-button, .mtrl-button-group > .mtrl-icon-button', 'height')).toBe('var(--mtrl-button-group-height-scale)');
   });
 
+  test('a narrow or wide icon button keeps its own width; the default stays square', () => {
+    // m3.material.io icon buttons, specs, read 2026-11-26: narrow and wide
+    // are the icon button's widths. The group only squares the default.
+    const square = '.mtrl-button-group > .mtrl-icon-button:not(.mtrl-icon-button--narrow):not(.mtrl-icon-button--wide)';
+    expect(value(square, 'width')).toBe('var(--mtrl-button-group-height-scale)');
+    expect(css).not.toMatch(/\.mtrl-icon-button--narrow\s*\{[^}]*width:\s*var\(--mtrl-button-group-height-scale\)/);
+    expect(css).not.toMatch(/\.mtrl-icon-button--wide\s*\{[^}]*width:\s*var\(--mtrl-button-group-height-scale\)/);
+  });
+
   test('buttons keep their own colours: the group paints no containers, borders or dividers', () => {
     expect(css).not.toMatch(/background-color:/);
     expect(css).not.toMatch(/border(-right|-bottom|-color)?:/);

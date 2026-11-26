@@ -63,7 +63,8 @@ type GroupButton = ButtonComponent & {
  *   pressed button briefly widens while its neighbours narrow
  * - Connected groups space their buttons 2dp apart with square inner
  *   corners and round outer corners; a selected button becomes a pill
- * - All buttons share the same variant, size and shape
+ * - The group's variant is the default; an item's own variant overrides it.
+ *   Every item shares the group's size and shape
  * - Supports horizontal and vertical orientations
  * - Supports density scaling (4dp per step)
  *
@@ -303,19 +304,24 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       // flag would carry no type information and the label could be absent.
       // Icon-only items are icon buttons (the Material spec allows both in a
       // group); they carry their own toggle state and selected icon.
+      const { width: itemWidth, ...sharedConfig } = resolvedConfig as typeof resolvedConfig & {
+        width?: ButtonGroupItemConfig['width'];
+      };
       const button = (buttonConfig.text === undefined && buttonConfig.icon
         ? createIconButton({
-            ...resolvedConfig,
+            ...sharedConfig,
             // Keep the typed explicit-label contract; runtime callers without
             // one receive the same value fallback as the custom element.
             ariaLabel: buttonConfig.ariaLabel ?? buttonConfig.value,
             toggle: selectable,
             toggleOnClick: false,
             selectedIcon: buttonConfig.selectedIcon,
-            variant: resolvedConfig.variant === 'text' ? 'standard' : resolvedConfig.variant
+            variant: sharedConfig.variant === 'text' ? 'standard' : sharedConfig.variant,
+            // Icon-only items take the icon button's width. A text item has none.
+            width: itemWidth
           })
         : createButton({
-            ...resolvedConfig,
+            ...sharedConfig,
             toggle: selectable,
             toggleOnClick: false
           })) as unknown as GroupButton;
@@ -395,8 +401,9 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       component.element.classList.add(`${baseConfig.prefix}-button-group--${variant}`);
       component.element.setAttribute('data-variant', variant);
 
-      // Update each button's variant
+      // The group's variant is the default. An item that set its own keeps it.
       buttons.forEach(button => {
+        if (button._groupConfig?.variant) return;
         button.setVariant(variant);
       });
 
