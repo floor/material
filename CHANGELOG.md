@@ -17,7 +17,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.16.6] - 2026-11-25
+## [3.16.6] - 2026-11-26
 
 Menus, selects and carousel drags follow the page zoom, time pickers with seconds fit their fields, icon buttons keep their round shape, and tall dialogs scroll within small windows.
 
