@@ -174,14 +174,47 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
 
   // 3. Dragged: every variant paints the 0.16 layer, with its pointer still on
   // the card, as a real drag has it, so the dragged state wins over hover.
+  const draggedOf = new Map<string, Reading>();
   for (const variant of variants) {
     await mount(page, variant, true);
     await page.hover(".mtrl-card");
     const dragged = await settle(page);
+    draggedOf.set(variant, dragged);
     assert.equal(dragged.layer.content, '""', `${engine} ${variant}: the dragged card has a state layer (${dragged.layer.content})`);
     assert.equal(dragged.layer.opacity, OPACITY("0.16"), `${engine} ${variant}: the dragged layer is 0.16 (${dragged.layer.opacity})`);
     assert.notEqual(dragged.shadow, restOf.get(variant)!.shadow, `${engine} ${variant}: the dragged elevation differs from rest`);
     rows.push(`${engine} ${variant} dragged: layer ${dragged.layer.opacity}`);
+  }
+
+  // 4. Pressed: a pointer down on the card returns it to its pressed elevation
+  // (Level 1 elevated, Level 0 filled and outlined) and the 0.10 layer, not
+  // the hover it sat in.
+  const pressedOf = new Map<string, Reading>();
+  for (const variant of variants) {
+    await mount(page, variant);
+    await page.hover(".mtrl-card");
+    await settle(page);
+    await page.mouse.down();
+    const pressed = await settle(page);
+    pressedOf.set(variant, pressed);
+    const expected = variant === "elevated" ? restOf.get(variant)!.shadow : "none";
+    assert.equal(pressed.shadow, expected, `${engine} ${variant}: pressed returns to its pressed elevation (${pressed.shadow})`);
+    assert.equal(pressed.layer.opacity, 0.1, `${engine} ${variant}: the pressed layer is 0.10 (${pressed.layer.opacity})`);
+    await page.mouse.up();
+    rows.push(`${engine} ${variant} pressed: layer ${pressed.layer.opacity}`);
+  }
+
+  // 5. Dragging while pressed: the drag replaces the press too, keeping the
+  // dragged elevation and the 0.16 layer.
+  for (const variant of variants) {
+    await mount(page, variant, true);
+    await page.hover(".mtrl-card");
+    await page.mouse.down();
+    const dragPressed = await settle(page);
+    assert.equal(dragPressed.shadow, draggedOf.get(variant)!.shadow, `${engine} ${variant}: a drag under the pointer keeps the dragged elevation (${dragPressed.shadow})`);
+    assert.equal(dragPressed.layer.opacity, OPACITY("0.16"), `${engine} ${variant}: the pressed drag layer stays 0.16 (${dragPressed.layer.opacity})`);
+    await page.mouse.up();
+    rows.push(`${engine} ${variant} drag+pressed: layer ${dragPressed.layer.opacity}`);
   }
 
   await page.close();
