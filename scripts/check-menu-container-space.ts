@@ -237,6 +237,72 @@ const run = async (browser: Browser, engine: string) => {
   }
   rows.push(`body autoFlip:false open scroll ${bodyOpen} (main ${expectedBodyScroll})`);
 
+  // A positioned host: the opener under a zoomed child, and the menu written
+  // in the host's own space (its border and scroll taken out and back).
+  const hostCases = await page.evaluate(async () => {
+    const results: { name: string; openerLeft: number; openerRight: number; openerTop: number; openerBottom: number; menuLeft: number; menuRight: number; menuTop: number; menuBottom: number; menuWidth: number; clientTop: number; clientBottom: number; clientLeft: number; clientRight: number }[] = [];
+    for (const kind of ["host-zoom", "host-border"] as const) {
+      document.querySelectorAll(".mtrl-menu").forEach((node) => node.remove());
+      const host = document.createElement("div");
+      host.id = "host";
+      host.style.cssText = "position:absolute;left:100px;top:100px;width:420px;height:400px";
+      const content = document.createElement("div");
+      content.style.cssText = "height:900px;position:relative";
+      const zoomed = document.createElement("div");
+      zoomed.style.zoom = "0.7";
+      const opener = document.createElement("button");
+      opener.id = "opener";
+      opener.textContent = "Open";
+      opener.style.cssText = "position:absolute;left:24px;top:200px;width:200px;height:36px";
+      zoomed.append(opener);
+      content.append(zoomed);
+      host.append(content);
+      document.body.append(host);
+      if (kind === "host-zoom") host.style.overflow = "hidden";
+      else {
+        host.style.cssText += ";overflow:auto;border:12px solid #333;box-sizing:border-box";
+        host.scrollTop = 120;
+      }
+      const create = (window as unknown as { mtrl: { createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => void } } }).mtrl.createMenu;
+      const settings: Record<string, unknown> = { opener, offset: 8, items: [{ text: "One" }, { text: "Two" }, { text: "Three" }] };
+      if (kind === "host-zoom") Object.assign(settings, { position: "bottom-end", container: host, width: "100%" });
+      else Object.assign(settings, { position: "bottom-start" });
+      const menu = create(settings);
+      // The border case pre-mounts the menu in the host, its documented use
+      // without a container config.
+      if (kind === "host-border") content.append(menu.element);
+      await new Promise((done) => setTimeout(done, 250));
+      menu.open();
+      await new Promise((done) => setTimeout(done, 500));
+      const rect = (element: Element) => element.getBoundingClientRect();
+      const m = rect(menu.element);
+      const o = rect(opener);
+      const port = rect(host);
+      results.push({
+        name: kind,
+        openerLeft: o.left, openerRight: o.right, openerTop: o.top, openerBottom: o.bottom,
+        menuLeft: m.left, menuRight: m.right, menuTop: m.top, menuBottom: m.bottom, menuWidth: m.width,
+        clientTop: port.top + host.clientTop, clientBottom: port.top + host.clientTop + host.clientHeight,
+        clientLeft: port.left + host.clientLeft, clientRight: port.left + host.clientLeft + host.clientWidth,
+      });
+      host.remove();
+    }
+    return results;
+  });
+  for (const hostCase of hostCases) {
+    const label = `positioned host ${hostCase.name}`;
+    if (hostCase.name === "host-zoom") {
+      // 100% of the opener, right-aligned to it.
+      if (Math.abs(hostCase.menuRight - hostCase.openerRight) > 1) failures.push(`${label}: the menu's end meets the opener's end (menu ${hostCase.menuRight.toFixed(1)}, opener ${hostCase.openerRight.toFixed(1)})`);
+      if (Math.abs(hostCase.menuWidth - (hostCase.openerRight - hostCase.openerLeft)) > 1) failures.push(`${label}: the menu is the opener's width (menu ${hostCase.menuWidth.toFixed(1)}, opener ${(hostCase.openerRight - hostCase.openerLeft).toFixed(1)})`);
+    } else {
+      // Below the opener, clear of it, inside the host's client box.
+      if (!(hostCase.menuTop >= hostCase.openerBottom - 0.5)) failures.push(`${label}: the menu is below the opener (menu top ${hostCase.menuTop.toFixed(1)}, opener bottom ${hostCase.openerBottom.toFixed(1)})`);
+      if (!(hostCase.menuTop >= hostCase.clientTop - 0.5 && hostCase.menuBottom <= hostCase.clientBottom + 0.5)) failures.push(`${label}: the menu is inside the host's client box (${hostCase.menuTop.toFixed(1)}..${hostCase.menuBottom.toFixed(1)} in ${hostCase.clientTop.toFixed(1)}..${hostCase.clientBottom.toFixed(1)})`);
+    }
+    rows.push(`${label} menu ${hostCase.menuLeft.toFixed(0)}..${hostCase.menuRight.toFixed(0)} x ${hostCase.menuTop.toFixed(0)}..${hostCase.menuBottom.toFixed(0)} opener ${hostCase.openerLeft.toFixed(0)}..${hostCase.openerRight.toFixed(0)} x ${hostCase.openerTop.toFixed(0)}..${hostCase.openerBottom.toFixed(0)}`);
+  }
+
   // The keyboard reveal: End on a 25-item menu scrolls the menu's own list,
   // in every layer and at a zoom, until the last item is whole inside it.
   const layerVariants = [
@@ -303,7 +369,8 @@ const run = async (browser: Browser, engine: string) => {
     }, variant);
     const label = `long menu ${variant.name}`;
     if (!(reveal.scrollTop > 0)) failures.push(`${label}: End scrolls the menu's own list (scrollTop stays ${reveal.scrollTop})`);
-    if (!(reveal.lastTop >= reveal.listTop - 0.5 && reveal.lastBottom <= reveal.listBottom + 0.5)) {
+    // Sub-pixel zoom rounding leaves the reveal within a pixel of the edge.
+    if (!(reveal.lastTop >= reveal.listTop - 1.5 && reveal.lastBottom <= reveal.listBottom + 1.5)) {
       failures.push(`${label}: the last item is whole in the list after End (item ${reveal.lastTop.toFixed(1)}..${reveal.lastBottom.toFixed(1)}, list ${reveal.listTop.toFixed(1)}..${reveal.listBottom.toFixed(1)})`);
     }
     rows.push(`${label} last item ${reveal.lastTop.toFixed(0)}..${reveal.lastBottom.toFixed(0)} in list ${reveal.listTop.toFixed(0)}..${reveal.listBottom.toFixed(0)} scrollTop ${reveal.scrollTop}`);
