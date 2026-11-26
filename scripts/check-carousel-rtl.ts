@@ -260,8 +260,8 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
     });
     await flipPage.waitForTimeout(200); // stays: pointer pacing inside a drag
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await settle(flipPage);
-    const unsnapped = await readScroll();
+    // goTo scrolls the strip itself; the reading settles when the scroll stops.
+    const unsnapped = (await settle(flipPage, { read: readScroll })) ?? (await readScroll());
     assert.ok(
       unsnapped <= -100,
       `after the flip, snap:false goTo(1) still moves negative (got ${unsnapped})`,

@@ -19,6 +19,7 @@
  * clipped.
  */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -57,7 +58,6 @@ const entrySource = `
 import * as mtrl from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
 import { defineFabMenu } from ${JSON.stringify(resolve(repoRoot, "src/elements/fab-menu.ts"))};
 import { registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/styles.ts"))};
-import { settle } from "./browser-settle";
 registerStyles({
   ripple: ${JSON.stringify(compile("utilities/ripple"))},
   button: ${JSON.stringify(compile("components/button"))},

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Build first. Check a packed production Vite app and compare CSS in Chromium. */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { mkdir, readFile, writeFile, copyFile, rm, symlink } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -72,7 +73,6 @@ try {
   // file, so the probe also checks that the module and its declarations exist.
   await writeFile(probe, `import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { settle } from "./browser-settle";
 const out = {};
 for (const specifier of ${JSON.stringify([...componentSubpaths, ...nestedSubpaths])}) {
   try {

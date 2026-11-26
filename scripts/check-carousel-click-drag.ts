@@ -117,8 +117,9 @@ const run = async (browser: Browser, engine: string, snap: boolean) => {
   await page.mouse.down();
   await page.waitForTimeout(60); // stays: pointer pacing inside a drag
   await page.mouse.up();
-  await settle(page);
-  const afterClick = await read(page);
+  // The strip moves by `scrollTo({behavior: "smooth"})`, which Web Animations
+  // cannot see: wait for the click's scroll to reach its end, then for rest.
+  const afterClick = (await settle(page, { until: async () => (await read(page)).left > 100, read: () => read(page) }))!;
   assert(afterClick.left > 100, `${label}: a click on a showing slide selects it and scrolls to it (${state.left} → ${afterClick.left})`);
 
   // 2. A held drag from the slide at the leading edge towards the middle.
@@ -145,12 +146,16 @@ const run = async (browser: Browser, engine: string, snap: boolean) => {
     (items[visible === -1 ? 0 : visible] as HTMLElement).focus({ preventScroll: true });
     return visible;
   });
-  await settle(page);
-  const afterFocus = await read(page);
   assert(focusIndex >= 0, `${label}: a slide was there to focus`);
+  const focusTarget = snap
+    ? released.snaps.reduce((best, position, i) => Math.abs(position - released.left) < Math.abs(released.snaps[best]! - released.left) ? i : best, 0)
+    : -1;
+  const afterFocus = (await settle(page, {
+    ...(snap ? { until: async () => Math.abs((await read(page)).left - released.snaps[focusTarget]!) <= 1 } : {}),
+    read: () => read(page),
+  }))!;
   if (snap) {
-    const target = afterFocus.snaps.reduce((best, position, i) => Math.abs(position - released.left) < Math.abs(afterFocus.snaps[best]! - released.left) ? i : best, 0);
-    assert(Math.abs(afterFocus.left - afterFocus.snaps[target]!) <= 1, `${label}: the settle lands on the snap nearest the release (${released.left.toFixed(0)} → ${afterFocus.left.toFixed(0)}, nearest ${afterFocus.snaps[target]!.toFixed(0)})`);
+    assert(Math.abs(afterFocus.left - afterFocus.snaps[focusTarget]!) <= 1, `${label}: the settle lands on the snap nearest the release (${released.left.toFixed(0)} → ${afterFocus.left.toFixed(0)}, nearest ${afterFocus.snaps[focusTarget]!.toFixed(0)})`);
   } else {
     assert(Math.abs(afterFocus.left - released.left) <= 1, `${label}: snapping off, the strip rests where it was released, though the release's focus moved (${released.left.toFixed(0)} → ${afterFocus.left.toFixed(0)})`);
   }
@@ -169,11 +174,10 @@ const run = async (browser: Browser, engine: string, snap: boolean) => {
     return index === -1 ? 0 : index;
   });
   const beforeArrow = await read(page);
-  await page.keyboard.press("ArrowRight");
-  await settle(page);
-  const afterArrow = await read(page);
   const nextSnap = beforeArrow.snaps[focused + 1];
   assert(nextSnap !== undefined, `${label}: the focused slide has a neighbour`);
+  await page.keyboard.press("ArrowRight");
+  const afterArrow = (await settle(page, { until: async () => Math.abs((await read(page)).left - nextSnap) <= 1, read: () => read(page) }))!;
   assert(Math.abs(afterArrow.left - nextSnap) <= 1, `${label}: the arrow from the focused slide (${focused}) moves the strip to its neighbour (${beforeArrow.left.toFixed(0)} → ${afterArrow.left.toFixed(0)}, snap ${nextSnap.toFixed(0)})`);
 
   // 5. A plain click (no drag) still selects its slide.
@@ -183,8 +187,7 @@ const run = async (browser: Browser, engine: string, snap: boolean) => {
   await page.mouse.down();
   await page.waitForTimeout(60); // stays: pointer pacing inside a drag
   await page.mouse.up();
-  await settle(page);
-  const afterClickAgain = await read(page);
+  const afterClickAgain = (await settle(page, { until: async () => Math.abs((await read(page)).left - state.left) > 1, read: () => read(page) }))!;
   assert(Math.abs(afterClickAgain.left - state.left) > 1, `${label}: a click without a drag still selects its slide (${state.left.toFixed(0)} → ${afterClickAgain.left.toFixed(0)})`);
 
   assert.deepEqual(errors, [], `${label}: no uncaught page errors`);

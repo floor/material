@@ -7321,8 +7321,13 @@ try {
       return event.defaultPrevented;
     });
     assert.equal(await wheel(), true, "wheel attribute enables scrolling at creation");
-    await settle(page);
-    assert((await scroller.evaluate(el => el.scrollLeft)) > 0);
+    // The wheel scroll runs on the carousel's own frames, which Web Animations
+    // cannot see: wait for it to reach its end, then for rest.
+    const scrollLeft = () => scroller.evaluate(el => el.scrollLeft);
+    const samples: number[] = [];
+    const scrolled = await settle(page, { until: async () => { const value = await scrollLeft(); samples.push(value); return value > 0; }, read: scrollLeft });
+    if ((scrolled ?? 0) <= 0) console.log("wheel debug:", JSON.stringify(samples), "settled:", scrolled);
+    assert((scrolled ?? 0) > 0);
     assert.equal(await host.evaluate(el => {
       const host = el as HTMLElement & { component: unknown };
       const before = host.component;
@@ -7340,8 +7345,8 @@ try {
       return host.component === before;
     }), true, "adding wheel keeps the component");
     assert.equal(await wheel(), true, "adding wheel enables interception again");
-    await settle(page);
-    assert((await scroller.evaluate(el => el.scrollLeft)) > position);
+    const scrolledAgain = await settle(page, { until: async () => (await scrollLeft()) > position, read: scrollLeft });
+    assert((scrolledAgain ?? 0) > position);
     check("carousel: wheel attribute scrolls horizontally and toggles in place");
   }
 

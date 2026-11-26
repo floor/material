@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
+import { settle } from "./browser-settle";
 
 const css = sass.compile("src/styles/main.scss", { logger: sass.Logger.silent }).css;
 const sheets = Object.fromEntries(["datepicker", "timepicker"].map(name => [name,
@@ -79,11 +80,7 @@ try {
         if (spec.html) { stage.innerHTML = spec.html; w.host = document.getElementById("target") as PickerHost; w.host.show(); w.picker = w.host.component; }
         else { w.picker = w.m[spec.kind === "date" ? "createDatePicker" : "createTimePicker"](spec.config); stage.append(w.picker.element); w.picker.open(); }
       }, spec);
-      const settle = () => page.evaluate(async () => {
-        await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-        await Promise.all(document.getAnimations().filter(a => Number.isFinite(a.effect?.getComputedTiming().iterations ?? 0)).map(a => a.finished.catch(() => {})));
-      });
-      await settle();
+      await settle(page);
       const retention = await page.evaluate(spec => {
         const w = window as unknown as PickerWindow, root = w.host?.shadowRoot ?? w.picker.element;
         const dialog = root.querySelector("dialog")!, active = w.host?.shadowRoot?.activeElement ?? document.activeElement;

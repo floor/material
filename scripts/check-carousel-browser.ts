@@ -1306,7 +1306,13 @@ export async function checkCarouselMixedPointers(page: Page): Promise<void> {
     assert.equal(afterTouch.dragging, true, `${label}: a touch released elsewhere keeps the mouse drag alive`);
     assert.notEqual(afterTouch.snap, "x mandatory", `${label}: snapping stays off while the mouse still holds the strip`);
     await page.mouse.up();
-    await settle(page)
+    // The strip's settle is a scroll the component drives, not a CSS
+    // animation: wait for its own state rather than for an animation.
+    await page.waitForFunction(() => {
+      const host = document.querySelector("m-carousel");
+      const root = (host?.shadowRoot ?? document).querySelector<HTMLElement>(".mtrl-carousel");
+      return !!root && !root.hasAttribute("data-settling") && !root.hasAttribute("data-dragging");
+    });
     const end = await page.evaluate(() => {
       const host = document.querySelector("m-carousel");
       const scope: ParentNode = host?.shadowRoot ?? document;

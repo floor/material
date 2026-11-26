@@ -76,7 +76,7 @@ try {
       if (mode !== "contents") assert.deepEqual(cancelled,
         { open: false, busy: null, focused: true, events: ["open", "close"] }, `${mode}: hidden ancestor retained pending open`);
       await page.evaluate(() => window.hiddenOpenerLab.menu.preload());
-      await page.waitForTimeout(160); // include the ordinary menu's delayed focus task
+      await page.waitForTimeout(160); // stays: the ordinary menu places focus on a later task
       const settled = await page.evaluate(() => {
         const { menu, other, events } = window.hiddenOpenerLab;
         return { open: menu.isOpen(), connected: !!menu.element?.isConnected,

@@ -38,6 +38,7 @@ const compile = (source: string): string => sass.compileString(`@use "${source}"
 const entrySource = `
 import { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton } from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
 import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
+import { settle } from "./browser-settle";
 registerStyles({ "top-app-bar": ${JSON.stringify(compile("components/top-app-bar"))}, "bottom-app-bar": ${JSON.stringify(compile("components/bottom-app-bar"))} });
 defineAll();
 window.api = { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton };
@@ -94,7 +95,7 @@ try {
         return { shadow, level2: getComputedStyle(reference.element).boxShadow };
       });
       // The bar transitions its shadow: read it once the transition has run.
-      await page.waitForFunction(() => document.getAnimations().length === 0 || document.getAnimations().every((animation) => animation.playState === "finished"));
+      await settle(page);
       const scrolled = await page.evaluate(() =>
         getComputedStyle(document.querySelector<HTMLElement>(".mtrl-top-app-bar")!).boxShadow);
       assert.equal(resting.shadow, "none", `P1: the resting bar has an elevation: ${resting.shadow}`);

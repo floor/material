@@ -12,6 +12,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Page } from "playwright";
 import type createButton from "../src/components/button";
+import { settle } from "./browser-settle";
 
 type ButtonWindow = Window & { core: { createButton: typeof createButton } };
 
@@ -51,7 +52,7 @@ export async function checkButtonStateLayers(page: Page, artifacts?: string): Pr
       }
     }, { mode, variants, kinds });
     // The theme switch starts colour transitions; let them finish first.
-    await page.waitForFunction(() => document.getAnimations().length === 0);
+    await settle(page);
 
     for (const variant of variants) {
       for (const kind of kinds) {
@@ -59,7 +60,6 @@ export async function checkButtonStateLayers(page: Page, artifacts?: string): Pr
         const id = `#layer-${variant}-${kind}`;
         const button = page.locator(id);
         const box = (await button.boundingBox())!;
-        const settled = () => page.waitForFunction(id => document.querySelector(id)!.getAnimations({ subtree: true }).length === 0, id);
         for (const [state, opacity] of Object.entries(states) as [keyof typeof states, number][]) {
           await page.mouse.move(0, 0);
           await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
@@ -70,7 +70,7 @@ export async function checkButtonStateLayers(page: Page, artifacts?: string): Pr
             await page.keyboard.press("Shift");
             await button.focus();
           }
-          await settled();
+          await settle(page, { target: id });
           const painted = await button.evaluate((element, state) => ({
             color: getComputedStyle(element).color,
             layer: getComputedStyle(element, "::before").backgroundColor,

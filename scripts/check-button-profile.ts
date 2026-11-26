@@ -108,18 +108,19 @@ try {
       if (name.startsWith("mixed")) { await page.waitForSelector("#general"); await page.waitForSelector('[role="tablist"]'); }
       pages.push(page);
     }
-    const sample = async (page: Page) => page.evaluate(async () => {
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      await Promise.all(document.getAnimations().filter(a => a.effect?.getComputedTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
-      const properties = ["display", "position", "width", "height", "min-width", "gap", "padding-inline-start", "padding-inline-end", "border-radius", "background-color", "color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "box-shadow", "outline", "outline-offset", "border-width", "border-style", "opacity", "transition-property", "transition-duration", "transition-timing-function"];
-      const values = (el: Element, pseudo?: string) => { const s = getComputedStyle(el, pseudo); return Object.fromEntries(properties.map(p => [p, s.getPropertyValue(p)])); };
-      return Object.fromEntries(["#button", "#toggle", "#general"].filter(selector => document.querySelector(selector)).map(selector => {
-        const el = document.querySelector<HTMLButtonElement>(selector)!;
-        return [selector, { main: values(el), before: values(el, "::before"), after: values(el, "::after"),
-          children: [...el.querySelectorAll(".mtrl-button__icon,.mtrl-button__text,.mtrl-button__progress,.mtrl-progress__canvas")].map(child => ({ class: child.className, style: values(child) })),
-          disabled: el.disabled, selected: el.getAttribute("aria-pressed"), text: el.textContent }];
-      }));
-    });
+    const sample = async (page: Page) => {
+      await settle(page);
+      return page.evaluate(() => {
+        const properties = ["display", "position", "width", "height", "min-width", "gap", "padding-inline-start", "padding-inline-end", "border-radius", "background-color", "color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "box-shadow", "outline", "outline-offset", "border-width", "border-style", "opacity", "transition-property", "transition-duration", "transition-timing-function"];
+        const values = (el: Element, pseudo?: string) => { const s = getComputedStyle(el, pseudo); return Object.fromEntries(properties.map(p => [p, s.getPropertyValue(p)])); };
+        return Object.fromEntries(["#button", "#toggle", "#general"].filter(selector => document.querySelector(selector)).map(selector => {
+          const el = document.querySelector<HTMLButtonElement>(selector)!;
+          return [selector, { main: values(el), before: values(el, "::before"), after: values(el, "::after"),
+            children: [...el.querySelectorAll(".mtrl-button__icon,.mtrl-button__text,.mtrl-button__progress,.mtrl-progress__canvas")].map(child => ({ class: child.className, style: values(child) })),
+            disabled: el.disabled, selected: el.getAttribute("aria-pressed"), text: el.textContent }];
+        }));
+      });
+    };
     const outcomes: string[] = [];
     const snapshots: Record<string, Awaited<ReturnType<typeof sample>>> = {};
     const compare = async (name: string) => {

@@ -44,6 +44,7 @@ const entry = `import * as m from ${JSON.stringify(resolve(sourceRoot, "src/inde
 import {createTab} from ${JSON.stringify(resolve(sourceRoot, "src/components/tabs/index.ts"))};
 import {defineAll} from ${JSON.stringify(resolve(sourceRoot, "src/elements/index.ts"))};
 import {registerStyles} from ${JSON.stringify(resolve(sourceRoot, "src/elements/styles.ts"))};
+import { settle } from "./browser-settle";
 registerStyles(${JSON.stringify(styles)}); defineAll(); window.mtrl={...m,createTab}; window.ready=true;`;
 const bundle = await Bun.build({ entrypoints: ["a11y-b"], target: "browser", plugins: [{ name: "a11y-b", setup(build) {
   build.onResolve({ filter: /^a11y-b$/ }, () => ({ path: "a11y-b", namespace: "fixture" }));
@@ -70,7 +71,6 @@ try {
   await cdp.send("Accessibility.enable");
   const ax = async () => (await cdp.send("Accessibility.getFullAXTree")).nodes.filter(node => !node.ignored);
   const names = async (role: string): Promise<string[]> => (await ax()).filter(node => node.role?.value === role).map(node => String(node.name?.value ?? ""));
-  const settle = () => page.evaluate(() => new Promise<void>(done => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
   const mount = async (factory?: string, config: Record<string, unknown> = {}, html = markup): Promise<void> => {
     await page.goto(`http://127.0.0.1:${server.port}`);
     await page.waitForFunction(() => (window as unknown as FixtureWindow).ready);
@@ -83,7 +83,7 @@ try {
         stage.append(win.subject.element);
       } else stage.innerHTML = html;
     }, { factory, config, html });
-    await settle();
+    await settle(page);
   };
   const test = async (name: string, run: () => Promise<void>): Promise<void> => {
     checks++;
@@ -157,7 +157,7 @@ try {
       (window as unknown as FixtureWindow).before = { component: host.component, tab, markup: host.outerHTML };
       host.setAttribute("aria-label", "Changed views");
     });
-    await settle();
+    await settle(page);
     assert.deepEqual(await names("tablist"), ["Changed views"]);
     assert.equal(await page.evaluate(() => {
       const host = document.getElementById("target") as Host;
@@ -166,7 +166,7 @@ try {
         && host.matches('[aria-label="Changed views"]');
     }), true);
     await page.evaluate(() => document.getElementById("target")!.removeAttribute("aria-label"));
-    await settle();
+    await settle(page);
     assert.deepEqual(await names("tablist"), [""]);
   });
   await test("declaration label/badge updates preserve tabs and focus", async () => {
@@ -179,7 +179,7 @@ try {
       host.children[1].setAttribute("aria-label", "Saved favorites");
       host.children[1].setAttribute("badge", "8");
     });
-    await settle();
+    await settle(page);
     assert.deepEqual(await names("tab"), ["Flights, 3", "Saved favorites, 8", "pins"]);
     assert.deepEqual(await names("status"), []);
     assert.equal(await page.evaluate(() => {
@@ -189,7 +189,7 @@ try {
         && host.children[1].matches('[aria-label="Saved favorites"][badge="8"]');
     }), true);
     await page.evaluate(() => { const tab = document.getElementById("target")!.children[1]; tab.removeAttribute("aria-label"); tab.removeAttribute("badge"); });
-    await settle();
+    await settle(page);
     assert.deepEqual(await names("tab"), ["Flights, 3", "favorites", "pins"]);
   });
   for (const selection of ["none", "single", "multi"]) {

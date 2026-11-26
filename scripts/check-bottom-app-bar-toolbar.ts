@@ -151,20 +151,21 @@ bar.addAction(button('One')).addAction(button('Two'));scopes[0].append(bar.eleme
 const old=legacy();old.addAction(button('Legacy'));scopes[1].append(old.element);
 const normal=toolbar({variant:'docked',placement:'bottom',items:[button('Toolbar one'),button('Toolbar two')]});scopes[2].append(normal.element);
 Object.assign(window,{probe:{bar,old,normal,events,button,setReenter:v=>reenter=v}});document.documentElement.dataset.ready='true';`;
-  const sample = (page: Page) => page.evaluate(async () => {
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    await Promise.all(document.getAnimations().filter(a => a.effect?.getComputedTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
-    const rect = (el: Element, parent: DOMRect) => { const r = el.getBoundingClientRect(); return [r.x-parent.x,r.y-parent.y,r.width,r.height].map(n => Math.round(n*100)/100); };
-    return ['subject','legacy','toolbar'].map(id => {
-      const scope=document.getElementById(id)!, root=scope.firstElementChild!, parent=scope.getBoundingClientRect();
-      const css=getComputedStyle(root);
-      return { id, box:rect(root,parent), role:root.getAttribute('role'), name:root.getAttribute('aria-label'),
-        roles:scope.querySelectorAll('[role="toolbar"]').length,inert:root.hasAttribute('inert'),
-        style:Object.fromEntries(['height','min-height','padding-top','padding-right','padding-bottom','padding-left','background-color','box-shadow','border-radius','transition-duration','transform'].map(p=>[p,css.getPropertyValue(p)])),
-        actions:[...root.querySelectorAll('button')].map(el=>({text:el.textContent,box:rect(el,parent),tab:el.getAttribute('tabindex')})),
-      };
+  const sample = async (page: Page) => {
+    await settle(page);
+    return page.evaluate(() => {
+      const rect = (el: Element, parent: DOMRect) => { const r = el.getBoundingClientRect(); return [r.x - parent.x, r.y - parent.y, r.width, r.height].map(n => Math.round(n * 100) / 100); };
+      return ["subject", "legacy", "toolbar"].map(id => {
+        const scope = document.getElementById(id)!, root = scope.firstElementChild!, parent = scope.getBoundingClientRect();
+        const css = getComputedStyle(root);
+        return { id, box: rect(root, parent), role: root.getAttribute("role"), name: root.getAttribute("aria-label"),
+          roles: scope.querySelectorAll('[role="toolbar"]').length, inert: root.hasAttribute("inert"),
+          style: Object.fromEntries(["height", "min-height", "padding-top", "padding-right", "padding-bottom", "padding-left", "background-color", "box-shadow", "border-radius", "transition-duration", "transform"].map(p => [p, css.getPropertyValue(p)])),
+          actions: [...root.querySelectorAll("button")].map(el => ({ text: el.textContent, box: rect(el, parent), tab: el.getAttribute("tabindex") })),
+        };
+      });
     });
-  });
+  };
   for (const base of [false,true]) for (const full of [false,true]) for (const reverse of [false,true]) {
     const name=`${base?"base":"no-base"}-${full?"full":"selective"}-${reverse?"reverse":"forward"}`;
     const pages: Page[]=[];

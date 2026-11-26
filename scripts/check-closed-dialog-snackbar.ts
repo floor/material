@@ -15,6 +15,7 @@
  * (m3.material.io/components/dialogs/accessibility, /snackbars/guidelines).
  */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
 import type { Page } from "playwright";
@@ -30,7 +31,6 @@ const compile = (source: string): string => sass.compileString(`@use "${source}"
 const entrySource = `
 import { createDialog, createSnackbar } from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
 import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
-import { settle } from "./browser-settle";
 registerStyles({ dialog: ${JSON.stringify(compile("components/dialog"))}, snackbar: ${JSON.stringify(compile("components/snackbar"))} });
 defineAll();
 window.api = { createDialog, createSnackbar };
@@ -130,6 +130,12 @@ try {
         await mount(kind, callerAppends);
         assert.equal(await exposed(label), null, `${label} is exposed before the first ${openName}`);
         await act(openName);
+        // The open itself is a task the surface runs; wait for its own state,
+        // then for its transition to end.
+        await page.waitForFunction((kind) => {
+          const surface = document.querySelector(kind === "dialog" ? ".mtrl-dialog" : ".mtrl-snackbar");
+          return !!surface && surface.matches(kind === "dialog" ? ".mtrl-dialog--visible" : ".mtrl-snackbar--visible");
+        }, kind);
         await settle(page);
         assert.ok(await exposed(label), `${label} is not exposed once ${openName}n`);
         await act(closeName as "close" | "hide");

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createToolbar from "../src/components/toolbar";
 import type createIconButton from "../src/components/icon-button";
+import { settle } from "./browser-settle";
 
 type ShapeWindow = Window & {
   mtrl: {
@@ -30,13 +31,6 @@ const boxOf = (page: Page, id: string): Promise<{ w: number; h: number }> =>
     return { w: box.width, h: box.height };
   }, id);
 
-/** Waits for the button's spring: a morphing radius reads mid-flight otherwise. */
-const settle = (page: Page, id: string): Promise<unknown> =>
-  page.evaluate((id) => {
-    const node = document.getElementById(id) as HTMLElement;
-    const inner = (node.shadowRoot?.querySelector(".mtrl-icon-button") ?? node) as HTMLElement;
-    return Promise.all(inner.getAnimations().map((a) => a.finished.catch(() => undefined)));
-  }, id);
 
 /** The computed radius while the primary button is held down: the pressed morph. */
 const pressedRadiusOf = async (page: Page, id: string): Promise<string> => {
@@ -48,7 +42,7 @@ const pressedRadiusOf = async (page: Page, id: string): Promise<string> => {
   }, id);
   await page.mouse.move(centre.x, centre.y);
   await page.mouse.down();
-  await settle(page, id);
+  await settle(page, { target: `#${id}` }); // the button's spring: a morphing radius reads mid-flight otherwise
   const radius = await radiusOf(page, id);
   await page.mouse.up();
   await page.mouse.move(0, 0);
@@ -187,7 +181,7 @@ export async function checkToolbarItemShape(page: Page, check: (name: string) =>
   // the new radius, so let the button's animation finish before reading it).
   assert.equal(await radiusOf(page, "resized"), "28px", "the resized host starts at its size");
   await page.evaluate((id) => (document.getElementById(id) as HTMLElement).setAttribute("size", "xl"), "resized");
-  await settle(page, "resized");
+  await settle(page, { target: "#resized" }); // the resize transition has ended
   assert.equal(await radiusOf(page, "resized"), "68px", "a slotted host resized after insertion follows its new size");
   check("toolbar shape: a slotted host re-reads its size after insertion");
 

@@ -52,8 +52,18 @@ export async function checkRailHeaderFab(): Promise<void> {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     const measure = async (name: string, expanded: boolean): Promise<void> => {
-      // Both rail and FAB dimension transitions must have settled.
-      await settle(page);const m = await page.evaluate(() => {
+      // Both rail and FAB dimension transitions must have settled, and the
+      // element's own render with them: the label's box is what is read.
+      await settle(page, {
+        read: () => page.evaluate(() => {
+          const host = document.getElementById("header-fab");
+          const label = host?.shadowRoot?.querySelector<HTMLElement>(".mtrl-extended-fab__text");
+          if (!label) return "no label";
+          const box = label.getBoundingClientRect();
+          return `${box.width.toFixed(2)}x${box.height.toFixed(2)}:${getComputedStyle(label).visibility}`;
+        }),
+      });
+      const m = await page.evaluate(() => {
         const rail = window.headerRail.element;
         const host = document.getElementById("header-fab")!;
         const button = host.shadowRoot?.querySelector<HTMLElement>(".mtrl-extended-fab") ?? host;
