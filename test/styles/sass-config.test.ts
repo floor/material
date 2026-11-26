@@ -28,8 +28,9 @@ describe("public configure-once Sass", () => {
   // (styles/components/_slider.scss), a standard list's selected row,
   // divider inset and leading media changed (styles/components/_list.scss),
   // and a clickable search avatar takes the trailing buttons' reset, layer
-  // and ring, and a search bar with no trailing action ends its text 16dp
-  // from the edge (styles/components/_search.scss).
+  // and ring, and a search bar with no trailing action, its empty value's
+  // clear button included, ends its text 16dp from the edge
+  // (styles/components/_search.scss).
   // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {
