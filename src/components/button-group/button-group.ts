@@ -414,11 +414,10 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       // added or removed after the group was created.
       buttons.forEach(button => {
         if (button._groupConfig?.variant) return;
-        const config = button._groupConfig;
-        const next = config && config.text === undefined && config.icon && variant === 'text'
-          ? 'standard'
-          : variant;
-        button.setVariant(next);
+        // An item with no override keeps the group's paint, including
+        // `text`. Mapping that to the icon button's `standard` recolors a
+        // selected icon.
+        button.setVariant(variant);
       });
 
       currentVariant = variant;

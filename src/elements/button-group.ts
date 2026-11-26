@@ -25,6 +25,7 @@
  */
 
 import createButtonGroup from "../components/button-group";
+import { getComponentDefaults } from "../core/config/global";
 import type {
   ButtonGroupChangeEvent, ButtonGroupComponent, ButtonGroupConfig, ButtonGroupDensity, ButtonGroupEvent,
   ButtonGroupIconVariant, ButtonGroupItemConfig, ButtonGroupVariant,
@@ -53,6 +54,22 @@ const parse = (value: unknown, multi: boolean): string[] => {
   return multi ? all : all.slice(0, 1);
 };
 
+/** Variants an icon-only item accepts. `elevated` is not one of them. */
+const ICON_ITEM_VARIANTS = ["filled", "tonal", "outlined", "standard", "text"] as const;
+
+const iconItemVariant = (value: string | undefined): ButtonGroupIconVariant | undefined => {
+  if (!value || !(ICON_ITEM_VARIANTS as readonly string[]).includes(value)) return undefined;
+  return value as ButtonGroupIconVariant;
+};
+
+/** The width an icon button has when the item does not set one. */
+const inheritedIconWidth = (): IconButtonWidth => {
+  const configured = (getComponentDefaults as (name: string) => { width?: string } | undefined)("icon-button");
+  const width = configured?.width;
+  if (width === "narrow" || width === "default" || width === "wide") return width;
+  return "default";
+};
+
 const declaredItems = (host: HTMLElement): Item[] => {
   const itemTag = `${host.localName}-item`;
   const items: Item[] = [];
@@ -73,10 +90,11 @@ const declaredItems = (host: HTMLElement): Item[] => {
     };
     // An item with an icon and no text is an icon button, which needs a
     // name: its value stands in for a missing aria-label. Its variant is one
-    // the icon button draws; a text item keeps the button's variant.
+    // the icon button draws. `elevated` is ignored, so the group's variant
+    // stays. A text item keeps the button's variant.
     items.push(text || !icon
       ? { ...base, text, ariaLabel, variant: variant as ButtonGroupVariant | undefined }
-      : { ...base, ariaLabel: ariaLabel ?? value, variant: variant as ButtonGroupIconVariant | undefined });
+      : { ...base, ariaLabel: ariaLabel ?? value, variant: iconItemVariant(variant) });
   }
   return items;
 };
@@ -152,14 +170,19 @@ const updateGroup = (host: ElementHost<ButtonGroupComponent>, component: ButtonG
       // the one from creation.
       const recorded = button as typeof button & { _groupConfig?: { variant?: typeof item.variant } };
       if (recorded._groupConfig) recorded._groupConfig.variant = item.variant;
-      const fallback = host.getAttribute("variant") ?? "outlined";
-      const next = item.variant ?? fallback;
-      button.setVariant(!item.text && item.icon && next === "text" ? "standard" : next);
+      // Clearing the item returns to the variant the group has now, not the
+      // attribute's absence (which reads as outlined). Only an item's own
+      // `text` is drawn as `standard`.
+      const own = item.variant;
+      const next = own ?? component.getVariant();
+      button.setVariant(own && !item.text && item.icon && next === "text" ? "standard" : next);
     }
     if (item.width !== before.width) {
       const adjustable = button as typeof button & { setWidth?: (width: string) => void };
       const opted = item.width !== undefined && !item.text && !!item.icon;
-      adjustable.setWidth?.(item.width ?? "default");
+      // Clearing the item returns to the width the icon button inherited,
+      // including a global narrow, rather than the icon button's own default.
+      adjustable.setWidth?.(item.width ?? inheritedIconWidth());
       button.element.classList.toggle(`${PREFIX}-${BUTTON_GROUP_CLASSES.WIDTH}`, opted);
     }
   }
@@ -255,7 +278,10 @@ export const buttonGroupItemDeclaration = {
     "aria-label": { type: "string" },
     /**
      * Overrides the group's `variant` for this item. Omitted, the item uses
-     * the group's variant.
+     * the group's variant. A text item takes `filled`, `tonal`, `outlined`,
+     * `elevated` or `text`. An icon-only item takes `filled`, `tonal`,
+     * `outlined`, `standard` or `text` (`text` is drawn as `standard`);
+     * `elevated` is ignored.
      */
     variant: { type: "string" },
     /**
