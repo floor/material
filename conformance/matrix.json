@@ -9467,9 +9467,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "12dp",
             "url": "https://m3.material.io/components/split-button/specs",
-            "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
+            "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge inner corner size",
             "read": "2026-11-26"
           },
           "compose": {
