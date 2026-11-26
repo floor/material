@@ -1,0 +1,328 @@
+#!/usr/bin/env bun
+// scripts/conformance/measure.ts
+/**
+ * The "ours" half of a conformance table: one Playwright harness that mounts a
+ * component, applies a case (variant, size, state, density, zoom), and returns
+ * the computed style and rects of the parts it names — so a component's own
+ * script is only a list of cases.
+ *
+ * A case says what to mount (page-side, against the component's creators) and
+ * which parts to read; the harness serves the built package from `dist/` when
+ * there is one (`bun run build`), and otherwise bundles the component's source
+ * so the same script runs before a build — the JSON says which it read.
+ *
+ *   import { createConformanceHarness } from "./measure";
+ *
+ *   const harness = await createConformanceHarness({ component: "button" });
+ *   const rows = await harness.measure([
+ *     {
+ *       id: "filled/m/rest",
+ *       mount: (mtrl, host) => {
+ *         const button = mtrl.createButton({ label: "Label" });
+ *         host.append(button.element);
+ *       },
+ *       parts: [{ name: "root", selector: ".mtrl-button" }, { name: "label", selector: "span" }],
+ *     },
+ *   ]);
+ *   await harness.close();
+ *
+ * Density is the stylesheet's `--mtrl-density` variable (0, -1, -2, -3): the
+ * harness sets it on the mount root, as the pages do. Zoom is the document's
+ * `zoom`, for the cases where the property is checked under a scaled preview.
+ *
+ *   bun run scripts/conformance/measure.ts button     # the worked example
+ */
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
+
+import * as sass from "sass";
+import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright";
+
+import { directionArmsPrelude, sassOptions } from "../build-styles";
+
+const root = resolve(import.meta.dir, "..", "..");
+
+/** The computed properties a conformance row usually needs. */
+export const CONFORMANCE_PROPERTIES = [
+  "height", "width", "minHeight", "maxWidth",
+  "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+  "gap", "columnGap", "rowGap",
+  "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
+  "borderTopColor", "borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius",
+  "backgroundColor", "color", "opacity", "boxShadow", "outlineWidth", "outlineColor", "outlineOffset",
+  "fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing",
+  "transform", "transition", "cursor",
+] as const;
+
+export type ConformanceProperty = (typeof CONFORMANCE_PROPERTIES)[number];
+
+export type Part = { name: string; selector: string };
+
+export type State = "rest" | "hover" | "focus" | "pressed";
+
+export type Case = {
+  /** The row id the table uses, e.g. "filled/m/rest". */
+  id: string;
+  /** Page-side: mount the component into `host` through the module namespace. */
+  mount: (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLElement) => void;
+  /** The parts to read, relative to the mount root. */
+  parts: Part[];
+  state?: State;
+  /** The stylesheet's `--mtrl-density`: 0, -1, -2 or -3. */
+  density?: number;
+  /** `documentElement.style.zoom` for a case that checks a scaled preview. */
+  zoom?: number;
+  /** Properties to read in place of the default set. */
+  properties?: readonly string[];
+};
+
+export type PartResult = {
+  rect: { x: number; y: number; width: number; height: number };
+  style: Record<string, string>;
+};
+
+export type CaseResult = {
+  id: string;
+  state: State;
+  density: number;
+  zoom: number;
+  parts: Record<string, PartResult | null>;
+};
+
+export type Harness = {
+  source: "dist" | "src";
+  url: string;
+  measure: (cases: Case[]) => Promise<CaseResult[]>;
+  /** A raw page for a measurement the case shape does not cover. */
+  page: Page;
+  close: () => Promise<void>;
+};
+
+export type HarnessOptions = {
+  /** The `src/components/<name>` folder and the `dist/components/<name>` entry. */
+  component: string;
+  /** `chromium` (default), `webkit`, or both through `engines`. */
+  engine?: "chromium" | "webkit";
+  /** Read every engine and return the rows of each, one block per engine. */
+  engines?: ("chromium" | "webkit")[];
+  /** The viewport, 900×600 by default: enough for a dialog or a menu. */
+  viewport?: { width: number; height: number };
+};
+
+
+/** `dist/components/<name>/index.js` when it exists, else a bundle of the source. */
+const loadEntry = async (component: string): Promise<{ source: "dist" | "src"; code: string }> => {
+  const built = join(root, "dist", "components", component, "index.js");
+  if (existsSync(built) && statSync(built).size > 0) return { source: "dist", code: readFileSync(built, "utf8") };
+  const entry = resolve(root, "src", "components", component, "index.ts");
+  const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
+  if (!bundle.success) throw new Error(`bundling ${component}: ${bundle.logs.join("\n")}`);
+  return { source: "src", code: await bundle.outputs[0]!.text() };
+};
+
+/** The stylesheet the component draws with: the built one, else a compiled source sheet. */
+const loadStyles = (): string => {
+  const built = join(root, "dist", "styles.css");
+  if (existsSync(built)) return readFileSync(built, "utf8");
+  return sass.compileString(directionArmsPrelude() + readFileSync(join(root, "src/styles/main.scss"), "utf8"), sassOptions()).css;
+};
+
+/** The page: one mount root, the component's namespace on `window`. */
+const PAGE = `<!doctype html><html data-theme="baseline"><head>
+<link rel="stylesheet" href="/__styles.css">
+<style>body{margin:0;padding:24px;font-family:sans-serif}#mount{display:inline-block}</style></head>
+<body><div id="mount"></div>
+<script type="module">
+  const module = await import("/__component.js");
+  window.mtrl = module.default && typeof module.default === "object" ? { ...module, ...module.default } : { ...module };
+  window.__ready = true;
+</script></body></html>`;
+
+const serve = () =>
+  Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch(request) {
+      const path = new URL(request.url).pathname;
+      if (path === "/__styles.css") return new Response(loadStyles(), { headers: { "Content-Type": "text/css" } });
+      if (path === "/__component.js") return new Response(entryCode, { headers: { "Content-Type": "text/javascript" } });
+      return new Response(PAGE, { headers: { "Content-Type": "text/html" } });
+    },
+  });
+
+let entryCode = "";
+
+const applyState = async (page: Page, selector: string, state: State) => {
+  if (state === "hover") await page.hover(selector);
+  else if (state === "focus") await page.focus(selector);
+  else if (state === "pressed") {
+    const box = await page.locator(selector).first().boundingBox();
+    if (!box) throw new Error(`pressed: ${selector} has no box`);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+  }
+};
+
+const releaseState = async (page: Page, state: State) => {
+  if (state === "pressed") await page.mouse.up();
+  if (state !== "rest") await page.mouse.move(0, 0);
+};
+
+/**
+ * Boot one harness: a page that imports the component, and a `measure` that
+ * runs the cases. The caller closes it.
+ */
+export const createConformanceHarness = async (options: HarnessOptions): Promise<Harness> => {
+  const entry = await loadEntry(options.component);
+  entryCode = entry.code;
+  const server = serve();
+  const url = `http://127.0.0.1:${server.port}`;
+  const engines: BrowserType[] = (options.engines ?? [options.engine ?? "chromium"]).map((engine) =>
+    engine === "webkit" ? webkit : chromium,
+  );
+  const browsers: Browser[] = [];
+  const pages: Page[] = [];
+  for (const engine of engines) {
+    const browser = await engine.launch({ headless: true });
+    browsers.push(browser);
+    const page = await browser.newPage({ viewport: options.viewport ?? { width: 900, height: 600 } });
+    await page.goto(url);
+    await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+    pages.push(page);
+  }
+
+  const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
+    const rows: CaseResult[] = [];
+    for (const testCase of cases) {
+      const state = testCase.state ?? "rest";
+      // The mount is a function, so it crosses as source and is rebuilt
+      // inside the page, where the module namespace lives.
+      await page.evaluate(
+        async ({ mountSource, density, zoom }) => {
+          const host = document.querySelector<HTMLElement>("#mount")!;
+          host.replaceChildren();
+          document.documentElement.style.zoom = String(zoom);
+          if (density === null) document.documentElement.style.removeProperty("--mtrl-density");
+          else document.documentElement.style.setProperty("--mtrl-density", String(density));
+          const mtrl = (window as unknown as { mtrl: Record<string, (...args: never[]) => unknown> }).mtrl;
+          const mount = new Function("mtrl", "host", `return (${mountSource})(mtrl, host);`) as (
+            mtrl: unknown,
+            host: HTMLElement,
+          ) => void;
+          mount(mtrl, host);
+          // A mount that returns before its layout settles (a font, an image,
+          // a transition's first frame) gets two frames to commit.
+          await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        },
+        { mountSource: testCase.mount.toString(), density: testCase.density ?? null, zoom: testCase.zoom ?? 1 },
+      );
+      // The state is applied from the outside: Playwright's pointer and focus,
+      // not a simulated class.
+      try {
+        await applyState(page, testCase.parts[0]!.selector, state);
+      } catch {
+        // A part that cannot take the state is read at rest.
+      }
+      await page.waitForTimeout(120);
+      const parts = await page.evaluate(
+        ({ parts, properties }) => {
+          const root = document.querySelector<HTMLElement>("#mount")!;
+          const result: Record<string, unknown> = {};
+          for (const part of parts) {
+            const element = part.selector === ":root" ? root : root.querySelector<HTMLElement>(part.selector);
+            if (!element) {
+              result[part.name] = null;
+              continue;
+            }
+            const rect = element.getBoundingClientRect();
+            const computed = getComputedStyle(element);
+            const style: Record<string, string> = {};
+            for (const property of properties) {
+              style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
+            }
+            result[part.name] = { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, style };
+          }
+          return result;
+        },
+        { parts: testCase.parts, properties: testCase.properties ?? [...CONFORMANCE_PROPERTIES] as string[] },
+      );
+      await releaseState(page, state);
+      rows.push({
+        id: testCase.id,
+        state,
+        density: testCase.density ?? 0,
+        zoom: testCase.zoom ?? 1,
+        parts: parts as CaseResult["parts"],
+      });
+    }
+    return rows;
+  };
+
+  return {
+    source: entry.source,
+    url,
+    page: pages[0]!,
+    measure: async (cases: Case[]): Promise<CaseResult[]> => {
+      const all: CaseResult[] = [];
+      for (const page of pages) all.push(...(await measureOn(page, cases)));
+      return all;
+    },
+    close: async () => {
+      for (const browser of browsers) await browser.close();
+      server.stop(true);
+    },
+  };
+};
+
+// ── The worked example: `bun run scripts/conformance/measure.ts button` ──
+
+if (import.meta.main) {
+  const component = process.argv[2] ?? "button";
+  const harness = await createConformanceHarness({ component, engines: ["chromium"] });
+  const cases: Case[] = [
+    {
+      id: "filled/m/rest",
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label" });
+        // The factory's `label` is the accessible name; the visible text is
+        // the button's content.
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [
+        { name: "root", selector: ".mtrl-button" },
+        { name: "label", selector: "span" },
+      ],
+    },
+    {
+      id: "filled/m/hover",
+      state: "hover",
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label" });
+        // The factory's `label` is the accessible name; the visible text is
+        // the button's content.
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [{ name: "root", selector: ".mtrl-button" }, { name: "label", selector: "span" }],
+    },
+    {
+      id: "filled/m/density -2",
+      density: -2,
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label" });
+        // The factory's `label` is the accessible name; the visible text is
+        // the button's content.
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [{ name: "root", selector: ".mtrl-button" }],
+    },
+  ];
+  const rows = await harness.measure(cases);
+  console.log(JSON.stringify({ component, source: harness.source, rows }, null, 2));
+  await harness.close();
+}
