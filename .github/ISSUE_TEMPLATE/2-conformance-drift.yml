@@ -61,12 +61,29 @@ body:
     id: reference
     attributes:
       label: Which reference does material differ from?
-      description: The specification, Jetpack Compose Material 3, or both.
+      description: The specification, Jetpack Compose Material 3, or both. If the answer is "They disagree with each other", the issue is a reference conflict, and a maintainer relabels it conformance/reference-conflict.
       options:
         - m3.material.io
         - Jetpack Compose Material 3
         - Both
         - They disagree with each other
+    validations:
+      required: true
+  - type: dropdown
+    id: aspect
+    attributes:
+      label: Aspect
+      description: The aspect the difference is in. It feeds the aspect/* labels at triage.
+      options:
+        - size
+        - shape
+        - colour
+        - typography
+        - elevation
+        - motion
+        - focus
+        - density
+        - behaviour
     validations:
       required: true
   - type: input

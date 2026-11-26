@@ -67,6 +67,17 @@ bun run dev
 
 5. **Submit a pull request** - Include a detailed description of your changes and reference any related issues.
 
+### Which issue form
+
+Each kind of issue has its own form in `.github/ISSUE_TEMPLATE/`, and blank issues are off:
+
+- **Bug report** (`1-bug.yml`) — broken behaviour: a crash, wrong behaviour against the
+  documentation, a regression, a layout shift, RTL, an accessibility break.
+- **Conformance drift** (`2-conformance-drift.yml`) — a measured difference from m3.material.io or
+  Compose Material 3; the section below is about it.
+- **Feature request** (`3-feature.yml`) — a missing component, variant or option; link the
+  reference when Material 3 specifies it, and it is tracked as a gap against the references.
+
 ### Conformance drift
 
 The library follows Material 3. Where a component looks or measures unlike the specification, the

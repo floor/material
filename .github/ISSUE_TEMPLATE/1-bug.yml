@@ -54,6 +54,7 @@ body:
         - toolbar
         - tooltip
         - top-app-bar
+        - other (build, types, docs, tooling)
     validations:
       required: true
   - type: input
@@ -64,6 +65,12 @@ body:
       placeholder: 3.16.7
     validations:
       required: true
+  - type: input
+    id: last-working-version
+    attributes:
+      label: Last version that worked
+      description: Optional. The last release where this behaved correctly, when it is a regression.
+      placeholder: 3.16.6
   - type: input
     id: browser
     attributes:
@@ -83,6 +90,13 @@ body:
         3. …
     validations:
       required: true
+  - type: checkboxes
+    id: not-a-drift
+    attributes:
+      label: Not a conformance drift
+      options:
+        - label: I checked this is not a difference from the M3 spec or Compose (that is a conformance drift).
+          required: false
   - type: textarea
     id: expected
     attributes:

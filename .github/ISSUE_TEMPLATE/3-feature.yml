@@ -1,0 +1,78 @@
+name: Feature request
+description: A component, variant or option material is missing.
+title: "feature: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask for a component, variant or option material lacks. If Material 3 specifies it (on
+        m3.material.io or in Compose Material 3), link that page: it is then tracked as a gap
+        against the references. material keeps to 3.x, so new API is added as options and never
+        breaks existing code.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: The component the request is about, or a new one.
+      options:
+        - badge
+        - bottom-app-bar
+        - bottom-sheet
+        - button
+        - button-group
+        - card
+        - carousel
+        - checkbox
+        - chips
+        - datepicker
+        - dialog
+        - divider
+        - extended-fab
+        - fab
+        - fab-menu
+        - icon-button
+        - list
+        - loading-indicator
+        - menu
+        - navigation-bar
+        - navigation-drawer
+        - navigation-rail
+        - progress
+        - radios
+        - search
+        - select
+        - side-sheet
+        - slider
+        - snackbar
+        - split-button
+        - switch
+        - tabs
+        - text-field
+        - timepicker
+        - toolbar
+        - tooltip
+        - top-app-bar
+        - new component
+    validations:
+      required: true
+  - type: textarea
+    id: missing
+    attributes:
+      label: What is missing
+      description: The component, variant or option, and how it would look or behave.
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Reference
+      description: Optional. A maintainer adds conformance/api-gap when this is set.
+      placeholder: https://m3.material.io/components/… (or the Compose API)
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Why you need it, and what you do today instead.
+    validations:
+      required: true
