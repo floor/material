@@ -34,7 +34,11 @@ const mount = (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLEl
       { id: "a", value: "a", text: "Alpha" },
       { id: "b", value: "b", text: "Beta" },
     ],
-    value: checked ? "a" : "b",
+    // The measured item (the first, A) must BE the option in the case's
+    // state: selected cases check A; unselected cases check nothing, so A
+    // is genuinely unchecked and the focused one. (The earlier fixture
+    // checked B while measuring A.)
+    value: checked ? "a" : undefined,
     ...(disabled ? { disabled: true } : {}),
   });
   host.append(radios.element);
@@ -62,6 +66,38 @@ const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter))
 const harness = await createConformanceHarness({ component: "radios", engines: ["chromium"] });
 try {
   const rows = await harness.measure(chosen);
+  // The fixture asserts itself: re-mount the two canonical configs and
+  // verify the measured option (the first, A) carries the state the case
+  // named — checked in selected cases, unchecked otherwise.
+  const verify = await harness.page.evaluate(`
+    (() => {
+      const results = [];
+      const host = document.querySelector("#mount") ?? document.body;
+      for (const checked of [true, false]) {
+        host.replaceChildren();
+        const w = window;
+        const radios = w.mtrl.createRadios({
+          name: "verify",
+          options: [
+            { id: "a", value: "a", text: "Alpha" },
+            { id: "b", value: "b", text: "Beta" },
+          ],
+          value: checked ? "a" : undefined,
+        });
+        host.append(radios.element);
+        const first = document.querySelector(".mtrl-radios__item .mtrl-radios__input");
+        const firstItem = document.querySelector(".mtrl-radios__item");
+        results.push({ checked, firstIsChecked: first?.checked ?? null, firstHasCheckedClass: firstItem?.className.includes("checked") ?? null });
+      }
+      host.replaceChildren();
+      return results;
+    })()
+  `) as Array<{ checked: boolean; firstIsChecked: boolean | null; firstHasCheckedClass: boolean | null }>;
+  for (const entry of verify) {
+    if (entry.firstIsChecked !== entry.checked) {
+      throw new Error(`fixture: the measured option A reads checked=${entry.firstIsChecked} in a ${entry.checked ? "selected" : "unselected"} case`);
+    }
+  }
   console.log(JSON.stringify({ component: "radios", source: harness.source, rows }, null, 2));
 } finally {
   await harness.close();
