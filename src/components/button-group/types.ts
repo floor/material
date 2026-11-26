@@ -127,12 +127,6 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
   value?: string;
 
   /**
-   * This item's variant. Omitted, the group's variant is used. On an
-   * icon-only item, `text` is the icon button's `standard`.
-   */
-  variant?: ButtonGroupVariant;
-
-  /**
    * Icon-only items: the icon button's width, `narrow`, `default` or `wide`
    * (m3.material.io icon buttons, specs, read 2026-11-26). A text item
    * ignores it. The group's size still sets the height.
@@ -166,9 +160,25 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
  * it on text items too is over-broad -- it would make 67 call sites in this
  * component's own tests pass a label that duplicates the text.
  */
+/**
+ * An icon-only item's variant. The icon button draws `filled`, `tonal`,
+ * `outlined` and `standard`. `text` is drawn as `standard`. `elevated` is a
+ * text button's variant and is not accepted on an icon-only item.
+ */
+export type ButtonGroupIconVariant = Exclude<ButtonGroupVariant, "elevated">;
+
 export type ButtonGroupItemConfig =
-  | (ButtonGroupItemBase & { text: string })
-  | (ButtonGroupItemBase & { text?: undefined; ariaLabel: string });
+  | (ButtonGroupItemBase & {
+      text: string;
+      /** This item's variant. Omitted, the group's variant is used. */
+      variant?: ButtonGroupVariant;
+    })
+  | (ButtonGroupItemBase & {
+      text?: undefined;
+      ariaLabel: string;
+      /** See {@link ButtonGroupIconVariant}. Omitted, the group's variant is used. */
+      variant?: ButtonGroupIconVariant;
+    });
 
 export interface ButtonGroupConfig {
   /**

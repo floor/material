@@ -3,22 +3,26 @@
 // read 2026-11-26.
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { JSDOM } from "jsdom";
+import { clearGlobalDefaults, setComponentDefaults } from "../../../src/core/config/global";
 
 let dom: JSDOM;
 
 beforeEach(() => {
   dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", { url: "http://localhost" });
-  (global as unknown as { document: Document }).document = dom.window.document;
-  (global as unknown as { window: Window }).window = dom.window;
-  (global as unknown as { HTMLElement: typeof HTMLElement }).HTMLElement = dom.window.HTMLElement;
-  (global as unknown as { Element: typeof Element }).Element = dom.window.Element;
-  (global as unknown as { Node: typeof Node }).Node = dom.window.Node;
-  (global as unknown as { Event: typeof Event }).Event = dom.window.Event;
-  (global as unknown as { MouseEvent: typeof MouseEvent }).MouseEvent = dom.window.MouseEvent;
-  (global as unknown as { customElements: CustomElementRegistry }).customElements = dom.window.customElements;
+  const g = globalThis as unknown as Record<string, unknown>;
+  g.document = dom.window.document;
+  g.window = dom.window;
+  g.HTMLElement = dom.window.HTMLElement;
+  g.Element = dom.window.Element;
+  g.Node = dom.window.Node;
+  g.Event = dom.window.Event;
+  g.MouseEvent = dom.window.MouseEvent;
+  g.MutationObserver = dom.window.MutationObserver;
+  g.customElements = dom.window.customElements;
 });
 
 afterEach(() => {
+  clearGlobalDefaults();
   dom.window.close();
 });
 
@@ -53,6 +57,25 @@ describe("button group item variant and width", () => {
     expect(group.buttons[2].getVariant()).toBe("outlined");
   });
 
+  it("keeps an inherited icon-button width, and marks only an item that sets width", () => {
+    (setComponentDefaults as (name: string, config: { width: string }) => void)("icon-button", { width: "narrow" });
+    const group = createButtonGroup({
+      size: "xl",
+      buttons: [
+        { icon: ICON, ariaLabel: "Inherited" },
+        { icon: ICON, ariaLabel: "Chosen", width: "wide" },
+        { icon: ICON, ariaLabel: "Classed", class: "mtrl-icon-button--wide" },
+      ],
+    });
+    const [inherited, chosen, classed] = group.buttons.map((button) => button.element);
+    expect(inherited.classList.contains("mtrl-icon-button--narrow")).toBe(true);
+    expect(inherited.classList.contains("mtrl-button-group__width")).toBe(false);
+    expect(chosen.classList.contains("mtrl-icon-button--wide")).toBe(true);
+    expect(chosen.classList.contains("mtrl-button-group__width")).toBe(true);
+    expect(classed.classList.contains("mtrl-icon-button--wide")).toBe(true);
+    expect(classed.classList.contains("mtrl-button-group__width")).toBe(false);
+  });
+
   it("reads variant and width from the item element", async () => {
     defineButtonGroup();
     const host = document.createElement("m-button-group");
@@ -77,5 +100,19 @@ describe("button group item variant and width", () => {
     expect(centre.classList.contains("mtrl-button--filled")).toBe(true);
     expect(right.classList.contains("mtrl-icon-button--tonal")).toBe(true);
     expect(right.classList.contains("mtrl-icon-button--narrow")).toBe(true);
+
+    // Adding a variant and removing one, then changing the host, follows the
+    // overrides that are there now. The first item's new filled stays. The
+    // cleared centre takes the host's outlined, and so does the item that
+    // never set one. A stale creation override would leave the centre filled.
+    const items = [...host.children];
+    items[0].setAttribute("variant", "filled");
+    items[1].removeAttribute("variant");
+    host.setAttribute("variant", "outlined");
+    await Promise.resolve();
+    const again = [...root.children];
+    expect(again[0].classList.contains("mtrl-icon-button--filled")).toBe(true);
+    expect(again[1].classList.contains("mtrl-button--outlined")).toBe(true);
+    expect(again[2].classList.contains("mtrl-icon-button--outlined")).toBe(true);
   });
 });

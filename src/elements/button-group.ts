@@ -27,9 +27,11 @@
 import createButtonGroup from "../components/button-group";
 import type {
   ButtonGroupChangeEvent, ButtonGroupComponent, ButtonGroupConfig, ButtonGroupDensity, ButtonGroupEvent,
-  ButtonGroupItemConfig, ButtonGroupVariant,
+  ButtonGroupIconVariant, ButtonGroupItemConfig, ButtonGroupVariant,
 } from "../components/button-group/types";
+import { BUTTON_GROUP_CLASSES } from "../components/button-group/constants";
 import type { IconButtonWidth } from "../components/icon-button/constants";
+import { PREFIX } from "../core/config";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
@@ -60,18 +62,21 @@ const declaredItems = (host: HTMLElement): Item[] => {
     const icon = child.getAttribute("icon") ?? undefined;
     const ariaLabel = child.getAttribute("aria-label") ?? undefined;
     const value = child.getAttribute("value") ?? (text || ariaLabel || String(items.length));
+    const variant = child.getAttribute("variant") ?? undefined;
     const base = {
       value,
       icon,
-      variant: (child.getAttribute("variant") ?? undefined) as ButtonGroupVariant | undefined,
       width: (child.getAttribute("width") ?? undefined) as IconButtonWidth | undefined,
       selectedIcon: child.getAttribute("selected-icon") ?? undefined,
       disabled: child.hasAttribute("disabled"),
       selected: child.hasAttribute("selected"),
     };
     // An item with an icon and no text is an icon button, which needs a
-    // name: its value stands in for a missing aria-label.
-    items.push(text || !icon ? { ...base, text, ariaLabel } : { ...base, ariaLabel: ariaLabel ?? value });
+    // name: its value stands in for a missing aria-label. Its variant is one
+    // the icon button draws; a text item keeps the button's variant.
+    items.push(text || !icon
+      ? { ...base, text, ariaLabel, variant: variant as ButtonGroupVariant | undefined }
+      : { ...base, ariaLabel: ariaLabel ?? value, variant: variant as ButtonGroupIconVariant | undefined });
   }
   return items;
 };
@@ -142,13 +147,20 @@ const updateGroup = (host: ElementHost<ButtonGroupComponent>, component: ButtonG
     if (item.icon !== before.icon) button.setIcon(item.icon ?? "");
     if (item.ariaLabel !== undefined && item.ariaLabel !== before.ariaLabel) button.setAriaLabel(item.ariaLabel);
     if (item.variant !== before.variant) {
+      // The group's setVariant reads this flag. It has to be the override
+      // the item has now, or a later change of the host variant restores
+      // the one from creation.
+      const recorded = button as typeof button & { _groupConfig?: { variant?: typeof item.variant } };
+      if (recorded._groupConfig) recorded._groupConfig.variant = item.variant;
       const fallback = host.getAttribute("variant") ?? "outlined";
       const next = item.variant ?? fallback;
       button.setVariant(!item.text && item.icon && next === "text" ? "standard" : next);
     }
     if (item.width !== before.width) {
       const adjustable = button as typeof button & { setWidth?: (width: string) => void };
+      const opted = item.width !== undefined && !item.text && !!item.icon;
       adjustable.setWidth?.(item.width ?? "default");
+      button.element.classList.toggle(`${PREFIX}-${BUTTON_GROUP_CLASSES.WIDTH}`, opted);
     }
   }
   applied.set(host, items);
