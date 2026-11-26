@@ -17,6 +17,25 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.7] - 2026-11-26
+
+Menus and selects keep their items in view, hidden bottom app bars stay out of the Tab order, and keyboard focus is clearer across the library.
+
+### Fixed
+
+- **Select when the popup flips above the field.** The selected option was scrolled before the menu settled. In Chromium and WebKit, the second option landed at y −197–−153, above a popup spanning y 215–495. The select now scrolls using the option’s layout position, putting it at y 265–309 inside the same popup for both filled and outlined fields ([#485](https://github.com/floor/material/pull/485)).
+- **Hidden bottom app bar.** At 300 px of page scroll, Tab from the preceding control used to focus the first off-screen action. The bar now makes its actions inert while hidden, so Tab reaches the following control. At scroll 0, the actions are reachable again ([#489](https://github.com/floor/material/pull/489)).
+- **Hidden toolbar-based bottom app bar.** At 41 px of scroll, Tab used to enter the hidden opt-in bar. With the fix, scrolling from 30 to 41 to 20 px sends Tab to the bar action, then the following control, then back to the bar action from the same starting control ([#491](https://github.com/floor/material/pull/491)).
+- **Keyboard focus rings.** The browser inventory found 41 rows with differing ring styles across light and dark themes. All 41 now draw a 3 dp Secondary ring at the control’s prescribed offset. The expanded Search input and the trailing avatar also gain a ring ([#490](https://github.com/floor/material/pull/490)).
+- **Menus in scrolling or positioned containers.** A scrolling container could clip 125 px of the menu, and opening it could move an ancestor’s scroll position from 120 to 40 px. In a positioned host, the menu could land 371 px off at 0.5 zoom. The menu now uses the space visible through the container and aligns with its opener even under zoom. The ancestor stays at 120 px in the same check, and End reveals the whole last item by scrolling the menu’s own list, including at 0.7 zoom ([#487](https://github.com/floor/material/pull/487), including [#472](https://github.com/floor/material/pull/472)).
+- **Search avatar button.** Inside `<m-search>`, a clickable avatar had a 2 px outset border, a grey fill and browser padding. It now rests transparent with zero border and padding. In both render paths it uses the trailing buttons’ 8% hover and 10% focus and press layers, plus a 3 px Secondary keyboard focus ring set 2 px outside the button ([#492](https://github.com/floor/material/pull/492)).
+
+The push-to-main package job measured **923,177 B** compressed,
+**5,258,247 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **1,346 B** (about 1.3 KB) from
+3.16.6 ([run 45866092028](https://github.com/floor/material/actions/runs/45866092028/job/140069674394)).
+
 ## [3.16.6] - 2026-11-26
 
 Menus, selects and carousel drags follow the page zoom, time pickers with seconds fit their fields, icon buttons keep their round shape, and tall dialogs scroll within small windows.
@@ -7460,7 +7479,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.6...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.7...HEAD
+[3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
 [3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
 [3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5
 [3.16.4]: https://github.com/floor/material/compare/v3.16.3...v3.16.4
