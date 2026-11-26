@@ -1041,7 +1041,8 @@ goes through review and testing by agents from a different lab than its author, 
 - A confirmed defect ships with the check that reproduces it, in a patch release.
 - There is no response-time commitment.
 
-To contribute, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+The commitments behind that are in [CHARTER.md](CHARTER.md). To contribute, see
+[CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## Contributing
 
