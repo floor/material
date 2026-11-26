@@ -74,6 +74,27 @@ describe("opt-in bottom app bar toolbar", () => {
     expect(events).toEqual([]);
   });
 
+  test("hide and auto-hide leave the bar inert until it is shown", () => {
+    const bar = make({ autoHide: true });
+    expect(bar.element.hasAttribute("inert")).toBe(false);
+    expect(bar.hide()).toBe(bar);
+    expect(bar.element.hasAttribute("inert")).toBe(true);
+    bar.hide();
+    expect(bar.element.hasAttribute("inert")).toBe(true);
+    expect(bar.show()).toBe(bar);
+    expect(bar.element.hasAttribute("inert")).toBe(false);
+    bar.show();
+    expect(bar.element.hasAttribute("inert")).toBe(false);
+    scroll(41);
+    expect(bar.isVisible()).toBe(false);
+    expect(bar.element.hasAttribute("inert")).toBe(true);
+    scroll(31);
+    expect(bar.element.hasAttribute("inert")).toBe(true);
+    scroll(20);
+    expect(bar.isVisible()).toBe(true);
+    expect(bar.element.hasAttribute("inert")).toBe(false);
+  });
+
   test("uses the legacy per-event strict 10px threshold, reversal and cleanup", () => {
     const states: boolean[] = [];
     const bar = make({ autoHide: true, transitionDuration: 123, onVisibilityChange: v => states.push(v) });
