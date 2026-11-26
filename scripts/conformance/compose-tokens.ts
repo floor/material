@@ -95,7 +95,7 @@ const parseTokens = (path: string, file: string): Token[] => {
   return tokens;
 };
 
-const index = (version: string) => {
+const index = () => {
   const files = tokenFiles();
   const byName = new Map<string, Token[]>();
   for (const file of files) {
@@ -223,7 +223,7 @@ const component = args.find((arg) => !arg.startsWith("--")) ?? "";
 
 const version = readVersion();
 tokensDir = existsSync(join(library, version)) ? tokenDir(version) : library;
-const lookupIndex = index(version);
+const lookupIndex = index();
 const lookup: Lookup = { tokens: new Map([...lookupIndex.byName].map(([file, tokens]) => [file, new Map(tokens.map((token) => [token.name, token]))])) };
 const wanted = (file: string): boolean => {
   if (only?.length) return only.includes(file.replace(/\.kt$/, ""));
