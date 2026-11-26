@@ -299,9 +299,19 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
 // 48dp tap targets around 24dp icons (they were 24dp buttons), with
 // state layers in their icon colour and md.comp.focus-ring.
+//
+// A clickable avatar is a button too, and the page's reset never reaches it:
+// the page styles buttons globally (src/styles/base/_reset.scss), which is
+// why the factory's avatar looked right, while `<m-search>` paints into a
+// shadow root that carries this stylesheet alone — so its avatar kept the UA
+// button's 2px outset border, grey fill and 1/6/1/6 padding. The avatar is a
+// trailing element of the bar (m3.material.io/m3/pages/search/specs, read
+// 2026-11-26: "Trailing icon and avatar (optional)", avatar 30dp), so it takes
+// the same reset, state layers and focus ring as the other trailing buttons.
 .#{$component}__leading-icon,
 .#{$component}__clear-button,
-.#{$component}__trailing-icon {
+.#{$component}__trailing-icon,
+button.#{$component}__avatar {
     --#{$component}-layer: 0%;
     display: flex;
     align-items: center;
@@ -313,17 +323,12 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     padding: 0;
     border: none;
     border-radius: 50%;
+    appearance: none;
     // A shadow root does not get the page's font reset.
     font: inherit;
     background-color: color-mix(in srgb, currentColor var(--#{$component}-layer), transparent);
     cursor: pointer;
     transition: background-color $transition-duration $transition-easing;
-
-    svg {
-        width: $icon-size;
-        height: $icon-size;
-        fill: currentColor;
-    }
 
     &:hover { --#{$component}-layer: 8%; }
     &:focus-visible, &:active { --#{$component}-layer: 10%; }
@@ -337,12 +342,22 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     }
 }
 
+// The glyphs are 24dp; the avatar's child keeps the 30dp the rule below gives it.
+.#{$component}__leading-icon svg,
+.#{$component}__clear-button svg,
+.#{$component}__trailing-icon svg {
+    width: $icon-size;
+    height: $icon-size;
+    fill: currentColor;
+}
+
 .#{$component}__leading-icon {
     color: t.color("on-surface");
 }
 
 .#{$component}__clear-button,
-.#{$component}__trailing-icon {
+.#{$component}__trailing-icon,
+button.#{$component}__avatar {
     color: t.color("on-surface-variant");
 }
 

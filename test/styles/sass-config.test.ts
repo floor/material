@@ -22,8 +22,10 @@ describe("public configure-once Sass", () => {
   });
 
   // main moved because the slider's pressed handle joins the 2px width rule
-  // (styles/components/_slider.scss) and a standard list's selected row,
-  // divider inset and leading media changed (styles/components/_list.scss).
+  // (styles/components/_slider.scss), a standard list's selected row,
+  // divider inset and leading media changed (styles/components/_list.scss),
+  // and a clickable search avatar takes the trailing buttons' reset, layer
+  // and ring (styles/components/_search.scss).
   // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {

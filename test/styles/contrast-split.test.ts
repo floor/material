@@ -357,9 +357,12 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_timepicker.scss).
     // A dialog taller than a small window scrolls its content with the
     // headline in view (+240 B; styles/components/_dialog.scss).
+    // A clickable search avatar joins the trailing buttons' rule, so a button
+    // in either tree is reset and takes their layer and ring (+299 B;
+    // styles/components/_search.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b295844be147868661c603b8503d9552c981441d5e3ce7805fb21d75fd2539f5",
-      length: 554338,
+      sha256: "f37982e59a8104523f96b81a61c3e332a5591add7476ae78794a1dc75474a86a",
+      length: 554637,
     });
   });
 
