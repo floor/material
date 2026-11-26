@@ -14,7 +14,7 @@ type Config = {
 const mount: Case["mount"] = (mtrl, host, data) => {
   const { type, direction, scrolled, noLeading, keepHeight } = data as Config;
   const page = window as Window & { measuredAppBar?: AppBarComponent };
-  page.measuredAppBar?.lifecycle.destroy();
+  page.measuredAppBar?.destroy();
   document.documentElement.dir = direction;
   host.style.width = "min(624px,calc(100vw - 48px))";
   const factory = mtrl.createAppBar as unknown as (config: AppBarConfig) => AppBarComponent;
