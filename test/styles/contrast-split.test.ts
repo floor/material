@@ -357,9 +357,13 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_timepicker.scss).
     // A dialog taller than a small window scrolls its content with the
     // headline in view (+240 B; styles/components/_dialog.scss).
+    // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
+    // where the control is clipped. The snackbar close stays 2px in
+    // inverse-on-surface (styles/abstract/_mixins.scss and the component
+    // sheets; styles/components/_snackbar.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "b295844be147868661c603b8503d9552c981441d5e3ce7805fb21d75fd2539f5",
-      length: 554338,
+      sha256: "45e35d1502c8dd54d7f9c8f5082c480f13637971ec82e54fab74d75637e9e07c",
+      length: 554607,
     });
   });
 

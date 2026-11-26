@@ -112,7 +112,7 @@ $component: "#{base.$prefix}-list";
     }
     &:hover:not(:disabled)::before { opacity: v.state("hover-state-layer-opacity"); }
     &:active:not(:disabled)::before { opacity: v.state("pressed-state-layer-opacity"); }
-    &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: -2px; }
+    &:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
     &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
     &:disabled { cursor: default; }
   }
@@ -124,7 +124,7 @@ $component: "#{base.$prefix}-list";
     &::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: t.color("on-surface"); opacity: 0; }
     &:hover:not(.#{$component}__item--disabled)::before { opacity: v.state("hover-state-layer-opacity"); }
     &:active:not(.#{$component}__item--disabled)::before { opacity: v.state("pressed-state-layer-opacity"); }
-    &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: -2px; }
+    &:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
     &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
     &.#{$component}__item--disabled { cursor: default; }
   }
