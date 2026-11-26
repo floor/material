@@ -18,7 +18,7 @@ these rows drift from a fresh measurement.
 | --- | ---: | ---: | ---: | ---: |
 | core | 7.7 KB | 3.0 KB | — |  |
 | badge | 15.4 KB | 5.3 KB | +2.2 KB |  |
-| bottom-app-bar | 11.1 KB | 4.1 KB | +1.1 KB |  |
+| bottom-app-bar | 11.2 KB | 4.2 KB | +1.1 KB |  |
 | bottom-sheet | 21.5 KB | 8.1 KB | +5.0 KB |  |
 | side-sheet | 17.8 KB | 6.6 KB | +3.5 KB |  |
 | button | 21.6 KB | 7.5 KB | +4.4 KB | +6.9 KB |
@@ -54,5 +54,5 @@ these rows drift from a fresh measurement.
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
 | tooltip | 17.9 KB | 6.3 KB | +3.3 KB |  |
 | toolbar | 33.1 KB | 11.2 KB | +8.2 KB | +6.9 KB |
-| all | 407.3 KB | 129.4 KB | +126.3 KB | +2.1 KB |
+| all | 407.4 KB | 129.4 KB | +126.4 KB | +2.1 KB |
 <!-- /size-table -->
