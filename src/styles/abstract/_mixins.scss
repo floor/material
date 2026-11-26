@@ -241,12 +241,23 @@ $sheet-overshoot-guard: 32px;
   transition: $transitions;
 }
 
-// Focus Ring
-@mixin focus-ring($color: var(--#{v.$prefix}-sys-color-primary), $width: 2px, $offset: 2px) {
-  &:focus-visible {
+// Keyboard focus indicator. m3.material.io foundations/interaction/states/
+// applying-states, "Keyboard focus indicator", read 2026-11-26: the ring
+// shows where keyboard focus is. It is 3px, in Secondary, 2px outside the
+// control. A negative $offset draws the stroke inside the edge.
+// $wrap keeps the card's call: the ring and its elevation sit on
+// :focus-visible. A rule that is already the focus selector, or that paints
+// a pseudo, passes $wrap: false and gets only the outline.
+@mixin focus-ring($color: var(--#{v.$prefix}-sys-color-secondary), $width: 3px, $offset: 2px, $wrap: true) {
+  @if $wrap {
+    &:focus-visible {
+      outline: $width solid $color;
+      outline-offset: $offset;
+      @include elevation(1);
+    }
+  } @else {
     outline: $width solid $color;
     outline-offset: $offset;
-    @include elevation(1);
   }
 }
 
