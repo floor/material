@@ -69,6 +69,9 @@ type CaseConfig = {
   position: "bottom-start" | "top-start";
   /** Mount to the body (no container) instead of into the scroller. */
   body?: boolean;
+  /** The scroller's border and zoom, for the scrollport's own box. */
+  border?: number;
+  zoom?: number;
 };
 
 type Measured = {
@@ -95,6 +98,8 @@ const runCase = (page: Page, config: CaseConfig) =>
     scroller.id = "scroller";
     scroller.style.top = `${options.scrollerTop}px`;
     scroller.style.height = `${options.scrollerHeight}px`;
+    if (options.border) scroller.style.border = `${options.border}px solid #333`;
+    if (options.zoom && options.zoom !== 1) scroller.style.zoom = String(options.zoom);
     const content = document.createElement("div");
     content.id = "content";
     const opener = document.createElement("button");
@@ -127,6 +132,8 @@ const runCase = (page: Page, config: CaseConfig) =>
     const menuRect = menu.element.getBoundingClientRect();
     const openerRect = opener.getBoundingClientRect();
     const port = scroller.getBoundingClientRect();
+    const clientTop = port.top + scroller.clientTop;
+    const clientBottom = clientTop + scroller.clientHeight;
     return {
       scrollTopBefore: before,
       scrollTopAfterFocus: after,
@@ -134,9 +141,11 @@ const runCase = (page: Page, config: CaseConfig) =>
       side: menu.element.className.includes("position-top") ? "top" : "bottom",
       opener: { top: openerRect.top, bottom: openerRect.bottom },
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      port: { top: port.top, bottom: port.bottom, left: port.left, right: port.right },
+      port: { top: clientTop, bottom: clientBottom, left: port.left, right: port.right },
     } as Measured;
   }, config);
+
+const testCaseLayer = (layer: string) => `long menu ${layer}`;
 
 const run = async (browser: Browser, engine: string) => {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -157,6 +166,13 @@ const run = async (browser: Browser, engine: string) => {
   // The scroller whose top is inside the window and whose end is too: the
   // roomier side is below, inside the window.
   cases.push({ id: "container deep scroller bottom-start scrollTop=120 opener=380", scrollerTop: 260, scrollerHeight: 500, openerTop: 380, scrollTop: 120, position: "bottom-start" });
+  // The scrollport's own box: a border is not room, and a zoomed scroller's
+  // client box is not its rect.
+  for (const border of [12]) {
+    cases.push({ id: `container top-start scrollTop=120 opener=380 border=${border}`, scrollerTop: 100, scrollerHeight: 400, openerTop: 380, scrollTop: 120, position: "top-start", border });
+  }
+  cases.push({ id: "container top-start scrollTop=120 opener=380 zoom=0.7", scrollerTop: 100, scrollerHeight: 400, openerTop: 380, scrollTop: 120, position: "top-start", zoom: 0.7 });
+
   // The control: the same geometry with the menu in the body, which the
   // scroller cannot clip.
   for (const scrollTop of [0, 120]) {
@@ -185,8 +201,64 @@ const run = async (browser: Browser, engine: string) => {
     }
     rows.push(`${testCase.id} menu ${measured.menu.top.toFixed(0)}..${measured.menu.bottom.toFixed(0)} scroll ${measured.scrollTopBefore}->${measured.scrollTopAfterFocus}`);
   }
+  // The keyboard reveal: End on a 25-item menu scrolls the menu's own list,
+  // in every layer, until the last item is whole inside it.
+  for (const layer of ["body", "top", "container"] as const) {
+    const reveal = await page.evaluate(async (name) => {
+      document.querySelectorAll("#scroller").forEach((node) => node.remove());
+      document.querySelectorAll(".mtrl-menu").forEach((node) => node.remove());
+      let host: HTMLElement = document.body;
+      if (name === "container") {
+        const scroller = document.createElement("div");
+        scroller.id = "scroller";
+        scroller.style.top = "100px";
+        scroller.style.height = "400px";
+        const content = document.createElement("div");
+        content.id = "content";
+        scroller.append(content);
+        document.body.append(scroller);
+        host = content;
+      }
+      const opener = document.createElement("button");
+      opener.id = "opener";
+      opener.textContent = "Open";
+      opener.style.cssText = "position:absolute;left:24px;top:120px;width:120px;height:32px";
+      host.append(opener);
+      const create = (window as unknown as { mtrl: { createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: (event?: Event, kind?: string) => void } } }).mtrl.createMenu;
+      const menu = create({
+        opener,
+        position: "bottom-start",
+        offset: 8,
+        // A long list has to be capped to overflow; a short window does it.
+        layer: name === "top" ? "top" : undefined,
+        container: name === "container" ? host.parentElement : undefined,
+        items: Array.from({ length: 25 }, (_, index) => ({ text: `Item ${index + 1}` })),
+      });
+      menu.open(undefined, "keyboard");
+      await new Promise((done) => setTimeout(done, 450));
+      (document.activeElement as HTMLElement | null)?.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
+      await new Promise((done) => setTimeout(done, 200));
+      const list = menu.element.querySelector<HTMLElement>(".mtrl-menu__list");
+      const items = menu.element.querySelectorAll<HTMLElement>(".mtrl-menu__item");
+      const last = items[items.length - 1];
+      const listRect = (list ?? menu.element).getBoundingClientRect();
+      const lastRect = last.getBoundingClientRect();
+      return {
+        scrollTop: list?.scrollTop ?? 0,
+        lastTop: lastRect.top,
+        lastBottom: lastRect.bottom,
+        listTop: listRect.top,
+        listBottom: listRect.bottom,
+      };
+    }, layer);
+    if (!(reveal.scrollTop > 0)) failures.push(`${testCaseLayer(layer)}: End scrolls the menu's own list (scrollTop stays ${reveal.scrollTop})`);
+    if (!(reveal.lastTop >= reveal.listTop - 0.5 && reveal.lastBottom <= reveal.listBottom + 0.5)) {
+      failures.push(`${testCaseLayer(layer)}: the last item is whole in the list after End (item ${reveal.lastTop.toFixed(1)}..${reveal.lastBottom.toFixed(1)}, list ${reveal.listTop.toFixed(1)}..${reveal.listBottom.toFixed(1)})`);
+    }
+    rows.push(`${testCaseLayer(layer)} last item ${reveal.lastTop.toFixed(0)}..${reveal.lastBottom.toFixed(0)} in list ${reveal.listTop.toFixed(0)}..${reveal.listBottom.toFixed(0)} scrollTop ${reveal.scrollTop}`);
+  }
   await page.close();
-  assert.deepEqual(failures, [], `${engine}: a menu in a container is placed where it can be seen, and focus does not scroll it onto its opener`);
+  assert.deepEqual(failures, [], `${engine}: a menu in a container is placed where it can be seen, focus does not scroll it onto its opener, and End reveals the last item in every layer`);
   return { engine, rows };
 };
 
