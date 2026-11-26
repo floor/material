@@ -111,8 +111,14 @@ type Lookup = { tokens: Map<string, Map<string, Token>> };
 const tokenOf = (lookup: Lookup, object: string, name: string): Token | undefined =>
   lookup.tokens.get(object)?.get(name);
 
-/** `Color(red = 103, green = 80, blue = 164)` as #6750A4. */
+/**
+ * A palette colour as #RRGGBB. The palette writes both forms: the 1.4.0
+ * release files spell it `Color(red = 103, green = 80, blue = 164)`, the
+ * androidx-main files `Color(0xFF6750A4)`.
+ */
 const colorHex = (raw: string): string | null => {
+  const packed = /Color\(0x[Ff]{2}([0-9A-Fa-f]{6})\)/.exec(raw);
+  if (packed) return `#${packed[1]!.toUpperCase()}`;
   const match = /Color\(red = (\d+), green = (\d+), blue = (\d+)/.exec(raw);
   if (!match) return null;
   const hex = (value: string) => Number(value).toString(16).padStart(2, "0");
