@@ -113,9 +113,28 @@ element with `Bun.build`, compiles the styles with Sass, serves one page with `B
 it with Playwright and asserts on measured values. Copy `scripts/check-divider-sheet-conformance.ts`:
 it shows the virtual entry for `Bun.build`, `compileString` with `src/styles` on the load path,
 `launchChromium` from `scripts/browser-profile.ts` (which keeps the browser profile inside the
-worktree) and the per-case assertions. When the defect needs a second engine, launch `webkit`
-from Playwright the way `scripts/check-dialog-small-viewport.ts` does and run the same function
-twice.
+worktree) and the per-case assertions.
+
+`launchChromium` is Chromium only. For a second engine, launch `webkit` from Playwright the way
+`scripts/check-dialog-small-viewport.ts` does, and run the same function twice:
+
+```ts
+import { webkit, type Browser } from "playwright";
+
+let browser: Browser | null = null;
+try { browser = await webkit.launch({ headless: true }); }
+catch { console.log("<what>: WebKit not installed here, skipped"); }
+if (browser) { try { await run(browser, "webkit"); } finally { await browser.close(); } }
+```
+
+```console
+$ bunx playwright install webkit   # nothing is printed when it is already installed
+```
+
+Reduced motion does not stop a CSS transition — it only changes what the stylesheet does — so a
+check that reads a value mid-transition reads the wrong one. Wait for the settled state before
+measuring: `await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished))`, or poll
+the computed value until two readings agree, as `scripts/check-search-avatar.ts` does.
 
 End the file with one sentence saying it passed, so the last line is the verdict:
 
@@ -133,7 +152,20 @@ scripts/check-menu-container-space.ts"`, add that script to a `browser` group's 
 `test/build/ci-commands.test.ts` (the test fails when CI stops running a command). Choose the
 group by area when a fitting one exists — `components-a`/`components-b` for factories,
 `elements-a`/`elements-b` for the elements, `shadow-styles` for the styles — and give a slow
-check a group of its own, because a run takes as long as its slowest group.
+check a group of its own, because a run takes as long as its slowest group. The group's
+`browsers:` field picks the engines CI installs and runs: a check that launches WebKit needs a
+group whose field lists it (`chromium firefox webkit`, as `listbox` has, or `firefox webkit`, as
+`ssr-b` has), or `webkit` added to that group's field.
+
+A check writes no temporary file under `scripts/`. Build its entry in memory with `Bun.build`, as
+`scripts/check-divider-sheet-conformance.ts` does with a virtual entry, and clean up anything it
+does write.
+
+To mount a custom element with its shadow stylesheets, register the sheets and define the element
+from the page, as `scripts/search-avatar-entry.ts` does: it exposes `registerStyles` and
+`defineSearch` on the window, and the page calls `registerStyles(sheets)` with the compiled
+component and `ripple` CSS before `defineSearch()`. `scripts/check-search-avatar.ts` is the whole
+pattern, for both a factory and an element.
 
 ## Conformance measurements
 
@@ -218,7 +250,9 @@ prefix orders it within its section.
 
 **One rule:** raise a ceiling only when a measurement is over it, to the measured value plus at
 least 10 B, rounded up to the next 10 — and state the figure in the pull request. Nothing else
-raises a ceiling.
+raises a ceiling. The ceiling tracks the measurement in both directions: when a later change
+measures lower than the figure its ceiling was set from, the ceiling comes down to the new
+measured value plus at least 10 B in the same commit.
 
 **Take the figure from CI, not from here.** The packer's output depends on its Node and npm; the
 package job prints the authoritative figure. To reproduce it locally:
