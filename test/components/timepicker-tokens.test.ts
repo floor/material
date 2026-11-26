@@ -134,10 +134,11 @@ describe("clock dial colour roles, now styled (the canvas is gone)", () => {
 
 // The sizes and colours of each variant, and no overrides of the theme.
 describe("time picker variants", () => {
-  test("the input mode's focused field is primary-container inside a 2dp primary outline", () => {
+  test("the input mode's focused field is primary-container inside the shared focus ring", () => {
     const rule = /__seconds\[type=number\]:focus \{([^}]*)\}/.exec(css)?.[1] ?? "";
     expect(rule).toContain("background-color: var(--mtrl-sys-color-primary-container)");
-    expect(rule).toContain("outline: 2px solid var(--mtrl-sys-color-primary)");
+    expect(rule).toContain("outline: 3px solid var(--mtrl-sys-color-secondary)");
+    expect(rule).toContain("outline-offset: -3px");
   });
 
   test("AM/PM is 52x80dp with an outline, and unselected is transparent", () => {
