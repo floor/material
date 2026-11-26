@@ -86,6 +86,15 @@ export const createPositioner = (
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
+    // The space the menu is written in, decided before anything is measured in
+    // it: a container's scrollport, or the menu's positioned offsetParent when
+    // there is no container.
+    const contextElement = menuElement.offsetParent as HTMLElement | null;
+    const inDocumentSpace =
+      !contextElement || contextElement === document.body || contextElement === document.documentElement;
+    const contextRect = inDocumentSpace ? null : contextElement!.getBoundingClientRect();
+    const contextZoom = contextRect ? effectiveZoom(contextElement!) : zoom;
+
     // A container's scrollport in the viewport's pixels: its client box (inside
     // the border and the scrollbars) at the container's own zoom. A rect is the
     // border box, so a bordered scroller would otherwise count its border as
@@ -137,7 +146,9 @@ export const createPositioner = (
       // The clone is measured in the zoomed subtree: its width is the opener's
       // rect width divided back to local pixels, or the menu is zoom-times too
       // wide at 0.7 and 0.5.
-      tempMenu.style.width = `${openerRect.width / (hasContainer ? containerZoom : zoom)}px`;
+      // The clone's width must be in the space the final width is written in:
+      // the container's zoom, else the positioned host's, else the document's.
+      tempMenu.style.width = `${openerRect.width / (hasContainer ? containerZoom : contextRect ? contextZoom : zoom)}px`;
     }
 
     // Add it to the DOM temporarily (use container if available for accurate measurement).
@@ -329,15 +340,10 @@ export const createPositioner = (
     // zoom right-aligns the body) puts that space elsewhere, so the host's own
     // origin comes out before the value is written; the document's origin is
     // the viewport's minus the scroll. A container keeps its own rule below.
-    const contextElement = menuElement.offsetParent as HTMLElement | null;
-    const inDocumentSpace =
-      !contextElement || contextElement === document.body || contextElement === document.documentElement;
-    const contextRect = inDocumentSpace ? null : contextElement!.getBoundingClientRect();
     // A positioned host's scrollport: its client box (inside its border and
     // scrollbars) at its own zoom, with its own scroll moved out and back in
     // one place. A host at another origin with a border, or scrolled, is the
     // case a bare offsetParent subtraction got wrong.
-    const contextZoom = contextRect ? effectiveZoom(contextElement!) : zoom;
     const contextPortTop = contextRect ? contextRect.top + contextElement!.clientTop * contextZoom : 0;
     const contextPortLeft = contextRect ? contextRect.left + contextElement!.clientLeft * contextZoom : 0;
     const contextLocalTop = (viewport: number): number =>

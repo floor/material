@@ -240,8 +240,8 @@ const run = async (browser: Browser, engine: string) => {
   // A positioned host: the opener under a zoomed child, and the menu written
   // in the host's own space (its border and scroll taken out and back).
   const hostCases = await page.evaluate(async () => {
-    const results: { name: string; openerLeft: number; openerRight: number; openerTop: number; openerBottom: number; menuLeft: number; menuRight: number; menuTop: number; menuBottom: number; menuWidth: number; clientTop: number; clientBottom: number; clientLeft: number; clientRight: number }[] = [];
-    for (const kind of ["host-zoom", "host-border"] as const) {
+    const results: { name: string; offsetParentIsHost: boolean; openerLeft: number; openerRight: number; openerTop: number; openerBottom: number; menuLeft: number; menuRight: number; menuTop: number; menuBottom: number; menuWidth: number; clientTop: number; clientBottom: number; clientLeft: number; clientRight: number }[] = [];
+    for (const kind of ["host-zoom", "host-zoom pre-mounted", "host-border"] as const) {
       document.querySelectorAll(".mtrl-menu").forEach((node) => node.remove());
       const host = document.createElement("div");
       host.id = "host";
@@ -258,7 +258,7 @@ const run = async (browser: Browser, engine: string) => {
       content.append(zoomed);
       host.append(content);
       document.body.append(host);
-      if (kind === "host-zoom") host.style.overflow = "hidden";
+      if (kind === "host-zoom" || kind === "host-zoom pre-mounted") host.style.overflow = "hidden";
       else {
         host.style.cssText += ";overflow:auto;border:12px solid #333;box-sizing:border-box";
         host.scrollTop = 120;
@@ -266,11 +266,12 @@ const run = async (browser: Browser, engine: string) => {
       const create = (window as unknown as { mtrl: { createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => void } } }).mtrl.createMenu;
       const settings: Record<string, unknown> = { opener, offset: 8, items: [{ text: "One" }, { text: "Two" }, { text: "Three" }] };
       if (kind === "host-zoom") Object.assign(settings, { position: "bottom-end", container: host, width: "100%" });
+      else if (kind === "host-zoom pre-mounted") Object.assign(settings, { position: "bottom-end", width: "100%" });
       else Object.assign(settings, { position: "bottom-start" });
       const menu = create(settings);
-      // The border case pre-mounts the menu in the host, its documented use
-      // without a container config.
-      if (kind === "host-border") content.append(menu.element);
+      // The pre-mounted cases put the menu in the host itself, so the host is
+      // its offsetParent and the space being guarded is the host's own.
+      if (kind !== "host-zoom") host.append(menu.element);
       await new Promise((done) => setTimeout(done, 250));
       menu.open();
       await new Promise((done) => setTimeout(done, 500));
@@ -280,6 +281,7 @@ const run = async (browser: Browser, engine: string) => {
       const port = rect(host);
       results.push({
         name: kind,
+        offsetParentIsHost: menu.element.offsetParent === host,
         openerLeft: o.left, openerRight: o.right, openerTop: o.top, openerBottom: o.bottom,
         menuLeft: m.left, menuRight: m.right, menuTop: m.top, menuBottom: m.bottom, menuWidth: m.width,
         clientTop: port.top + host.clientTop, clientBottom: port.top + host.clientTop + host.clientHeight,
@@ -291,7 +293,10 @@ const run = async (browser: Browser, engine: string) => {
   });
   for (const hostCase of hostCases) {
     const label = `positioned host ${hostCase.name}`;
-    if (hostCase.name === "host-zoom") {
+    if (hostCase.name !== "host-zoom" && !hostCase.offsetParentIsHost) {
+      failures.push(`${label}: the menu's offsetParent is the host (the case guards the host's conversion)`);
+    }
+    if (hostCase.name !== "host-border") {
       // 100% of the opener, right-aligned to it.
       if (Math.abs(hostCase.menuRight - hostCase.openerRight) > 1) failures.push(`${label}: the menu's end meets the opener's end (menu ${hostCase.menuRight.toFixed(1)}, opener ${hostCase.openerRight.toFixed(1)})`);
       if (Math.abs(hostCase.menuWidth - (hostCase.openerRight - hostCase.openerLeft)) > 1) failures.push(`${label}: the menu is the opener's width (menu ${hostCase.menuWidth.toFixed(1)}, opener ${(hostCase.openerRight - hostCase.openerLeft).toFixed(1)})`);
