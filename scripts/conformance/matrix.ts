@@ -13,7 +13,7 @@ const composeRelease = "https://developer.android.com/jetpack/androidx/releases/
 const kotlin = "compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3";
 
 const urlId = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
-const rowId = (component: string, key: string) => /^(?:top-app-bar|bottom-app-bar)\/[^/]+\/[^/]+\/[^/]+$/.test(key)
+const rowId = (component: string, key: string) => /^top-app-bar\/[^/]+\/[^/]+\/[^/]+$/.test(key)
   ? key : `${component}/${key}`;
 const hex = /#[A-F\d]{6}\b/i;
 const colorMatch = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/;

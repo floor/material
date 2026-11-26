@@ -91,14 +91,13 @@ export const bindings: FixtureBinding[] = [
     ["container-height/large", "Container height", "size", "large/base/light", height("badge"), "BadgeTokens.LargeSize", "large"],
     ["container-colour/large", "Container tone", "colour", "large/base/light", colour("badge"), "BadgeTokens.LargeColor", "large"],
   ]),
-  fixture("bottom-app-bar", "Toolbar", [
-    ["bottom-app-bar/container-height/end-fab/rest", "Bar height with end FAB", "size", "end/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
-    ["bottom-app-bar/container-height/centred-fab/rest", "Bar height with centred FAB", "size", "center/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
-    ["bottom-app-bar/end-padding/no-fab/rest", "End padding without FAB", "spacing", "plain/base/light", css("root", "paddingRight")],
-    ["bottom-app-bar/container-height", "Bottom app bar height", "size", "plain/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
-    ["bottom-app-bar/with-fab-height", "Bottom app bar height with FAB", "size", "end/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
-    ["bottom-app-bar/container-colour", "Bottom app bar tone", "colour", "plain/base/light", colour("root"), "BottomAppBarTokens.ContainerColor"],
-  ], "toolbar"),
+  fixture("bottom-app-bar", "Bottom app bar", [
+    ["container-height/end-fab/rest", "Bar height with end FAB", "size", "end/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
+    ["container-height/centred-fab/rest", "Bar height with centred FAB", "size", "center/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
+    ["end-padding/no-fab/rest", "End padding without FAB", "spacing", "plain/base/light", css("root", "paddingRight")],
+    ["container-height/no-fab/rest", "Bottom app bar height without FAB", "size", "plain/base/light", height("root"), "BottomAppBarTokens.ContainerHeight"],
+    ["container-colour/no-fab/rest", "Bottom app bar tone without FAB", "colour", "plain/base/light", colour("root"), "BottomAppBarTokens.ContainerColor"],
+  ]),
   fixture("bottom-sheet", "Bottom sheet", [
     ["side-clearance/standard/above-640", "Side clearance at 700px", "spacing", "standard/wide-700", inset("surface", "viewport", "left")],
     ["side-clearance/modal/above-640", "Side clearance at 700px", "spacing", "modal/wide-700", inset("surface", "viewport", "left")],

@@ -569,6 +569,167 @@
       ]
     },
     {
+      "id": "bottom-app-bar",
+      "name": "Bottom app bar",
+      "properties": [
+        {
+          "id": "bottom-app-bar/container-colour/no-fab/rest",
+          "property": "Bottom app bar tone without FAB",
+          "aspect": "colour",
+          "variant": "no-fab",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": null,
+            "url": "https://m3.material.io",
+            "section": "",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "SurfaceContainer #F3EDF7",
+            "file": "BottomAppBarTokens.kt",
+            "symbol": "ContainerColor",
+            "line": 24,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L24"
+          },
+          "material": {
+            "value": "SurfaceContainer #F3EDF7",
+            "engines": null
+          },
+          "status": {
+            "spec": "no-value",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "bottom-app-bar/container-height/centred-fab/rest",
+          "property": "Bar height with centred FAB",
+          "aspect": "size",
+          "variant": "centred-fab",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": null,
+            "url": "https://m3.material.io",
+            "section": "",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "80.0dp",
+            "file": "BottomAppBarTokens.kt",
+            "symbol": "ContainerHeight",
+            "line": 30,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
+          },
+          "material": {
+            "value": "72px",
+            "engines": null
+          },
+          "status": {
+            "spec": "no-value",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "bottom-app-bar/container-height/end-fab/rest",
+          "property": "Bar height with end FAB",
+          "aspect": "size",
+          "variant": "end-fab",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": null,
+            "url": "https://m3.material.io",
+            "section": "",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "80.0dp",
+            "file": "BottomAppBarTokens.kt",
+            "symbol": "ContainerHeight",
+            "line": 30,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
+          },
+          "material": {
+            "value": "72px",
+            "engines": null
+          },
+          "status": {
+            "spec": "no-value",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "bottom-app-bar/container-height/no-fab/rest",
+          "property": "Bottom app bar height without FAB",
+          "aspect": "size",
+          "variant": "no-fab",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": null,
+            "url": "https://m3.material.io",
+            "section": "",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "80.0dp",
+            "file": "BottomAppBarTokens.kt",
+            "symbol": "ContainerHeight",
+            "line": 30,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
+          },
+          "material": {
+            "value": "80px",
+            "engines": null
+          },
+          "status": {
+            "spec": "no-value",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "bottom-app-bar/end-padding/no-fab/rest",
+          "property": "End padding without FAB",
+          "aspect": "spacing",
+          "variant": "no-fab",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": null,
+            "url": "https://m3.material.io",
+            "section": "",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "4dp",
+            "file": "AppBar.kt",
+            "symbol": "BottomAppBarHorizontalPadding",
+            "line": 2651,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L2651"
+          },
+          "material": {
+            "value": "16px",
+            "engines": null
+          },
+          "status": {
+            "spec": "no-value",
+            "compose": "drift"
+          },
+          "note": "Compose applies 4 dp end padding when there is no FAB.",
+          "issue": null
+        }
+      ]
+    },
+    {
       "id": "bottom-sheet",
       "name": "Bottom sheet",
       "properties": [
@@ -10531,189 +10692,6 @@
       "id": "toolbar",
       "name": "Toolbar",
       "properties": [
-        {
-          "id": "bottom-app-bar/container-height/centred-fab/rest",
-          "property": "Bar height with centred FAB",
-          "aspect": "size",
-          "variant": "centred-fab",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "80.0dp",
-            "file": "BottomAppBarTokens.kt",
-            "symbol": "ContainerHeight",
-            "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
-          },
-          "material": {
-            "value": "72px",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "drift"
-          },
-          "note": "",
-          "issue": null
-        },
-        {
-          "id": "bottom-app-bar/container-height/end-fab/rest",
-          "property": "Bar height with end FAB",
-          "aspect": "size",
-          "variant": "end-fab",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "80.0dp",
-            "file": "BottomAppBarTokens.kt",
-            "symbol": "ContainerHeight",
-            "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
-          },
-          "material": {
-            "value": "72px",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "drift"
-          },
-          "note": "",
-          "issue": null
-        },
-        {
-          "id": "bottom-app-bar/end-padding/no-fab/rest",
-          "property": "End padding without FAB",
-          "aspect": "spacing",
-          "variant": "no-fab",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "4dp",
-            "file": "AppBar.kt",
-            "symbol": "BottomAppBarHorizontalPadding",
-            "line": 2651,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L2651"
-          },
-          "material": {
-            "value": "16px",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "drift"
-          },
-          "note": "Compose applies 4 dp end padding when there is no FAB.",
-          "issue": null
-        },
-        {
-          "id": "toolbar/bottom-app-bar/container-colour",
-          "property": "Bottom app bar tone",
-          "aspect": "colour",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "SurfaceContainer #F3EDF7",
-            "file": "BottomAppBarTokens.kt",
-            "symbol": "ContainerColor",
-            "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L24"
-          },
-          "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "match"
-          },
-          "note": "",
-          "issue": null
-        },
-        {
-          "id": "toolbar/bottom-app-bar/container-height",
-          "property": "Bottom app bar height",
-          "aspect": "size",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "80.0dp",
-            "file": "BottomAppBarTokens.kt",
-            "symbol": "ContainerHeight",
-            "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
-          },
-          "material": {
-            "value": "80px",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "match"
-          },
-          "note": "",
-          "issue": null
-        },
-        {
-          "id": "toolbar/bottom-app-bar/with-fab-height",
-          "property": "Bottom app bar height with FAB",
-          "aspect": "size",
-          "state": "rest",
-          "density": 0,
-          "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
-            "read": "2026-11-26"
-          },
-          "compose": {
-            "value": "80.0dp",
-            "file": "BottomAppBarTokens.kt",
-            "symbol": "ContainerHeight",
-            "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L30"
-          },
-          "material": {
-            "value": "72px",
-            "engines": null
-          },
-          "status": {
-            "spec": "no-value",
-            "compose": "drift"
-          },
-          "note": "",
-          "issue": null
-        },
         {
           "id": "toolbar/collapse-into-fab/floating-with-fab/scroll",
           "property": "Collapse into FAB when scrolling",
