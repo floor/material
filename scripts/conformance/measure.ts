@@ -99,6 +99,7 @@ export type Case = {
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
   zoom?: number;
+  viewport?: { width: number; height: number };
   /** The theme mode for the colour rows: `light` (default) or `dark`. */
   scheme?: "light" | "dark";
   /**
@@ -165,6 +166,14 @@ export const fixtureEngine = (): "chromium" | "webkit" =>
 
 export const selectFixtureCases = <T extends { id: string }>(cases: T[]): T[] => {
   const args = process.argv.slice(2);
+  const exact = args.find(arg => arg.startsWith("--cases="));
+  if (exact) {
+    const ids = new Set<string>(JSON.parse(exact.slice("--cases=".length)));
+    const selected = cases.filter(row => ids.has(row.id));
+    for (const row of selected) ids.delete(row.id);
+    if (ids.size || !selected.length) throw new Error(`Missing fixture cases: ${JSON.stringify([...ids])}`);
+    return selected;
+  }
   const flag = args.find(arg => arg.startsWith("--case="));
   const filter = flag ? flag.slice("--case=".length) : args.find(arg => !arg.startsWith("--"));
   const selected = filter === undefined ? cases : cases.filter(row => filter && row.id.includes(filter));
@@ -292,7 +301,13 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
 
   const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
+    const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
+      const viewport = testCase.viewport ?? defaultViewport;
+      const currentViewport = page.viewportSize();
+      if (currentViewport?.width !== viewport.width || currentViewport.height !== viewport.height) {
+        await page.setViewportSize(viewport);
+      }
       const state = testCase.state ?? "rest";
       // The mount is a function, so it crosses as source and is rebuilt
       // inside the page, where the module namespace lives.

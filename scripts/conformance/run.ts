@@ -26,11 +26,16 @@ const [command, ...args] = process.argv.slice(2);
 if (!command || command === "--help") {
   console.log(`Usage:
   bun run conformance --list
+  bun run conformance --matrix [--check]
   bun run conformance <component> [--webkit] [--case=<substring>]
   bun run conformance all [--webkit]
   bun run conformance tokens <component> [--json | --files] [--only=TokenFile,...]
 
 See scripts/conformance/README.md for setup and component-specific probes.`);
+} else if (command === "--matrix") {
+  if (args.some(arg => arg !== "--check")) throw new Error("The matrix command accepts only --check");
+  const { generateMatrix } = await import("./matrix");
+  await generateMatrix(new Map(components.map(component => [component, entryFor(component)])), args.includes("--check"));
 } else if (command === "--list") {
   console.log(components.join("\n"));
 } else if (command === "tokens") {

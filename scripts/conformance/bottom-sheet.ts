@@ -64,6 +64,8 @@ for (const variant of ["standard","modal"] as const) {
     add(`full/${scheme}`, { ...config, stage: "full" }, scheme);
     if (variant === "modal") add(`top/${scheme}`, { ...config, top: true }, scheme);
   }
+  add("wide-700", { ...config, stage: "full" });
+  cases.at(-1)!.viewport = { width: 700, height: 600 };
   for (const state of ["focus","hover","pressed"] as const) add(state, config, "light", 0, state);
   for (const density of [-1,-2,-3]) add(`density/${density}`, config, "light", density);
   add("rtl", { ...config, direction: "rtl" });

@@ -10,6 +10,8 @@ type Config = {
   state: ReadState;
   text?: string;
   top?: boolean;
+  customCaret?: boolean;
+  persistent?: boolean;
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
@@ -26,9 +28,15 @@ const mount: Case["mount"] = (mtrl, host, data) => {
   const tooltip = create({
     target, variant: config.variant, position: config.position, text: config.text ?? "Additional context",
     layer: config.top ? "top" : undefined,
+    ...(config.customCaret ? { caretShape: "circle" } : {}),
+    ...(config.persistent ? { persistent: true, trigger: "click" } : {}),
   });
   page.measuredTooltip = tooltip;
-  if (config.state === "rest") tooltip.show(true);
+  if (config.persistent) {
+    target.click();
+    host.dataset.clicked = "true";
+  }
+  else if (config.state === "rest") tooltip.show(true);
 };
 
 const target = "#tooltip-target";
@@ -38,6 +46,7 @@ const properties = [...fieldProperties,
 ];
 const parts = [
   part("target", target), part("surface", tooltip), part("arrow", `${tooltip} .mtrl-tooltip__arrow`),
+  part("customCaret", `${tooltip} .mtrl-tooltip__arrow[data-shape="circle"]`),
   part("subhead", `${tooltip} h1,${tooltip} h2,${tooltip} h3,${tooltip} [role='heading']`),
   part("action", `${tooltip} button,${tooltip} a[href]`),
 ];
@@ -55,12 +64,17 @@ for (const variant of ["plain","rich"] as const) {
     add(`short/${scheme}`, config, scheme);
     add(`top-layer/${scheme}`, { ...config, position: "top", top: true }, scheme);
   }
+  add("caret", { ...config, position: "top" });
   add("empty", { ...config, text: "" });
   add("long", { ...config, text: "Extra help about how this option affects your choices. ".repeat(6) });
   add("rtl", { ...config, direction: "rtl" });
   for (const state of ["hover","focus"] as const) add(state, { ...config, state });
   for (const density of [-1,-2,-3]) add(`density/${density}`, config, "light", density);
-  if (variant === "rich") add("html-looking-text", { ...config, text: "<h3>Hint</h3><button>Learn more</button>" });
+  if (variant === "rich") {
+    add("html-looking-text", { ...config, text: "<h3>Hint</h3><button>Learn more</button>" });
+    add("custom-caret", { ...config, position: "top", customCaret: true });
+    add("persistent", { ...config, persistent: true });
+  }
 }
 
 async function measureTooltipBehavior() {
@@ -131,11 +145,20 @@ async function measureTooltipBehavior() {
     const focusAfterEscape = await page.evaluate(() => document.activeElement?.id);
     assert.ok(Number.isFinite(hideDelay));
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ source: harness.source, engine, mounted, placement, hideDelay, visibleAfterOtherHover, focusAfterEscape }));
+    const behavior = { mounted, placement, hideDelay, visibleAfterOtherHover, focusAfterEscape };
+    if (process.argv.includes("--matrix-behavior")) {
+      // A timer can be a few milliseconds late on a shared CI runner.
+      const style = { hideDelay: `${Math.round(hideDelay / 25) * 25}ms`, visibleAfterOtherHover: String(visibleAfterOtherHover) };
+      const rect = { x: 0, y: 0, width: 0, height: 0 };
+      const rows = [{ id: "behavior", state: "rest", density: 0, zoom: 1, parts: { behavior: { rect, style } } }];
+      console.log(JSON.stringify({ source: harness.source, engine, rows }));
+    } else {
+      console.log(JSON.stringify({ source: harness.source, engine, ...behavior }));
+    }
   } finally {
     await harness.close();
   }
 }
 
-if (process.argv.includes("--behavior")) await measureTooltipBehavior();
-else await runFieldFixture("tooltip", cases, () => ["target", "surface", "arrow"]);
+if (process.argv.includes("--behavior") || process.argv.includes("--matrix-behavior")) await measureTooltipBehavior();
+else await runFieldFixture("tooltip", cases, id => id === "rich/persistent" ? ["target"] : ["target", "surface", "arrow"]);

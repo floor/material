@@ -1,0 +1,2534 @@
+{
+  "app-bar/container-height/small": {
+    "spec": {
+      "value": "64dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Small top app bar",
+      "read": "2026-11-26"
+    }
+  },
+  "app-bar/leading-icon-size/small": {
+    "reason": "The website sizes the glyph. Compose takes the navigation icon as a slot.",
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "app-bar/leading-inset/small": {
+    "reason": "The leading edge measurement starts at the navigation target.",
+    "compose": {
+      "value": "4dp",
+      "file": "AppBar.kt",
+      "symbol": "TopAppBarHorizontalPadding",
+      "line": 3610,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L3610"
+    },
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Small top app bar",
+      "read": "2026-11-26"
+    }
+  },
+  "badge/container-colour/large": {
+    "reason": "The released badge shares the same colour across both sizes.",
+    "compose": {
+      "value": "Error #B3261E",
+      "file": "BadgeTokens.kt",
+      "symbol": "Color",
+      "line": 24,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BadgeTokens.kt#L24"
+    }
+  },
+  "badge/container-height/large": {
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/badges/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "badge/container-height/small": {
+    "spec": {
+      "value": "6dp",
+      "url": "https://m3.material.io/components/badges/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "badge/container-width/small": {
+    "spec": {
+      "value": "6dp",
+      "url": "https://m3.material.io/components/badges/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "bottom-app-bar/end-padding/no-fab/rest": {
+    "reason": "Compose applies 4 dp end padding when there is no FAB.",
+    "compose": {
+      "value": "4dp",
+      "file": "AppBar.kt",
+      "symbol": "BottomAppBarHorizontalPadding",
+      "line": 2651,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L2651"
+    }
+  },
+  "bottom-sheet/corner/modal-partial": {
+    "reason": "This row measures the upper corner of the docked shape.",
+    "compose": {
+      "value": "28dp",
+      "file": "SheetBottomTokens.kt",
+      "symbol": "DockedContainerShape",
+      "line": 27,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L27"
+    }
+  },
+  "bottom-sheet/focus-ring/handle/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "bottom-sheet/max-width/modal": {
+    "reason": "Compose caps the outer sheet width.",
+    "compose": {
+      "value": "640dp",
+      "file": "SheetDefaults.kt",
+      "symbol": "SheetMaxWidth",
+      "line": 536,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SheetDefaults.kt#L536"
+    },
+    "spec": {
+      "value": "640dp",
+      "url": "https://m3.material.io/components/bottom-sheets/specs",
+      "section": "Modal bottom sheet",
+      "read": "2026-11-26"
+    }
+  },
+  "bottom-sheet/side-clearance/modal/above-640": {
+    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/bottom-sheets/specs",
+      "section": "Bottom-sheet maximum width",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "30dp",
+      "file": "SheetDefaults.kt",
+      "symbol": "SheetMaxWidth",
+      "line": 536,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SheetDefaults.kt#L536"
+    }
+  },
+  "bottom-sheet/side-clearance/standard/above-640": {
+    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/bottom-sheets/specs",
+      "section": "Bottom-sheet maximum width",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "30dp",
+      "file": "SheetDefaults.kt",
+      "symbol": "SheetMaxWidth",
+      "line": 536,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SheetDefaults.kt#L536"
+    }
+  },
+  "bottom-sheet/top-clearance/modal/expanded": {
+    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+    "compose": {
+      "value": "0dp",
+      "file": "BottomSheet.kt",
+      "symbol": "Expanded anchor",
+      "line": 306,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/BottomSheet.kt#L306"
+    },
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/bottom-sheets/specs",
+      "section": "Expanded bottom sheet",
+      "read": "2026-11-26"
+    }
+  },
+  "bottom-sheet/top-clearance/standard/expanded": {
+    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/bottom-sheets/specs",
+      "section": "Expanded bottom sheet",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "BottomSheetScaffold.kt",
+      "symbol": "Expanded anchor",
+      "line": 342,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/BottomSheetScaffold.kt#L342"
+    }
+  },
+  "button-group/gap/connected": {
+    "reason": "The website gives the connected group spacing.",
+    "spec": {
+      "value": "2dp",
+      "url": "https://m3.material.io/m3/pages/button-groups/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "button-group/item-size/standard/rest": {
+    "reason": "Compose accepts separately configured item content. The Material probe supplies the option on the first item of a standard group.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/button-groups/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "ButtonGroup.kt",
+      "symbol": "ButtonGroupScope",
+      "line": 817,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ButtonGroup.kt#L817"
+    }
+  },
+  "button-group/item-variant/standard/rest": {
+    "reason": "Compose accepts separately configured item content. The Material probe supplies the option on the first item of a standard group.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/button-groups/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "ButtonGroup.kt",
+      "symbol": "ButtonGroupScope",
+      "line": 817,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ButtonGroup.kt#L817"
+    }
+  },
+  "button-group/item-width/standard/rest": {
+    "reason": "Compose accepts separately configured item content. The Material probe supplies the option on the first item of a standard group.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/button-groups/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "ButtonGroup.kt",
+      "symbol": "ButtonGroupScope",
+      "line": 817,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ButtonGroup.kt#L817"
+    }
+  },
+  "button/corner/square-s/selected": {
+    "reason": "This is the selected radius of the small square toggle. The previous radius is retained for the resting small square.",
+    "compose": {
+      "value": "12dp",
+      "file": "ButtonSmallTokens.kt",
+      "symbol": "SelectedContainerShapeSquare",
+      "line": 51,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L51"
+    }
+  },
+  "button/elevation/filled": {
+    "reason": "The filled button has level zero elevation at rest.",
+    "compose": {
+      "value": "none",
+      "file": "FilledButtonTokens.kt",
+      "symbol": "ContainerElevation",
+      "line": 25,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L25"
+    }
+  },
+  "button/focus": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "button/height/filled-s/density-minus-3": {
+    "reason": "The website applies three 4 dp density steps to the 40 dp button.",
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/m3/pages/grids-spacing/density",
+      "section": "Density",
+      "read": "2026-11-26"
+    }
+  },
+  "button/icon-label-gap/xs": {
+    "reason": "The released size helper overrides the generated 8 dp token.",
+    "compose": {
+      "value": "4dp",
+      "file": "Button.kt",
+      "symbol": "ExtraSmallIconSpacing",
+      "line": 1108,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Button.kt#L1108"
+    }
+  },
+  "button/outline-width/outlined": {
+    "reason": "The released button border uses the shared small outline token.",
+    "compose": {
+      "value": "1dp",
+      "file": "ButtonSmallTokens.kt",
+      "symbol": "OutlinedOutlineWidth",
+      "line": 42,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L42"
+    }
+  },
+  "button/padding-start/xs": {
+    "reason": "The released size helper sets its own padding.",
+    "compose": {
+      "value": "12dp",
+      "file": "Button.kt",
+      "symbol": "ExtraSmallContentPadding",
+      "line": 959,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Button.kt#L959"
+    }
+  },
+  "button/square-corner/l": {
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/common-buttons/specs",
+      "section": "Button corner radius",
+      "read": "2026-11-26"
+    }
+  },
+  "button/square-corner/m": {
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/common-buttons/specs",
+      "section": "Button corner radius",
+      "read": "2026-11-26"
+    }
+  },
+  "button/square-corner/s": {
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/common-buttons/specs",
+      "section": "Button corner radius",
+      "read": "2026-11-26"
+    }
+  },
+  "button/square-corner/xl": {
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/common-buttons/specs",
+      "section": "Button corner radius",
+      "read": "2026-11-26"
+    }
+  },
+  "button/square-corner/xs": {
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/common-buttons/specs",
+      "section": "Button corner radius",
+      "read": "2026-11-26"
+    }
+  },
+  "card/corner/elevated": {
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/corner/filled": {
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/corner/outlined": {
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/focus-elevation/filled/focus": {
+    "reason": "Compose supplies Level 0 from the focus elevation token.",
+    "compose": {
+      "value": "Level 0",
+      "file": "FilledCardTokens.kt",
+      "symbol": "FocusContainerElevation",
+      "line": 43,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43"
+    }
+  },
+  "card/focus-elevation/outlined/focus": {
+    "reason": "Compose supplies Level 0 from the focus elevation token.",
+    "compose": {
+      "value": "Level 0",
+      "file": "OutlinedCardTokens.kt",
+      "symbol": "FocusContainerElevation",
+      "line": 46,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46"
+    }
+  },
+  "card/focus-ring/elevated/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "card/focus-ring/filled/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "card/focus-ring/outlined/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "card/state-layer-opacity/elevated/dragged": {
+    "reason": "The value measures effective opacity of the painted layer, including the colour alpha.",
+    "spec": {
+      "value": "0.16",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/state-layer-opacity/elevated/hover": {
+    "reason": "The value measures effective opacity of the painted layer, including the colour alpha.",
+    "spec": {
+      "value": "0.08",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/state-layer-opacity/filled/dragged": {
+    "reason": "The value measures effective opacity of the painted layer, including the colour alpha.",
+    "spec": {
+      "value": "0.16",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "card/state-layer-opacity/outlined/dragged": {
+    "reason": "The value measures effective opacity of the painted layer, including the colour alpha.",
+    "spec": {
+      "value": "0.16",
+      "url": "https://m3.material.io/components/cards/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "carousel/block-padding/centered-hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/block-padding/hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/block-padding/multi-browse/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    },
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "carousel/block-padding/uncontained/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/corner/multi-browse": {
+    "reason": "The website specifies item corner geometry. Compose accepts caller-supplied item content.",
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "carousel/density/multi-browse/minus-one": {
+    "reason": "The references give no density-specific carousel height."
+  },
+  "carousel/inline-padding/centered-hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/inline-padding/hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/inline-padding/multi-browse/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    }
+  },
+  "carousel/inline-padding/uncontained/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ContentPadding",
+      "line": 822,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
+    },
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "carousel/item-gap/centered-hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ItemSpacing",
+      "line": 819,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L819"
+    }
+  },
+  "carousel/item-gap/hero/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ItemSpacing",
+      "line": 819,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L819"
+    }
+  },
+  "carousel/item-gap/multi-browse/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ItemSpacing",
+      "line": 819,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L819"
+    }
+  },
+  "carousel/item-gap/uncontained/rest": {
+    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Carousel.kt",
+      "symbol": "ItemSpacing",
+      "line": 819,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L819"
+    }
+  },
+  "carousel/item-state/all/disabled": {
+    "reason": "The fixture asks for a disabled first item and checks its accessibility state.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "carousel/mixed-aspect-ratios/uncontained/rest": {
+    "reason": "Mixed aspect ratios require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Absent",
+      "file": "Carousel.kt",
+      "symbol": "HorizontalUncontainedCarousel",
+      "line": 179,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L179"
+    }
+  },
+  "carousel/mixed-item-widths/uncontained/rest": {
+    "reason": "Mixed item widths require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Absent",
+      "file": "Carousel.kt",
+      "symbol": "HorizontalUncontainedCarousel",
+      "line": 179,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L179"
+    }
+  },
+  "carousel/small-item-width/centered-hero/opening": {
+    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+    "spec": {
+      "value": "40dp minimum",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "34.67dp",
+      "file": "Strategy.kt",
+      "symbol": "createShiftedKeylineListForContentPadding",
+      "line": 561,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Strategy.kt#L561"
+    }
+  },
+  "carousel/small-item-width/hero/opening": {
+    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+    "spec": {
+      "value": "40dp minimum",
+      "url": "https://m3.material.io/components/carousel/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "32dp",
+      "file": "Strategy.kt",
+      "symbol": "createShiftedKeylineListForContentPadding",
+      "line": 561,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Strategy.kt#L561"
+    }
+  },
+  "checkbox/box-height/default": {
+    "reason": "Compose defaults to a 20 dp box. The 18 dp adjustment is available through its styling flag.",
+    "compose": {
+      "value": "20dp",
+      "file": "Checkbox.kt",
+      "symbol": "CheckboxSize",
+      "line": 1001,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Checkbox.kt#L1001"
+    }
+  },
+  "checkbox/box-width/default": {
+    "reason": "Compose defaults to a 20 dp box. The 18 dp adjustment is available through its styling flag.",
+    "compose": {
+      "value": "20dp",
+      "file": "Checkbox.kt",
+      "symbol": "CheckboxSize",
+      "line": 1001,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Checkbox.kt#L1001"
+    }
+  },
+  "checkbox/density/minus-one": {
+    "reason": "The references give no density-specific checkbox box size."
+  },
+  "checkbox/focus-ring/default/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-corner/assist": {
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-corner/filter": {
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-corner/input": {
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-corner/suggestion": {
+    "spec": {
+      "value": "8dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-height/assist": {
+    "spec": {
+      "value": "32dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-height/filter": {
+    "spec": {
+      "value": "32dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-height/input": {
+    "spec": {
+      "value": "32dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/container-height/suggestion": {
+    "spec": {
+      "value": "32dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "chips/icon-size/assist": {
+    "spec": {
+      "value": "18dp",
+      "url": "https://m3.material.io/components/chips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "datepicker/confirmation-footer/docked-day/rest": {
+    "reason": "Compose separates the picker body from its dialog and supplies buttons only in the latter.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/date-pickers/specs",
+      "section": "Docked picker anatomy",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Absent",
+      "file": "DatePicker.kt",
+      "symbol": "DatePicker",
+      "line": 185,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/DatePicker.kt#L185"
+    }
+  },
+  "datepicker/container-height/docked-day/rest": {
+    "reason": "The website illustration includes the confirmation footer. Compose sizes the picker body to its content.",
+    "spec": {
+      "value": "460dp",
+      "url": "https://m3.material.io/components/date-pickers/specs",
+      "section": "Docked picker anatomy",
+      "read": "2026-11-26"
+    }
+  },
+  "dialog/close-focus/basic": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "dialog/close-icon-colour/full-screen/rest": {
+    "reason": "The website close icon uses OnSurface. The light-theme default is shown.",
+    "spec": {
+      "value": "OnSurface #1D1B20",
+      "url": "https://m3.material.io/components/dialogs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "dialog/container-width/full-screen/rest": {
+    "reason": "The website caps the full-screen surface at 560 dp. The fixture measures a 900 px viewport.",
+    "spec": {
+      "value": "560dp maximum",
+      "url": "https://m3.material.io/components/dialogs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "dialog/corner/basic": {
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/dialogs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "divider/thickness/horizontal": {
+    "spec": {
+      "value": "1dp",
+      "url": "https://m3.material.io/components/divider/specs",
+      "section": "Tokens & specs",
+      "read": "2026-11-26"
+    }
+  },
+  "divider/thickness/vertical": {
+    "spec": {
+      "value": "1dp",
+      "url": "https://m3.material.io/components/divider/specs",
+      "section": "Tokens & specs",
+      "read": "2026-11-26"
+    }
+  },
+  "extended-fab/container-height/small": {
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/extended-fab/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "extended-fab/icon-label-gap/large": {
+    "reason": "The released layout overrides the generated spacing token.",
+    "compose": {
+      "value": "16dp",
+      "file": "FloatingActionButton.kt",
+      "symbol": "LargeExtendedFabIconPadding",
+      "line": 1468,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingActionButton.kt#L1468"
+    }
+  },
+  "extended-fab/icon-label-gap/medium": {
+    "reason": "The released layout overrides the generated spacing token.",
+    "compose": {
+      "value": "12dp",
+      "file": "FloatingActionButton.kt",
+      "symbol": "MediumExtendedFabIconPadding",
+      "line": 1455,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingActionButton.kt#L1455"
+    }
+  },
+  "extended-fab/icon-size/large": {
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "ExtendedFabLargeTokens.kt",
+      "symbol": "IconSize",
+      "line": 33,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExtendedFabLargeTokens.kt#L33"
+    }
+  },
+  "extended-fab/icon-size/medium": {
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "ExtendedFabMediumTokens.kt",
+      "symbol": "IconSize",
+      "line": 32,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExtendedFabMediumTokens.kt#L32"
+    }
+  },
+  "extended-fab/icon-size/small": {
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/extended-fab/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "ExtendedFabSmallTokens.kt",
+      "symbol": "IconSize",
+      "line": 33,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExtendedFabSmallTokens.kt#L33"
+    }
+  },
+  "fab-menu/button-height": {
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/fab-menu/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "fab-menu/item-icon": {
+    "reason": "Compose accepts a caller-sized item icon.",
+    "compose": {
+      "value": null,
+      "file": "FabMenuBaselineTokens.kt",
+      "symbol": "ListItemIconSize",
+      "line": 57,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FabMenuBaselineTokens.kt#L57"
+    }
+  },
+  "fab/focus-ring/default/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "fab/icon-size/default": {
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "FabBaselineTokens.kt",
+      "symbol": "IconSize",
+      "line": 33,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FabBaselineTokens.kt#L33"
+    }
+  },
+  "fab/icon-size/large": {
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "FabLargeTokens.kt",
+      "symbol": "IconSize",
+      "line": 33,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FabLargeTokens.kt#L33"
+    }
+  },
+  "fab/icon-size/medium": {
+    "reason": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
+    "compose": {
+      "value": null,
+      "file": "FabMediumTokens.kt",
+      "symbol": "IconSize",
+      "line": 32,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FabMediumTokens.kt#L32"
+    }
+  },
+  "icon-button/focus-ring/filled/focus": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "icon-button/focus-ring/standard/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "list/between-space/segmented-one-line/rest": {
+    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
+    "compose": {
+      "value": "12dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemBetweenSpace",
+      "line": 42,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L42"
+    }
+  },
+  "list/bottom-space/segmented-one-line/rest": {
+    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
+    "compose": {
+      "value": "10dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemBottomSpace",
+      "line": 45,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L45"
+    }
+  },
+  "list/container-colour/segmented/rest": {
+    "reason": "The released segmented list uses its dedicated container colour.",
+    "compose": {
+      "value": "Surface #FEF7FF",
+      "file": "ListTokens.kt",
+      "symbol": "ItemSegmentedContainerColor",
+      "line": 201,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L201"
+    }
+  },
+  "list/divider-trailing-space/inset/rest": {
+    "reason": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller.",
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/lists/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "16dp",
+      "file": "ListTokens.kt",
+      "symbol": "DividerTrailingSpace",
+      "line": 36,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L36"
+    }
+  },
+  "list/focus/standard": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "list/top-space/segmented-one-line/rest": {
+    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
+    "compose": {
+      "value": "10dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemTopSpace",
+      "line": 326,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
+    }
+  },
+  "list/trailing-space/three-line/rest": {
+    "reason": "The website baseline three-line diagram uses a 24 dp trailing inset. Compose uses 16 dp.",
+    "compose": {
+      "value": "16dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemTrailingSpace",
+      "line": 338,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L338"
+    },
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/lists/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "list/vertical-padding/segmented-three-line/rest": {
+    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
+    "compose": {
+      "value": "10dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemTopSpace",
+      "line": 326,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
+    }
+  },
+  "list/vertical-padding/segmented-two-line/rest": {
+    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
+    "compose": {
+      "value": "10dp",
+      "file": "ListTokens.kt",
+      "symbol": "ItemTopSpace",
+      "line": 326,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
+    }
+  },
+  "loading-indicator/container-height": {
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/loading-indicator/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "loading-indicator/container-width": {
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/loading-indicator/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "menu/selected-colour/baseline": {
+    "reason": "The baseline Compose menu item has no selected state.",
+    "compose": {
+      "value": null,
+      "file": "MenuTokens.kt",
+      "symbol": "ListItemSelectedContainerColor",
+      "line": 34,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L34"
+    }
+  },
+  "navigation-bar/focus-ring/horizontal/focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "navigation-bar/indicator-trailing-space/horizontal/selected": {
+    "reason": "The website shows 20 dp on the active pill trailing edge. The reference choice is pending.",
+    "compose": {
+      "value": "16dp",
+      "file": "NavigationBarHorizontalItemTokens.kt",
+      "symbol": "ActiveIndicatorTrailingSpace",
+      "line": 30,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationBarHorizontalItemTokens.kt#L30"
+    },
+    "spec": {
+      "value": "20dp",
+      "url": "https://m3.material.io/components/navigation-bar/specs",
+      "section": "Horizontal navigation bar",
+      "read": "2026-11-26"
+    }
+  },
+  "navigation-bar/item-width/horizontal/medium-width": {
+    "reason": "This fixture measures five items at bar widths of 660 px and 840 px. Compose defaults to equal division with a separate opt-in centered arrangement.",
+    "spec": {
+      "value": "Fixed target widths",
+      "url": "https://m3.material.io/components/navigation-bar/specs",
+      "section": "Horizontal navigation bar",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "132dp / 168dp",
+      "file": "ShortNavigationBar.kt",
+      "symbol": "EqualWeight",
+      "line": 383,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ShortNavigationBar.kt#L383"
+    }
+  },
+  "navigation-bar/label-colour/horizontal/selected": {
+    "reason": "The released ShortNavigationBarItem sets the inline selected label to the active icon colour.",
+    "compose": {
+      "value": "OnSecondaryContainer #1D192B",
+      "file": "ShortNavigationBar.kt",
+      "symbol": "selectedTextColorStartIconPosition",
+      "line": 295,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ShortNavigationBar.kt#L295"
+    }
+  },
+  "navigation-drawer/container-width/modal": {
+    "spec": {
+      "value": "360dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "navigation-drawer/divider-side-inset/modal/rest": {
+    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+    "spec": {
+      "value": "28dp / 28dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp / 0dp",
+      "file": "Divider.kt",
+      "symbol": "HorizontalDivider",
+      "line": 49,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
+    }
+  },
+  "navigation-drawer/divider-side-inset/standard/rest": {
+    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+    "spec": {
+      "value": "28dp / 28dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp / 0dp",
+      "file": "Divider.kt",
+      "symbol": "HorizontalDivider",
+      "line": 49,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
+    }
+  },
+  "navigation-drawer/divider-top-space/modal/rest": {
+    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Divider.kt",
+      "symbol": "HorizontalDivider",
+      "line": 49,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
+    }
+  },
+  "navigation-drawer/divider-top-space/standard/rest": {
+    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "Divider.kt",
+      "symbol": "HorizontalDivider",
+      "line": 49,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
+    }
+  },
+  "navigation-drawer/indicator-height": {
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "navigation-drawer/indicator-width": {
+    "spec": {
+      "value": "336dp",
+      "url": "https://m3.material.io/components/navigation-drawer/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "reason": "The indicator fills the 360dp drawer inside two 12dp insets.",
+    "compose": {
+      "value": "336dp",
+      "file": "NavigationDrawer.kt",
+      "symbol": "NavigationDrawerItem",
+      "line": 1123,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationDrawer.kt#L1123"
+    }
+  },
+  "navigation-drawer/indicator-width/standard/selected": {
+    "reason": "The Compose sheet fixture uses 12 dp side padding within 360 dp, and the selected row fills that inner width.",
+    "compose": {
+      "value": "336dp",
+      "file": "NavigationDrawer.kt",
+      "symbol": "NavigationDrawerItem",
+      "line": 1141,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationDrawer.kt#L1141"
+    }
+  },
+  "navigation-drawer/label-weight/standard/selected": {
+    "reason": "The released DrawerItem supplies colour and leaves typography to caller-provided content.",
+    "compose": {
+      "value": null,
+      "file": "NavigationDrawer.kt",
+      "symbol": "NavigationDrawerItem",
+      "line": 1156,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationDrawer.kt#L1156"
+    }
+  },
+  "navigation-rail/container-shape/modal-expanded/rest": {
+    "reason": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail.",
+    "compose": {
+      "value": "16dp",
+      "file": "NavigationRailExpandedTokens.kt",
+      "symbol": "ModalContainerShape",
+      "line": 39,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationRailExpandedTokens.kt#L39"
+    }
+  },
+  "navigation-rail/item-hit-width/modal-expanded/rest": {
+    "reason": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width.",
+    "spec": {
+      "value": "Full rail width",
+      "url": "https://m3.material.io/components/navigation-rail/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Content-sized target",
+      "file": "NavigationItem.kt",
+      "symbol": "NavigationItem",
+      "line": 466,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L466"
+    }
+  },
+  "navigation-rail/side-padding/modal-expanded/rest": {
+    "reason": "The website shows a full-width target. Compose applies no default horizontal padding to the modal dialog body.",
+    "spec": {
+      "value": "0dp",
+      "url": "https://m3.material.io/components/navigation-rail/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0dp",
+      "file": "WideNavigationRail.kt",
+      "symbol": "WideNavigationRail",
+      "line": 357,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/WideNavigationRail.kt#L357"
+    }
+  },
+  "progress/height/linear": {
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/progress-indicators/specs",
+      "section": "Configurations",
+      "read": "2026-11-26"
+    }
+  },
+  "radios/focus/unselected": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "radios/icon-size": {
+    "spec": {
+      "value": "20dp",
+      "url": "https://m3.material.io/components/radio-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "radios/target-size": {
+    "reason": "The website gives the minimum interactive target size.",
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/radio-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "search/bar-height/contained": {
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/search/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "search/focus/contained": {
+    "reason": "Compose attaches an outline in opt-in inset mode. The website specifies a focus ring. The reference choice is pending.",
+    "compose": {
+      "value": "No outline",
+      "file": "SearchBar.kt",
+      "symbol": "InputField",
+      "line": 2119,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SearchBar.kt#L2119"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "search/trailing-icon/contained": {
+    "reason": "The website sizes the glyph. Compose takes the trailing icon as a slot.",
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/search/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "search/trailing-space/contained-no-actions/enabled": {
+    "reason": "The released search field uses the unlabelled text field padding when its trailing slot is empty.",
+    "compose": {
+      "value": "16dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "contentPaddingWithoutLabel",
+      "line": 452,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L452"
+    },
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/search/specs",
+      "section": "Docked layout measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "search/trailing-space/divided-no-actions/enabled": {
+    "reason": "The released search field uses the unlabelled text field padding when its trailing slot is empty.",
+    "compose": {
+      "value": "16dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "contentPaddingWithoutLabel",
+      "line": 452,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L452"
+    },
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/search/specs",
+      "section": "Docked layout measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "select/field-colour/outlined": {
+    "reason": "The released palette uses a transparent field container.",
+    "compose": {
+      "value": "transparent",
+      "file": "ExposedDropdownMenu.kt",
+      "symbol": "outlinedTextFieldColors",
+      "line": 676,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ExposedDropdownMenu.kt#L676"
+    }
+  },
+  "select/field-height/outlined": {
+    "reason": "The released field sets a 56dp minimum height.",
+    "compose": {
+      "value": "56dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "MinHeight",
+      "line": 1000,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L1000"
+    }
+  },
+  "select/label-colour/outlined/hover": {
+    "reason": "The outlined hover label uses the OnSurfaceVariant role in the autocomplete reference.",
+    "spec": {
+      "value": "OnSurfaceVariant #49454F",
+      "url": "https://m3.material.io/components/text-fields/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "select/menu-container-colour/filled/popup": {
+    "reason": "The baseline autocomplete menu uses SurfaceContainer.",
+    "spec": {
+      "value": "SurfaceContainer #F3EDF7",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "select/menu-container-colour/outlined/popup": {
+    "reason": "The baseline autocomplete menu uses SurfaceContainer.",
+    "compose": {
+      "value": "SurfaceContainer #F3EDF7",
+      "file": "MenuTokens.kt",
+      "symbol": "ContainerColor",
+      "line": 22,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22"
+    },
+    "spec": {
+      "value": "SurfaceContainer #F3EDF7",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "select/menu-container-shape/filled/popup": {
+    "reason": "The baseline autocomplete menu gives a corner size independently of the expressive Material menu.",
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "4dp",
+      "file": "FilledAutocompleteTokens.kt",
+      "symbol": "MenuContainerShape",
+      "line": 30,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L30"
+    }
+  },
+  "select/menu-container-shape/outlined/popup": {
+    "reason": "The baseline autocomplete menu gives a corner size independently of the expressive Material menu.",
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "4dp",
+      "file": "OutlinedAutocompleteTokens.kt",
+      "symbol": "MenuContainerShape",
+      "line": 30,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L30"
+    }
+  },
+  "select/option-height/filled/popup-top-layer": {
+    "reason": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+    "spec": {
+      "value": "44dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "48dp",
+      "file": "Menu.kt",
+      "symbol": "DropdownMenuItem",
+      "line": 2166,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+    }
+  },
+  "select/option-height/outlined/popup-top-layer": {
+    "reason": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+    "spec": {
+      "value": "44dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "48dp",
+      "file": "Menu.kt",
+      "symbol": "DropdownMenuItem",
+      "line": 2166,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+    }
+  },
+  "select/trailing-icon-colour/filled/error-focus": {
+    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "spec": {
+      "value": "Error #B3261E",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Error #B3261E",
+      "file": "FilledAutocompleteTokens.kt",
+      "symbol": "TextFieldErrorFocusTrailingIconColor",
+      "line": 100,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L100"
+    }
+  },
+  "select/trailing-icon-colour/filled/focus": {
+    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "spec": {
+      "value": "OnSurfaceVariant #49454F",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "OnSurfaceVariant #49454F",
+      "file": "FilledAutocompleteTokens.kt",
+      "symbol": "TextFieldFocusTrailingIconColor",
+      "line": 154,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L154"
+    }
+  },
+  "select/trailing-icon-colour/outlined/error-focus": {
+    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "spec": {
+      "value": "Error #B3261E",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Error #B3261E",
+      "file": "OutlinedAutocompleteTokens.kt",
+      "symbol": "TextFieldErrorFocusTrailingIconColor",
+      "line": 87,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L87"
+    }
+  },
+  "select/trailing-icon-colour/outlined/focus": {
+    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "spec": {
+      "value": "OnSurfaceVariant #49454F",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "OnSurfaceVariant #49454F",
+      "file": "OutlinedAutocompleteTokens.kt",
+      "symbol": "TextFieldFocusTrailingIconColor",
+      "line": 144,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L144"
+    }
+  },
+  "select/trailing-icon/outlined": {
+    "reason": "The supplied dropdown icon uses the default icon size.",
+    "compose": {
+      "value": "24dp",
+      "file": "Icon.kt",
+      "symbol": "DefaultIconSizeModifier",
+      "line": 219,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Icon.kt#L219"
+    }
+  },
+  "side-sheet/action-row/modal/rest": {
+    "reason": "This probe checks a built-in action row. Callers can provide footer content.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/action-row/standard/rest": {
+    "reason": "This probe checks a built-in action row. Callers can provide footer content.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/back-button/modal/rest": {
+    "reason": "This probe checks the modal sheet header for a built-in back affordance.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/close-target/standard": {
+    "reason": "The website specifies the minimum interactive target size.",
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/side-sheets/guidelines",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/content-padding/modal": {
+    "reason": "The website specifies the content padding.",
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/detached-spacing/detached/rest": {
+    "reason": "This probe checks the detached layout. The Material sheet supports standard and modal docking.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/header-padding/standard": {
+    "reason": "The website specifies the header padding.",
+    "spec": {
+      "value": "24dp",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/headline-colour/modal/rest": {
+    "reason": "The side sheet has a website spec and no standalone released Compose component.",
+    "spec": {
+      "value": "OnSurface #1D1B20",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/headline-colour/standard/rest": {
+    "reason": "The side sheet has a website spec and no standalone released Compose component.",
+    "spec": {
+      "value": "OnSurface #1D1B20",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "side-sheet/max-width/standard": {
+    "reason": "The website specifies the maximum width.",
+    "spec": {
+      "value": "400dp",
+      "url": "https://m3.material.io/components/side-sheets/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "slider/focus/xs": {
+    "reason": "The website specifies a focus ring. Compose defaults to an opacity layer. The reference choice is pending.",
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "LocalRippleThemeConfiguration",
+      "line": 378,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
+    },
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    }
+  },
+  "slider/handle-height/xs": {
+    "spec": {
+      "value": "44dp",
+      "url": "https://m3.material.io/components/sliders/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "slider/handle-width/xs": {
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/sliders/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "snackbar/close-icon-inset-end/one-line-action-close/rest": {
+    "reason": "The 24 dp close icon is centered in a 48 dp Compose allocation.",
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/snackbar/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "12dp",
+      "file": "Snackbar.kt",
+      "symbol": "Snackbar",
+      "line": 260,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Snackbar.kt#L260"
+    }
+  },
+  "snackbar/close-icon-inset-start/one-line-action-close/rest": {
+    "reason": "The 24 dp close icon is centered in a 48 dp Compose allocation.",
+    "spec": {
+      "value": "12dp",
+      "url": "https://m3.material.io/components/snackbar/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "12dp",
+      "file": "Snackbar.kt",
+      "symbol": "Snackbar",
+      "line": 260,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Snackbar.kt#L260"
+    }
+  },
+  "split-button/gap/size-m": {
+    "reason": "The released split layout uses the shared gap default.",
+    "compose": {
+      "value": "2dp",
+      "file": "SplitButton.kt",
+      "symbol": "Spacing",
+      "line": 212,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SplitButton.kt#L212"
+    }
+  },
+  "split-button/height/filled-m/density-minus-1": {
+    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "spec": {
+      "value": "52dp",
+      "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
+      "section": "Density",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/height/filled-m/density-minus-2": {
+    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
+      "section": "Density",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/height/filled-m/density-minus-3": {
+    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "spec": {
+      "value": "44dp",
+      "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
+      "section": "Density",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/menu-icon-offset/filled-l/rest": {
+    "reason": "The site moves the unselected icon slightly toward the leading half.",
+    "spec": {
+      "value": "-3dp",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/menu-icon-offset/filled-m/rest": {
+    "reason": "The site moves the unselected icon slightly toward the leading half.",
+    "spec": {
+      "value": "-2dp",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/menu-icon-offset/filled-s/rest": {
+    "reason": "The site moves the unselected icon slightly toward the leading half.",
+    "spec": {
+      "value": "-1dp",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/menu-icon-offset/filled-xl/rest": {
+    "reason": "The site moves the unselected icon slightly toward the leading half.",
+    "spec": {
+      "value": "-6dp",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/menu-icon-offset/filled-xs/rest": {
+    "reason": "The site moves the unselected icon slightly toward the leading half.",
+    "spec": {
+      "value": "-1dp",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "split-button/state-layer/filled-trailing/selected": {
+    "reason": "The website specifies a selected layer without changing the container tone and gives no numeric opacity.",
+    "spec": {
+      "value": "Visible state layer",
+      "url": "https://m3.material.io/components/split-button/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "switch/track-colour/unselected/disabled": {
+    "reason": "Compare the resolved disabled track fill using the token alpha in the light theme.",
+    "compose": {
+      "value": "#E6E0E9 at 0.12 opacity",
+      "file": "SwitchTokens.kt",
+      "symbol": "DisabledUnselectedTrackColor",
+      "line": 44,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L44"
+    }
+  },
+  "tabs/container-height/primary-stacked": {
+    "spec": {
+      "value": "64dp",
+      "url": "https://m3.material.io/components/tabs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "reason": "The released tab layout selects its height by content.",
+    "compose": {
+      "value": "64dp",
+      "file": "Tab.kt",
+      "symbol": "LargeTabHeight",
+      "line": 419,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tab.kt#L419"
+    }
+  },
+  "tabs/container-height/primary-text": {
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/tabs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "tabs/container-height/secondary-text": {
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/tabs/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "reason": "The released text tab uses the shared small tab height.",
+    "compose": {
+      "value": "48dp",
+      "file": "Tab.kt",
+      "symbol": "SmallTabHeight",
+      "line": 417,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tab.kt#L417"
+    }
+  },
+  "tabs/label-line-height/primary/rest": {
+    "reason": "The released tab typography uses TitleSmall, including its 20 sp line height."
+  },
+  "tabs/label-line-height/secondary/rest": {
+    "reason": "The released tab typography uses TitleSmall, including its 20 sp line height."
+  },
+  "text-field/height/filled": {
+    "reason": "The released field sets a 56dp minimum height.",
+    "compose": {
+      "value": "56dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "MinHeight",
+      "line": 83,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L83"
+    },
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/text-fields/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "text-field/height/outlined": {
+    "reason": "The released field sets a 56dp minimum height.",
+    "compose": {
+      "value": "56dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "MinHeight",
+      "line": 1000,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L1000"
+    },
+    "spec": {
+      "value": "56dp",
+      "url": "https://m3.material.io/components/text-fields/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "text-field/leading-icon/filled": {
+    "reason": "Compose accepts a caller-sized leading icon.",
+    "compose": {
+      "value": null,
+      "file": "FilledTextFieldTokens.kt",
+      "symbol": "LeadingIconSize",
+      "line": 193,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledTextFieldTokens.kt#L193"
+    }
+  },
+  "text-field/outline-width/outlined-focus": {
+    "reason": "Compose uses a 2 dp border. The newer 3 dp token is unused.",
+    "compose": {
+      "value": "2dp",
+      "file": "TextFieldDefaults.kt",
+      "symbol": "FocusedBorderThickness",
+      "line": 910,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L910"
+    },
+    "spec": {
+      "value": "2dp",
+      "url": "https://m3.material.io/components/text-fields/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    }
+  },
+  "text-field/trailing-action-focus-ring/filled/focus": {
+    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "text-field/trailing-action-focus-ring/outlined/focus": {
+    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "timepicker/dialog-corner/dial": {
+    "reason": "The released time picker dialog uses the shared dialog shape.",
+    "compose": {
+      "value": "28dp",
+      "file": "DialogTokens.kt",
+      "symbol": "ContainerShape",
+      "line": 45,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+    }
+  },
+  "timepicker/dialog-corner/input": {
+    "reason": "The released time picker dialog uses the shared dialog shape.",
+    "compose": {
+      "value": "28dp",
+      "file": "DialogTokens.kt",
+      "symbol": "ContainerShape",
+      "line": 45,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+    }
+  },
+  "timepicker/focus-indicator/input/period-focus": {
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "spec": {
+      "value": "Visible keyboard focus ring",
+      "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+      "section": "Keyboard focus indicator",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0.10 opacity focus layer",
+      "file": "Ripple.kt",
+      "symbol": "ThemeConfiguration",
+      "line": 360,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
+    }
+  },
+  "timepicker/inline-embedding/input/rest": {
+    "reason": "Compose provides composable TimeInput separately from its dialog.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/time-pickers/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "TimePicker.kt",
+      "symbol": "TimeInput",
+      "line": 313,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TimePicker.kt#L313"
+    }
+  },
+  "timepicker/scroll-variant/scroll/rest": {
+    "reason": "The released expressive time picker exposes a scrolling time selector.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/time-pickers/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "TimePicker.kt",
+      "symbol": "TimePicker",
+      "line": 423,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TimePicker.kt#L423"
+    }
+  },
+  "toolbar/collapse-into-fab/floating-with-fab/scroll": {
+    "reason": "The probe scrolls a floating toolbar with a FAB and checks its collapsed state.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/toolbars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "FloatingToolbar.kt",
+      "symbol": "HorizontalFloatingToolbar",
+      "line": 175,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L175"
+    }
+  },
+  "toolbar/container-elevation/floating-horizontal-no-fab/rest": {
+    "reason": "The site depicts a raised floating toolbar. Compose defaults to Level 0 without a FAB.",
+    "spec": {
+      "value": "Raised",
+      "url": "https://m3.material.io/components/toolbars/guidelines",
+      "section": "Floating toolbars",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Level 0",
+      "file": "FloatingToolbar.kt",
+      "symbol": "ContainerExpandedElevation",
+      "line": 640,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L640"
+    }
+  },
+  "tooltip/actions/rich/rest": {
+    "reason": "The website rich tooltip anatomy includes an action slot.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "RichTooltip",
+      "line": 426,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L426"
+    }
+  },
+  "tooltip/caret-shape/rich/custom": {
+    "reason": "Compose permits a caller-supplied Shape. The fixture requests an alternate shape.",
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "RichTooltip",
+      "line": 430,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L430"
+    }
+  },
+  "tooltip/caret/plain/rest": {
+    "reason": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "PlainTooltip",
+      "line": 345,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L345"
+    }
+  },
+  "tooltip/caret/rich/rest": {
+    "reason": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "RichTooltip",
+      "line": 430,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L430"
+    }
+  },
+  "tooltip/gap-trigger/plain/above": {
+    "reason": "The measured gap is surface to anchor before any caret shape is added.",
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "4dp",
+      "file": "Tooltip.kt",
+      "symbol": "SpacingBetweenTooltipAndAnchor",
+      "line": 1448,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L1448"
+    }
+  },
+  "tooltip/hide-delay/plain/after-pointer-exit": {
+    "reason": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal.",
+    "spec": {
+      "value": "1500ms",
+      "url": "https://m3.material.io/components/tooltips/guidelines",
+      "section": "Transient tooltips",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "0ms",
+      "file": "BasicTooltip.kt",
+      "symbol": "PointerEventType.Exit",
+      "line": 274,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/internal/BasicTooltip.kt#L274"
+    }
+  },
+  "tooltip/max-width/plain": {
+    "reason": "Compose uses the 200 dp default. The newer maximum width token is unused.",
+    "compose": {
+      "value": "200dp",
+      "file": "Tooltip.kt",
+      "symbol": "plainTooltipMaxWidth",
+      "line": 535,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L535"
+    }
+  },
+  "tooltip/persistent/rich/click-triggered": {
+    "reason": "Compose supports a tooltip state that persists until dismissal.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "rememberTooltipState",
+      "line": 861,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L861"
+    }
+  },
+  "tooltip/simultaneous-visible/plain/focus-and-hover": {
+    "reason": "The fixture focuses a plain tooltip and hovers a second trigger.",
+    "spec": {
+      "value": "1",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "1",
+      "file": "BasicTooltip.kt",
+      "symbol": "BasicTooltipState",
+      "line": 23,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/internal/BasicTooltip.kt#L23"
+    }
+  },
+  "tooltip/subhead/rich/rest": {
+    "reason": "The website rich tooltip anatomy includes a subhead slot.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/tooltips/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "Tooltip.kt",
+      "symbol": "RichTooltip",
+      "line": 426,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Tooltip.kt#L426"
+    }
+  },
+  "tooltip/transition-duration/plain": {
+    "reason": "The references give no CSS transition duration for a plain tooltip."
+  },
+  "top-app-bar/large-flexible/expressive/rest": {
+    "reason": "The probe requests the expressive configuration in the small-bar fixture.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "AppBar.kt",
+      "symbol": "LargeFlexibleTopAppBar",
+      "line": 814,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L814"
+    }
+  },
+  "top-app-bar/leading-space/small/rest": {
+    "reason": "The 48 dp Compose target begins 4 dp from the bar edge. Its 24 dp glyph therefore begins 16 dp from that edge.",
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Small top app bar",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "4dp",
+      "file": "AppBar.kt",
+      "symbol": "TopAppBarHorizontalPadding",
+      "line": 3610,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L3610"
+    }
+  },
+  "top-app-bar/medium-flexible/expressive/rest": {
+    "reason": "The probe requests the expressive configuration in the small-bar fixture.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "AppBar.kt",
+      "symbol": "MediumFlexibleTopAppBar",
+      "line": 618,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L618"
+    }
+  },
+  "top-app-bar/search-variant/expressive/rest": {
+    "reason": "Compose uses the search bar component for this app bar pattern. The probe requests a search variant on the Material app bar.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "SearchBar.kt",
+      "symbol": "SearchBar",
+      "line": 260,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SearchBar.kt#L260"
+    }
+  },
+  "top-app-bar/subtitle/expressive/rest": {
+    "reason": "The probe requests the expressive configuration in the small-bar fixture.",
+    "spec": {
+      "value": "Present",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "Present",
+      "file": "AppBar.kt",
+      "symbol": "MediumFlexibleTopAppBar",
+      "line": 618,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L618"
+    }
+  },
+  "top-app-bar/title-inset/large-no-leading/rest": {
+    "reason": "Compose adds title inset to the outer row padding for a combined 16 dp.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "16dp",
+      "file": "AppBar.kt",
+      "symbol": "TopAppBarTitleInset",
+      "line": 3615,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L3615"
+    }
+  },
+  "top-app-bar/title-inset/medium-no-leading/rest": {
+    "reason": "Compose adds title inset to the outer row padding for a combined 16 dp.",
+    "spec": {
+      "value": "16dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Measurements",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "16dp",
+      "file": "AppBar.kt",
+      "symbol": "TopAppBarTitleInset",
+      "line": 3615,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L3615"
+    }
+  },
+  "top-app-bar/trailing-space/small/rest": {
+    "reason": "The 48 dp Compose target begins 4 dp from the bar edge. Its 24 dp glyph therefore begins 16 dp from that edge.",
+    "spec": {
+      "value": "4dp",
+      "url": "https://m3.material.io/components/app-bars/specs",
+      "section": "Small top app bar",
+      "read": "2026-11-26"
+    },
+    "compose": {
+      "value": "4dp",
+      "file": "AppBar.kt",
+      "symbol": "TopAppBarHorizontalPadding",
+      "line": 3610,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt#L3610"
+    }
+  }
+}
