@@ -18,7 +18,7 @@ export function interaction(name: string, selector: string, state: ReadState): P
   return variants[state] ? [part(name,selector+variants[state])] : [];
 }
 
-export async function runFieldFixture(component: string, cases: Case[], required: (id: string) => string[]) {
+export async function runFieldFixture(component: string, cases: Case[], required: (id: string) => string[], packageEntry = false) {
   const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
   const filter = process.argv.find(arg=>arg.startsWith("--case="))?.slice(7);
   const picked = filter ? cases.filter(row=>row.id.includes(filter)) : cases;
@@ -27,7 +27,7 @@ export async function runFieldFixture(component: string, cases: Case[], required
   const width = widthOption ? Number(widthOption.slice("--viewport-width=".length)) : undefined;
   assert.ok(width === undefined || (Number.isInteger(width) && width > 0), "Viewport width must be a positive integer");
   const viewport = width ? { width, height: 600 } : undefined;
-  const harness = await createConformanceHarness({component,engine,viewport});
+  const harness = await createConformanceHarness({component,engine,viewport,packageEntry});
   harness.page.setDefaultTimeout(6500);
   const errors: string[] = [];
   harness.page.on("pageerror",error=>errors.push(error.message));
