@@ -182,6 +182,11 @@ const setupCombobox = (
   input.setAttribute("aria-expanded", "false");
 
   let active: HTMLElement | null = null;
+  // `open` fires before the menu is positioned, and `positioned` fires while
+  // the menu is still `scaleY(0)`. `scrollIntoView` reads that collapsed box
+  // and parks the option above the popup. The opening scroll uses the
+  // option's layout position, which the scale does not move.
+  let positioned = false;
   let keyboard = false;
   let pending: "selected" | "first" | "last" = "selected";
   let buffer = "";
@@ -204,7 +209,23 @@ const setupCombobox = (
       ? state.options.find((option) => String(option.id) === element.getAttribute("data-id"))
       : undefined;
 
-  const setActive = (element: HTMLElement | null): void => {
+  // The option's top inside the scrolling list. `offsetTop` is layout, so the
+  // menu's opening scale does not change it. When the list is not the
+  // option's offset parent, both are measured from the same ancestor and the
+  // difference is the option's place in the list.
+  const revealInList = (option: HTMLElement): void => {
+    const list = option.closest<HTMLElement>('[role="listbox"]');
+    if (!list) return;
+    const top = option.offsetParent === list || option.offsetParent !== list.offsetParent
+      ? option.offsetTop
+      : option.offsetTop - list.offsetTop;
+    const bottom = top + option.offsetHeight;
+    const visible = list.clientHeight;
+    if (top < list.scrollTop) list.scrollTop = top;
+    else if (bottom > list.scrollTop + visible) list.scrollTop = bottom - visible;
+  };
+
+  const setActive = (element: HTMLElement | null, scroll = false): void => {
     active = element;
     options().forEach((option) => {
       option.classList.toggle(activeClass, option === element);
@@ -212,7 +233,9 @@ const setupCombobox = (
     });
     if (element) {
       input.setAttribute("aria-activedescendant", element.id);
-      element.scrollIntoView?.({ block: "nearest" });
+      // A key moves the option after the menu is open, when its box is the
+      // one on screen. The opening placement uses `revealInList` instead.
+      if (scroll) element.scrollIntoView?.({ block: "nearest" });
     } else {
       input.removeAttribute("aria-activedescendant");
     }
@@ -221,12 +244,20 @@ const setupCombobox = (
   // Where the active option starts when the listbox opens
   const placeActive = (): void => {
     const list = enabled();
-    if (!list.length) return setActive(null);
-    if (pending === "first") return setActive(list[0]);
-    if (pending === "last") return setActive(list[list.length - 1]);
-    const selectedId = state.selectedOption ? String(state.selectedOption.id) : null;
-    const selected = list.find((option) => option.getAttribute("data-id") === selectedId);
-    setActive(selectedId ? selected ?? null : list[0]);
+    if (!list.length) {
+      setActive(null);
+      return;
+    }
+    if (pending === "first") setActive(list[0]);
+    else if (pending === "last") setActive(list[list.length - 1]);
+    else {
+      const selectedId = state.selectedOption ? String(state.selectedOption.id) : null;
+      const selected = list.find((option) => option.getAttribute("data-id") === selectedId);
+      setActive(selectedId ? selected ?? null : list[0]);
+    }
+    // The listbox can arrive after the menu was positioned. Place it then
+    // too; the `positioned` listener covers the ordinary open.
+    if (positioned && active) revealInList(active);
   };
 
   const open = (start: "selected" | "first" | "last", event?: Event): void => {
@@ -249,7 +280,7 @@ const setupCombobox = (
   const move = (index: number): void => {
     const list = enabled();
     if (!list.length) return;
-    setActive(list[Math.max(0, Math.min(index, list.length - 1))]);
+    setActive(list[Math.max(0, Math.min(index, list.length - 1))], true);
   };
 
   // Typing moves to the next option starting with what was typed
@@ -266,7 +297,7 @@ const setupCombobox = (
     const match = ordered.find((option) =>
       (option.textContent || "").trim().toLowerCase().startsWith(buffer),
     );
-    if (match) setActive(match);
+    if (match) setActive(match, true);
     return !!match;
   };
 
@@ -290,8 +321,14 @@ const setupCombobox = (
   };
 
   menu.on("open", () => {
+    positioned = false;
     input.setAttribute("aria-expanded", "true");
     place();
+  });
+
+  menu.on("positioned", () => {
+    positioned = true;
+    if (active) revealInList(active);
   });
 
   // The real menu replaces the stand-in when its chunk arrives: the listbox,
@@ -299,6 +336,7 @@ const setupCombobox = (
   menu.whenReady(place);
 
   menu.on("close", () => {
+    positioned = false;
     input.setAttribute("aria-expanded", "false");
     input.removeAttribute("aria-controls");
     setActive(null);
