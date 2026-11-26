@@ -176,6 +176,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     throw new Error("Build the package with bun run build before generating the conformance matrix");
   }
   const overrides: Record<string, Override> = await Bun.file(join(root, "conformance", "overrides.json")).json();
+  const specValues: Record<string, SpecReference> = await Bun.file(join(root, "conformance", "spec-values.json")).json();
   const ids = new Set<string>();
   const fixtures = new Set<string>();
   const files = new Set<string>();
@@ -196,6 +197,14 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
   for (const [id, override] of Object.entries(overrides)) {
     if (!ids.has(id)) throw new Error(`Unknown override ${id}`);
     if (override.compose && !override.reason?.trim()) throw new Error(`Compose override ${id} needs a reason`);
+  }
+  for (const [id, spec] of Object.entries(specValues)) {
+    if (!ids.has(id)) throw new Error(`Unknown specification row ${id}`);
+    if (overrides[id]?.spec?.value != null) throw new Error(`Specification row ${id} already has a value`);
+    if (!spec.value?.trim() || !spec.section.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(spec.read) ||
+        !/^https:\/\/m3\.material\.io\/components\/[a-z-]+\/specs$/.test(spec.url)) {
+      throw new Error(`Specification row ${id} needs a value, official specs URL, section and read date`);
+    }
   }
   const tokens = await matrixTokens(root, files);
   const lookup = new Map(tokens.map(row => [`${row.file}.${row.token}`, row]));
@@ -255,11 +264,13 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     const component = components.get(binding.id) ?? { id: binding.id, name: binding.name, properties: [] };
     for (const row of binding.rows) {
       const id = rowId(binding.id, row.key);
-      const spec = overrides[id]?.spec ?? specDefault;
+      const existingSpec = overrides[id]?.spec ?? specDefault;
+      const publishedSpec = specValues[id];
+      const spec = publishedSpec ?? existingSpec;
       const compose = composeFor(id, row);
       const forRole = (value: string) => {
         const normalized = colorValue(value) ?? value;
-        const referenceColor = [spec.value, compose.value].find(value =>
+        const referenceColor = [existingSpec.value, compose.value].find(value =>
           value && /^\w+ (#[A-F\d]{6})$/i.exec(value)?.[1] === normalized);
         if (referenceColor) return referenceColor;
         const role = roles.get(normalized);
@@ -272,15 +283,22 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
         chromium: readProbe(chromium, left, row.probe, id, forRole),
         webkit: readProbe(webkit, right, row.probe, id, forRole),
       };
-      const status = (reference: string | null): Status => {
+      const status = (reference: string | null, fromPublishedSpecs = false): Status => {
         if (reference === null) return "no-value";
-        const target = comparable(reference);
+        const comparison = fromPublishedSpecs
+          ? reference.replace(/^(\d+(?:\.\d+)?)pt$/, "$1px")
+            .replace(/^\w+ (#[A-F\d]{6} at [\d.]+ opacity)$/i, "$1")
+          : reference;
+        const target = comparable(comparison);
         const agrees = (value: string) => {
           if (reference === "Visible keyboard focus ring") {
             return Number(/^([\d.]+)px (?:solid|double|dotted|dashed) /.exec(value)?.[1] ?? 0) > 0;
           }
           if (reference === "Visible state layer") return Number(value) > 0;
           if (reference === "Raised") return /^Level [1-5]$/.test(value);
+          if (fromPublishedSpecs && row.aspect === "elevation" && reference === "0dp") {
+            return value === "none" || value === "Level 0";
+          }
           const limit = /^([\d.]+)dp (minimum|maximum)$/.exec(reference);
           if (limit && value.endsWith("px")) {
             const amount = Number.parseFloat(value);
@@ -299,7 +317,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
         variant: row.variant ?? variant, state, density: left.density,
         spec, compose,
         material: { value: values.chromium, engines: values.chromium === values.webkit ? null : values },
-        status: { spec: status(spec.value), compose: status(compose.value) },
+        status: { spec: status(spec.value, Boolean(publishedSpec)), compose: status(compose.value) },
         note: overrides[id]?.reason ?? "", issue: null,
       });
     }

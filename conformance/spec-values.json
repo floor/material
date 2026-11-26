@@ -1,0 +1,1130 @@
+{
+  "app-bar/container-height/centre": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/app-bars/specs",
+    "section": "Tokens & specs · App bar - Size - Small · App bar small container height",
+    "read": "2026-11-26"
+  },
+  "badge/container-colour/large": {
+    "value": "Error #B3261E",
+    "url": "https://m3.material.io/components/badges/specs",
+    "section": "Tokens & specs · Badges · Badge large color",
+    "read": "2026-11-26"
+  },
+  "badge/container-colour/small": {
+    "value": "Error #B3261E",
+    "url": "https://m3.material.io/components/badges/specs",
+    "section": "Tokens & specs · Badges · Badge color",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-colour/no-fab/rest": {
+    "value": "SurfaceContainer #F3EDF7",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container color",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/centred-fab/rest": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/end-fab/rest": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/no-fab/rest": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container height",
+    "read": "2026-11-26"
+  },
+  "bottom-sheet/container-colour/modal": {
+    "value": "SurfaceContainerLow #F7F2FA",
+    "url": "https://m3.material.io/components/bottom-sheets/specs",
+    "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container color",
+    "read": "2026-11-26"
+  },
+  "bottom-sheet/corner/modal-partial": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/bottom-sheets/specs",
+    "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container shape (top corners)",
+    "read": "2026-11-26"
+  },
+  "button/container-colour/filled": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled container color",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/corner/square-s/selected": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small selected container shape square (Corner Full on a 40dp container)",
+    "read": "2026-11-26"
+  },
+  "button/elevation/filled": {
+    "value": "0dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled elevation",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/l": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/m": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/s": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/xl": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/xs": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/l": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/m": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/s": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/xl": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/xs": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall icon size",
+    "read": "2026-11-26"
+  },
+  "button/outline-width/outlined": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium outline width",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/l": {
+    "value": "48dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/m": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/s": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/xl": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/xs": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall leading space",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Large · Button group large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Medium · Button group medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Small · Button group small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Xlarge · Button group xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Xsmall · Button group xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/gap/standard": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Small · Button group small between space",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/elevated": {
+    "value": "SurfaceContainerLow #F7F2FA",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Elevated · Elevated card container color",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/filled": {
+    "value": "SurfaceContainerHighest #E6E0E9",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Filled · Filled card container color",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/outlined": {
+    "value": "Surface #FEF7FF",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Outlined · Outlined card container color",
+    "read": "2026-11-26"
+  },
+  "card/focus-elevation/filled/focus": {
+    "value": "0dp",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Filled · Filled card focus container elevation",
+    "read": "2026-11-26"
+  },
+  "card/focus-elevation/outlined/focus": {
+    "value": "0dp",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Outlined · Outlined card focus container elevation",
+    "read": "2026-11-26"
+  },
+  "checkbox/box-height/default": {
+    "value": "18dp",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox container height",
+    "read": "2026-11-26"
+  },
+  "checkbox/box-width/default": {
+    "value": "18dp",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox container width",
+    "read": "2026-11-26"
+  },
+  "checkbox/checked-colour": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox selected container color",
+    "read": "2026-11-26"
+  },
+  "chips/selected-colour/filter": {
+    "value": "SecondaryContainer #E8DEF8",
+    "url": "https://m3.material.io/components/chips/specs",
+    "section": "Tokens & specs · Chip - Filter · Filter chip (selected) outline color",
+    "read": "2026-11-26"
+  },
+  "datepicker/modal-colour": {
+    "value": "SurfaceContainerHigh #ECE6F0",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container color",
+    "read": "2026-11-26"
+  },
+  "datepicker/modal-corner": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container shape",
+    "read": "2026-11-26"
+  },
+  "datepicker/modal-width": {
+    "value": "360dp",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container width",
+    "read": "2026-11-26"
+  },
+  "datepicker/year-width": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Year selection year container width",
+    "read": "2026-11-26"
+  },
+  "dialog/body-tracking/basic": {
+    "value": "0.25pt",
+    "url": "https://m3.material.io/components/dialogs/specs",
+    "section": "Tokens & specs · Dialog - Basic · Dialog supporting text tracking",
+    "read": "2026-11-26"
+  },
+  "dialog/colour/basic": {
+    "value": "SurfaceContainerHigh #ECE6F0",
+    "url": "https://m3.material.io/components/dialogs/specs",
+    "section": "Tokens & specs · Dialog - Basic · Dialog container color",
+    "read": "2026-11-26"
+  },
+  "divider/colour/horizontal": {
+    "value": "OutlineVariant #CAC4D0",
+    "url": "https://m3.material.io/components/divider/specs",
+    "section": "Tokens & specs · Divider · Divider color",
+    "read": "2026-11-26"
+  },
+  "extended-fab/container-height/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large container height",
+    "read": "2026-11-26"
+  },
+  "extended-fab/container-height/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium container height",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/large": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/medium": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/small": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-size/large": {
+    "value": "36dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon size",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-size/medium": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon size",
+    "read": "2026-11-26"
+  },
+  "extended-fab/label-tracking/small": {
+    "value": "0.15pt",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small label text",
+    "read": "2026-11-26"
+  },
+  "fab/container-height/default": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-height/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-height/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/default": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container width",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large container width",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium container width",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/default": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) icon size",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/large": {
+    "value": "36dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large icon size",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/medium": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/button-icon": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu close button icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-height": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item container height",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-icon": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-tracking": {
+    "value": "0.15pt",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item label text",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Large · Icon button large container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Medium · Icon button medium container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Small · Icon button small container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Xlarge · Icon button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Xsmall · Icon button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/icon-size/size-s": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Small · Icon button small icon size",
+    "read": "2026-11-26"
+  },
+  "list/between-space/segmented-one-line/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item between space",
+    "read": "2026-11-26"
+  },
+  "list/bottom-space/segmented-one-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item bottom space",
+    "read": "2026-11-26"
+  },
+  "list/container-colour/segmented/rest": {
+    "value": "Surface #FEF7FF",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item segmented container color",
+    "read": "2026-11-26"
+  },
+  "list/selected-colour/segmented": {
+    "value": "SecondaryContainer #E8DEF8",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item selected container color",
+    "read": "2026-11-26"
+  },
+  "list/selected-colour/standard": {
+    "value": "SecondaryContainer #E8DEF8",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item selected container color",
+    "read": "2026-11-26"
+  },
+  "list/supporting-tracking": {
+    "value": "0.25pt",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item supporting text tracking",
+    "read": "2026-11-26"
+  },
+  "list/top-space/segmented-one-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item top space",
+    "read": "2026-11-26"
+  },
+  "list/vertical-padding/segmented-three-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item top space",
+    "read": "2026-11-26"
+  },
+  "list/vertical-padding/segmented-two-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item top space",
+    "read": "2026-11-26"
+  },
+  "menu/container-colour/baseline": {
+    "value": "SurfaceContainer #F3EDF7",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · Menu (baseline) · Menu container color",
+    "read": "2026-11-26"
+  },
+  "menu/container-colour/standard": {
+    "value": "SurfaceContainerLow #F7F2FA",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · Menus - Color - Standard · Menu standard container color",
+    "read": "2026-11-26"
+  },
+  "menu/container-corner/baseline": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · Menu (baseline) · Menu container shape",
+    "read": "2026-11-26"
+  },
+  "menu/container-corner/segmented": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · Menus - Common · Menu container shape",
+    "read": "2026-11-26"
+  },
+  "menu/selected-colour/baseline": {
+    "value": "SecondaryContainer #E8DEF8",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · Menu (baseline) · Menu list item selected container color",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/container-colour": {
+    "value": "SurfaceContainer #F3EDF7",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar container color",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/container-height/horizontal": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar height",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/container-height/vertical": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar height",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/label-colour/horizontal/selected": {
+    "value": "Secondary #625B71",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar item active label text color",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/indicator-colour": {
+    "value": "SecondaryContainer #E8DEF8",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator color",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/indicator-width/standard/selected": {
+    "value": "336dp",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator width",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/label-weight/standard/selected": {
+    "value": "700",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active label text weight",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/container-shape/modal-expanded/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail - Expanded · Nav rail expanded modal container shape",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/container-width/collapsed": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail - Collapsed · Nav rail collapsed container width",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/icon-size/expanded": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail item - Common · Nav rail item icon size",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/item-height/expanded": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail item - Common · Nav rail item container height",
+    "read": "2026-11-26"
+  },
+  "progress/height/circular": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/progress-indicators/specs",
+    "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
+    "read": "2026-11-26"
+  },
+  "progress/width/circular": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/progress-indicators/specs",
+    "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
+    "read": "2026-11-26"
+  },
+  "radios/selected-colour": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/radio-button/specs",
+    "section": "Tokens & specs · Radio Button · Radio button icon selected color",
+    "read": "2026-11-26"
+  },
+  "search/bar-colour/contained": {
+    "value": "SurfaceContainerHigh #ECE6F0",
+    "url": "https://m3.material.io/components/search/specs",
+    "section": "Tokens & specs · Search - Bar · Search bar container color",
+    "read": "2026-11-26"
+  },
+  "slider/active-colour/xs": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/sliders/specs",
+    "section": "Tokens & specs · Slider · Slider active track color",
+    "read": "2026-11-26"
+  },
+  "snackbar/container-colour": {
+    "value": "InverseSurface #322F35",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container color",
+    "read": "2026-11-26"
+  },
+  "snackbar/corner": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container shape",
+    "read": "2026-11-26"
+  },
+  "snackbar/height/single-line": {
+    "value": "48dp",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container with single line height",
+    "read": "2026-11-26"
+  },
+  "snackbar/height/two-lines": {
+    "value": "68dp",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container with two lines height",
+    "read": "2026-11-26"
+  },
+  "snackbar/label-tracking": {
+    "value": "0.25pt",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar supporting text tracking",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Large · Split button large container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Small · Split button small container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Xsmall · Split button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "split-button/gap/size-m": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium between space",
+    "read": "2026-11-26"
+  },
+  "split-button/inner-corner/filled-l/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
+    "read": "2026-11-26"
+  },
+  "split-button/inner-corner/filled-m/rest": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium inner corner size",
+    "read": "2026-11-26"
+  },
+  "split-button/inner-corner/filled-xl/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
+    "read": "2026-11-26"
+  },
+  "split-button/pressed-opacity/size-m": {
+    "value": "0.1",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled pressed container state layer opacity (leading button)",
+    "read": "2026-11-26"
+  },
+  "split-button/trailing-icon/size-m": {
+    "value": "26dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium trailing button icon size",
+    "read": "2026-11-26"
+  },
+  "switch/selected-disabled-handle-colour": {
+    "value": "Surface #FEF7FF",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch disabled selected handle color",
+    "read": "2026-11-26"
+  },
+  "switch/selected-handle-width": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch selected handle width",
+    "read": "2026-11-26"
+  },
+  "switch/selected-track-colour": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch selected track color",
+    "read": "2026-11-26"
+  },
+  "switch/track-colour/unselected/disabled": {
+    "value": "SurfaceContainerHighest #E6E0E9 at 0.12 opacity",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch disabled unselected track color and Disabled track opacity",
+    "read": "2026-11-26"
+  },
+  "switch/track-height": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch track height",
+    "read": "2026-11-26"
+  },
+  "switch/track-width": {
+    "value": "52dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch track width",
+    "read": "2026-11-26"
+  },
+  "tabs/container-colour/primary/selected": {
+    "value": "Surface #FEF7FF",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab container color",
+    "read": "2026-11-26"
+  },
+  "tabs/container-colour/secondary/selected": {
+    "value": "Surface #FEF7FF",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab container color",
+    "read": "2026-11-26"
+  },
+  "tabs/indicator-colour/primary": {
+    "value": "Primary #6750A4",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator color",
+    "read": "2026-11-26"
+  },
+  "tabs/indicator-height/primary": {
+    "value": "3dp",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator height",
+    "read": "2026-11-26"
+  },
+  "tabs/label-line-height/primary/rest": {
+    "value": "20pt",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab with label text line height",
+    "read": "2026-11-26"
+  },
+  "tabs/label-line-height/secondary/rest": {
+    "value": "20pt",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab label text line height",
+    "read": "2026-11-26"
+  },
+  "text-field/corner/outlined": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · Outlined text field container shape",
+    "read": "2026-11-26"
+  },
+  "text-field/leading-icon/filled": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · Filled text field leading icon size",
+    "read": "2026-11-26"
+  },
+  "timepicker/dial-diameter": {
+    "value": "256dp",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker clock dial container size",
+    "read": "2026-11-26"
+  },
+  "timepicker/dialog-colour/dial": {
+    "value": "SurfaceContainerHigh #ECE6F0",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker container color",
+    "read": "2026-11-26"
+  },
+  "timepicker/dialog-corner/dial": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker container shape",
+    "read": "2026-11-26"
+  },
+  "timepicker/dialog-corner/input": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Input · Time input container shape",
+    "read": "2026-11-26"
+  },
+  "timepicker/period-tracking/dial": {
+    "value": "0.15pt",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker period selector label text tracking",
+    "read": "2026-11-26"
+  },
+  "toolbar/docked/height": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Docked · Docked toolbar container height",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/height": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Floating · Floating toolbar container height",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/standard-colour": {
+    "value": "SurfaceContainer #F3EDF7",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Color - Standard · Toolbar standard container color",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/start-padding": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Floating · Floating toolbar leading space",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/vibrant-colour": {
+    "value": "PrimaryContainer #EADDFF",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Color - Vibrant · Toolbar standard container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/body-tracking/rich": {
+    "value": "0.25pt",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip supporting text tracking",
+    "read": "2026-11-26"
+  },
+  "tooltip/colour/plain": {
+    "value": "InverseSurface #322F35",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/colour/rich": {
+    "value": "SurfaceContainer #F3EDF7",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/corner/plain": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container shape",
+    "read": "2026-11-26"
+  },
+  "tooltip/corner/rich": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container shape",
+    "read": "2026-11-26"
+  },
+  "tooltip/max-width/plain": {
+    "value": "444dp",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip max width",
+    "read": "2026-11-26"
+  }
+}
