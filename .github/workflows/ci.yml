@@ -252,6 +252,10 @@ jobs:
           - group: search-trailing-space
             browsers: chromium webkit
             checks: search-trailing-space:check
+          - group: conformance-matrix
+            browsers: chromium webkit
+            checks: conformance
+            args: --matrix --check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check
@@ -366,10 +370,11 @@ jobs:
             cd "$BROWSER_CHECKOUT"
             runner=(setpriv --reuid "$(stat -c %u /github/home)" --regid "$(stat -c %g /github/home)" --clear-groups bun)
           fi
+          read -r -a arguments <<< "${{ matrix.args }}"
           for script in ${{ matrix.checks }}; do
             start=$SECONDS
             echo "::group::$script (start)"
-            "${runner[@]}" run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
+            "${runner[@]}" run "$script" "${arguments[@]}" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
             echo "$script: passed in $((SECONDS - start))s"
           done
@@ -392,6 +397,7 @@ jobs:
             analysis/navigation-rail
             analysis/core
             analysis/listbox
+            analysis/conformance-matrix-actual.json
             analysis/catalogue-full.json
             analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json
