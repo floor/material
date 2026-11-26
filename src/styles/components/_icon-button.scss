@@ -174,8 +174,7 @@ $widths: (
     }
 
     &:focus-visible {
-        outline: 2px solid t.color("secondary");
-        outline-offset: 2px;
+        @include m.focus-ring($wrap: false);
         z-index: 1;
     }
 

@@ -401,6 +401,10 @@ button.#{$component}__avatar {
         border-radius: 50%;
         object-fit: cover;
     }
+
+    &:focus-visible {
+        @include m.focus-ring($wrap: false);
+    }
 }
 
 // Trailing items container
@@ -444,6 +448,12 @@ button.#{$component}__avatar {
         cursor: not-allowed;
         color: t.color("on-surface");
     }
+}
+
+// The collapsed bar paints its ring on the container. The expanded view's
+// input is the focused control, and it had no author ring.
+.#{$component}--view .#{$component}__input:focus-visible {
+    @include m.focus-ring($wrap: false);
 }
 
 // ============================================================================

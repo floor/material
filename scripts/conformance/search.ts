@@ -2,10 +2,10 @@ import type { SearchComponent, SearchConfig, SearchVariant } from "../../src/com
 import type { Case } from "./measure";
 import { fieldProperties,interaction,part,runFieldFixture,type ReadState } from "./field-fixture";
 
-type Data={variant:SearchVariant; view:"bar"|"docked"|"fullscreen"; direction:"ltr"|"rtl"; state:ReadState; avatar?:boolean; empty?:boolean; noActions?:boolean; intrinsic?:boolean};
+type Data={variant:SearchVariant; view:"bar"|"docked"|"fullscreen"; direction:"ltr"|"rtl"; state:ReadState; avatar?:boolean; clickable?:boolean; empty?:boolean; noActions?:boolean; intrinsic?:boolean};
 
 const mount:Case["mount"]=(mtrl,host,data)=>{
-  const {variant,view,direction,state,avatar,empty,noActions,intrinsic}=data as Data;
+  const {variant,view,direction,state,avatar,clickable,empty,noActions,intrinsic}=data as Data;
   const page=window as Window & {conformanceSearch?:SearchComponent};
   page.conformanceSearch?.destroy();
   document.documentElement.dir=direction;
@@ -17,7 +17,7 @@ const mount:Case["mount"]=(mtrl,host,data)=>{
     variant,viewMode:view==="fullscreen"?"fullscreen":"docked",
     disabled:state==="disabled", expandOnFocus:false,collapseOnBlur:false, fullWidth:!intrinsic, placeholder:"Search records",
     value:empty?"":"Notes",showClearButton:!empty&&!noActions,
-    leadingIcon:icon,trailingItems:noActions?[]:[{id:"profile",content:avatar?"<span>A</span>":icon,type:avatar?"avatar":"icon",ariaLabel:"Profile"}],
+    leadingIcon:icon,trailingItems:noActions?[]:[{id:"profile",content:avatar?"<span>A</span>":icon,type:avatar?"avatar":"icon",ariaLabel:"Profile",...(avatar&&clickable?{onClick:()=>{}}:{})}],
     suggestions:[{text:"Today",icon,supportingText:"Recent item",group:"Recent"},{text:"Saved",icon,group:"Recent"},{text:"All",icon,group:"Browse"}],
   });
   page.conformanceSearch=search;
@@ -64,5 +64,12 @@ for(const variant of ["contained","divided"] as const) {
   for(const density of [-1,-2,-3]) add(`bar/density/${density}`,base,"light",density);
   add("bar/rtl",{...base,direction:"rtl"});
   add("docked/rtl",{...base,view:"docked",direction:"rtl",empty:false});
+  add("docked/light/focus",{...base,view:"docked",empty:false,state:"focus"});
+  if (variant === "contained") cases.push({
+    id: "contained/bar/light/avatar-focus", mount,
+    config: {...base, avatar: true, clickable: true, state: "focus"},
+    state: "focus", focusTarget: ".mtrl-search__avatar", properties: fieldProperties,
+    parts: [...parts, part("verifiedState", ".mtrl-search__avatar:focus-visible")],
+  });
 }
 await runFieldFixture("search",cases,id=>["root","header","input","surface","leading","leadingGlyph",...(id.includes("/docked/")||id.includes("/fullscreen/")?["results","suggestion","suggestionText"]:[])]);

@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part } from "./measure";
 import type { DialogComponent, DialogConfig } from "../../src/components/dialog/types";
 
-type Fixture = { size: "small" | "medium" | "large" | "fullscreen"; wrap: boolean };
+type Fixture = { size: "small" | "medium" | "large" | "fullscreen"; wrap: boolean; closeButton?: boolean };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
-  const { size, wrap } = data as Fixture;
+  const { size, wrap, closeButton } = data as Fixture;
   const win = window as Window & { conformanceDialog?: DialogComponent };
   win.conformanceDialog?.destroy();
   Object.assign(host.style, { display: "block", width: "100vw", height: "100vh" });
@@ -15,6 +15,7 @@ const mount: Case["mount"] = (mtrl, host, data) => {
     size, title: "Discard changes?",
     content: wrap ? "The changes on this page will be discarded. ".repeat(18) : "The changes on this page will be discarded.",
     divider: true,
+    ...(closeButton ? { closeButton: true } : {}),
     buttons: [{ text: "Cancel", variant: "text" }, { text: "Discard", variant: "text" }],
   });
   win.conformanceDialog = dialog;
@@ -43,7 +44,16 @@ const parts = [
 
 const action = parts[0]!.selector;
 const widths = [900, 360];
-const cases = selectFixtureCases(widths.flatMap(width => {
+const closeFocus = {
+  width: 900,
+  id: "900/medium/light/close-focus",
+  mount, scheme: "light" as const, state: "focus" as const, before: 600,
+  config: { size: "medium", wrap: false, closeButton: true },
+  focusTarget: ".mtrl-dialog__header button",
+  properties: [...CONFORMANCE_PROPERTIES, "maxHeight", "minWidth", "textAlign", "overflowY", "transitionDuration"],
+  parts: [...parts, { name: "verifiedClose", document: true, selector: ".mtrl-dialog__header button:focus-visible" }],
+};
+const cases = selectFixtureCases([closeFocus, ...widths.flatMap(width => {
   const sizes = width === 360
     ? (["small", "large", "fullscreen", "medium"] as const)
     : (["small", "medium", "large", "fullscreen"] as const);
@@ -62,7 +72,7 @@ const cases = selectFixtureCases(widths.flatMap(width => {
         })),
     ),
   );
-}));
+})]);
 
 const engine = fixtureEngine();
 const harness = await createConformanceHarness({ component: "dialog", engine });
@@ -76,7 +86,7 @@ try {
   }
   for (const row of rows) {
     assert.ok(row.parts.dialog && row.parts.title && row.parts.body && row.parts.action, `${row.id}: ${Object.entries(row.parts).filter(([, part]) => !part).map(([name]) => name).join(", ")}`);
-    if (row.state !== "rest") assert.ok(row.parts.verifiedAction, row.id);
+    if (row.state !== "rest") assert.ok(row.parts.verifiedAction || row.parts.verifiedClose, row.id);
   }
   await harness.page.setViewportSize({ width: 360, height: 600 });
   await harness.measure([{ id: "overflow", mount, config: { size: "medium", wrap: true }, parts }]);

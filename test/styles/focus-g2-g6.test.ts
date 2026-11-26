@@ -84,11 +84,11 @@ describe("G3 — Slider handle keyboard focus", () => {
     .join("\n");
   const hc = forcedColorsBlocks(css);
 
-  test("draws a 2px secondary focus ring on .mtrl-slider__handle:focus-visible::before while keeping the outer touch box unoutlined", () => {
+  test("draws a 3px secondary focus ring on .mtrl-slider__handle:focus-visible::before while keeping the outer touch box unoutlined", () => {
     expect(declValue(top, ".mtrl-slider__handle:focus", "outline")).toBe("none");
     expect(
       declValue(top, ".mtrl-slider__handle:focus-visible::before", "outline")
-    ).toBe("2px solid var(--mtrl-sys-color-secondary)");
+    ).toBe("3px solid var(--mtrl-sys-color-secondary)");
     expect(
       declValue(
         top,

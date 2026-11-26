@@ -152,7 +152,10 @@ $margin: 16px;
     }
 
     &:focus-visible {
-      outline-color: t.color('inverse-on-surface');
+      // Documented exception. The shared icon-button ring is 3px Secondary;
+      // on inverse-surface the close stays 2px in inverse-on-surface.
+      outline: 2px solid t.color('inverse-on-surface');
+      outline-offset: 2px;
     }
   }
 

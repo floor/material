@@ -21,7 +21,10 @@ describe("public configure-once Sass", () => {
     expect((css.match(/--[\w-]+:/g) ?? []).length).toBe(5);
   });
 
-  // main moved because the slider's pressed handle joins the 2px width rule
+  // main moved because the keyboard focus ring is 3px in Secondary
+  // (styles/abstract/_mixins.scss and the component sheets; the snackbar
+  // close stays 2px in inverse-on-surface, styles/components/_snackbar.scss),
+  // because the slider's pressed handle joins the 2px width rule
   // (styles/components/_slider.scss), a standard list's selected row,
   // divider inset and leading media changed (styles/components/_list.scss),
   // and a clickable search avatar takes the trailing buttons' reset, layer

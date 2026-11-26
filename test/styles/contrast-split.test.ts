@@ -357,13 +357,16 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_timepicker.scss).
     // A dialog taller than a small window scrolls its content with the
     // headline in view (+240 B; styles/components/_dialog.scss).
-    // A clickable search avatar joins the trailing buttons' rule, so a button
-    // in either tree is reset and takes their layer and ring; its layer names
-    // OnSurfaceVariant itself, so supplied content keeps its own colour
-    // (+415 B; styles/components/_search.scss).
+    // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
+    // where the control is clipped. The snackbar close stays 2px in
+    // inverse-on-surface (styles/abstract/_mixins.scss and the component
+    // sheets; styles/components/_snackbar.scss). A clickable search avatar
+    // joins the trailing buttons' rule, so a button in either tree is reset
+    // and takes their layer and ring; its layer names OnSurfaceVariant itself,
+    // so supplied content keeps its own colour (styles/components/_search.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "8d0534b0b0e07ea5082621a4a34ec07db584df3b0c87cfabf2fdeaf45c636ed8",
-      length: 554753,
+      sha256: "8b35bc42371ce61c1ce60573432ea8235ed410dce1255653fb25e4c7a1304244",
+      length: 555022,
     });
   });
 

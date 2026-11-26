@@ -168,9 +168,9 @@ $component: '#{base.$prefix}-time-picker';
     @include m.typography('display-large');
 
     // Input mode: TimeFieldContainerColor surface-container-highest with an
-    // on-surface label; focused, primary-container and on-primary-container
-    // inside a 2dp primary outline. The selected colours never showed before:
-    // this rule overrode them.
+    // on-surface label; focused, primary-container and on-primary-container.
+    // The ring is the shared 3px Secondary stroke, inside the edge. The
+    // selected colours never showed before: this rule overrode them.
     &[type="number"] {
       height: 72px;
       @include m.typography('display-medium');
@@ -179,8 +179,7 @@ $component: '#{base.$prefix}-time-picker';
       cursor: text;
 
       &:focus {
-        outline: 2px solid t.color('primary');
-        outline-offset: -2px;
+        @include m.focus-ring($offset: -3px, $wrap: false);
         background-color: t.color('primary-container');
         color: t.color('on-primary-container');
       }
@@ -264,8 +263,7 @@ $component: '#{base.$prefix}-time-picker';
 
       // Improve focus styles for keyboard navigation
       &:focus-visible {
-        outline: 2px solid t.color('primary');
-        outline-offset: -2px;
+        @include m.focus-ring($offset: -3px, $wrap: false);
       }
 
       &:hover {
@@ -450,8 +448,7 @@ $component: '#{base.$prefix}-time-picker';
     
     // Improve focus styles for keyboard navigation
     &:focus-visible {
-      outline: 2px solid t.color('primary');
-      outline-offset: 2px;
+      @include m.focus-ring($wrap: false);
     }
     
     &:hover {
@@ -494,8 +491,7 @@ $component: '#{base.$prefix}-time-picker';
     
     // Improve focus styles for keyboard navigation
     &:focus-visible {
-      outline: 2px solid t.color('primary');
-      outline-offset: 2px;
+      @include m.focus-ring($wrap: false);
     }
     
     &:hover {
