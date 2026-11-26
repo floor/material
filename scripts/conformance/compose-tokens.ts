@@ -186,72 +186,77 @@ const resolve = (token: Token, lookup: Lookup): Resolved => {
   return { text: raw.slice(0, 80), chain: "" };
 };
 
-// ── The command line ────────────────────────────────────────────
-
-const args = process.argv.slice(2);
-const json = args.includes("--json");
-const listFiles = args.includes("--files");
-const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".length).split(",").map((name) => name.trim());
-const component = args.find((arg) => !arg.startsWith("--")) ?? "";
-
-if (args.includes("--help")) {
-  console.log("Usage: COMPOSE_TOKENS_DIR=<tokens directory> bun run conformance tokens <component> [--json | --files] [--only=TokenFile,...]");
-  process.exit(0);
-}
-const directory = process.env.COMPOSE_TOKENS_DIR;
-if (!directory) {
-  console.error("Set COMPOSE_TOKENS_DIR to the public AndroidX checkout’s tokens directory (see scripts/conformance/README.md).");
-  process.exit(1);
-}
-const version = readVersion(directory);
-const lookupIndex = index(directory);
-const lookup: Lookup = { tokens: new Map([...lookupIndex.byName].map(([file, tokens]) => [file, new Map(tokens.map((token) => [token.name, token]))])) };
-const wanted = (file: string): boolean => {
-  if (only?.length) return only.includes(file.replace(/\.kt$/, ""));
-  if (!component) return false;
-  const name = file.replace(/\.kt$/, "").toLowerCase();
-  const needle = component.toLowerCase().replace(/[^a-z]/g, "");
-  return name.includes(needle);
+export type ComposeToken = {
+  file: string;
+  token: string;
+  raw: string;
+  resolved: string;
+  chain: string;
+  source: string;
 };
-const chosen = lookupIndex.files.filter(wanted);
 
-if (listFiles) {
-  console.log(`compose tokens ${version}: ${chosen.length} file(s) matching ${JSON.stringify(component)}`);
-  for (const file of chosen) console.log(`  ${file}`);
-  process.exit(0);
-}
-if (chosen.length === 0) {
-  console.error(`no token file matches ${JSON.stringify(component)}; --files lists what does`);
-  process.exit(1);
-}
-
-const rows: { file: string; token: string; raw: string; resolved: string; chain: string; source: string }[] = [];
-for (const file of chosen) {
-  const tokens = lookupIndex.byName.get(file.replace(/\.kt$/, "")) ?? [];
-  for (const token of tokens) {
+export function readComposeTokens(directory: string) {
+  const { files, byName } = index(directory);
+  const lookup: Lookup = {
+    tokens: new Map([...byName].map(([file, tokens]) => [file, new Map(tokens.map(token => [token.name, token]))])),
+  };
+  const rows = [...byName].flatMap(([file, tokens]) => tokens.map((token): ComposeToken => {
     const resolved = resolve(token, lookup);
-    rows.push({
-      file: file.replace(/\.kt$/, ""),
-      token: token.name,
-      raw: token.raw,
-      resolved: resolved.text,
-      chain: resolved.chain,
-      source: `${file.replace(/\.kt$/, "")}:${token.line}`,
-    });
+    return { file, token: token.name, raw: token.raw, resolved: resolved.text, chain: resolved.chain, source: `${file}:${token.line}` };
+  }));
+  return { files, version: readVersion(directory), rows };
+}
+
+if (import.meta.main) {
+  const args = process.argv.slice(2);
+  const json = args.includes("--json");
+  const listFiles = args.includes("--files");
+  const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".length).split(",").map((name) => name.trim());
+  const component = args.find((arg) => !arg.startsWith("--")) ?? "";
+
+  if (args.includes("--help")) {
+    console.log("Usage: COMPOSE_TOKENS_DIR=<tokens directory> bun run conformance tokens <component> [--json | --files] [--only=TokenFile,...]");
+    process.exit(0);
   }
-}
+  const directory = process.env.COMPOSE_TOKENS_DIR;
+  if (!directory) {
+    console.error("Set COMPOSE_TOKENS_DIR to the public AndroidX checkout’s tokens directory (see scripts/conformance/README.md).");
+    process.exit(1);
+  }
+  const { files, rows: allRows, version } = readComposeTokens(directory);
+  const wanted = (file: string): boolean => {
+    if (only?.length) return only.includes(file.replace(/\.kt$/, ""));
+    if (!component) return false;
+    const name = file.replace(/\.kt$/, "").toLowerCase();
+    const needle = component.toLowerCase().replace(/[^a-z]/g, "");
+    return name.includes(needle);
+  };
+  const chosen = files.filter(wanted);
 
-if (json) {
-  console.log(JSON.stringify({ version, component, files: chosen, rows }, null, 2));
-  process.exit(0);
-}
+  if (listFiles) {
+    console.log(`compose tokens ${version}: ${chosen.length} file(s) matching ${JSON.stringify(component)}`);
+    for (const file of chosen) console.log(`  ${file}`);
+    process.exit(0);
+  }
+  if (chosen.length === 0) {
+    console.error(`no token file matches ${JSON.stringify(component)}; --files lists what does`);
+    process.exit(1);
+  }
 
-console.log(`Compose tokens ${version} — ${chosen.length} file(s) for ${component || only?.join(", ")}`);
-console.log("");
-console.log("| Object | Token | Raw | Resolved | Source |");
-console.log("| --- | --- | --- | --- | --- |");
-for (const row of rows) {
-  console.log(`| ${row.file} | ${row.token} | \`${row.raw.replace(/\|/g, "\\|")}\` | ${row.resolved.replace(/\|/g, "\\|")}${row.chain} | ${row.source} |`);
+  const rows = allRows.filter(row => wanted(`${row.file}.kt`));
+
+  if (json) {
+    console.log(JSON.stringify({ version, component, files: chosen, rows }, null, 2));
+    process.exit(0);
+  }
+
+  console.log(`Compose tokens ${version} — ${chosen.length} file(s) for ${component || only?.join(", ")}`);
+  console.log("");
+  console.log("| Object | Token | Raw | Resolved | Source |");
+  console.log("| --- | --- | --- | --- | --- |");
+  for (const row of rows) {
+    console.log(`| ${row.file} | ${row.token} | \`${row.raw.replace(/\|/g, "\\|")}\` | ${row.resolved.replace(/\|/g, "\\|")}${row.chain} | ${row.source} |`);
+  }
+  console.log("");
+  console.log(`${rows.length} tokens.`);
 }
-console.log("");
-console.log(`${rows.length} tokens.`);

@@ -99,6 +99,7 @@ export type Case = {
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
   zoom?: number;
+  viewport?: { width: number; height: number };
   /** The theme mode for the colour rows: `light` (default) or `dark`. */
   scheme?: "light" | "dark";
   /**
@@ -107,6 +108,8 @@ export type Case = {
    * aimed at a part still at width 0 has nowhere to land.
    */
   before?: number;
+  /** Wait for CSS transitions on the first part before reading its settled state. */
+  settleTransitions?: boolean;
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -165,6 +168,14 @@ export const fixtureEngine = (): "chromium" | "webkit" =>
 
 export const selectFixtureCases = <T extends { id: string }>(cases: T[]): T[] => {
   const args = process.argv.slice(2);
+  const exact = args.find(arg => arg.startsWith("--cases="));
+  if (exact) {
+    const ids = new Set<string>(JSON.parse(exact.slice("--cases=".length)));
+    const selected = cases.filter(row => ids.has(row.id));
+    for (const row of selected) ids.delete(row.id);
+    if (ids.size || !selected.length) throw new Error(`Missing fixture cases: ${JSON.stringify([...ids])}`);
+    return selected;
+  }
   const flag = args.find(arg => arg.startsWith("--case="));
   const filter = flag ? flag.slice("--case=".length) : args.find(arg => !arg.startsWith("--"));
   const selected = filter === undefined ? cases : cases.filter(row => filter && row.id.includes(filter));
@@ -292,7 +303,13 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
 
   const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
+    const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
+      const viewport = testCase.viewport ?? defaultViewport;
+      const currentViewport = page.viewportSize();
+      if (currentViewport?.width !== viewport.width || currentViewport.height !== viewport.height) {
+        await page.setViewportSize(viewport);
+      }
       const state = testCase.state ?? "rest";
       // The mount is a function, so it crosses as source and is rebuilt
       // inside the page, where the module namespace lives.
@@ -335,6 +352,12 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // A state that runs a spring settles before it is read: the conformance
       // value is the resting one, not a frame of the transition.
       await page.waitForTimeout(500);
+      if (testCase.settleTransitions) {
+        await page.locator(testCase.parts[0]!.selector).first().evaluate(async element => {
+          const transitions = element.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition);
+          await Promise.allSettled(transitions.map(transition => transition.finished));
+        });
+      }
       const parts = await page.evaluate(
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;

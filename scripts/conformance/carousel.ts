@@ -8,6 +8,8 @@ type Config = {
   atEnd?: boolean;
   middle?: boolean;
   square?: boolean;
+  mixed?: boolean;
+  disabled?: boolean;
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
@@ -20,7 +22,11 @@ const mount: Case["mount"] = (mtrl, host, data) => {
   const slides = Array.from({ length: 6 }, (_, i) => {
     const content = document.createElement("div");
     content.style.cssText = `width:100%;height:100%;background:hsl(${i * 55} 60% 70%)`;
-    return { content, title: `Slide ${i + 1}` };
+    return {
+      content, title: `Slide ${i + 1}`,
+      ...(config.mixed ? { width: 140 + 25 * i, height: 100 + 16 * i } : {}),
+      ...(config.disabled && i === 0 ? { disabled: true } : {}),
+    };
   });
   const carousel = create({
     variant: config.variant, slides, ariaLabel: "Destinations",
@@ -35,6 +41,7 @@ const root = ".mtrl-carousel";
 const item = root+"__item";
 const slide = (i: number) => `${item}[aria-label='Slide ${i}']`;
 const parts = [
+  part("disabled", `${slide(1)}[aria-disabled="true"]`),
   part("root", root), part("scroller", root+"__scroller"), part("layer", root+"__layer"), part("track", root+"__track"),
   part("first", slide(1)), part("second", slide(2)), part("third", slide(3)), part("fourth", slide(4)),
   part("fifth", slide(5)), part("last", slide(6)), part("firstLayer", slide(1), "::before"),
@@ -57,6 +64,7 @@ for (const variant of ["multi-browse", "uncontained", "hero", "hero-center", "fu
   add("rtl",{direction:"rtl"});
   add("end",{atEnd:true});
   add("end-rtl",{direction:"rtl",atEnd:true});
+  if (variant === "uncontained") { add("mixed", { mixed: true }); add("disabled-item", { disabled: true }); }
   if (variant==="hero-center") add("middle",{middle:true});
   if (variant==="full-screen") add("square",{square:true});
   for (const density of [-1,-2,-3]) add(`density/${density}`,{},"light",density);

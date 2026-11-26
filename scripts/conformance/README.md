@@ -36,3 +36,5 @@ bun run conformance tokens --only=LinearProgressIndicatorTokens,CircularProgress
 ```
 
 An existing copy of the pinned Kotlin directory works as `COMPOSE_TOKENS_DIR`. The extractor returns the raw token, resolved value and source line. Use `--files` to find matching token files or `--only` when the AndroidX component name differs. Keep measurement output, upstream checkouts, and the audit tables outside tracked files.
+
+The [public conformance matrix](../../conformance/README.md) reuses selected fixture cases in Chromium and WebKit. Generate it with `bun run conformance --matrix`.

@@ -185,6 +185,7 @@ for (const size of ["xs", "s"] as const) {
   });
 }
 
+cases.push({ id: "standard/m/focus", state: "focus", mount, config: { variant: "standard", size: "m" }, parts, properties });
 const chosen = selectFixtureCases(cases);
 const engine = fixtureEngine();
 

@@ -110,6 +110,7 @@ for (const mode of ["floating","docked"] as const) {
     if (mode==="floating") {
       add("vertical-rtl",{direction:"rtl",vertical:true});
       add("flat",{elevated:false});
+      add("collapsed-with-fab",{collapse:true,fab:"default"});
     } else {
       add("center",{center:true});
       add("collapsed",{collapse:true});
