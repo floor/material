@@ -9,9 +9,9 @@
  *   bun run scripts/conformance/chips.ts filter     # rows whose id matches
  *
  * Compose is the other column:
- *   COMPOSE_TOKENS_DIR=<pin> bun run scripts/conformance/compose-tokens.ts --only AssistChipTokens,FilterChipTokens,InputChipTokens,SuggestionChipTokens
+ *   COMPOSE_TOKENS_DIR=<pin> bun run scripts/conformance/compose-tokens.ts --only=AssistChipTokens,FilterChipTokens,InputChipTokens,SuggestionChipTokens
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 // The chip element is first: the harness aims hover/press at parts[0].
 const parts = [
@@ -19,7 +19,7 @@ const parts = [
   { name: "label", selector: ".mtrl-chip__label" },
   { name: "leading icon", selector: ".mtrl-chip__leading-icon" },
   { name: "checkmark", selector: ".mtrl-chip__checkmark" },
-  { name: "trailing icon", selector: ".mtrl-chip__trailing-icon" },
+  { name: "trailing icon", selector: ".mtrl-chip__remove svg, .mtrl-chip__trailing-icon:not([hidden]) svg" },
   { name: "avatar", selector: ".mtrl-chip__avatar, [class*=avatar]" },
   { name: "chip ::after", selector: ".mtrl-chip", pseudo: "::after" as const },
   { name: "action ::before", selector: ".mtrl-chip__action", pseudo: "::before" as const },
@@ -27,7 +27,7 @@ const parts = [
 
 type MountOptions = { kind?: string; selected?: boolean; disabled?: boolean; icon?: boolean; trailing?: boolean; avatar?: boolean };
 
-const mount = (mtrl: Record<string, (...args: unknown[]) => unknown>, host: HTMLElement, config?: unknown) => {
+const mount: Case["mount"] = (mtrl, host, config) => {
   const { kind = "assist", selected, disabled, icon, trailing, avatar } = (config ?? {}) as MountOptions;
   const iconSvg = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
   const creators: Record<string, string> = {
@@ -73,12 +73,17 @@ cases.push({ id: "input/avatar/rest", mount, config: { kind: "input", avatar: tr
 cases.push({ id: "input/trailing/rest", mount, config: { kind: "input", trailing: true }, parts });
 cases.push({ id: "suggestion/icon/rest", mount, config: { kind: "suggestion", icon: true }, parts });
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "chips", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "chips", engine });
 try {
   const rows = await harness.measure(chosen);
+  for (const row of rows) {
+    if (row.id === "input/trailing/rest" && !row.parts["trailing icon"]?.rect.width) {
+      throw new Error("Input chip remove glyph is missing");
+    }
+  }
   // The fixture asserts itself: the four creators mounted, and a selected
   // filter chip carries its selected marker.
   const verify = await harness.page.evaluate(`
@@ -101,7 +106,7 @@ try {
     if (!entry.mounted) throw new Error(`fixture: the ${entry.kind} chip did not mount`);
     if (entry.kind === "filter" && entry.selectedClass !== true) throw new Error("fixture: the selected filter chip carries no selected marker");
   }
-  console.log(JSON.stringify({ component: "chips", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "chips", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

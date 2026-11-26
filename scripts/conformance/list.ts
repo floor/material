@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { ListComponent, ListConfig, ListItem, ListVariant } from "../../src/components/list/types";
-import { CONFORMANCE_PROPERTIES, createConformanceHarness, type Case, type Part, type State } from "./measure";
+import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part, type State } from "./measure";
 
 type Selection = "single" | "multi" | "listbox";
 type Fixture = {
@@ -131,10 +131,8 @@ for (const variant of ["standard","segmented"] as const) {
   add(`${variant}/listbox/focus`, {...base,selection:"listbox"}, "focus");
 }
 
-const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
-const filter = process.argv.find(arg => arg.startsWith("--case="))?.slice(7);
-const selectedCases = filter ? cases.filter(row => row.id.includes(filter)) : cases;
-assert.ok(selectedCases.length, "No matching fixtures");
+const engine = fixtureEngine();
+const selectedCases = selectFixtureCases(cases);
 const harness = await createConformanceHarness({ component:"list",engine });
 const errors: string[] = [];
 harness.page.on("pageerror", error => errors.push(error.message));

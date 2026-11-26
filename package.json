@@ -628,6 +628,7 @@
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
+    "conformance": "bun run scripts/conformance/run.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "name:check": "bun scripts/package-name.ts material --check",
     "check:dist-tags": "bun run scripts/check-dist-tags.ts",

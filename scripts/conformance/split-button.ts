@@ -9,7 +9,7 @@
  *
  * Compose is the other column: `bun run scripts/conformance/compose-tokens.ts --only=SplitButtonMediumTokens`.
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const SIZES = ["xs", "s", "m", "l", "xl"] as const;
 const VARIANTS = ["filled", "tonal", "outlined", "elevated"] as const;
@@ -105,13 +105,13 @@ for (const size of SIZES) {
   });
 }
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "split-button", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "split-button", engine });
 try {
   const rows = await harness.measure(chosen);
-  console.log(JSON.stringify({ component: "split-button", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "split-button", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

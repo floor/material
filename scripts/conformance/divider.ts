@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 type Fixture = {
   variant: "full-width" | "inset" | "middle-inset";
@@ -34,10 +34,10 @@ const cases: Case[] = (["full-width", "inset", "middle-inset"] as const).flatMap
   ),
 );
 
-const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
+const engine = fixtureEngine();
 const harness = await createConformanceHarness({ component: "divider", engine });
 try {
-  const rows = await harness.measure(cases);
+  const rows = await harness.measure(selectFixtureCases(cases));
   for (const row of rows) assert.ok(row.parts.divider && row.parts.fixture, row.id);
   console.log(JSON.stringify({ source: harness.source, engine, rows }, null, 2));
 } finally {

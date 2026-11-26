@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CONFORMANCE_PROPERTIES, createConformanceHarness, type Case, type Part, type State } from "./measure";
+import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part, type State } from "./measure";
 import type { CardComponent, CardConfig } from "../../src/components/card/types";
 
 type CardCase = { variant: CardConfig["variant"]; dragged?: boolean; disabled?: boolean };
@@ -47,10 +47,10 @@ const cases: Case[] = variants.flatMap(variant =>
   }))),
 );
 
-const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
+const engine = fixtureEngine();
 const harness = await createConformanceHarness({ component: "card", engine });
 try {
-  const rows = await harness.measure(cases);
+  const rows = await harness.measure(selectFixtureCases(cases));
   for (const row of rows) {
     assert.ok(row.parts.card && row.parts.content, row.id);
     if (["hover", "pressed", "focus"].includes(row.state)) assert.ok(row.parts.activeState, row.id);

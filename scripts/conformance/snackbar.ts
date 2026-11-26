@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createConformanceHarness, type Case, type Part, type State } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part, type State } from "./measure";
 import type { SnackbarComponent, SnackbarConfig } from "../../src/components/snackbar/types";
 
 type Fixture = { action: boolean; close: boolean; wrap: boolean };
@@ -30,7 +30,7 @@ const parts = [
   { name: "icon", selector: ".mtrl-snackbar__close svg" },
 ].map(part => ({ ...part, document: true })) satisfies Part[];
 
-const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
+const engine = fixtureEngine();
 const cases: Case[] = (["light", "dark"] as const).flatMap(scheme => {
   const layouts: Case[] = [
     { id: `${scheme}/message`, mount, scheme, parts, config: { action: false, close: false, wrap: false } },
@@ -57,7 +57,7 @@ const cases: Case[] = (["light", "dark"] as const).flatMap(scheme => {
 
 const harness = await createConformanceHarness({ component: "snackbar", engine });
 try {
-  const rows = await harness.measure(cases);
+  const rows = await harness.measure(selectFixtureCases(cases));
   for (const row of rows) {
     assert.ok(row.parts.container && row.parts.message, row.id);
     if (row.state !== "rest") assert.ok(row.parts.verifiedControl, row.id);

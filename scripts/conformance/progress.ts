@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { ProgressComponent, ProgressConfig } from "../../src/components/progress/types";
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, type Case } from "./measure";
 import { fieldProperties,part,runFieldFixture } from "./field-fixture";
 
 type Config={
@@ -59,7 +59,7 @@ for(const variant of ["linear","circular"] as const)for(const shape of ["flat","
   for(const d of [-1,-2,-3])add(`density/${d}`,{},"light",d);
 }
 async function measureWaves() {
-  const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
+  const engine = fixtureEngine();
   const harness = await createConformanceHarness({ component: "progress", engine });
   try {
     const { records, flat } = await harness.page.evaluate(async () => {

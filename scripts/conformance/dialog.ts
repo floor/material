@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CONFORMANCE_PROPERTIES, createConformanceHarness, type Case, type Part } from "./measure";
+import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part } from "./measure";
 import type { DialogComponent, DialogConfig } from "../../src/components/dialog/types";
 
 type Fixture = { size: "small" | "medium" | "large" | "fullscreen"; wrap: boolean };
@@ -41,33 +41,45 @@ const parts = [
   { name: "overlay", selector: ".mtrl-dialog__overlay" },
 ].map(part => ({ ...part, document: true })) satisfies Part[];
 
-const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
-const harness = await createConformanceHarness({ component: "dialog", engine, viewport: { width: 900, height: 600 } });
+const action = parts[0]!.selector;
+const widths = [900, 360];
+const cases = selectFixtureCases(widths.flatMap(width => {
+  const sizes = width === 360
+    ? (["small", "large", "fullscreen", "medium"] as const)
+    : (["small", "medium", "large", "fullscreen"] as const);
+  return sizes.flatMap(size =>
+    (["light", "dark"] as const).flatMap(scheme =>
+      (width === 900 && size === "medium" ? ["rest", "hover", "focus", "pressed"] as const : ["rest"] as const)
+        .map(state => ({
+          width,
+          id: `${width}/${size}/${scheme}/${state}`,
+          mount, scheme, state, before: 600, config: { size, wrap: width === 360 },
+          focusTarget: action,
+          properties: [...CONFORMANCE_PROPERTIES, "maxHeight", "minWidth", "textAlign", "overflowY", "transitionDuration"],
+          parts: [...parts, ...(state !== "rest"
+            ? [{ name: "verifiedAction", document: true, selector: `${action}:${state === "pressed" ? "active" : state === "focus" ? "focus-visible" : "hover"}` }]
+            : [])],
+        })),
+    ),
+  );
+}));
+
+const engine = fixtureEngine();
+const harness = await createConformanceHarness({ component: "dialog", engine });
 try {
   const rows = [];
-  for (const width of [900, 360]) {
+  for (const width of widths) {
+    const measured = cases.filter(testCase => testCase.width === width);
+    if (measured.length === 0) continue;
     await harness.page.setViewportSize({ width, height: 600 });
-    const sizes = width === 360 ? (["small", "large", "fullscreen", "medium"] as const) : (["small", "medium", "large", "fullscreen"] as const);
-    const cases: Case[] = sizes.flatMap(size =>
-      (["light", "dark"] as const).flatMap(scheme =>
-        (width === 900 && size === "medium" ? ["rest", "hover", "focus", "pressed"] as const : ["rest"] as const)
-          .map(state => ({
-            id: `${width}/${size}/${scheme}/${state}`,
-            mount, scheme, state, before: 600, config: { size, wrap: width === 360 },
-            focusTarget: parts[0]!.selector,
-            properties: [...CONFORMANCE_PROPERTIES, "maxHeight", "minWidth", "textAlign", "overflowY", "transitionDuration"],
-            parts: [...parts, ...(state !== "rest"
-              ? [{ name: "verifiedAction", document: true, selector: `.mtrl-dialog__footer button:${state === "pressed" ? "active" : state === "focus" ? "focus-visible" : "hover"}` }]
-              : [])],
-          })),
-      ),
-    );
-    rows.push(...await harness.measure(cases));
+    rows.push(...await harness.measure(measured));
   }
   for (const row of rows) {
     assert.ok(row.parts.dialog && row.parts.title && row.parts.body && row.parts.action, `${row.id}: ${Object.entries(row.parts).filter(([, part]) => !part).map(([name]) => name).join(", ")}`);
     if (row.state !== "rest") assert.ok(row.parts.verifiedAction, row.id);
   }
+  await harness.page.setViewportSize({ width: 360, height: 600 });
+  await harness.measure([{ id: "overflow", mount, config: { size: "medium", wrap: true }, parts }]);
   const overflow = await harness.page.evaluate(() => {
     const overlay = document.querySelector<HTMLElement>(".mtrl-dialog__overlay")!;
     const title = document.querySelector<HTMLElement>(".mtrl-dialog__header-title")!;

@@ -11,7 +11,7 @@
  * Compose is the other column: `COMPOSE_TOKENS_DIR=.compose-tokens-41.1.19
  * bun run scripts/conformance/compose-tokens.ts --only=FabMenuBaselineTokens,…`.
  */
-import { assertFixture, createConformanceHarness, type Case } from "./measure";
+import { assertFixture, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const COLORS = ["primary", "secondary", "tertiary"] as const;
 const SIZES = ["default", "medium", "large"] as const;
@@ -145,10 +145,10 @@ cases.push({
   properties: ["width", "height"],
 });
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "fab-menu", engines: ["chromium"], viewport: { width: 900, height: 760 } });
+const harness = await createConformanceHarness({ component: "fab-menu", engine, viewport: { width: 900, height: 760 } });
 await harness.page.evaluate((svg) => {
   (window as unknown as { mtrl: Record<string, unknown> }).mtrl.__icon = svg;
 }, ICON);
@@ -157,7 +157,7 @@ try {
   // the harness's own settle time covers it, and the list is read after it.
   const rows = await harness.measure(chosen);
   assertFixture(rows);
-  console.log(JSON.stringify({ component: "fab-menu", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "fab-menu", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

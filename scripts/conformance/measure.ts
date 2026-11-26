@@ -159,6 +159,19 @@ export const assertFixture = (rows: CaseResult[]): void => {
   }
 };
 
+/** Common CLI options. The positional filter remains supported for direct runs. */
+export const fixtureEngine = (): "chromium" | "webkit" =>
+  process.argv.includes("--webkit") ? "webkit" : "chromium";
+
+export const selectFixtureCases = <T extends { id: string }>(cases: T[]): T[] => {
+  const args = process.argv.slice(2);
+  const flag = args.find(arg => arg.startsWith("--case="));
+  const filter = flag ? flag.slice("--case=".length) : args.find(arg => !arg.startsWith("--"));
+  const selected = filter === undefined ? cases : cases.filter(row => filter && row.id.includes(filter));
+  if (!selected.length) throw new Error(filter ? `No case matches ${JSON.stringify(filter)}` : "No fixture cases selected");
+  return selected;
+};
+
 export type HarnessOptions = {
   /** The `src/components/<name>` folder and the `dist/components/<name>` entry. */
   component: string;
@@ -439,7 +452,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
 
 if (import.meta.main) {
   const component = process.argv[2] ?? "button";
-  const harness = await createConformanceHarness({ component, engines: ["chromium"] });
+  const harness = await createConformanceHarness({ component, engine: fixtureEngine() });
   const cases: Case[] = [
     {
       id: "filled/m/rest",

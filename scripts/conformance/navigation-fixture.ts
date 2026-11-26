@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CONFORMANCE_PROPERTIES, createConformanceHarness, type Case, type Part, type State } from "./measure";
+import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part, type State } from "./measure";
 
 export type NavigationCase = {
   scheme: "light" | "dark";
@@ -17,8 +17,7 @@ type NavigationFixture = {
 };
 
 export async function measureNavigation({ component, variants, mount, item }: NavigationFixture) {
-  const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
-  const filter = process.argv.find(arg => arg.startsWith("--case="))?.slice(7);
+  const engine = fixtureEngine();
   const cases: Case[] = [];
   for (const [variant, { config, parts, geometryOnly }] of Object.entries(variants)) {
     const add = (scheme: NavigationCase["scheme"], direction: NavigationCase["direction"], selected: boolean, state: State, density = 0) => {
@@ -53,8 +52,7 @@ export async function measureNavigation({ component, variants, mount, item }: Na
       add(scheme, "ltr", false, "disabled");
     }
   }
-  const wanted = filter ? cases.filter(row => row.id.includes(filter)) : cases;
-  assert.ok(wanted.length, "No matching fixture cases");
+  const wanted = selectFixtureCases(cases);
   const harness = await createConformanceHarness({ component, engine });
   const errors: string[] = [];
   harness.page.on("pageerror", error => errors.push(error.message));

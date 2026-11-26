@@ -12,7 +12,7 @@
  * Compose is the other column: `COMPOSE_TOKENS_DIR=.compose-tokens-41.1.19
  * bun run scripts/conformance/compose-tokens.ts --only=IconButtonMediumTokens,…`.
  */
-import { assertFixture, createConformanceHarness, type Case } from "./measure";
+import { assertFixture, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const SIZES = ["xs", "s", "m", "l", "xl"] as const;
 const VARIANTS = ["filled", "tonal", "outlined", "standard"] as const;
@@ -185,10 +185,10 @@ for (const size of ["xs", "s"] as const) {
   });
 }
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "icon-button", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "icon-button", engine });
 await harness.page.evaluate((svg) => {
   (window as unknown as { mtrl: Record<string, unknown> }).mtrl.__icon = svg;
 }, ICON);
@@ -196,7 +196,7 @@ try {
   const rows = await harness.measure(chosen);
   // Self-asserting fixture: every row found its root and its icon.
   assertFixture(rows);
-  console.log(JSON.stringify({ component: "icon-button", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "icon-button", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

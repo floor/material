@@ -10,7 +10,7 @@
  * Compose is the other column: `COMPOSE_TOKENS_DIR=.compose-tokens-41.1.19
  * bun run scripts/conformance/compose-tokens.ts --only=ButtonMediumTokens,…
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const SIZES = ["xs", "s", "m", "l", "xl"] as const;
 const VARIANTS = ["filled", "tonal", "outlined", "elevated", "text"] as const;
@@ -149,10 +149,10 @@ cases.push({ id: "filled/m/disabled", state: "disabled", mount, config: { varian
 cases.push({ id: "outlined/m/disabled", state: "disabled", mount, config: { variant: "outlined", size: "m", disabled: true }, parts,
   properties: ["height", "backgroundColor", "color", "borderTopColor", "borderTopWidth"] });
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "button", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "button", engine });
 // The icon SVG rides on the module namespace: a mount is rebuilt from source
 // inside the page, so it reads nothing from here but its arguments.
 await harness.page.evaluate((svg) => {
@@ -160,7 +160,7 @@ await harness.page.evaluate((svg) => {
 }, ICON);
 try {
   const rows = await harness.measure(chosen);
-  console.log(JSON.stringify({ component: "button", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "button", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CONFORMANCE_PROPERTIES,createConformanceHarness,type Case,type Part } from "./measure";
+import { CONFORMANCE_PROPERTIES,createConformanceHarness, fixtureEngine, selectFixtureCases,type Case,type Part } from "./measure";
 
 export const fieldProperties = [...CONFORMANCE_PROPERTIES,
   "minWidth","paddingInlineStart","paddingInlineEnd","paddingBlockStart","paddingBlockEnd",
@@ -19,10 +19,8 @@ export function interaction(name: string, selector: string, state: ReadState): P
 }
 
 export async function runFieldFixture(component: string, cases: Case[], required: (id: string) => string[], packageEntry = false) {
-  const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
-  const filter = process.argv.find(arg=>arg.startsWith("--case="))?.slice(7);
-  const picked = filter ? cases.filter(row=>row.id.includes(filter)) : cases;
-  assert.ok(picked.length,"No matching cases");
+  const engine = fixtureEngine();
+  const picked = selectFixtureCases(cases);
   const widthOption = process.argv.find(arg => arg.startsWith("--viewport-width="));
   const width = widthOption ? Number(widthOption.slice("--viewport-width=".length)) : undefined;
   assert.ok(width === undefined || (Number.isInteger(width) && width > 0), "Viewport width must be a positive integer");

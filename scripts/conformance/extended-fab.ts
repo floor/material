@@ -11,7 +11,7 @@
  * Compose is the other column: `COMPOSE_TOKENS_DIR=.compose-tokens-41.1.19
  * bun run scripts/conformance/compose-tokens.ts --only=ExtendedFabSmallTokens,…`.
  */
-import { assertFixture, createConformanceHarness, type Case } from "./measure";
+import { assertFixture, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const SIZES = ["small", "medium", "large"] as const;
 const VARIANTS = ["primary-container", "secondary-container", "tertiary-container", "primary", "secondary", "tertiary"] as const;
@@ -93,17 +93,17 @@ for (const size of ["medium", "large"] as const) {
   cases.push({ id: `primary-container/${size}/hover`, state: "hover", mount, config: { variant: "primary-container", size }, parts, properties });
 }
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "extended-fab", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "extended-fab", engine });
 await harness.page.evaluate((svg) => {
   (window as unknown as { mtrl: Record<string, unknown> }).mtrl.__icon = svg;
 }, ICON);
 try {
   const rows = await harness.measure(chosen);
   assertFixture(rows);
-  console.log(JSON.stringify({ component: "extended-fab", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "extended-fab", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

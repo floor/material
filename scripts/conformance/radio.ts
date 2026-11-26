@@ -10,7 +10,7 @@
  * Compose is the other column:
  *   COMPOSE_TOKENS_DIR=<pin> bun run scripts/conformance/compose-tokens.ts radio
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 // The item is first: the harness aims hover/press at parts[0], and the item's
 // box covers the control and label, where the state lands.
@@ -60,10 +60,10 @@ for (const density of [0, -1, -2, -3]) {
   cases.push({ id: `unselected/rest/density ${density}`, density, mount, config: {}, parts });
 }
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "radios", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "radios", engine });
 try {
   const rows = await harness.measure(chosen);
   // The fixture asserts itself: re-mount the two canonical configs and
@@ -98,7 +98,7 @@ try {
       throw new Error(`fixture: the measured option A reads checked=${entry.firstIsChecked} in a ${entry.checked ? "selected" : "unselected"} case`);
     }
   }
-  console.log(JSON.stringify({ component: "radios", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "radios", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

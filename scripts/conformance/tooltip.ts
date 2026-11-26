@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { TooltipComponent, TooltipConfig } from "../../src/components/tooltip/types";
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, type Case } from "./measure";
 import { fieldProperties, interaction, part, runFieldFixture, type ReadState } from "./field-fixture";
 
 type Config = {
@@ -64,7 +64,7 @@ for (const variant of ["plain","rich"] as const) {
 }
 
 async function measureTooltipBehavior() {
-  const engine = process.argv.includes("--webkit") ? "webkit" : "chromium";
+  const engine = fixtureEngine();
   const harness = await createConformanceHarness({ component: "tooltip", engine });
   const { page } = harness;
   page.setDefaultTimeout(6500);

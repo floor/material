@@ -12,7 +12,7 @@
  * ConnectedButtonGroupSmallTokens in the pinned token files (see
  * compose-tokens.ts).
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 const SIZES = ["xs", "s", "m", "l", "xl"] as const;
 
@@ -137,13 +137,13 @@ cases.push({
   properties,
 });
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "button-group", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "button-group", engine });
 try {
   const rows = await harness.measure(chosen);
-  console.log(JSON.stringify({ component: "button-group", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "button-group", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }

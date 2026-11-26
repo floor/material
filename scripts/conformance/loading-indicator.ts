@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { LoadingIndicatorComponent,LoadingIndicatorConfig } from "../../src/components/loading-indicator/types";
-import { createConformanceHarness,type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine,type Case } from "./measure";
 import { fieldProperties,part,runFieldFixture } from "./field-fixture";
 
 type Config={contained:boolean; value?:number; size?:number; direction:"ltr"|"rtl"};
@@ -39,7 +39,7 @@ for(const contained of [false,true]){
   for(const density of [-1,-2,-3])add(`density/${density}`,{},"light",density);
 }
 async function measureFrames(){
-  const engine=process.argv.includes("--webkit")?"webkit":"chromium";
+  const engine=fixtureEngine();
   const reduced=process.argv.includes("--reduced-motion");
   const harness=await createConformanceHarness({component:"loading-indicator",engine});
   try{

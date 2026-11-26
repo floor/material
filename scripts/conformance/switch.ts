@@ -10,7 +10,7 @@
  * Compose is the other column:
  *   COMPOSE_TOKENS_DIR=<pin> bun run scripts/conformance/compose-tokens.ts switch
  */
-import { createConformanceHarness, type Case } from "./measure";
+import { createConformanceHarness, fixtureEngine, selectFixtureCases, type Case } from "./measure";
 
 // The root is first: the harness aims hover/press at parts[0], and the root's
 // box covers the track and thumb.
@@ -52,10 +52,10 @@ for (const density of [0, -1, -2, -3]) {
   cases.push({ id: `unselected/rest/density ${density}`, density, mount, config: {}, parts });
 }
 
-const filter = process.argv[2];
-const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
+const chosen = selectFixtureCases(cases);
+const engine = fixtureEngine();
 
-const harness = await createConformanceHarness({ component: "switch", engines: ["chromium"] });
+const harness = await createConformanceHarness({ component: "switch", engine });
 try {
   const rows = await harness.measure(chosen);
   // The fixture asserts itself: the measured switch carries the state the
@@ -81,7 +81,7 @@ try {
       throw new Error(`fixture: the measured switch reads checked=${entry.inputIsChecked} in a ${entry.checked ? "selected" : "unselected"} case`);
     }
   }
-  console.log(JSON.stringify({ component: "switch", source: harness.source, rows }, null, 2));
+  console.log(JSON.stringify({ component: "switch", source: harness.source, engine, rows }, null, 2));
 } finally {
   await harness.close();
 }
