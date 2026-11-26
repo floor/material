@@ -181,6 +181,9 @@ export const createBottomAppBar = (
       this.element.classList.remove(
         `${component.getClass("bottom-app-bar")}--hidden`
       );
+      // Back on screen, the bar and its actions return to the focus order.
+      // Same as the toolbar: a hidden bar is inert.
+      this.element.removeAttribute("inert");
       const changed = !isVisible;
       isVisible = true;
       if (changed) componentConfig.onVisibilityChange?.(true);
@@ -191,6 +194,10 @@ export const createBottomAppBar = (
       this.element.classList.add(
         `${component.getClass("bottom-app-bar")}--hidden`
       );
+      // Off screen, the bar and its actions leave the focus order and the
+      // accessibility tree. A bar that holds focus gives it up because it
+      // is inert, the same way a hidden toolbar does.
+      this.element.setAttribute("inert", "");
       const changed = isVisible;
       isVisible = false;
       if (changed) componentConfig.onVisibilityChange?.(false);
