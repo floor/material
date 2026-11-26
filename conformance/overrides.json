@@ -79,11 +79,14 @@
   "bottom-sheet/corner/modal-partial": {
     "reason": "This row measures the upper corner of the docked shape.",
     "compose": {
-      "value": "28dp",
+      "value": "CornerExtraLargeTop",
       "file": "SheetBottomTokens.kt",
       "symbol": "DockedContainerShape",
       "line": 27,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L27"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L27",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "bottom-sheet/focus-ring/handle/focus": {
@@ -242,21 +245,27 @@
   "button/corner/square-s/selected": {
     "reason": "This is the selected radius of the small square toggle. The previous radius is retained for the resting small square.",
     "compose": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "file": "ButtonSmallTokens.kt",
       "symbol": "SelectedContainerShapeSquare",
       "line": 51,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L51"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L51",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "button/elevation/filled": {
     "reason": "The filled button has level zero elevation at rest.",
     "compose": {
-      "value": "none",
+      "value": "Level0",
       "file": "FilledButtonTokens.kt",
       "symbol": "ContainerElevation",
       "line": 25,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L25"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L25",
+      "resolved": {
+        "elevation": "0dp"
+      }
     }
   },
   "button/focus": {
@@ -316,86 +325,116 @@
   },
   "button/square-corner/l": {
     "spec": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "url": "https://m3.material.io/components/common-buttons/specs",
       "section": "Button corner radius",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "button/square-corner/m": {
     "spec": {
-      "value": "16dp",
+      "value": "CornerLarge",
       "url": "https://m3.material.io/components/common-buttons/specs",
       "section": "Button corner radius",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "16dp"
+      }
     }
   },
   "button/square-corner/s": {
     "spec": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "url": "https://m3.material.io/components/common-buttons/specs",
       "section": "Button corner radius",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "button/square-corner/xl": {
     "spec": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "url": "https://m3.material.io/components/common-buttons/specs",
       "section": "Button corner radius",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "button/square-corner/xs": {
     "spec": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "url": "https://m3.material.io/components/common-buttons/specs",
       "section": "Button corner radius",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "card/corner/elevated": {
     "spec": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "url": "https://m3.material.io/components/cards/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "card/corner/filled": {
     "spec": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "url": "https://m3.material.io/components/cards/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "card/corner/outlined": {
     "spec": {
-      "value": "12dp",
+      "value": "CornerMedium",
       "url": "https://m3.material.io/components/cards/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "12dp"
+      }
     }
   },
   "card/focus-elevation/filled/focus": {
     "reason": "Compose supplies Level 0 from the focus elevation token.",
     "compose": {
-      "value": "Level 0",
+      "value": "Level0",
       "file": "FilledCardTokens.kt",
       "symbol": "FocusContainerElevation",
       "line": 43,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43",
+      "resolved": {
+        "elevation": "0dp"
+      }
     }
   },
   "card/focus-elevation/outlined/focus": {
     "reason": "Compose supplies Level 0 from the focus elevation token.",
     "compose": {
-      "value": "Level 0",
+      "value": "Level0",
       "file": "OutlinedCardTokens.kt",
       "symbol": "FocusContainerElevation",
       "line": 46,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46",
+      "resolved": {
+        "elevation": "0dp"
+      }
     }
   },
   "card/focus-ring/elevated/focus": {
@@ -549,10 +588,13 @@
   "carousel/corner/multi-browse": {
     "reason": "The website specifies item corner geometry. Compose accepts caller-supplied item content.",
     "spec": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "url": "https://m3.material.io/components/carousel/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "carousel/density/multi-browse/minus-one": {
@@ -800,34 +842,46 @@
   },
   "chips/container-corner/assist": {
     "spec": {
-      "value": "8dp",
+      "value": "CornerSmall",
       "url": "https://m3.material.io/components/chips/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "8dp"
+      }
     }
   },
   "chips/container-corner/filter": {
     "spec": {
-      "value": "8dp",
+      "value": "CornerSmall",
       "url": "https://m3.material.io/components/chips/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "8dp"
+      }
     }
   },
   "chips/container-corner/input": {
     "spec": {
-      "value": "8dp",
+      "value": "CornerSmall",
       "url": "https://m3.material.io/components/chips/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "8dp"
+      }
     }
   },
   "chips/container-corner/suggestion": {
     "spec": {
-      "value": "8dp",
+      "value": "CornerSmall",
       "url": "https://m3.material.io/components/chips/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "8dp"
+      }
     }
   },
   "chips/container-height/assist": {
@@ -931,10 +985,13 @@
   },
   "dialog/corner/basic": {
     "spec": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "url": "https://m3.material.io/components/dialogs/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "divider/thickness/horizontal": {
@@ -1424,11 +1481,14 @@
   "navigation-rail/container-shape/modal-expanded/rest": {
     "reason": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail.",
     "compose": {
-      "value": "16dp",
+      "value": "CornerLarge",
       "file": "NavigationRailExpandedTokens.kt",
       "symbol": "ModalContainerShape",
       "line": 39,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationRailExpandedTokens.kt#L39"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationRailExpandedTokens.kt#L39",
+      "resolved": {
+        "radius": "16dp"
+      }
     }
   },
   "navigation-rail/item-hit-width/modal-expanded/rest": {
@@ -1626,33 +1686,45 @@
   "select/menu-container-shape/filled/popup": {
     "reason": "The baseline autocomplete menu gives a corner size independently of the expressive Material menu.",
     "spec": {
-      "value": "4dp",
+      "value": "CornerExtraSmall",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "4dp"
+      }
     },
     "compose": {
-      "value": "4dp",
+      "value": "CornerExtraSmall",
       "file": "FilledAutocompleteTokens.kt",
       "symbol": "MenuContainerShape",
       "line": 30,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L30"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L30",
+      "resolved": {
+        "radius": "4dp"
+      }
     }
   },
   "select/menu-container-shape/outlined/popup": {
     "reason": "The baseline autocomplete menu gives a corner size independently of the expressive Material menu.",
     "spec": {
-      "value": "4dp",
+      "value": "CornerExtraSmall",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
-      "read": "2026-11-26"
+      "read": "2026-11-26",
+      "resolved": {
+        "radius": "4dp"
+      }
     },
     "compose": {
-      "value": "4dp",
+      "value": "CornerExtraSmall",
       "file": "OutlinedAutocompleteTokens.kt",
       "symbol": "MenuContainerShape",
       "line": 30,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L30"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L30",
+      "resolved": {
+        "radius": "4dp"
+      }
     }
   },
   "select/option-height/filled/popup-top-layer": {
@@ -2145,21 +2217,27 @@
   "timepicker/dialog-corner/dial": {
     "reason": "The released time picker dialog uses the shared dialog shape.",
     "compose": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "file": "DialogTokens.kt",
       "symbol": "ContainerShape",
       "line": 45,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "timepicker/dialog-corner/input": {
     "reason": "The released time picker dialog uses the shared dialog shape.",
     "compose": {
-      "value": "28dp",
+      "value": "CornerExtraLarge",
       "file": "DialogTokens.kt",
       "symbol": "ContainerShape",
       "line": 45,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45",
+      "resolved": {
+        "radius": "28dp"
+      }
     }
   },
   "timepicker/focus-indicator/input/period-focus": {
@@ -2235,11 +2313,14 @@
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "Level 0",
+      "value": "Level0",
       "file": "FloatingToolbar.kt",
       "symbol": "ContainerExpandedElevation",
       "line": 640,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L640"
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L640",
+      "resolved": {
+        "elevation": "0dp"
+      }
     }
   },
   "tooltip/actions/rich/rest": {

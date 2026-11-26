@@ -48,10 +48,13 @@
     "read": "2026-11-26"
   },
   "bottom-sheet/corner/modal-partial": {
-    "value": "28dp",
+    "value": "CornerExtraLargeTop",
     "url": "https://m3.material.io/components/bottom-sheets/specs",
     "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container shape (top corners)",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
   },
   "button/container-colour/filled": {
     "value": "Primary",
@@ -210,16 +213,22 @@
     "read": "2026-11-26"
   },
   "button/corner/square-s/selected": {
-    "value": "20dp",
+    "value": "CornerFull",
     "url": "https://m3.material.io/components/buttons/specs",
     "section": "Tokens & specs · Button - Size - Small · Button small selected container shape square (Corner Full on a 40dp container)",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "20dp"
+    }
   },
   "button/elevation/filled": {
-    "value": "0dp",
+    "value": "Level0",
     "url": "https://m3.material.io/components/buttons/specs",
     "section": "Tokens & specs · Button - Color - Filled · Button filled elevation",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
   },
   "button/icon-label-gap/l": {
     "value": "12dp",
@@ -432,16 +441,22 @@
     "read": "2026-11-26"
   },
   "card/focus-elevation/filled/focus": {
-    "value": "0dp",
+    "value": "Level0",
     "url": "https://m3.material.io/components/cards/specs",
     "section": "Tokens & specs · Card - Filled · Filled card focus container elevation",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
   },
   "card/focus-elevation/outlined/focus": {
-    "value": "0dp",
+    "value": "Level0",
     "url": "https://m3.material.io/components/cards/specs",
     "section": "Tokens & specs · Card - Outlined · Outlined card focus container elevation",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
   },
   "checkbox/box-height/default": {
     "value": "18dp",
@@ -474,10 +489,13 @@
     "read": "2026-11-26"
   },
   "datepicker/modal-corner": {
-    "value": "28dp",
+    "value": "CornerExtraLarge",
     "url": "https://m3.material.io/components/date-pickers/specs",
     "section": "Tokens & specs · Date picker - Modal · Container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
   },
   "datepicker/modal-width": {
     "value": "360dp",
@@ -492,10 +510,16 @@
     "read": "2026-11-26"
   },
   "dialog/body-tracking/basic": {
-    "value": "0.25pt",
+    "value": "BodyMedium",
     "url": "https://m3.material.io/components/dialogs/specs",
     "section": "Tokens & specs · Dialog - Basic · Dialog supporting text tracking",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
   },
   "dialog/colour/basic": {
     "value": "SurfaceContainerHigh",
@@ -552,10 +576,16 @@
     "read": "2026-11-26"
   },
   "extended-fab/label-tracking/small": {
-    "value": "0.15pt",
+    "value": "TitleMedium",
     "url": "https://m3.material.io/components/extended-fab/specs",
     "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small label text",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
   },
   "fab/container-height/default": {
     "value": "56dp",
@@ -630,10 +660,16 @@
     "read": "2026-11-26"
   },
   "fab-menu/item-tracking": {
-    "value": "0.15pt",
+    "value": "TitleMedium",
     "url": "https://m3.material.io/components/fab-menu/specs",
     "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item label text",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
   },
   "icon-button/container-height/l": {
     "value": "96dp",
@@ -702,10 +738,16 @@
     "read": "2026-11-26"
   },
   "list/supporting-tracking": {
-    "value": "0.25pt",
+    "value": "BodyMedium",
     "url": "https://m3.material.io/components/lists/specs",
     "section": "Tokens & specs · List - Common · List list item supporting text tracking",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
   },
   "list/top-space/segmented-one-line/rest": {
     "value": "10dp",
@@ -738,16 +780,22 @@
     "read": "2026-11-26"
   },
   "menu/container-corner/baseline": {
-    "value": "4dp",
+    "value": "CornerExtraSmall",
     "url": "https://m3.material.io/components/menus/specs",
     "section": "Tokens & specs · Menu (baseline) · Menu container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
   },
   "menu/container-corner/segmented": {
-    "value": "16dp",
+    "value": "CornerLarge",
     "url": "https://m3.material.io/components/menus/specs",
     "section": "Tokens & specs · Menus - Common · Menu container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "16dp"
+    }
   },
   "menu/selected-colour/baseline": {
     "value": "SecondaryContainer",
@@ -792,16 +840,25 @@
     "read": "2026-11-26"
   },
   "navigation-drawer/label-weight/standard/selected": {
-    "value": "700",
+    "value": "LabelLargeProminent",
     "url": "https://m3.material.io/components/navigation-drawer/specs",
     "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active label text weight",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "700",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
   },
   "navigation-rail/container-shape/modal-expanded/rest": {
-    "value": "16dp",
+    "value": "CornerLarge",
     "url": "https://m3.material.io/components/navigation-rail/specs",
     "section": "Tokens & specs · Nav rail - Expanded · Nav rail expanded modal container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "16dp"
+    }
   },
   "navigation-rail/container-width/collapsed": {
     "value": "96dp",
@@ -858,10 +915,13 @@
     "read": "2026-11-26"
   },
   "snackbar/corner": {
-    "value": "4dp",
+    "value": "CornerExtraSmall",
     "url": "https://m3.material.io/components/snackbar/specs",
     "section": "Tokens & specs · Snackbars · Snackbar container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
   },
   "snackbar/height/single-line": {
     "value": "48dp",
@@ -876,10 +936,16 @@
     "read": "2026-11-26"
   },
   "snackbar/label-tracking": {
-    "value": "0.25pt",
+    "value": "BodyMedium",
     "url": "https://m3.material.io/components/snackbar/specs",
     "section": "Tokens & specs · Snackbars · Snackbar supporting text tracking",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
   },
   "split-button/container-height/l": {
     "value": "96dp",
@@ -918,22 +984,31 @@
     "read": "2026-11-26"
   },
   "split-button/inner-corner/filled-l/rest": {
-    "value": "8dp",
+    "value": "CornerSmall",
     "url": "https://m3.material.io/components/split-button/specs",
     "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "8dp"
+    }
   },
   "split-button/inner-corner/filled-m/rest": {
-    "value": "4dp",
+    "value": "CornerExtraSmall",
     "url": "https://m3.material.io/components/split-button/specs",
     "section": "Tokens & specs · Split button - Size - Medium · Split button medium inner corner size",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
   },
   "split-button/inner-corner/filled-xl/rest": {
-    "value": "12dp",
+    "value": "CornerMedium",
     "url": "https://m3.material.io/components/split-button/specs",
     "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge inner corner size",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
   },
   "split-button/pressed-opacity/size-m": {
     "value": "0.1",
@@ -1014,22 +1089,37 @@
     "read": "2026-11-26"
   },
   "tabs/label-line-height/primary/rest": {
-    "value": "20pt",
+    "value": "TitleSmall",
     "url": "https://m3.material.io/components/tabs/specs",
     "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab with label text line height",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
   },
   "tabs/label-line-height/secondary/rest": {
-    "value": "20pt",
+    "value": "TitleSmall",
     "url": "https://m3.material.io/components/tabs/specs",
     "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab label text line height",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
   },
   "text-field/corner/outlined": {
-    "value": "4dp",
+    "value": "CornerExtraSmall",
     "url": "https://m3.material.io/components/text-fields/specs",
     "section": "Tokens & specs · Text field - Outlined · Outlined text field container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
   },
   "text-field/leading-icon/filled": {
     "value": "24dp",
@@ -1050,22 +1140,34 @@
     "read": "2026-11-26"
   },
   "timepicker/dialog-corner/dial": {
-    "value": "28dp",
+    "value": "CornerExtraLarge",
     "url": "https://m3.material.io/components/time-pickers/specs",
     "section": "Tokens & specs · Time picker - Dial · Time picker container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
   },
   "timepicker/dialog-corner/input": {
-    "value": "28dp",
+    "value": "CornerExtraLarge",
     "url": "https://m3.material.io/components/time-pickers/specs",
     "section": "Tokens & specs · Time picker - Input · Time input container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
   },
   "timepicker/period-tracking/dial": {
-    "value": "0.15pt",
+    "value": "TitleMedium",
     "url": "https://m3.material.io/components/time-pickers/specs",
     "section": "Tokens & specs · Time picker - Dial · Time picker period selector label text tracking",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
   },
   "toolbar/docked/height": {
     "value": "64dp",
@@ -1098,10 +1200,16 @@
     "read": "2026-11-26"
   },
   "tooltip/body-tracking/rich": {
-    "value": "0.25pt",
+    "value": "BodyMedium",
     "url": "https://m3.material.io/components/tooltips/specs",
     "section": "Tokens & specs · Tooltip - Rich · Rich tooltip supporting text tracking",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
   },
   "tooltip/colour/plain": {
     "value": "InverseSurface",
@@ -1116,16 +1224,22 @@
     "read": "2026-11-26"
   },
   "tooltip/corner/plain": {
-    "value": "12dp",
+    "value": "CornerMedium",
     "url": "https://m3.material.io/components/tooltips/specs",
     "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
   },
   "tooltip/corner/rich": {
-    "value": "12dp",
+    "value": "CornerMedium",
     "url": "https://m3.material.io/components/tooltips/specs",
     "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container shape",
-    "read": "2026-11-26"
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
   },
   "tooltip/max-width/plain": {
     "value": "444dp",

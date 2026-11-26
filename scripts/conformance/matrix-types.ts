@@ -1,14 +1,18 @@
+import type { ResolvedColours } from "./matrix-colours";
+import type { MetricDetails } from "./matrix-metrics";
+
 export type Aspect = "size" | "spacing" | "shape" | "colour" | "typography" | "elevation" | "focus" | "motion" | "density" | "other";
 export type Status = "match" | "drift" | "no-value";
 
-export type SpecReference = { value: string | null; url: string; section: string; read: string; resolved?: ResolvedColours };
+export type ReferenceDetails = ResolvedColours | MetricDetails;
+export type SpecReference = { value: string | null; url: string; section: string; read: string; resolved?: ReferenceDetails };
 export type ComposeReference = {
   value: string | null;
   file: string | null;
   symbol: string | null;
   line: number | null;
   url: string;
-  resolved?: ResolvedColours;
+  resolved?: ReferenceDetails;
 };
 export type Override = {
   reason?: string;
@@ -45,4 +49,3 @@ export type FixtureBinding = {
   name: string;
   rows: RowBinding[];
 };
-import type { ResolvedColours } from "./matrix-colours";
