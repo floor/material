@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import pin from "../../conformance/reference.json";
 import { bindings } from "./matrix-bindings";
+import { colourThemes, parseColour, readColourRoles, type ResolvedColours, type ThemePalettes } from "./matrix-colours";
 import { matrixTokens } from "./matrix-reference";
 import type { CaseResult, PartResult } from "./measure";
 import type { ComposeReference, Override, Probe, RowBinding, SpecReference, Status } from "./matrix-types";
@@ -11,6 +12,12 @@ import type { ComposeReference, Override, Probe, RowBinding, SpecReference, Stat
 const root = resolve(import.meta.dir, "../..");
 const engines = ["chromium", "webkit"] as const;
 type Engine = typeof engines[number];
+type MaterialValue = {
+  value: string;
+  engines: Record<Engine, string> | null;
+  resolved?: ResolvedColours;
+  resolvedEngines?: Record<Engine, ResolvedColours>;
+};
 const composeRelease = "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0";
 const kotlin = "compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3";
 
@@ -57,6 +64,50 @@ function getPart(row: CaseResult, name: string, id: string): PartResult {
   return part;
 }
 
+const colourProbe = (row: RowBinding) =>
+  row.aspect === "colour" && "style" in row.probe && /(?:^color$|Color$)/.test(row.probe.style)
+    ? row.probe : undefined;
+
+function resolveColourReference<T extends SpecReference | ComposeReference>(reference: T, palettes: ThemePalettes): T {
+  const { value } = reference;
+  if (value === null || value === "transparent") return reference;
+  if (!Object.hasOwn(palettes.light, value)) throw new Error(`Unknown colour role ${value}`);
+  return {
+    ...reference,
+    resolved: { light: palettes.light[value]!, dark: palettes.dark[value]!, seed: palettes.seed[value]! },
+  };
+}
+
+function compareColour(probe: { part: string; style: string }, rows: [CaseResult, CaseResult], id: string) {
+  const [left, right] = rows;
+  const palettes = left.colours?.palettes;
+  if (!palettes || JSON.stringify(palettes) !== JSON.stringify(right.colours?.palettes)) {
+    throw new Error(`${id}: three-theme palettes are missing or differ between engines`);
+  }
+  const readings = rows.map(row => {
+    const read = (theme: typeof colourThemes[number]) => {
+      const value = row.colours?.[theme][probe.part]?.style[probe.style];
+      if (!value) throw new Error(`${id}: missing ${probe.style} measurement in ${theme}`);
+      return value;
+    };
+    return { light: read("light"), dark: read("dark"), seed: read("seed") };
+  });
+  const { role, resolved } = readColourRoles(readings, palettes);
+  const [chromium, webkit] = resolved as [ResolvedColours, ResolvedColours];
+  const material: MaterialValue = {
+    value: role ?? chromium.light,
+    engines: chromium.light === webkit.light ? null : { chromium: chromium.light, webkit: webkit.light },
+    resolved: chromium,
+    ...(colourThemes.some(theme => chromium[theme] !== webkit[theme]) ? {
+      resolvedEngines: { chromium, webkit },
+    } : {}),
+  };
+  const status = (reference: string | null): Status =>
+    reference === null ? "no-value" : role === reference ? "match" : "drift";
+  const note = role === null ? "The measured colour does not resolve to a unique theme role across all three themes." : "";
+  return { material, palettes, status, note };
+}
+
 function visibleRect(part: PartResult): PartResult["rect"] {
   const clip = /^inset\(0px ([\d.]+)px(?: round .*)?\)$/.exec(part.style.clipPath ?? "");
   if (!clip) return part.rect;
@@ -77,9 +128,8 @@ function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, prob
   const px = (value: number) => `${decimal(value)}px`;
   if ("read" in probe) {
     if (probe.read === "opacity") {
-      const background = colorMatch.exec(style.backgroundColor ?? "");
-      if (!background || !style.opacity) throw new Error(`${id}: missing state layer background or opacity`);
-      return String(decimal(Number(style.opacity) * Number(background[4] ?? 1)));
+      if (!style.backgroundColor || !style.opacity) throw new Error(`${id}: missing background colour or opacity`);
+      return String(decimal(Number(style.opacity) * parseColour(style.backgroundColor).opacity));
     }
     if (probe.read === "translateX") {
       const matrix = /^matrix\(([^)]+)\)$/.exec(style.transform ?? "");
@@ -133,10 +183,11 @@ function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, prob
   return colorValue(value) ? roleFor(value) : cssValue(value);
 }
 
-async function readFixture(entry: string, ids: string[], engine: Engine): Promise<Map<string, CaseResult>> {
+async function readFixture(entry: string, ids: string[], engine: Engine, colourCases: string[] = []): Promise<Map<string, CaseResult>> {
   const command = [process.execPath, join(import.meta.dir, `${entry}.ts`), `--cases=${JSON.stringify(ids)}`];
   if (ids.length === 1 && ids[0] === "behavior") command.push("--matrix-behavior");
   if (engine === "webkit") command.push("--webkit");
+  if (colourCases.length) command.push(`--colour-cases=${JSON.stringify(colourCases)}`);
   const temporary = mkdtempSync(join(tmpdir(), "material-conformance-"));
   const output = join(temporary, "fixture.json");
   let result: { source: string; engine: string; rows: CaseResult[] };
@@ -235,7 +286,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     const file = `${token.file}.kt`;
     const line = Number(token.source.split(":")[1]);
     return {
-      value: role && light ? `${role} ${light}` : cssValue(token.resolved),
+      value: role && colourProbe(binding) ? role : role && light ? `${role} ${light}` : cssValue(token.resolved),
       file, symbol: token.token, line,
       url: `https://github.com/androidx/androidx/blob/${pin.reference.compose.commit}/${kotlin}/tokens/${file}#L${line}`,
     };
@@ -244,7 +295,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
   type MatrixRow = {
     id: string; property: string; aspect: RowBinding["aspect"]; variant?: string; state: string;
     density: number; spec: SpecReference; compose: ComposeReference;
-    material: { value: string; engines: Record<Engine, string> | null };
+    material: MaterialValue;
     status: { spec: Status; compose: Status }; note: string; issue: null;
   };
   const components = new Map<string, { id: string; name: string; properties: MatrixRow[] }>();
@@ -253,8 +304,9 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     const cases = [...new Set(binding.rows.flatMap(row => "widthPair" in row.probe
       ? [row.case, row.probe.widthPair] : [row.case]))];
     const regular = cases.filter(id => id !== "behavior");
-    const chromium = await readFixture(entry, regular, "chromium");
-    const webkit = await readFixture(entry, regular, "webkit");
+    const colourCases = [...new Set(binding.rows.filter(colourProbe).map(row => row.case))];
+    const chromium = await readFixture(entry, regular, "chromium", colourCases);
+    const webkit = await readFixture(entry, regular, "webkit", colourCases);
     if (cases.includes("behavior")) {
       for (const [engine, measurements] of [["chromium", chromium], ["webkit", webkit]] as const) {
         const extra = await readFixture(entry, ["behavior"], engine);
@@ -279,6 +331,24 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
       const left = chromium.get(row.case)!;
       const right = webkit.get(row.case)!;
       if (left.state !== right.state || left.density !== right.density) throw new Error(`${id}: fixture metadata differs by engine`);
+      const segments = id.split("/");
+      const hasFixtureState = segments.length === 4 && !/^(?:xs|s|m|l|xl)$/.test(segments[3]!);
+      const metadata = {
+        id, property: row.property, aspect: row.aspect,
+        variant: row.variant ?? (hasFixtureState ? segments[2] : undefined),
+        state: hasFixtureState ? segments[3]! : left.state, density: left.density,
+      };
+      const reason = overrides[id]?.reason ?? "";
+      const probe = colourProbe(row);
+      if (probe) {
+        const result = compareColour(probe, [left, right], id);
+        component.properties.push({
+          ...metadata, spec: resolveColourReference(spec, result.palettes), compose: resolveColourReference(compose, result.palettes),
+          material: result.material, status: { spec: result.status(spec.value), compose: result.status(compose.value) },
+          note: [reason, result.note].filter(Boolean).join(" "), issue: null,
+        });
+        continue;
+      }
       const values = {
         chromium: readProbe(chromium, left, row.probe, id, forRole),
         webkit: readProbe(webkit, right, row.probe, id, forRole),
@@ -308,17 +378,12 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
         };
         return engines.every(engine => agrees(values[engine])) ? "match" : "drift";
       };
-      const segments = id.split("/");
-      const hasFixtureState = segments.length === 4 && !/^(?:xs|s|m|l|xl)$/.test(segments[3]!);
-      const variant = hasFixtureState ? segments[2] : undefined;
-      const state = hasFixtureState ? segments[3] : left.state;
       component.properties.push({
-        id, property: row.property, aspect: row.aspect,
-        variant: row.variant ?? variant, state, density: left.density,
+        ...metadata,
         spec, compose,
         material: { value: values.chromium, engines: values.chromium === values.webkit ? null : values },
         status: { spec: status(spec.value, Boolean(publishedSpec)), compose: status(compose.value) },
-        note: overrides[id]?.reason ?? "", issue: null,
+        note: reason, issue: null,
       });
     }
     components.set(binding.id, component);
@@ -345,6 +410,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     method: {
       browsers: engines, engines: { chromium: versionOf("chromium"), webkit: versionOf("webkit") },
       note: "Both engines measure every value. Separate engine values appear where they differ.",
+
     },
     components: sorted.map(component => ({
       ...component, properties: component.properties.sort((a, b) => a.id.localeCompare(b.id, "en")),

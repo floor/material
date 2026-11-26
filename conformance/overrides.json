@@ -35,7 +35,7 @@
   "badge/container-colour/large": {
     "reason": "The released badge shares the same colour across both sizes.",
     "compose": {
-      "value": "Error #B3261E",
+      "value": "Error",
       "file": "BadgeTokens.kt",
       "symbol": "Color",
       "line": 24,
@@ -912,9 +912,9 @@
     }
   },
   "dialog/close-icon-colour/full-screen/rest": {
-    "reason": "The website close icon uses OnSurface. The light-theme default is shown.",
+    "reason": "The website close icon uses OnSurface.",
     "spec": {
-      "value": "OnSurface #1D1B20",
+      "value": "OnSurface",
       "url": "https://m3.material.io/components/dialogs/specs",
       "section": "Measurements",
       "read": "2026-11-26"
@@ -1136,7 +1136,7 @@
   "list/container-colour/segmented/rest": {
     "reason": "The released segmented list uses its dedicated container colour.",
     "compose": {
-      "value": "Surface #FEF7FF",
+      "value": "Surface",
       "file": "ListTokens.kt",
       "symbol": "ItemSegmentedContainerColor",
       "line": 201,
@@ -1298,7 +1298,7 @@
   "navigation-bar/label-colour/horizontal/selected": {
     "reason": "The released ShortNavigationBarItem sets the inline selected label to the active icon colour.",
     "compose": {
-      "value": "OnSecondaryContainer #1D192B",
+      "value": "OnSecondaryContainer",
       "file": "ShortNavigationBar.kt",
       "symbol": "selectedTextColorStartIconPosition",
       "line": 295,
@@ -1592,7 +1592,7 @@
   "select/label-colour/outlined/hover": {
     "reason": "The outlined hover label uses the OnSurfaceVariant role in the autocomplete reference.",
     "spec": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/text-fields/specs",
       "section": "Measurements",
       "read": "2026-11-26"
@@ -1601,7 +1601,7 @@
   "select/menu-container-colour/filled/popup": {
     "reason": "The baseline autocomplete menu uses SurfaceContainer.",
     "spec": {
-      "value": "SurfaceContainer #F3EDF7",
+      "value": "SurfaceContainer",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
@@ -1610,14 +1610,14 @@
   "select/menu-container-colour/outlined/popup": {
     "reason": "The baseline autocomplete menu uses SurfaceContainer.",
     "compose": {
-      "value": "SurfaceContainer #F3EDF7",
+      "value": "SurfaceContainer",
       "file": "MenuTokens.kt",
       "symbol": "ContainerColor",
       "line": 22,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22"
     },
     "spec": {
-      "value": "SurfaceContainer #F3EDF7",
+      "value": "SurfaceContainer",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
@@ -1688,15 +1688,15 @@
     }
   },
   "select/trailing-icon-colour/filled/error-focus": {
-    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "reason": "The reference uses the matching released autocomplete colour role.",
     "spec": {
-      "value": "Error #B3261E",
+      "value": "Error",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "Error #B3261E",
+      "value": "Error",
       "file": "FilledAutocompleteTokens.kt",
       "symbol": "TextFieldErrorFocusTrailingIconColor",
       "line": 100,
@@ -1704,15 +1704,15 @@
     }
   },
   "select/trailing-icon-colour/filled/focus": {
-    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "reason": "The reference uses the matching released autocomplete colour role.",
     "spec": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "file": "FilledAutocompleteTokens.kt",
       "symbol": "TextFieldFocusTrailingIconColor",
       "line": 154,
@@ -1720,15 +1720,15 @@
     }
   },
   "select/trailing-icon-colour/outlined/error-focus": {
-    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "reason": "The reference uses the matching released autocomplete colour role.",
     "spec": {
-      "value": "Error #B3261E",
+      "value": "Error",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "Error #B3261E",
+      "value": "Error",
       "file": "OutlinedAutocompleteTokens.kt",
       "symbol": "TextFieldErrorFocusTrailingIconColor",
       "line": 87,
@@ -1736,15 +1736,15 @@
     }
   },
   "select/trailing-icon-colour/outlined/focus": {
-    "reason": "The light theme reference is resolved against the released autocomplete token.",
+    "reason": "The reference uses the matching released autocomplete colour role.",
     "spec": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/menus/specs",
       "section": "Measurements",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "file": "OutlinedAutocompleteTokens.kt",
       "symbol": "TextFieldFocusTrailingIconColor",
       "line": 144,
@@ -1827,7 +1827,7 @@
   "side-sheet/headline-colour/modal/rest": {
     "reason": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
     "spec": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/side-sheets/specs",
       "section": "Modal side sheet color",
       "read": "2026-11-26"
@@ -1836,7 +1836,7 @@
   "side-sheet/headline-colour/standard/rest": {
     "reason": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
     "spec": {
-      "value": "OnSurfaceVariant #49454F",
+      "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/side-sheets/specs",
       "section": "Standard side sheet color",
       "read": "2026-11-26"
@@ -2004,16 +2004,6 @@
       "url": "https://m3.material.io/components/split-button/specs",
       "section": "Measurements",
       "read": "2026-11-26"
-    }
-  },
-  "switch/track-colour/unselected/disabled": {
-    "reason": "Compare the resolved disabled track fill using the token alpha in the light theme.",
-    "compose": {
-      "value": "#E6E0E9 at 0.12 opacity",
-      "file": "SwitchTokens.kt",
-      "symbol": "DisabledUnselectedTrackColor",
-      "line": 44,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L44"
     }
   },
   "tabs/container-height/primary-stacked": {

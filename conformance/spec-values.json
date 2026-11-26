@@ -6,19 +6,19 @@
     "read": "2026-11-26"
   },
   "badge/container-colour/large": {
-    "value": "Error #B3261E",
+    "value": "Error",
     "url": "https://m3.material.io/components/badges/specs",
     "section": "Tokens & specs · Badges · Badge large color",
     "read": "2026-11-26"
   },
   "badge/container-colour/small": {
-    "value": "Error #B3261E",
+    "value": "Error",
     "url": "https://m3.material.io/components/badges/specs",
     "section": "Tokens & specs · Badges · Badge color",
     "read": "2026-11-26"
   },
   "bottom-app-bar/container-colour/no-fab/rest": {
-    "value": "SurfaceContainer #F3EDF7",
+    "value": "SurfaceContainer",
     "url": "https://m3.material.io/components/toolbars/specs",
     "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container color",
     "read": "2026-11-26"
@@ -42,7 +42,7 @@
     "read": "2026-11-26"
   },
   "bottom-sheet/container-colour/modal": {
-    "value": "SurfaceContainerLow #F7F2FA",
+    "value": "SurfaceContainerLow",
     "url": "https://m3.material.io/components/bottom-sheets/specs",
     "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container color",
     "read": "2026-11-26"
@@ -54,7 +54,7 @@
     "read": "2026-11-26"
   },
   "button/container-colour/filled": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/buttons/specs",
     "section": "Tokens & specs · Button - Color - Filled · Button filled container color",
     "read": "2026-11-26"
@@ -414,19 +414,19 @@
     "read": "2026-11-26"
   },
   "card/container-colour/elevated": {
-    "value": "SurfaceContainerLow #F7F2FA",
+    "value": "SurfaceContainerLow",
     "url": "https://m3.material.io/components/cards/specs",
     "section": "Tokens & specs · Card - Elevated · Elevated card container color",
     "read": "2026-11-26"
   },
   "card/container-colour/filled": {
-    "value": "SurfaceContainerHighest #E6E0E9",
+    "value": "SurfaceContainerHighest",
     "url": "https://m3.material.io/components/cards/specs",
     "section": "Tokens & specs · Card - Filled · Filled card container color",
     "read": "2026-11-26"
   },
   "card/container-colour/outlined": {
-    "value": "Surface #FEF7FF",
+    "value": "Surface",
     "url": "https://m3.material.io/components/cards/specs",
     "section": "Tokens & specs · Card - Outlined · Outlined card container color",
     "read": "2026-11-26"
@@ -456,19 +456,19 @@
     "read": "2026-11-26"
   },
   "checkbox/checked-colour": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/checkbox/specs",
     "section": "Tokens & specs · Checkbox · Checkbox selected container color",
     "read": "2026-11-26"
   },
   "chips/selected-colour/filter": {
-    "value": "SecondaryContainer #E8DEF8",
+    "value": "SecondaryContainer",
     "url": "https://m3.material.io/components/chips/specs",
     "section": "Tokens & specs · Chip - Filter · Filter chip (selected) outline color",
     "read": "2026-11-26"
   },
   "datepicker/modal-colour": {
-    "value": "SurfaceContainerHigh #ECE6F0",
+    "value": "SurfaceContainerHigh",
     "url": "https://m3.material.io/components/date-pickers/specs",
     "section": "Tokens & specs · Date picker - Modal · Container color",
     "read": "2026-11-26"
@@ -498,13 +498,13 @@
     "read": "2026-11-26"
   },
   "dialog/colour/basic": {
-    "value": "SurfaceContainerHigh #ECE6F0",
+    "value": "SurfaceContainerHigh",
     "url": "https://m3.material.io/components/dialogs/specs",
     "section": "Tokens & specs · Dialog - Basic · Dialog container color",
     "read": "2026-11-26"
   },
   "divider/colour/horizontal": {
-    "value": "OutlineVariant #CAC4D0",
+    "value": "OutlineVariant",
     "url": "https://m3.material.io/components/divider/specs",
     "section": "Tokens & specs · Divider · Divider color",
     "read": "2026-11-26"
@@ -684,19 +684,19 @@
     "read": "2026-11-26"
   },
   "list/container-colour/segmented/rest": {
-    "value": "Surface #FEF7FF",
+    "value": "Surface",
     "url": "https://m3.material.io/components/lists/specs",
     "section": "Tokens & specs · List - Common · List list item segmented container color",
     "read": "2026-11-26"
   },
   "list/selected-colour/segmented": {
-    "value": "SecondaryContainer #E8DEF8",
+    "value": "SecondaryContainer",
     "url": "https://m3.material.io/components/lists/specs",
     "section": "Tokens & specs · List - Common · List list item selected container color",
     "read": "2026-11-26"
   },
   "list/selected-colour/standard": {
-    "value": "SecondaryContainer #E8DEF8",
+    "value": "SecondaryContainer",
     "url": "https://m3.material.io/components/lists/specs",
     "section": "Tokens & specs · List - Common · List list item selected container color",
     "read": "2026-11-26"
@@ -726,13 +726,13 @@
     "read": "2026-11-26"
   },
   "menu/container-colour/baseline": {
-    "value": "SurfaceContainer #F3EDF7",
+    "value": "SurfaceContainer",
     "url": "https://m3.material.io/components/menus/specs",
     "section": "Tokens & specs · Menu (baseline) · Menu container color",
     "read": "2026-11-26"
   },
   "menu/container-colour/standard": {
-    "value": "SurfaceContainerLow #F7F2FA",
+    "value": "SurfaceContainerLow",
     "url": "https://m3.material.io/components/menus/specs",
     "section": "Tokens & specs · Menus - Color - Standard · Menu standard container color",
     "read": "2026-11-26"
@@ -750,13 +750,13 @@
     "read": "2026-11-26"
   },
   "menu/selected-colour/baseline": {
-    "value": "SecondaryContainer #E8DEF8",
+    "value": "SecondaryContainer",
     "url": "https://m3.material.io/components/menus/specs",
     "section": "Tokens & specs · Menu (baseline) · Menu list item selected container color",
     "read": "2026-11-26"
   },
   "navigation-bar/container-colour": {
-    "value": "SurfaceContainer #F3EDF7",
+    "value": "SurfaceContainer",
     "url": "https://m3.material.io/components/navigation-bar/specs",
     "section": "Tokens & specs · Nav bar - Common · Nav bar container color",
     "read": "2026-11-26"
@@ -774,13 +774,13 @@
     "read": "2026-11-26"
   },
   "navigation-bar/label-colour/horizontal/selected": {
-    "value": "Secondary #625B71",
+    "value": "Secondary",
     "url": "https://m3.material.io/components/navigation-bar/specs",
     "section": "Tokens & specs · Nav bar - Common · Nav bar item active label text color",
     "read": "2026-11-26"
   },
   "navigation-drawer/indicator-colour": {
-    "value": "SecondaryContainer #E8DEF8",
+    "value": "SecondaryContainer",
     "url": "https://m3.material.io/components/navigation-drawer/specs",
     "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator color",
     "read": "2026-11-26"
@@ -834,25 +834,25 @@
     "read": "2026-11-26"
   },
   "radios/selected-colour": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/radio-button/specs",
     "section": "Tokens & specs · Radio Button · Radio button icon selected color",
     "read": "2026-11-26"
   },
   "search/bar-colour/contained": {
-    "value": "SurfaceContainerHigh #ECE6F0",
+    "value": "SurfaceContainerHigh",
     "url": "https://m3.material.io/components/search/specs",
     "section": "Tokens & specs · Search - Bar · Search bar container color",
     "read": "2026-11-26"
   },
   "slider/active-colour/xs": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/sliders/specs",
     "section": "Tokens & specs · Slider · Slider active track color",
     "read": "2026-11-26"
   },
   "snackbar/container-colour": {
-    "value": "InverseSurface #322F35",
+    "value": "InverseSurface",
     "url": "https://m3.material.io/components/snackbar/specs",
     "section": "Tokens & specs · Snackbars · Snackbar container color",
     "read": "2026-11-26"
@@ -948,7 +948,7 @@
     "read": "2026-11-26"
   },
   "switch/selected-disabled-handle-colour": {
-    "value": "Surface #FEF7FF",
+    "value": "Surface",
     "url": "https://m3.material.io/components/switch/specs",
     "section": "Tokens & specs · Switch · Switch disabled selected handle color",
     "read": "2026-11-26"
@@ -960,15 +960,21 @@
     "read": "2026-11-26"
   },
   "switch/selected-track-colour": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/switch/specs",
     "section": "Tokens & specs · Switch · Switch selected track color",
     "read": "2026-11-26"
   },
   "switch/track-colour/unselected/disabled": {
-    "value": "SurfaceContainerHighest #E6E0E9 at 0.12 opacity",
+    "value": "SurfaceContainerHighest",
     "url": "https://m3.material.io/components/switch/specs",
-    "section": "Tokens & specs · Switch · Switch disabled unselected track color and Disabled track opacity",
+    "section": "Tokens & specs · Switch · Switch disabled unselected track color",
+    "read": "2026-11-26"
+  },
+  "switch/track-opacity/unselected/disabled": {
+    "value": "0.12",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Disabled track opacity",
     "read": "2026-11-26"
   },
   "switch/track-height": {
@@ -984,19 +990,19 @@
     "read": "2026-11-26"
   },
   "tabs/container-colour/primary/selected": {
-    "value": "Surface #FEF7FF",
+    "value": "Surface",
     "url": "https://m3.material.io/components/tabs/specs",
     "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab container color",
     "read": "2026-11-26"
   },
   "tabs/container-colour/secondary/selected": {
-    "value": "Surface #FEF7FF",
+    "value": "Surface",
     "url": "https://m3.material.io/components/tabs/specs",
     "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab container color",
     "read": "2026-11-26"
   },
   "tabs/indicator-colour/primary": {
-    "value": "Primary #6750A4",
+    "value": "Primary",
     "url": "https://m3.material.io/components/tabs/specs",
     "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator color",
     "read": "2026-11-26"
@@ -1038,7 +1044,7 @@
     "read": "2026-11-26"
   },
   "timepicker/dialog-colour/dial": {
-    "value": "SurfaceContainerHigh #ECE6F0",
+    "value": "SurfaceContainerHigh",
     "url": "https://m3.material.io/components/time-pickers/specs",
     "section": "Tokens & specs · Time picker - Dial · Time picker container color",
     "read": "2026-11-26"
@@ -1074,7 +1080,7 @@
     "read": "2026-11-26"
   },
   "toolbar/floating/standard-colour": {
-    "value": "SurfaceContainer #F3EDF7",
+    "value": "SurfaceContainer",
     "url": "https://m3.material.io/components/toolbars/specs",
     "section": "Tokens & specs · Toolbar - Color - Standard · Toolbar standard container color",
     "read": "2026-11-26"
@@ -1086,7 +1092,7 @@
     "read": "2026-11-26"
   },
   "toolbar/floating/vibrant-colour": {
-    "value": "PrimaryContainer #EADDFF",
+    "value": "PrimaryContainer",
     "url": "https://m3.material.io/components/toolbars/specs",
     "section": "Tokens & specs · Toolbar - Color - Vibrant · Toolbar standard container color",
     "read": "2026-11-26"
@@ -1098,13 +1104,13 @@
     "read": "2026-11-26"
   },
   "tooltip/colour/plain": {
-    "value": "InverseSurface #322F35",
+    "value": "InverseSurface",
     "url": "https://m3.material.io/components/tooltips/specs",
     "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container color",
     "read": "2026-11-26"
   },
   "tooltip/colour/rich": {
-    "value": "SurfaceContainer #F3EDF7",
+    "value": "SurfaceContainer",
     "url": "https://m3.material.io/components/tooltips/specs",
     "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container color",
     "read": "2026-11-26"

@@ -1,13 +1,14 @@
 export type Aspect = "size" | "spacing" | "shape" | "colour" | "typography" | "elevation" | "focus" | "motion" | "density" | "other";
 export type Status = "match" | "drift" | "no-value";
 
-export type SpecReference = { value: string | null; url: string; section: string; read: string };
+export type SpecReference = { value: string | null; url: string; section: string; read: string; resolved?: ResolvedColours };
 export type ComposeReference = {
   value: string | null;
   file: string | null;
   symbol: string | null;
   line: number | null;
   url: string;
+  resolved?: ResolvedColours;
 };
 export type Override = {
   reason?: string;
@@ -44,3 +45,4 @@ export type FixtureBinding = {
   name: string;
   rows: RowBinding[];
 };
+import type { ResolvedColours } from "./matrix-colours";

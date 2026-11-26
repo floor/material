@@ -44,6 +44,8 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "../build-styles";
+import { THEME_ROLES } from "../../src/core/theme/tokens";
+import { matrixSeed, parseColour, type ThemePalettes } from "./matrix-colours";
 
 const root = resolve(import.meta.dir, "..", "..");
 
@@ -134,6 +136,12 @@ export type CaseResult = {
   density: number;
   zoom: number;
   parts: Record<string, PartResult | null>;
+  colours?: {
+    palettes: ThemePalettes;
+    light: CaseResult["parts"];
+    dark: CaseResult["parts"];
+    seed: CaseResult["parts"];
+  };
 };
 
 export type Harness = {
@@ -226,7 +234,7 @@ const PAGE = `<!doctype html><html data-theme="baseline"><head>
   window.__ready = true;
 </script></body></html>`;
 
-const serve = () =>
+const serve = (entryCode: string, themeCode: string | undefined) =>
   Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -234,11 +242,10 @@ const serve = () =>
       const path = new URL(request.url).pathname;
       if (path === "/__styles.css") return new Response(loadStyles(), { headers: { "Content-Type": "text/css" } });
       if (path === "/__component.js") return new Response(entryCode, { headers: { "Content-Type": "text/javascript" } });
+      if (path === "/__theme.js" && themeCode) return new Response(themeCode, { headers: { "Content-Type": "text/javascript" } });
       return new Response(PAGE, { headers: { "Content-Type": "text/html" } });
     },
   });
-
-let entryCode = "";
 
 const applyState = async (page: Page, selector: string, state: State, focusTarget?: string) => {
   if (state === "hover") await page.hover(selector);
@@ -284,8 +291,15 @@ const releaseState = async (page: Page, state: State) => {
  */
 export const createConformanceHarness = async (options: HarnessOptions): Promise<Harness> => {
   const entry = await loadEntry(options);
-  entryCode = entry.code;
-  const server = serve();
+  const colourArg = process.argv.find(arg => arg.startsWith("--colour-cases="));
+  const colourCases = new Set<string>(colourArg ? JSON.parse(colourArg.slice("--colour-cases=".length)) : []);
+  let themeCode: string | undefined;
+  if (colourCases.size) {
+    const bundle = await Bun.build({ entrypoints: [join(root, "dist", "theme", "index.js")], target: "browser", format: "esm" });
+    if (!bundle.success) throw new Error(`bundling the runtime theme: ${bundle.logs.join("\n")}`);
+    themeCode = await bundle.outputs[0]!.text();
+  }
+  const server = serve(entry.code, themeCode);
   const url = `http://127.0.0.1:${server.port}`;
   const engines: BrowserType[] = (options.engines ?? [options.engine ?? "chromium"]).map((engine) =>
     engine === "webkit" ? webkit : chromium,
@@ -301,7 +315,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     pages.push(page);
   }
 
-  const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
+  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark"): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
     const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
@@ -337,7 +351,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           mountConfig: testCase.config ?? null,
           density: testCase.density ?? null,
           zoom: testCase.zoom ?? 1,
-          scheme: testCase.scheme ?? "light",
+          scheme: scheme ?? testCase.scheme ?? "light",
         },
       );
       if (testCase.before) await page.waitForTimeout(testCase.before);
@@ -455,13 +469,65 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     return rows;
   };
 
+  async function readTheme(browser: Browser, viewport: { width: number; height: number }, cases: Case[], theme: "dark" | "seed") {
+    const page = await browser.newPage({ viewport });
+    try {
+      await page.goto(url);
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+      const palette = async () => {
+        const values = await page.evaluate(roles => {
+          const style = getComputedStyle(document.documentElement);
+          return roles.map(role => style.getPropertyValue(`--mtrl-sys-color-${role}`).trim());
+        }, THEME_ROLES);
+        return Object.fromEntries(THEME_ROLES.map((key, index) => [
+          key.split("-").map(part => part[0]!.toUpperCase() + part.slice(1)).join(""),
+          parseColour(values[index]!).hex,
+        ]));
+      };
+      const light = await palette();
+      if (theme === "seed") {
+        await page.evaluate(async seed => {
+          const path = "/__theme.js";
+          const { applyScheme, createScheme } = await import(path);
+          applyScheme(createScheme(seed), document.documentElement);
+        }, matrixSeed);
+      }
+      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light");
+      return { light, palette: await palette(), rows };
+    } finally {
+      await page.close();
+    }
+  }
+
   return {
     source: entry.source,
     url,
     page: pages[0]!,
     measure: async (cases: Case[]): Promise<CaseResult[]> => {
       const all: CaseResult[] = [];
-      for (const page of pages) all.push(...(await measureOn(page, cases)));
+      const selected = cases.filter(testCase => colourCases.has(testCase.id));
+      for (const [index, page] of pages.entries()) {
+        if (!selected.length) {
+          all.push(...await measureOn(page, cases));
+          continue;
+        }
+        if (selected.some(testCase => testCase.scheme === "dark")) {
+          throw new Error("Three-theme colour cases must start in the baseline light theme");
+        }
+        const viewport = page.viewportSize()!;
+        const [rows, dark, seed] = await Promise.all([
+          measureOn(page, cases),
+          readTheme(browsers[index]!, viewport, selected, "dark"),
+          readTheme(browsers[index]!, viewport, selected, "seed"),
+        ]);
+        const palettes = { light: dark.light, dark: dark.palette, seed: seed.palette };
+        const byId = new Map(rows.map(row => [row.id, row]));
+        for (const [i, testCase] of selected.entries()) {
+          const row = byId.get(testCase.id)!;
+          row.colours = { palettes, light: row.parts, dark: dark.rows[i]!.parts, seed: seed.rows[i]!.parts };
+        }
+        all.push(...rows);
+      }
       return all;
     },
     close: async () => {
