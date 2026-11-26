@@ -127,6 +127,16 @@ test("destroy before initialization cancels work, including initially visible me
     released();
   }
 });
+test("a body menu takes initial focus in a DOM without the popover API", () => {
+  // JSDOM 26 has no showPopover(), and matches(":popover-open") throws
+  // SyntaxError there; the container test must not ask it of an ordinary menu.
+  const menu = make(false, FLAT);
+  tick(); // Initialize the menu.
+  menu.open(new MouseEvent("click"));
+  tick(); // Place the menu and schedule initial focus.
+  tick(); // Run the delayed initial-focus callback.
+  expect(document.activeElement).toBe(menu.element);
+});
 test("initial keyboard focus does not undo an arrow pressed before its timer", () => {
   const menu = make(false, FLAT);
   tick(); // Initialize the menu.

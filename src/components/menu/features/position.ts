@@ -83,6 +83,43 @@ export const createPositioner = (
         ? rawParentMenuRect
         : openerRect;
 
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // The space the menu is written in, decided before anything is measured in
+    // it: a container's scrollport, or the menu's positioned offsetParent when
+    // there is no container.
+    const contextElement = menuElement.offsetParent as HTMLElement | null;
+    const inDocumentSpace =
+      !contextElement || contextElement === document.body || contextElement === document.documentElement;
+    const contextRect = inDocumentSpace ? null : contextElement!.getBoundingClientRect();
+    const contextZoom = contextRect ? effectiveZoom(contextElement!) : zoom;
+
+    // A container's scrollport in the viewport's pixels: its client box (inside
+    // the border and the scrollbars) at the container's own zoom. A rect is the
+    // border box, so a bordered scroller would otherwise count its border as
+    // room. The menu is written in this scrollport's local space, and every
+    // viewport value is converted once, in that same space.
+    let portTop = 0;
+    let portLeft = 0;
+    let containerZoom = zoom;
+    let limitTop = 0;
+    let limitBottom = viewportHeight;
+    let containerClips = false;
+    if (hasContainer && config.container) {
+      const overflow = getComputedStyle(config.container);
+      containerClips = [overflow.overflow, overflow.overflowX, overflow.overflowY]
+        .some((value) => value !== "visible");
+      const port = config.container.getBoundingClientRect();
+      containerZoom = effectiveZoom(config.container);
+      portTop = port.top + config.container.clientTop * containerZoom;
+      portLeft = port.left + config.container.clientLeft * containerZoom;
+      if (containerClips) {
+        const portBottom = portTop + config.container.clientHeight * containerZoom;
+        limitTop = Math.max(limitTop, portTop);
+        limitBottom = Math.min(limitBottom, portBottom);
+      }
+    }
     // Make a copy of the menu for measurement without affecting the real menu
     const tempMenu = menuElement.cloneNode(true) as HTMLElement;
 
@@ -109,20 +146,26 @@ export const createPositioner = (
       // The clone is measured in the zoomed subtree: its width is the opener's
       // rect width divided back to local pixels, or the menu is zoom-times too
       // wide at 0.7 and 0.5.
-      tempMenu.style.width = `${openerRect.width / zoom}px`;
+      // The clone's width must be in the space the final width is written in:
+      // the container's zoom, else the positioned host's, else the document's.
+      tempMenu.style.width = `${openerRect.width / (hasContainer ? containerZoom : contextRect ? contextZoom : zoom)}px`;
     }
 
     // Add it to the DOM temporarily (use container if available for accurate measurement).
     // A top-layer menu is measured where it is, in its own tree, whose styles
-    // may be a shadow root's.
+    // may be a shadow root's. A menu already mounted in a host — the case with
+    // no container config — is measured beside itself, in the host's own zoom
+    // and scroll, so its width is the width written there; anything else is
+    // measured under the document.
+    const parentHost = menuElement.parentElement && menuElement.parentElement !== document.body
+      ? menuElement.parentElement
+      : null;
     const measureContainer =
-      (topLayer && menuElement.parentNode) || config.container || document.body;
+      (topLayer && menuElement.parentNode) || config.container || parentHost || document.body;
     measureContainer.appendChild(tempMenu);
 
     // Get measurements
     const menuRect = tempMenu.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
 
     // Remove the temp element after measurements
     measureContainer.removeChild(tempMenu);
@@ -211,9 +254,22 @@ export const createPositioner = (
     // submenus keep their own rules.
     let height = menuRect.height;
     let fitted: number | null = null;
+    // A length the page states in the container's own pixels, in the
+    // viewport's: the offset and the margin both belong to the local space.
+    const placeZoom = hasContainer ? containerZoom : zoom;
+    const placeOffset = hasContainer ? offset * placeZoom : offset;
+    const placeMargin = hasContainer ? VIEWPORT_MARGIN * placeZoom : VIEWPORT_MARGIN;
     if (!isSubmenu && /^(top|bottom)/.test(calculatedPosition)) {
-      const below = viewportHeight - openerRect.bottom - offset - VIEWPORT_MARGIN;
-      const above = openerRect.top - offset - VIEWPORT_MARGIN;
+      // The room a menu can use is the part of the window it can be seen in:
+      // the viewport, and, in an explicit container that clips, only the part
+      // of the container's scrollport that is also in the viewport. Choosing
+      // a side from the viewport alone put the menu where the container cut
+      // it — an item focused afterwards scrolled the container to reveal it,
+      // which dragged the menu over its opener. A container that does not
+      // clip (overflow visible) limits nothing of its own, and a body or
+      // top-layer menu keeps the viewport alone.
+      const below = limitBottom - openerRect.bottom - placeOffset - placeMargin;
+      const above = openerRect.top - limitTop - placeOffset - placeMargin;
       const fit = fitVertically({
         preferred: calculatedPosition.startsWith("top") ? "top" : "bottom",
         height,
@@ -229,8 +285,10 @@ export const createPositioner = (
       }
     }
     // The fitted height, else the configured one; none left over from a
-    // previous placement where it no longer applies
-    menuElement.style.maxHeight = fitted !== null ? `${fitted}px` : (config.maxHeight ?? "");
+    // previous placement where it no longer applies. A container's cap is in
+    // its own pixels.
+    const capLocal = fitted !== null && hasContainer ? fitted / containerZoom : fitted;
+    menuElement.style.maxHeight = capLocal !== null ? `${capLocal}px` : (config.maxHeight ?? "");
 
     // A menu wider than its opener, placed at the start, keeps the opener's
     // left in both directions. Right-to-left, that edge is the right. Only
@@ -282,33 +340,57 @@ export const createPositioner = (
 
     // Position calculation - important: getBoundingClientRect() returns values relative to viewport
     // We need to add scroll position to get absolute position (unless we have a container)
-    // When inside a container, position relative to the container
-    const containerRect =
-      hasContainer && config.container
-        ? config.container.getBoundingClientRect()
-        : { top: 0, left: 0, right: 0, bottom: 0 };
 
-    // Calculate offsets - when in a container, subtract container position
-    const offsetX = hasContainer ? -containerRect.left : scrollX;
-    const offsetY = hasContainer ? -containerRect.top : scrollY;
+    // The menu is written in its offsetParent's space while a rect is in the
+    // viewport's. A positioned host away from the origin (or an RTL page whose
+    // zoom right-aligns the body) puts that space elsewhere, so the host's own
+    // origin comes out before the value is written; the document's origin is
+    // the viewport's minus the scroll. A container keeps its own rule below.
+    // A positioned host's scrollport: its client box (inside its border and
+    // scrollbars) at its own zoom, with its own scroll moved out and back in
+    // one place. A host at another origin with a border, or scrolled, is the
+    // case a bare offsetParent subtraction got wrong.
+    const contextPortTop = contextRect ? contextRect.top + contextElement!.clientTop * contextZoom : 0;
+    const contextPortLeft = contextRect ? contextRect.left + contextElement!.clientLeft * contextZoom : 0;
+    const contextLocalTop = (viewport: number): number =>
+      contextRect ? (viewport - contextPortTop) / contextZoom + contextElement!.scrollTop : viewport + scrollY;
+    const contextLocalLeft = (viewport: number): number =>
+      contextRect ? (viewport - contextPortLeft) / contextZoom + contextElement!.scrollLeft : viewport + scrollX;
+    // Viewport <-> write space, for the clamps that live in viewport pixels.
+    const toViewportTop = (value: number): number => (contextRect ? value : value - scrollY);
+    const fromViewportTop = (value: number): number => (contextRect ? value : value + scrollY);
+    const toViewportLeft = (value: number): number => (contextRect ? value : value - scrollX);
+    const fromViewportLeft = (value: number): number => (contextRect ? value : value + scrollX);
+
+    // When in a container, map the opener's viewport rect back into the
+    // container's content space: subtract the container's edge and add its own
+    // scroll, which moved the content under that edge (a menu written without
+    // it landed a scroll's worth above the opener — at scrollTop 120 on a
+    // 120 px scroll, 120 px too high).
+    // A container's switch runs in the viewport's pixels and is converted
+    // once, below, into the scrollport's local space.
+    // A container's and a positioned host's switch run in the viewport's
+    // pixels; both are converted once at the write, below.
+    const offsetX = hasContainer || contextRect ? 0 : scrollX;
+    const offsetY = hasContainer || contextRect ? 0 : scrollY;
 
     switch (calculatedPosition) {
       case "top-start":
-        top = openerRect.top + offsetY - height - offset;
+        top = openerRect.top + offsetY - height - placeOffset;
         left = openerRect.left + offsetX;
         break;
       case "top":
-        top = openerRect.top + offsetY - height - offset;
+        top = openerRect.top + offsetY - height - placeOffset;
         left =
           openerRect.left + offsetX + openerRect.width / 2 - menuRect.width / 2;
         break;
       case "top-end":
-        top = openerRect.top + offsetY - height - offset;
+        top = openerRect.top + offsetY - height - placeOffset;
         left = openerRect.right + offsetX - menuRect.width;
         break;
       case "right-start":
         top = openerRect.top + offsetY;
-        left = horizontalRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + placeOffset;
         break;
       case "right":
         // Custom top position might be set above; only set if not already defined
@@ -321,28 +403,28 @@ export const createPositioner = (
         } else {
           top += offsetY;
         }
-        left = horizontalRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + placeOffset;
         break;
       case "right-end":
         top = openerRect.bottom + offsetY - height;
-        left = horizontalRect.right + offsetX + offset;
+        left = horizontalRect.right + offsetX + placeOffset;
         break;
       case "bottom-start":
-        top = openerRect.bottom + offsetY + offset;
+        top = openerRect.bottom + offsetY + placeOffset;
         left = openerRect.left + offsetX;
         break;
       case "bottom":
-        top = openerRect.bottom + offsetY + offset;
+        top = openerRect.bottom + offsetY + placeOffset;
         left =
           openerRect.left + offsetX + openerRect.width / 2 - menuRect.width / 2;
         break;
       case "bottom-end":
-        top = openerRect.bottom + offsetY + offset;
+        top = openerRect.bottom + offsetY + placeOffset;
         left = openerRect.right + offsetX - menuRect.width;
         break;
       case "left-start":
         top = openerRect.top + offsetY;
-        left = horizontalRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - placeOffset;
         break;
       case "left":
         // Custom top position might be set above; only set if not already defined
@@ -355,24 +437,29 @@ export const createPositioner = (
         } else {
           top += offsetY;
         }
-        left = horizontalRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - placeOffset;
         break;
       case "left-end":
         top = openerRect.bottom + offsetY - height;
-        left = horizontalRect.left + offsetX - menuRect.width - offset;
+        left = horizontalRect.left + offsetX - menuRect.width - placeOffset;
         break;
     }
 
     // Ensure the menu has proper spacing from viewport edges
     // Skip viewport edge checks when inside a container
     if (hasContainer) {
-      // For container-based positioning, just apply the calculated positions
-      menuElement.style.top = `${top / zoom}px`;
-      menuElement.style.left = `${left / zoom}px`;
+      // The switch computed the position in the viewport's pixels; the menu is
+      // written in the container's scrollport local space: inside its border,
+      // divided by the container's zoom, and moved by the container's own
+      // scroll. One conversion, in one space.
+      const toLocalY = (value: number) => (value - portTop) / containerZoom + (config.container?.scrollTop ?? 0);
+      const toLocalX = (value: number) => (value - portLeft) / containerZoom + (config.container?.scrollLeft ?? 0);
+      menuElement.style.top = `${toLocalY(top)}px`;
+      menuElement.style.left = `${toLocalX(left)}px`;
 
       // For 'width: 100%' configuration, match the opener width
       if (config.width === "100%" && !isSubmenu) {
-        menuElement.style.width = `${openerRect.width / zoom}px`;
+        menuElement.style.width = `${openerRect.width / containerZoom}px`;
       }
 
       return; // Exit early for container-based menus
@@ -380,15 +467,15 @@ export const createPositioner = (
 
     // Top edge spacing - ensure the menu doesn't go above the viewport + padding
     const minTopSpacing = 48; // Minimum distance from top of viewport
-    if (top - scrollY < minTopSpacing) {
-      top = minTopSpacing + scrollY;
+    if (toViewportTop(top) < minTopSpacing) {
+      top = fromViewportTop(minTopSpacing);
     }
 
     // A side menu or a submenu running past the bottom shrinks to fit;
     // a menu above or below its anchor was fitted before it was placed
-    const bottomEdge = top - scrollY + height;
+    const bottomEdge = toViewportTop(top) + height;
     if (fitted === null && bottomEdge > viewportHeight - VIEWPORT_MARGIN) {
-      const available = viewportHeight - (top - scrollY) - VIEWPORT_MARGIN;
+      const available = viewportHeight - toViewportTop(top) - VIEWPORT_MARGIN;
       const shrunk = Math.max(available, Math.min(height, MIN_MENU_HEIGHT));
       const configured = config.maxHeight ? parseInt(config.maxHeight, 10) : NaN;
       menuElement.style.maxHeight = `${Number.isNaN(configured) ? shrunk : Math.min(shrunk, configured)}px`;
@@ -396,19 +483,19 @@ export const createPositioner = (
 
     // For 'width: 100%' configuration, match the opener width
     if (config.width === "100%" && !isSubmenu) {
-      menuElement.style.width = `${openerRect.width / zoom}px`;
+      menuElement.style.width = `${openerRect.width / (contextRect ? contextZoom : zoom)}px`;
     }
 
     // Apply final positions, ensuring menu stays within viewport
     // The position is absolute, not fixed, so it must account for scroll
-    const finalTop = Math.max(minTopSpacing + scrollY, top);
-    const finalLeft = Math.max(16 + scrollX, left);
+    const finalTop = Math.max(fromViewportTop(minTopSpacing), top);
+    const finalLeft = Math.max(fromViewportLeft(16), left);
 
-    menuElement.style.top = `${finalTop / zoom}px`;
-    menuElement.style.left = `${finalLeft / zoom}px`;
+    menuElement.style.top = contextRect ? `${contextLocalTop(finalTop)}px` : `${finalTop / zoom}px`;
+    menuElement.style.left = contextRect ? `${contextLocalLeft(finalLeft)}px` : `${finalLeft / zoom}px`;
 
     // Make sure menu doesn't extend past right edge
-    if (finalLeft - scrollX + menuRect.width > viewportWidth - 16) {
+    if (toViewportLeft(finalLeft) + menuRect.width > viewportWidth - 16) {
       // If we're going past the right edge, set right with fixed distance from edge
       menuElement.style.left = "auto";
       menuElement.style.right = "16px";
