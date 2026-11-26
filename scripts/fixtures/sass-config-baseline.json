@@ -40,7 +40,7 @@
     "components/badge/constants.js": "0006f8eb4a35d8fe8e777ef9ae915cf1f6b977ad87ba910d3284ca5e45ff7c16",
     "components/badge/features.js": "965e64bef65ffc8a60debaff5d3bf799c21d67fb986d87e7d8cc971e84570fd6",
     "components/badge/index.js": "7fda2649d2add3d57283d7cc840647305c3d71cb1790d3f95ff1649975e009f9",
-    "components/bottom-app-bar-toolbar/index.js": "50ecfadb7792e5dbf0afe22ee9a61000b0b37dcaff24b4db902f5aa29355b75e",
+    "components/bottom-app-bar-toolbar/index.js": "9d9308c100d2b4c58afa62a8290c654844a6d776842ac1f007cfa4994189fb96",
     "components/bottom-app-bar-toolbar/structure.js": "85f566997f8de849ec92653cdbb7d9a1aa08c5c371ebdfe0b07605e71e408b8c",
     "components/bottom-app-bar/bottom-app-bar.js": "962d3a0a9e8399bd7f7dc2d665ab5790e89f3e75226085d88896b9e77c25882a",
     "components/bottom-app-bar/config.js": "deb3dd427a367c8edf2352110a718a384cb9379c92cd6e35e5f8d7aff1ff99be",
