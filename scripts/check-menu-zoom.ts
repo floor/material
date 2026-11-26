@@ -105,6 +105,7 @@ const run = async (browser: Browser, engine: string) => {
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
 
   let referenceGap: number | null = null;
+  const hostLog: string[] = [];
   const rows: string[] = [];
   for (const zoom of [1, 0.7, 0.5]) {
     await page.evaluate((z) => {
@@ -241,6 +242,56 @@ const run = async (browser: Browser, engine: string) => {
   }
   await page.evaluate(() => { document.querySelector<HTMLElement>("#host")!.dir = "ltr"; });
   console.log(`${engine} rtl: ${rtlRows.join(" | ")}`);
+
+  // A menu written inside a positioned host that is not at the viewport
+  // origin, without a container: the placement is in the host's
+  // space, so the host's distance comes out before the write, at every zoom
+  // and in both directions. A top-layer menu is placed by its own rule and
+  // must not move.
+  for (const direction of ["ltr", "rtl"] as const) {
+    for (const zoom of [1, 0.7, 0.5]) {
+      const hosted = await page.evaluate(async ({ zoom, direction }) => {
+        const w = window as unknown as { mtrl: { createButton: (c: unknown) => { element: HTMLElement }; createMenu: (c: unknown) => { element: HTMLElement; open: () => void } } };
+        document.documentElement.style.zoom = String(zoom);
+        document.body.dir = direction;
+        const host = document.querySelector<HTMLElement>("#host")!;
+        host.replaceChildren();
+        host.style.cssText = "position:relative;width:400px;margin-left:180px;margin-top:60px";
+        const button = w.mtrl.createButton({ label: "Open" });
+        button.element.id = "opener";
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Open" }));
+        // The opener is wider than the menu (120 against ~112), so the
+        // placement is the plain start one and not the RTL flip.
+        button.element.style.cssText = "position:absolute;left:60px;top:40px;width:120px";
+        host.append(button.element);
+        const menu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "Alpha" }, { text: "Beta" }] });
+        // The menu goes into the host: that is what makes the host its
+        // offsetParent, which is the space the placement writes in.
+        host.append(menu.element);
+        await new Promise((r) => setTimeout(r, 250));
+        const opener = button.element.getBoundingClientRect();
+        menu.open();
+        await new Promise((r) => setTimeout(r, 400));
+        const m = menu.element.getBoundingClientRect();
+        return { dx: m.x - opener.x, dy: m.y - opener.bottom, hostLeft: host.getBoundingClientRect().left };
+      }, { zoom, direction });
+      assert(
+        Math.abs(hosted.dx) <= 1,
+        `${engine} ${direction} host zoom ${zoom}: the menu sits at its opener's left (${hosted.dx.toFixed(1)} px off, host at ${hosted.hostLeft.toFixed(1)})`,
+      );
+      assert(
+        Math.abs(hosted.dy) <= 12,
+        `${engine} ${direction} host zoom ${zoom}: the menu opens below its opener (${hosted.dy.toFixed(1)} px)`,
+      );
+      hostLog.push(`${direction} ${zoom}: dx ${hosted.dx.toFixed(1)}`);
+    }
+  }
+  await page.evaluate(() => {
+    document.body.dir = "";
+    document.documentElement.style.zoom = "1";
+    document.querySelector<HTMLElement>("#host")!.style.cssText = "";
+  });
+  console.log(`${engine} positioned host: ${hostLog.join(" | ")}`);
 
   assert.deepEqual(errors, [], `${engine}: no uncaught page errors`);
   await page.close();

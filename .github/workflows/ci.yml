@@ -224,7 +224,7 @@ jobs:
             checks: consumer:check tabs:check slider:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
           - group: menu-deferred
             browsers: chromium
-            checks: menu-deferred:check
+            checks: menu-deferred:check menu-container-space:check
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
