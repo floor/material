@@ -72,6 +72,8 @@ export type Part = {
   document?: boolean;
   /** Read the element's own `::before` or `::after`, where state layers live. */
   pseudo?: "::before" | "::after" | "::placeholder" | "::backdrop";
+  /** Include occupied, near-opaque regions of the canvas bitmap in CSS pixels. */
+  bitmap?: boolean;
 };
 
 export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
@@ -109,9 +111,18 @@ export type Case = {
   properties?: readonly string[];
 };
 
+type Paint = {
+  pixels: number;
+  bounds: [number, number, number, number];
+  radius: number;
+  verticalTravel: number;
+  centerRuns: [number, number][];
+};
+
 export type PartResult = {
   rect: { x: number; y: number; width: number; height: number };
   style: Record<string, string>;
+  bitmap?: { width: number; height: number; colours: Record<string, Paint> };
 };
 
 export type CaseResult = {
@@ -327,6 +338,54 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
             return found as HTMLElement | null;
           };
           const result: Record<string, unknown> = {};
+          function readBitmap(canvas: HTMLCanvasElement, box: DOMRect): PartResult["bitmap"] {
+            const { width, height } = canvas;
+            const ctx = canvas.getContext("2d");
+            if (!ctx || !width || !height || !box.width || !box.height) return undefined;
+            const data = ctx.getImageData(0, 0, width, height).data;
+            const scaleX = box.width / width;
+            const scaleY = box.height / height;
+            const colours = new Map<number, Paint & { columns: Map<number, [number, number]> }>();
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
+                const i = (y * width + x) * 4;
+                if (data[i + 3]! < 230) continue;
+                const key = data[i]! * 65536 + data[i + 1]! * 256 + data[i + 2]!;
+                let c = colours.get(key);
+                if (!c) {
+                  c = { pixels: 0, bounds: [x, y, x + 1, y + 1], radius: 0, verticalTravel: 0, centerRuns: [], columns: new Map() };
+                  colours.set(key, c);
+                }
+                c.pixels++;
+                c.bounds[0] = Math.min(x, c.bounds[0]);
+                c.bounds[1] = Math.min(y, c.bounds[1]);
+                c.bounds[2] = Math.max(x + 1, c.bounds[2]);
+                c.bounds[3] = Math.max(y + 1, c.bounds[3]);
+                c.radius = Math.max(c.radius, Math.hypot((x + .5 - width / 2) * scaleX, (y + .5 - height / 2) * scaleY));
+                const column = c.columns.get(x);
+                if (column) column[1] = y;
+                else c.columns.set(x, [y, y]);
+                if (y === Math.floor(height / 2)) {
+                  const last = c.centerRuns.at(-1);
+                  if (last && last[1] === x) last[1]++;
+                  else c.centerRuns.push([x, x + 1]);
+                }
+              }
+            }
+            const paint: Record<string, Paint> = {};
+            for (const [key, c] of colours) {
+              if (c.pixels < 4) continue;
+              const centres = [...c.columns.values()].map(([a, b]) => (a + b) / 2);
+              paint[`#${key.toString(16).padStart(6, "0").toUpperCase()}`] = {
+                pixels: c.pixels,
+                bounds: [c.bounds[0] * scaleX, c.bounds[1] * scaleY, c.bounds[2] * scaleX, c.bounds[3] * scaleY],
+                radius: c.radius,
+                verticalTravel: (Math.max(...centres) - Math.min(...centres)) * scaleY,
+                centerRuns: c.centerRuns.map(([a, b]) => [a * scaleX, b * scaleX]),
+              };
+            }
+            return { width, height, colours: paint };
+          }
           for (const part of parts) {
             const element = resolve(part.selector, part.document);
             if (!element) {
@@ -341,7 +400,8 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
             for (const property of properties) {
               style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
             }
-            result[part.name] = { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, style };
+            const bitmap = part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;
+            result[part.name] = { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, style, bitmap };
           }
           return result;
         },
