@@ -35,6 +35,27 @@ $component: '#{base.$prefix}-time-picker';
       width: 440px;
       max-width: calc(100vw - 48px);
     }
+
+    // Below 488px the viewport cap is narrower than the seconds row — 312px
+    // of dialog at 360 — so the row shrinks to fit rather than clip: the same
+    // 72dp boxes with 12dp separators and a 44dp AM/PM column hold three
+    // fields at 284dp, inside 312. Only a dialog with seconds: the
+    // hours-and-minutes dialog keeps its M3 sizes at every width.
+    @media (max-width: 487.98px) {
+      &:has(.#{$component}__seconds) {
+        :is(.#{$component}__hours, .#{$component}__minutes, .#{$component}__seconds) {
+          width: 72px;
+        }
+
+        .#{$component}__separator {
+          width: 12px;
+        }
+
+        .#{$component}__period {
+          width: 44px;
+        }
+      }
+    }
     max-height: 520px;
     background-color: t.color('surface-container-high');
     color: t.color('on-surface');

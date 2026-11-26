@@ -13,9 +13,11 @@
  * directions, with and without seconds, on Chromium and WebKit, and asserts:
  *
  * 1. with seconds, every field and the AM/PM column lies inside the content
- *    box, whose `overflow: hidden` is what clipped them;
- * 2. without seconds, the dialog keeps the widths it has on main: 280 px for
- *    the 24h input, 304 px for the 24h dial, 328 px for 12h.
+ *    box, whose `overflow: hidden` is what clipped them — at 360, 412 and
+ *    900 px, where the narrow widths shrink the row rather than clip it;
+ * 2. without seconds, the dialog keeps the widths it has on origin/main at
+ *    that width: 280 px below 488, and at 900 px 328 for 12h, 304 for the 24h
+ *    dial, 280 for the 24h input.
  *
  *   bun run scripts/check-timepicker-seconds-width.ts
  */
@@ -87,44 +89,58 @@ const openPicker = (page: Page, config: { dir: "ltr" | "rtl"; format: "12h" | "2
     } as Measured;
   }, config);
 
+/**
+ * The no-seconds dialog at each width, as origin/main measures it (8f156da2):
+ * the viewport caps it at 280 below 488, and at 900 the format and type set
+ * it — 328 for 12h, 304 for the 24h dial, 280 for the 24h input. The fix may
+ * not move any of these.
+ */
+const MAIN_NO_SECONDS = (width: number, format: "12h" | "24h", type: "dial" | "input"): number => {
+  if (width < 488) return 280;
+  if (format === "12h") return 328;
+  return type === "dial" ? 304 : 280;
+};
+
 const run = async (browser: Browser, engine: string) => {
-  const page = await browser.newPage({ viewport: { width: 900, height: 760 } });
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`http://127.0.0.1:${server.port}`);
-  await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
   const rows: string[] = [];
+  const errors: string[] = [];
+  for (const width of [360, 412, 900]) {
+    const page = await browser.newPage({ viewport: { width, height: 760 } });
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(`http://127.0.0.1:${server.port}`);
+    await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
 
-  for (const dir of ["ltr", "rtl"] as const) {
-    for (const format of ["12h", "24h"] as const) {
-      for (const type of ["dial", "input"] as const) {
-        const label = `${engine} ${dir} ${format}/${type}`;
-        const withSeconds = await openPicker(page, { dir, format, type, showSeconds: true });
-        for (const field of withSeconds.fields) {
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const format of ["12h", "24h"] as const) {
+        for (const type of ["dial", "input"] as const) {
+          const label = `${engine} ${width}px ${dir} ${format}/${type}`;
+          const withSeconds = await openPicker(page, { dir, format, type, showSeconds: true });
+          for (const field of withSeconds.fields) {
+            assert(
+              field.left >= withSeconds.box.left - 0.5 && field.right <= withSeconds.box.right + 0.5,
+              `${label}: with seconds every field is whole — ${field.name} spans ${field.left.toFixed(1)}..${field.right.toFixed(1)} outside the content's ${withSeconds.box.left.toFixed(1)}..${withSeconds.box.right.toFixed(1)}`,
+            );
+          }
+          // Three fields and the AM/PM column at 12h, one fewer period at 24h.
           assert(
-            field.left >= withSeconds.box.left - 0.5 && field.right <= withSeconds.box.right + 0.5,
-            `${label}: with seconds every field is whole — ${field.name} spans ${field.left.toFixed(1)}..${field.right.toFixed(1)} outside the content's ${withSeconds.box.left.toFixed(1)}..${withSeconds.box.right.toFixed(1)}`,
+            withSeconds.fields.length === (format === "12h" ? 4 : 3),
+            `${label}: every field is measured (${withSeconds.fields.map((field) => field.name).join(", ")})`,
           );
-        }
-        // Three fields and the AM/PM column at 12h, one fewer period at 24h.
-        assert(
-          withSeconds.fields.length === (format === "12h" ? 4 : 3),
-          `${label}: every field is measured (${withSeconds.fields.map((field) => field.name).join(", ")})`,
-        );
-        rows.push(`${label} +seconds ${withSeconds.dialogWidth.toFixed(0)} px, ${withSeconds.fields.length} fields`);
+          rows.push(`${label} +seconds ${withSeconds.dialogWidth.toFixed(0)} px`);
 
-        const withoutSeconds = await openPicker(page, { dir, format, type, showSeconds: false });
-        const expected = format === "12h" ? 328 : type === "dial" ? 304 : 280;
-        assert(
-          Math.abs(withoutSeconds.dialogWidth - expected) <= 1,
-          `${label}: without seconds the dialog keeps the M3 width (${withoutSeconds.dialogWidth.toFixed(1)} px, expected ${expected})`,
-        );
-        rows.push(`${label} ${withoutSeconds.dialogWidth.toFixed(0)} px`);
+          const withoutSeconds = await openPicker(page, { dir, format, type, showSeconds: false });
+          const expected = MAIN_NO_SECONDS(width, format, type);
+          assert(
+            Math.abs(withoutSeconds.dialogWidth - expected) <= 1,
+            `${label}: without seconds the dialog keeps main's width (${withoutSeconds.dialogWidth.toFixed(1)} px, expected ${expected})`,
+          );
+          rows.push(`${label} ${withoutSeconds.dialogWidth.toFixed(0)} px`);
+        }
       }
     }
+    await page.close();
   }
   assert.deepEqual(errors, [], `${engine}: no uncaught page errors`);
-  await page.close();
   return { engine, rows };
 };
 
