@@ -113,6 +113,23 @@ for (const size of ["s", "m"] as const) {
   }
 }
 
+// Both halves of the toggle's shape swap at m: round → square (CornerLarge)
+// and square → pill (SelectedContainerShapeSquare is CornerFull at m).
+for (const shape of ["round", "square"] as const) {
+  cases.push({
+    id: `filled/m/selected (${shape} toggle)`,
+    mount: (mtrl, host, config) => {
+      const { shape: shapeName } = (config ?? {}) as MountOptions;
+      const create = mtrl.createButton as unknown as (settings: Record<string, unknown>) => { element: HTMLElement };
+      const button = create({ text: "Button", variant: "filled", size: "m", shape: shapeName, toggle: true, selected: true });
+      host.append(button.element);
+    },
+    config: { shape },
+    parts: [{ name: "root", selector: ".mtrl-button" }],
+    properties: ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius", "height"],
+  });
+}
+
 // Colours: the five variants' container and label, light and dark.
 for (const variant of VARIANTS) {
   cases.push({ id: `${variant}/m/dark`, scheme: "dark", mount, config: { variant, size: "m" }, parts });
