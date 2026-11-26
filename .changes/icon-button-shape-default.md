@@ -1,3 +1,0 @@
-Section: Fixed
-
-**Icon button resting shape.** `createIconButton({ shape: undefined })` — the call a spread options object makes — wrote an undefined over the default "round", so the element lost its shape class. The circle radius and the selected and pressed shape rules are keyed on that class, and without it the container kept the default size's 20 px radius at every size (32, 56, 96 and 136 px tall buttons all read 20 px), while its height still followed the size. The shape is derived once after the config merge now, so the documented default and the spread call both keep the full radius and the shape morphs.
