@@ -494,10 +494,34 @@ dialog.#{$component} {
         // Mobile dialogs animate from bottom
         transform-origin: bottom center;
 
+        // A dialog taller than the window scrolls its content, not its
+        // surface. The overlay aligns a dialog that fits to its bottom (the
+        // sheet placement); a taller one overflowed the overlay's start edge,
+        // where `overflow: auto` cannot scroll, so the headline sat above the
+        // top edge with nothing to scroll it back (360×600, title at -400;
+        // overlay scrollHeight == clientHeight). Capped at the overlay's box,
+        // the header and the actions stay put and the content scrolls between
+        // them, with the headline visible.
+        max-height: calc(100% - 32px);
+        display: flex;
+        flex-direction: column;
+
+        > .#{$component}__header,
+        > .#{$component}__footer {
+            flex-shrink: 0;
+        }
+
+        > .#{$component}__content {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
         &--fullscreen {
             width: 100%;
             height: 100%;
             margin: 0;
+            max-height: none;
             transform-origin: center center;
         }
     }

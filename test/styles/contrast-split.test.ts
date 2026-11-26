@@ -355,9 +355,11 @@ describe("explicit contrast levels are opt-in", () => {
     // A time picker holding seconds takes its row's width, and below 488px
     // the row shrinks rather than clips (+375 B;
     // styles/components/_timepicker.scss).
+    // A dialog taller than a small window scrolls its content with the
+    // headline in view (+240 B; styles/components/_dialog.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "629c736b7e0f5ece2ec490c4fabac704c1b728c3d9d25c2191eaf08951cbdf23",
-      length: 554098,
+      sha256: "b295844be147868661c603b8503d9552c981441d5e3ce7805fb21d75fd2539f5",
+      length: 554338,
     });
   });
 
