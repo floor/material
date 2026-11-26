@@ -359,7 +359,7 @@ describe("explicit contrast levels are opt-in", () => {
     // headline in view (+240 B; styles/components/_dialog.scss).
     // A card paints the hover layer in every variant and the dragged layer in
     // all three, and its focus ring no longer draws an elevation-1 shadow
-    // (+1,108 B; styles/components/_card.scss).
+    // (+1,486 B; styles/components/_card.scss).
     // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
     // where the control is clipped. The snackbar close stays 2px in
     // inverse-on-surface (styles/abstract/_mixins.scss and the component
@@ -371,8 +371,8 @@ describe("explicit contrast levels are opt-in", () => {
     // bar with no shown trailing action ends its text 16dp from the edge, and
     // an empty value's clear button takes no room (+92 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "9343d89dd42beb178869c437279b0d4478a35df31e3af3a866c787d552dab5c0",
-      length: 556118,
+      sha256: "44351d3a8438036f5cb131f8154e088d17c0def0f9980bfe8e116b3bb1a1e95f",
+      length: 556496,
     });
   });
 

@@ -61,16 +61,16 @@ describe('card stylesheet', () => {
     // HoverContainerElevation: 2 for elevated, 1 for filled and outlined.
     // Filled and outlined used to take a state layer and no elevation at all.
     // The hover yields to a drag, whose own elevation and layer replace it.
-    expect(value('.mtrl-card--elevated:hover.mtrl-card--interactive:not(.mtrl-card--dragging)', 'box-shadow')).toBe(LEVEL[2]);
-    expect(value('.mtrl-card--filled:hover.mtrl-card--interactive:not(.mtrl-card--dragging)', 'box-shadow')).toBe(LEVEL[1]);
-    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:not(.mtrl-card--dragging)', 'box-shadow')).toBe(LEVEL[1]);
+    expect(value('.mtrl-card--elevated:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[2]);
+    expect(value('.mtrl-card--filled:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[1]);
+    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[1]);
   });
 
   test('every variant paints the hover layer, elevated included', () => {
     // md.sys.state.hover, 0.08, on the ::before layer; the elevated card used
     // to paint none.
     for (const variant of ['elevated', 'filled', 'outlined']) {
-      expect(value(`.mtrl-card--${variant}:hover.mtrl-card--interactive:not(.mtrl-card--dragging)::before`, 'opacity')).toBe('0.08');
+      expect(value(`.mtrl-card--${variant}:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))::before`, 'opacity')).toBe('0.08');
     }
   });
 
@@ -94,7 +94,7 @@ describe('card stylesheet', () => {
     // OutlineColor is OutlineVariant; the darker `outline` role was wrong, and
     // lightening it on hover was the wrong direction as well
     expect(value('.mtrl-card--outlined', 'border')).toBe('1px solid var(--mtrl-sys-color-outline-variant)');
-    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:not(.mtrl-card--dragging)', 'border-color')).toBe('var(--mtrl-sys-color-outline-variant)');
+    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'border-color')).toBe('var(--mtrl-sys-color-outline-variant)');
     // FocusOutlineColor
     expect(value('.mtrl-card--outlined:focus-visible, .mtrl-card--outlined.mtrl-card--focused', 'border-color')).toBe('var(--mtrl-sys-color-on-surface)');
   });
