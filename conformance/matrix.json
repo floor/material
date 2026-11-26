@@ -823,7 +823,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -885,7 +885,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+          "note": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture. The reference choice is pending.",
           "issue": null
         },
         {
@@ -916,7 +916,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+          "note": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture. The reference choice is pending.",
           "issue": null
         },
         {
@@ -947,7 +947,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+          "note": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp. The reference choice is pending.",
           "issue": null
         },
         {
@@ -978,7 +978,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+          "note": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp. The reference choice is pending.",
           "issue": null
         }
       ]
@@ -3476,7 +3476,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3507,7 +3507,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3538,7 +3538,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3699,7 +3699,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3730,7 +3730,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3761,7 +3761,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3792,7 +3792,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3885,7 +3885,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3916,7 +3916,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3947,7 +3947,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -3978,7 +3978,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4009,7 +4009,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4040,7 +4040,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4071,7 +4071,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4102,7 +4102,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose has a configurable gap or content padding. This row compares default values.",
+          "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4195,7 +4195,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Mixed item widths require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs.",
+          "note": "Mixed item widths require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4226,7 +4226,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+          "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
           "issue": null
         },
         {
@@ -4257,7 +4257,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+          "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
           "issue": null
         }
       ]
@@ -4414,7 +4414,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         }
       ]
@@ -4767,7 +4767,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "Compose separates the picker body from its dialog and supplies buttons only in the latter.",
+          "note": "Compose separates the picker body from its dialog and supplies buttons only in the latter. The reference choice is pending.",
           "issue": null
         },
         {
@@ -5748,7 +5748,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -6220,7 +6220,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -6381,7 +6381,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller.",
+          "note": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
           "issue": null
         },
         {
@@ -6566,7 +6566,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The website baseline three-line diagram uses a 24 dp trailing inset. Compose uses 16 dp.",
+          "note": "The website baseline three-line diagram uses a 24 dp trailing inset. Compose uses 16 dp. The reference choice is pending.",
           "issue": null
         },
         {
@@ -6984,7 +6984,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7049,7 +7049,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "This fixture measures five items at bar widths of 660 px and 840 px. Compose defaults to equal division with a separate opt-in centered arrangement.",
+          "note": "This fixture measures five items at bar widths of 660 px and 840 px. Compose defaults to equal division with a separate opt-in centered arrangement. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7148,7 +7148,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7179,7 +7179,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7210,7 +7210,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7241,7 +7241,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
           "issue": null
         },
         {
@@ -7554,7 +7554,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width.",
+          "note": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width. The reference choice is pending.",
           "issue": null
         },
         {
@@ -10399,7 +10399,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+          "note": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers. The reference choice is pending.",
           "issue": null
         },
         {
@@ -10430,7 +10430,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+          "note": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers. The reference choice is pending.",
           "issue": null
         }
       ]
@@ -10590,7 +10590,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
           "issue": null
         },
         {
@@ -10751,7 +10751,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The site depicts a raised floating toolbar. Compose defaults to Level 0 without a FAB.",
+          "note": "The site depicts a raised floating toolbar. Compose defaults to Level 0 without a FAB. The reference choice is pending.",
           "issue": null
         },
         {
@@ -11248,7 +11248,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal.",
+          "note": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal. The reference choice is pending.",
           "issue": null
         },
         {

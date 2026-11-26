@@ -87,7 +87,7 @@
     }
   },
   "bottom-sheet/focus-ring/handle/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "compose": {
       "value": "0.10 opacity focus layer",
       "file": "Ripple.kt",
@@ -119,7 +119,7 @@
     }
   },
   "bottom-sheet/side-clearance/modal/above-640": {
-    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture. The reference choice is pending.",
     "spec": {
       "value": "56dp",
       "url": "https://m3.material.io/components/bottom-sheets/specs",
@@ -135,7 +135,7 @@
     }
   },
   "bottom-sheet/side-clearance/standard/above-640": {
-    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture.",
+    "reason": "A centered 640 dp maximum leaves 30 dp per side in the 700 dp fixture. The reference choice is pending.",
     "spec": {
       "value": "56dp",
       "url": "https://m3.material.io/components/bottom-sheets/specs",
@@ -151,7 +151,7 @@
     }
   },
   "bottom-sheet/top-clearance/modal/expanded": {
-    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp. The reference choice is pending.",
     "compose": {
       "value": "0dp",
       "file": "BottomSheet.kt",
@@ -167,7 +167,7 @@
     }
   },
   "bottom-sheet/top-clearance/standard/expanded": {
-    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp.",
+    "reason": "The measured fixture fills the available window. The website uses 72 dp in compact windows and 56 dp above 640 dp. The reference choice is pending.",
     "spec": {
       "value": "56dp",
       "url": "https://m3.material.io/components/bottom-sheets/specs",
@@ -399,7 +399,7 @@
     }
   },
   "card/focus-ring/elevated/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "compose": {
       "value": "0.10 opacity focus layer",
       "file": "Ripple.kt",
@@ -415,7 +415,7 @@
     }
   },
   "card/focus-ring/filled/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -431,7 +431,7 @@
     }
   },
   "card/focus-ring/outlined/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -483,7 +483,7 @@
     }
   },
   "carousel/block-padding/centered-hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -499,7 +499,7 @@
     }
   },
   "carousel/block-padding/hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -515,7 +515,7 @@
     }
   },
   "carousel/block-padding/multi-browse/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "compose": {
       "value": "0dp",
       "file": "Carousel.kt",
@@ -531,7 +531,7 @@
     }
   },
   "carousel/block-padding/uncontained/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -559,7 +559,7 @@
     "reason": "The references give no density-specific carousel height."
   },
   "carousel/inline-padding/centered-hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "16dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -575,7 +575,7 @@
     }
   },
   "carousel/inline-padding/hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "16dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -591,7 +591,7 @@
     }
   },
   "carousel/inline-padding/multi-browse/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "16dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -607,7 +607,7 @@
     }
   },
   "carousel/inline-padding/uncontained/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "compose": {
       "value": "0dp",
       "file": "Carousel.kt",
@@ -623,7 +623,7 @@
     }
   },
   "carousel/item-gap/centered-hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -639,7 +639,7 @@
     }
   },
   "carousel/item-gap/hero/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -655,7 +655,7 @@
     }
   },
   "carousel/item-gap/multi-browse/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -671,7 +671,7 @@
     }
   },
   "carousel/item-gap/uncontained/rest": {
-    "reason": "Compose has a configurable gap or content padding. This row compares default values.",
+    "reason": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
     "spec": {
       "value": "8dp",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -712,7 +712,7 @@
     }
   },
   "carousel/mixed-item-widths/uncontained/rest": {
-    "reason": "Mixed item widths require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs.",
+    "reason": "Mixed item widths require individual slot geometry. Compose uses a shared itemWidth, even if individual image content differs. The reference choice is pending.",
     "spec": {
       "value": "Present",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -728,7 +728,7 @@
     }
   },
   "carousel/small-item-width/centered-hero/opening": {
-    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
     "spec": {
       "value": "40dp minimum",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -744,7 +744,7 @@
     }
   },
   "carousel/small-item-width/hero/opening": {
-    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor.",
+    "reason": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
     "spec": {
       "value": "40dp minimum",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -783,7 +783,7 @@
     "reason": "The references give no density-specific checkbox box size."
   },
   "checkbox/focus-ring/default/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "compose": {
       "value": "0.10 opacity focus layer",
       "file": "Ripple.kt",
@@ -871,7 +871,7 @@
     }
   },
   "datepicker/confirmation-footer/docked-day/rest": {
-    "reason": "Compose separates the picker body from its dialog and supplies buttons only in the latter.",
+    "reason": "Compose separates the picker body from its dialog and supplies buttons only in the latter. The reference choice is pending.",
     "spec": {
       "value": "Present",
       "url": "https://m3.material.io/components/date-pickers/specs",
@@ -1036,7 +1036,7 @@
     }
   },
   "fab/focus-ring/default/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -1098,7 +1098,7 @@
     }
   },
   "icon-button/focus-ring/standard/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -1144,7 +1144,7 @@
     }
   },
   "list/divider-trailing-space/inset/rest": {
-    "reason": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller.",
+    "reason": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
@@ -1186,7 +1186,7 @@
     }
   },
   "list/trailing-space/three-line/rest": {
-    "reason": "The website baseline three-line diagram uses a 24 dp trailing inset. Compose uses 16 dp.",
+    "reason": "The website baseline three-line diagram uses a 24 dp trailing inset. Compose uses 16 dp. The reference choice is pending.",
     "compose": {
       "value": "16dp",
       "file": "ListTokens.kt",
@@ -1248,7 +1248,7 @@
     }
   },
   "navigation-bar/focus-ring/horizontal/focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "compose": {
       "value": "0.10 opacity focus layer",
       "file": "Ripple.kt",
@@ -1280,7 +1280,7 @@
     }
   },
   "navigation-bar/item-width/horizontal/medium-width": {
-    "reason": "This fixture measures five items at bar widths of 660 px and 840 px. Compose defaults to equal division with a separate opt-in centered arrangement.",
+    "reason": "This fixture measures five items at bar widths of 660 px and 840 px. Compose defaults to equal division with a separate opt-in centered arrangement. The reference choice is pending.",
     "spec": {
       "value": "Fixed target widths",
       "url": "https://m3.material.io/components/navigation-bar/specs",
@@ -1314,7 +1314,7 @@
     }
   },
   "navigation-drawer/divider-side-inset/modal/rest": {
-    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
     "spec": {
       "value": "28dp / 28dp",
       "url": "https://m3.material.io/components/navigation-drawer/specs",
@@ -1330,7 +1330,7 @@
     }
   },
   "navigation-drawer/divider-side-inset/standard/rest": {
-    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible.",
+    "reason": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
     "spec": {
       "value": "28dp / 28dp",
       "url": "https://m3.material.io/components/navigation-drawer/specs",
@@ -1346,7 +1346,7 @@
     }
   },
   "navigation-drawer/divider-top-space/modal/rest": {
-    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
     "spec": {
       "value": "16dp",
       "url": "https://m3.material.io/components/navigation-drawer/specs",
@@ -1362,7 +1362,7 @@
     }
   },
   "navigation-drawer/divider-top-space/standard/rest": {
-    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap.",
+    "reason": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
     "spec": {
       "value": "16dp",
       "url": "https://m3.material.io/components/navigation-drawer/specs",
@@ -1432,7 +1432,7 @@
     }
   },
   "navigation-rail/item-hit-width/modal-expanded/rest": {
-    "reason": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width.",
+    "reason": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width. The reference choice is pending.",
     "spec": {
       "value": "Full rail width",
       "url": "https://m3.material.io/components/navigation-rail/specs",
@@ -2121,7 +2121,7 @@
     }
   },
   "text-field/trailing-action-focus-ring/filled/focus": {
-    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -2137,7 +2137,7 @@
     }
   },
   "text-field/trailing-action-focus-ring/outlined/focus": {
-    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers.",
+    "reason": "The site calls for a keyboard focus indicator. Compose defaults to an opacity layer on its ripple consumers. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -2173,7 +2173,7 @@
     }
   },
   "timepicker/focus-indicator/input/period-focus": {
-    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring.",
+    "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
     "spec": {
       "value": "Visible keyboard focus ring",
       "url": "https://m3.material.io/foundations/interaction/states/applying-states",
@@ -2237,7 +2237,7 @@
     }
   },
   "toolbar/container-elevation/floating-horizontal-no-fab/rest": {
-    "reason": "The site depicts a raised floating toolbar. Compose defaults to Level 0 without a FAB.",
+    "reason": "The site depicts a raised floating toolbar. Compose defaults to Level 0 without a FAB. The reference choice is pending.",
     "spec": {
       "value": "Raised",
       "url": "https://m3.material.io/components/toolbars/guidelines",
@@ -2327,7 +2327,7 @@
     }
   },
   "tooltip/hide-delay/plain/after-pointer-exit": {
-    "reason": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal.",
+    "reason": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal. The reference choice is pending.",
     "spec": {
       "value": "1500ms",
       "url": "https://m3.material.io/components/tooltips/guidelines",
