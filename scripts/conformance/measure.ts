@@ -87,6 +87,8 @@ export type Case = {
   /** The parts to read, relative to the mount root. */
   parts: Part[];
   state?: State;
+  /** Tab through intervening stops until this light-DOM selector owns focus. */
+  focusTarget?: string;
   /** The stylesheet's `--mtrl-density`: 0, -1, -2 or -3. */
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
@@ -157,11 +159,11 @@ export type HarnessOptions = {
 /** `dist/components/<name>/index.js` when it exists, else a bundle of the source. */
 const loadEntry = async (component: string): Promise<{ source: "dist" | "src"; code: string }> => {
   const built = join(root, "dist", "components", component, "index.js");
-  if (existsSync(built) && statSync(built).size > 0) return { source: "dist", code: readFileSync(built, "utf8") };
-  const entry = resolve(root, "src", "components", component, "index.ts");
+  const source = existsSync(built) && statSync(built).size > 0 ? "dist" : "src";
+  const entry = source === "dist" ? built : resolve(root, "src", "components", component, "index.ts");
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
   if (!bundle.success) throw new Error(`bundling ${component}: ${bundle.logs.join("\n")}`);
-  return { source: "src", code: await bundle.outputs[0]!.text() };
+  return { source, code: await bundle.outputs[0]!.text() };
 };
 
 /** The stylesheet the component draws with: the built one, else a compiled source sheet. */
@@ -196,20 +198,26 @@ const serve = () =>
 
 let entryCode = "";
 
-const applyState = async (page: Page, selector: string, state: State) => {
+const applyState = async (page: Page, selector: string, state: State, focusTarget?: string) => {
   if (state === "hover") await page.hover(selector);
   else if (state === "focus") {
     // A programmatic focus does not match `:focus-visible`: the ring is read
     // from a real tab stop, so the keyboard moves it there.
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
-    for (let attempt = 0; attempt < 8; attempt++) {
-      await page.keyboard.press("Tab");
-      // The first stop inside the mount: the leading control, in tab order.
-      const inside = await page.evaluate(() => {
+    // An open modal can already own focus. Keep its entry stop so the
+    // fixture exercises natural Tab movement inside it.
+    if (!focusTarget) await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+    const isWebKit = page.context().browser()?.browserType().name() === "webkit";
+    for (let attempt = 0; attempt < 12; attempt++) {
+      // WebKit on macOS can skip links and buttons on unmodified Tab.
+      // The alternate sequence also lets custom focus traps see plain Tab.
+      const alternate = focusTarget ? attempt >= 6 : attempt < 6;
+      await page.keyboard.press(isWebKit && alternate ? "Alt+Tab" : "Tab");
+      // Default to the first stop inside the mount. A fixture can name its target.
+      const inside = await page.evaluate((target) => {
         const host = document.querySelector("#mount");
         const active = document.activeElement;
-        return !!host && !!active && host.contains(active);
-      });
+        return !!host && !!active && host.contains(active) && (!target || active.matches(target));
+      }, focusTarget);
       if (inside) break;
     }
   }
@@ -288,7 +296,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // The state is applied from the outside: Playwright's pointer and focus,
       // not a simulated class.
       try {
-        await applyState(page, testCase.parts[0]!.selector, state);
+        await applyState(page, testCase.parts[0]!.selector, state, testCase.focusTarget);
       } catch {
         // A part that cannot take the state is read at rest.
       }
