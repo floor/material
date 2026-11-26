@@ -19,18 +19,20 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [3.16.6] - 2026-11-25
 
-Menus, selects and carousel drags follow the page zoom, and time pickers with seconds fit their fields.
+Menus, selects and carousel drags follow the page zoom, time pickers with seconds fit their fields, icon buttons keep their round shape, and tall dialogs scroll within small windows.
 
 ### Fixed
 
 - **Carousel drag in a zoomed document.** A pointer delta is in zoomed viewport pixels while the scroller's position is in the element's own, so under a CSS `zoom` the strip moved the drag times the zoom — a 120 px drag moved 92 px at 0.7 and 66 at 0.5 (md3.io, 2026-11-25). The drag now divides its delta by the effective zoom (`currentCSSZoom`, or the computed zoom product where the engine lacks it), so a drag follows the pointer at any zoom.
 - **Menu and select in a zoomed document.** `zoom` scales the used values, so `getBoundingClientRect()` reports zoomed viewport pixels while `style.left/top/width` inside the zoomed subtree are local pixels. A menu copied its opener's rect straight into those styles, so under `zoom` it landed at the zoom times its offset — at 0.5 it opened at half its anchor's coordinates, over the field, and a select's listbox was half its field's width (md3.io, 2026-11-25). Both are placed and sized through the element's effective zoom now (`rect.width / offsetWidth`), so a menu keeps its opener's edge and its gap at 1, 0.7 and 0.5 and a listbox is always its field's width.
 - **Time picker with seconds.** M3's dialog width, 328 px, is what an hh:mm row needs; the seconds field is our extension and its row is wider — 388 px at 12h and 356 at 24h — so the content overflowed and the hour, or the AM/PM column, was clipped. A dialog holding seconds now takes the row's width (440 px, capped by the viewport), while the hours-and-minutes dialog keeps its M3 width exactly: 280 px for the 24h input, 304 px for the 24h dial, 328 px for 12h.
+- **Icon button resting shape.** An options object with `shape: undefined` dropped the default round shape and left every size with a 20 px radius. The button now resolves the shape after merging its options, so each size keeps its round radius and its selected and pressed shape changes ([#476](https://github.com/floor/material/pull/476)).
+- **A dialog taller than a small window.** Bottom alignment could push a tall dialog's headline and the start of its content above the window, where scrolling could never reach them. The dialog now fits within the window, with its content scrolling between the header and actions. A dialog that fits still sits at the bottom ([#478](https://github.com/floor/material/pull/478)).
 
-The push-to-main package job measured **921,652 B** compressed,
-**5,249,831 B** unpacked and **1,303 files**, with **135,581 B** of
-gzip-compressed root JavaScript and **132,492 B** for the every-component
-scenario ([run 45793649681](https://github.com/floor/material/actions/runs/45793649681/job/139819188931)).
+The package job on the merged tree measured **921,829 B** compressed,
+**5,251,059 B** unpacked and **1,303 files**, with **135,579 B** of
+gzip-compressed root JavaScript and **132,494 B** for the every-component
+scenario ([run 45818122059](https://github.com/floor/material/actions/runs/45818122059/job/139903549819)).
 
 ## [3.16.5] - 2026-11-25
 
