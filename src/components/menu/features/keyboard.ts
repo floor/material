@@ -131,8 +131,10 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
   const inContainer = (menuElement: HTMLElement): boolean => {
     // A top-layer menu keeps the browser's own focus behaviour whatever its
     // parent: it is inserted next to its opener, so a nested opener's host is
-    // its parentElement and would read as an explicit container.
-    if (menuElement.hasAttribute("popover") || menuElement.matches(":popover-open")) return false;
+    // its parentElement and would read as an explicit container. The popover
+    // attribute is the marker — `:popover-open` is not asked of `matches()`,
+    // which throws on it in a DOM without the popover API (JSDOM 26).
+    if (menuElement.hasAttribute("popover")) return false;
     const parent = menuElement.parentElement;
     return !!parent && parent !== document.body && parent !== document.documentElement;
   };
