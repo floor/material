@@ -427,6 +427,14 @@ button.#{$component}__avatar {
     align-items: center;
 }
 
+// With no trailing action (no clear button, no trailing items) the text ends
+// 16dp from the bar's end: the bar's 4dp padding plus 12. Compose
+// SearchBarTokens.ContainedNoActionsTrailingSpace = Space200 = 16dp at
+// androidx-main 08ec699d (tokens 41.1.19).
+.#{$component}__container:not(:has(.#{$component}__clear-button, .#{$component}__trailing > *)) .#{$component}__input-wrapper {
+    margin-inline-end: 12px;
+}
+
 .#{$component}__input {
     width: 100%;
     height: 100%;
