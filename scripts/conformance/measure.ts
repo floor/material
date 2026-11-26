@@ -68,8 +68,10 @@ export type Part = {
   name: string;
   /** A selector inside the mount root; `>>>` steps into a shadow root. */
   selector: string;
+  /** A portalled part within the current browser document. */
+  document?: boolean;
   /** Read the element's own `::before` or `::after`, where state layers live. */
-  pseudo?: "::before" | "::after";
+  pseudo?: "::before" | "::after" | "::placeholder" | "::backdrop";
 };
 
 export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
@@ -89,6 +91,8 @@ export type Case = {
   state?: State;
   /** Tab through intervening stops until this light-DOM selector owns focus. */
   focusTarget?: string;
+  /** Real keyboard input applied after the mounted component settles. */
+  keys?: string[];
   /** The stylesheet's `--mtrl-density`: 0, -1, -2 or -3. */
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
@@ -216,7 +220,7 @@ const applyState = async (page: Page, selector: string, state: State, focusTarge
       const inside = await page.evaluate((target) => {
         const host = document.querySelector("#mount");
         const active = document.activeElement;
-        return !!host && !!active && host.contains(active) && (!target || active.matches(target));
+        return !!active && (target ? active.matches(target) : !!host && host.contains(active));
       }, focusTarget);
       if (inside) break;
     }
@@ -293,6 +297,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         },
       );
       if (testCase.before) await page.waitForTimeout(testCase.before);
+      for (const key of testCase.keys ?? []) await page.keyboard.press(key);
       // The state is applied from the outside: Playwright's pointer and focus,
       // not a simulated class.
       try {
@@ -307,9 +312,9 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
           // `a >>> b` enters a's shadow root for b, then b's for the next.
-          const resolve = (selector: string): HTMLElement | null => {
+          const resolve = (selector: string, documentScope = false): HTMLElement | null => {
             if (selector === ":root") return root;
-            let scope: ParentNode = root;
+            let scope: ParentNode = documentScope ? document : root;
             let found: Element | null = null;
             for (const step of selector.split(">>>").map((part) => part.trim())) {
               found = scope.querySelector(step);
@@ -320,7 +325,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           };
           const result: Record<string, unknown> = {};
           for (const part of parts) {
-            const element = resolve(part.selector);
+            const element = resolve(part.selector, part.document);
             if (!element) {
               result[part.name] = null;
               continue;
