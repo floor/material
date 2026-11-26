@@ -247,10 +247,10 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
   assert.deepEqual([military.hours?.width, military.minutes?.width, military.period], [114, 114, null], "24h dial: 114dp boxes, no AM/PM");
 
   // Input: 96x72 Display Medium fields, labelled Hour and Minute below in Body
-  // Small; the focused one primary-container inside a 2dp primary outline.
+  // Small; the focused one primary-container inside the 3px Secondary ring.
   const input = await measure({ type: "input", format: "12h" }, "ltr", ".mtrl-time-picker__minutes");
   assert.deepEqual([input.hours?.width, input.hours?.height, input.hours?.font, input.hours?.fill, input.hours?.outline], [96, 72, "45px/52px", "surface-container-highest", "none"], "input: an unfocused field");
-  assert.deepEqual([input.minutes?.fill, input.minutes?.label, input.minutes?.outline], ["primary-container", "on-primary-container", "2px primary"], "input: the focused field");
+  assert.deepEqual([input.minutes?.fill, input.minutes?.label, input.minutes?.outline], ["primary-container", "on-primary-container", "3px secondary"], "input: the focused field");
   assert.deepEqual(input.labels, ["Hour 12px on-surface-variant for=true", "Minute 12px on-surface-variant for=true"], "input: Hour and Minute labels, tied to their fields");
   assert.deepEqual([input.period?.width, input.period?.height], [52, 72], "input: AM/PM 52x72dp");
 
