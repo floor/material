@@ -169,6 +169,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(changes.outputs?.docs_only).toBe("${{ steps.classify.outputs.docs_only }}");
     expect(changes.outputs?.run_all).toBe("${{ steps.classify.outputs.run_all }}");
     const script = changes.steps.map(step => step.run ?? "").join("\n");
+    expect(script).toContain("README.md|npm-readme.md");
     expect(script).toContain('git diff -M --name-status "$BASE_SHA...HEAD"');
     expect(script).toContain("git fetch --quiet --depth=1 origin");
     expect(workflow.jobs.browser.needs).toEqual(["build", "changes"]);

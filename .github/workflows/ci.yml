@@ -93,7 +93,10 @@ jobs:
             [ -n "$file" ] || continue
             counted=$((counted + 1))
             doc=false
+            # README.md and npm-readme.md are not docs: check-readme-browser.ts
+            # runs the fences they mark `example: run`.
             case "$file" in
+              README.md|npm-readme.md) ;;
               *.md|CHARTER.md|AGENTS.md|.github/ISSUE_TEMPLATE/*|docs/*) doc=true ;;
             esac
             hit_library=false
@@ -103,7 +106,7 @@ jobs:
             esac
             hit_checks=false
             case "$file" in
-              test/*|scripts/check-*|scripts/generate-adapters.ts|scripts/fixtures/*|scripts/conformance/*|scripts/comparators/*|.github/workflows/*|.github/actions/*)
+              README.md|npm-readme.md|test/*|scripts/check-*|scripts/generate-adapters.ts|scripts/fixtures/*|scripts/conformance/*|scripts/comparators/*|.github/workflows/*|.github/actions/*)
                 hit_checks=true ;;
             esac
             # The public issues JSON. No browser group and no comparator runs it.
