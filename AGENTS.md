@@ -212,8 +212,7 @@ prefix orders it within its section.
 - `scripts/budgets.ts` — the explicit byte ceilings (packed package, tarball, unpacked, CSS).
 - `scripts/size.ts` — the per-component gzip budgets in `kb(n)` steps, and the `SIZES.md` table
   that must match its measurement.
-- `SIZES.md` and the sizes table in `README.md` and `npm-readme.md` — the committed figures; the
-  README's table is refreshed by a release.
+- `SIZES.md` and the sizes table in `README.md` and `npm-readme.md` — the committed figures.
 - `scripts/fixtures/sass-config-baseline.json` — the frozen Sass source digests (`sources`) and
   the payload digests of the packed JS and CSS (`payloads`).
 
@@ -245,7 +244,8 @@ A CSS change can move the packed output in three places:
    assertion prints, and put that value in the file.
 
 `sources.main` fails first and alone when the change is confined to that entry; a theme or element
-change moves its own entry instead. Whatever moved, update the comment above the loop in
+change moves `main`, `themes` and the theme's own entry too, so refresh every affected entry the
+check names. Whatever moved, update the comment above the loop in
 `test/styles/sass-config.test.ts` that says why, naming the change and its file. When the payload
 map drifts, the package job prints each path with its new digest; replace that line and leave
 `tested`, `branch`, `ci` and `mainRevision` as they are.

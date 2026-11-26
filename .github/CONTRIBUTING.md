@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to material! This document provides guidelines and instructions for contributing to this lightweight, TypeScript-focused UI component library.
 
-Claude Code 2.1.277 or later, Codex and Cursor all read [AGENTS.md](../AGENTS.md) on their own — see [Claude Code's memory documentation](https://code.claude.com/docs/en/memory#agents-md). Contributor agents should start there for the checks and the rules, and use this guide for the whole workflow.
+Claude Code 2.1.277 or later reads [AGENTS.md](../AGENTS.md) automatically in most setups (see [the linked docs](https://code.claude.com/docs/en/memory#agents-md) for exceptions), and so do Codex and Cursor. Contributor agents should start there for the checks and the rules, and use this guide for the whole workflow.
 
 ## Why Contribute?
 
