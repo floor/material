@@ -65,6 +65,12 @@ $ bun test ./test/components/button/button.test.ts
 $ bun run test:naming
 check-test-naming: every file defining tests is collectable
 
+$ bun run test:types
+check-test-types: the test tree type-checks, 0 drifted mock suite(s) still excluded (F6)
+
+$ bun run name:check
+package-name: the tree is consistently `material` (<files> files scanned, <occurrences> occurrences a rename would change, <classified> classified)
+
 $ bun run scripts/check-dialog-small-viewport.ts
 Dialog small viewport check passed.
 
