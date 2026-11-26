@@ -212,8 +212,28 @@ export const createPositioner = (
     let height = menuRect.height;
     let fitted: number | null = null;
     if (!isSubmenu && /^(top|bottom)/.test(calculatedPosition)) {
-      const below = viewportHeight - openerRect.bottom - offset - VIEWPORT_MARGIN;
-      const above = openerRect.top - offset - VIEWPORT_MARGIN;
+      // The room a menu can use is the part of the window it can be seen in:
+      // the viewport, and, in an explicit container that clips, only the part
+      // of the container's scrollport that is also in the viewport. Choosing
+      // a side from the viewport alone put the menu where the container cut
+      // it — an item focused afterwards scrolled the container to reveal it,
+      // which dragged the menu over its opener. A container that does not
+      // clip (overflow visible) limits nothing of its own, and a body or
+      // top-layer menu keeps the viewport alone.
+      let limitTop = 0;
+      let limitBottom = viewportHeight;
+      if (hasContainer && config.container) {
+        const overflow = getComputedStyle(config.container);
+        const clips = [overflow.overflow, overflow.overflowX, overflow.overflowY]
+          .some((value) => value !== "visible");
+        if (clips) {
+          const port = config.container.getBoundingClientRect();
+          limitTop = Math.max(limitTop, port.top);
+          limitBottom = Math.min(limitBottom, port.bottom);
+        }
+      }
+      const below = limitBottom - openerRect.bottom - offset - VIEWPORT_MARGIN;
+      const above = openerRect.top - limitTop - offset - VIEWPORT_MARGIN;
       const fit = fitVertically({
         preferred: calculatedPosition.startsWith("top") ? "top" : "bottom",
         height,
@@ -288,9 +308,17 @@ export const createPositioner = (
         ? config.container.getBoundingClientRect()
         : { top: 0, left: 0, right: 0, bottom: 0 };
 
-    // Calculate offsets - when in a container, subtract container position
-    const offsetX = hasContainer ? -containerRect.left : scrollX;
-    const offsetY = hasContainer ? -containerRect.top : scrollY;
+    // Calculate offsets - when in a container, map the opener's viewport rect
+    // back into the container's content space: subtract the container's edge
+    // and add its own scroll, which moved the content under that edge (a menu
+    // written without it landed a scroll's worth above the opener — at
+    // scrollTop 120 on a 120 px scroll, 120 px too high).
+    const offsetX = hasContainer && config.container
+      ? config.container.scrollLeft - containerRect.left
+      : scrollX;
+    const offsetY = hasContainer && config.container
+      ? config.container.scrollTop - containerRect.top
+      : scrollY;
 
     switch (calculatedPosition) {
       case "top-start":

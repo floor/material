@@ -111,6 +111,22 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     ) as HTMLElement[]).filter((item) => item.checkVisibility?.() !== false);
 
   /**
+   * Focuses an element inside the menu without scrolling the ancestors that
+   * hold the menu: in an explicit container, a native focus scroll moves the
+   * container and drags the menu with it, over its opener (measured: 120 to 40
+   * on open, 0 to 259 with the menu at the container's top). The menu's own
+   * list scrolls instead, only when the element is outside the list's box, so
+   * a keyboard move still reveals an item a capped menu had scrolled away.
+   */
+  const focusInMenu = (element: HTMLElement, list: HTMLElement): void => {
+    element.focus({ preventScroll: true });
+    const listRect = list.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    if (rect.top < listRect.top) list.scrollTop -= listRect.top - rect.top;
+    else if (rect.bottom > listRect.bottom) list.scrollTop += rect.bottom - listRect.bottom;
+  };
+
+  /**
    * Resets the typeahead search buffer
    */
   const resetTypeahead = (): void => {
@@ -166,7 +182,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // what a person navigating by key expects to see marked
     // (m3.material.io menu accessibility, "Initial focus").
     if (interactionType === "keyboard" && items.length > 0) {
-      target.focus();
+      focusInMenu(target, menuElement);
       return;
     }
 
@@ -175,7 +191,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // item is marked, and the first arrow press then lands on the first
     // item rather than stepping past it to the second.
     menuElement.setAttribute("tabindex", "-1");
-    menuElement.focus();
+    menuElement.focus({ preventScroll: true });
   };
 
   /**
@@ -215,7 +231,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // Simplified focus function
     const focusItem = (index: number) => {
       if (items[index]) {
-        items[index].focus();
+        focusInMenu(items[index], menuElement);
       }
     };
 
