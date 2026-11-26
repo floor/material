@@ -79,8 +79,8 @@ difference is a conformance drift.
   [m3.material.io](https://m3.material.io) with the date you read it. The property tables are not
   public, so the measurement and the sources are the reference.
 - **Read what is already known.** Where a component page on
-  [md3.io](https://md3.io/components/) lists its *Known issues*, that section is the public face
-  of the conformance tables, and the issues labelled `conformance-drift` mirror it here.
+  [md3.io](https://md3.io/components/) lists its *Known issues*, that section is the public list
+  of what differs today.
 - **Fix what the two agree on**, then add a browser check that fails without the fix and passes
   with it, and quote both runs in the pull request.
 
