@@ -368,6 +368,9 @@ jobs:
           - group: listbox
             browsers: chromium firefox webkit
             checks: listbox:check
+          - group: card-state-layers
+            browsers: chromium webkit
+            checks: card-state-layers:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-roles:check theme-origins:check spring-tokens:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
