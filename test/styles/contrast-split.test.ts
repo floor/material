@@ -355,9 +355,11 @@ describe("explicit contrast levels are opt-in", () => {
     // A time picker holding seconds takes its row's width, and below 488px
     // the row shrinks rather than clips (+375 B;
     // styles/components/_timepicker.scss).
+    // An icon button in a group is square at the group's height unless the
+    // item set a width (styles/components/_button-group.scss; +39 B).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "629c736b7e0f5ece2ec490c4fabac704c1b728c3d9d25c2191eaf08951cbdf23",
-      length: 554098,
+      sha256: "6a4df16718ed1e1e328a0c950203f4917dcb3bfba707fdbd0f1dbb77fb84e973",
+      length: 554137,
     });
   });
 
