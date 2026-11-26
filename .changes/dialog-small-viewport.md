@@ -1,0 +1,3 @@
+Section: Fixed
+
+**A dialog taller than a small window.** Below the small breakpoint the overlay aligns a dialog to its bottom edge, the way a sheet sits. A dialog taller than the window overflowed that edge instead: at 360×600 a basic dialog with long content measured 992 px tall, its top at −424 and its headline at −400, and the overlay could not scroll (its scrollHeight equalled its clientHeight), so the headline and the start of the content could never be reached. The dialog is capped at the overlay's box now, with the header and the actions held in place and the content scrolling between them; a dialog that fits keeps the bottom-edge placement, and the full-screen variant is unchanged.

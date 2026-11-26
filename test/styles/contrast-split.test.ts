@@ -357,9 +357,11 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_timepicker.scss).
     // An icon button in a group is square at the group's height unless the
     // item set a width (styles/components/_button-group.scss; +39 B).
+    // A dialog taller than a small window scrolls its content with the
+    // headline in view (+240 B; styles/components/_dialog.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "6a4df16718ed1e1e328a0c950203f4917dcb3bfba707fdbd0f1dbb77fb84e973",
-      length: 554137,
+      sha256: "44eb41207a40737011de8a6a8845b4ddce624615361c23d072a4d201270a1c29",
+      length: 554377,
     });
   });
 
