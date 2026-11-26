@@ -103,8 +103,17 @@ const read = async (page: Page): Promise<Reading> =>
     };
   });
 
-/** Waits until the box shadow and the layer stop changing: both fade on a transition. */
+/**
+ * The settled reading. The shadow and the layer both run on transitions, and a
+ * slow engine shows an intermediate value (Linux WebKit read 0.298 of Level 1
+ * mid-fade), so the card's animations are awaited first — `getAnimations`, as
+ * AGENTS.md says — and then two readings must agree before the value is used.
+ */
 const settle = async (page: Page): Promise<Reading> => {
+  await page.evaluate(() => {
+    const el = document.querySelector(".mtrl-card") as HTMLElement | null;
+    return Promise.all((el?.getAnimations({ subtree: true }) ?? []).map((animation) => animation.finished.catch(() => undefined)));
+  });
   let last = await read(page);
   for (let attempt = 0; attempt < 40; attempt += 1) {
     await page.waitForTimeout(50);
