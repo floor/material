@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "material": "3.16.7",
-  "commit": "44d7a29f022778a3a04e301d5f278c39e2b507fe",
+  "commit": "ec42c777ef99f11a9734302a727a4c2b81fb9797",
   "measured": "2026-11-26",
   "references": {
     "spec": {
@@ -3407,12 +3407,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43"
           },
           "material": {
-            "value": "Level 1",
+            "value": "Level 0",
             "engines": null
           },
           "status": {
             "spec": "no-value",
-            "compose": "drift"
+            "compose": "match"
           },
           "note": "Compose supplies Level 0 from the focus elevation token.",
           "issue": null
@@ -3438,12 +3438,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46"
           },
           "material": {
-            "value": "Level 1",
+            "value": "Level 0",
             "engines": null
           },
           "status": {
             "spec": "no-value",
-            "compose": "drift"
+            "compose": "match"
           },
           "note": "Compose supplies Level 0 from the focus elevation token.",
           "issue": null
@@ -3562,12 +3562,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StateTokens.kt#L22"
           },
           "material": {
-            "value": "0",
+            "value": "0.16",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The value measures effective opacity of the painted layer, including the colour alpha.",
           "issue": null
@@ -3593,12 +3593,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StateTokens.kt#L24"
           },
           "material": {
-            "value": "0",
+            "value": "0.08",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The value measures effective opacity of the painted layer, including the colour alpha.",
           "issue": null
@@ -3624,12 +3624,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StateTokens.kt#L22"
           },
           "material": {
-            "value": "0",
+            "value": "0.16",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The value measures effective opacity of the painted layer, including the colour alpha.",
           "issue": null
@@ -3655,12 +3655,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StateTokens.kt#L22"
           },
           "material": {
-            "value": "0",
+            "value": "0.16",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The value measures effective opacity of the painted layer, including the colour alpha.",
           "issue": null
