@@ -26,6 +26,11 @@
  *   ]);
  *   await harness.close();
  *
+ * A press may paint two things: the `::before` state layer (hover's opacity)
+ * and the ripple wave the press mounts (`.mtrl-ripple-wave`, the pressed
+ * opacity). Read both when the table has a pressed row — the wave is where the
+ * press opacity lives.
+ *
  * Density is the stylesheet's `--mtrl-density` variable (0, -1, -2, -3): the
  * harness sets it on the mount root, as the pages do. Zoom is the document's
  * `zoom`, for the cases where the property is checked under a scaled preview.

@@ -64,6 +64,20 @@ cases.push({ id: "outlined/m/rest (border)", mount, config: { variant: "outlined
 cases.push({ id: "elevated/m/rest (shadow)", mount, config: { variant: "elevated", size: "m" }, parts });
 cases.push({ id: "elevated/m/hover (shadow)", state: "hover", mount, config: { variant: "elevated", size: "m" }, parts });
 
+// The press is the ripple wave, not the ::before state layer: read the wave.
+cases.push({
+  id: "filled/m/pressed (ripple wave)",
+  state: "pressed",
+  mount,
+  config: { variant: "filled", size: "m" },
+  parts: [
+    // The press lands on the leading half, where the wave mounts.
+    { name: "leading", selector: ".mtrl-split-button__leading" },
+    { name: "ripple wave", selector: ".mtrl-ripple-wave" },
+  ],
+  properties: ["opacity", "backgroundColor", "width", "height"],
+});
+
 // The two rows m3.material.io adds and Compose has no token for: the menu
 // icon's optical offset when unselected, and the layer a selected trailing
 // half carries without changing colour.
