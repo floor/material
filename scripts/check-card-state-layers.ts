@@ -86,7 +86,7 @@ window.ready = true;
 type Reading = {
   shadow: string;
   layer: { opacity: number; content: string; color: string };
-  outline: { width: string; color: string; offset: string };
+  outline: { style: string; width: string; color: string; offset: string };
 };
 
 const OPACITY = (value: string): number => Number.parseFloat(value);
@@ -99,7 +99,7 @@ const read = async (page: Page): Promise<Reading> =>
     return {
       shadow: style.boxShadow,
       layer: { opacity: Number.parseFloat(layer.opacity), content: layer.content, color: layer.backgroundColor },
-      outline: { width: style.outlineWidth, color: style.outlineColor, offset: style.outlineOffset },
+      outline: { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor, offset: style.outlineOffset },
     };
   });
 
@@ -161,7 +161,16 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
       { width: "3px", offset: "2px" },
       `${engine} ${variant}: the focus ring stays 3px at +2 (${JSON.stringify(focus.outline)})`,
     );
-    rows.push(`${engine} ${variant}: focus shadow ${focus.shadow === "none" ? "Level 0" : "Level 1"}, ring ${focus.outline.width}/${focus.outline.offset}`);
+
+    // A pointer click focuses the card but is not :focus-visible, so it paints
+    // no ring; the factory's --focused class alone must not draw one.
+    await mount(page, variant);
+    await page.click(".mtrl-card");
+    const clicked = await settle(page);
+    const clickedVisible = await page.evaluate(() => document.querySelector(".mtrl-card")?.matches(":focus-visible") ?? false);
+    assert.equal(clickedVisible, false, `${engine} ${variant}: a click leaves :focus-visible false`);
+    assert.equal(clicked.outline.style, "none", `${engine} ${variant}: a click paints no focus ring (${clicked.outline.style} ${clicked.outline.width})`);
+    rows.push(`${engine} ${variant}: focus shadow ${focus.shadow === "none" ? "Level 0" : "Level 1"}, ring ${focus.outline.width}/${focus.outline.offset}, click ring ${clicked.outline.style}`);
   }
 
   // 2. Hover: the elevated card paints the 0.08 layer.

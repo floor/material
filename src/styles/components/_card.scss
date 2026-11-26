@@ -40,10 +40,9 @@ $component: '#{base.$prefix}-card';
     @include m.focus-ring(t.color('secondary'), $wrap: false);
   }
 
-  // Focus state class
-  &--focused {
-    @include m.focus-ring(t.color('secondary'), $wrap: false);
-  }
+  // The factory marks any focus with `--focused`, a pointer click included, so
+  // a ring on that class alone would paint for a mouse. The keyboard gate is
+  // `:focus-visible`, and the rule above is the only ring.
 
   // Ripple styles for clickable cards
   .ripple {
