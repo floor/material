@@ -85,6 +85,10 @@ difference is a conformance drift.
   of what differs today.
 - **Fix what the two agree on**, then add a browser check that fails without the fix and passes
   with it, and quote both runs in the pull request.
+- **Open it as a drift, not a bug.** A bug report is broken behaviour; a drift is a measured
+  difference. A maintainer labels a drift on triage with the `conformance/*` family
+  (`drift-spec`, `drift-compose`, `drift-both`, `reference-conflict`, `deviation`, `api-gap`) and
+  the `component/*` and `aspect/*` labels that fit.
 
 ## Development Guidelines
 

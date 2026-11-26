@@ -1,25 +1,66 @@
 name: Bug report
-description: A component does not work as documented, or a page built with it breaks.
+description: Broken behaviour — something does not work as documented, or a page built with it breaks.
 title: "bug: "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
+        This form is for broken behaviour: something does not work as documented, or a page that uses
+        the library breaks. A difference from the Material 3 specification or from Jetpack Compose is
+        a conformance drift, not a bug — please use the conformance-drift form for it.
+
         Thanks for the report. The shortest path to a fix is a reproduction we can open.
-  - type: input
+  - type: dropdown
     id: component
     attributes:
       label: Component
-      description: The factory or the tag, e.g. `createButton` or `<m-button>`.
-      placeholder: createButton
+      description: The component the page uses.
+      options:
+        - badge
+        - bottom-app-bar
+        - bottom-sheet
+        - button
+        - button-group
+        - card
+        - carousel
+        - checkbox
+        - chips
+        - datepicker
+        - dialog
+        - divider
+        - extended-fab
+        - fab
+        - fab-menu
+        - icon-button
+        - list
+        - loading-indicator
+        - menu
+        - navigation-bar
+        - navigation-drawer
+        - navigation-rail
+        - progress
+        - radios
+        - search
+        - select
+        - side-sheet
+        - slider
+        - snackbar
+        - split-button
+        - switch
+        - tabs
+        - text-field
+        - timepicker
+        - toolbar
+        - tooltip
+        - top-app-bar
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version
-      description: The installed version, from `npm ls` in your project or from your lockfile.
+      description: The installed version, from the `material` entry in `npm ls` or your lockfile.
       placeholder: 3.16.7
     validations:
       required: true

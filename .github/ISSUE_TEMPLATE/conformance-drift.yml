@@ -1,19 +1,71 @@
 name: Conformance drift
-description: A component differs from the Material 3 specification.
+description: A component differs from the Material 3 specification or from Jetpack Compose.
 title: "conformance: "
-labels: ["conformance-drift"]
+labels: ["conformance/drift-spec"]
 body:
   - type: markdown
     attributes:
       value: |
-        A conformance drift is a measured difference from Material 3. Name the property, the
+        A conformance drift is a measured difference from a reference. Name the property, the
         expected value with the source that states it, and the value this library renders.
-  - type: input
+
+        Bug reports for broken behaviour go to the bug form instead. A maintainer sets the exact
+        `conformance/*` and `component/*` labels on triage; this form cannot label the issue itself.
+  - type: dropdown
     id: component
     attributes:
       label: Component
-      description: The component and the part, e.g. `button` / `container`.
-      placeholder: button / container
+      description: The component that differs.
+      options:
+        - badge
+        - bottom-app-bar
+        - bottom-sheet
+        - button
+        - button-group
+        - card
+        - carousel
+        - checkbox
+        - chips
+        - datepicker
+        - dialog
+        - divider
+        - extended-fab
+        - fab
+        - fab-menu
+        - icon-button
+        - list
+        - loading-indicator
+        - menu
+        - navigation-bar
+        - navigation-drawer
+        - navigation-rail
+        - progress
+        - radios
+        - search
+        - select
+        - side-sheet
+        - slider
+        - snackbar
+        - split-button
+        - switch
+        - tabs
+        - text-field
+        - timepicker
+        - toolbar
+        - tooltip
+        - top-app-bar
+    validations:
+      required: true
+  - type: dropdown
+    id: reference
+    attributes:
+      label: Which reference does material differ from?
+      description: The specification, Jetpack Compose Material 3, or both.
+      options:
+        - m3.material.io
+        - Jetpack Compose Material 3
+        - Both
+        - They disagree with each other
     validations:
       required: true
   - type: input
@@ -27,7 +79,7 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: M3 expected value and its source
+      label: Expected value and its source
       description: The expected value, and where it is written — a Compose token file and line at a named version, or an m3.material.io page and the date you read it.
       placeholder: |
         20 dp — ShapeTokens.kt, CornerSmall, Compose Material 3 1.5.0

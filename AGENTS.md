@@ -262,6 +262,11 @@ prefix orders it within its section.
 - `SIZES.md` and the sizes table in `README.md` and `npm-readme.md` — the committed figures.
 - `scripts/fixtures/sass-config-baseline.json` — the frozen Sass source digests (`sources`) and
   the payload digests of the packed JS and CSS (`payloads`).
+- `test/styles/contrast-split.test.ts` — the full stylesheet's compressed length and its sha256.
+- `test/styles/full-stylesheet.snapshot.json` — the full stylesheet's selector census.
+
+The last two and the `sources` digests are unit tests: `bun test test/styles` runs them before a
+push, and a stylesheet change refreshes each value from the failing test's output.
 
 **One rule:** raise a ceiling only when a measurement is over it, to the measured value plus at
 least 10 B, rounded up to the next 10 — and state the figure in the pull request. Nothing else
@@ -277,7 +282,9 @@ $ npx -y -p node@22 -p npm@10 -- bun run size:check
 npm package: <bytes> bytes compressed, <bytes> unpacked, <files> files (packed with Node <version> / npm <version>)
 ```
 
-The packer can differ from CI's by a few bytes run to run; CI's figure governs.
+The local packer can differ from CI's by a few bytes — 923,295 here against 923,297 there, for
+the same tree. CI sets the ceiling, and a follow-up commit adjusts it if the figure it prints
+differs from the one the first commit took.
 
 A raised ceiling carries a comment saying the measured figure, the CI run it came from, and
 `the next 10 B`, with the line it replaces as `Preceding:`. An older figure stays in the chain as
@@ -334,6 +341,16 @@ one of the `browser` groups in `ci.yml` and to the list in `test/build/ci-comman
   run on the code before the change and the passing run after, both quoted; a link to the source
   it follows; when it changed size, the measured figure and the ceiling it raised.
 - A branch that has been reviewed is not force-pushed; a review fix is a new commit.
+
+## Issues
+
+A bug report is broken behaviour; a difference from the Material 3 specification or from Jetpack
+Compose is a conformance drift, and the two have their own forms. A drift's issue carries
+`conformance/drift-spec`, `conformance/drift-compose`, `conformance/drift-both`,
+`conformance/reference-conflict`, `conformance/deviation` or `conformance/api-gap`, plus a
+`component/<name>` label for the component and an `aspect/<name>` label for the measured aspect
+(size, shape, colour, typography, elevation, motion, focus, density, behaviour); a maintainer sets
+the exact labels on triage.
 
 ## Never
 
