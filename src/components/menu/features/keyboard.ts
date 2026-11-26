@@ -118,8 +118,27 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
    * list scrolls instead, only when the element is outside the list's box, so
    * a keyboard move still reveals an item a capped menu had scrolled away.
    */
-  const focusInMenu = (element: HTMLElement, list: HTMLElement): void => {
+  const listOf = (menuElement: HTMLElement): HTMLElement =>
+    menuElement.querySelector<HTMLElement>(`.${component.getClass("menu__list")}`) ?? menuElement;
+
+  /**
+   * Whether the menu lives in an explicit container rather than the body. A
+   * container's focus scroll moves the container and the menu with it; the
+   * body and top-layer paths keep the browser's own behaviour, which they had
+   * before this change.
+   */
+  const inContainer = (menuElement: HTMLElement): boolean => {
+    const parent = menuElement.parentElement;
+    return !!parent && parent !== document.body && parent !== document.documentElement;
+  };
+
+  const focusInMenu = (element: HTMLElement, menuElement: HTMLElement): void => {
+    if (!inContainer(menuElement)) {
+      element.focus();
+      return;
+    }
     element.focus({ preventScroll: true });
+    const list = listOf(menuElement);
     const listRect = list.getBoundingClientRect();
     const rect = element.getBoundingClientRect();
     if (rect.top < listRect.top) list.scrollTop -= listRect.top - rect.top;
@@ -191,7 +210,8 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // item is marked, and the first arrow press then lands on the first
     // item rather than stepping past it to the second.
     menuElement.setAttribute("tabindex", "-1");
-    menuElement.focus({ preventScroll: true });
+    if (inContainer(menuElement)) menuElement.focus({ preventScroll: true });
+    else menuElement.focus();
   };
 
   /**
