@@ -249,6 +249,9 @@ jobs:
           - group: list-conformance
             browsers: chromium
             checks: list-conformance:check
+          - group: search-trailing-space
+            browsers: chromium webkit
+            checks: search-trailing-space:check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check

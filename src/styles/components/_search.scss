@@ -368,21 +368,21 @@ button.#{$component}__avatar {
     color: t.color("on-surface-variant");
 }
 
+// An empty search has no clear action, so the hidden button takes no room:
+// the text then runs to the no-actions end space below. It fades in when the
+// first character arrives and leaves at once when the value empties.
 .#{$component}__clear-button {
     opacity: 1;
-    visibility: visible;
     transition:
         opacity $transition-duration $transition-easing,
-        visibility 0s,
         background-color $transition-duration $transition-easing;
 
-    &--hidden {
+    @starting-style {
         opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition:
-            opacity $transition-duration $transition-easing,
-            visibility 0s $transition-duration;
+    }
+
+    &--hidden {
+        display: none;
     }
 }
 
@@ -425,6 +425,14 @@ button.#{$component}__avatar {
     margin: 0 4px;
     display: flex;
     align-items: center;
+}
+
+// With no trailing action (no shown clear button, no trailing items) the text
+// ends 16dp from the bar's end: the bar's 4dp padding plus 12. Compose
+// SearchBarTokens.ContainedNoActionsTrailingSpace = Space200 = 16dp at
+// androidx-main 08ec699d (tokens 41.1.19).
+.#{$component}__container:not(:has(.#{$component}__clear-button:not(.#{$component}__clear-button--hidden), .#{$component}__trailing > *)) .#{$component}__input-wrapper {
+    margin-inline-end: 12px;
 }
 
 .#{$component}__input {
