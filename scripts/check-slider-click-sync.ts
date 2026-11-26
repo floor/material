@@ -67,7 +67,7 @@ const mount = async (page: Page) => {
     });
     holder.append(slider.element);
   }, HOST);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(300); // stays: sampling frames: the animation is under test
   const box = await page.evaluate(() => {
     const container = document.querySelector<HTMLElement>(".mtrl-slider__container")!.getBoundingClientRect();
     return { x: container.x, y: container.y, width: container.width, height: container.height };
@@ -123,12 +123,12 @@ const run = async (browser: Browser, engine: string) => {
   // in one frame: the held state has to be committed for a restart to happen.
   let point = await mount(page);
   await startFrames(page);
-  await page.waitForTimeout(30);
+  await page.waitForTimeout(30); // stays: sampling frames: the animation is under test
   await page.mouse.move(point.x, point.y);
   await page.mouse.down();
-  await page.waitForTimeout(60);
+  await page.waitForTimeout(60); // stays: sampling frames: the animation is under test
   await page.mouse.up();
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1200); // stays: sampling frames: the animation is under test
   const frames = (await stopFrames(page)).filter((frame) => frame.activeEnd !== null && frame.inactiveStart !== null && frame.settling);
   assert(frames.length >= 8, `${engine}: ${frames.length} frames of the settle were sampled`);
   let worstBefore = 0;
@@ -144,10 +144,10 @@ const run = async (browser: Browser, engine: string) => {
   const before = await geometry(page);
   await page.mouse.move(point.x, point.y);
   await page.mouse.down();
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(50); // stays: sampling frames: the animation is under test
   const held = await geometry(page);
   await page.mouse.up();
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(50); // stays: sampling frames: the animation is under test
   const released = await geometry(page);
   assert(!before.pressed && held.pressed && !released.pressed, `${engine}: the press and its release toggle the pressed handle`);
   // The handle narrows to 2 dp for as long as any press inside the component

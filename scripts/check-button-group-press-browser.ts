@@ -120,12 +120,12 @@ export async function checkButtonGroupPress(page: Page, check: (name: string) =>
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
         await page.mouse.down();
         // The :active spatial spring is 450ms: 80ms is mid-ease, 560ms settled.
-        await page.waitForTimeout(80);
+        await page.waitForTimeout(80); // stays: a sample mid-press, by design
         const mid = await sample(id, pressedIndex);
-        await page.waitForTimeout(480);
+        await page.waitForTimeout(480); // stays: a sample mid-press, by design
         const settled = await sample(id, pressedIndex);
         await page.mouse.up();
-        await page.waitForTimeout(520);
+        await page.waitForTimeout(520); // stays: a sample mid-press, by design
         const released = await sample(id, pressedIndex);
 
         const where = `${size} ${dir}, ${pressed} button pressed`;

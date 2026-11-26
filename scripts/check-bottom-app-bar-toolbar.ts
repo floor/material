@@ -10,6 +10,7 @@ import { launchChromium } from "./browser-profile";
 import { createPackageFixture, run } from "./package-fixture";
 import { bottomAppBarToolbarCss, bottomAppBarToolbarDependencies } from "./bottom-app-bar-toolbar-style";
 import { profileStyleModule } from "./optional-style-profiles";
+import { settle } from "./browser-settle";
 
 // The prototype's admission is measured against the revision this run changes:
 // a pull request's base, or the parent a push lands on. Each run derives its
@@ -186,7 +187,7 @@ Object.assign(window,{probe:{bar,old,normal,events,button,setReenter:v=>reenter=
     const mutate=async(source:string)=>{for(const page of pages)await page.evaluate(source);};
     await mutate("probe.bar.addFab(probe.button('FAB'));probe.bar.getActionsContainer().append(probe.button('Direct'))");await compare('late center FAB and direct append');
     await mutate("probe.bar.addFab(probe.button('Replacement'))");await compare('replacement FAB');
-    for(const y of [10,20,25,30,41,31,20]){for(const page of pages){await page.evaluate(y=>window.scrollTo(0,y),y);await page.waitForTimeout(35);}await compare(`scroll ${y}`);}
+    for(const y of [10,20,25,30,41,31,20]){for(const page of pages){await page.evaluate(y=>window.scrollTo(0,y),y);await settle(page);}await compare(`scroll ${y}`);}
     await mutate("probe.bar.hide();probe.bar.hide();probe.bar.show();probe.setReenter(true);probe.bar.hide()");await compare('manual visibility and nested callback');
     check(JSON.stringify(await pages[0].evaluate('probe.events'))===JSON.stringify(await pages[1].evaluate('probe.events')),`${name}: callback values/state/counts`);
     for(const page of pages){await page.evaluate(()=>{document.documentElement.dir='rtl';document.documentElement.style.setProperty('--mtrl-density','-2');});await page.emulateMedia({reducedMotion:'reduce',colorScheme:'dark'});}

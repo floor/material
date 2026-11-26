@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import type { NavigationRailComponent } from "../src/components/navigation-rail/types";
 import type { NavigationRailElement } from "../src/elements/navigation-rail";
 import type { ExtendedFabElement } from "../src/elements/extended-fab";
@@ -52,8 +53,7 @@ export async function checkRailHeaderFab(): Promise<void> {
     page.on("pageerror", error => errors.push(error.message));
     const measure = async (name: string, expanded: boolean): Promise<void> => {
       // Both rail and FAB dimension transitions must have settled.
-      await page.waitForTimeout(550);
-      const m = await page.evaluate(() => {
+      await settle(page);const m = await page.evaluate(() => {
         const rail = window.headerRail.element;
         const host = document.getElementById("header-fab")!;
         const button = host.shadowRoot?.querySelector<HTMLElement>(".mtrl-extended-fab") ?? host;
@@ -131,8 +131,7 @@ export async function checkRailHeaderFab(): Promise<void> {
           }
         }, { direction, kind });
         if (kind === "prefixed-element") {
-          await page.waitForTimeout(50);
-          await page.evaluate(() => window.railHeaderFab.defineExtendedFab({ prefix: "test-ui" }));
+          await settle(page);await page.evaluate(() => window.railHeaderFab.defineExtendedFab({ prefix: "test-ui" }));
         }
         const name = `${kind} ${direction}`;
         await measure(`${name} initial`, false);
@@ -173,8 +172,7 @@ export async function checkRailHeaderFab(): Promise<void> {
           // Consumer-invoked FAB methods retain their bubbling event contract.
           await page.evaluate(() => (document.getElementById("header-fab") as ExtendedFabElement).collapse());
           await events(`${name} explicit FAB collapse`, [{ type: "collapse", target: "header-fab" }]);
-          await page.waitForTimeout(550);
-          verify(`${name}: explicit compact form allowed in expanded rail`, await page.locator("#header-fab .mtrl-extended-fab").evaluate(el => Math.abs(el.getBoundingClientRect().width - 56) < 0.5));
+          await settle(page);verify(`${name}: explicit compact form allowed in expanded rail`, await page.locator("#header-fab .mtrl-extended-fab").evaluate(el => Math.abs(el.getBoundingClientRect().width - 56) < 0.5));
           await page.evaluate(() => (document.getElementById("header-fab") as ExtendedFabElement).expand());
           await events(`${name} explicit FAB expand`, [{ type: "expand", target: "header-fab" }]);
           // A detached FAB must no longer inherit the rail's compact layout.
@@ -182,8 +180,7 @@ export async function checkRailHeaderFab(): Promise<void> {
             window.headerRail.collapse();
             document.getElementById("outside")!.append(document.getElementById("header-fab")!);
           });
-          await page.waitForTimeout(550);
-          verify(`${name}: detached FAB extended`, await page.locator("#header-fab .mtrl-extended-fab").evaluate(el => el.getBoundingClientRect().width > 56));
+          await settle(page);verify(`${name}: detached FAB extended`, await page.locator("#header-fab .mtrl-extended-fab").evaluate(el => el.getBoundingClientRect().width > 56));
         } else {
           await page.evaluate(() => window.headerCleanup());
         }

@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import type * as Card from "../src/components/card";
 import type createProgress from "../src/components/progress";
 import type createIconButton from "../src/components/icon-button";
@@ -146,8 +147,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   const light = await root.evaluate(element => getComputedStyle(element).backgroundColor);
   await page.screenshot({ path: join(artifacts, "card-light.png"), animations: "disabled" });
   await page.evaluate(() => document.documentElement.setAttribute("data-theme-mode", "dark"));
-  await page.waitForTimeout(250);
-  assert.notEqual(await root.evaluate(element => getComputedStyle(element).backgroundColor), light);
+  await settle(page);assert.notEqual(await root.evaluate(element => getComputedStyle(element).backgroundColor), light);
   await page.screenshot({ path: join(artifacts, "card-dark.png"), animations: "disabled" });
   await page.evaluate(() => {
     const state = window as unknown as CardWindow;

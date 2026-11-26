@@ -112,7 +112,7 @@ try {
       button.destroy(); button.destroy();
     }
   });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(500); // stays: the listeners are removed on a later task after destroy()
   assert.equal(await page.evaluate(() => [...(window as unknown as CoreWindow).documentListeners.values()].reduce((sum, set) => sum + set.size, 0)), 0);
   assert.equal(await page.locator(".mtrl-ripple-wave").count(), 0);
   await checkCarouselWheel(page);

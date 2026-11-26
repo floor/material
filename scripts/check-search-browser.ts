@@ -3,6 +3,7 @@ import { checkSearchSuggestionLayout } from "./check-search-suggestion-layout";
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
+import { settle } from "./browser-settle";
 
 type SearchWindow = Window & { searchEvents: string[]; createSearch: typeof createSearch; search: ReturnType<typeof createSearch> };
 
@@ -237,8 +238,7 @@ export async function checkSearch(page: Page): Promise<void> {
   await page.mouse.move(40, 120);
   assert.equal(await page.evaluate(() => document.querySelectorAll(".mtrl-search__suggestion-item--selected").length), 0, "a list opening under the pointer highlights nothing");
   await page.keyboard.press("Shift+Tab");
-  await page.waitForTimeout(300);
-  assert.deepEqual(await page.evaluate(() => [document.activeElement?.className, !!document.querySelector(".mtrl-search--view")]), ["mtrl-search__leading-icon", true], "full screen: moving to the back button does not close the view");
+  await settle(page);assert.deepEqual(await page.evaluate(() => [document.activeElement?.className, !!document.querySelector(".mtrl-search--view")]), ["mtrl-search__leading-icon", true], "full screen: moving to the back button does not close the view");
   // Escape from the back button is the dialog's cancel.
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.querySelector(".mtrl-search--bar"));
@@ -303,13 +303,13 @@ async function checkSearchTokens(page: Page): Promise<void> {
   const colour = (css: string) => page.evaluate((css) => { const i = document.createElement("i"); i.style.color = css; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); const x = document.createElement("canvas").getContext("2d")!; x.fillStyle = c; x.fillRect(0, 0, 1, 1); return x.getImageData(0, 0, 1, 1).data.join(); }, css);
   const painted = (selector: string, property = "backgroundColor") => page.locator(selector).evaluate((el, property) => { const c = (getComputedStyle(el) as unknown as Record<string, string>)[property]; const x = document.createElement("canvas").getContext("2d")!; x.fillStyle = c; x.fillRect(0, 0, 1, 1); return x.getImageData(0, 0, 1, 1).data.join(); }, property);
   await page.locator(".mtrl-search__container").hover({ position: { x: 300, y: 28 } });
-  await page.waitForTimeout(300); // the layer eases in
+  await settle(page);
   assert.equal(await painted(".mtrl-search__container"), await colour("color-mix(in srgb, var(--mtrl-sys-color-on-surface) 8%, var(--mtrl-sys-color-surface-container-high))"), "the bar's hover layer: on-surface at 8%");
   await page.mouse.move(0, 0);
   // Keyboard focus on the leading icon: the 3dp secondary ring.
   await page.evaluate(() => { const b = document.createElement("button"); b.id = "before-search"; document.body.prepend(b); b.focus(); });
   await page.keyboard.press("Tab");
-  await page.waitForTimeout(300); // the ring's colour eases in
+  await settle(page);
   const ring = await page.locator(".mtrl-search__leading-icon").evaluate(el => { const c = getComputedStyle(el); return [c.outlineWidth, c.outlineStyle, c.outlineOffset]; });
   assert.deepEqual(ring, ["3px", "solid", "2px"], "the icon buttons' focus ring: 3dp, 2dp out");
   assert.equal(await painted(".mtrl-search__leading-icon", "outlineColor"), await colour("var(--mtrl-sys-color-secondary)"), "the focus ring is secondary");
@@ -327,7 +327,7 @@ async function checkSearchTokens(page: Page): Promise<void> {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   assert.deepEqual(await combobox(), { role: "combobox", autocomplete: "list", expanded: "true", list: "listbox", active: "Banana", status: "3 suggestions" }, "expanded, pointing at the option the arrows reach");
-  await page.waitForTimeout(300); // the layer eases in
+  await settle(page);
   assert.equal(await painted(".mtrl-search__suggestion-item--selected"), await colour("color-mix(in srgb, var(--mtrl-sys-color-on-surface) 10%, transparent)"), "the reached option looks focused: on-surface at 10%");
   assert.equal(await page.locator(".mtrl-search__suggestion-item--selected").evaluate(el => getComputedStyle(el).outlineWidth), "3px", "with the focus ring");
   const item = await page.locator(".mtrl-search__suggestion-item").first().evaluate(el => { const c = getComputedStyle(el); return [el.getBoundingClientRect().height, `${c.fontSize}/${c.lineHeight}`, c.paddingLeft]; });
@@ -348,8 +348,7 @@ async function checkSearchVariants(page: Page): Promise<void> {
     await mount(page, { suggestions: ["Apple", "Banana"], ...config });
     await page.locator(".mtrl-search__input").click();
     await opened(page);
-    await page.waitForTimeout(350);
-  };
+    await settle(page);};
   const shape = () => page.evaluate(() => {
     const q = (s: string) => document.querySelector<HTMLElement>(s)!;
     const px = (css: string) => { const i = document.createElement("i"); i.style.color = css; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); return c; };

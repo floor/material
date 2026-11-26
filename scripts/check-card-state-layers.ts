@@ -33,6 +33,7 @@ import { resolve } from "node:path";
 import * as sass from "sass";
 import { chromium, webkit, type Browser, type Page } from "playwright";
 
+import { settle } from "./browser-settle";
 import { directionArmsPrelude, sassOptions } from "./build-styles";
 
 const bundle = await Bun.build({
@@ -103,32 +104,15 @@ const read = async (page: Page): Promise<Reading> =>
     };
   });
 
-/**
- * The settled reading. The shadow and the layer both run on transitions, and a
- * slow engine shows an intermediate value (Linux WebKit read 0.298 of Level 1
- * mid-fade), so the card's animations are awaited first — `getAnimations`, as
- * AGENTS.md says — and then two readings must agree before the value is used.
- */
-const settle = async (page: Page): Promise<Reading> => {
-  await page.evaluate(() => {
-    const el = document.querySelector(".mtrl-card") as HTMLElement | null;
-    return Promise.all((el?.getAnimations({ subtree: true }) ?? []).map((animation) => animation.finished.catch(() => undefined)));
-  });
-  let last = await read(page);
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    await page.waitForTimeout(50);
-    const next = await read(page);
-    if (next.shadow === last.shadow && next.layer.opacity === last.layer.opacity) return next;
-    last = next;
-  }
-  return last;
-};
+/** The settled reading: the shared helper, with this check's reading. */
+const settled = (page: Page): Promise<Reading | undefined> =>
+  settle(page, { target: ".mtrl-card", read: () => read(page) });
 
 const mount = async (page: Page, variant: string, draggable = false): Promise<void> => {
   await page.mouse.move(0, 0);
   await page.evaluate(({ variant, draggable }) => (window as unknown as { mount: (v: string, d: boolean) => string }).mount(variant, draggable), { variant, draggable });
   await page.waitForSelector(".mtrl-card");
-  await settle(page);
+  await settled(page);
 };
 
 const focusByKey = async (page: Page): Promise<void> => {
@@ -155,10 +139,10 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   // keep Level 0, elevated keeps Level 1, and the ring stays in all three.
   for (const variant of variants) {
     await mount(page, variant);
-    const rest = await settle(page);
+    const rest = await settled(page);
     restOf.set(variant, rest);
     await focusByKey(page);
-    const focus = await settle(page);
+    const focus = await settled(page);
     if (variant === "elevated") {
       assert.notEqual(focus.shadow, "none", `${engine} ${variant}: a focused elevated card keeps its Level 1 shadow (${focus.shadow})`);
       assert.equal(focus.shadow, rest.shadow, `${engine} ${variant}: focus does not change the elevated elevation`);
@@ -175,7 +159,7 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     // no ring; the factory's --focused class alone must not draw one.
     await mount(page, variant);
     await page.click(".mtrl-card");
-    const clicked = await settle(page);
+    const clicked = await settled(page);
     const clickedVisible = await page.evaluate(() => document.querySelector(".mtrl-card")?.matches(":focus-visible") ?? false);
     assert.equal(clickedVisible, false, `${engine} ${variant}: a click leaves :focus-visible false`);
     assert.equal(clicked.outline.style, "none", `${engine} ${variant}: a click paints no focus ring (${clicked.outline.style} ${clicked.outline.width})`);
@@ -185,7 +169,7 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   // 2. Hover: the elevated card paints the 0.08 layer.
   await mount(page, "elevated");
   await page.hover(".mtrl-card");
-  const hover = await settle(page);
+  const hover = await settled(page);
   assert.equal(hover.layer.content, '""', `${engine} elevated: the hovered card has a state layer (${hover.layer.content})`);
   assert.equal(hover.layer.opacity, 0.08, `${engine} elevated: the hover layer is 0.08 (${hover.layer.opacity})`);
   rows.push(`${engine} elevated hover: layer ${hover.layer.opacity}`);
@@ -196,7 +180,7 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   for (const variant of variants) {
     await mount(page, variant, true);
     await page.hover(".mtrl-card");
-    const dragged = await settle(page);
+    const dragged = await settled(page);
     draggedOf.set(variant, dragged);
     assert.equal(dragged.layer.content, '""', `${engine} ${variant}: the dragged card has a state layer (${dragged.layer.content})`);
     assert.equal(dragged.layer.opacity, OPACITY("0.16"), `${engine} ${variant}: the dragged layer is 0.16 (${dragged.layer.opacity})`);
@@ -211,9 +195,9 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   for (const variant of variants) {
     await mount(page, variant);
     await page.hover(".mtrl-card");
-    await settle(page);
+    await settled(page);
     await page.mouse.down();
-    const pressed = await settle(page);
+    const pressed = await settled(page);
     pressedOf.set(variant, pressed);
     const expected = variant === "elevated" ? restOf.get(variant)!.shadow : "none";
     assert.equal(pressed.shadow, expected, `${engine} ${variant}: pressed returns to its pressed elevation (${pressed.shadow})`);
@@ -228,7 +212,7 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     await mount(page, variant, true);
     await page.hover(".mtrl-card");
     await page.mouse.down();
-    const dragPressed = await settle(page);
+    const dragPressed = await settled(page);
     assert.equal(dragPressed.shadow, draggedOf.get(variant)!.shadow, `${engine} ${variant}: a drag under the pointer keeps the dragged elevation (${dragPressed.shadow})`);
     assert.equal(dragPressed.layer.opacity, OPACITY("0.16"), `${engine} ${variant}: the pressed drag layer stays 0.16 (${dragPressed.layer.opacity})`);
     await page.mouse.up();

@@ -125,13 +125,13 @@ try{
   for(const part of ['header','content','media','actions']) {
     const before=warnings.length;
     const dynamic=await page.evaluate(part=>Reflect.get(window,'mtrlE').exerciseWarning(part),part);
-    await page.waitForTimeout(20);
+    await page.waitForTimeout(20); // stays: the warning is raised on a later task
     check('card-'+part+'-warning',warnings.length===before+1);
     check('card-'+part+'-dom-preserved',dynamic.role==='button'&&dynamic.tabIndex===0&&dynamic.action==='<button>Dynamic action</button>');
   }
   const beforePlain=warnings.length;
   await page.evaluate(()=>Reflect.get(window,'mtrlE').exerciseWarning('actions',false));
-  await page.waitForTimeout(20);
+  await page.waitForTimeout(20); // stays: the warning is raised on a later task
   check('card-container-no-warning',warnings.length===beforePlain);
   // Correct current APIs and semantics remain controls, not additional fixes.
   check('loading-api-state',report('button-loading-api').tree[0].properties.busy===1&&report('button-loading-api').tree[0].properties.disabled===true);

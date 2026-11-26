@@ -37,6 +37,7 @@ import { checkFocusVisibility } from "./check-focus-visibility";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
+import { settle } from "./browser-settle";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -2329,7 +2330,7 @@ try {
       (document.getElementById("nb") as HTMLElement).append(factory.element);
     });
     // placement, the label's float and the border-colour transition
-    await page.waitForTimeout(500);
+    await settle(page);
     type Box = { left: number; right: number; top: number; bottom: number; width: number };
     const notches = await page.evaluate(() => {
       // A missing segment measures as nothing, so the label is judged first
@@ -7320,7 +7321,7 @@ try {
       return event.defaultPrevented;
     });
     assert.equal(await wheel(), true, "wheel attribute enables scrolling at creation");
-    await page.waitForTimeout(700);
+    await settle(page);
     assert((await scroller.evaluate(el => el.scrollLeft)) > 0);
     assert.equal(await host.evaluate(el => {
       const host = el as HTMLElement & { component: unknown };
@@ -7328,7 +7329,7 @@ try {
       host.removeAttribute("wheel");
       return host.component === before;
     }), true, "removing wheel keeps the component");
-    await page.waitForTimeout(200);
+    await settle(page);
     const position = await scroller.evaluate(el => el.scrollLeft);
     assert.equal(await wheel(), false, "removing wheel disables interception");
     assert.equal(await scroller.evaluate(el => el.scrollLeft), position);
@@ -7339,7 +7340,7 @@ try {
       return host.component === before;
     }), true, "adding wheel keeps the component");
     assert.equal(await wheel(), true, "adding wheel enables interception again");
-    await page.waitForTimeout(700);
+    await settle(page);
     assert((await scroller.evaluate(el => el.scrollLeft)) > position);
     check("carousel: wheel attribute scrolls horizontally and toggles in place");
   }
@@ -10277,7 +10278,7 @@ try {
       await restorePage.goto(`http://127.0.0.1:${server.port}/restore-select`);
       await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
       await restorePage.locator("#rs").click();
-      await restorePage.waitForTimeout(450);
+      await settle(restorePage);
       await restorePage.getByRole("option", { name: "Beta", exact: true }).click();
       await restorePage.click("#go");
       await restorePage.waitForURL(/\/away$/);
@@ -12420,7 +12421,7 @@ try {
       document.documentElement.style.setProperty("--mtrl-sys-shape-corner-medium", "3px");
     });
     // the square button eases its corner; wait past the transition
-    await page.waitForTimeout(600);
+    await settle(page);
     const set = await read();
     await page.evaluate(() => {
       document.documentElement.style.removeProperty("--mtrl-ref-typeface-plain");
