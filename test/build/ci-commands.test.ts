@@ -171,7 +171,10 @@ describe("CI (.github/workflows/ci.yml)", () => {
     const script = changes.steps.map(step => step.run ?? "").join("\n");
     expect(script).toContain("README.md|npm-readme.md");
     expect(script).toContain('git diff -M --name-status "$BASE_SHA...HEAD"');
-    expect(script).toContain("git fetch --quiet --depth=1 origin");
+    expect(script).toContain("if ! git fetch --quiet --depth=1 origin");
+    expect(script).toContain("jq -r '.version // empty'");
+    expect(script).not.toContain("PR_TITLE");
+    expect(script).not.toContain("release:");
     expect(workflow.jobs.browser.needs).toEqual(["build", "changes"]);
     expect(workflow.jobs.comparators.needs).toEqual(["build", "changes"]);
     expect(workflow.jobs.static.if).toBeUndefined();
@@ -180,6 +183,9 @@ describe("CI (.github/workflows/ci.yml)", () => {
 
   test("cancels a superseded pull request run and never a run on main", () => {
     expect(workflow.concurrency?.["cancel-in-progress"]).toBe("${{ github.event_name == 'pull_request' }}");
-    expect(workflow.concurrency?.group).toContain("github.ref");
+    const group = workflow.concurrency?.group ?? "";
+    expect(group).toContain("github.run_id");
+    expect(group).toContain("github.event.pull_request.number");
+    expect(group).not.toContain("github.ref");
   });
 });

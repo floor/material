@@ -6,7 +6,7 @@
 # The work is split into parallel jobs, so a run takes as long as its slowest job
 # rather than the sum of every step. `changes` classifies a pull request's diff.
 # Browser groups and comparators run only when that diff can affect them, or when
-# the run is on main, on the nightly schedule, or a release pull request. `ci-ok`
+# the run is on main, on the nightly schedule, or the package version changed. `ci-ok`
 # waits for every job and passes when each one succeeded or was skipped, so a
 # skipped browser job does not leave a required check pending. `check` mirrors
 # `ci-ok` and is still the status the main ruleset requires; branch protection
@@ -32,18 +32,19 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same pull request cancels the run it replaces. A run on main
-# is never cancelled: each merge commit keeps a verdict of its own. The group is
-# the pull request when there is one, and cancel-in-progress is true only then.
+# A newer push to the same pull request cancels the run it replaces. A push to
+# main and the nightly do not share a group, so neither cancels or waits on the
+# other. cancel-in-progress is true only for a pull request.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: "${{ github.event_name == 'pull_request' && format('ci-{0}', github.event.pull_request.number) || format('ci-{0}', github.run_id) }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # First. A pull request is classified from its diff against the base, with a
   # shallow fetch of that commit and no third-party action. Push and schedule
-  # runs set run_all: the filter does not apply on main. A release pull request
-  # (a title starting with "release:", or a package.json version change) does too.
+  # runs set run_all: the filter does not apply on main. A release is a change
+  # to package.json's version, read as JSON. A fetch of the base that fails
+  # runs every job instead of exiting.
   changes:
     runs-on: ubuntu-24.04
     outputs:
@@ -59,20 +60,27 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
         shell: bash
         run: |
           set -euo pipefail
           emit() { echo "$1=$2" >> "$GITHUB_OUTPUT"; echo "$1=$2"; }
-          if [ "$EVENT_NAME" != "pull_request" ]; then
-            echo "event $EVENT_NAME: no path filter"
+          run_all_outputs() {
+            echo "no path filter"
             emit library true
             emit checks true
             emit docs_only false
             emit run_all true
             exit 0
+          }
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "event $EVENT_NAME: no path filter"
+            run_all_outputs
           fi
-          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          # A missing base must not fail the job (git fetch exits 128). Run every check.
+          if ! git fetch --quiet --depth=1 origin "$BASE_SHA"; then
+            echo "base fetch failed: running every job"
+            run_all_outputs
+          fi
           if git merge-base --is-ancestor "$BASE_SHA" HEAD 2>/dev/null; then
             echo "diff $BASE_SHA...HEAD"
             status=$(git diff -M --name-status "$BASE_SHA...HEAD")
@@ -86,9 +94,6 @@ jobs:
           docs_only=true
           run_all=false
           counted=0
-          case "$PR_TITLE" in
-            release:*) run_all=true; echo "release title: no path filter" ;;
-          esac
           while IFS= read -r file; do
             [ -n "$file" ] || continue
             counted=$((counted + 1))
@@ -122,8 +127,8 @@ jobs:
             fi
             if [ "$doc" = false ]; then docs_only=false; fi
             if [ "$file" = package.json ]; then
-              old=$(git show "$BASE_SHA:package.json" 2>/dev/null | sed -n 's/^  "version": "\([^"]*\)".*/\1/p' | head -n 1 || true)
-              new=$(git show "HEAD:package.json" 2>/dev/null | sed -n 's/^  "version": "\([^"]*\)".*/\1/p' | head -n 1 || true)
+              old=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -r '.version // empty' || true)
+              new=$(git show "HEAD:package.json" 2>/dev/null | jq -r '.version // empty' || true)
               if [ -n "$old" ] && [ -n "$new" ] && [ "$old" != "$new" ]; then
                 run_all=true
                 echo "version bump $old -> $new: no path filter"
