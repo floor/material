@@ -24,6 +24,17 @@ $component: '#{base.$prefix}-time-picker';
     border: 0;
     min-width: 280px;
     max-width: 328px;
+    // M3's dialog width is the one an hh:mm row needs. The seconds field is
+    // our extension, and its row is wider than that — 388 px at 12h and 356
+    // at 24h against a 280 px content box, so the row overflowed and the hour
+    // or the period was clipped (md3.io, 2026-11-26). A dialog holding
+    // seconds takes the row's width, 388 plus the content's 24 dp padding on
+    // each side, capped by the viewport; hours and minutes alone keep the M3
+    // width exactly.
+    &:has(.#{$component}__seconds) {
+      width: 440px;
+      max-width: calc(100vw - 48px);
+    }
     max-height: 520px;
     background-color: t.color('surface-container-high');
     color: t.color('on-surface');
