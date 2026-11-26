@@ -40,7 +40,8 @@ const rings: Ring[] = [
   { component: "slider", filter: "xs/focus/light", part: "handleInk", width: "3px", offset: "2px", color: "secondary" },
   { component: "text-field", filter: "filled/trailing-focus", part: "trailing", width: "3px", offset: "2px", color: "secondary" },
   { component: "text-field", filter: "outlined/trailing-focus", part: "trailing", width: "3px", offset: "2px", color: "secondary" },
-  { component: "dialog", filter: "900/medium/light/focus", part: "action", width: "3px", offset: "2px", color: "secondary" },
+  // The first footer button is not the one that holds focus. verifiedAction is :focus-visible.
+  { component: "dialog", filter: "900/medium/light/focus", part: "verifiedAction", width: "3px", offset: "2px", color: "secondary" },
   { component: "dialog", filter: "900/medium/light/close-focus", part: "close", width: "3px", offset: "2px", color: "secondary" },
   { component: "snackbar", filter: "action/focus", part: "control", width: "3px", offset: "2px", color: "inverse-primary" },
   { component: "snackbar", filter: "close/focus", part: "control", width: "2px", offset: "2px", color: "inverse-on-surface" },
