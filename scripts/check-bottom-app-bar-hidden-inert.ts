@@ -80,7 +80,7 @@ try {
       const bar = document.querySelector(".mtrl-bottom-app-bar");
       return !!bar && bar.classList.contains("mtrl-bottom-app-bar--hidden") === hidden;
     }, wantHidden);
-    await page.focus("#before");
+    await page.locator("#before").evaluate((button) => button.focus({ preventScroll: true }));
     await page.keyboard.press("Tab");
     return page.evaluate(() => {
       const bar = document.querySelector<HTMLElement>(".mtrl-bottom-app-bar")!;
