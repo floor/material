@@ -112,18 +112,27 @@ A browser check is a file `scripts/check-<what>.ts`, run with Bun. It bundles th
 element with `Bun.build`, compiles the styles with Sass, serves one page with `Bun.serve`, opens
 it with Playwright and asserts on measured values. Copy `scripts/check-divider-sheet-conformance.ts`:
 it shows the virtual entry for `Bun.build`, `compileString` with `src/styles` on the load path,
-`launchChromium` from `scripts/browser-profile.ts` (which keeps the browser profile inside the
-worktree) and the per-case assertions.
+a page built with `page.setContent` and the CSS and JS injected with `addStyleTag` and
+`addScriptTag`, `launchChromium` from `scripts/browser-profile.ts` (which keeps the browser
+profile inside the worktree) and the per-case assertions. A check that needs its page served over
+HTTP instead uses `Bun.serve`, as `scripts/check-dialog-small-viewport.ts` does.
 
-`launchChromium` is Chromium only. For a second engine, launch `webkit` from Playwright the way
-`scripts/check-dialog-small-viewport.ts` does, and run the same function twice:
+`launchChromium` is Chromium only. For a second engine, launch `webkit` from Playwright and run
+the same function twice. A launch that fails is a failure, never a skip: CI installs the engines
+the group's `browsers:` field lists, and the script decides which of them to run, so an engine
+that is missing or crashes must turn the check red. A local skip exists only when asked for, by
+an argument or an environment flag:
 
 ```ts
 import { webkit, type Browser } from "playwright";
 
+const skipMissingWebkit = process.argv.includes("--skip-missing-webkit");
 let browser: Browser | null = null;
 try { browser = await webkit.launch({ headless: true }); }
-catch { console.log("<what>: WebKit not installed here, skipped"); }
+catch (error) {
+  if (!skipMissingWebkit) throw error;
+  console.log("<what>: WebKit not installed here, skipped by --skip-missing-webkit");
+}
 if (browser) { try { await run(browser, "webkit"); } finally { await browser.close(); } }
 ```
 
@@ -277,9 +286,10 @@ A CSS change can move the packed output in three places:
    first and alone when the change is confined to that entry. Run it, read the digest the
    assertion prints, and put that value in the file.
 
-`sources.main` fails first and alone when the change is confined to that entry; a theme or element
-change moves `main`, `themes` and the theme's own entry too, so refresh every affected entry the
-check names. Whatever moved, update the comment above the loop in
+`sources.main` fails first and alone when the change is confined to that entry. Which other entries
+move depends on what imports the changed sheet — a theme change can move three, an element change
+need not touch `themes` — so refresh the digests the check names. Whatever moved, update the
+comment above the loop in
 `test/styles/sass-config.test.ts` that says why, naming the change and its file. When the payload
 map drifts, the package job prints each path with its new digest; replace that line and leave
 `tested`, `branch`, `ci` and `mainRevision` as they are.
