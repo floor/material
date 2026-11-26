@@ -23,11 +23,16 @@ export async function runFieldFixture(component: string, cases: Case[], required
   const filter = process.argv.find(arg=>arg.startsWith("--case="))?.slice(7);
   const picked = filter ? cases.filter(row=>row.id.includes(filter)) : cases;
   assert.ok(picked.length,"No matching cases");
-  const harness = await createConformanceHarness({component,engine});
+  const widthOption = process.argv.find(arg => arg.startsWith("--viewport-width="));
+  const width = widthOption ? Number(widthOption.slice("--viewport-width=".length)) : undefined;
+  assert.ok(width === undefined || (Number.isInteger(width) && width > 0), "Viewport width must be a positive integer");
+  const viewport = width ? { width, height: 600 } : undefined;
+  const harness = await createConformanceHarness({component,engine,viewport});
   harness.page.setDefaultTimeout(6500);
   const errors: string[] = [];
   harness.page.on("pageerror",error=>errors.push(error.message));
   try {
+    if (process.argv.includes("--reduced-motion")) await harness.page.emulateMedia({ reducedMotion: "reduce" });
     const rows = await harness.measure(picked);
     for (const row of rows) {
       for (const name of required(row.id)) {
