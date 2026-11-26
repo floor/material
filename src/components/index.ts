@@ -108,6 +108,7 @@ export type {
   ButtonGroupEvent,
   ButtonGroupEventType,
   ButtonGroupVariant,
+  ButtonGroupIconVariant,
   ButtonGroupOrientation,
   ButtonGroupDensity,
 } from "./button-group/types";

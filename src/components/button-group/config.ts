@@ -168,7 +168,7 @@ export const getButtonConfig = (
 
   return {
     ...buttonConfig,
-    variant: groupConfig.variant,
+    variant: buttonConfig.variant || groupConfig.variant,
     size: groupConfig.size || BUTTON_GROUP_DEFAULTS.SIZE,
     shape: groupConfig.shape || BUTTON_GROUP_DEFAULTS.SHAPE,
     disabled: groupConfig.disabled || buttonConfig.disabled,

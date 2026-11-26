@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>button group</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<style>
+  body { margin: 0; font: 16px/1.4 sans-serif; }
+  main { display: grid; gap: 32px; padding: 24px; }
+  section { display: grid; gap: 12px; }
+  h1, h2 { margin: 0; font-size: 1rem; }
+</style>
+</head>
+<body>
+<main id="page"></main>
+<script type="module">
+import { createButtonGroup } from "/dist/components/button-group/index.js";
+
+const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="currentColor"></circle></svg>';
+const page = document.getElementById("page");
+
+const section = (title) => {
+  const block = document.createElement("section");
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+  block.append(heading);
+  page.append(block);
+  return block;
+};
+
+const mount = (parent, config) => {
+  const group = createButtonGroup(config);
+  parent.append(group.element);
+  return group;
+};
+
+const sizes = section("Variants and sizes");
+mount(sizes, {
+  size: "xl",
+  variant: "tonal",
+  buttons: [
+    { icon: ICON, ariaLabel: "Accessibility", variant: "tonal", width: "narrow" },
+    { text: "Get started", variant: "filled" },
+    { icon: ICON, ariaLabel: "Language", variant: "tonal", width: "narrow" },
+  ],
+});
+
+const states = section("The group's variant is the default");
+mount(states, {
+  size: "m",
+  variant: "outlined",
+  buttons: [
+    { icon: ICON, ariaLabel: "First" },
+    { icon: ICON, ariaLabel: "Second", variant: "filled" },
+    { text: "Third" },
+  ],
+});
+
+const edges = section("A text item ignores width");
+mount(edges, {
+  size: "m",
+  buttons: [
+    { text: "Get started", width: "narrow", variant: "filled" },
+  ],
+});
+</script>
+</body>
+</html>

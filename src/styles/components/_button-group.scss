@@ -100,9 +100,17 @@ $shape: '--#{base.$prefix}-button-shape';
     transition: group-button-transition('spring-default-spatial');
   }
 
-  // Density lowers the height; a round icon button keeps its aspect
-  > .#{$icon-button} {
+  // Density lowers the height, and an icon button stays square at that
+  // height. An item that sets `width` carries __width and is left out:
+  // :where() adds no specificity, so the rule stays as specific as it was
+  // and a narrow or wide class that did not come from that field still
+  // loses to it where it used to (m3.material.io icon buttons, specs,
+  // read 2026-11-26: XL narrow is 104dp against the 136dp height).
+  > .#{$icon-button}:not(:where(.#{$component}__width)) {
     width: var(--#{base.$prefix}-button-group-height-scale);
+  }
+
+  > .#{$icon-button} {
     // The icon button's 48px target reaches sideways by default; in a group
     // the neighbours sit 2px away, so it keeps the visible width and only
     // reaches above and below (m3.material.io button group specs).

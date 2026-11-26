@@ -33,6 +33,7 @@ import { checkButtonIconPosition } from "./check-button-icon-position";
 import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
+import { checkButtonGroupFigure } from "./check-button-group-figure";
 import { checkFocusVisibility } from "./check-focus-visibility";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
@@ -5576,6 +5577,8 @@ try {
   await checkButtonToggle(page, check);
 
   await checkButtonGroupPress(page, check);
+
+  await checkButtonGroupFigure(page, check);
 
   // The rows the roving rule must get right. Read in the same turn as
   // connect, before the browser's own slotchange microtask.

@@ -77,8 +77,10 @@ describe("the component subpaths' exports", () => {
       if (!existsSync(file)) return [];
       return [...readFileSync(file, "utf8").matchAll(/^export type ([A-Z][A-Za-z]*Variant)\b/gm)].map((m) => [component, m[1]!] as const);
     }));
-    // 22 live variant types, plus the deprecated `DrawerVariant` alias.
-    expect(declared.length).toBe(23);
+    // 23 live variant types, plus the deprecated `DrawerVariant` alias.
+    // The 24th declaration is `ButtonGroupIconVariant`, the variants an
+    // icon-only button-group item accepts.
+    expect(declared.length).toBe(24);
     expect(declared.filter(([component, name]) => !now[component]?.some((e) => e.name === name)).map(([c, n]) => `${c}:${n}`)).toEqual([]);
     expect(declared.filter(([, name]) => !root.has(name)).map(([, n]) => `root:${n}`)).toEqual([]);
   }, 60_000);

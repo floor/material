@@ -23,6 +23,7 @@ export type {
   ButtonGroupEvent,
   ButtonGroupEventType,
   ButtonGroupVariant,
+  ButtonGroupIconVariant,
   ButtonGroupOrientation,
   ButtonGroupDensity
 } from './types';

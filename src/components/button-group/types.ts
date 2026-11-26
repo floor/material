@@ -1,6 +1,7 @@
 // src/components/button-group/types.ts
 
 import type { ButtonConfig, ButtonComponent } from "../button/types";
+import type { IconButtonWidth } from "../icon-button/constants";
 
 /**
  * Button group orientation
@@ -80,8 +81,10 @@ export interface ButtonGroupEvent {
 }
 
 /**
- * Configuration for a single button within a button group
- * Extends ButtonConfig but omits properties controlled by the group
+ * Configuration for a single button within a button group.
+ * The group's size and shape apply to every item. `variant` is omitted from
+ * the button config and declared here so an item can override the group's
+ * variant; omitted, the group's variant is the default.
  * @category Components
  */
 interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
@@ -122,6 +125,13 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
    * Value associated with this button
    */
   value?: string;
+
+  /**
+   * Icon-only items: the icon button's width, `narrow`, `default` or `wide`
+   * (m3.material.io icon buttons, specs, read 2026-11-26). A text item
+   * ignores it. The group's size still sets the height.
+   */
+  width?: IconButtonWidth;
   /** Icon shown while selected (toggle buttons). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   selectedIcon?: string;
   /** Initially selected (selection groups only) */
@@ -150,9 +160,25 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
  * it on text items too is over-broad -- it would make 67 call sites in this
  * component's own tests pass a label that duplicates the text.
  */
+/**
+ * An icon-only item's variant. The icon button draws `filled`, `tonal`,
+ * `outlined` and `standard`. `text` is drawn as `standard`. `elevated` is a
+ * text button's variant and is not accepted on an icon-only item.
+ */
+export type ButtonGroupIconVariant = Exclude<ButtonGroupVariant, "elevated">;
+
 export type ButtonGroupItemConfig =
-  | (ButtonGroupItemBase & { text: string })
-  | (ButtonGroupItemBase & { text?: undefined; ariaLabel: string });
+  | (ButtonGroupItemBase & {
+      text: string;
+      /** This item's variant. Omitted, the group's variant is used. */
+      variant?: ButtonGroupVariant;
+    })
+  | (ButtonGroupItemBase & {
+      text?: undefined;
+      ariaLabel: string;
+      /** See {@link ButtonGroupIconVariant}. Omitted, the group's variant is used. */
+      variant?: ButtonGroupIconVariant;
+    });
 
 export interface ButtonGroupConfig {
   /**
