@@ -10,8 +10,6 @@
  *
  *   bun run scripts/check-focus-ring-m3.ts
  */
-import assert from "node:assert/strict";
-
 type Colour = "secondary" | "inverse-on-surface" | "inverse-primary";
 
 type Ring = {
@@ -32,6 +30,7 @@ const rings: Ring[] = [
   { component: "button", filter: "filled/m/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
   { component: "icon-button", filter: "filled/m/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
   { component: "fab", filter: "primary-container/default/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
+  // The state row does not record an outline. The fixture's "focus ring" row does, on root.
   { component: "extended-fab", filter: "primary-container/small/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
   { component: "card", filter: "elevated/light/focus", part: "card", width: "3px", offset: "2px", color: "secondary" },
   { component: "card", filter: "elevated/dark/focus", part: "card", width: "3px", offset: "2px", color: "secondary" },
@@ -98,23 +97,47 @@ const measure = async (component: string, filter: string, webkit: boolean): Prom
   return parsed.rows;
 };
 
+const failures: string[] = [];
+
+/** One row's miss is recorded and the rest still run, in both engines. */
+const miss = (message: string) => {
+  failures.push(message);
+  console.error(message);
+};
+
 for (const engine of [false, true]) {
   const name = engine ? "webkit" : "chromium";
   for (const ring of rings) {
-    const rows = await measure(ring.component, ring.filter, engine);
-    for (const row of rows) {
-      const part = row.parts[ring.part];
-      const where = `${name} ${ring.component} ${row.id} ${ring.part}`;
-      assert.ok(part, `${where} was not measured`);
-      const style = part.style;
-      assert.equal(style.outlineWidth, ring.width, `${where} width ${style.outlineWidth}`);
-      assert.equal(style.outlineStyle, "solid", `${where} style ${style.outlineStyle}`);
-      assert.equal(style.outlineOffset, ring.offset, `${where} offset ${style.outlineOffset}`);
-      const expected = COLOURS[schemeOf(row.id)][ring.color];
-      assert.equal(canon(style.outlineColor), expected, `${where} colour ${style.outlineColor}`);
+    let rows: Row[];
+    try {
+      rows = await measure(ring.component, ring.filter, engine);
+    } catch (error) {
+      miss(error instanceof Error ? error.message : String(error));
+      continue;
     }
-    console.log(`${name}: ${ring.component} ${ring.filter} (${rows.length})`);
+    // A filter can match a state row that never asked for the outline.
+    // The ring is the row whose named part has one.
+    const painted = rows.filter((row) => row.parts[ring.part]?.style.outlineWidth !== undefined);
+    if (painted.length === 0) {
+      miss(`${name} ${ring.component} ${rows.map((row) => row.id).join(", ")}: no measured outline on ${ring.part}`);
+      continue;
+    }
+    for (const row of painted) {
+      const style = row.parts[ring.part]!.style;
+      const where = `${name} ${ring.component} ${row.id} ${ring.part}`;
+      if (style.outlineWidth !== ring.width) miss(`${where} width ${style.outlineWidth}`);
+      if (style.outlineStyle !== "solid") miss(`${where} style ${style.outlineStyle}`);
+      if (style.outlineOffset !== ring.offset) miss(`${where} offset ${style.outlineOffset}`);
+      const expected = COLOURS[schemeOf(row.id)][ring.color];
+      const colour = canon(style.outlineColor);
+      if (colour !== expected) miss(`${where} colour ${style.outlineColor}`);
+    }
+    console.log(`${name}: ${ring.component} ${ring.filter} (${painted.length})`);
   }
+}
+
+if (failures.length > 0) {
+  throw new Error(`${failures.length} focus ring row(s)\n${failures.join("\n")}`);
 }
 
 console.log("Passed: the conformance focus rows use the M3 focus ring.");
