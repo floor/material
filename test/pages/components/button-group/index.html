@@ -4,15 +4,29 @@
 <meta charset="utf-8">
 <title>button group</title>
 <link rel="stylesheet" href="/dist/styles.css">
-<link rel="stylesheet" href="/shared/harness.css">
+<style>
+  body { margin: 0; font: 16px/1.4 sans-serif; }
+  main { display: grid; gap: 32px; padding: 24px; }
+  section { display: grid; gap: 12px; }
+  h1, h2 { margin: 0; font-size: 1rem; }
+</style>
 </head>
 <body>
+<main id="page"></main>
 <script type="module">
-import { initPage, section, scenario } from "/shared/harness.js";
 import { createButtonGroup } from "/dist/components/button-group/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="currentColor"></circle></svg>';
-const main = await initPage({ name: "button group" });
+const page = document.getElementById("page");
+
+const section = (title) => {
+  const block = document.createElement("section");
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+  block.append(heading);
+  page.append(block);
+  return block;
+};
 
 const mount = (parent, config) => {
   const group = createButtonGroup(config);
@@ -20,81 +34,34 @@ const mount = (parent, config) => {
   return group;
 };
 
-const sizes = section(main, "Variants & sizes");
-scenario(sizes, {
-  title: "XL, narrow tonal ends, filled centre",
-  lookFor: "Two tall icon pills and a wider filled label between them.",
-  expected: "The ends are narrower than they are tall. The centre is a filled button, wider than it is tall. The group's size is XL for every item.",
-  mount(body) {
-    mount(body, {
-      size: "xl",
-      variant: "tonal",
-      buttons: [
-        { icon: ICON, ariaLabel: "Accessibility", variant: "tonal", width: "narrow" },
-        { text: "Get started", variant: "filled" },
-        { icon: ICON, ariaLabel: "Language", variant: "tonal", width: "narrow" },
-      ],
-    });
-  },
-  measure() {
-    const group = document.querySelector(".tp-section .mtrl-button-group");
-    if (!group) return "";
-    return [...group.children].map((el) => {
-      const r = el.getBoundingClientRect();
-      return `${Math.round(r.width)}×${Math.round(r.height)}`;
-    }).join("  ");
-  },
+const sizes = section("Variants and sizes");
+mount(sizes, {
+  size: "xl",
+  variant: "tonal",
+  buttons: [
+    { icon: ICON, ariaLabel: "Accessibility", variant: "tonal", width: "narrow" },
+    { text: "Get started", variant: "filled" },
+    { icon: ICON, ariaLabel: "Language", variant: "tonal", width: "narrow" },
+  ],
 });
 
-const states = section(main, "States");
-scenario(states, {
-  title: "The group's variant is only the default",
-  lookFor: "The middle icon stays filled after the group is tonal.",
-  expected: "An item with no variant follows the group. An item with a variant keeps it.",
-  mount(body) {
-    mount(body, {
-      size: "m",
-      variant: "outlined",
-      buttons: [
-        { icon: ICON, ariaLabel: "First" },
-        { icon: ICON, ariaLabel: "Second", variant: "filled" },
-        { text: "Third" },
-      ],
-    });
-  },
+const states = section("The group's variant is the default");
+mount(states, {
+  size: "m",
+  variant: "outlined",
+  buttons: [
+    { icon: ICON, ariaLabel: "First" },
+    { icon: ICON, ariaLabel: "Second", variant: "filled" },
+    { text: "Third" },
+  ],
 });
 
-const interaction = section(main, "Interaction");
-scenario(interaction, {
-  title: "Press the centre",
-  lookFor: "The centre widens and the two pills narrow, then all three return.",
-  expected: "The press uses each item's measured width, including a narrow icon button.",
-  mount(body) {
-    mount(body, {
-      size: "xl",
-      variant: "tonal",
-      buttons: [
-        { icon: ICON, ariaLabel: "Accessibility", width: "narrow" },
-        { text: "Get started", variant: "filled" },
-        { icon: ICON, ariaLabel: "Language", width: "narrow" },
-      ],
-    });
-  },
-});
-
-const edges = section(main, "Edge cases");
-scenario(edges, {
-  title: "A text item ignores width",
-  lookFor: "The label is as wide as its text, not a narrow icon pill.",
-  expected: "width applies to icon-only items. A text item keeps the group's height and its own text width.",
-  mount(body) {
-    mount(body, {
-      size: "m",
-      buttons: [
-        { text: "Get started", width: "narrow", variant: "filled" },
-      ],
-    });
-  },
+const edges = section("A text item ignores width");
+mount(edges, {
+  size: "m",
+  buttons: [
+    { text: "Get started", width: "narrow", variant: "filled" },
+  ],
 });
 </script>
 </body>
