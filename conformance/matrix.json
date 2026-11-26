@@ -419,21 +419,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "url": "https://m3.material.io/components/badges/specs",
             "section": "Tokens & specs · Badges · Badge large color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "compose": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "file": "BadgeTokens.kt",
             "symbol": "Color",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BadgeTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BadgeTokens.kt#L24",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "material": {
-            "value": "Error #B3261E",
-            "engines": null
+            "value": "Error",
+            "engines": null,
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "status": {
             "spec": "match",
@@ -450,21 +465,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "url": "https://m3.material.io/components/badges/specs",
             "section": "Tokens & specs · Badges · Badge color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "compose": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "file": "BadgeTokens.kt",
             "symbol": "Color",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BadgeTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BadgeTokens.kt#L24",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "material": {
-            "value": "Error #B3261E",
-            "engines": null
+            "value": "Error",
+            "engines": null,
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "status": {
             "spec": "match",
@@ -580,21 +610,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/toolbars/specs",
             "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "BottomAppBarTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/BottomAppBarTokens.kt#L24",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "match",
@@ -741,21 +786,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "url": "https://m3.material.io/components/bottom-sheets/specs",
             "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "file": "SheetBottomTokens.kt",
             "symbol": "DockedContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L24",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "material": {
-            "value": "SurfaceContainerLow #F7F2FA",
-            "engines": null
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "status": {
             "spec": "match",
@@ -772,21 +832,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLargeTop",
             "url": "https://m3.material.io/components/bottom-sheets/specs",
             "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container shape (top corners)",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28dp",
+            "value": "CornerExtraLargeTop",
             "file": "SheetBottomTokens.kt",
             "symbol": "DockedContainerShape",
             "line": 27,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L27"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt#L27",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLargeTop",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -816,8 +885,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at -3px",
-            "engines": null
+            "value": "3px solid Secondary at -3px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -995,21 +1069,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/buttons/specs",
             "section": "Tokens & specs · Button - Color - Filled · Button filled container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "FilledButtonTokens.kt",
             "symbol": "ContainerColor",
             "line": 22,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L22"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L22",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -1801,21 +1890,30 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": "20dp",
+            "value": "CornerFull",
             "url": "https://m3.material.io/components/buttons/specs",
             "section": "Tokens & specs · Button - Size - Small · Button small selected container shape square (Corner Full on a 40dp container)",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "20dp"
+            }
           },
           "compose": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "file": "ButtonSmallTokens.kt",
             "symbol": "SelectedContainerShapeSquare",
             "line": 51,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L51"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L51",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "material": {
-            "value": "20px",
-            "engines": null
+            "value": "CornerFull",
+            "engines": null,
+            "resolved": {
+              "radius": "20px"
+            }
           },
           "status": {
             "spec": "match",
@@ -1832,21 +1930,31 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0dp",
+            "value": "Level0",
             "url": "https://m3.material.io/components/buttons/specs",
             "section": "Tokens & specs · Button - Color - Filled · Button filled elevation",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "compose": {
-            "value": "none",
+            "value": "Level0",
             "file": "FilledButtonTokens.kt",
             "symbol": "ContainerElevation",
             "line": 25,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L25"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledButtonTokens.kt#L25",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "material": {
-            "value": "none",
-            "engines": null
+            "value": "Level0",
+            "engines": null,
+            "resolved": {
+              "elevation": "0dp",
+              "shadow": "none"
+            }
           },
           "status": {
             "spec": "match",
@@ -1876,8 +1984,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -2421,21 +2534,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/common-buttons/specs",
             "section": "Button corner radius",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28.0dp all corners",
+            "value": "CornerExtraLarge",
             "file": "ButtonLargeTokens.kt",
             "symbol": "ContainerShapeSquare",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonLargeTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonLargeTokens.kt#L30",
+            "resolved": {
+              "radius": "28.0dp all corners"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -2452,21 +2574,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "16dp",
+            "value": "CornerLarge",
             "url": "https://m3.material.io/components/common-buttons/specs",
             "section": "Button corner radius",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "16dp"
+            }
           },
           "compose": {
-            "value": "16.0dp all corners",
+            "value": "CornerLarge",
             "file": "ButtonMediumTokens.kt",
             "symbol": "ContainerShapeSquare",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonMediumTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonMediumTokens.kt#L30",
+            "resolved": {
+              "radius": "16.0dp all corners"
+            }
           },
           "material": {
-            "value": "16px",
-            "engines": null
+            "value": "CornerLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "16px"
+            }
           },
           "status": {
             "spec": "match",
@@ -2483,21 +2614,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/common-buttons/specs",
             "section": "Button corner radius",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "ButtonSmallTokens.kt",
             "symbol": "ContainerShapeSquare",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt#L30",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
@@ -2514,21 +2654,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/common-buttons/specs",
             "section": "Button corner radius",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28.0dp all corners",
+            "value": "CornerExtraLarge",
             "file": "ButtonXLargeTokens.kt",
             "symbol": "ContainerShapeSquare",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonXLargeTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonXLargeTokens.kt#L30",
+            "resolved": {
+              "radius": "28.0dp all corners"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -2545,21 +2694,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/common-buttons/specs",
             "section": "Button corner radius",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "ButtonXSmallTokens.kt",
             "symbol": "ContainerShapeSquare",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonXSmallTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonXSmallTokens.kt#L30",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
@@ -3208,21 +3366,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Tokens & specs · Card - Elevated · Elevated card container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "file": "ElevatedCardTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevatedCardTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevatedCardTokens.kt#L24",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "material": {
-            "value": "SurfaceContainerLow #F7F2FA",
-            "engines": null
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "status": {
             "spec": "match",
@@ -3239,21 +3412,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHighest #E6E0E9",
+            "value": "SurfaceContainerHighest",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Tokens & specs · Card - Filled · Filled card container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E6E0E9",
+              "dark": "#36343B",
+              "seed": "#DEE4DE"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerHighest #E6E0E9",
+            "value": "SurfaceContainerHighest",
             "file": "FilledCardTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L24",
+            "resolved": {
+              "light": "#E6E0E9",
+              "dark": "#36343B",
+              "seed": "#DEE4DE"
+            }
           },
           "material": {
-            "value": "SurfaceContainerHighest #E6E0E9",
-            "engines": null
+            "value": "SurfaceContainerHighest",
+            "engines": null,
+            "resolved": {
+              "light": "#E6E0E9",
+              "dark": "#36343B",
+              "seed": "#DEE4DE"
+            }
           },
           "status": {
             "spec": "match",
@@ -3270,21 +3458,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Tokens & specs · Card - Outlined · Outlined card container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "compose": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "file": "OutlinedCardTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L24",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "material": {
-            "value": "Surface #FEF7FF",
-            "engines": null
+            "value": "Surface",
+            "engines": null,
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "status": {
             "spec": "match",
@@ -3301,21 +3504,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "ElevatedCardTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevatedCardTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevatedCardTokens.kt#L30",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
@@ -3332,21 +3544,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "FilledCardTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L30",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
@@ -3363,21 +3584,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "OutlinedCardTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L30",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
@@ -3394,21 +3624,31 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": "0dp",
+            "value": "Level0",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Tokens & specs · Card - Filled · Filled card focus container elevation",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "compose": {
-            "value": "Level 0",
+            "value": "Level0",
             "file": "FilledCardTokens.kt",
             "symbol": "FocusContainerElevation",
             "line": 43,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledCardTokens.kt#L43",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "material": {
-            "value": "Level 0",
-            "engines": null
+            "value": "Level0",
+            "engines": null,
+            "resolved": {
+              "elevation": "0dp",
+              "shadow": "none"
+            }
           },
           "status": {
             "spec": "match",
@@ -3425,21 +3665,31 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": "0dp",
+            "value": "Level0",
             "url": "https://m3.material.io/components/cards/specs",
             "section": "Tokens & specs · Card - Outlined · Outlined card focus container elevation",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "compose": {
-            "value": "Level 0",
+            "value": "Level0",
             "file": "OutlinedCardTokens.kt",
             "symbol": "FocusContainerElevation",
             "line": 46,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedCardTokens.kt#L46",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "material": {
-            "value": "Level 0",
-            "engines": null
+            "value": "Level0",
+            "engines": null,
+            "resolved": {
+              "elevation": "0dp",
+              "shadow": "none"
+            }
           },
           "status": {
             "spec": "match",
@@ -3469,8 +3719,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -3500,8 +3755,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -3531,8 +3791,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -3803,10 +4068,13 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/carousel/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
             "value": null,
@@ -3816,8 +4084,11 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4333,21 +4604,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/checkbox/specs",
             "section": "Tokens & specs · Checkbox · Checkbox selected container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "CheckboxTokens.kt",
             "symbol": "SelectedContainerColor",
             "line": 36,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/CheckboxTokens.kt#L36"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/CheckboxTokens.kt#L36",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -4407,8 +4693,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -4431,21 +4722,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "CornerSmall",
             "url": "https://m3.material.io/components/chips/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "8dp"
+            }
           },
           "compose": {
-            "value": "8.0dp all corners",
+            "value": "CornerSmall",
             "file": "AssistChipTokens.kt",
             "symbol": "ContainerShape",
             "line": 27,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/AssistChipTokens.kt#L27"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/AssistChipTokens.kt#L27",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
           },
           "material": {
-            "value": "8px",
-            "engines": null
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4462,21 +4762,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "CornerSmall",
             "url": "https://m3.material.io/components/chips/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "8dp"
+            }
           },
           "compose": {
-            "value": "8.0dp all corners",
+            "value": "CornerSmall",
             "file": "FilterChipTokens.kt",
             "symbol": "ContainerShape",
             "line": 27,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilterChipTokens.kt#L27"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilterChipTokens.kt#L27",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
           },
           "material": {
-            "value": "8px",
-            "engines": null
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4493,21 +4802,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "CornerSmall",
             "url": "https://m3.material.io/components/chips/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "8dp"
+            }
           },
           "compose": {
-            "value": "8.0dp all corners",
+            "value": "CornerSmall",
             "file": "InputChipTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/InputChipTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/InputChipTokens.kt#L30",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
           },
           "material": {
-            "value": "8px",
-            "engines": null
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4524,21 +4842,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "CornerSmall",
             "url": "https://m3.material.io/components/chips/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "8dp"
+            }
           },
           "compose": {
-            "value": "8.0dp all corners",
+            "value": "CornerSmall",
             "file": "SuggestionChipTokens.kt",
             "symbol": "ContainerShape",
             "line": 27,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SuggestionChipTokens.kt#L27"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SuggestionChipTokens.kt#L27",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
           },
           "material": {
-            "value": "8px",
-            "engines": null
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4710,21 +5037,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/chips/specs",
             "section": "Tokens & specs · Chip - Filter · Filter chip (selected) outline color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "compose": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "file": "FilterChipTokens.kt",
             "symbol": "FlatSelectedContainerColor",
             "line": 73,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilterChipTokens.kt#L73"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilterChipTokens.kt#L73",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "material": {
-            "value": "SecondaryContainer #E8DEF8",
-            "engines": null
+            "value": "SecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "status": {
             "spec": "match",
@@ -4808,21 +5150,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "url": "https://m3.material.io/components/date-pickers/specs",
             "section": "Tokens & specs · Date picker - Modal · Container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "file": "DatePickerModalTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DatePickerModalTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DatePickerModalTokens.kt#L24",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "material": {
-            "value": "SurfaceContainerHigh #ECE6F0",
-            "engines": null
+            "value": "SurfaceContainerHigh",
+            "engines": null,
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "status": {
             "spec": "match",
@@ -4838,21 +5195,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/date-pickers/specs",
             "section": "Tokens & specs · Date picker - Modal · Container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28.0dp all corners",
+            "value": "CornerExtraLarge",
             "file": "DatePickerModalTokens.kt",
             "symbol": "ContainerShape",
             "line": 33,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DatePickerModalTokens.kt#L33"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DatePickerModalTokens.kt#L33",
+            "resolved": {
+              "radius": "28.0dp all corners"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4935,21 +5301,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.25pt",
+            "value": "BodyMedium",
             "url": "https://m3.material.io/components/dialogs/specs",
             "section": "Tokens & specs · Dialog - Basic · Dialog supporting text tracking",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "400",
+              "lineHeight": "20pt",
+              "tracking": "0.25pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "BodyMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "BodyMediumTracking",
             "line": 48,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48",
+            "resolved": {
+              "size": "14sp",
+              "weight": "400",
+              "lineHeight": "20.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.25px",
-            "engines": null
+            "value": "BodyMedium",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "400",
+              "lineHeight": "20px",
+              "tracking": "0.25px"
+            }
           },
           "status": {
             "spec": "match",
@@ -4979,8 +5363,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -4997,10 +5386,15 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OnSurface #1D1B20",
+            "value": "OnSurface",
             "url": "https://m3.material.io/components/dialogs/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
           },
           "compose": {
             "value": null,
@@ -5010,14 +5404,19 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnSurfaceVariant #49454F",
-            "engines": null
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "no-value"
           },
-          "note": "The website close icon uses OnSurface. The light-theme default is shown.",
+          "note": "The website close icon uses OnSurface.",
           "issue": null
         },
         {
@@ -5028,21 +5427,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "url": "https://m3.material.io/components/dialogs/specs",
             "section": "Tokens & specs · Dialog - Basic · Dialog container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "file": "DialogTokens.kt",
             "symbol": "ContainerColor",
             "line": 39,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L39"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L39",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "material": {
-            "value": "SurfaceContainerHigh #ECE6F0",
-            "engines": null
+            "value": "SurfaceContainerHigh",
+            "engines": null,
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "status": {
             "spec": "match",
@@ -5090,21 +5504,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/dialogs/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28.0dp all corners",
+            "value": "CornerExtraLarge",
             "file": "DialogTokens.kt",
             "symbol": "ContainerShape",
             "line": 45,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45",
+            "resolved": {
+              "radius": "28.0dp all corners"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -5127,21 +5550,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OutlineVariant #CAC4D0",
+            "value": "OutlineVariant",
             "url": "https://m3.material.io/components/divider/specs",
             "section": "Tokens & specs · Divider · Divider color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#CAC4D0",
+              "dark": "#49454F",
+              "seed": "#BFC9C2"
+            }
           },
           "compose": {
-            "value": "OutlineVariant #CAC4D0",
+            "value": "OutlineVariant",
             "file": "DividerTokens.kt",
             "symbol": "Color",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DividerTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DividerTokens.kt#L24",
+            "resolved": {
+              "light": "#CAC4D0",
+              "dark": "#49454F",
+              "seed": "#BFC9C2"
+            }
           },
           "material": {
-            "value": "OutlineVariant #CAC4D0",
-            "engines": null
+            "value": "OutlineVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#CAC4D0",
+              "dark": "#49454F",
+              "seed": "#BFC9C2"
+            }
           },
           "status": {
             "spec": "match",
@@ -5505,21 +5943,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.15pt",
+            "value": "TitleMedium",
             "url": "https://m3.material.io/components/extended-fab/specs",
             "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small label text",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "16pt",
+              "weight": "500",
+              "lineHeight": "24pt",
+              "tracking": "0.15pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "TitleMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "TitleMediumTracking",
             "line": 228,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228",
+            "resolved": {
+              "size": "16sp",
+              "weight": "500",
+              "lineHeight": "24.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.15px",
-            "engines": null
+            "value": "TitleMedium",
+            "engines": null,
+            "resolved": {
+              "size": "16px",
+              "weight": "500",
+              "lineHeight": "24px",
+              "tracking": "0.15px"
+            }
           },
           "status": {
             "spec": "match",
@@ -5741,8 +6197,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -5977,21 +6438,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.15pt",
+            "value": "TitleMedium",
             "url": "https://m3.material.io/components/fab-menu/specs",
             "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item label text",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "16pt",
+              "weight": "500",
+              "lineHeight": "24pt",
+              "tracking": "0.15pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "TitleMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "TitleMediumTracking",
             "line": 228,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228",
+            "resolved": {
+              "size": "16sp",
+              "weight": "500",
+              "lineHeight": "24.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.15px",
-            "engines": null
+            "value": "TitleMedium",
+            "engines": null,
+            "resolved": {
+              "size": "16px",
+              "weight": "500",
+              "lineHeight": "24px",
+              "tracking": "0.15px"
+            }
           },
           "status": {
             "spec": "match",
@@ -6182,8 +6661,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -6213,8 +6697,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -6330,21 +6819,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "url": "https://m3.material.io/components/lists/specs",
             "section": "Tokens & specs · List - Common · List list item segmented container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "compose": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "file": "ListTokens.kt",
             "symbol": "ItemSegmentedContainerColor",
             "line": 201,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L201"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L201",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "drift",
@@ -6405,8 +6909,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at -3px",
-            "engines": null
+            "value": "3px solid Secondary at -3px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -6423,21 +6932,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/lists/specs",
             "section": "Tokens & specs · List - Common · List list item selected container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "compose": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "file": "ListTokens.kt",
             "symbol": "ItemSelectedContainerColor",
             "line": 204,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L204"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L204",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "material": {
-            "value": "SecondaryContainer #E8DEF8",
-            "engines": null
+            "value": "SecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "status": {
             "spec": "match",
@@ -6454,21 +6978,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/lists/specs",
             "section": "Tokens & specs · List - Common · List list item selected container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "compose": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "file": "ListTokens.kt",
             "symbol": "ItemSelectedContainerColor",
             "line": 204,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L204"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L204",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "material": {
-            "value": "SecondaryContainer #E8DEF8",
-            "engines": null
+            "value": "SecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "status": {
             "spec": "match",
@@ -6484,21 +7023,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.25pt",
+            "value": "BodyMedium",
             "url": "https://m3.material.io/components/lists/specs",
             "section": "Tokens & specs · List - Common · List list item supporting text tracking",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "400",
+              "lineHeight": "20pt",
+              "tracking": "0.25pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "BodyMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "BodyMediumTracking",
             "line": 48,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48",
+            "resolved": {
+              "size": "14sp",
+              "weight": "400",
+              "lineHeight": "20.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.25px",
-            "engines": null
+            "value": "BodyMedium",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "400",
+              "lineHeight": "20px",
+              "tracking": "0.25px"
+            }
           },
           "status": {
             "spec": "match",
@@ -6711,21 +7268,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Tokens & specs · Menu (baseline) · Menu container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "MenuTokens.kt",
             "symbol": "ContainerColor",
             "line": 22,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "match",
@@ -6742,21 +7314,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Tokens & specs · Menus - Color - Standard · Menu standard container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerLow #F7F2FA",
+            "value": "SurfaceContainerLow",
             "file": "StandardMenuTokens.kt",
             "symbol": "ContainerColor",
             "line": 31,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L31"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L31",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "material": {
-            "value": "SurfaceContainerLow #F7F2FA",
-            "engines": null
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "status": {
             "spec": "match",
@@ -6773,21 +7360,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Tokens & specs · Menu (baseline) · Menu container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4.0dp all corners",
+            "value": "CornerExtraSmall",
             "file": "MenuTokens.kt",
             "symbol": "ContainerShape",
             "line": 28,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L28"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L28",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
           },
           "material": {
-            "value": "4px",
-            "engines": null
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
           },
           "status": {
             "spec": "match",
@@ -6804,21 +7400,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "16dp",
+            "value": "CornerLarge",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Tokens & specs · Menus - Common · Menu container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "16dp"
+            }
           },
           "compose": {
-            "value": "16.0dp all corners",
+            "value": "CornerLarge",
             "file": "SegmentedMenuTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L30",
+            "resolved": {
+              "radius": "16.0dp all corners"
+            }
           },
           "material": {
-            "value": "16px",
-            "engines": null
+            "value": "CornerLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "16px"
+            }
           },
           "status": {
             "spec": "match",
@@ -6835,10 +7440,15 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Tokens & specs · Menu (baseline) · Menu list item selected container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "compose": {
             "value": null,
@@ -6848,8 +7458,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L34"
           },
           "material": {
-            "value": "SecondaryContainer #E8DEF8",
-            "engines": null
+            "value": "SecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "status": {
             "spec": "match",
@@ -6871,21 +7486,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/navigation-bar/specs",
             "section": "Tokens & specs · Nav bar - Common · Nav bar container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "NavigationBarTokens.kt",
             "symbol": "ContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationBarTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationBarTokens.kt#L24",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "match",
@@ -6977,8 +7607,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -7060,21 +7695,36 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": "Secondary #625B71",
+            "value": "Secondary",
             "url": "https://m3.material.io/components/navigation-bar/specs",
             "section": "Tokens & specs · Nav bar - Common · Nav bar item active label text color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "compose": {
-            "value": "OnSecondaryContainer #1D192B",
+            "value": "OnSecondaryContainer",
             "file": "ShortNavigationBar.kt",
             "symbol": "selectedTextColorStartIconPosition",
             "line": 295,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ShortNavigationBar.kt#L295"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ShortNavigationBar.kt#L295",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
           },
           "material": {
-            "value": "Secondary #625B71",
-            "engines": null
+            "value": "Secondary",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -7251,21 +7901,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "compose": {
-            "value": "SecondaryContainer #E8DEF8",
+            "value": "SecondaryContainer",
             "file": "NavigationDrawerTokens.kt",
             "symbol": "ActiveIndicatorColor",
             "line": 39,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationDrawerTokens.kt#L39"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationDrawerTokens.kt#L39",
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "material": {
-            "value": "SecondaryContainer #E8DEF8",
-            "engines": null
+            "value": "SecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#E8DEF8",
+              "dark": "#4A4458",
+              "seed": "#CFE9D9"
+            }
           },
           "status": {
             "spec": "match",
@@ -7373,10 +8038,16 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": "700",
+            "value": "LabelLargeProminent",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active label text weight",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "700",
+              "lineHeight": "20pt",
+              "tracking": "0.1pt"
+            }
           },
           "compose": {
             "value": null,
@@ -7386,8 +8057,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationDrawer.kt#L1156"
           },
           "material": {
-            "value": "700",
-            "engines": null
+            "value": "LabelLargeProminent",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "700",
+              "lineHeight": "20px",
+              "tracking": "0.1px"
+            }
           },
           "status": {
             "spec": "match",
@@ -7410,27 +8087,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "16dp",
+            "value": "CornerLarge",
             "url": "https://m3.material.io/components/navigation-rail/specs",
             "section": "Tokens & specs · Nav rail - Expanded · Nav rail expanded modal container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "16dp"
+            }
           },
           "compose": {
-            "value": "16dp",
+            "value": "CornerLarge",
             "file": "NavigationRailExpandedTokens.kt",
             "symbol": "ModalContainerShape",
             "line": 39,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationRailExpandedTokens.kt#L39"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/NavigationRailExpandedTokens.kt#L39",
+            "resolved": {
+              "radius": "16dp"
+            }
           },
           "material": {
             "value": "0px",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "radius": "0px"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail.",
+          "note": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail. The measured value could not be assigned a unique role.",
           "issue": null
         },
         {
@@ -7714,8 +8400,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -7761,21 +8452,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/radio-button/specs",
             "section": "Tokens & specs · Radio Button · Radio button icon selected color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "RadioButtonTokens.kt",
             "symbol": "SelectedIconColor",
             "line": 41,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RadioButtonTokens.kt#L41"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RadioButtonTokens.kt#L41",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -7828,21 +8534,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "url": "https://m3.material.io/components/search/specs",
             "section": "Tokens & specs · Search - Bar · Search bar container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "file": "SearchBarTokens.kt",
             "symbol": "ContainerColor",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SearchBarTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SearchBarTokens.kt#L30",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "material": {
-            "value": "SurfaceContainerHigh #ECE6F0",
-            "engines": null
+            "value": "SurfaceContainerHigh",
+            "engines": null,
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "status": {
             "spec": "match",
@@ -7903,8 +8624,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SearchBar.kt#L2119"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -8034,7 +8760,12 @@
           },
           "material": {
             "value": "transparent",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "light": "#00000000",
+              "dark": "#00000000",
+              "seed": "#00000000"
+            }
           },
           "status": {
             "spec": "no-value",
@@ -8082,21 +8813,36 @@
           "state": "hover",
           "density": 0,
           "spec": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/text-fields/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "compose": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "file": "OutlinedAutocompleteTokens.kt",
             "symbol": "FieldHoverLabelTextColor",
             "line": 150,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L150"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L150",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "material": {
-            "value": "OnBackground #1D1B20",
-            "engines": null
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8113,21 +8859,36 @@
           "state": "popup",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "FilledAutocompleteTokens.kt",
             "symbol": "MenuContainerColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L24",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainerLow #F7F2FA",
-            "engines": null
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8144,21 +8905,36 @@
           "state": "popup",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "MenuTokens.kt",
             "symbol": "ContainerColor",
             "line": 22,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L22",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainerLow #F7F2FA",
-            "engines": null
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8175,21 +8951,30 @@
           "state": "popup",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "file": "FilledAutocompleteTokens.kt",
             "symbol": "MenuContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L30",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "material": {
-            "value": "16px",
-            "engines": null
+            "value": "CornerLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "16px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8206,21 +8991,30 @@
           "state": "popup",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "file": "OutlinedAutocompleteTokens.kt",
             "symbol": "MenuContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L30",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "material": {
-            "value": "16px",
-            "engines": null
+            "value": "CornerLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "16px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8299,27 +9093,42 @@
           "state": "error-focus",
           "density": 0,
           "spec": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "compose": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "file": "FilledAutocompleteTokens.kt",
             "symbol": "TextFieldErrorFocusTrailingIconColor",
             "line": 100,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L100"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L100",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The light theme reference is resolved against the released autocomplete token.",
+          "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
         },
         {
@@ -8330,27 +9139,42 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "compose": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "file": "FilledAutocompleteTokens.kt",
             "symbol": "TextFieldFocusTrailingIconColor",
             "line": 154,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L154"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FilledAutocompleteTokens.kt#L154",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The light theme reference is resolved against the released autocomplete token.",
+          "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
         },
         {
@@ -8361,27 +9185,42 @@
           "state": "error-focus",
           "density": 0,
           "spec": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "compose": {
-            "value": "Error #B3261E",
+            "value": "Error",
             "file": "OutlinedAutocompleteTokens.kt",
             "symbol": "TextFieldErrorFocusTrailingIconColor",
             "line": 87,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L87"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L87",
+            "resolved": {
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The light theme reference is resolved against the released autocomplete token.",
+          "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
         },
         {
@@ -8392,27 +9231,42 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/menus/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "compose": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "file": "OutlinedAutocompleteTokens.kt",
             "symbol": "TextFieldFocusTrailingIconColor",
             "line": 144,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L144"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedAutocompleteTokens.kt#L144",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The light theme reference is resolved against the released autocomplete token.",
+          "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
         },
         {
@@ -8677,10 +9531,15 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/side-sheets/specs",
             "section": "Modal side sheet color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "compose": {
             "value": null,
@@ -8690,8 +9549,13 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnBackground #1D1B20",
-            "engines": null
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8708,10 +9572,15 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OnSurfaceVariant #49454F",
+            "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/side-sheets/specs",
             "section": "Standard side sheet color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
           },
           "compose": {
             "value": null,
@@ -8721,8 +9590,13 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnBackground #1D1B20",
-            "engines": null
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
           },
           "status": {
             "spec": "drift",
@@ -8776,21 +9650,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/sliders/specs",
             "section": "Tokens & specs · Slider · Slider active track color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "SliderTokens.kt",
             "symbol": "ActiveTrackColor",
             "line": 43,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SliderTokens.kt#L43"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SliderTokens.kt#L43",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -8820,8 +9709,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L378"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -8967,21 +9861,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "InverseSurface #322F35",
+            "value": "InverseSurface",
             "url": "https://m3.material.io/components/snackbar/specs",
             "section": "Tokens & specs · Snackbars · Snackbar container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "compose": {
-            "value": "InverseSurface #322F35",
+            "value": "InverseSurface",
             "file": "SnackbarTokens.kt",
             "symbol": "ContainerColor",
             "line": 39,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SnackbarTokens.kt#L39"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SnackbarTokens.kt#L39",
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "material": {
-            "value": "InverseSurface #322F35",
-            "engines": null
+            "value": "InverseSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "status": {
             "spec": "match",
@@ -8997,21 +9906,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/snackbar/specs",
             "section": "Tokens & specs · Snackbars · Snackbar container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4.0dp all corners",
+            "value": "CornerExtraSmall",
             "file": "SnackbarTokens.kt",
             "symbol": "ContainerShape",
             "line": 45,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SnackbarTokens.kt#L45"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SnackbarTokens.kt#L45",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
           },
           "material": {
-            "value": "4px",
-            "engines": null
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
           },
           "status": {
             "spec": "match",
@@ -9089,21 +10007,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.25pt",
+            "value": "BodyMedium",
             "url": "https://m3.material.io/components/snackbar/specs",
             "section": "Tokens & specs · Snackbars · Snackbar supporting text tracking",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "400",
+              "lineHeight": "20pt",
+              "tracking": "0.25pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "BodyMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "BodyMediumTracking",
             "line": 48,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48",
+            "resolved": {
+              "size": "14sp",
+              "weight": "400",
+              "lineHeight": "20.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.25px",
-            "engines": null
+            "value": "BodyMedium",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "400",
+              "lineHeight": "20px",
+              "tracking": "0.25px"
+            }
           },
           "status": {
             "spec": "match",
@@ -9405,21 +10341,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "8dp",
+            "value": "CornerSmall",
             "url": "https://m3.material.io/components/split-button/specs",
             "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "8dp"
+            }
           },
           "compose": {
-            "value": "8.0dp corner size",
+            "value": "CornerSmall",
             "file": "SplitButtonLargeTokens.kt",
             "symbol": "InnerCornerCornerSize",
             "line": 34,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonLargeTokens.kt#L34"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonLargeTokens.kt#L34",
+            "resolved": {
+              "radius": "8.0dp corner size"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -9436,21 +10381,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/split-button/specs",
             "section": "Tokens & specs · Split button - Size - Medium · Split button medium inner corner size",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4.0dp corner size",
+            "value": "CornerExtraSmall",
             "file": "SplitButtonMediumTokens.kt",
             "symbol": "InnerCornerCornerSize",
             "line": 34,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonMediumTokens.kt#L34"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonMediumTokens.kt#L34",
+            "resolved": {
+              "radius": "4.0dp corner size"
+            }
           },
           "material": {
-            "value": "8px",
-            "engines": null
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -9467,21 +10421,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/split-button/specs",
             "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge inner corner size",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp corner size",
+            "value": "CornerMedium",
             "file": "SplitButtonXLargeTokens.kt",
             "symbol": "InnerCornerCornerSize",
             "line": 34,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonXLargeTokens.kt#L34"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SplitButtonXLargeTokens.kt#L34",
+            "resolved": {
+              "radius": "12.0dp corner size"
+            }
           },
           "material": {
-            "value": "16px",
-            "engines": null
+            "value": "CornerLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "16px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -9751,21 +10714,36 @@
           "state": "disabled",
           "density": 0,
           "spec": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "url": "https://m3.material.io/components/switch/specs",
             "section": "Tokens & specs · Switch · Switch disabled selected handle color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "compose": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "file": "SwitchTokens.kt",
             "symbol": "DisabledSelectedHandleColor",
             "line": 24,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L24"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L24",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "material": {
-            "value": "Surface #FEF7FF",
-            "engines": null
+            "value": "Surface",
+            "engines": null,
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "status": {
             "spec": "match",
@@ -9811,21 +10789,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/switch/specs",
             "section": "Tokens & specs · Switch · Switch selected track color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "SwitchTokens.kt",
             "symbol": "SelectedTrackColor",
             "line": 104,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L104"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L104",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -9842,27 +10835,42 @@
           "state": "disabled",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHighest #E6E0E9 at 0.12 opacity",
+            "value": "SurfaceContainerHighest",
             "url": "https://m3.material.io/components/switch/specs",
-            "section": "Tokens & specs · Switch · Switch disabled unselected track color and Disabled track opacity",
-            "read": "2026-11-26"
+            "section": "Tokens & specs · Switch · Switch disabled unselected track color",
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#E6E0E9",
+              "dark": "#36343B",
+              "seed": "#DEE4DE"
+            }
           },
           "compose": {
-            "value": "#E6E0E9 at 0.12 opacity",
+            "value": "SurfaceContainerHighest",
             "file": "SwitchTokens.kt",
             "symbol": "DisabledUnselectedTrackColor",
             "line": 44,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L44"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L44",
+            "resolved": {
+              "light": "#E6E0E9",
+              "dark": "#36343B",
+              "seed": "#DEE4DE"
+            }
           },
           "material": {
-            "value": "#1D1B20 at 0.12 opacity",
-            "engines": null
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "Compare the resolved disabled track fill using the token alpha in the light theme.",
+          "note": "",
           "issue": null
         },
         {
@@ -9886,6 +10894,37 @@
           },
           "material": {
             "value": "32px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "switch/track-opacity/unselected/disabled",
+          "property": "Disabled unselected track opacity",
+          "aspect": "colour",
+          "variant": "unselected",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.12",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Disabled track opacity",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "0.12",
+            "file": "SwitchTokens.kt",
+            "symbol": "DisabledTrackOpacity",
+            "line": 35,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SwitchTokens.kt#L35"
+          },
+          "material": {
+            "value": "0.12",
             "engines": null
           },
           "status": {
@@ -9939,21 +10978,36 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "url": "https://m3.material.io/components/tabs/specs",
             "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "compose": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "file": "PrimaryNavigationTabTokens.kt",
             "symbol": "ContainerColor",
             "line": 33,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PrimaryNavigationTabTokens.kt#L33"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PrimaryNavigationTabTokens.kt#L33",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "material": {
             "value": "transparent",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "light": "#00000000",
+              "dark": "#00000000",
+              "seed": "#00000000"
+            }
           },
           "status": {
             "spec": "drift",
@@ -9970,21 +11024,36 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "url": "https://m3.material.io/components/tabs/specs",
             "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "compose": {
-            "value": "Surface #FEF7FF",
+            "value": "Surface",
             "file": "SecondaryNavigationTabTokens.kt",
             "symbol": "ContainerColor",
             "line": 28,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SecondaryNavigationTabTokens.kt#L28"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SecondaryNavigationTabTokens.kt#L28",
+            "resolved": {
+              "light": "#FEF7FF",
+              "dark": "#141218",
+              "seed": "#F5FBF5"
+            }
           },
           "material": {
             "value": "transparent",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "light": "#00000000",
+              "dark": "#00000000",
+              "seed": "#00000000"
+            }
           },
           "status": {
             "spec": "drift",
@@ -10094,21 +11163,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "url": "https://m3.material.io/components/tabs/specs",
             "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "compose": {
-            "value": "Primary #6750A4",
+            "value": "Primary",
             "file": "PrimaryNavigationTabTokens.kt",
             "symbol": "ActiveIndicatorColor",
             "line": 26,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PrimaryNavigationTabTokens.kt#L26"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PrimaryNavigationTabTokens.kt#L26",
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "material": {
-            "value": "Primary #6750A4",
-            "engines": null
+            "value": "Primary",
+            "engines": null,
+            "resolved": {
+              "light": "#6750A4",
+              "dark": "#D0BCFF",
+              "seed": "#1F6A4E"
+            }
           },
           "status": {
             "spec": "match",
@@ -10156,27 +11240,45 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "20pt",
+            "value": "TitleSmall",
             "url": "https://m3.material.io/components/tabs/specs",
             "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab with label text line height",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "500",
+              "lineHeight": "20pt",
+              "tracking": "0.1pt"
+            }
           },
           "compose": {
-            "value": "20.0sp",
+            "value": "TitleSmall",
             "file": "TypeScaleTokens.kt",
             "symbol": "TitleSmallLineHeight",
             "line": 237,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L237"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L237",
+            "resolved": {
+              "size": "14sp",
+              "weight": "500",
+              "lineHeight": "20.0sp",
+              "tracking": "0.1sp"
+            }
           },
           "material": {
             "value": "16.8px",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "500",
+              "lineHeight": "16.8px",
+              "tracking": "0.1px"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The released tab typography uses TitleSmall, including its 20 sp line height.",
+          "note": "The released tab typography uses TitleSmall, including its 20 sp line height. The measured value could not be assigned a unique role.",
           "issue": null
         },
         {
@@ -10187,27 +11289,45 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "20pt",
+            "value": "TitleSmall",
             "url": "https://m3.material.io/components/tabs/specs",
             "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab label text line height",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "500",
+              "lineHeight": "20pt",
+              "tracking": "0.1pt"
+            }
           },
           "compose": {
-            "value": "20.0sp",
+            "value": "TitleSmall",
             "file": "TypeScaleTokens.kt",
             "symbol": "TitleSmallLineHeight",
             "line": 237,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L237"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L237",
+            "resolved": {
+              "size": "14sp",
+              "weight": "500",
+              "lineHeight": "20.0sp",
+              "tracking": "0.1sp"
+            }
           },
           "material": {
             "value": "16.8px",
-            "engines": null
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "500",
+              "lineHeight": "16.8px",
+              "tracking": "0.1px"
+            }
           },
           "status": {
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The released tab typography uses TitleSmall, including its 20 sp line height.",
+          "note": "The released tab typography uses TitleSmall, including its 20 sp line height. The measured value could not be assigned a unique role.",
           "issue": null
         }
       ]
@@ -10224,21 +11344,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "4dp",
+            "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/text-fields/specs",
             "section": "Tokens & specs · Text field - Outlined · Outlined text field container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "4dp"
+            }
           },
           "compose": {
-            "value": "4.0dp all corners",
+            "value": "CornerExtraSmall",
             "file": "OutlinedTextFieldTokens.kt",
             "symbol": "ContainerShape",
             "line": 30,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedTextFieldTokens.kt#L30"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/OutlinedTextFieldTokens.kt#L30",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
           },
           "material": {
-            "value": "4px",
-            "engines": null
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
           },
           "status": {
             "spec": "match",
@@ -10392,8 +11521,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -10423,8 +11557,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at 2px",
-            "engines": null
+            "value": "3px solid Secondary at 2px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -10477,21 +11616,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "url": "https://m3.material.io/components/time-pickers/specs",
             "section": "Tokens & specs · Time picker - Dial · Time picker container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "compose": {
-            "value": "SurfaceContainerHigh #ECE6F0",
+            "value": "SurfaceContainerHigh",
             "file": "TimePickerTokens.kt",
             "symbol": "ContainerColor",
             "line": 66,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TimePickerTokens.kt#L66"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TimePickerTokens.kt#L66",
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "material": {
-            "value": "SurfaceContainerHigh #ECE6F0",
-            "engines": null
+            "value": "SurfaceContainerHigh",
+            "engines": null,
+            "resolved": {
+              "light": "#ECE6F0",
+              "dark": "#2B2930",
+              "seed": "#E4EAE4"
+            }
           },
           "status": {
             "spec": "match",
@@ -10508,21 +11662,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/time-pickers/specs",
             "section": "Tokens & specs · Time picker - Dial · Time picker container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "file": "DialogTokens.kt",
             "symbol": "ContainerShape",
             "line": 45,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -10539,21 +11702,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "url": "https://m3.material.io/components/time-pickers/specs",
             "section": "Tokens & specs · Time picker - Input · Time input container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "compose": {
-            "value": "28dp",
+            "value": "CornerExtraLarge",
             "file": "DialogTokens.kt",
             "symbol": "ContainerShape",
             "line": 45,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/DialogTokens.kt#L45",
+            "resolved": {
+              "radius": "28dp"
+            }
           },
           "material": {
-            "value": "28px",
-            "engines": null
+            "value": "CornerExtraLarge",
+            "engines": null,
+            "resolved": {
+              "radius": "28px"
+            }
           },
           "status": {
             "spec": "match",
@@ -10583,8 +11755,13 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary #625B71 at -3px",
-            "engines": null
+            "value": "3px solid Secondary at -3px",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
           },
           "status": {
             "spec": "match",
@@ -10632,21 +11809,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.15pt",
+            "value": "TitleMedium",
             "url": "https://m3.material.io/components/time-pickers/specs",
             "section": "Tokens & specs · Time picker - Dial · Time picker period selector label text tracking",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "16pt",
+              "weight": "500",
+              "lineHeight": "24pt",
+              "tracking": "0.15pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "TitleMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "TitleMediumTracking",
             "line": 228,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L228",
+            "resolved": {
+              "size": "16sp",
+              "weight": "500",
+              "lineHeight": "24.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.15px",
-            "engines": null
+            "value": "TitleMedium",
+            "engines": null,
+            "resolved": {
+              "size": "16px",
+              "weight": "500",
+              "lineHeight": "24px",
+              "tracking": "0.15px"
+            }
           },
           "status": {
             "spec": "match",
@@ -10737,15 +11932,22 @@
             "read": "2026-11-26"
           },
           "compose": {
-            "value": "Level 0",
+            "value": "Level0",
             "file": "FloatingToolbar.kt",
             "symbol": "ContainerExpandedElevation",
             "line": 640,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L640"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt#L640",
+            "resolved": {
+              "elevation": "0dp"
+            }
           },
           "material": {
-            "value": "Level 1",
-            "engines": null
+            "value": "Level1",
+            "engines": null,
+            "resolved": {
+              "elevation": "1dp",
+              "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 1px"
+            }
           },
           "status": {
             "spec": "match",
@@ -10821,21 +12023,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/toolbars/specs",
             "section": "Tokens & specs · Toolbar - Color - Standard · Toolbar standard container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "FloatingToolbarTokens.kt",
             "symbol": "StandardContainerColor",
             "line": 42,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FloatingToolbarTokens.kt#L42"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FloatingToolbarTokens.kt#L42",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "match",
@@ -10881,21 +12098,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "PrimaryContainer #EADDFF",
+            "value": "PrimaryContainer",
             "url": "https://m3.material.io/components/toolbars/specs",
             "section": "Tokens & specs · Toolbar - Color - Vibrant · Toolbar standard container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#EADDFF",
+              "dark": "#4F378B",
+              "seed": "#A8F2CE"
+            }
           },
           "compose": {
-            "value": "PrimaryContainer #EADDFF",
+            "value": "PrimaryContainer",
             "file": "FloatingToolbarTokens.kt",
             "symbol": "VibrantContainerColor",
             "line": 60,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FloatingToolbarTokens.kt#L60"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FloatingToolbarTokens.kt#L60",
+            "resolved": {
+              "light": "#EADDFF",
+              "dark": "#4F378B",
+              "seed": "#A8F2CE"
+            }
           },
           "material": {
-            "value": "PrimaryContainer #EADDFF",
-            "engines": null
+            "value": "PrimaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#EADDFF",
+              "dark": "#4F378B",
+              "seed": "#A8F2CE"
+            }
           },
           "status": {
             "spec": "match",
@@ -10949,21 +12181,39 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "0.25pt",
+            "value": "BodyMedium",
             "url": "https://m3.material.io/components/tooltips/specs",
             "section": "Tokens & specs · Tooltip - Rich · Rich tooltip supporting text tracking",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "size": "14pt",
+              "weight": "400",
+              "lineHeight": "20pt",
+              "tracking": "0.25pt"
+            }
           },
           "compose": {
-            "value": "0.2sp",
+            "value": "BodyMedium",
             "file": "TypeScaleTokens.kt",
             "symbol": "BodyMediumTracking",
             "line": 48,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt#L48",
+            "resolved": {
+              "size": "14sp",
+              "weight": "400",
+              "lineHeight": "20.0sp",
+              "tracking": "0.2sp"
+            }
           },
           "material": {
-            "value": "0.25px",
-            "engines": null
+            "value": "BodyMedium",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "400",
+              "lineHeight": "20px",
+              "tracking": "0.25px"
+            }
           },
           "status": {
             "spec": "match",
@@ -11073,21 +12323,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "InverseSurface #322F35",
+            "value": "InverseSurface",
             "url": "https://m3.material.io/components/tooltips/specs",
             "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "compose": {
-            "value": "InverseSurface #322F35",
+            "value": "InverseSurface",
             "file": "PlainTooltipTokens.kt",
             "symbol": "ContainerColor",
             "line": 20,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PlainTooltipTokens.kt#L20"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PlainTooltipTokens.kt#L20",
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "material": {
-            "value": "InverseSurface #322F35",
-            "engines": null
+            "value": "InverseSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#322F35",
+              "dark": "#E6E0E9",
+              "seed": "#2C322E"
+            }
           },
           "status": {
             "spec": "match",
@@ -11104,21 +12369,36 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/tooltips/specs",
             "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container color",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "compose": {
-            "value": "SurfaceContainer #F3EDF7",
+            "value": "SurfaceContainer",
             "file": "RichTooltipTokens.kt",
             "symbol": "ContainerColor",
             "line": 37,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RichTooltipTokens.kt#L37"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RichTooltipTokens.kt#L37",
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "material": {
-            "value": "SurfaceContainer #F3EDF7",
-            "engines": null
+            "value": "SurfaceContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
+            }
           },
           "status": {
             "spec": "match",
@@ -11135,21 +12415,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/tooltips/specs",
             "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "4.0dp all corners",
+            "value": "CornerExtraSmall",
             "file": "PlainTooltipTokens.kt",
             "symbol": "ContainerShape",
             "line": 23,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PlainTooltipTokens.kt#L23"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PlainTooltipTokens.kt#L23",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
           },
           "material": {
-            "value": "4px",
-            "engines": null
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
           },
           "status": {
             "spec": "drift",
@@ -11166,21 +12455,30 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "12dp",
+            "value": "CornerMedium",
             "url": "https://m3.material.io/components/tooltips/specs",
             "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container shape",
-            "read": "2026-11-26"
+            "read": "2026-11-26",
+            "resolved": {
+              "radius": "12dp"
+            }
           },
           "compose": {
-            "value": "12.0dp all corners",
+            "value": "CornerMedium",
             "file": "RichTooltipTokens.kt",
             "symbol": "ContainerShape",
             "line": 43,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RichTooltipTokens.kt#L43"
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/RichTooltipTokens.kt#L43",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
           },
           "material": {
-            "value": "12px",
-            "engines": null
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
           },
           "status": {
             "spec": "match",
