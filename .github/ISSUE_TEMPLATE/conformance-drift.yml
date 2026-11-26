@@ -9,8 +9,9 @@ body:
         A conformance drift is a measured difference from a reference. Name the property, the
         expected value with the source that states it, and the value this library renders.
 
-        Bug reports for broken behaviour go to the bug form instead. A maintainer sets the exact
-        `conformance/*` and `component/*` labels on triage; this form cannot label the issue itself.
+        Bug reports for broken behaviour go to the bug form instead. This issue starts with the
+        `conformance/drift-spec` label; a maintainer sets the exact `conformance/*`, `component/*`
+        and `aspect/*` labels at triage.
   - type: dropdown
     id: component
     attributes:
