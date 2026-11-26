@@ -145,8 +145,6 @@ const runCase = (page: Page, config: CaseConfig) =>
     } as Measured;
   }, config);
 
-const testCaseLayer = (layer: string) => `long menu ${layer}`;
-
 const run = async (browser: Browser, engine: string) => {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
   await page.goto(`http://127.0.0.1:${server.port}`);
