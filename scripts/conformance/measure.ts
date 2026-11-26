@@ -93,6 +93,12 @@ export type Case = {
   zoom?: number;
   /** The theme mode for the colour rows: `light` (default) or `dark`. */
   scheme?: "light" | "dark";
+  /**
+   * Milliseconds to wait after the mount before the state is applied, for a
+   * component whose parts animate in (a list that reveals its items): a state
+   * aimed at a part still at width 0 has nowhere to land.
+   */
+  before?: number;
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -278,6 +284,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           scheme: testCase.scheme ?? "light",
         },
       );
+      if (testCase.before) await page.waitForTimeout(testCase.before);
       // The state is applied from the outside: Playwright's pointer and focus,
       // not a simulated class.
       try {
