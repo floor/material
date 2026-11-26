@@ -248,7 +248,7 @@ $sheet-overshoot-guard: 32px;
 // $wrap keeps the card's call: the ring and its elevation sit on
 // :focus-visible. A rule that is already the focus selector, or that paints
 // a pseudo, passes $wrap: false and gets only the outline.
-@mixin focus-ring($color: var(--#{v.$prefix}-sys-color-secondary), $width: 3px, $offset: 2px, $wrap: true) {
+@mixin focus-ring($color: var(--#{base.$prefix}-sys-color-secondary), $width: 3px, $offset: 2px, $wrap: true) {
   @if $wrap {
     &:focus-visible {
       outline: $width solid $color;
