@@ -151,6 +151,8 @@ export const assertFixture = (rows: CaseResult[]): void => {
 export type HarnessOptions = {
   /** The `src/components/<name>` folder and the `dist/components/<name>` entry. */
   component: string;
+  /** Load the package entry when a case composes factories from several subpaths. */
+  packageEntry?: boolean;
   /** `chromium` (default), `webkit`, or both through `engines`. */
   engine?: "chromium" | "webkit";
   /** Read every engine and return the rows of each, one block per engine. */
@@ -161,12 +163,13 @@ export type HarnessOptions = {
 
 
 /** `dist/components/<name>/index.js` when it exists, else a bundle of the source. */
-const loadEntry = async (component: string): Promise<{ source: "dist" | "src"; code: string }> => {
-  const built = join(root, "dist", "components", component, "index.js");
+const loadEntry = async (options: HarnessOptions): Promise<{ source: "dist" | "src"; code: string }> => {
+  const folder = options.packageEntry ? [] : ["components", options.component];
+  const built = join(root, "dist", ...folder, "index.js");
   const source = existsSync(built) && statSync(built).size > 0 ? "dist" : "src";
-  const entry = source === "dist" ? built : resolve(root, "src", "components", component, "index.ts");
+  const entry = source === "dist" ? built : resolve(root, "src", ...folder, "index.ts");
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
-  if (!bundle.success) throw new Error(`bundling ${component}: ${bundle.logs.join("\n")}`);
+  if (!bundle.success) throw new Error(`bundling ${options.component}: ${bundle.logs.join("\n")}`);
   return { source, code: await bundle.outputs[0]!.text() };
 };
 
@@ -245,7 +248,7 @@ const releaseState = async (page: Page, state: State) => {
  * runs the cases. The caller closes it.
  */
 export const createConformanceHarness = async (options: HarnessOptions): Promise<Harness> => {
-  const entry = await loadEntry(options.component);
+  const entry = await loadEntry(options);
   entryCode = entry.code;
   const server = serve();
   const url = `http://127.0.0.1:${server.port}`;
