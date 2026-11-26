@@ -308,17 +308,32 @@ export const createPositioner = (
         ? config.container.getBoundingClientRect()
         : { top: 0, left: 0, right: 0, bottom: 0 };
 
-    // Calculate offsets - when in a container, map the opener's viewport rect
-    // back into the container's content space: subtract the container's edge
-    // and add its own scroll, which moved the content under that edge (a menu
-    // written without it landed a scroll's worth above the opener — at
-    // scrollTop 120 on a 120 px scroll, 120 px too high).
+    // The menu is written in its offsetParent's space while a rect is in the
+    // viewport's. A positioned host away from the origin (or an RTL page whose
+    // zoom right-aligns the body) puts that space elsewhere, so the host's own
+    // origin comes out before the value is written; the document's origin is
+    // the viewport's minus the scroll. A container keeps its own rule below.
+    const contextElement = menuElement.offsetParent as HTMLElement | null;
+    const inDocumentSpace =
+      !contextElement || contextElement === document.body || contextElement === document.documentElement;
+    const contextRect = inDocumentSpace ? null : contextElement.getBoundingClientRect();
+    // Viewport <-> write space, for the clamps that live in viewport pixels.
+    const toViewportTop = (value: number): number => (contextRect ? value + contextRect.top : value - scrollY);
+    const fromViewportTop = (value: number): number => (contextRect ? value - contextRect.top : value + scrollY);
+    const toViewportLeft = (value: number): number => (contextRect ? value + contextRect.left : value - scrollX);
+    const fromViewportLeft = (value: number): number => (contextRect ? value - contextRect.left : value + scrollX);
+
+    // When in a container, map the opener's viewport rect back into the
+    // container's content space: subtract the container's edge and add its own
+    // scroll, which moved the content under that edge (a menu written without
+    // it landed a scroll's worth above the opener — at scrollTop 120 on a
+    // 120 px scroll, 120 px too high).
     const offsetX = hasContainer && config.container
       ? config.container.scrollLeft - containerRect.left
-      : scrollX;
+      : contextRect ? -contextRect.left : scrollX;
     const offsetY = hasContainer && config.container
       ? config.container.scrollTop - containerRect.top
-      : scrollY;
+      : contextRect ? -contextRect.top : scrollY;
 
     switch (calculatedPosition) {
       case "top-start":
@@ -408,15 +423,15 @@ export const createPositioner = (
 
     // Top edge spacing - ensure the menu doesn't go above the viewport + padding
     const minTopSpacing = 48; // Minimum distance from top of viewport
-    if (top - scrollY < minTopSpacing) {
-      top = minTopSpacing + scrollY;
+    if (toViewportTop(top) < minTopSpacing) {
+      top = fromViewportTop(minTopSpacing);
     }
 
     // A side menu or a submenu running past the bottom shrinks to fit;
     // a menu above or below its anchor was fitted before it was placed
-    const bottomEdge = top - scrollY + height;
+    const bottomEdge = toViewportTop(top) + height;
     if (fitted === null && bottomEdge > viewportHeight - VIEWPORT_MARGIN) {
-      const available = viewportHeight - (top - scrollY) - VIEWPORT_MARGIN;
+      const available = viewportHeight - toViewportTop(top) - VIEWPORT_MARGIN;
       const shrunk = Math.max(available, Math.min(height, MIN_MENU_HEIGHT));
       const configured = config.maxHeight ? parseInt(config.maxHeight, 10) : NaN;
       menuElement.style.maxHeight = `${Number.isNaN(configured) ? shrunk : Math.min(shrunk, configured)}px`;
@@ -429,14 +444,14 @@ export const createPositioner = (
 
     // Apply final positions, ensuring menu stays within viewport
     // The position is absolute, not fixed, so it must account for scroll
-    const finalTop = Math.max(minTopSpacing + scrollY, top);
-    const finalLeft = Math.max(16 + scrollX, left);
+    const finalTop = Math.max(fromViewportTop(minTopSpacing), top);
+    const finalLeft = Math.max(fromViewportLeft(16), left);
 
     menuElement.style.top = `${finalTop / zoom}px`;
     menuElement.style.left = `${finalLeft / zoom}px`;
 
     // Make sure menu doesn't extend past right edge
-    if (finalLeft - scrollX + menuRect.width > viewportWidth - 16) {
+    if (toViewportLeft(finalLeft) + menuRect.width > viewportWidth - 16) {
       // If we're going past the right edge, set right with fixed distance from edge
       menuElement.style.left = "auto";
       menuElement.style.right = "16px";
