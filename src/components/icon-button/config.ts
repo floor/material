@@ -111,10 +111,12 @@ export const getElementConfig = (config: IconButtonConfig) => {
   }
 
   // Add shape class, the default round included: the selected and pressed
-  // shape rules are keyed on it
-  if (config.shape) {
-    componentClasses.push(`${PREFIX}-icon-button--${config.shape}`);
-  }
+  // shape rules are keyed on it. The shape is derived here rather than read
+  // off the merge: a call that passes the key with an undefined value (a
+  // spread options object) overwrites the default with it, and a missing
+  // --round leaves the container at the default size's radius at every size.
+  const shape = config.shape || ICON_BUTTON_SHAPES.ROUND;
+  componentClasses.push(`${PREFIX}-icon-button--${shape}`);
 
   // Add width class (default is 'default')
   if (config.width && config.width !== "default") {
