@@ -107,6 +107,11 @@
     "status": "public"
   },
   {
+    "name": "ButtonGroupIconVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "ButtonGroupItemConfig",
     "kind": "type",
     "status": "public"

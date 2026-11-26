@@ -211,11 +211,20 @@
       "\"focus\""
     ]
   },
+  "ButtonGroupIconVariant": {
+    "kind": "union",
+    "members": [
+      "\"filled\"",
+      "\"outlined\"",
+      "\"text\"",
+      "\"tonal\""
+    ]
+  },
   "ButtonGroupItemConfig": {
     "kind": "union",
     "members": [
-      "ButtonGroupItemBase & { text: string; }",
-      "ButtonGroupItemBase & { text?: undefined; ariaLabel: string; }"
+      "ButtonGroupItemBase & { text: string; variant?: ButtonGroupVariant | undefined; }",
+      "ButtonGroupItemBase & { text?: undefined; ariaLabel: string; variant?: ButtonGroupIconVariant | undefined; }"
     ]
   },
   "ButtonGroupKind": {
