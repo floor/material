@@ -5947,14 +5947,14 @@ try {
         const focused = await read(listName);
         expectRows(focused, { ...rest, Connected: "16px 16px 16px 16px" }, "Connected");
         const connected = focused.find((row) => row.headline === "Connected");
-        if (!connected?.focusVisible || connected.outlineWidth !== "2px" || connected.outlineStyle !== "solid") {
+        if (!connected?.focusVisible || connected.outlineWidth !== "3px" || connected.outlineStyle !== "solid") {
           failures.push(`${where} Connected focus ring ${connected?.outlineWidth} ${connected?.outlineStyle} visible=${connected?.focusVisible}`);
         }
         await focusItem(listName, "Sound");
         const focusedSelected = await read(listName);
         expectRows(focusedSelected, rest, "Sound");
         const sound = focusedSelected.find((row) => row.headline === "Sound");
-        if (!sound?.focusVisible || sound.outlineWidth !== "2px" || sound.outlineStyle !== "solid") {
+        if (!sound?.focusVisible || sound.outlineWidth !== "3px" || sound.outlineStyle !== "solid") {
           failures.push(`${where} Sound focus ring ${sound?.outlineWidth} ${sound?.outlineStyle} visible=${sound?.focusVisible}`);
         }
         await page.evaluate(() => {

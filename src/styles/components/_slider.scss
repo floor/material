@@ -225,8 +225,7 @@ $component: '#{base.$prefix}-slider';
     }
 
     &:focus-visible::before {
-      outline: 2px solid t.color('secondary');
-      outline-offset: 2px;
+      @include m.focus-ring($wrap: false);
     }
   }
 

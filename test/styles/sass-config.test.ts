@@ -21,9 +21,9 @@ describe("public configure-once Sass", () => {
     expect((css.match(/--[\w-]+:/g) ?? []).length).toBe(5);
   });
 
-  // main moved because the slider's pressed handle joins the 2px width rule
-  // (styles/components/_slider.scss) and a standard list's selected row,
-  // divider inset and leading media changed (styles/components/_list.scss).
+  // main moved because the keyboard focus ring is 3px in Secondary
+  // (styles/abstract/_mixins.scss and the component sheets). The snackbar
+  // close stays 2px in inverse-on-surface (styles/components/_snackbar.scss).
   // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {

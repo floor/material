@@ -215,7 +215,7 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
     (dialog.ownerDocument.activeElement as HTMLElement | null)?.blur();
     if (focus) dialog.querySelector<HTMLElement>(focus)!.focus();
     const pixel = (css: string) => { const probe = document.createElement("i"); probe.style.color = css; document.body.append(probe); const context = document.createElement("canvas").getContext("2d")!; context.fillStyle = getComputedStyle(probe).color; probe.remove(); context.fillRect(0, 0, 1, 1); return context.getImageData(0, 0, 1, 1).data.join(); };
-    const roles = ["primary-container", "on-primary-container", "surface-container-highest", "on-surface", "on-surface-variant", "tertiary-container", "on-tertiary-container", "outline", "primary"];
+    const roles = ["primary-container", "on-primary-container", "surface-container-highest", "on-surface", "on-surface-variant", "tertiary-container", "on-tertiary-container", "outline", "primary", "secondary"];
     const role = (css: string) => { if (css === "rgba(0, 0, 0, 0)") return "transparent"; const value = pixel(css); return roles.find(name => pixel(`var(--mtrl-sys-color-${name})`) === value) ?? css; };
     const part = (name: string) => dialog.querySelector<HTMLElement>(`.mtrl-time-picker__${name}`);
     const box = (name: string) => { const element = part(name); if (!element) return null; const r = element.getBoundingClientRect(), c = getComputedStyle(element); return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width), height: Math.round(r.height), font: `${c.fontSize}/${c.lineHeight}`, fill: role(c.backgroundColor), label: role(c.color), outline: c.outlineStyle === "none" ? "none" : `${c.outlineWidth} ${role(c.outlineColor)}`, border: `${c.borderTopWidth} ${role(c.borderTopColor)}` }; };
@@ -247,10 +247,10 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
   assert.deepEqual([military.hours?.width, military.minutes?.width, military.period], [114, 114, null], "24h dial: 114dp boxes, no AM/PM");
 
   // Input: 96x72 Display Medium fields, labelled Hour and Minute below in Body
-  // Small; the focused one primary-container inside a 2dp primary outline.
+  // Small; the focused one primary-container inside the 3px Secondary ring.
   const input = await measure({ type: "input", format: "12h" }, "ltr", ".mtrl-time-picker__minutes");
   assert.deepEqual([input.hours?.width, input.hours?.height, input.hours?.font, input.hours?.fill, input.hours?.outline], [96, 72, "45px/52px", "surface-container-highest", "none"], "input: an unfocused field");
-  assert.deepEqual([input.minutes?.fill, input.minutes?.label, input.minutes?.outline], ["primary-container", "on-primary-container", "2px primary"], "input: the focused field");
+  assert.deepEqual([input.minutes?.fill, input.minutes?.label, input.minutes?.outline], ["primary-container", "on-primary-container", "3px secondary"], "input: the focused field");
   assert.deepEqual(input.labels, ["Hour 12px on-surface-variant for=true", "Minute 12px on-surface-variant for=true"], "input: Hour and Minute labels, tied to their fields");
   assert.deepEqual([input.period?.width, input.period?.height], [52, 72], "input: AM/PM 52x72dp");
 

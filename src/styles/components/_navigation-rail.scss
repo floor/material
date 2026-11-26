@@ -331,7 +331,7 @@ $snap: 0s linear $midpoint;
     }
   }
 
-  &__toggle:focus-visible { outline: 2px solid t.color('secondary'); outline-offset: -2px; }
+  &__toggle:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
 
   @include m.reduced-motion { &, & *, & *::before, & *::after { transition: none; animation: none; } }
   @include m.high-contrast {
