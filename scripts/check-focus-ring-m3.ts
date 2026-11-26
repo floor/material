@@ -12,6 +12,9 @@
  *   bun run scripts/check-focus-ring-m3.ts
  */
 import assert from "node:assert/strict";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import * as sass from "sass";
 import { webkit, type Browser, type Page } from "playwright";
@@ -76,13 +79,32 @@ const controls = rows.map((row, index) => {
   if (row.name === "time hours") {
     return `<input type="number" class="mtrl-time-picker__hours" data-i="${index}" aria-label="${row.name}">`;
   }
+  if (row.name === "list option") {
+    return `<div id="list-option" data-i="${index}"></div>`;
+  }
   return `<button type="button" class="${className}" data-i="${index}">${row.name}</button>`;
 }).join("\n");
+
+const listDir = await mkdtemp(join(tmpdir(), "focus-ring-list-"));
+const listEntry = join(listDir, "entry.ts");
+await writeFile(listEntry, `
+import createList, { withSingleSelectListbox } from ${JSON.stringify(join(import.meta.dir, "../src/components/list/index.ts"))};
+const slot = document.querySelector<HTMLElement>("#list-option");
+const index = slot?.dataset.i ?? "";
+const list = withSingleSelectListbox(createList({ ariaLabel: "Options", items: [{ headline: "One" }] }));
+slot?.replaceWith(list.element);
+const option = list.element.querySelector<HTMLElement>("[role=option]");
+if (option) option.dataset.i = index;
+`);
+const listBuild = await Bun.build({ entrypoints: [listEntry], target: "browser", format: "esm" });
+if (!listBuild.success) throw new Error(String(listBuild.logs));
+const listJs = await listBuild.outputs[0]!.text();
 
 const html = `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
 <body>
 <span id="secondary" style="color: var(--mtrl-sys-color-secondary)"></span>
 ${controls}
+<script type="module" src="/list.js"></script>
 </body></html>`;
 
 const server = Bun.serve({
@@ -91,6 +113,7 @@ const server = Bun.serve({
   fetch(request) {
     const path = new URL(request.url).pathname;
     if (path === "/styles.css") return new Response(css, { headers: { "Content-Type": "text/css" } });
+    if (path === "/list.js") return new Response(listJs, { headers: { "Content-Type": "text/javascript" } });
     return new Response(html, { headers: { "Content-Type": "text/html" } });
   },
 });
