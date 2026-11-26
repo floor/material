@@ -13,6 +13,8 @@ test("open is synchronous and positioned follows the placement", async () => {
     items: [{ id: "one", text: "One" }, { id: "two", text: "Two" }],
   }));
   menu.on("open", () => { order.push("open"); });
+  // "positioned" is not a MenuEvents member. The string listener is the
+  // same path "submenu-opened" uses.
   menu.on("positioned", () => { order.push("positioned"); });
   await wait();
   menu.open();

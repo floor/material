@@ -527,6 +527,8 @@ const withController =
       // The side and the cap are applied. `open` already fired, before this
       // delay, and stays there. The select scrolls its active option now,
       // against the menu that was just placed.
+      // @internal Not a MenuEvents member, same as "submenu-opened": a name
+      // the string listener accepts, and not part of the public event type.
       component.emit("positioned", { menu: getComponent(), originalEvent: event });
 
       // Step 4: Set up initial focus based on interaction type. A listbox
