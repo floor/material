@@ -72,8 +72,14 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}/`);
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
 
-  const focusAfterTab = async (scrollY: number) => {
-    await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+  const focusAfterTab = async (scrollY: number, wantHidden: boolean) => {
+    // Instant, then wait for the bar. A smooth scroll still reads as hidden
+    // in WebKit when the upward scroll has not finished.
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), scrollY);
+    await page.waitForFunction((hidden) => {
+      const bar = document.querySelector(".mtrl-bottom-app-bar");
+      return !!bar && bar.classList.contains("mtrl-bottom-app-bar--hidden") === hidden;
+    }, wantHidden);
     await page.focus("#before");
     await page.keyboard.press("Tab");
     return page.evaluate(() => {
@@ -88,7 +94,7 @@ try {
     });
   };
 
-  const hidden = await focusAfterTab(300);
+  const hidden = await focusAfterTab(300, true);
   assert.equal(hidden.hidden, true, "scrolling down hides the bar");
   assert.equal(
     hidden.inside,
@@ -97,7 +103,7 @@ try {
   );
   console.log(`hidden: inert ${hidden.inert}, focus ${JSON.stringify(hidden.active)}`);
 
-  const shown = await focusAfterTab(0);
+  const shown = await focusAfterTab(0, false);
   assert.equal(shown.hidden, false, "scrolling up shows the bar");
   assert.equal(
     shown.inside,
