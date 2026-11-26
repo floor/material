@@ -2,6 +2,7 @@
 
 import { createMenuTasks } from "./tasks";
 import { activeElementOf } from "../../../core/dom/focus";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeyboardActions,
   KeyboardMenuState,
@@ -128,6 +129,10 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
    * before this change.
    */
   const inContainer = (menuElement: HTMLElement): boolean => {
+    // A top-layer menu keeps the browser's own focus behaviour whatever its
+    // parent: it is inserted next to its opener, so a nested opener's host is
+    // its parentElement and would read as an explicit container.
+    if (menuElement.hasAttribute("popover") || menuElement.matches(":popover-open")) return false;
     const parent = menuElement.parentElement;
     return !!parent && parent !== document.body && parent !== document.documentElement;
   };
@@ -141,8 +146,11 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     const list = listOf(menuElement);
     const listRect = list.getBoundingClientRect();
     const rect = element.getBoundingClientRect();
-    if (rect.top < listRect.top) list.scrollTop -= listRect.top - rect.top;
-    else if (rect.bottom > listRect.bottom) list.scrollTop += rect.bottom - listRect.bottom;
+    // The rects are in the viewport's pixels, scrollTop in the list's own:
+    // under a CSS zoom a 0.7-scaled list needs the distance divided back.
+    const zoom = effectiveZoom(list);
+    if (rect.top < listRect.top) list.scrollTop -= (listRect.top - rect.top) / zoom;
+    else if (rect.bottom > listRect.bottom) list.scrollTop += (rect.bottom - listRect.bottom) / zoom;
   };
 
   /**
