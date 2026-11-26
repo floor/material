@@ -24,9 +24,14 @@ By contributing to material, you'll help create a lean alternative to heavier fr
    cd material
    ```
 
-2. **Install dependencies**:
+2. **Install dependencies** with Bun 1.4.2, the version CI runs:
    ```bash
-   bun install
+   bun install --frozen-lockfile
+   ```
+
+3. **Install the Playwright browsers** the browser checks drive:
+   ```bash
+   bunx playwright install chromium webkit
    ```
 
 ### Testing Your Components with md3.io
@@ -59,6 +64,23 @@ bun run dev
 4. **Test your changes** - Tests go in the same commit as the code (see [Testing](#testing)), and md3.io shows the component live (see above).
 
 5. **Submit a pull request** - Include a detailed description of your changes and reference any related issues.
+
+### Conformance drift
+
+The library follows Material 3. Where a component looks or measures unlike the specification, the
+difference is a conformance drift.
+
+- **Measure it.** `bun run conformance <component>` returns one JSON row per case — the measured
+  parts, their state, density, zoom and colour scheme — in Chromium, and with `--webkit` in
+  WebKit. `bun run conformance --list` names the fixtures; `scripts/conformance/README.md` covers
+  the cases and the Compose token extractor.
+- **Compare it with the sources.** The Compose token files at the pinned AndroidX commit
+  (`08ec699d`, see the token extractor in that README) and the page on
+  [m3.material.io](https://m3.material.io) with the date you read it. The property tables are not
+  public, so the measurement and the sources are the reference.
+- **Fix what the two agree on**, then add a browser check that fails without the fix and passes
+  with it, and quote both runs in the pull request.
+- Known, open drifts are collected under the issues labelled `conformance-drift`.
 
 ## Development Guidelines
 
@@ -165,6 +187,15 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 3. A change that breaks the public API or the rendered DOM goes in the fragment's **Changed** section with a `Migration:` line.
 4. CI must pass: types, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
+6. Use conventional commits, one idea per commit (`fix(menu): …`), and put the measurement in
+   the pull request body: the check that failed before and the same check passing after, both
+   quoted.
+7. A fix that needs more bytes than a size budget allows raises that budget to the measured value
+   plus 10 B and says so in the pull request. Never raise a budget silently or by more.
+
+Reviewers check that the change follows the sources it names, that the measurement in the body
+reproduces, that the new check fails without the fix, and that the DOM, the CSS and the public API
+are what the fragment says.
 
 Every pull request is reviewed against [REVIEW.md](../REVIEW.md): what failure looks like in this
 repository, how a finding is written, and how the review loop ends.
