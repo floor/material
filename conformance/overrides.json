@@ -1825,20 +1825,20 @@
     }
   },
   "side-sheet/headline-colour/modal/rest": {
-    "reason": "The side sheet has a website spec and no standalone released Compose component.",
+    "reason": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
     "spec": {
-      "value": "OnSurface #1D1B20",
+      "value": "OnSurfaceVariant #49454F",
       "url": "https://m3.material.io/components/side-sheets/specs",
-      "section": "Measurements",
+      "section": "Modal side sheet color",
       "read": "2026-11-26"
     }
   },
   "side-sheet/headline-colour/standard/rest": {
-    "reason": "The side sheet has a website spec and no standalone released Compose component.",
+    "reason": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
     "spec": {
-      "value": "OnSurface #1D1B20",
+      "value": "OnSurfaceVariant #49454F",
       "url": "https://m3.material.io/components/side-sheets/specs",
-      "section": "Measurements",
+      "section": "Standard side sheet color",
       "read": "2026-11-26"
     }
   },
@@ -2279,15 +2279,15 @@
     }
   },
   "tooltip/caret/plain/rest": {
-    "reason": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+    "reason": "The website anatomy shows no caret. Compose defaults caretShape to null. Material paints a caret by default.",
     "spec": {
-      "value": "Present",
-      "url": "https://m3.material.io/components/tooltips/specs",
-      "section": "Measurements",
+      "value": "Absent",
+      "url": "https://m3.material.io/components/tooltips/guidelines",
+      "section": "Anatomy · Plain tooltip",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "Present",
+      "value": "Absent",
       "file": "Tooltip.kt",
       "symbol": "PlainTooltip",
       "line": 345,
@@ -2295,15 +2295,15 @@
     }
   },
   "tooltip/caret/rich/rest": {
-    "reason": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+    "reason": "The website anatomy shows no caret. Compose defaults caretShape to null. Material paints a caret by default.",
     "spec": {
-      "value": "Present",
-      "url": "https://m3.material.io/components/tooltips/specs",
-      "section": "Measurements",
+      "value": "Absent",
+      "url": "https://m3.material.io/components/tooltips/guidelines",
+      "section": "Anatomy · Rich tooltip",
       "read": "2026-11-26"
     },
     "compose": {
-      "value": "Present",
+      "value": "Absent",
       "file": "Tooltip.kt",
       "symbol": "RichTooltip",
       "line": 430,

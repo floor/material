@@ -8677,9 +8677,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OnSurface #1D1B20",
+            "value": "OnSurfaceVariant #49454F",
             "url": "https://m3.material.io/components/side-sheets/specs",
-            "section": "Measurements",
+            "section": "Modal side sheet color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -8690,14 +8690,14 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnSurface #1D1B20",
+            "value": "OnBackground #1D1B20",
             "engines": null
           },
           "status": {
-            "spec": "match",
+            "spec": "drift",
             "compose": "no-value"
           },
-          "note": "The side sheet has a website spec and no standalone released Compose component.",
+          "note": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
           "issue": null
         },
         {
@@ -8708,9 +8708,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "OnSurface #1D1B20",
+            "value": "OnSurfaceVariant #49454F",
             "url": "https://m3.material.io/components/side-sheets/specs",
-            "section": "Measurements",
+            "section": "Standard side sheet color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -8721,14 +8721,14 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnSurface #1D1B20",
+            "value": "OnBackground #1D1B20",
             "engines": null
           },
           "status": {
-            "spec": "match",
+            "spec": "drift",
             "compose": "no-value"
           },
-          "note": "The side sheet has a website spec and no standalone released Compose component.",
+          "note": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
           "issue": null
         },
         {
@@ -11005,19 +11005,19 @@
         },
         {
           "id": "tooltip/caret/plain/rest",
-          "property": "Optional caret",
+          "property": "Default caret",
           "aspect": "other",
           "variant": "plain",
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Present",
-            "url": "https://m3.material.io/components/tooltips/specs",
-            "section": "Measurements",
+            "value": "Absent",
+            "url": "https://m3.material.io/components/tooltips/guidelines",
+            "section": "Anatomy · Plain tooltip",
             "read": "2026-11-26"
           },
           "compose": {
-            "value": "Present",
+            "value": "Absent",
             "file": "Tooltip.kt",
             "symbol": "PlainTooltip",
             "line": 345,
@@ -11028,27 +11028,27 @@
             "engines": null
           },
           "status": {
-            "spec": "match",
-            "compose": "match"
+            "spec": "drift",
+            "compose": "drift"
           },
-          "note": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+          "note": "The website anatomy shows no caret. Compose defaults caretShape to null. Material paints a caret by default.",
           "issue": null
         },
         {
           "id": "tooltip/caret/rich/rest",
-          "property": "Optional caret",
+          "property": "Default caret",
           "aspect": "other",
           "variant": "rich",
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": "Present",
-            "url": "https://m3.material.io/components/tooltips/specs",
-            "section": "Measurements",
+            "value": "Absent",
+            "url": "https://m3.material.io/components/tooltips/guidelines",
+            "section": "Anatomy · Rich tooltip",
             "read": "2026-11-26"
           },
           "compose": {
-            "value": "Present",
+            "value": "Absent",
             "file": "Tooltip.kt",
             "symbol": "RichTooltip",
             "line": 430,
@@ -11059,10 +11059,10 @@
             "engines": null
           },
           "status": {
-            "spec": "match",
-            "compose": "match"
+            "spec": "drift",
+            "compose": "drift"
           },
-          "note": "The website and Compose allow an optional caret. The probe asks for the normal caret.",
+          "note": "The website anatomy shows no caret. Compose defaults caretShape to null. Material paints a caret by default.",
           "issue": null
         },
         {
