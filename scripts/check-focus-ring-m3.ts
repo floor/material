@@ -10,6 +10,8 @@
  *
  *   bun run scripts/check-focus-ring-m3.ts
  */
+export {};
+
 type Colour = "secondary" | "inverse-on-surface" | "inverse-primary";
 
 type Ring = {
