@@ -32,15 +32,17 @@ $component: '#{base.$prefix}-card';
     border-color
   );
 
-  // Focus outline for accessibility - use focus-ring mixin
+  // Focus outline for accessibility - use focus-ring mixin. `$wrap: false`
+  // keeps the mixin from drawing its elevation-1 shadow: a focused card keeps
+  // the variant's FocusContainerElevation, Level 0 for filled and outlined
+  // (FilledCardTokens.kt, OutlinedCardTokens.kt in Compose Material 3 1.5.0).
   &:focus-visible {
-    @include m.focus-ring(t.color('secondary'));
+    @include m.focus-ring(t.color('secondary'), $wrap: false);
   }
 
-  // Focus state class
-  &--focused {
-    @include m.focus-ring(t.color('secondary'));
-  }
+  // The factory marks any focus with `--focused`, a pointer click included, so
+  // a ring on that class alone would paint for a mouse. The keyboard gate is
+  // `:focus-visible`, and the rule above is the only ring.
 
   // Ripple styles for clickable cards
   .ripple {
@@ -65,17 +67,19 @@ $component: '#{base.$prefix}-card';
     background-color: t.color('surface-container-low');
     @include m.elevation(1);
 
-    &:hover.#{$component}--interactive {
+    &:hover.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(2);
+      @include m.state-layer(t.color('on-surface'), 'hover');
     }
 
-    &:active.#{$component}--interactive {
+    &:active.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(1);
       @include m.state-layer(t.color('on-surface'), 'pressed');
     }
 
     &.#{$component}--dragging {
       @include m.elevation(4); // DraggedContainerElevation
+      @include m.state-layer(t.color('on-surface'), 'dragged');
     }
 
     &.#{$component}--state-disabled {
@@ -90,18 +94,19 @@ $component: '#{base.$prefix}-card';
     background-color: t.color('surface-container-highest');
     @include m.elevation(0);
 
-    &:hover.#{$component}--interactive {
+    &:hover.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(1); // HoverContainerElevation
       @include m.state-layer(t.color('on-surface'), 'hover');
     }
 
-    &:active.#{$component}--interactive {
+    &:active.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(0);
       @include m.state-layer(t.color('on-surface'), 'pressed');
     }
 
     &.#{$component}--dragging {
       @include m.elevation(3); // DraggedContainerElevation
+      @include m.state-layer(t.color('on-surface'), 'dragged');
     }
 
     &.#{$component}--state-disabled {
@@ -118,7 +123,7 @@ $component: '#{base.$prefix}-card';
     background-color: t.color('surface');
     @include m.elevation(0);
 
-    &:hover.#{$component}--interactive {
+    &:hover.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(1); // HoverContainerElevation
       @include m.state-layer(t.color('on-surface'), 'hover');
       border-color: t.color('outline-variant'); // HoverOutlineColor
@@ -129,7 +134,7 @@ $component: '#{base.$prefix}-card';
       border-color: t.color('on-surface'); // FocusOutlineColor
     }
 
-    &:active.#{$component}--interactive {
+    &:active.#{$component}--interactive:where(:not(.#{$component}--dragging)) {
       @include m.elevation(0);
       @include m.state-layer(t.color('on-surface'), 'pressed');
       border-color: t.color('outline-variant'); // PressedOutlineColor
@@ -137,6 +142,7 @@ $component: '#{base.$prefix}-card';
 
     &.#{$component}--dragging {
       @include m.elevation(3); // DraggedContainerElevation
+      @include m.state-layer(t.color('on-surface'), 'dragged');
     }
 
     &.#{$component}--state-disabled {

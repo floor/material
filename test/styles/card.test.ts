@@ -60,16 +60,41 @@ describe('card stylesheet', () => {
   test('every variant rises on hover, not only the elevated one', () => {
     // HoverContainerElevation: 2 for elevated, 1 for filled and outlined.
     // Filled and outlined used to take a state layer and no elevation at all.
-    expect(value('.mtrl-card--elevated:hover.mtrl-card--interactive', 'box-shadow')).toBe(LEVEL[2]);
-    expect(value('.mtrl-card--filled:hover.mtrl-card--interactive', 'box-shadow')).toBe(LEVEL[1]);
-    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive', 'box-shadow')).toBe(LEVEL[1]);
+    // The hover yields to a drag, whose own elevation and layer replace it.
+    expect(value('.mtrl-card--elevated:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[2]);
+    expect(value('.mtrl-card--filled:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[1]);
+    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'box-shadow')).toBe(LEVEL[1]);
+  });
+
+  test('every variant paints the hover layer, elevated included', () => {
+    // md.sys.state.hover, 0.08, on the ::before layer; the elevated card used
+    // to paint none.
+    for (const variant of ['elevated', 'filled', 'outlined']) {
+      expect(value(`.mtrl-card--${variant}:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))::before`, 'opacity')).toBe('0.08');
+    }
+  });
+
+  test('every variant paints the dragged layer', () => {
+    // md.sys.state.dragged, 0.16, on the ::before layer.
+    for (const variant of ['elevated', 'filled', 'outlined']) {
+      expect(value(`.mtrl-card--${variant}.mtrl-card--dragging::before`, 'opacity')).toBe('0.16');
+    }
+  });
+
+  test('a focused card keeps its own elevation', () => {
+    // FocusContainerElevation: Level 0 for filled and outlined, Level 1 for
+    // elevated. The focus ring drew an elevation-1 shadow into all three.
+    expect(value('.mtrl-card:focus-visible', 'box-shadow')).toBeUndefined();
+    expect(value('.mtrl-card--focused', 'box-shadow')).toBeUndefined();
+    expect(value('.mtrl-card--filled', 'box-shadow')).toBe('none');
+    expect(value('.mtrl-card--outlined', 'box-shadow')).toBe('none');
   });
 
   test('the outline is outline-variant at rest and on-surface when focused', () => {
     // OutlineColor is OutlineVariant; the darker `outline` role was wrong, and
     // lightening it on hover was the wrong direction as well
     expect(value('.mtrl-card--outlined', 'border')).toBe('1px solid var(--mtrl-sys-color-outline-variant)');
-    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive', 'border-color')).toBe('var(--mtrl-sys-color-outline-variant)');
+    expect(value('.mtrl-card--outlined:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))', 'border-color')).toBe('var(--mtrl-sys-color-outline-variant)');
     // FocusOutlineColor
     expect(value('.mtrl-card--outlined:focus-visible, .mtrl-card--outlined.mtrl-card--focused', 'border-color')).toBe('var(--mtrl-sys-color-on-surface)');
   });
