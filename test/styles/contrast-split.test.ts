@@ -362,11 +362,12 @@ describe("explicit contrast levels are opt-in", () => {
     // inverse-on-surface (styles/abstract/_mixins.scss and the component
     // sheets; styles/components/_snackbar.scss). A clickable search avatar
     // joins the trailing buttons' rule, so a button in either tree is reset
-    // and takes their layer and ring; its layer names OnSurfaceVariant itself,
-    // so supplied content keeps its own colour (styles/components/_search.scss).
+    // and takes that 3px ring and their layers; its layer names
+    // OnSurfaceVariant itself, so supplied content keeps its own colour, and
+    // it draws no second outline (styles/components/_search.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "8b35bc42371ce61c1ce60573432ea8235ed410dce1255653fb25e4c7a1304244",
-      length: 555022,
+      sha256: "5b3f3edf0088693c564c5f865fe3a841e489d2b9f147436e5d7dce84e1a8a60a",
+      length: 554918,
     });
   });
 

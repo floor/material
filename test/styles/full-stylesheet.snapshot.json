@@ -1645,7 +1645,6 @@
     ".mtrl-search--view .mtrl-search__input:focus-visible",
     ".mtrl-search--view .mtrl-search__surface",
     ".mtrl-search__avatar",
-    ".mtrl-search__avatar:focus-visible",
     ".mtrl-search__avatar>*",
     ".mtrl-search__clear-button",
     ".mtrl-search__clear-button,.mtrl-search__trailing-icon",

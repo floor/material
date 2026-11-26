@@ -402,9 +402,9 @@ button.#{$component}__avatar {
         object-fit: cover;
     }
 
-    &:focus-visible {
-        @include m.focus-ring($wrap: false);
-    }
+    // A clickable avatar is a button and draws the trailing buttons' ring
+    // above (the button.#{$component}__avatar:focus-visible rule); it needs
+    // no second outline of its own.
 }
 
 // Trailing items container
