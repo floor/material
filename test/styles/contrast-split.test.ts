@@ -358,11 +358,12 @@ describe("explicit contrast levels are opt-in", () => {
     // A dialog taller than a small window scrolls its content with the
     // headline in view (+240 B; styles/components/_dialog.scss).
     // A clickable search avatar joins the trailing buttons' rule, so a button
-    // in either tree is reset and takes their layer and ring (+299 B;
-    // styles/components/_search.scss).
+    // in either tree is reset and takes their layer and ring; its layer names
+    // OnSurfaceVariant itself, so supplied content keeps its own colour
+    // (+415 B; styles/components/_search.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "f37982e59a8104523f96b81a61c3e332a5591add7476ae78794a1dc75474a86a",
-      length: 554637,
+      sha256: "8d0534b0b0e07ea5082621a4a34ec07db584df3b0c87cfabf2fdeaf45c636ed8",
+      length: 554753,
     });
   });
 

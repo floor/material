@@ -76,6 +76,7 @@ const server = Bun.serve({
 <body>
 <div id="factory"></div>
 <m-search id="element" aria-label="Search" avatar="${avatarAttribute}" avatar-label="Account" trailing-icon="${iconAttribute}"></m-search>
+<button id="reference" type="button">Reference</button>
 <script type="module">
 import "/search.js";
 const m = await (await fetch("/manifest.json")).json();
@@ -112,6 +113,7 @@ type Reading = {
   border: { width: string; style: string };
   background: string;
   alpha: number;
+  color: string;
   padding: { top: string; right: string; bottom: string; left: string };
   appearance: string;
   outline: { width: string; style: string; color: string; offset: string };
@@ -143,6 +145,7 @@ const readAvatar = async (page: Page, which: string): Promise<Reading> =>
       border: { width: cs.borderTopWidth, style: cs.borderTopStyle },
       background: cs.backgroundColor,
       alpha: alphaOf(cs.backgroundColor),
+      color: cs.color,
       padding: { top: cs.paddingTop, right: cs.paddingRight, bottom: cs.paddingBottom, left: cs.paddingLeft },
       appearance: cs.appearance,
       outline: { width: cs.outlineWidth, style: cs.outlineStyle, color: cs.outlineColor, offset: cs.outlineOffset },
@@ -163,6 +166,9 @@ const readTrailingIcon = async (page: Page, which: string): Promise<{ alpha: num
     const el = win.trailingOf(which) as HTMLElement;
     return { alpha: alphaOf(getComputedStyle(el).backgroundColor) };
   }, which);
+
+const referenceColor = async (page: Page): Promise<string> =>
+  page.evaluate(() => getComputedStyle(document.querySelector("#reference")!).color);
 
 const secondaryColor = async (page: Page): Promise<string> =>
   page.evaluate(() => {
@@ -236,6 +242,7 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   });
 
   const secondary = await secondaryColor(page);
+  const reference = await referenceColor(page);
   const rows: string[] = [];
   for (const which of ["element", "factory"] as const) {
     const rest = await readAvatar(page, which);
@@ -251,6 +258,13 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
       `${engine} ${which}: the avatar has no padding (${JSON.stringify(rest.padding)})`,
     );
     assert.equal(rest.appearance, "none", `${engine} ${which}: appearance is none (${rest.appearance})`);
+    // The layer must not repaint supplied content that reads currentColor: the
+    // avatar's own colour stays the button text it had, as a bare button shows.
+    assert.equal(
+      rest.color,
+      reference,
+      `${engine} ${which}: the avatar's colour is the button text, so an inline SVG keeps its resting colour (${rest.color} vs ${reference})`,
+    );
     assert.deepEqual(rest.box, { width: 48, height: 48 }, `${engine} ${which}: the avatar keeps its 48x48 box (${rest.box.width}x${rest.box.height})`);
     assert.deepEqual(rest.image, { width: 30, height: 30 }, `${engine} ${which}: the image stays 30x30 (${rest.image.width}x${rest.image.height})`);
 

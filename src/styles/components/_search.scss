@@ -323,7 +323,6 @@ button.#{$component}__avatar {
     padding: 0;
     border: none;
     border-radius: 50%;
-    appearance: none;
     // A shadow root does not get the page's font reset.
     font: inherit;
     background-color: color-mix(in srgb, currentColor var(--#{$component}-layer), transparent);
@@ -342,6 +341,15 @@ button.#{$component}__avatar {
     }
 }
 
+// The avatar's layer is OnSurfaceVariant while its own colour stays what the
+// content was drawn in: the state layer must not repaint a supplied inline SVG
+// that reads currentColor. Its colour is therefore the user agent's button
+// text (as before this rule), and only the background names the token.
+button.#{$component}__avatar {
+    appearance: none;
+    background-color: color-mix(in srgb, #{t.color("on-surface-variant")} var(--#{$component}-layer), transparent);
+}
+
 // The glyphs are 24dp; the avatar's child keeps the 30dp the rule below gives it.
 .#{$component}__leading-icon svg,
 .#{$component}__clear-button svg,
@@ -356,8 +364,7 @@ button.#{$component}__avatar {
 }
 
 .#{$component}__clear-button,
-.#{$component}__trailing-icon,
-button.#{$component}__avatar {
+.#{$component}__trailing-icon {
     color: t.color("on-surface-variant");
 }
 
