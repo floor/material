@@ -1,170 +1,120 @@
 #!/usr/bin/env bun
 /**
- * The keyboard focus ring is 3px, in Secondary, at the offset the inventory
- * records. m3.material.io/foundations/interaction/states/applying-states,
+ * The keyboard focus ring, read from the conformance fixtures. Each row is
+ * mounted by the component's factory. The harness tabs to it, and WebKit uses
+ * Alt+Tab. m3.material.io/foundations/interaction/states/applying-states,
  * "Keyboard focus indicator", read 2026-11-26.
  *
- * Drift rows and the two Search parts that had no author ring are focused
- * with Tab. Matching rows are the no-change guard: the same width, colour
- * and offset. On main the drift rows are 2px, or have no author ring, so
- * this fails there. Run on main and on the branch, Chromium and WebKit:
+ * On main the drifting rows are still 2px, or a different colour, so this
+ * fails there. Chromium and WebKit:
  *
  *   bun run scripts/check-focus-ring-m3.ts
  */
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
-import * as sass from "sass";
-import { webkit, type Browser, type Page } from "playwright";
+type Colour = "secondary" | "inverse-on-surface" | "inverse-primary";
 
-import { launchChromium } from "./browser-profile";
-import { directionArmsPrelude, sassOptions } from "./build-styles";
-
-type Row = { name: string; selector: string; offset: "2px" | "-3px"; pseudo?: "::before" | "::after"; guard?: boolean };
-
-// One element per drifting paint rule, then the two Search parts, then one
-// element per matching outline rule. Rows that share a rule are covered by
-// that rule's element.
-const rows: Row[] = [
-  { name: "card", selector: ".mtrl-card", offset: "2px" },
-  { name: "icon button", selector: ".mtrl-icon-button", offset: "2px" },
-  { name: "fab", selector: ".mtrl-fab", offset: "2px" },
-  { name: "extended fab", selector: ".mtrl-extended-fab", offset: "2px" },
-  { name: "date input", selector: ".mtrl-datepicker__input", offset: "-3px" },
-  { name: "date mode toggle", selector: ".mtrl-datepicker__mode-toggle", offset: "-3px" },
-  { name: "date month", selector: ".mtrl-datepicker__month", offset: "2px", pseudo: "::before" },
-  { name: "time hours", selector: ".mtrl-time-picker__hours", offset: "-3px" },
-  { name: "time period", selector: ".mtrl-time-picker__period-am", offset: "-3px" },
-  { name: "time mode switch", selector: ".mtrl-time-picker__toggle-type", offset: "2px" },
-  { name: "time cancel", selector: ".mtrl-time-picker__cancel", offset: "2px" },
-  { name: "slider handle", selector: ".mtrl-slider__handle", offset: "2px", pseudo: "::before" },
-  { name: "dialog close", selector: ".mtrl-dialog__header-close", offset: "2px" },
-  { name: "list action", selector: ".mtrl-list__action", offset: "-3px" },
-  { name: "list option", selector: ".mtrl-list__item", offset: "-3px" },
-  { name: "rail toggle", selector: ".mtrl-navigation-rail__toggle", offset: "-3px" },
-  { name: "field trailing icon", selector: ".mtrl-text-field__trailing-icon", offset: "2px" },
-  { name: "search expanded input", selector: ".mtrl-search--view .mtrl-search__input", offset: "2px" },
-  { name: "search avatar", selector: ".mtrl-search__avatar", offset: "2px" },
-  { name: "button", selector: ".mtrl-button", offset: "2px", guard: true },
-  { name: "sheet surface", selector: ".mtrl-bottom-sheet__container", offset: "-3px", guard: true },
-  { name: "sheet handle", selector: ".mtrl-bottom-sheet__handle", offset: "-3px", guard: true },
-  { name: "carousel link", selector: ".mtrl-carousel__button", offset: "2px", guard: true },
-  { name: "checkbox", selector: ".mtrl-checkbox__icon", offset: "2px", pseudo: "::before", guard: true },
-  { name: "chip", selector: ".mtrl-chip__action", offset: "2px", guard: true },
-  { name: "date day", selector: ".mtrl-datepicker__day", offset: "2px", pseudo: "::after", guard: true },
-  { name: "drawer item", selector: ".mtrl-drawer__item", offset: "2px", guard: true },
-  { name: "listbox option", selector: ".mtrl-listbox__option", offset: "-3px", guard: true },
-  { name: "menu item", selector: ".mtrl-menu__item", offset: "-3px", guard: true },
-  { name: "menu surface", selector: ".mtrl-menu", offset: "-3px", guard: true },
-  { name: "search clear", selector: ".mtrl-search__clear-button", offset: "2px", guard: true },
-  { name: "search suggestion", selector: ".mtrl-search__suggestion-item", offset: "-3px", guard: true },
-  { name: "side sheet", selector: ".mtrl-side-sheet__container", offset: "-3px", guard: true },
-  { name: "side sheet close", selector: ".mtrl-side-sheet__close", offset: "2px", guard: true },
-  { name: "switch", selector: ".mtrl-switch__track", offset: "2px", guard: true },
-  { name: "dial number", selector: ".mtrl-time-picker__dial-number", offset: "2px", guard: true },
-];
-
-const css = sass.compileString(
-  directionArmsPrelude() + (await Bun.file("src/styles/main.scss").text()),
-  sassOptions(),
-).css;
-
-const controls = rows.map((row, index) => {
-  const className = row.selector.replace(/^\./, "").replace(/\./g, " ");
-  if (row.name === "search expanded input") {
-    return `<span class="mtrl-search mtrl-search--view"><input class="mtrl-search__input" data-i="${index}" aria-label="${row.name}"></span>`;
-  }
-  if (row.name === "time hours") {
-    return `<input type="number" class="mtrl-time-picker__hours" data-i="${index}" aria-label="${row.name}">`;
-  }
-  if (row.name === "list option") {
-    return `<div id="list-option" data-i="${index}"></div>`;
-  }
-  if (row.name === "checkbox") {
-    return `<div id="checkbox" data-i="${index}"></div>`;
-  }
-  return `<button type="button" class="${className}" data-i="${index}">${row.name}</button>`;
-}).join("\n");
-
-const listDir = await mkdtemp(join(tmpdir(), "focus-ring-list-"));
-const listEntry = join(listDir, "entry.ts");
-await writeFile(listEntry, `
-import createList, { withSingleSelectListbox } from ${JSON.stringify(join(import.meta.dir, "../src/components/list/index.ts"))};
-import createCheckbox from ${JSON.stringify(join(import.meta.dir, "../src/components/checkbox/index.ts"))};
-const slot = document.querySelector<HTMLElement>("#list-option");
-const listIndex = slot?.dataset.i ?? "";
-const list = withSingleSelectListbox(createList({ ariaLabel: "Options", items: [{ headline: "One" }] }));
-slot?.replaceWith(list.element);
-const option = list.element.querySelector<HTMLElement>("[role=option]");
-if (option) option.dataset.i = listIndex;
-const box = document.querySelector<HTMLElement>("#checkbox");
-const boxIndex = box?.dataset.i ?? "";
-const checkbox = createCheckbox({ label: "Agree" });
-box?.replaceWith(checkbox.element);
-const icon = checkbox.element.querySelector<HTMLElement>(".mtrl-checkbox__icon");
-if (icon) icon.dataset.i = boxIndex;
-`);
-const listBuild = await Bun.build({ entrypoints: [listEntry], target: "browser", format: "esm" });
-if (!listBuild.success) throw new Error(String(listBuild.logs));
-const listJs = await listBuild.outputs[0]!.text();
-
-const html = `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
-<body>
-<span id="secondary" style="color: var(--mtrl-sys-color-secondary)"></span>
-${controls}
-<script type="module" src="/list.js"></script>
-</body></html>`;
-
-const server = Bun.serve({
-  hostname: "127.0.0.1",
-  port: 0,
-  fetch(request) {
-    const path = new URL(request.url).pathname;
-    if (path === "/styles.css") return new Response(css, { headers: { "Content-Type": "text/css" } });
-    if (path === "/list.js") return new Response(listJs, { headers: { "Content-Type": "text/javascript" } });
-    return new Response(html, { headers: { "Content-Type": "text/html" } });
-  },
-});
-
-const readRing = (page: Page, index: number, pseudo?: string) => page.evaluate(({ index, pseudo }) => {
-  const host = document.querySelector<HTMLElement>(`[data-i="${index}"]`)!;
-  const target = pseudo ? host : host;
-  const style = getComputedStyle(target, pseudo ?? undefined);
-  return {
-    width: style.outlineWidth,
-    style: style.outlineStyle,
-    color: style.outlineColor,
-    offset: style.outlineOffset,
-    secondary: getComputedStyle(document.querySelector("#secondary")!).color,
-  };
-}, { index, pseudo });
-
-const run = async (page: Page, engine: string) => {
-  await page.setViewportSize({ width: 1100, height: 820 });
-  await page.goto(`http://127.0.0.1:${server.port}/`);
-  for (const [index, row] of rows.entries()) {
-    await page.keyboard.press("Tab");
-    const ring = await readRing(page, index, row.pseudo);
-    const where = `${engine} ${row.guard ? "guard" : "drift"} ${row.name}`;
-    assert.equal(ring.width, "3px", `${where} width ${ring.width}`);
-    assert.equal(ring.style, "solid", `${where} style ${ring.style}`);
-    assert.equal(ring.color, ring.secondary, `${where} colour ${ring.color}, secondary ${ring.secondary}`);
-    assert.equal(ring.offset, row.offset, `${where} offset ${ring.offset}`);
-  }
-  console.log(`${engine}: ${rows.length} focus rings are 3px Secondary at the recorded offset`);
+type Ring = {
+  /** `scripts/conformance/<component>.ts` */
+  component: string;
+  /** Passed as `--case=`, matched against the fixture's row id. */
+  filter: string;
+  /** The part the fixture reads that paints the ring. */
+  part: string;
+  width: "3px" | "2px";
+  offset: "2px" | "-3px";
+  color: Colour;
 };
 
-const chromium = await launchChromium({ headless: true });
-const webkitBrowser: Browser = await webkit.launch({ headless: true });
-try {
-  await run(await chromium.newPage(), "chromium");
-  await run(await webkitBrowser.newPage(), "webkit");
-} finally {
-  await chromium.close();
-  await webkitBrowser.close();
-  server.stop();
+// One fixture row per drifting paint, plus a matching row as a guard.
+// The snackbar close is the documented inverse-surface exception.
+const rings: Ring[] = [
+  { component: "button", filter: "filled/m/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
+  { component: "icon-button", filter: "filled/m/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
+  { component: "fab", filter: "primary-container/default/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
+  { component: "extended-fab", filter: "primary-container/small/focus", part: "root", width: "3px", offset: "2px", color: "secondary" },
+  { component: "card", filter: "elevated/light/focus", part: "card", width: "3px", offset: "2px", color: "secondary" },
+  { component: "card", filter: "elevated/dark/focus", part: "card", width: "3px", offset: "2px", color: "secondary" },
+  { component: "checkbox", filter: "unselected/focus", part: "state layer", width: "3px", offset: "2px", color: "secondary" },
+  { component: "list", filter: "standard/light/unselected/focus", part: "action", width: "3px", offset: "-3px", color: "secondary" },
+  { component: "list", filter: "standard/listbox/focus", part: "action", width: "3px", offset: "-3px", color: "secondary" },
+  { component: "slider", filter: "xs/focus/light", part: "handleInk", width: "3px", offset: "2px", color: "secondary" },
+  { component: "text-field", filter: "filled/trailing-focus", part: "trailing", width: "3px", offset: "2px", color: "secondary" },
+  { component: "text-field", filter: "outlined/trailing-focus", part: "trailing", width: "3px", offset: "2px", color: "secondary" },
+  { component: "dialog", filter: "900/medium/light/focus", part: "action", width: "3px", offset: "2px", color: "secondary" },
+  { component: "dialog", filter: "900/medium/light/close-focus", part: "close", width: "3px", offset: "2px", color: "secondary" },
+  { component: "snackbar", filter: "action/focus", part: "control", width: "3px", offset: "2px", color: "inverse-primary" },
+  { component: "snackbar", filter: "close/focus", part: "control", width: "2px", offset: "2px", color: "inverse-on-surface" },
+  { component: "search", filter: "contained/bar/light/focus", part: "header", width: "3px", offset: "2px", color: "secondary" },
+  { component: "search", filter: "contained/docked/light/focus", part: "input", width: "3px", offset: "2px", color: "secondary" },
+  { component: "search", filter: "contained/bar/light/avatar-focus", part: "avatar", width: "3px", offset: "2px", color: "secondary" },
+  { component: "timepicker", filter: "input/hours/focus/light", part: "hours", width: "3px", offset: "-3px", color: "secondary" },
+  { component: "timepicker", filter: "input/period-selected/focus/light", part: "selectedPeriod", width: "3px", offset: "-3px", color: "secondary" },
+];
+
+const COLOURS: Record<"light" | "dark", Record<Colour, string>> = {
+  light: {
+    secondary: "rgb(98, 91, 113)",
+    "inverse-on-surface": "rgb(245, 239, 247)",
+    "inverse-primary": "rgb(208, 188, 255)",
+  },
+  dark: {
+    secondary: "rgb(204, 194, 220)",
+    "inverse-on-surface": "rgb(50, 47, 53)",
+    "inverse-primary": "rgb(103, 80, 164)",
+  },
+};
+
+const canon = (color: string) => {
+  const match = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/.exec(color);
+  if (!match) return color.replace(/\s/g, "").toLowerCase();
+  return `rgb(${Math.round(Number(match[1]))}, ${Math.round(Number(match[2]))}, ${Math.round(Number(match[3]))})`;
+};
+
+const schemeOf = (id: string): "light" | "dark" => (/(?:^|\/)dark(?:\/|$)/.test(id) ? "dark" : "light");
+
+type Row = {
+  id: string;
+  parts: Record<string, { style: Record<string, string> } | null>;
+};
+
+const measure = async (component: string, filter: string, webkit: boolean): Promise<Row[]> => {
+  const child = Bun.spawn([
+    process.execPath,
+    `scripts/conformance/${component}.ts`,
+    `--case=${filter}`,
+    ...(webkit ? ["--webkit"] : []),
+  ], { stdout: "pipe", stderr: "pipe" });
+  const [stdout, stderr] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+  ]);
+  const code = await child.exited;
+  if (code !== 0) {
+    throw new Error(`${component} ${filter}${webkit ? " webkit" : ""} failed\n${stderr || stdout}`);
+  }
+  const parsed = JSON.parse(stdout) as { rows?: Row[] };
+  if (!parsed.rows?.length) throw new Error(`${component} ${filter} returned no rows`);
+  return parsed.rows;
+};
+
+for (const engine of [false, true]) {
+  const name = engine ? "webkit" : "chromium";
+  for (const ring of rings) {
+    const rows = await measure(ring.component, ring.filter, engine);
+    for (const row of rows) {
+      const part = row.parts[ring.part];
+      const where = `${name} ${ring.component} ${row.id} ${ring.part}`;
+      assert.ok(part, `${where} was not measured`);
+      const style = part.style;
+      assert.equal(style.outlineWidth, ring.width, `${where} width ${style.outlineWidth}`);
+      assert.equal(style.outlineStyle, "solid", `${where} style ${style.outlineStyle}`);
+      assert.equal(style.outlineOffset, ring.offset, `${where} offset ${style.outlineOffset}`);
+      const expected = COLOURS[schemeOf(row.id)][ring.color];
+      assert.equal(canon(style.outlineColor), expected, `${where} colour ${style.outlineColor}`);
+    }
+    console.log(`${name}: ${ring.component} ${ring.filter} (${rows.length})`);
+  }
 }
 
-console.log("Passed: drift rows and the matching guard use the M3 focus ring.");
+console.log("Passed: the conformance focus rows use the M3 focus ring.");
