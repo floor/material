@@ -148,7 +148,7 @@
     "components/fab/fab.js": "2cc7cb5ea680e90152ec4dda7a2862923017e9c6b6eddfa6b655754e8da1736c",
     "components/fab/index.js": "554a1e3157badc6c1db8c3be36e682412346129728e0555aaf78642b1f77ac1c",
     "components/icon-button/api.js": "f0f23cf80ba1095980467ab771caad2cbefc64061aa3fd71403da9224ea6f4f8",
-    "components/icon-button/config.js": "9b6a62d9af4df18f7806525ec5652dfae4c11e64c98339ab89f79d962d345fcc",
+    "components/icon-button/config.js": "be269fee6f6c2a0e36dec77a2bdfb6a945b052c087c7c1a35efbf6f355b0df3c",
     "components/icon-button/constants.js": "4c6f06a4da8a94a6788020d37950bd9a51c3495550a9634f76c09dddb599b7d9",
     "components/icon-button/features/toggle.js": "7264b2f138d27fb129273753c875ff4a0792d364d333f4e9d65b55ba35130c3b",
     "components/icon-button/icon-button.js": "f8cf81fd175346b49cfbea32d09cbdca8d4e262329cd67948a09c6b8b6d46f24",
