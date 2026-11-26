@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.16.5",
+  "version": "3.16.6",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -629,6 +629,7 @@
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
+    "conformance": "bun run scripts/conformance/run.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "name:check": "bun scripts/package-name.ts material --check",
     "check:dist-tags": "bun run scripts/check-dist-tags.ts",
