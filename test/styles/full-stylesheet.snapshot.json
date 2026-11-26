@@ -2294,6 +2294,7 @@
     "@media(forced-colors: active)",
     "@media(max-width: 1279px)",
     "@media(max-width: 1919px)",
+    "@media(max-width: 487.98px)",
     "@media(max-width: 599px)",
     "@media(max-width: 600px)",
     "@media(max-width: 959px)",

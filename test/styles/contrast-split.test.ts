@@ -352,9 +352,12 @@ describe("explicit contrast levels are opt-in", () => {
     // The slider's pressed handle joins the 2px width rule (+38 B;
     // styles/components/_slider.scss), and the container's own press narrows
     // the handle from the first frame (+400 B; same file).
+    // A time picker holding seconds takes its row's width, and below 488px
+    // the row shrinks rather than clips (+375 B;
+    // styles/components/_timepicker.scss).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "d7a8448d9d88008b1e2ab0c0f44f7ea894b29cbea0a4af23a789656fea386a80",
-      length: 553723,
+      sha256: "629c736b7e0f5ece2ec490c4fabac704c1b728c3d9d25c2191eaf08951cbdf23",
+      length: 554098,
     });
   });
 
