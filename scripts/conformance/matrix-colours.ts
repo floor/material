@@ -19,6 +19,7 @@ export function parseColour(value: string): { hex: string; opacity: number } {
 
 export function readColourRoles(readings: ResolvedColours[], palettes: ThemePalettes) {
   const colours = readings.map(reading => colourThemes.map(theme => parseColour(reading[theme])));
+  const transparent = colours.every(reading => reading.every(value => value.opacity === 0));
   const roles = Object.keys(palettes.light).filter(role => colours.every(reading =>
     colourThemes.every((theme, index) => {
       const colour = reading[index]!;
@@ -34,5 +35,5 @@ export function readColourRoles(readings: ResolvedColours[], palettes: ThemePale
     };
     return { light: hex(0), dark: hex(1), seed: hex(2) };
   });
-  return { role, resolved };
+  return { role, transparent, resolved };
 }

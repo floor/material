@@ -23,7 +23,7 @@ describe("matrix colour roles", () => {
   test("compares the colour role independently of opacity", () => {
     const translucent = { ...primary, light: "color(srgb 0.403922 0.313725 0.643137 / 0.12)" };
     expect(readColourRoles([primary, translucent], palettes)).toEqual({
-      role: "Primary",
+      role: "Primary", transparent: false,
       resolved: [
         { light: "#6750A4", dark: "#D0BCFF", seed: "#006C4C" },
         { light: "#6750A4", dark: "#D0BCFF", seed: "#006C4C" },
@@ -34,8 +34,14 @@ describe("matrix colour roles", () => {
   test("retains unassigned colours as measured hex", () => {
     const fixed = { light: "rgb(103, 80, 164)", dark: "rgba(103, 80, 164, 0.12)", seed: "rgba(0, 0, 0, 0)" };
     expect(readColourRoles([fixed], palettes)).toEqual({
-      role: null,
+      role: null, transparent: false,
       resolved: [{ light: "#6750A4", dark: "#6750A41F", seed: "#00000000" }],
     });
+  });
+
+  test("recognises literal transparency only when every profile and engine has zero alpha", () => {
+    const clear = { light: "rgba(0, 0, 0, 0)", dark: "rgba(17, 12, 6, 0)", seed: "color(srgb 0 0 0 / 0)" };
+    expect(readColourRoles([clear, clear], palettes).transparent).toBe(true);
+    expect(readColourRoles([clear, { ...clear, seed: "rgba(0, 0, 0, 0.001)" }], palettes).transparent).toBe(false);
   });
 });

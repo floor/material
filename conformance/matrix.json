@@ -8759,7 +8759,7 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ExposedDropdownMenu.kt#L676"
           },
           "material": {
-            "value": "#00000000",
+            "value": "transparent",
             "engines": null,
             "resolved": {
               "light": "#00000000",
@@ -8769,9 +8769,9 @@
           },
           "status": {
             "spec": "no-value",
-            "compose": "drift"
+            "compose": "match"
           },
-          "note": "The released palette uses a transparent field container. The measured colour does not resolve to a unique theme role across all three themes.",
+          "note": "The released palette uses a transparent field container.",
           "issue": null
         },
         {
@@ -11001,7 +11001,7 @@
             }
           },
           "material": {
-            "value": "#00000000",
+            "value": "transparent",
             "engines": null,
             "resolved": {
               "light": "#00000000",
@@ -11013,7 +11013,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The measured colour does not resolve to a unique theme role across all three themes.",
+          "note": "",
           "issue": null
         },
         {
@@ -11047,7 +11047,7 @@
             }
           },
           "material": {
-            "value": "#00000000",
+            "value": "transparent",
             "engines": null,
             "resolved": {
               "light": "#00000000",
@@ -11059,7 +11059,7 @@
             "spec": "drift",
             "compose": "drift"
           },
-          "note": "The measured colour does not resolve to a unique theme role across all three themes.",
+          "note": "",
           "issue": null
         },
         {

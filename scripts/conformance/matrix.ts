@@ -98,10 +98,11 @@ function compareColour(probe: { part: string; style: string }, rows: [CaseResult
     };
     return { light: read("light"), dark: read("dark"), seed: read("seed") };
   });
-  const { role, resolved } = readColourRoles(readings, palettes);
+  const { role, transparent, resolved } = readColourRoles(readings, palettes);
   const [chromium, webkit] = resolved as [ResolvedColours, ResolvedColours];
+  const comparison = role ?? (transparent ? "transparent" : null);
   const material: MaterialValue = {
-    value: role ?? chromium.light,
+    value: comparison ?? chromium.light,
     engines: chromium.light === webkit.light ? null : { chromium: chromium.light, webkit: webkit.light },
     resolved: chromium,
     ...(colourThemes.some(theme => chromium[theme] !== webkit[theme]) ? {
@@ -109,8 +110,8 @@ function compareColour(probe: { part: string; style: string }, rows: [CaseResult
     } : {}),
   };
   const status = (reference: string | null): Status =>
-    reference === null ? "no-value" : role === reference ? "match" : "drift";
-  const note = role === null ? "The measured colour does not resolve to a unique theme role across all three themes." : "";
+    reference === null ? "no-value" : comparison === reference ? "match" : "drift";
+  const note = role === null && !transparent ? "The measured colour does not resolve to a unique theme role across all three themes." : "";
   return { material, palettes, status, note };
 }
 
