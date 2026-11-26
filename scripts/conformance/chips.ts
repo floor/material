@@ -19,12 +19,17 @@ const parts = [
   { name: "label", selector: ".mtrl-chip__label" },
   { name: "leading icon", selector: ".mtrl-chip__leading-icon" },
   { name: "checkmark", selector: ".mtrl-chip__checkmark" },
+  { name: "trailing icon", selector: ".mtrl-chip__trailing-icon" },
+  { name: "avatar", selector: ".mtrl-chip__avatar, [class*=avatar]" },
+  { name: "chip ::after", selector: ".mtrl-chip", pseudo: "::after" as const },
+  { name: "action ::before", selector: ".mtrl-chip__action", pseudo: "::before" as const },
 ];
 
-type MountOptions = { kind?: string; selected?: boolean; disabled?: boolean };
+type MountOptions = { kind?: string; selected?: boolean; disabled?: boolean; icon?: boolean; trailing?: boolean; avatar?: boolean };
 
-const mount = (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLElement, config?: unknown) => {
-  const { kind = "assist", selected, disabled } = (config ?? {}) as MountOptions;
+const mount = (mtrl: Record<string, (...args: unknown[]) => unknown>, host: HTMLElement, config?: unknown) => {
+  const { kind = "assist", selected, disabled, icon, trailing, avatar } = (config ?? {}) as MountOptions;
+  const iconSvg = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
   const creators: Record<string, string> = {
     assist: "createAssistChip",
     filter: "createFilterChip",
@@ -37,6 +42,9 @@ const mount = (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLEl
     ariaLabel: kind,
     ...(selected ? { selected: true } : {}),
     ...(disabled ? { disabled: true } : {}),
+    ...(icon ? { icon: iconSvg } : {}),
+    ...(trailing ? { trailingIcon: iconSvg, removeLabel: "Remove" } : {}),
+    ...(avatar ? { avatar: iconSvg } : {}),
   });
   host.append(chip.element);
 };
@@ -57,6 +65,13 @@ for (const kind of ["filter", "input"] as const) {
   cases.push({ id: `${kind}/selected/disabled`, state: "disabled", mount, config: { kind, selected: true, disabled: true }, parts });
   cases.push({ id: `${kind}/selected/rest/dark`, scheme: "dark", mount, config: { kind, selected: true }, parts });
 }
+
+// The icon rows: leading icon, trailing icon/remove (input), avatar (input).
+cases.push({ id: "assist/icon/rest", mount, config: { kind: "assist", icon: true }, parts });
+cases.push({ id: "filter/icon/selected/rest", mount, config: { kind: "filter", icon: true, selected: true }, parts });
+cases.push({ id: "input/avatar/rest", mount, config: { kind: "input", avatar: true }, parts });
+cases.push({ id: "input/trailing/rest", mount, config: { kind: "input", trailing: true }, parts });
+cases.push({ id: "suggestion/icon/rest", mount, config: { kind: "suggestion", icon: true }, parts });
 
 const filter = process.argv[2];
 const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
