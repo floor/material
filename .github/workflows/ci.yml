@@ -114,14 +114,9 @@ jobs:
               README.md|npm-readme.md|test/*|scripts/check-*|scripts/generate-adapters.ts|scripts/fixtures/*|scripts/conformance/*|scripts/comparators/*|.github/workflows/*|.github/actions/*)
                 hit_checks=true ;;
             esac
-            # The public issues JSON. No browser group and no comparator runs it.
-            neutral=false
-            case "$file" in
-              scripts/conformance-issues.ts) neutral=true ;;
-            esac
             if [ "$hit_library" = true ]; then library=true; fi
             if [ "$hit_checks" = true ]; then checks=true; fi
-            if [ "$hit_library" = false ] && [ "$hit_checks" = false ] && [ "$doc" = false ] && [ "$neutral" = false ]; then
+            if [ "$hit_library" = false ] && [ "$hit_checks" = false ] && [ "$doc" = false ]; then
               echo "unclassified $file: running the browser jobs"
               checks=true
             fi
