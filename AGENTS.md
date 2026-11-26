@@ -96,9 +96,9 @@ $ bun run conformance divider
 ```
 
 Compose tokens come from the pinned AndroidX checkout; `scripts/conformance/README.md` has the
-clone commands and the `COMPOSE_TOKENS_DIR` setup. Each component's page on
-[md3.io](https://md3.io/components/) carries its *Known issues* section, the published view of the
-conformance measurements.
+clone commands and the `COMPOSE_TOKENS_DIR` setup. Where a component's page on
+[md3.io](https://md3.io/components/) lists a *Known issues* section, that is the published view of
+the conformance measurements.
 
 ## Material 3 sources and their pins
 
@@ -146,7 +146,8 @@ one of the `browser` groups in `ci.yml` and to the list in `test/build/ci-comman
 - Conventional commits, one idea per commit, titled `fix(scope): …`, `feat(scope): …` and so on.
   A change driven by the specification names its Material source in the commit body.
 - Plain merge commits only; squash is never used.
-- Every change ships with a `.changes/<slug>.md` fragment; only a release pull request edits
+- A change under `src/` ships with a `.changes/<slug>.md` fragment, and `bun run changelog:check`
+  fails without one; a documentation-only change needs none. Only a release pull request edits
   `CHANGELOG.md`, and it deletes the fragments it assembles.
 - A pull request body carries the measurement: the failing check before and the passing one
   after, with both runs quoted, and any size ceiling it raised with its measured figure.

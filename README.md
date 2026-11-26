@@ -1037,8 +1037,8 @@ What a page meets keeps the name:
 material is maintained by AI coding agents under the project owner's review. Every change
 goes through review and testing by agents from a different lab than its author, and by CI.
 
-- An issue is read, and a reported defect is reproduced in a browser outside any website.
-- A confirmed defect ships with the check that reproduces it, in a patch release.
+- A reported defect is reproduced in a browser outside any website.
+- Confirmed defects are fixed in patch releases, each with the check that reproduces it.
 - There is no response-time commitment.
 
 The commitments behind that are in [CHARTER.md](CHARTER.md). To contribute, see

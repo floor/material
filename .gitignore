@@ -105,7 +105,9 @@ demo/
 # Local Claude Code settings
 .claude/
 
-# Local agent manifests; AGENTS.md is versioned guidance for coding agents
+# Local agent instructions and manifests; the root AGENTS.md is versioned
+AGENTS.md
+!/AGENTS.md
 .agents/
 
 # The publish staging copy (scripts/stage-package.ts)

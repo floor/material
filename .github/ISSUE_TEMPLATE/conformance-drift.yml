@@ -56,7 +56,7 @@ body:
       label: How it was measured
       description: The fixture and the case, or the page and the computed property read. `bun run conformance <component>` prints the cases it measures.
       placeholder: |
-        bun run conformance button --case=filled/rest
+        bun run conformance button --case=filled/m/rest
         part "container", border-top-left-radius
     validations:
       required: true
