@@ -29,10 +29,10 @@ Menus, selects and carousel drags follow the page zoom, time pickers with second
 - **Icon button resting shape.** An options object with `shape: undefined` dropped the default round shape and left every size with a 20 px radius. The button now resolves the shape after merging its options, so each size keeps its round radius and its selected and pressed shape changes ([#476](https://github.com/floor/material/pull/476)).
 - **A dialog taller than a small window.** Bottom alignment could push a tall dialog's headline and the start of its content above the window, where scrolling could never reach them. The dialog now fits within the window, with its content scrolling between the header and actions. A dialog that fits still sits at the bottom ([#478](https://github.com/floor/material/pull/478)).
 
-The package job on the merged tree measured **921,829 B** compressed,
+The push-to-main package job measured **921,831 B** compressed,
 **5,251,059 B** unpacked and **1,303 files**, with **135,579 B** of
 gzip-compressed root JavaScript and **132,494 B** for the every-component
-scenario ([run 45818122059](https://github.com/floor/material/actions/runs/45818122059/job/139903549819)).
+scenario ([run 45820063921](https://github.com/floor/material/actions/runs/45820063921/job/139910426458)).
 
 ## [3.16.5] - 2026-11-25
 
