@@ -201,6 +201,40 @@ const run = async (browser: Browser, engine: string) => {
     }
     rows.push(`${testCase.id} menu ${measured.menu.top.toFixed(0)}..${measured.menu.bottom.toFixed(0)} scroll ${measured.scrollTopBefore}->${measured.scrollTopAfterFocus}`);
   }
+  // The body control: a menu in the body with autoFlip: false scrolls the
+  // document on open exactly as main does — 62 px in Chromium, 63 in WebKit in
+  // this geometry, once the reveal settles. Nothing here may change it.
+  const bodyOpen = await page.evaluate(async () => {
+    document.querySelectorAll("#scroller").forEach((node) => node.remove());
+    document.querySelectorAll(".mtrl-menu").forEach((node) => node.remove());
+    window.scrollTo(0, 0);
+    const pageElement = document.createElement("div");
+    pageElement.style.cssText = "height:1600px;position:relative";
+    const opener = document.createElement("button");
+    opener.id = "opener";
+    opener.textContent = "Open";
+    opener.style.cssText = "position:absolute;left:40px;top:540px;width:120px;height:36px";
+    pageElement.append(opener);
+    document.body.append(pageElement);
+    const menu = (window as unknown as { mtrl: { createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => void } } }).mtrl.createMenu({
+      opener,
+      position: "bottom-start",
+      offset: 8,
+      autoFlip: false,
+      items: Array.from({ length: 6 }, (_, index) => ({ text: `Item ${index + 1}` })),
+    });
+    await new Promise((done) => setTimeout(done, 200));
+    menu.open();
+    // The browser's own focus scroll lands once the reveal settles.
+    await new Promise((done) => setTimeout(done, 1200));
+    return window.scrollY;
+  });
+  const expectedBodyScroll = engine === "webkit" ? 63 : 62;
+  if (Math.abs(bodyOpen - expectedBodyScroll) > 1) {
+    failures.push(`body autoFlip:false open: the window scroll matches main (${expectedBodyScroll}, measured ${bodyOpen})`);
+  }
+  rows.push(`body autoFlip:false open scroll ${bodyOpen} (main ${expectedBodyScroll})`);
+
   // The keyboard reveal: End on a 25-item menu scrolls the menu's own list,
   // in every layer, until the last item is whole inside it.
   for (const layer of ["body", "top", "container"] as const) {
