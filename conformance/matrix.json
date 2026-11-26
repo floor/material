@@ -41,9 +41,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/app-bars/specs",
+            "section": "Tokens & specs · App bar - Size - Small · App bar small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -58,7 +58,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -419,9 +419,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Error #B3261E",
+            "url": "https://m3.material.io/components/badges/specs",
+            "section": "Tokens & specs · Badges · Badge large color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -436,7 +436,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released badge shares the same colour across both sizes.",
@@ -450,9 +450,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Error #B3261E",
+            "url": "https://m3.material.io/components/badges/specs",
+            "section": "Tokens & specs · Badges · Badge color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -467,7 +467,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -580,9 +580,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainer #F3EDF7",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -597,7 +597,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -611,9 +611,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "72dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -628,7 +628,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -642,9 +642,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "72dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -659,7 +659,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -673,9 +673,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "80dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -690,7 +690,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -741,9 +741,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerLow #F7F2FA",
+            "url": "https://m3.material.io/components/bottom-sheets/specs",
+            "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -758,7 +758,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -772,9 +772,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/bottom-sheets/specs",
+            "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container shape (top corners)",
             "read": "2026-11-26"
           },
           "compose": {
@@ -789,7 +789,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "This row measures the upper corner of the docked shape.",
@@ -995,9 +995,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Color - Filled · Button filled container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1012,7 +1012,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1026,9 +1026,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1043,7 +1043,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1057,9 +1057,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1074,7 +1074,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1088,9 +1088,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1105,7 +1105,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1119,9 +1119,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1136,7 +1136,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1150,9 +1150,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1167,7 +1167,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1181,9 +1181,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1198,7 +1198,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1212,9 +1212,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1229,7 +1229,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1243,9 +1243,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1260,7 +1260,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1274,9 +1274,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1291,7 +1291,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1305,9 +1305,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1322,7 +1322,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1336,9 +1336,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1353,7 +1353,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1367,9 +1367,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1384,7 +1384,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1398,9 +1398,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1415,7 +1415,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1429,9 +1429,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1446,7 +1446,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1460,9 +1460,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1477,7 +1477,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1491,9 +1491,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1508,7 +1508,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1522,9 +1522,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1539,7 +1539,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1553,9 +1553,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1570,7 +1570,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1584,9 +1584,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1601,7 +1601,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1615,9 +1615,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1632,7 +1632,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1646,9 +1646,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1663,7 +1663,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1677,9 +1677,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1694,7 +1694,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1708,9 +1708,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1725,7 +1725,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1739,9 +1739,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1756,7 +1756,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1770,9 +1770,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1787,7 +1787,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1801,9 +1801,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small selected container shape square (Corner Full on a 40dp container)",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1818,7 +1818,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "This is the selected radius of the small square toggle. The previous radius is retained for the resting small square.",
@@ -1832,9 +1832,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Color - Filled · Button filled elevation",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1849,7 +1849,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The filled button has level zero elevation at rest.",
@@ -1925,9 +1925,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large between icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1942,7 +1942,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1956,9 +1956,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "8dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium between icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -1973,7 +1973,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -1987,9 +1987,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "8dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small between icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2004,7 +2004,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2018,9 +2018,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "16dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge between icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2035,7 +2035,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2049,9 +2049,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "4dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall between icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2066,7 +2066,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released size helper overrides the generated 8 dp token.",
@@ -2080,9 +2080,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2097,7 +2097,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2111,9 +2111,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2128,7 +2128,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2142,9 +2142,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2159,7 +2159,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2173,9 +2173,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2190,7 +2190,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2204,9 +2204,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2221,7 +2221,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2235,9 +2235,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "1dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium outline width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2252,7 +2252,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released button border uses the shared small outline token.",
@@ -2266,9 +2266,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "48dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Large · Button large leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2283,7 +2283,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2297,9 +2297,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Medium · Button medium leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2314,7 +2314,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2328,9 +2328,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "16dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Small · Button small leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2345,7 +2345,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2359,9 +2359,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2376,7 +2376,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2390,9 +2390,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2407,7 +2407,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released size helper sets its own padding.",
@@ -2582,9 +2582,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2599,7 +2599,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2613,9 +2613,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2630,7 +2630,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2644,9 +2644,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2661,7 +2661,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2675,9 +2675,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2692,7 +2692,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2706,9 +2706,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2723,7 +2723,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2737,9 +2737,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2754,7 +2754,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2768,9 +2768,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2785,7 +2785,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2799,9 +2799,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2816,7 +2816,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2830,9 +2830,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2847,7 +2847,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2861,9 +2861,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2878,7 +2878,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2892,9 +2892,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Large · Button group large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2909,7 +2909,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2923,9 +2923,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Medium · Button group medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2940,7 +2940,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2954,9 +2954,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Small · Button group small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -2971,7 +2971,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -2985,9 +2985,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Xlarge · Button group xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3002,7 +3002,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3016,9 +3016,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Xsmall · Button group xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3033,7 +3033,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3078,9 +3078,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Tokens & specs · Button group standard - Size - Small · Button group small between space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3095,7 +3095,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3208,9 +3208,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerLow #F7F2FA",
+            "url": "https://m3.material.io/components/cards/specs",
+            "section": "Tokens & specs · Card - Elevated · Elevated card container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3225,7 +3225,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3239,9 +3239,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHighest #E6E0E9",
+            "url": "https://m3.material.io/components/cards/specs",
+            "section": "Tokens & specs · Card - Filled · Filled card container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3256,7 +3256,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3270,9 +3270,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Surface #FEF7FF",
+            "url": "https://m3.material.io/components/cards/specs",
+            "section": "Tokens & specs · Card - Outlined · Outlined card container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3287,7 +3287,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -3394,9 +3394,9 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0dp",
+            "url": "https://m3.material.io/components/cards/specs",
+            "section": "Tokens & specs · Card - Filled · Filled card focus container elevation",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3411,7 +3411,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "Compose supplies Level 0 from the focus elevation token.",
@@ -3425,9 +3425,9 @@
           "state": "focus",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0dp",
+            "url": "https://m3.material.io/components/cards/specs",
+            "section": "Tokens & specs · Card - Outlined · Outlined card focus container elevation",
             "read": "2026-11-26"
           },
           "compose": {
@@ -3442,7 +3442,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "Compose supplies Level 0 from the focus elevation token.",
@@ -4273,9 +4273,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "18dp",
+            "url": "https://m3.material.io/components/checkbox/specs",
+            "section": "Tokens & specs · Checkbox · Checkbox container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4290,7 +4290,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "Compose defaults to a 20 dp box. The 18 dp adjustment is available through its styling flag.",
@@ -4303,9 +4303,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "18dp",
+            "url": "https://m3.material.io/components/checkbox/specs",
+            "section": "Tokens & specs · Checkbox · Checkbox container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4320,7 +4320,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "Compose defaults to a 20 dp box. The 18 dp adjustment is available through its styling flag.",
@@ -4333,9 +4333,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/checkbox/specs",
+            "section": "Tokens & specs · Checkbox · Checkbox selected container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4350,7 +4350,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4710,9 +4710,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SecondaryContainer #E8DEF8",
+            "url": "https://m3.material.io/components/chips/specs",
+            "section": "Tokens & specs · Chip - Filter · Filter chip (selected) outline color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4727,7 +4727,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4808,9 +4808,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHigh #ECE6F0",
+            "url": "https://m3.material.io/components/date-pickers/specs",
+            "section": "Tokens & specs · Date picker - Modal · Container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4825,7 +4825,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4838,9 +4838,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/date-pickers/specs",
+            "section": "Tokens & specs · Date picker - Modal · Container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4855,7 +4855,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4868,9 +4868,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "360dp",
+            "url": "https://m3.material.io/components/date-pickers/specs",
+            "section": "Tokens & specs · Date picker - Modal · Container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4885,7 +4885,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4898,9 +4898,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "72dp",
+            "url": "https://m3.material.io/components/date-pickers/specs",
+            "section": "Tokens & specs · Date picker - Modal · Year selection year container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4915,7 +4915,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -4935,9 +4935,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.25pt",
+            "url": "https://m3.material.io/components/dialogs/specs",
+            "section": "Tokens & specs · Dialog - Basic · Dialog supporting text tracking",
             "read": "2026-11-26"
           },
           "compose": {
@@ -4952,7 +4952,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -5028,9 +5028,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHigh #ECE6F0",
+            "url": "https://m3.material.io/components/dialogs/specs",
+            "section": "Tokens & specs · Dialog - Basic · Dialog container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5045,7 +5045,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5127,9 +5127,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "OutlineVariant #CAC4D0",
+            "url": "https://m3.material.io/components/divider/specs",
+            "section": "Tokens & specs · Divider · Divider color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5144,7 +5144,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5226,9 +5226,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5243,7 +5243,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5257,9 +5257,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "80dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5274,7 +5274,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5319,9 +5319,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "16dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5336,7 +5336,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The released layout overrides the generated spacing token.",
@@ -5350,9 +5350,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5367,7 +5367,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The released layout overrides the generated spacing token.",
@@ -5381,9 +5381,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "8dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small icon label space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5398,7 +5398,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5412,9 +5412,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "36dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5429,7 +5429,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
@@ -5443,9 +5443,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5460,7 +5460,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
@@ -5505,9 +5505,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.15pt",
+            "url": "https://m3.material.io/components/extended-fab/specs",
+            "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small label text",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5522,7 +5522,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -5542,9 +5542,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5559,7 +5559,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5573,9 +5573,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Large · FAB large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5590,7 +5590,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5604,9 +5604,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "80dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Medium · FAB medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5621,7 +5621,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5635,9 +5635,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5652,7 +5652,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5666,9 +5666,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Large · FAB large container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5683,7 +5683,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5697,9 +5697,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "80dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Medium · FAB medium container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5714,7 +5714,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5759,9 +5759,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5776,7 +5776,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
@@ -5790,9 +5790,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "36dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Large · FAB large icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5807,7 +5807,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
@@ -5821,9 +5821,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/floating-action-button/specs",
+            "section": "Tokens & specs · FAB - Size - Medium · FAB medium icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5838,7 +5838,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized icon. Its samples provide recommended sizes.",
@@ -5887,9 +5887,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20dp",
+            "url": "https://m3.material.io/components/fab-menu/specs",
+            "section": "Tokens & specs · FAB menu - Common · FAB menu close button icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5904,7 +5904,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5917,9 +5917,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/fab-menu/specs",
+            "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5934,7 +5934,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -5947,9 +5947,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/fab-menu/specs",
+            "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5964,7 +5964,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized item icon.",
@@ -5977,9 +5977,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.15pt",
+            "url": "https://m3.material.io/components/fab-menu/specs",
+            "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item label text",
             "read": "2026-11-26"
           },
           "compose": {
@@ -5994,7 +5994,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -6014,9 +6014,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Large · Icon button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6031,7 +6031,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6045,9 +6045,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Medium · Icon button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6062,7 +6062,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6076,9 +6076,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Small · Icon button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6093,7 +6093,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6107,9 +6107,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Xlarge · Icon button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6124,7 +6124,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6138,9 +6138,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Xsmall · Icon button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6155,7 +6155,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6231,9 +6231,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/icon-buttons/specs",
+            "section": "Tokens & specs · Icon button - Size - Small · Icon button small icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6248,7 +6248,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6268,9 +6268,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item between space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6285,7 +6285,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
@@ -6299,9 +6299,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "10dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item bottom space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6316,7 +6316,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
@@ -6330,9 +6330,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Surface #FEF7FF",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item segmented container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6347,7 +6347,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The released segmented list uses its dedicated container colour.",
@@ -6423,9 +6423,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SecondaryContainer #E8DEF8",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item selected container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6440,7 +6440,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6454,9 +6454,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SecondaryContainer #E8DEF8",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item selected container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6471,7 +6471,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6484,9 +6484,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.25pt",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item supporting text tracking",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6501,7 +6501,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -6515,9 +6515,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "10dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item top space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6532,7 +6532,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
@@ -6577,9 +6577,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "10dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item top space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6594,7 +6594,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
@@ -6608,9 +6608,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "10dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Tokens & specs · List - Common · List list item top space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6625,7 +6625,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
@@ -6711,9 +6711,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainer #F3EDF7",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · Menu (baseline) · Menu container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6728,7 +6728,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6742,9 +6742,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerLow #F7F2FA",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · Menus - Color - Standard · Menu standard container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6759,7 +6759,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6773,9 +6773,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "4dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · Menu (baseline) · Menu container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6790,7 +6790,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6804,9 +6804,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "16dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · Menus - Common · Menu container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6821,7 +6821,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6835,9 +6835,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SecondaryContainer #E8DEF8",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · Menu (baseline) · Menu list item selected container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6852,7 +6852,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "The baseline Compose menu item has no selected state.",
@@ -6871,9 +6871,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainer #F3EDF7",
+            "url": "https://m3.material.io/components/navigation-bar/specs",
+            "section": "Tokens & specs · Nav bar - Common · Nav bar container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6888,7 +6888,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6902,9 +6902,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/navigation-bar/specs",
+            "section": "Tokens & specs · Nav bar - Common · Nav bar height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6919,7 +6919,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -6933,9 +6933,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/navigation-bar/specs",
+            "section": "Tokens & specs · Nav bar - Common · Nav bar height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -6950,7 +6950,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -7060,9 +7060,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Secondary #625B71",
+            "url": "https://m3.material.io/components/navigation-bar/specs",
+            "section": "Tokens & specs · Nav bar - Common · Nav bar item active label text color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7077,7 +7077,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "The released ShortNavigationBarItem sets the inline selected label to the active icon colour.",
@@ -7251,9 +7251,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SecondaryContainer #E8DEF8",
+            "url": "https://m3.material.io/components/navigation-drawer/specs",
+            "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7268,7 +7268,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7342,9 +7342,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "336dp",
+            "url": "https://m3.material.io/components/navigation-drawer/specs",
+            "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7359,7 +7359,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The Compose sheet fixture uses 12 dp side padding within 360 dp, and the selected row fills that inner width.",
@@ -7373,9 +7373,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "700",
+            "url": "https://m3.material.io/components/navigation-drawer/specs",
+            "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active label text weight",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7390,7 +7390,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "The released DrawerItem supplies colour and leaves typography to caller-provided content.",
@@ -7410,9 +7410,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "16dp",
+            "url": "https://m3.material.io/components/navigation-rail/specs",
+            "section": "Tokens & specs · Nav rail - Expanded · Nav rail expanded modal container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7427,7 +7427,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail.",
@@ -7441,9 +7441,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/navigation-rail/specs",
+            "section": "Tokens & specs · Nav rail - Collapsed · Nav rail collapsed container width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7458,7 +7458,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7472,9 +7472,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/navigation-rail/specs",
+            "section": "Tokens & specs · Nav rail item - Common · Nav rail item icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7489,7 +7489,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7503,9 +7503,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/navigation-rail/specs",
+            "section": "Tokens & specs · Nav rail item - Common · Nav rail item container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7520,7 +7520,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -7602,9 +7602,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/progress-indicators/specs",
+            "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7619,7 +7619,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7664,9 +7664,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/progress-indicators/specs",
+            "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7681,7 +7681,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7761,9 +7761,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/radio-button/specs",
+            "section": "Tokens & specs · Radio Button · Radio button icon selected color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7778,7 +7778,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -7828,9 +7828,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHigh #ECE6F0",
+            "url": "https://m3.material.io/components/search/specs",
+            "section": "Tokens & specs · Search - Bar · Search bar container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -7845,7 +7845,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -8776,9 +8776,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/sliders/specs",
+            "section": "Tokens & specs · Slider · Slider active track color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -8793,7 +8793,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -8967,9 +8967,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "InverseSurface #322F35",
+            "url": "https://m3.material.io/components/snackbar/specs",
+            "section": "Tokens & specs · Snackbars · Snackbar container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -8984,7 +8984,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -8997,9 +8997,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "4dp",
+            "url": "https://m3.material.io/components/snackbar/specs",
+            "section": "Tokens & specs · Snackbars · Snackbar container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9014,7 +9014,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9028,9 +9028,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "48dp",
+            "url": "https://m3.material.io/components/snackbar/specs",
+            "section": "Tokens & specs · Snackbars · Snackbar container with single line height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9045,7 +9045,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9059,9 +9059,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "68dp",
+            "url": "https://m3.material.io/components/snackbar/specs",
+            "section": "Tokens & specs · Snackbars · Snackbar container with two lines height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9076,7 +9076,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9089,9 +9089,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.25pt",
+            "url": "https://m3.material.io/components/snackbar/specs",
+            "section": "Tokens & specs · Snackbars · Snackbar supporting text tracking",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9106,7 +9106,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -9126,9 +9126,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "96dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Large · Split button large container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9143,7 +9143,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9157,9 +9157,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "56dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Medium · Split button medium container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9174,7 +9174,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9188,9 +9188,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "40dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Small · Split button small container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9205,7 +9205,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9219,9 +9219,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "136dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9236,7 +9236,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9250,9 +9250,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Xsmall · Split button xsmall container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9267,7 +9267,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9281,9 +9281,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "2dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Medium · Split button medium between space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9298,7 +9298,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released split layout uses the shared gap default.",
@@ -9405,9 +9405,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "8dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9422,7 +9422,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -9436,9 +9436,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "4dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Medium · Split button medium inner corner size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9453,7 +9453,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -9467,9 +9467,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge inner corner size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9484,7 +9484,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -9653,9 +9653,9 @@
           "state": "pressed",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.1",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Button - Color - Filled · Button filled pressed container state layer opacity (leading button)",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9670,7 +9670,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9715,9 +9715,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "26dp",
+            "url": "https://m3.material.io/components/split-button/specs",
+            "section": "Tokens & specs · Split button - Size - Medium · Split button medium trailing button icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9732,7 +9732,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9751,9 +9751,9 @@
           "state": "disabled",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Surface #FEF7FF",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch disabled selected handle color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9768,7 +9768,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9781,9 +9781,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch selected handle width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9798,7 +9798,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9811,9 +9811,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch selected track color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9828,7 +9828,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9842,9 +9842,9 @@
           "state": "disabled",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHighest #E6E0E9 at 0.12 opacity",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch disabled unselected track color and Disabled track opacity",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9859,7 +9859,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "Compare the resolved disabled track fill using the token alpha in the light theme.",
@@ -9872,9 +9872,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "32dp",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch track height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9889,7 +9889,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9902,9 +9902,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "52dp",
+            "url": "https://m3.material.io/components/switch/specs",
+            "section": "Tokens & specs · Switch · Switch track width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9919,7 +9919,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -9939,9 +9939,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Surface #FEF7FF",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9956,7 +9956,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -9970,9 +9970,9 @@
           "state": "selected",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Surface #FEF7FF",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -9987,7 +9987,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "",
@@ -10094,9 +10094,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "Primary #6750A4",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10111,7 +10111,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10125,9 +10125,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "3dp",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10142,7 +10142,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10156,9 +10156,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20pt",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab with label text line height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10173,7 +10173,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The released tab typography uses TitleSmall, including its 20 sp line height.",
@@ -10187,9 +10187,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "20pt",
+            "url": "https://m3.material.io/components/tabs/specs",
+            "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab label text line height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10204,7 +10204,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "drift"
           },
           "note": "The released tab typography uses TitleSmall, including its 20 sp line height.",
@@ -10224,9 +10224,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "4dp",
+            "url": "https://m3.material.io/components/text-fields/specs",
+            "section": "Tokens & specs · Text field - Outlined · Outlined text field container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10241,7 +10241,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10317,9 +10317,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "24dp",
+            "url": "https://m3.material.io/components/text-fields/specs",
+            "section": "Tokens & specs · Text field - Filled · Filled text field leading icon size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10334,7 +10334,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "Compose accepts a caller-sized leading icon.",
@@ -10446,9 +10446,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "256dp",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Time picker - Dial · Time picker clock dial container size",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10463,7 +10463,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10477,9 +10477,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainerHigh #ECE6F0",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Time picker - Dial · Time picker container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10494,7 +10494,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10508,9 +10508,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Time picker - Dial · Time picker container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10525,7 +10525,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released time picker dialog uses the shared dialog shape.",
@@ -10539,9 +10539,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "28dp",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Time picker - Input · Time input container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10556,7 +10556,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "The released time picker dialog uses the shared dialog shape.",
@@ -10632,9 +10632,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.15pt",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Time picker - Dial · Time picker period selector label text tracking",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10649,7 +10649,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -10761,9 +10761,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Tokens & specs · Toolbar - Docked · Docked toolbar container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10778,7 +10778,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10791,9 +10791,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "64dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Tokens & specs · Toolbar - Floating · Floating toolbar container height",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10808,7 +10808,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10821,9 +10821,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainer #F3EDF7",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Tokens & specs · Toolbar - Color - Standard · Toolbar standard container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10838,7 +10838,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10851,9 +10851,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "8dp",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Tokens & specs · Toolbar - Floating · Floating toolbar leading space",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10868,7 +10868,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10881,9 +10881,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "PrimaryContainer #EADDFF",
+            "url": "https://m3.material.io/components/toolbars/specs",
+            "section": "Tokens & specs · Toolbar - Color - Vibrant · Toolbar standard container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10898,7 +10898,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -10949,9 +10949,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "0.25pt",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Rich · Rich tooltip supporting text tracking",
             "read": "2026-11-26"
           },
           "compose": {
@@ -10966,7 +10966,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "drift"
           },
           "note": "",
@@ -11073,9 +11073,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "InverseSurface #322F35",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -11090,7 +11090,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -11104,9 +11104,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "SurfaceContainer #F3EDF7",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container color",
             "read": "2026-11-26"
           },
           "compose": {
@@ -11121,7 +11121,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -11135,9 +11135,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -11152,7 +11152,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "match"
           },
           "note": "",
@@ -11166,9 +11166,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "12dp",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container shape",
             "read": "2026-11-26"
           },
           "compose": {
@@ -11183,7 +11183,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "match",
             "compose": "match"
           },
           "note": "",
@@ -11259,9 +11259,9 @@
           "state": "rest",
           "density": 0,
           "spec": {
-            "value": null,
-            "url": "https://m3.material.io",
-            "section": "",
+            "value": "444dp",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Tokens & specs · Tooltip - Plain · Plain tooltip max width",
             "read": "2026-11-26"
           },
           "compose": {
@@ -11276,7 +11276,7 @@
             "engines": null
           },
           "status": {
-            "spec": "no-value",
+            "spec": "drift",
             "compose": "match"
           },
           "note": "Compose uses the 200 dp default. The newer maximum width token is unused.",
