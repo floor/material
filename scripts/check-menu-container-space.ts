@@ -311,13 +311,13 @@ const run = async (browser: Browser, engine: string) => {
 
   // The keyboard reveal: End on a 25-item menu scrolls the menu's own list,
   // in every layer and at a zoom, until the last item is whole inside it.
-  const layerVariants = [
+  const layerVariants: { name: string; zoom?: number; layer?: string }[] = [
     { name: "body" },
     { name: "top" },
     { name: "container" },
     { name: "container zoom=0.7", zoom: 0.7 },
     { name: "top nested zoom=0.7", zoom: 0.7, layer: "top" },
-  ] as const;
+  ];
   for (const variant of layerVariants) {
     const reveal = await page.evaluate(async (options) => {
       document.querySelectorAll("#scroller").forEach((node) => node.remove());
