@@ -1,0 +1,203 @@
+#!/usr/bin/env bun
+// scripts/check-menu-container-space.ts
+/**
+ * A menu in a clipping container takes its side from the space it can be seen
+ * in, and focusing it never scrolls the container onto its opener.
+ *
+ * The side used to be chosen from the viewport alone. With an explicit
+ * container the menu is placed in the container's coordinates, so a side the
+ * viewport has room for can be a side the container cuts: at 800×600 with a
+ * 160 px menu, an 8 px offset and a scroller whose scrollport ends inside the
+ * window, the menu opened below with 125 px clipped, and focusing it scrolled
+ * the scroller until the menu sat over its opener (gap −117 px); another
+ * geometry flipped above with 48 px clipped at the scroller's top.
+ *
+ * The check mounts the menu in a clipping scroller at two scroll offsets and
+ * two opener positions, with autoFlip on and off, and asserts, on Chromium and
+ * WebKit:
+ *
+ * 1. the menu's box lies inside the intersection of the window and the
+ *    scroller's scrollport — no pixel of it is clipped by either;
+ * 2. the menu keeps its side of the opener: a menu below starts at or after
+ *    the opener's bottom, one above ends at or before its top;
+ * 3. focusing an item does not scroll the scroller: its scrollTop is the one
+ *    the case set, and the two rules above still hold after the focus.
+ *
+ * Body menus are the control: they are still placed from the window and are
+ * not clipped by the scroller at all.
+ *
+ *   bun run scripts/check-menu-container-space.ts
+ */
+import assert from "node:assert/strict";
+import { resolve } from "node:path";
+
+import * as sass from "sass";
+import { chromium, webkit, type Browser, type Page } from "playwright";
+
+import { directionArmsPrelude, sassOptions } from "./build-styles";
+
+const entry = resolve("scripts/menu-zoom-entry.ts");
+const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
+assert(bundle.success, String(bundle.logs));
+const js = (await bundle.outputs[0]!.text()).replaceAll("\u0000", "\\u0000");
+const css = sass.compileString(directionArmsPrelude() + (await Bun.file("src/styles/main.scss").text()), sassOptions()).css;
+
+const server = Bun.serve({
+  hostname: "127.0.0.1",
+  port: 0,
+  fetch(request) {
+    const path = new URL(request.url).pathname;
+    if (path === "/components.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/styles.css") return new Response(css, { headers: { "Content-Type": "text/css" } });
+    return new Response(
+      `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
+<style>body{margin:0;padding:0;font-family:sans-serif} #scroller{position:absolute;left:24px;width:400px;overflow-y:auto;border:0;padding:0} #content{height:1200px;position:relative} #opener{position:absolute;left:24px;width:120px;height:32px}</style></head>
+<body><script type="module">import "/components.js";</script></body></html>`,
+      { headers: { "Content-Type": "text/html" } },
+    );
+  },
+});
+
+type CaseConfig = {
+  /** The scroller's viewport position and height. */
+  scrollerTop: number;
+  scrollerHeight: number;
+  /** The opener's position inside the scroller's content. */
+  openerTop: number;
+  scrollTop: number;
+  /** The preferred side: below or above the opener. */
+  position: "bottom-start" | "top-start";
+  /** Mount to the body (no container) instead of into the scroller. */
+  body?: boolean;
+};
+
+type Measured = {
+  scrollTopBefore: number;
+  scrollTopAfterFocus: number;
+  menu: { top: number; bottom: number; left: number; right: number };
+  side: "top" | "bottom";
+  opener: { top: number; bottom: number };
+  viewport: { width: number; height: number };
+  port: { top: number; bottom: number; left: number; right: number };
+};
+
+const runCase = (page: Page, config: CaseConfig) =>
+  page.evaluate(async (options) => {
+    const w = window as unknown as {
+      mtrl: {
+        createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => void; close?: () => void };
+      };
+      __menu?: { element: HTMLElement; open: () => void; close?: () => void };
+    };
+    document.querySelectorAll("#scroller").forEach((node) => node.remove());
+    w.__menu?.close?.();
+    const scroller = document.createElement("div");
+    scroller.id = "scroller";
+    scroller.style.top = `${options.scrollerTop}px`;
+    scroller.style.height = `${options.scrollerHeight}px`;
+    const content = document.createElement("div");
+    content.id = "content";
+    const opener = document.createElement("button");
+    opener.id = "opener";
+    opener.textContent = "Open";
+    opener.style.top = `${options.openerTop}px`;
+    content.append(opener);
+    scroller.append(content);
+    document.body.append(scroller);
+    scroller.scrollTop = options.scrollTop;
+    // The opener is the anchor; the menu lives in the scroller (the
+    // container) or in the body.
+    const menu = w.mtrl.createMenu({
+      opener,
+      position: options.position,
+      offset: 8,
+      container: options.body ? null : scroller,
+      items: [{ text: "One" }, { text: "Two" }, { text: "Three" }, { text: "Four" }],
+    });
+    w.__menu = menu;
+    await new Promise((done) => setTimeout(done, 250));
+    menu.open();
+    await new Promise((done) => setTimeout(done, 450));
+    const before = scroller.scrollTop;
+    // Focus the first item, the interaction the report measured.
+    const item = menu.element.querySelector<HTMLElement>("[role='menuitem'], li, button");
+    item?.focus();
+    await new Promise((done) => setTimeout(done, 200));
+    const after = scroller.scrollTop;
+    const menuRect = menu.element.getBoundingClientRect();
+    const openerRect = opener.getBoundingClientRect();
+    const port = scroller.getBoundingClientRect();
+    return {
+      scrollTopBefore: before,
+      scrollTopAfterFocus: after,
+      menu: { top: menuRect.top, bottom: menuRect.bottom, left: menuRect.left, right: menuRect.right },
+      side: menu.element.className.includes("position-top") ? "top" : "bottom",
+      opener: { top: openerRect.top, bottom: openerRect.bottom },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      port: { top: port.top, bottom: port.bottom, left: port.left, right: port.right },
+    } as Measured;
+  }, config);
+
+const run = async (browser: Browser, engine: string) => {
+  const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+  await page.goto(`http://127.0.0.1:${server.port}`);
+  await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
+  const failures: string[] = [];
+  const rows: string[] = [];
+  const cases: (CaseConfig & { id: string })[] = [];
+  // The brief's measured set: an explicit container, two scroll offsets, the
+  // preferred side below (normal) and above (inverse).
+  for (const position of ["bottom-start", "top-start"] as const) {
+    for (const scrollTop of [0, 120]) {
+      for (const openerTop of [120, 300, 380]) {
+        cases.push({ id: `container ${position} scrollTop=${scrollTop} opener=${openerTop}`, scrollerTop: 100, scrollerHeight: 400, openerTop, scrollTop, position });
+      }
+    }
+  }
+  // The scroller whose top is inside the window and whose end is too: the
+  // roomier side is below, inside the window.
+  cases.push({ id: "container deep scroller bottom-start scrollTop=120 opener=380", scrollerTop: 260, scrollerHeight: 500, openerTop: 380, scrollTop: 120, position: "bottom-start" });
+  // The control: the same geometry with the menu in the body, which the
+  // scroller cannot clip.
+  for (const scrollTop of [0, 120]) {
+    cases.push({ id: `body scrollTop=${scrollTop} opener=300`, scrollerTop: 100, scrollerHeight: 400, openerTop: 300, scrollTop, position: "bottom-start", body: true });
+  }
+
+  for (const testCase of cases) {
+    const measured = await runCase(page, testCase);
+    const within = (value: number, low: number, high: number) => value >= low - 0.5 && value <= high + 0.5;
+    const body = testCase.body === true;
+    const clipTop = body ? 0 : Math.max(0, measured.port.top);
+    const clipBottom = body ? measured.viewport.height : Math.min(measured.viewport.height, measured.port.bottom);
+    if (!within(measured.menu.top, clipTop, clipBottom) || !within(measured.menu.bottom, clipTop, clipBottom)) {
+      failures.push(`${testCase.id}: the menu is seen whole (menu ${measured.menu.top.toFixed(1)}..${measured.menu.bottom.toFixed(1)}, visible ${clipTop}..${clipBottom})`);
+    }
+    // The side it took is a side of its opener, not over it.
+    const above = measured.side === "top"
+      ? measured.menu.bottom <= measured.opener.top + 0.5
+      : measured.menu.top >= measured.opener.bottom - 0.5;
+    if (!above) {
+      failures.push(`${testCase.id}: the menu keeps its ${measured.side} side of the opener (menu ${measured.menu.top.toFixed(1)}..${measured.menu.bottom.toFixed(1)}, opener ${measured.opener.top.toFixed(1)}..${measured.opener.bottom.toFixed(1)})`);
+    }
+    // Focusing an item does not scroll the container.
+    if (Math.abs(measured.scrollTopAfterFocus - measured.scrollTopBefore) > 0.5) {
+      failures.push(`${testCase.id}: focusing an item leaves the container where it was (scrollTop ${measured.scrollTopBefore} -> ${measured.scrollTopAfterFocus})`);
+    }
+    rows.push(`${testCase.id} menu ${measured.menu.top.toFixed(0)}..${measured.menu.bottom.toFixed(0)} scroll ${measured.scrollTopBefore}->${measured.scrollTopAfterFocus}`);
+  }
+  await page.close();
+  assert.deepEqual(failures, [], `${engine}: a menu in a container is placed where it can be seen, and focus does not scroll it onto its opener`);
+  return { engine, rows };
+};
+
+const results = [];
+const chromiumBrowser = await chromium.launch({ headless: true });
+try { results.push(await run(chromiumBrowser, "chromium")); } finally { await chromiumBrowser.close(); }
+let webkitBrowser: Browser | null = null;
+try { webkitBrowser = await webkit.launch({ headless: true }); } catch { console.log("menu container space: WebKit not installed here, skipped"); }
+if (webkitBrowser) {
+  try { results.push(await run(webkitBrowser, "webkit")); } finally { await webkitBrowser.close(); }
+}
+server.stop(true);
+for (const result of results) for (const row of result.rows) console.log(`${result.engine} ${row}`);
+console.log("Menu container space check passed.");
