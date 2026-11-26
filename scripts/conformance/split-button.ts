@@ -64,6 +64,33 @@ cases.push({ id: "outlined/m/rest (border)", mount, config: { variant: "outlined
 cases.push({ id: "elevated/m/rest (shadow)", mount, config: { variant: "elevated", size: "m" }, parts });
 cases.push({ id: "elevated/m/hover (shadow)", state: "hover", mount, config: { variant: "elevated", size: "m" }, parts });
 
+// The two rows m3.material.io adds and Compose has no token for: the menu
+// icon's optical offset when unselected, and the layer a selected trailing
+// half carries without changing colour.
+for (const size of SIZES) {
+  cases.push({
+    id: `chevron offset/${size}`,
+    mount,
+    config: { variant: "filled", size },
+    parts: [{ name: "chevron", selector: ".mtrl-split-button__chevron" }],
+    properties: ["transform", "translate", "width", "height", "marginLeft", "marginRight"],
+  });
+  cases.push({
+    id: `selected layer/${size}`,
+    mount: (mtrl, host, config) => {
+      const create = mtrl.createSplitButton as unknown as (settings: Record<string, unknown>) => { element: HTMLElement };
+      const { variant, size: sizeName } = (config ?? {}) as MountOptions;
+      const button = create({ text: "Split", variant, size: sizeName, items: [{ text: "One" }] });
+      host.append(button.element);
+      // Selected: the trailing half's menu is open.
+      button.element.querySelector<HTMLElement>(".mtrl-split-button__trailing")?.click();
+    },
+    config: { variant: "filled", size },
+    parts: [{ name: "trailing layer", selector: ".mtrl-split-button__trailing", pseudo: "::before" }],
+    properties: ["opacity", "backgroundColor"],
+  });
+}
+
 const filter = process.argv[2];
 const chosen = filter ? cases.filter((testCase) => testCase.id.includes(filter)) : cases;
 
