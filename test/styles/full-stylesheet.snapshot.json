@@ -261,7 +261,6 @@
     ".mtrl-card--filled:active.mtrl-card--interactive:where(:not(.mtrl-card--dragging)):not(:has(>.mtrl-ripple))::before",
     ".mtrl-card--filled:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))",
     ".mtrl-card--filled:hover.mtrl-card--interactive:where(:not(.mtrl-card--dragging))::before",
-    ".mtrl-card--focused",
     ".mtrl-card--full-width",
     ".mtrl-card--interactive",
     ".mtrl-card--large",
