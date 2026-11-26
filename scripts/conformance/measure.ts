@@ -68,6 +68,8 @@ export type Part = {
   name: string;
   /** A selector inside the mount root; `>>>` steps into a shadow root. */
   selector: string;
+  /** Read a portalled part outside the mount, such as a dialog or snackbar. */
+  document?: boolean;
   /** Read the element's own `::before` or `::after`, where state layers live. */
   pseudo?: "::before" | "::after";
 };
@@ -157,11 +159,11 @@ export type HarnessOptions = {
 /** `dist/components/<name>/index.js` when it exists, else a bundle of the source. */
 const loadEntry = async (component: string): Promise<{ source: "dist" | "src"; code: string }> => {
   const built = join(root, "dist", "components", component, "index.js");
-  if (existsSync(built) && statSync(built).size > 0) return { source: "dist", code: readFileSync(built, "utf8") };
-  const entry = resolve(root, "src", "components", component, "index.ts");
+  const source = existsSync(built) && statSync(built).size > 0 ? "dist" : "src";
+  const entry = source === "dist" ? built : resolve(root, "src", "components", component, "index.ts");
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
   if (!bundle.success) throw new Error(`bundling ${component}: ${bundle.logs.join("\n")}`);
-  return { source: "src", code: await bundle.outputs[0]!.text() };
+  return { source, code: await bundle.outputs[0]!.text() };
 };
 
 /** The stylesheet the component draws with: the built one, else a compiled source sheet. */
@@ -196,20 +198,22 @@ const serve = () =>
 
 let entryCode = "";
 
-const applyState = async (page: Page, selector: string, state: State) => {
+const applyState = async (page: Page, part: Part, state: State) => {
+  const { selector } = part;
   if (state === "hover") await page.hover(selector);
   else if (state === "focus") {
     // A programmatic focus does not match `:focus-visible`: the ring is read
     // from a real tab stop, so the keyboard moves it there.
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+    const key = page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab";
     for (let attempt = 0; attempt < 8; attempt++) {
-      await page.keyboard.press("Tab");
+      await page.keyboard.press(key);
       // The first stop inside the mount: the leading control, in tab order.
-      const inside = await page.evaluate(() => {
-        const host = document.querySelector("#mount");
+      const inside = await page.evaluate(({ selector, documentPart }) => {
+        const host = document.querySelector(documentPart ? selector : "#mount");
         const active = document.activeElement;
         return !!host && !!active && host.contains(active);
-      });
+      }, { selector, documentPart: part.document });
       if (inside) break;
     }
   }
@@ -288,7 +292,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // The state is applied from the outside: Playwright's pointer and focus,
       // not a simulated class.
       try {
-        await applyState(page, testCase.parts[0]!.selector, state);
+        await applyState(page, testCase.parts[0]!, state);
       } catch {
         // A part that cannot take the state is read at rest.
       }
@@ -299,9 +303,9 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
           // `a >>> b` enters a's shadow root for b, then b's for the next.
-          const resolve = (selector: string): HTMLElement | null => {
+          const resolve = (selector: string, documentPart?: boolean): HTMLElement | null => {
             if (selector === ":root") return root;
-            let scope: ParentNode = root;
+            let scope: ParentNode = documentPart ? document : root;
             let found: Element | null = null;
             for (const step of selector.split(">>>").map((part) => part.trim())) {
               found = scope.querySelector(step);
@@ -312,7 +316,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           };
           const result: Record<string, unknown> = {};
           for (const part of parts) {
-            const element = resolve(part.selector);
+            const element = resolve(part.selector, part.document);
             if (!element) {
               result[part.name] = null;
               continue;
