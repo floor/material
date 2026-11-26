@@ -159,6 +159,12 @@ export const BUTTON_GROUP_CLASSES = {
   ROOT: 'button-group',
   /** Individual button within group */
   BUTTON: 'button-group__button',
+  /**
+   * An icon-only item that set `width`. The group's square rule skips it,
+   * and only this marker: a class the icon button already uses for its own
+   * width is not an opt-in.
+   */
+  WIDTH: 'button-group__width',
   /** First button in group */
   FIRST: 'button-group__button--first',
   /** Last button in group */

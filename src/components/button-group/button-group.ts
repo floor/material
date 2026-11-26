@@ -30,7 +30,8 @@ import {
   BUTTON_GROUP_DEFAULTS,
   BUTTON_GROUP_DENSITY,
   BUTTON_GROUP_EXPANDED_RATIO,
-  BUTTON_GROUP_COMPRESSION_LIMIT
+  BUTTON_GROUP_COMPRESSION_LIMIT,
+  BUTTON_GROUP_CLASSES
 } from './constants';
 
 /**
@@ -307,6 +308,8 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       const { width: itemWidth, ...sharedConfig } = resolvedConfig as typeof resolvedConfig & {
         width?: ButtonGroupItemConfig['width'];
       };
+      // `width: undefined` would win over a global icon-button default and
+      // clear it. Pass the width only when this item set one.
       const button = (buttonConfig.text === undefined && buttonConfig.icon
         ? createIconButton({
             ...sharedConfig,
@@ -317,14 +320,19 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
             toggleOnClick: false,
             selectedIcon: buttonConfig.selectedIcon,
             variant: sharedConfig.variant === 'text' ? 'standard' : sharedConfig.variant,
-            // Icon-only items take the icon button's width. A text item has none.
-            width: itemWidth
+            ...(itemWidth !== undefined ? { width: itemWidth } : {}),
           })
         : createButton({
             ...sharedConfig,
             toggle: selectable,
             toggleOnClick: false
           })) as unknown as GroupButton;
+      // The marker is the opt-in. The icon button's own narrow or wide class
+      // is not: a default, a global width and a class on the item keep the
+      // square rule they had.
+      if (itemWidth !== undefined) {
+        button.element.classList.add(`${baseConfig.prefix}-${BUTTON_GROUP_CLASSES.WIDTH}`);
+      }
       button._groupConfig = buttonConfig;
       button._groupIndex = index;
       if (selectable) {
@@ -402,9 +410,15 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       component.element.setAttribute('data-variant', variant);
 
       // The group's variant is the default. An item that set its own keeps it.
+      // The flag is the item's current override, including one the element
+      // added or removed after the group was created.
       buttons.forEach(button => {
         if (button._groupConfig?.variant) return;
-        button.setVariant(variant);
+        const config = button._groupConfig;
+        const next = config && config.text === undefined && config.icon && variant === 'text'
+          ? 'standard'
+          : variant;
+        button.setVariant(next);
       });
 
       currentVariant = variant;
