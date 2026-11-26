@@ -4,8 +4,13 @@
 # tests were never run in CI.
 #
 # The work is split into parallel jobs, so a run takes as long as its slowest job
-# rather than the sum of every step. `check` waits for all of them and is the one
-# status the main ruleset requires, so the jobs can change without touching it.
+# rather than the sum of every step. `changes` classifies a pull request's diff.
+# Browser groups and comparators run only when that diff can affect them, or when
+# the run is on main, on the nightly schedule, or a release pull request. `ci-ok`
+# waits for every job and passes when each one succeeded or was skipped, so a
+# skipped browser job does not leave a required check pending. `check` mirrors
+# `ci-ok` and is still the status the main ruleset requires; branch protection
+# can move to `ci-ok` and drop `check` afterwards.
 #
 # A push to main runs the same checks on the merge commit itself, so the commit a
 # tag publishes carries a green run of its own instead of relying on the pull
@@ -28,12 +33,111 @@ permissions:
   contents: read
 
 # A newer push to the same pull request cancels the run it replaces. A run on main
-# is never cancelled: each merge commit keeps a verdict of its own.
+# is never cancelled: each merge commit keeps a verdict of its own. The group is
+# the pull request when there is one, and cancel-in-progress is true only then.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # First. A pull request is classified from its diff against the base, with a
+  # shallow fetch of that commit and no third-party action. Push and schedule
+  # runs set run_all: the filter does not apply on main. A release pull request
+  # (a title starting with "release:", or a package.json version change) does too.
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      library: ${{ steps.classify.outputs.library }}
+      checks: ${{ steps.classify.outputs.checks }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      run_all: ${{ steps.classify.outputs.run_all }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          emit() { echo "$1=$2" >> "$GITHUB_OUTPUT"; echo "$1=$2"; }
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "event $EVENT_NAME: no path filter"
+            emit library true
+            emit checks true
+            emit docs_only false
+            emit run_all true
+            exit 0
+          fi
+          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          if git merge-base --is-ancestor "$BASE_SHA" HEAD 2>/dev/null; then
+            echo "diff $BASE_SHA...HEAD"
+            status=$(git diff -M --name-status "$BASE_SHA...HEAD")
+          else
+            echo "shallow checkout has no merge base; comparing $BASE_SHA to HEAD"
+            status=$(git diff -M --name-status "$BASE_SHA" HEAD)
+          fi
+          names=$(printf '%s\n' "$status" | awk -F '\t' '$1 ~ /^[RC]/ { print $2; print $3; next } NF >= 2 { print $2 }')
+          library=false
+          checks=false
+          docs_only=true
+          run_all=false
+          counted=0
+          case "$PR_TITLE" in
+            release:*) run_all=true; echo "release title: no path filter" ;;
+          esac
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            counted=$((counted + 1))
+            doc=false
+            case "$file" in
+              *.md|CHARTER.md|AGENTS.md|.github/ISSUE_TEMPLATE/*|docs/*) doc=true ;;
+            esac
+            hit_library=false
+            case "$file" in
+              src/*|package.json|bun.lock|bun.lockb|tsconfig*|scripts/build.ts|scripts/build-*|scripts/style-manifest.ts|scripts/button-style-profile.ts|scripts/optional-style-profiles.ts|scripts/bottom-app-bar-toolbar-style.ts|scripts/generate-token-catalogue.ts|scripts/generate-themes.ts|scripts/token-catalogue/*|scripts/svelte-package.ts|scripts/consolidate-declarations.ts|scripts/prune-declarations.ts|scripts/strip-internal-declaration-docs.ts|scripts/dist-modules.ts|scripts/element-modules.ts|scripts/package-styles.ts|scripts/component-exports.ts)
+                hit_library=true ;;
+            esac
+            hit_checks=false
+            case "$file" in
+              test/*|scripts/check-*|scripts/generate-adapters.ts|scripts/fixtures/*|scripts/conformance/*|scripts/comparators/*|.github/workflows/*|.github/actions/*)
+                hit_checks=true ;;
+            esac
+            # The public issues JSON. No browser group and no comparator runs it.
+            neutral=false
+            case "$file" in
+              scripts/conformance-issues.ts) neutral=true ;;
+            esac
+            if [ "$hit_library" = true ]; then library=true; fi
+            if [ "$hit_checks" = true ]; then checks=true; fi
+            if [ "$hit_library" = false ] && [ "$hit_checks" = false ] && [ "$doc" = false ] && [ "$neutral" = false ]; then
+              echo "unclassified $file: running the browser jobs"
+              checks=true
+            fi
+            if [ "$doc" = false ]; then docs_only=false; fi
+            if [ "$file" = package.json ]; then
+              old=$(git show "$BASE_SHA:package.json" 2>/dev/null | sed -n 's/^  "version": "\([^"]*\)".*/\1/p' | head -n 1 || true)
+              new=$(git show "HEAD:package.json" 2>/dev/null | sed -n 's/^  "version": "\([^"]*\)".*/\1/p' | head -n 1 || true)
+              if [ -n "$old" ] && [ -n "$new" ] && [ "$old" != "$new" ]; then
+                run_all=true
+                echo "version bump $old -> $new: no path filter"
+              fi
+            fi
+            echo "file $file library=$hit_library checks=$hit_checks doc=$doc"
+          done <<< "$names"
+          if [ "$counted" -eq 0 ]; then
+            echo "empty diff: running the browser jobs"
+            checks=true
+            docs_only=false
+          fi
+          emit library "$library"
+          emit checks "$checks"
+          emit docs_only "$docs_only"
+          emit run_all "$run_all"
+
   # Types, the strictness ratchets, lint and test-file naming, run side by side.
   static:
     runs-on: ubuntu-24.04
@@ -191,7 +295,10 @@ jobs:
   # package.json allows, and put the installed version back before they return
   # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
-    needs: build
+    needs: [build, changes]
+    # A group whose check script changed sets checks, so that group still runs
+    # (the whole matrix does: a false skip is worse than a slow run).
+    if: "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     container:
@@ -463,7 +570,8 @@ jobs:
 
   # Tooling-only comparators. Dependencies and builds never enter the published package.
   comparators:
-    needs: build
+    needs: [build, changes]
+    if: "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')"
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
@@ -541,18 +649,40 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-  # The status the main ruleset requires: green only when every job above is.
-  check:
+  # Green when every job succeeded or was skipped on purpose. A failed or
+  # cancelled job fails this one. Branch protection should require `ci-ok`.
+  ci-ok:
     if: always()
-    needs: [static, tests, build, package, browser, identity, comparators, ssr-worker]
+    needs: [changes, static, tests, build, package, browser, identity, comparators, ssr-worker]
     runs-on: ubuntu-24.04
     steps:
-      - name: Every job passed
+      - name: Every job passed or was skipped
         run: |
-          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
-          [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
-            && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.package.result }}' = success ] \
-            && [ '${{ needs.browser.result }}' = success ] \
-            && [ '${{ needs.identity.result }}' = success ] \
-            && [ '${{ needs.comparators.result }}' = success ] \
-            && [ '${{ needs.ssr-worker.result }}' = success ]
+          echo 'changes=${{ needs.changes.result }} static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
+          accept() {
+            case "$1" in
+              success|skipped) ;;
+              *) echo "::error::$2 is $1"; exit 1 ;;
+            esac
+          }
+          accept "${{ needs.changes.result }}" changes
+          accept "${{ needs.static.result }}" static
+          accept "${{ needs.tests.result }}" tests
+          accept "${{ needs.build.result }}" build
+          accept "${{ needs.package.result }}" package
+          accept "${{ needs.browser.result }}" browser
+          accept "${{ needs.identity.result }}" identity
+          accept "${{ needs.comparators.result }}" comparators
+          accept "${{ needs.ssr-worker.result }}" ssr-worker
+
+  # The status the main ruleset requires today. It follows ci-ok, so a skipped
+  # browser job stays green here until branch protection moves to ci-ok.
+  check:
+    if: always()
+    needs: [ci-ok]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: ci-ok passed
+        run: |
+          echo 'ci-ok=${{ needs.ci-ok.result }}'
+          [ '${{ needs.ci-ok.result }}' = success ]

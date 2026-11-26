@@ -35,13 +35,18 @@ interface Job {
   needs?: string | string[];
   if?: string;
   "continue-on-error"?: unknown;
+  outputs?: Record<string, string>;
   steps: Step[];
   strategy?: { matrix?: { include?: Record<string, string>[] } };
+}
+interface Workflow {
+  jobs: Record<string, Job>;
+  concurrency?: { group?: string; "cancel-in-progress"?: string };
 }
 
 // Bun parses YAML; the installed @types/bun does not declare it yet.
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
-const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as { jobs: Record<string, Job> };
+const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as Workflow;
 const manifest = await Bun.file("package.json").json() as { scripts: Record<string, string>; peerDependencies: Record<string, string> };
 const { scripts, peerDependencies: peers } = manifest;
 
@@ -100,14 +105,17 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
   });
 
-  // A command that may be skipped, or may fail without failing its job, still
-  // appears in the list above and no longer checks anything.
+  // Browser groups and comparators are the jobs a docs-only or tooling-only
+  // diff skips. Their commands still fail the job when the job runs. Every
+  // other command stays unconditional.
   test("runs them unconditionally, and their failure fails the job", () => {
+    const pathFilter = "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')";
     const loose: string[] = [];
     for (const [name, job] of Object.entries(workflow.jobs)) {
       const steps = job.steps.filter(step => commandsOf(job, step).length);
       if (!steps.length) continue;
-      if (job.if !== undefined) loose.push(`${name}: if`);
+      const filtered = (name === "browser" || name === "comparators") && job.if === pathFilter;
+      if (job.if !== undefined && !filtered) loose.push(`${name}: if`);
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
         const command = commandsOf(job, step).join(" ");
@@ -139,10 +147,38 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(unbounded).toEqual([]);
   });
 
-  test("gates the required `check` status on every other job", () => {
-    const { check, ...jobs } = workflow.jobs;
-    expect([check.needs].flat().sort()).toEqual(Object.keys(jobs).sort());
-    const gate = check.steps.map(step => step.run ?? "").join("\n");
-    for (const job of Object.keys(jobs)) expect(gate).toContain(`[ '\${{ needs.${job}.result }}' = success ]`);
+  test("gates ci-ok on every other job, and a skipped job still passes", () => {
+    const gate = workflow.jobs["ci-ok"];
+    const check = workflow.jobs.check;
+    const jobs = Object.keys(workflow.jobs).filter(name => name !== "ci-ok" && name !== "check").sort();
+    expect([gate.needs].flat().sort()).toEqual(jobs);
+    expect(gate.if).toBe("always()");
+    const body = gate.steps.map(step => step.run ?? "").join("\n");
+    expect(body).toContain("success|skipped");
+    for (const job of jobs) expect(body).toContain(`needs.${job}.result`);
+    expect([check.needs].flat()).toEqual(["ci-ok"]);
+    expect(check.if).toBe("always()");
+    const mirror = check.steps.map(step => step.run ?? "").join("\n");
+    expect(mirror).toContain("[ '${{ needs.ci-ok.result }}' = success ]");
+  });
+
+  test("classifies a pull request before skipping browser jobs and comparators", () => {
+    const changes = workflow.jobs.changes;
+    expect(changes.outputs?.library).toBe("${{ steps.classify.outputs.library }}");
+    expect(changes.outputs?.checks).toBe("${{ steps.classify.outputs.checks }}");
+    expect(changes.outputs?.docs_only).toBe("${{ steps.classify.outputs.docs_only }}");
+    expect(changes.outputs?.run_all).toBe("${{ steps.classify.outputs.run_all }}");
+    const script = changes.steps.map(step => step.run ?? "").join("\n");
+    expect(script).toContain('git diff -M --name-status "$BASE_SHA...HEAD"');
+    expect(script).toContain("git fetch --quiet --depth=1 origin");
+    expect(workflow.jobs.browser.needs).toEqual(["build", "changes"]);
+    expect(workflow.jobs.comparators.needs).toEqual(["build", "changes"]);
+    expect(workflow.jobs.static.if).toBeUndefined();
+    expect(workflow.jobs.tests.if).toBeUndefined();
+  });
+
+  test("cancels a superseded pull request run and never a run on main", () => {
+    expect(workflow.concurrency?.["cancel-in-progress"]).toBe("${{ github.event_name == 'pull_request' }}");
+    expect(workflow.concurrency?.group).toContain("github.ref");
   });
 });
