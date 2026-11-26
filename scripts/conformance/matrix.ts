@@ -1,4 +1,6 @@
 import { dirname, join, resolve } from "node:path";
+import { closeSync, mkdtempSync, openSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import pin from "../../conformance/reference.json";
 import { bindings } from "./matrix-bindings";
@@ -135,12 +137,29 @@ async function readFixture(entry: string, ids: string[], engine: Engine): Promis
   const command = [process.execPath, join(import.meta.dir, `${entry}.ts`), `--cases=${JSON.stringify(ids)}`];
   if (ids.length === 1 && ids[0] === "behavior") command.push("--matrix-behavior");
   if (engine === "webkit") command.push("--webkit");
-  const child = Bun.spawn(command, { cwd: root, stdout: "pipe", stderr: "pipe" });
-  const [exitCode, stdout, stderr] = await Promise.all([
-    child.exited, new Response(child.stdout).text(), new Response(child.stderr).text(),
-  ]);
-  if (exitCode) throw new Error(`${entry} (${engine}) exited ${exitCode}\n${stderr}`);
-  const result = JSON.parse(stdout) as { source: string; engine: string; rows: CaseResult[] };
+  const temporary = mkdtempSync(join(tmpdir(), "material-conformance-"));
+  const output = join(temporary, "fixture.json");
+  let result: { source: string; engine: string; rows: CaseResult[] };
+  try {
+    const fd = openSync(output, "w");
+    let child: ReturnType<typeof Bun.spawn>;
+    try {
+      child = Bun.spawn(command, { cwd: root, stdout: fd, stderr: "inherit" });
+    } finally {
+      closeSync(fd);
+    }
+    const exitCode = await child.exited;
+    if (exitCode) throw new Error(`${entry} (${engine}) exited ${exitCode}`);
+    try {
+      result = await Bun.file(output).json();
+    } catch (cause) {
+      const saved = join(root, "analysis", `conformance-${entry}-${engine}.log`);
+      await Bun.write(saved, Bun.file(output));
+      throw new Error(`${entry} (${engine}) produced invalid JSON; see ${saved}`, { cause });
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
   if (result.source !== "dist" || result.engine !== engine) {
     throw new Error(`${entry}: expected ${engine} against dist, got ${result.engine} against ${result.source}`);
   }

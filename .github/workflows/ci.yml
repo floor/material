@@ -398,6 +398,7 @@ jobs:
             analysis/core
             analysis/listbox
             analysis/conformance-matrix-actual.json
+            analysis/conformance-*.log
             analysis/catalogue-full.json
             analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json
