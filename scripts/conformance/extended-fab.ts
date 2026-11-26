@@ -78,6 +78,16 @@ cases.push({
   properties: ["opacity", "backgroundColor", "width", "height"],
 });
 
+// The focus ring: the sheet draws its own outline at the focus state.
+cases.push({
+  id: "primary-container/small/focus ring",
+  state: "focus",
+  mount,
+  config: { variant: "primary-container" },
+  parts: [{ name: "root", selector: ".mtrl-extended-fab" }, { name: "icon", selector: ".mtrl-extended-fab__icon" }],
+  properties: ["outlineStyle", "outlineWidth", "outlineColor", "outlineOffset"],
+});
+
 // The box at the larger sizes under a state, so a size change would show.
 for (const size of ["medium", "large"] as const) {
   cases.push({ id: `primary-container/${size}/hover`, state: "hover", mount, config: { variant: "primary-container", size }, parts, properties });
