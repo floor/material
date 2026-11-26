@@ -8,11 +8,13 @@
  * consumer builds. A raise edits one constant here; no check restates a
  * number, so a copy cannot be missed again.
  *
- * How a ceiling is set is unchanged and stays in scripts/size.ts's header:
- * `kb(n)` in the per-component tables, and for an explicit byte ceiling the
- * measured gzip plus 1% or 100 bytes, whichever is more, rounded up to the
- * next multiple of 50 (1,000 for the SSR entry's raw ceiling, the npm tarball
- * and the unpacked size).
+ * How a ceiling is set: `kb(n)` in the per-component tables in
+ * scripts/size.ts, and for an explicit byte ceiling the measured value plus at
+ * least 10 B, rounded up to the next 10 (the owner's standing decision of
+ * 2026-11-19; older rows in the comments below were raised under the earlier
+ * rule of measured plus 1%, rounded to the next 50 or 1,000, and are history).
+ * A row's comment states the measured figure, the CI run it came from and
+ * "the next 10 B", with the line it replaces as "Preceding:".
  */
 
 /** check-package-size.ts: the packed package fixture gzip ceilings, by fixture. */

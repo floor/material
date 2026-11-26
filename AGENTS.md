@@ -1,7 +1,10 @@
 # AGENTS.md
 
-How this repository is built, checked and shipped. Written for coding agents and precise enough
-to follow without guessing. Every command below was run in this checkout, with its output quoted.
+How this repository is built, checked and shipped, written for coding agents and precise enough
+to follow without guessing. Every command below was run in this checkout with its output quoted.
+
+The contributor guide is [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md): the setup, the
+conventions, the review process and this file's short form.
 
 ## Layout
 
@@ -9,8 +12,8 @@ to follow without guessing. Every command below was run in this checkout, with i
   `config.ts`, `types.ts`, `constants.ts`, and `features/` when it has several.
 - `src/elements/` — the custom elements (`<m-button>`) that wrap the factories: one spec per
   element, with its attributes, properties, events and slots.
-- `src/styles/` — Sass: `main.scss`, `components/_<name>.scss`, `themes/`, the token modules,
-  and `abstract/_mixins.scss`.
+- `src/styles/` — Sass: `main.scss`, `components/_<name>.scss`, `themes/`, the token modules and
+  `abstract/_mixins.scss`.
 - `scripts/` — the build, the size checks, the browser checks (`check-*.ts`) and
   `scripts/conformance/`, the Material 3 measurement tooling.
 - `test/` — the unit suite, mirroring `src/`, files ending `.test.ts`.
@@ -25,14 +28,14 @@ A new component touches these places:
 - `src/components/<name>/`, exported from `src/components/index.ts`;
 - `src/styles/components/_<name>.scss`, imported by `src/styles/main.scss` and declared in
   `scripts/style-manifest.ts`; colours, type, shape and motion come from tokens, never literals;
-- `src/elements/<name>.ts` for the element, and the adapters the build generates from it;
-- `scripts/size.ts` for its size budget;
-- `.changes/<slug>.md`, one changelog fragment (see the commit format below).
+- `src/elements/<name>.ts` for the element; the adapters are generated from it by the build;
+- `scripts/size.ts` for its per-component budget;
+- `.changes/<slug>.md`, one changelog fragment (see below).
 
 The element layer wraps a factory: the spec names the tag, its attributes and properties, its
 events and its shadow stylesheets; the factory is the implementation and stays public on its own.
 
-## Install and the checks
+## Install and the local checks
 
 Bun 1.4.2 is what CI runs. Playwright drives the browser checks; its browsers are installed once.
 
@@ -40,14 +43,14 @@ Bun 1.4.2 is what CI runs. Playwright drives the browser checks; its browsers ar
 $ bun install --frozen-lockfile
 341 packages installed [766.00ms]
 
-$ bunx playwright install chromium   # add webkit for the WebKit runs
+$ bunx playwright install chromium   # add webkit for the WebKit runs; nothing is printed when installed
 ```
 
 The local gate, in the order that fails fastest:
 
 ```console
 $ bun run build
-Built material 3.16.7 in ./dist
+Built material <version> in ./dist
 
 $ bun run ts:check
 $ tsc --noEmit --skipLibCheck
@@ -58,6 +61,9 @@ $ bunx eslint src scripts --ext .ts,.tsx
 $ bun test ./test/components/button/button.test.ts
  28 pass
  0 fail
+
+$ bun run test:naming
+check-test-naming: every file defining tests is collectable
 
 $ bun run scripts/check-dialog-small-viewport.ts
 Dialog small viewport check passed.
@@ -72,15 +78,68 @@ $ bun run changelog:check
 changelog:check: 0 fragment(s); no src/ change
 ```
 
-`ts:check` and `lint` print nothing beyond their script line when they pass. Browser checks are
-files under `scripts/check-*.ts`, run directly with Bun; each ends with a sentence like
-`Dialog small viewport check passed.` and exits non-zero on a failure. A check written for a fix
-must fail on the code before it and pass after; quote both runs in the pull request.
+`ts:check` and `lint` print nothing beyond their script line when they pass.
+
+Steps a change can break, run when the change reaches them:
+
+```console
+$ bun run size
+  ✓ SIZES.md: the committed table matches this measurement
+
+$ bun run size:check
+npm package: <bytes> bytes compressed, <bytes> unpacked, <files> files (packed with Node <version> / npm <version>)
+
+$ bun run styles-package:check
+Passed styles package: 15 public Sass entries compile from the packed tarball to the checkout's own CSS, and 3 internal partials are absent.
+
+$ bun run readme:check
+README.md and npm-readme.md: 22 scripts compiled, 45 specifiers resolved, 65 tags checked, 79 links
+
+$ bun run docs-imports:check
+65 documented imports of material: 45 statements compiled against the packed package, 14 Markdown files and 643 sources read.
+```
+
+`size:check` and `styles-package:check` read `dist/`, so run `bun run build` first. A change to
+`src/styles/` can also fail `size:check`, `styles-package:check` and `test/styles/sass-config.test.ts`
+together; see *Size budgets and pins*.
+
+`changelog:check` compares the committed branch with `main`: an uncommitted `src/` edit still
+prints `changelog:check: 0 fragment(s); no src/ change`, so commit before trusting it.
+
+## Browser checks
+
+A browser check is a file `scripts/check-<what>.ts`, run with Bun. It bundles the factory or the
+element with `Bun.build`, compiles the styles with Sass, serves one page with `Bun.serve`, opens
+it with Playwright and asserts on measured values. Copy `scripts/check-divider-sheet-conformance.ts`:
+it shows the virtual entry for `Bun.build`, `compileString` with `src/styles` on the load path,
+`launchChromium` from `scripts/browser-profile.ts` (which keeps the browser profile inside the
+worktree) and the per-case assertions. When the defect needs a second engine, launch `webkit`
+from Playwright the way `scripts/check-dialog-small-viewport.ts` does and run the same function
+twice.
+
+End the file with one sentence saying it passed, so the last line is the verdict:
+
+```console
+$ bun run scripts/check-dialog-small-viewport.ts
+Dialog small viewport check passed.
+```
+
+A check written for a fix must fail on the code before it and pass after. Quote both runs in the
+pull request.
+
+To run a check in CI: add a `package.json` script such as `"menu-container-space:check": "bun run
+scripts/check-menu-container-space.ts"`, add that script to a `browser` group's `checks:` line in
+`.github/workflows/ci.yml`, and add the script name to the list in
+`test/build/ci-commands.test.ts` (the test fails when CI stops running a command). Choose the
+group by area when a fitting one exists — `components-a`/`components-b` for factories,
+`elements-a`/`elements-b` for the elements, `shadow-styles` for the styles — and give a slow
+check a group of its own, because a run takes as long as its slowest group.
 
 ## Conformance measurements
 
 `scripts/conformance/` measures the library against Material 3, in Chromium and WebKit, and
-returns JSON.
+returns JSON. Use the source build for a development measurement and an exact-head `dist/` for
+what ships: the result says which it read.
 
 ```console
 $ bun run conformance --list
@@ -89,10 +148,24 @@ top-app-bar
 
 $ bun run conformance divider
 {
-  "source": "src",
+  "source": "dist",
   "engine": "chromium",
   "rows": [ { "id": "full-width/horizontal/ltr/light", "state": "rest", ... } ]
 }
+```
+
+`"source"` reads `dist` once `dist/` exists, as after `bun run build`, and `src` when the
+fixture had to bundle the checkout instead. A row
+is one case: its `id` carries the variant, size, state, density, zoom or colour scheme it was
+measured in, and `parts` holds the measured values per named part. To answer a spacing question,
+read the row whose `id` has the variant, size and state you care about, compare its part's
+`width`/`height`/`x`/`y` (or the CSS values) with the reference, and change the fixture only when
+it has no case for the combination you need. `--case=<text>` runs the cases whose id contains
+that text:
+
+```console
+$ bun run conformance button --case=filled/m/rest
+{ "source": "dist", "engine": "chromium", "rows": [ { "id": "filled/m/rest", ... } ] }
 ```
 
 Compose tokens come from the pinned AndroidX checkout; `scripts/conformance/README.md` has the
@@ -110,26 +183,70 @@ the conformance measurements.
   `https://r.jina.ai/https://m3.material.io/m3/pages/<page>/<section>`, and linked in the pull
   request. Never from memory, and never from another library's behaviour.
 
+A value that a Compose token states is enough: name the token file and line at the pin. A decision
+the tokens do not carry — what a state looks like, when a layer applies, how a control behaves —
+is a guideline question, read on m3.material.io on the day, with the date in the pull request. When
+the two disagree, say so and state which one the change follows and why.
+
+## Changelog fragments
+
+A change under `src/` ships with one file in `.changes/`; the directory is created by the first
+fragment. `bun run changelog:check` fails a branch that touches `src/` without one, and fails a
+branch other than `release/*` that edits `CHANGELOG.md`.
+
+```markdown
+Section: Fixed
+Migration: Replace `createThing()` with `createOtherThing()`.
+
+**What changed.** Why it changed, what stays the same, and the measured before and after.
+```
+
+`Section` is `Added`, `Changed`, `Deprecated` or `Fixed`. `Migration` is optional and only for a
+change a consumer must act on. The bold lead names the component; its pull request link is added
+after the pull request exists — a follow-up commit on the branch, or left out, because the release
+pull request assembles the section from the fragments as written. Name the file `<slug>.md`; a date
+prefix orders it within its section.
+
 ## Size budgets and pins
 
 - `scripts/budgets.ts` — the explicit byte ceilings (packed package, tarball, unpacked, CSS).
-- `scripts/size.ts` — the per-component gzip budgets, and the commitment that `SIZES.md` matches
-  its measurement: `bun run size` ends with `✓ SIZES.md: the committed table matches this measurement`.
-- `SIZES.md` and the sizes table in `README.md` and `npm-readme.md` — the committed figures.
-- `scripts/fixtures/sass-config-baseline.json` — the frozen Sass sources digest and the payload
-  digests of the packed JS and CSS.
+- `scripts/size.ts` — the per-component gzip budgets in `kb(n)` steps, and the `SIZES.md` table
+  that must match its measurement.
+- `SIZES.md` and the sizes table in `README.md` and `npm-readme.md` — the committed figures; the
+  README's table is refreshed by a release.
+- `scripts/fixtures/sass-config-baseline.json` — the frozen Sass source digests (`sources`) and
+  the payload digests of the packed JS and CSS (`payloads`).
 
-Raise a ceiling only when a measurement is over it, to the measured value plus 10 B, and state
-the figure in the pull request. The package job prints the measurement:
+**One rule:** raise a ceiling only when a measurement is over it, to the measured value plus at
+least 10 B, rounded up to the next 10 — and state the figure in the pull request. Nothing else
+raises a ceiling.
+
+**Take the figure from CI, not from here.** The packer's output depends on its Node and npm; the
+package job prints the authoritative figure. To reproduce it locally:
 
 ```console
-$ bun run size:check
-npm package: 919,893 bytes compressed, 5,258,247 unpacked, 1,303 files (packed with Node v26.8.1 / npm 11.19.0)
+$ npx -y -p node@22 -p npm@10 -- bun run size:check
+npm package: <bytes> bytes compressed, <bytes> unpacked, <files> files (packed with Node <version> / npm <version>)
 ```
 
-The packer's figure depends on its Node and npm, so take the ceiling from the CI run, not from a
-local one. When the payload map drifts, the package job prints each path with its new digest;
-replace that line only, and leave `tested`, `branch`, `ci` and `mainRevision` as they are.
+The packer can differ from CI's by a few bytes run to run; CI's figure governs.
+
+A raised ceiling carries a comment saying the measured figure, the CI run it came from, and
+`the next 10 B`, with the line it replaces as `Preceding:`. An older figure stays in the chain as
+history; delete nothing.
+
+A CSS change can move the packed output in three places:
+
+1. `size:check` — the packed package, the tarball, the unpacked size and the CSS budgets;
+2. `styles-package:check` — the packed Sass entries against the checkout's own CSS, and the
+   payload map;
+3. `test/styles/sass-config.test.ts` — the frozen `sources` digests, where `sources.main` fails
+   first and alone. Run it, read the digest the assertion prints, and put that value in the file.
+
+When `sources.main` moves, update the comment above the loop in `test/styles/sass-config.test.ts`
+that says why it moved, naming the change and its file. When the payload map drifts, the package
+job prints each path with its new digest; replace that line and leave `tested`, `branch`, `ci` and
+`mainRevision` as they are.
 
 ## The CI gate
 
@@ -143,14 +260,25 @@ one of the `browser` groups in `ci.yml` and to the list in `test/build/ci-comman
 ## Commit and pull request format
 
 - Branch from `main`; one topic per branch and per pull request.
-- Conventional commits, one idea per commit, titled `fix(scope): …`, `feat(scope): …` and so on.
-  A change driven by the specification names its Material source in the commit body.
+- Conventional commits, one idea per commit: `fix(scope): …`, `feat(scope): …`, `docs: …`.
 - Plain merge commits only; squash is never used.
-- A change under `src/` ships with a `.changes/<slug>.md` fragment, and `bun run changelog:check`
-  fails without one; a documentation-only change needs none. Only a release pull request edits
-  `CHANGELOG.md`, and it deletes the fragments it assembles.
-- A pull request body carries the measurement: the failing check before and the passing one
-  after, with both runs quoted, and any size ceiling it raised with its measured figure.
+- A change under `src/` ships with a `.changes/<slug>.md` fragment; a documentation-only change
+  needs none. Only a release pull request edits `CHANGELOG.md`.
+- A spec-driven change names its source in the commit body, after the description:
+
+  ```text
+  fix(button): the pressed container keeps its 20 dp corner
+
+  The pressed state drew 4 dp where the container is 20 dp. ShapeTokens.kt,
+  CornerSmall, Compose Material 3 1.5.0 with the tooling pin 08ec699d.
+
+  Agent: <name> · <role>
+  ```
+
+- A pull request body carries, in this order: what was wrong and how it was measured; the failing
+  run on the code before the change and the passing run after, both quoted; a link to the source
+  it follows; when it changed size, the measured figure and the ceiling it raised.
+- A branch that has been reviewed is not force-pushed; a review fix is a new commit.
 
 ## Never
 
