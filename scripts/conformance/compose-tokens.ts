@@ -1,58 +1,25 @@
 #!/usr/bin/env bun
 // scripts/conformance/compose-tokens.ts
 /**
- * The M3 column of a conformance table, generated from the library's own
- * Compose token files instead of typed by hand.
- *
- *   bun run scripts/conformance/compose-tokens.ts button
- *   bun run scripts/conformance/compose-tokens.ts button --files
- *   bun run scripts/conformance/compose-tokens.ts --only ButtonSmallTokens,ButtonMediumTokens
- *   bun run scripts/conformance/compose-tokens.ts button-group --json
- *
- * It reads the version named in docs/projects/material/library/compose-tokens/
- * current.json, finds the token files whose name matches the component, and
- * prints every `val Name = value` with its raw value, the value resolved
- * through the theme, shape and type aliases (the colour scheme for light and
- * dark, the shape tokens, the elevation levels, the type scale), and the
- * file:line where each is written. Nothing here is measured: the "ours" column
- * of the table is a browser measurement on origin/main.
+ * Resolve the public Compose tokens for a component, including aliases,
+ * light and dark colours, and source lines. COMPOSE_TOKENS_DIR must point
+ * to the flat tokens directory of a public AndroidX checkout.
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-
-const root = join(import.meta.dir, "..", "..");
-
-/** The library's token folder: found by walking up from the repo, or given. */
-const findLibrary = (): string => {
-  const given = process.env.COMPOSE_TOKENS_DIR;
-  if (given) return given;
-  let at = root;
-  for (let i = 0; i < 8; i++) {
-    const candidate = join(at, "docs", "projects", "material", "library", "compose-tokens");
-    if (readdirSync(at).includes("docs")) {
-      try {
-        readFileSync(join(candidate, "current.json"));
-        return candidate;
-      } catch {
-        // keep walking
-      }
-    }
-    at = join(at, "..");
-  }
-  throw new Error("compose-tokens not found; set COMPOSE_TOKENS_DIR");
-};
-const library = findLibrary();
-const versionFile = join(library, "current.json");
 
 type Token = { name: string; raw: string; line: number; file: string };
 type Resolved = { text: string; chain: string };
 
-const readVersion = (): string => JSON.parse(readFileSync(versionFile, "utf8")).version as string;
-/** `<library>/<version>/files/…/tokens`, or a folder of `.kt` files given as the library. */
-let tokensDir = "";
-const tokenDir = (version: string): string =>
-  join(library, version, "files", "compose", "material3", "material3", "src", "commonMain", "kotlin", "androidx", "compose", "material3", "tokens");
-const tokenFiles = (): string[] => readdirSync(tokensDir).filter((name) => name.endsWith(".kt"));
+const tokenFiles = (directory: string): string[] =>
+  readdirSync(directory).filter(name => name.endsWith(".kt")).sort();
+
+const readVersion = (directory: string): string => {
+  const shapeTokens = readFileSync(join(directory, "ShapeTokens.kt"), "utf8");
+  const version = /^\s*\/\/\s*VERSION:\s*([\d._]+)/m.exec(shapeTokens)?.[1];
+  if (!version) throw new Error("No VERSION header in ShapeTokens.kt");
+  return version;
+};
 
 /**
  * Every token in a file. Two forms are read: `val Name = value`, and the
@@ -95,11 +62,11 @@ const parseTokens = (path: string, file: string): Token[] => {
   return tokens;
 };
 
-const index = () => {
-  const files = tokenFiles();
+const index = (directory: string) => {
+  const files = tokenFiles(directory);
   const byName = new Map<string, Token[]>();
   for (const file of files) {
-    const parsed = parseTokens(join(tokensDir, file), file);
+    const parsed = parseTokens(join(directory, file), file);
     if (parsed.length) byName.set(file.replace(/\.kt$/, ""), parsed);
   }
   return { files, byName };
@@ -227,9 +194,17 @@ const listFiles = args.includes("--files");
 const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".length).split(",").map((name) => name.trim());
 const component = args.find((arg) => !arg.startsWith("--")) ?? "";
 
-const version = readVersion();
-tokensDir = existsSync(join(library, version)) ? tokenDir(version) : library;
-const lookupIndex = index();
+if (args.includes("--help")) {
+  console.log("Usage: COMPOSE_TOKENS_DIR=<tokens directory> bun run conformance tokens <component> [--json | --files] [--only=TokenFile,...]");
+  process.exit(0);
+}
+const directory = process.env.COMPOSE_TOKENS_DIR;
+if (!directory) {
+  console.error("Set COMPOSE_TOKENS_DIR to the public AndroidX checkout’s tokens directory (see scripts/conformance/README.md).");
+  process.exit(1);
+}
+const version = readVersion(directory);
+const lookupIndex = index(directory);
 const lookup: Lookup = { tokens: new Map([...lookupIndex.byName].map(([file, tokens]) => [file, new Map(tokens.map((token) => [token.name, token]))])) };
 const wanted = (file: string): boolean => {
   if (only?.length) return only.includes(file.replace(/\.kt$/, ""));
