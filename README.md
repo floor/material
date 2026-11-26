@@ -1032,6 +1032,17 @@ What a page meets keeps the name:
 - the `m-` tags;
 - the `mtrl.*` cascade layers.
 
+## Maintenance
+
+material is maintained by AI coding agents under the project owner's review. Every change
+goes through review and testing by agents from a different lab than its author, and by CI.
+
+- An issue is read, and a reported defect is reproduced in a browser outside any website.
+- A confirmed defect ships with the check that reproduces it, in a patch release.
+- There is no response-time commitment.
+
+To contribute, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
 ## Contributing
 
 Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the development setup, conventions and the distribution checks.
