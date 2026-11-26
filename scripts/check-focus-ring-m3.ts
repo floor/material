@@ -82,6 +82,9 @@ const controls = rows.map((row, index) => {
   if (row.name === "list option") {
     return `<div id="list-option" data-i="${index}"></div>`;
   }
+  if (row.name === "checkbox") {
+    return `<div id="checkbox" data-i="${index}"></div>`;
+  }
   return `<button type="button" class="${className}" data-i="${index}">${row.name}</button>`;
 }).join("\n");
 
@@ -89,12 +92,19 @@ const listDir = await mkdtemp(join(tmpdir(), "focus-ring-list-"));
 const listEntry = join(listDir, "entry.ts");
 await writeFile(listEntry, `
 import createList, { withSingleSelectListbox } from ${JSON.stringify(join(import.meta.dir, "../src/components/list/index.ts"))};
+import createCheckbox from ${JSON.stringify(join(import.meta.dir, "../src/components/checkbox/index.ts"))};
 const slot = document.querySelector<HTMLElement>("#list-option");
-const index = slot?.dataset.i ?? "";
+const listIndex = slot?.dataset.i ?? "";
 const list = withSingleSelectListbox(createList({ ariaLabel: "Options", items: [{ headline: "One" }] }));
 slot?.replaceWith(list.element);
 const option = list.element.querySelector<HTMLElement>("[role=option]");
-if (option) option.dataset.i = index;
+if (option) option.dataset.i = listIndex;
+const box = document.querySelector<HTMLElement>("#checkbox");
+const boxIndex = box?.dataset.i ?? "";
+const checkbox = createCheckbox({ label: "Agree" });
+box?.replaceWith(checkbox.element);
+const icon = checkbox.element.querySelector<HTMLElement>(".mtrl-checkbox__icon");
+if (icon) icon.dataset.i = boxIndex;
 `);
 const listBuild = await Bun.build({ entrypoints: [listEntry], target: "browser", format: "esm" });
 if (!listBuild.success) throw new Error(String(listBuild.logs));
