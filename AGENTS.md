@@ -241,12 +241,17 @@ A CSS change can move the packed output in three places:
 2. `styles-package:check` — the packed Sass entries against the checkout's own CSS, and the
    payload map;
 3. `test/styles/sass-config.test.ts` — the frozen `sources` digests, where `sources.main` fails
-   first and alone. Run it, read the digest the assertion prints, and put that value in the file.
+   first and alone when the change is confined to that entry. Run it, read the digest the
+   assertion prints, and put that value in the file.
 
-When `sources.main` moves, update the comment above the loop in `test/styles/sass-config.test.ts`
-that says why it moved, naming the change and its file. When the payload map drifts, the package
-job prints each path with its new digest; replace that line and leave `tested`, `branch`, `ci` and
-`mainRevision` as they are.
+`sources.main` fails first and alone when the change is confined to that entry; a theme or element
+change moves its own entry instead. Whatever moved, update the comment above the loop in
+`test/styles/sass-config.test.ts` that says why, naming the change and its file. When the payload
+map drifts, the package job prints each path with its new digest; replace that line and leave
+`tested`, `branch`, `ci` and `mainRevision` as they are.
+
+`readme:check` fails CI on a stale size row, so a pull request that moves a size updates the rows
+in `README.md` and `npm-readme.md` itself, to the figure the run prints.
 
 ## The CI gate
 

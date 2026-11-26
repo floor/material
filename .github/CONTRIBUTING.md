@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to material! This document provides guidelines and instructions for contributing to this lightweight, TypeScript-focused UI component library.
 
+Claude Code 2.1.277 or later, Codex and Cursor all read [AGENTS.md](../AGENTS.md) on their own — see [Claude Code's memory documentation](https://code.claude.com/docs/en/memory#agents-md). Contributor agents should start there for the checks and the rules, and use this guide for the whole workflow.
+
 ## Why Contribute?
 
 material aims to be a modern, flexible UI component library with:
@@ -193,7 +195,8 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
    the pull request body: the check that failed before and the same check passing after, both
    quoted.
 7. A fix that needs more bytes than a size budget allows raises that budget to the measured value
-   plus 10 B and says so in the pull request. Never raise a budget silently or by more.
+   plus at least 10 B, rounded up to the next 10, and says so in the pull request. Never raise a
+   budget silently or by more.
 
 Reviewers check that the change follows the sources it names, that the measurement in the body
 reproduces, that the new check fails without the fix, and that the DOM, the CSS and the public API

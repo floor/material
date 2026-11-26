@@ -19,21 +19,14 @@
  * (`node:zlib`, the setting check-adapter-size.ts uses — what a CDN serves).
  * It is reported, never gated: every budget in this file stays gzip.
  *
- * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
- * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
- * least 100 bytes above the measured gzip. Explicit byte ceilings for a
- * bundle (the constants in scripts/budgets.ts: the `gzip:` scenarios,
- * `full-css` and the other `*-css` ones, the SSR entry and pages,
- * `button-initial`, the Vite ceilings in check-consumer.ts, and the slider
- * entry in check-slider.ts) are measured plus 1% or 100 bytes, whichever is more, rounded up to the
- * next multiple of 50, and never above the ceiling `next` had before this
- * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
- * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
- * list, navigation-rail, select and switch, and the packed text field gzip,
- * were raised to the rule once, not grown. The unpacked size stayed at
- * 6,393,000 until the 3.0.0 contract work filled it; it is 6,458,000 by the
- * same rule (scripts/check-package-size.ts). The merged tree measured 6,420,252;
- * measured plus 1% is above that ceiling, so it stays.
+ * How a ceiling is set. `kb(n)` in both tables, including `all`: the smallest
+ * multiple of 0.05 such that `kb(n)` is at least 100 bytes above the measured
+ * gzip. An explicit byte ceiling (the constants in scripts/budgets.ts, the
+ * Vite ceilings in check-consumer.ts and the slider entry in check-slider.ts)
+ * is measured plus at least 10 B, rounded up to the next 10 — the owner's
+ * standing decision of 2026-11-19, and the rule scripts/budgets.ts restates.
+ * Ceilings and rows in the comments below that name 1% or a multiple of 50 or
+ * 1,000 were set under the earlier rule and are history.
  *
  * The published table. SIZES.md is generated from this script's own results by
  * `bun run size --markdown > SIZES.md`, and a plain `bun run size` fails when
