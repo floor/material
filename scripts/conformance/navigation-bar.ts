@@ -10,9 +10,11 @@ const mount: Case["mount"] = (mtrl, host, data) => {
   host.style.width = `${width}px`;
   const icon = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
   const create = mtrl.createNavigationBar as unknown as (config: NavigationBarConfig) => NavigationBarComponent;
+  const labels = ["Home", "Trips", "Saved"];
+  if (itemLayout === "horizontal") labels.push("Profile", "Settings");
   const bar = create({
     itemLayout, ripple: false,
-    items: ["Home", "Trips", "Saved"].map((label, index) => ({
+    items: labels.map((label, index) => ({
       id: String(index), label, icon, active: index === (selected ? 0 : 1),
       badge: index === 0 ? 3 : index === 1 ? true : undefined,
       disabled: disabled && index === 0,

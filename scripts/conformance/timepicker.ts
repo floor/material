@@ -8,15 +8,21 @@ type Config = {
   orientation: "vertical" | "horizontal";
   direction: "ltr" | "rtl";
   seconds?: boolean;
+  experimental?: "scroll" | "inline";
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
-  const { direction, seconds, ...config } = data as Config;
+  const { direction, seconds, experimental, ...config } = data as Config;
   const page = window as Window & { measuredTimepicker?: TimePickerComponent };
   page.measuredTimepicker?.destroy();
   document.documentElement.dir = direction;
   const create = mtrl.createTimePicker as unknown as (settings: TimePickerConfig) => TimePickerComponent;
-  const picker = create({ ...config, title: "Select time", value: "14:30", showSeconds: seconds });
+  const picker = create({
+    ...config,
+    ...(experimental === "scroll" ? { type: "scroll" as TimePickerConfig["type"] } : {}),
+    ...(experimental === "inline" ? { inline: true } : {}),
+    title: "Select time", value: "14:30", showSeconds: seconds,
+  });
   host.append(picker.element);
   page.measuredTimepicker = picker;
   picker.open();
@@ -28,6 +34,8 @@ const period = piece("period");
 const selectedPeriod = `${period} [aria-checked='true']`;
 const restPeriod = `${period} [aria-checked='false']`;
 const parts = [
+  part("inline", ".mtrl-time-picker input:not(dialog input)"),
+  part("scroll", ".mtrl-time-picker__wheel"),
   part("surface", dialog), part("scrim", dialog, "::backdrop"), part("title", piece("title")),
   part("hours", piece("hours")), part("mins", piece("minutes")), part("secs", piece("seconds")),
   part("inputLabel", piece("input-label")), part("separator", piece("separator")),
@@ -55,6 +63,10 @@ for (const type of ["dial", "input"] as const) {
       parts: [part("stateTarget", target), ...parts, ...check],
     });
   };
+  if (type === "input") {
+    add("scroll", { ...setup, experimental: "scroll" });
+    add("inline", { ...setup, experimental: "inline" });
+  }
   for (const scheme of ["light", "dark"] as const) {
     add(`base/${scheme}`, setup, scheme);
     add(`horizontal/${scheme}`, { ...setup, orientation: "horizontal" }, scheme);
@@ -73,7 +85,7 @@ for (const type of ["dial", "input"] as const) {
   add("seconds", { ...setup, seconds: true, format: "24h" });
 }
 
-await runFieldFixture("timepicker", cases, id => [
+await runFieldFixture("timepicker", cases, id => id === "input/scroll" ? ["surface"] : [
   "surface", "title", "hours", "mins", "separator", "confirm", "cancel", "toggle",
   ...(id.includes("/24h/") || id.endsWith("/seconds") ? [] : ["period", "selectedPeriod", "restPeriod"]),
   ...(id.startsWith("dial/") ? ["dial", "handle", "center", "track", "dialRest"] : ["inputLabel"]),

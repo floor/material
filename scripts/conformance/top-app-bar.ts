@@ -9,10 +9,11 @@ type Config = {
   scrolled?: boolean;
   noLeading?: boolean;
   keepHeight?: boolean;
+  expressive?: "medium-flexible" | "large-flexible" | "subtitle" | "search";
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
-  const { type, direction, scrolled, noLeading, keepHeight } = data as Config;
+  const { type, direction, scrolled, noLeading, keepHeight, expressive } = data as Config;
   const page = window as Window & { measuredAppBar?: AppBarComponent };
   page.measuredAppBar?.destroy();
   document.documentElement.dir = direction;
@@ -20,7 +21,13 @@ const mount: Case["mount"] = (mtrl, host, data) => {
   const factory = mtrl.createAppBar as unknown as (config: AppBarConfig) => AppBarComponent;
   const iconButton = mtrl.createIconButton as unknown as (config: IconButtonConfig) => IconButtonComponent;
   const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
-  const bar = factory({ title: "Trips", type, scrollable: true, compressible: !keepHeight });
+  const bar = factory({
+    title: "Trips", type,
+    ...(expressive === "subtitle" ? { subtitle: "Details" } : {}),
+    ...(expressive === "search" ? { search: true, type: "search" as TopAppBarType } : {}),
+    ...(expressive?.endsWith("flexible") ? { type: expressive as TopAppBarType } : {}),
+    scrollable: true, compressible: !keepHeight,
+  });
   const place = (where: "leading" | "trailing", name: string) => {
     const button = iconButton({ ariaLabel: name, icon }).element;
     button.dataset.fixturePart = name;
@@ -37,6 +44,9 @@ const mount: Case["mount"] = (mtrl, host, data) => {
 
 const root = ".mtrl-top-app-bar";
 const parts = [
+  part("mediumFlexible", root+"--medium-flexible .mtrl-top-app-bar__row:nth-child(2)"),
+  part("largeFlexible", root+"--large-flexible .mtrl-top-app-bar__row:nth-child(2)"),
+  part("subtitle", root+"__subtitle"), part("search", root+" input[type=search]"),
   part("root", root), part("leadingWrap", root+"__leading"), part("title", root+"__headline"),
   part("trailingWrap", root+"__trailing"),
   part("leading", "[data-fixture-part='Back']"), part("leadingIcon", "[data-fixture-part='Back'] svg"),
@@ -57,6 +67,11 @@ for (const type of ["small","center","medium","large"] as const) {
   for (const scheme of ["light", "dark"] as const) {
     add(`rest/${scheme}`, {}, scheme);
     add(`scrolled/${scheme}`, { scrolled: true }, scheme);
+  }
+  if (type === "small") {
+    for (const expressive of ["medium-flexible", "large-flexible", "subtitle", "search"] as const) {
+      add(expressive, { expressive });
+    }
   }
   add("rtl", { direction: "rtl" });
   add("no-leading", { noLeading: true });
