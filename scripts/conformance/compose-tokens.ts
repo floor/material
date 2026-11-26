@@ -17,7 +17,7 @@
  * file:line where each is written. Nothing here is measured: the "ours" column
  * of the table is a browser measurement on origin/main.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "..", "..");
@@ -48,28 +48,40 @@ type Token = { name: string; raw: string; line: number; file: string };
 type Resolved = { text: string; chain: string };
 
 const readVersion = (): string => JSON.parse(readFileSync(versionFile, "utf8")).version as string;
+/** `<library>/<version>/files/…/tokens`, or a folder of `.kt` files given as the library. */
+let tokensDir = "";
 const tokenDir = (version: string): string =>
   join(library, version, "files", "compose", "material3", "material3", "src", "commonMain", "kotlin", "androidx", "compose", "material3", "tokens");
-const tokenFiles = (version: string): string[] => readdirSync(tokenDir(version)).filter((name) => name.endsWith(".kt"));
+const tokenFiles = (): string[] => readdirSync(tokensDir).filter((name) => name.endsWith(".kt"));
 
-/** Every `val Name = value` in a file, multi-line values gathered. */
+/**
+ * Every token in a file. Two forms are read: `val Name = value`, and the
+ * androidx-main form `inline val Name: Type` with `get() = value` on the
+ * following lines. A value that opens a call or is written on the next line
+ * runs until its own parens close.
+ */
 const parseTokens = (path: string, file: string): Token[] => {
   const lines = readFileSync(path, "utf8").split("\n");
   const tokens: Token[] = [];
+  const depth = (text: string) => (text.match(/\(/g)?.length ?? 0) - (text.match(/\)/g)?.length ?? 0);
+  const continues = (line: string | undefined) =>
+    line !== undefined && !/^\s*(val |inline val |const val |object |enum |class |\})/.test(line);
   for (let i = 0; i < lines.length; i++) {
-    const match = /^\s*val (\w+) =\s*(.*)$/.exec(lines[i]!);
-    if (!match) continue;
-    const name = match[1]!;
-    let raw = match[2]!.trim();
+    const inline = /^\s*(?:(?:inline|const)\s+)*val (\w+)(?:\s*:\s*[\w.]+)?(?:\s*=\s*(.*))?$/.exec(lines[i]!);
+    if (!inline) continue;
+    const name = inline[1]!;
+    let raw = (inline[2] ?? "").trim();
     let end = i;
-    // A value that opens a call or a copy runs to its balanced close; a value
-    // written on the following line (`val TitleMedium =` then `DefaultText…`)
-    // runs until its own parens close.
-    const depth = (text: string) => (text.match(/\(/g)?.length ?? 0) - (text.match(/\)/g)?.length ?? 0);
-    let opened = depth(raw);
-    const continues = (line: string | undefined) =>
-      line !== undefined && !/^\s*(val |object |enum |class |\})/.test(line);
-    if (raw === "") opened = 1;
+    let opened = raw === "" ? 1 : depth(raw);
+    if (raw === "" ) {
+      // `get() = value` on the following lines
+      const getter = /^\s*get\(\)\s*=\s*(.*)$/.exec(lines[i + 1] ?? "");
+      if (getter) {
+        end = i + 1;
+        raw = getter[1]!.trim();
+        opened = raw === "" ? 1 : depth(raw);
+      }
+    }
     while (opened > 0 && continues(lines[end + 1])) {
       end += 1;
       const next = lines[end]!.trim();
@@ -77,17 +89,17 @@ const parseTokens = (path: string, file: string): Token[] => {
       opened += depth(next);
       if (raw !== "" && opened <= 0) break;
     }
-    tokens.push({ name, raw: raw.replace(/\s+/g, " ").trim(), line: i + 1, file });
+    if (raw !== "") tokens.push({ name, raw: raw.replace(/\s+/g, " ").trim(), line: i + 1, file });
     i = end;
   }
   return tokens;
 };
 
 const index = (version: string) => {
-  const files = tokenFiles(version);
+  const files = tokenFiles();
   const byName = new Map<string, Token[]>();
   for (const file of files) {
-    const parsed = parseTokens(join(tokenDir(version), file), file);
+    const parsed = parseTokens(join(tokensDir, file), file);
     if (parsed.length) byName.set(file.replace(/\.kt$/, ""), parsed);
   }
   return { files, byName };
@@ -152,6 +164,13 @@ const resolve = (token: Token, lookup: Lookup): Resolved => {
     return { text: found ? shapeText(found.raw) : `shape role ${shape[1]}`, chain: where(found) };
   }
 
+  // androidx-main writes spacing through measurement tokens: resolve them.
+  const measure = /^MeasurementTokens\.(\w+)/.exec(raw);
+  if (measure) {
+    const found = tokenOf(lookup, "MeasurementTokens", measure[1]!);
+    return { text: found ? found.raw.replace(/\.dp$/, " dp") : `measurement ${measure[1]}`, chain: where(found) };
+  }
+
   // A direct shape value (`ShapeTokens.CornerValueSmall`) resolves in place.
   const shapeValue = /^ShapeTokens\.(\w+)/.exec(raw);
   if (shapeValue) {
@@ -203,6 +222,7 @@ const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".leng
 const component = args.find((arg) => !arg.startsWith("--")) ?? "";
 
 const version = readVersion();
+tokensDir = existsSync(join(library, version)) ? tokenDir(version) : library;
 const lookupIndex = index(version);
 const lookup: Lookup = { tokens: new Map([...lookupIndex.byName].map(([file, tokens]) => [file, new Map(tokens.map((token) => [token.name, token]))])) };
 const wanted = (file: string): boolean => {
