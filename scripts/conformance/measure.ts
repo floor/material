@@ -49,7 +49,7 @@ export const CONFORMANCE_PROPERTIES = [
   "gap", "columnGap", "rowGap",
   "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
   "borderTopColor", "borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius",
-  "backgroundColor", "color", "opacity", "boxShadow", "outlineWidth", "outlineColor", "outlineOffset",
+  "backgroundColor", "color", "opacity", "boxShadow", "outlineStyle", "outlineWidth", "outlineColor", "outlineOffset",
   "fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing",
   "transform", "transition", "cursor",
   // A state layer or a focus ring lives on a pseudo-element: read its own box
@@ -72,8 +72,13 @@ export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
 export type Case = {
   /** The row id the table uses, e.g. "filled/m/rest". */
   id: string;
-  /** Page-side: mount the component into `host` through the module namespace. */
-  mount: (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLElement) => void;
+  /**
+   * Page-side: mount the component into `host` through the module namespace.
+   * `config` is the case's own data, which crosses as JSON: a closure cannot.
+   */
+  mount: (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLElement, config?: unknown) => void;
+  /** The case's data for `mount`. */
+  config?: unknown;
   /** The parts to read, relative to the mount root. */
   parts: Part[];
   state?: State;
@@ -165,7 +170,21 @@ let entryCode = "";
 
 const applyState = async (page: Page, selector: string, state: State) => {
   if (state === "hover") await page.hover(selector);
-  else if (state === "focus") await page.focus(selector);
+  else if (state === "focus") {
+    // A programmatic focus does not match `:focus-visible`: the ring is read
+    // from a real tab stop, so the keyboard moves it there.
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+    for (let attempt = 0; attempt < 8; attempt++) {
+      await page.keyboard.press("Tab");
+      // The first stop inside the mount: the leading control, in tab order.
+      const inside = await page.evaluate(() => {
+        const host = document.querySelector("#mount");
+        const active = document.activeElement;
+        return !!host && !!active && host.contains(active);
+      });
+      if (inside) break;
+    }
+  }
   else if (state === "disabled") {
     // The case's mount built it disabled; the state names the row.
   } else if (state === "pressed") {
@@ -211,7 +230,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // The mount is a function, so it crosses as source and is rebuilt
       // inside the page, where the module namespace lives.
       await page.evaluate(
-        async ({ mountSource, density, zoom, scheme }) => {
+        async ({ mountSource, mountConfig, density, zoom, scheme }) => {
           const host = document.querySelector<HTMLElement>("#mount")!;
           host.replaceChildren();
           document.documentElement.style.zoom = String(zoom);
@@ -219,17 +238,19 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           if (density === null) document.documentElement.style.removeProperty("--mtrl-density");
           else document.documentElement.style.setProperty("--mtrl-density", String(density));
           const mtrl = (window as unknown as { mtrl: Record<string, (...args: never[]) => unknown> }).mtrl;
-          const mount = new Function("mtrl", "host", `return (${mountSource})(mtrl, host);`) as (
+          const mount = new Function("mtrl", "host", "config", `return (${mountSource})(mtrl, host, config);`) as (
             mtrl: unknown,
             host: HTMLElement,
+            config: unknown,
           ) => void;
-          mount(mtrl, host);
+          mount(mtrl, host, mountConfig);
           // A mount that returns before its layout settles (a font, an image,
           // a transition's first frame) gets two frames to commit.
           await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         },
         {
           mountSource: testCase.mount.toString(),
+          mountConfig: testCase.config ?? null,
           density: testCase.density ?? null,
           zoom: testCase.zoom ?? 1,
           scheme: testCase.scheme ?? "light",
@@ -242,7 +263,9 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       } catch {
         // A part that cannot take the state is read at rest.
       }
-      await page.waitForTimeout(120);
+      // A state that runs a spring settles before it is read: the conformance
+      // value is the resting one, not a frame of the transition.
+      await page.waitForTimeout(500);
       const parts = await page.evaluate(
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
