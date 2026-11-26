@@ -60,10 +60,9 @@ export async function checkButtonGroupFigure(page: Page, check: (name: string) =
 
   const resting = await boxes();
   assert.equal(resting.length, 3);
-  // On main every item takes the group's tonal variant and the icon buttons
-  // are square, so the centre matches the ends and each end's width equals
-  // its height. The branch's centre is filled and the ends are narrower
-  // than they are tall.
+  // The ends share a background and the centre does not. Each end is
+  // narrower than it is tall. On main those ends already measure 104×136,
+  // so the width is not what separates the two: the centre is filled.
   assert.equal(resting[0].bg, resting[2].bg);
   assert.notEqual(resting[1].bg, resting[0].bg);
   assert.ok(resting[0].w < resting[0].h, `left ${resting[0].w}x${resting[0].h}`);
