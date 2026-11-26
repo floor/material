@@ -119,6 +119,23 @@ export type Harness = {
   close: () => Promise<void>;
 };
 
+/**
+ * Fail loudly on a fixture that did not mount what a row names: every part a
+ * case asked for must be found, and its box must have a size. A null part or
+ * a zero box is a broken mount or a wrong selector, never a conformance
+ * result, so the table is never written from one.
+ */
+export const assertFixture = (rows: CaseResult[]): void => {
+  for (const row of rows) {
+    for (const [name, part] of Object.entries(row.parts)) {
+      if (!part) throw new Error(`${row.id}: part ${JSON.stringify(name)} was not found`);
+      if (!(part.rect.width > 0 && part.rect.height > 0)) {
+        throw new Error(`${row.id}: part ${JSON.stringify(name)} has no box (${part.rect.width}×${part.rect.height})`);
+      }
+    }
+  }
+};
+
 export type HarnessOptions = {
   /** The `src/components/<name>` folder and the `dist/components/<name>` entry. */
   component: string;
