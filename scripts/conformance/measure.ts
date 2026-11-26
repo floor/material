@@ -52,13 +52,22 @@ export const CONFORMANCE_PROPERTIES = [
   "backgroundColor", "color", "opacity", "boxShadow", "outlineWidth", "outlineColor", "outlineOffset",
   "fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing",
   "transform", "transition", "cursor",
+  // A state layer or a focus ring lives on a pseudo-element: read its own box
+  // and paint, not the host's.
+  "content", "display", "insetTop", "insetRight", "insetBottom", "insetLeft",
 ] as const;
 
 export type ConformanceProperty = (typeof CONFORMANCE_PROPERTIES)[number];
 
-export type Part = { name: string; selector: string };
+export type Part = {
+  name: string;
+  /** A selector inside the mount root; `>>>` steps into a shadow root. */
+  selector: string;
+  /** Read the element's own `::before` or `::after`, where state layers live. */
+  pseudo?: "::before" | "::after";
+};
 
-export type State = "rest" | "hover" | "focus" | "pressed";
+export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
 
 export type Case = {
   /** The row id the table uses, e.g. "filled/m/rest". */
@@ -72,6 +81,8 @@ export type Case = {
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
   zoom?: number;
+  /** The theme mode for the colour rows: `light` (default) or `dark`. */
+  scheme?: "light" | "dark";
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -155,7 +166,9 @@ let entryCode = "";
 const applyState = async (page: Page, selector: string, state: State) => {
   if (state === "hover") await page.hover(selector);
   else if (state === "focus") await page.focus(selector);
-  else if (state === "pressed") {
+  else if (state === "disabled") {
+    // The case's mount built it disabled; the state names the row.
+  } else if (state === "pressed") {
     const box = await page.locator(selector).first().boundingBox();
     if (!box) throw new Error(`pressed: ${selector} has no box`);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -198,10 +211,11 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // The mount is a function, so it crosses as source and is rebuilt
       // inside the page, where the module namespace lives.
       await page.evaluate(
-        async ({ mountSource, density, zoom }) => {
+        async ({ mountSource, density, zoom, scheme }) => {
           const host = document.querySelector<HTMLElement>("#mount")!;
           host.replaceChildren();
           document.documentElement.style.zoom = String(zoom);
+          document.documentElement.setAttribute("data-theme-mode", scheme);
           if (density === null) document.documentElement.style.removeProperty("--mtrl-density");
           else document.documentElement.style.setProperty("--mtrl-density", String(density));
           const mtrl = (window as unknown as { mtrl: Record<string, (...args: never[]) => unknown> }).mtrl;
@@ -214,7 +228,12 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           // a transition's first frame) gets two frames to commit.
           await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         },
-        { mountSource: testCase.mount.toString(), density: testCase.density ?? null, zoom: testCase.zoom ?? 1 },
+        {
+          mountSource: testCase.mount.toString(),
+          density: testCase.density ?? null,
+          zoom: testCase.zoom ?? 1,
+          scheme: testCase.scheme ?? "light",
+        },
       );
       // The state is applied from the outside: Playwright's pointer and focus,
       // not a simulated class.
@@ -227,15 +246,29 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       const parts = await page.evaluate(
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
+          // `a >>> b` enters a's shadow root for b, then b's for the next.
+          const resolve = (selector: string): HTMLElement | null => {
+            if (selector === ":root") return root;
+            let scope: ParentNode = root;
+            let found: Element | null = null;
+            for (const step of selector.split(">>>").map((part) => part.trim())) {
+              found = scope.querySelector(step);
+              if (!found) return null;
+              scope = found.shadowRoot ?? found;
+            }
+            return found as HTMLElement | null;
+          };
           const result: Record<string, unknown> = {};
           for (const part of parts) {
-            const element = part.selector === ":root" ? root : root.querySelector<HTMLElement>(part.selector);
+            const element = resolve(part.selector);
             if (!element) {
               result[part.name] = null;
               continue;
             }
             const rect = element.getBoundingClientRect();
-            const computed = getComputedStyle(element);
+            // A pseudo-element has no rect of its own through the DOM: its
+            // inset is read as the style, and its box is the host's.
+            const computed = getComputedStyle(element, part.pseudo ?? undefined);
             const style: Record<string, string> = {};
             for (const property of properties) {
               style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
@@ -303,6 +336,39 @@ if (import.meta.main) {
         const button = create({ label: "Label" });
         // The factory's `label` is the accessible name; the visible text is
         // the button's content.
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [{ name: "root", selector: ".mtrl-button" }, { name: "label", selector: "span" }],
+    },
+    {
+      id: "filled/m/state layer (::before)",
+      state: "hover",
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label" });
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [{ name: "state layer", selector: ".mtrl-button", pseudo: "::before" }],
+    },
+    {
+      id: "filled/m/dark",
+      scheme: "dark",
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label" });
+        button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
+        host.append(button.element);
+      },
+      parts: [{ name: "root", selector: ".mtrl-button" }, { name: "label", selector: "span" }],
+    },
+    {
+      id: "filled/m/disabled",
+      state: "disabled",
+      mount: (mtrl, host) => {
+        const create = mtrl.createButton as unknown as (config: Record<string, unknown>) => { element: HTMLElement };
+        const button = create({ label: "Label", disabled: true });
         button.element.append(Object.assign(document.createElement("span"), { textContent: "Label" }));
         host.append(button.element);
       },
