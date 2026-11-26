@@ -1,0 +1,62 @@
+name: Conformance drift
+description: A component differs from the Material 3 specification.
+title: "conformance: "
+labels: ["conformance-drift"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A conformance drift is a measured difference from Material 3. Name the property, the
+        expected value with the source that states it, and the value this library renders.
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: The component and the part, e.g. `button` / `container`.
+      placeholder: button / container
+    validations:
+      required: true
+  - type: input
+    id: property
+    attributes:
+      label: Property
+      description: The measured property, with the variant and the state it was measured in.
+      placeholder: radius, filled variant, rest state
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: M3 expected value and its source
+      description: The expected value, and where it is written — a Compose token file and line at a named version, or an m3.material.io page and the date you read it.
+      placeholder: |
+        20 dp — ShapeTokens.kt, CornerSmall, Compose Material 3 1.5.0
+        or: full radius — https://m3.material.io/components/…, read 2026-11-26
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual measured value
+      description: The value this library renders, with its unit.
+      placeholder: 16 px
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: The engine and version the value was measured in.
+      placeholder: Chromium 153, WebKit 26.6
+    validations:
+      required: true
+  - type: textarea
+    id: measurement
+    attributes:
+      label: How it was measured
+      description: The fixture and the case, or the page and the computed property read. `bun run conformance <component>` prints the cases it measures.
+      placeholder: |
+        bun run conformance button --case=filled/rest
+        part "container", border-top-left-radius
+    validations:
+      required: true
