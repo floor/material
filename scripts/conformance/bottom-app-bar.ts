@@ -9,7 +9,7 @@ type Config = { direction: "ltr" | "rtl"; fab?: "end" | "center"; hidden?: boole
 const mount: Case["mount"] = (mtrl, host, data) => {
   const config = data as Config;
   const page = window as Window & { measuredBar?: BottomAppBarComponent };
-  page.measuredBar?.lifecycle.destroy();
+  page.measuredBar?.destroy();
   document.documentElement.dir = config.direction;
   host.style.cssText = "height:320px;position:relative;width:min(624px,calc(100vw - 48px))";
   const factory = mtrl.createBottomAppBar as unknown as (config: BottomAppBarConfig) => BottomAppBarComponent;
