@@ -56,9 +56,11 @@ const sheets = {
 };
 
 const avatarContent = `<img alt="" width="30" height="30" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30'><circle cx='15' cy='15' r='15' fill='%23625B71'/></svg>">`;
+// An avatar whose content reads currentColor: the state layer must not repaint it.
+const currentColorAvatar = `<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="15" fill="currentColor"></circle></svg>`;
 const trailingIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"></path></svg>`;
 
-const manifest = JSON.stringify({ avatarContent, trailingIcon, sheets });
+const manifest = JSON.stringify({ avatarContent, currentColorAvatar, trailingIcon, sheets });
 
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -70,12 +72,15 @@ const server = Bun.serve({
     if (path === "/manifest.json") return new Response(manifest, { headers: { "Content-Type": "application/json" } });
     const avatarAttribute = avatarContent.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     const iconAttribute = trailingIcon.replaceAll('"', "&quot;");
+    const currentColorAttribute = currentColorAvatar.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;font-family:sans-serif;padding:40px;display:grid;gap:40px;justify-items:start}</style></head>
 <body>
 <div id="factory"></div>
+<div id="factory-current"></div>
 <m-search id="element" aria-label="Search" avatar="${avatarAttribute}" avatar-label="Account" trailing-icon="${iconAttribute}"></m-search>
+<m-search id="element-current" aria-label="Search" avatar="${currentColorAttribute}" avatar-label="Account"></m-search>
 <button id="reference" type="button">Reference</button>
 <script type="module">
 import "/search.js";
@@ -85,19 +90,25 @@ registerStyles(m.sheets);
 defineSearch();
 const scope = (which) => which === "factory"
   ? document.querySelector("#factory")
-  : document.querySelector("#element").shadowRoot;
+  : which === "factory-current"
+    ? document.querySelector("#factory-current")
+    : which === "element-current"
+      ? document.querySelector("#element-current").shadowRoot
+      : document.querySelector("#element").shadowRoot;
 window.avatarOf = (which) => scope(which).querySelector(".mtrl-search__avatar");
 window.trailingOf = (which) => scope(which).querySelector(".mtrl-search__trailing-icon");
 window.toggleOf = (which) => scope(which).querySelector(".mtrl-search__leading-icon");
 window.mountFactory = () => {
-  const search = createSearch({
-    label: "Search",
-    trailingItems: [
-      { id: "settings", type: "icon", content: m.trailingIcon, ariaLabel: "Settings", onClick: () => {} },
-      { id: "avatar", type: "avatar", content: m.avatarContent, ariaLabel: "Account", onClick: () => {} },
-    ],
-  });
-  document.querySelector("#factory").append(search.element);
+  for (const [host, content] of [["#factory", m.avatarContent], ["#factory-current", m.currentColorAvatar]]) {
+    const search = createSearch({
+      label: "Search",
+      trailingItems: [
+        { id: "settings", type: "icon", content: m.trailingIcon, ariaLabel: "Settings", onClick: () => {} },
+        { id: "avatar", type: "avatar", content, ariaLabel: "Account", onClick: () => {} },
+      ],
+    });
+    document.querySelector(host).append(search.element);
+  }
 };
 window.ready = true;
 </script>
@@ -154,7 +165,7 @@ const readAvatar = async (page: Page, which: string): Promise<Reading> =>
     };
   }, which);
 
-const readTrailingIcon = async (page: Page, which: string): Promise<{ alpha: number }> =>
+const readTrailingIcon = async (page: Page, which: string): Promise<{ alpha: number; appearance: string }> =>
   page.evaluate((which) => {
     const win = window as any;
     const alphaOf = (value: string): number => {
@@ -164,7 +175,23 @@ const readTrailingIcon = async (page: Page, which: string): Promise<{ alpha: num
       return parts && parts.length === 4 ? Number.parseFloat(parts[3]!) : 1;
     };
     const el = win.trailingOf(which) as HTMLElement;
-    return { alpha: alphaOf(getComputedStyle(el).backgroundColor) };
+    return { alpha: alphaOf(getComputedStyle(el).backgroundColor), appearance: getComputedStyle(el).appearance };
+  }, which);
+
+const readCurrentAvatar = async (page: Page, which: string): Promise<{ color: string; fill: string; border: string; box: { width: number; height: number }; image: { width: number; height: number } }> =>
+  page.evaluate((which) => {
+    const win = window as any;
+    const el = win.avatarOf(which) as HTMLElement;
+    const circle = el.querySelector("circle")!;
+    const rect = el.getBoundingClientRect();
+    const content = (el.firstElementChild as HTMLElement).getBoundingClientRect();
+    return {
+      color: getComputedStyle(el).color,
+      fill: getComputedStyle(circle).fill,
+      border: getComputedStyle(el).borderTopWidth,
+      box: { width: rect.width, height: rect.height },
+      image: { width: content.width, height: content.height },
+    };
   }, which);
 
 const referenceColor = async (page: Page): Promise<string> =>
@@ -238,11 +265,14 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
   await page.evaluate(() => (window as unknown as { mountFactory: () => void }).mountFactory());
   await page.waitForFunction(() => {
     const host = document.querySelector("m-search") as HTMLElement & { shadowRoot: ShadowRoot | null };
-    return !!document.querySelector("#factory .mtrl-search__avatar") && !!host?.shadowRoot?.querySelector(".mtrl-search__avatar");
+    return !!document.querySelector("#factory .mtrl-search__avatar")
+      && !!document.querySelector("#factory-current .mtrl-search__avatar")
+      && !!host?.shadowRoot?.querySelector(".mtrl-search__avatar");
   });
 
   const secondary = await secondaryColor(page);
   const reference = await referenceColor(page);
+  const referenceAppearance = await page.evaluate(() => getComputedStyle(document.querySelector("#reference")!).appearance);
   const rows: string[] = [];
   for (const which of ["element", "factory"] as const) {
     const rest = await readAvatar(page, which);
@@ -280,6 +310,8 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     await page.mouse.move(0, 0);
     await settle(page, () => readAvatar(page, which));
     assert.ok(hover.alpha > 0, `${engine} ${which}: the avatar paints a hover layer (${hover.background})`);
+    // `appearance: none` is the avatar's: the icon buttons keep theirs.
+    assert.equal(trailing.appearance, referenceAppearance, `${engine} ${which}: the trailing icon's appearance is untouched (${trailing.appearance} vs a bare button's ${referenceAppearance})`);
     assert.equal(
       hover.alpha,
       trailing.alpha,
@@ -300,6 +332,17 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     rows.push(
       `${engine} ${which}: box ${rest.box.width}x${rest.box.height}, image ${rest.image.width}x${rest.image.height}, border ${rest.border.width} ${rest.border.style}, rest ${rest.background}, hover ${hover.background}, padding ${rest.padding.top}, ring ${focus.outline.width} ${focus.outline.style} ${focus.outline.color} at ${focus.outline.offset}`,
     );
+  }
+  // An inline SVG avatar that reads currentColor keeps the colour it had on
+  // main: the layer names its own token instead of colouring the content.
+  for (const which of ["element-current", "factory-current"] as const) {
+    const current = await readCurrentAvatar(page, which);
+    assert.equal(current.border, "0px", `${engine} ${which}: the reset still applies (border ${current.border})`);
+    assert.deepEqual(current.box, { width: 48, height: 48 }, `${engine} ${which}: the box is 48x48`);
+    assert.deepEqual(current.image, { width: 30, height: 30 }, `${engine} ${which}: the SVG is 30x30`);
+    assert.equal(current.color, reference, `${engine} ${which}: the avatar's colour is the button text (${current.color} vs ${reference})`);
+    assert.equal(current.fill, reference, `${engine} ${which}: a currentColor SVG paints in the button text (${current.fill} vs ${reference})`);
+    rows.push(`${engine} ${which}: currentColor SVG fill ${current.fill}, button colour ${current.color}, border ${current.border}`);
   }
   await page.close();
   return rows;
