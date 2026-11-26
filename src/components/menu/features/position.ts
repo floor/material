@@ -153,9 +153,15 @@ export const createPositioner = (
 
     // Add it to the DOM temporarily (use container if available for accurate measurement).
     // A top-layer menu is measured where it is, in its own tree, whose styles
-    // may be a shadow root's.
+    // may be a shadow root's. A menu already mounted in a host — the case with
+    // no container config — is measured beside itself, in the host's own zoom
+    // and scroll, so its width is the width written there; anything else is
+    // measured under the document.
+    const parentHost = menuElement.parentElement && menuElement.parentElement !== document.body
+      ? menuElement.parentElement
+      : null;
     const measureContainer =
-      (topLayer && menuElement.parentNode) || config.container || document.body;
+      (topLayer && menuElement.parentNode) || config.container || parentHost || document.body;
     measureContainer.appendChild(tempMenu);
 
     // Get measurements

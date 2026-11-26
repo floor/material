@@ -241,7 +241,7 @@ const run = async (browser: Browser, engine: string) => {
   // in the host's own space (its border and scroll taken out and back).
   const hostCases = await page.evaluate(async () => {
     const results: { name: string; offsetParentIsHost: boolean; openerLeft: number; openerRight: number; openerTop: number; openerBottom: number; menuLeft: number; menuRight: number; menuTop: number; menuBottom: number; menuWidth: number; clientTop: number; clientBottom: number; clientLeft: number; clientRight: number }[] = [];
-    for (const kind of ["host-zoom", "host-zoom pre-mounted", "host-border"] as const) {
+    for (const kind of ["host-zoom", "host-zoom pre-mounted", "host-zoom on host", "host-border"] as const) {
       document.querySelectorAll(".mtrl-menu").forEach((node) => node.remove());
       const host = document.createElement("div");
       host.id = "host";
@@ -258,7 +258,8 @@ const run = async (browser: Browser, engine: string) => {
       content.append(zoomed);
       host.append(content);
       document.body.append(host);
-      if (kind === "host-zoom" || kind === "host-zoom pre-mounted") host.style.overflow = "hidden";
+      if (kind === "host-zoom on host") host.style.cssText += ";overflow:hidden;zoom:0.7", zoomed.style.zoom = "1";
+      else if (kind === "host-zoom" || kind === "host-zoom pre-mounted") host.style.overflow = "hidden";
       else {
         host.style.cssText += ";overflow:auto;border:12px solid #333;box-sizing:border-box";
         host.scrollTop = 120;
@@ -266,7 +267,7 @@ const run = async (browser: Browser, engine: string) => {
       const create = (window as unknown as { mtrl: { createMenu: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => void } } }).mtrl.createMenu;
       const settings: Record<string, unknown> = { opener, offset: 8, items: [{ text: "One" }, { text: "Two" }, { text: "Three" }] };
       if (kind === "host-zoom") Object.assign(settings, { position: "bottom-end", container: host, width: "100%" });
-      else if (kind === "host-zoom pre-mounted") Object.assign(settings, { position: "bottom-end", width: "100%" });
+      else if (kind === "host-zoom pre-mounted" || kind === "host-zoom on host") Object.assign(settings, { position: "bottom-end", width: "100%" });
       else Object.assign(settings, { position: "bottom-start" });
       const menu = create(settings);
       // The pre-mounted cases put the menu in the host itself, so the host is
