@@ -1,3 +1,3 @@
 Section: Fixed
 
-**Select.** Opening a select near the bottom of the window flips the menu above the field and caps it. The selected option is scrolled into that menu after it has been positioned, so the option stays inside the popup.
+**Select.** Opening a select near the bottom of the window flips the menu above the field and caps it. The selected option is placed in that menu from its layout position, so the menu's opening scale does not leave the option above the popup.

@@ -4,14 +4,14 @@
  * caps it. The selected option has to sit inside that popup.
  *
  * Measured 2026-11-26, filled and outlined, 16 options, the second selected
- * (`data-id="1"`): the field at y 519–575, the popup at y 239–519, the
- * selected option at y −173 with no overlap. `open` fires before the menu
- * is positioned, and the option was scrolled then.
+ * (`data-id="1"`): a 495px spacer, the menu mounted on document.body with
+ * max-height 280px, the field at y 519–575, the popup at y 239–519, the
+ * selected option at y −173 (scrollTop 462) with no overlap.
  *
- * The field is placed at the same window position. After the menu has
- * opened and its reveal has finished, the selected option's box intersects
- * the popup, and the popup is above the field. Run on main and on the
- * branch:
+ * The page uses that setup. After the menu has opened and its reveal has
+ * finished, the selected option's box intersects the popup, and the popup
+ * is above the field. On main the option stays above the popup, so this
+ * fails there. Run on main and on the branch:
  *
  *   bun run scripts/check-select-flipped-option.ts
  */
@@ -49,7 +49,7 @@ const server = Bun.serve({
     }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
-<body><div id="host"></div>
+<body><div id="spacer" style="height:495px"></div><div id="host"></div>
 <script type="module">
 import { createSelect } from "/select.js";
 window.createSelect = createSelect;
@@ -77,8 +77,14 @@ try {
       const win = window as unknown as {
         createSelect: (config: Record<string, unknown>) => { element: HTMLElement; open: () => unknown; destroy: () => void };
       };
-      const select = win.createSelect({ label: "Choice", variant, value: "1", options });
-      select.element.style.cssText = "position:absolute;top:519px;left:24px;width:240px";
+      const select = win.createSelect({
+        label: "Choice",
+        variant,
+        value: "1",
+        options,
+        menu: { container: document.body, maxHeight: "280px" },
+      });
+      select.element.style.width = "240px";
       host.append(select.element);
       select.open();
       const menu = await new Promise<HTMLElement>((resolve, reject) => {
@@ -95,11 +101,12 @@ try {
       const field = select.element.querySelector(".mtrl-text-field__field")!.getBoundingClientRect();
       const popup = menu.getBoundingClientRect();
       const option = menu.querySelector<HTMLElement>('[role="option"][data-id="1"]')!.getBoundingClientRect();
+      const scrollTop = menu.querySelector<HTMLElement>('[role="listbox"]')?.scrollTop ?? -1;
       select.destroy();
       const box = (rect: DOMRect): Box => ({
         top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, width: rect.width, height: rect.height,
       });
-      return { field: box(field), popup: box(popup), option: box(option) };
+      return { field: box(field), popup: box(popup), option: box(option), scrollTop };
     }, { variant, options });
 
     const intersects = boxes.option.left < boxes.popup.right
@@ -115,7 +122,7 @@ try {
       `${variant}: the selected option intersects the popup (option y ${boxes.option.top.toFixed(1)}–${boxes.option.bottom.toFixed(1)}, popup y ${boxes.popup.top.toFixed(1)}–${boxes.popup.bottom.toFixed(1)})`,
     );
     console.log(
-      `${variant}: field y ${boxes.field.top.toFixed(0)}–${boxes.field.bottom.toFixed(0)}, popup y ${boxes.popup.top.toFixed(0)}–${boxes.popup.bottom.toFixed(0)}, option y ${boxes.option.top.toFixed(0)}–${boxes.option.bottom.toFixed(0)}`,
+      `${variant}: field y ${boxes.field.top.toFixed(0)}–${boxes.field.bottom.toFixed(0)}, popup y ${boxes.popup.top.toFixed(0)}–${boxes.popup.bottom.toFixed(0)}, option y ${boxes.option.top.toFixed(0)}–${boxes.option.bottom.toFixed(0)}, scrollTop ${boxes.scrollTop.toFixed(0)}`,
     );
   }
 } finally {
