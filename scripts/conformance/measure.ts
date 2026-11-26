@@ -108,6 +108,8 @@ export type Case = {
    * aimed at a part still at width 0 has nowhere to land.
    */
   before?: number;
+  /** Wait for CSS transitions on the first part before reading its settled state. */
+  settleTransitions?: boolean;
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -350,6 +352,12 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // A state that runs a spring settles before it is read: the conformance
       // value is the resting one, not a frame of the transition.
       await page.waitForTimeout(500);
+      if (testCase.settleTransitions) {
+        await page.locator(testCase.parts[0]!.selector).first().evaluate(async element => {
+          const transitions = element.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition);
+          await Promise.allSettled(transitions.map(transition => transition.finished));
+        });
+      }
       const parts = await page.evaluate(
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
