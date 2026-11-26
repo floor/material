@@ -357,6 +357,9 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_timepicker.scss).
     // A dialog taller than a small window scrolls its content with the
     // headline in view (+240 B; styles/components/_dialog.scss).
+    // A card paints the hover layer in every variant and the dragged layer in
+    // all three, and its focus ring no longer draws an elevation-1 shadow
+    // (+1,397 B; styles/components/_card.scss).
     // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
     // where the control is clipped. The snackbar close stays 2px in
     // inverse-on-surface (styles/abstract/_mixins.scss and the component
@@ -368,8 +371,8 @@ describe("explicit contrast levels are opt-in", () => {
     // bar with no shown trailing action ends its text 16dp from the edge, and
     // an empty value's clear button takes no room (+92 B; same file).
     expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "2d494ac4433ff18301455660813e0cabc4ca9bc5018d08451689b51b7345a2bb",
-      length: 555010,
+      sha256: "a23f701fdbd105d9b67bf9134e10df5b4ef01e89f7a94f061021c52641276a3e",
+      length: 556407,
     });
   });
 

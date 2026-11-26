@@ -30,7 +30,9 @@ describe("public configure-once Sass", () => {
   // and a clickable search avatar takes the trailing buttons' reset, layer
   // and ring, and a search bar with no trailing action, its empty value's
   // clear button included, ends its text 16dp from the edge
-  // (styles/components/_search.scss).
+  // (styles/components/_search.scss), and a card paints the hover and dragged
+  // layers and keeps its own elevation when focused
+  // (styles/components/_card.scss).
   // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {
