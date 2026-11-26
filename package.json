@@ -653,7 +653,8 @@
     "typescale-defaults:check": "bun run scripts/check-typescale-defaults.ts",
     "typescale-consumers:check": "bun run scripts/check-typescale-consumers.ts",
     "comparators:check": "bun run scripts/check-comparators.ts",
-    "button-profile:check": "bun run scripts/check-button-profile.ts"
+    "button-profile:check": "bun run scripts/check-button-profile.ts",
+    "search-trailing-space:check": "bun run scripts/check-search-trailing-space.ts"
   },
   "repository": {
     "type": "git",

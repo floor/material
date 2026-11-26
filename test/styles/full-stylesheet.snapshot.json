@@ -1650,6 +1650,7 @@
     ".mtrl-search__clear-button,.mtrl-search__trailing-icon",
     ".mtrl-search__clear-button--hidden",
     ".mtrl-search__container",
+    ".mtrl-search__container:not(:has(.mtrl-search__clear-button:not(.mtrl-search__clear-button--hidden),.mtrl-search__trailing>*)) .mtrl-search__input-wrapper",
     ".mtrl-search__content",
     ".mtrl-search__divider",
     ".mtrl-search__input",
