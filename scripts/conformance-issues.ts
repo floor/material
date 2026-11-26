@@ -4,11 +4,11 @@
  * The public export of the conformance issues: Linear project "material" in,
  * `conformance/issues.json` out.
  *
- * The matrix (`conformance/matrix.json`) holds what each value is; this file
- * holds the work on those values — open, in progress, decided, fixed — and the
- * two join on the matrix row id. Everything here is curated for publication:
- * one entry per issue, with a public slug, its kind, component, aspects, rows,
- * status, target, the version it was fixed in, and the date it changed.
+ * The export is every issue of the project, curated for publication: one
+ * entry per issue, with a public slug, its type and kind, component, aspects,
+ * rows, status, target, the version it was fixed in, and the date it changed.
+ * `rows` is plain data — the matrix row ids an issue names — and this script
+ * neither reads the matrix nor checks the ids against it.
  *
  * No description text, comment, URL, person or tracker id leaves Linear. The
  * slug is derived from the first matrix row the issue names, so it survives a
@@ -26,14 +26,13 @@
  * With no `LINEAR_API_KEY` and no `--from`, it exits 2 and names the variable.
  * `--from` reads a saved GraphQL response instead of the network.
  */
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
 import { internalIdRefs } from "./internal-ids";
 import { publicNameRefs } from "./public-names";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const MATRIX = resolve(ROOT, "conformance/matrix.json");
 const OUTPUT = resolve(ROOT, "conformance/issues.json");
 
 /** The Conformance label group the export keeps. A bug carries none of them. */
@@ -55,11 +54,14 @@ export interface LinearIssue {
   milestone: string | null;
 }
 
+export type Type = "bug" | "conformance" | "improvement" | "feature";
+
 /** One entry of `conformance/issues.json`. */
 export interface IssueEntry {
   id: string;
   title: string;
-  kind: Kind;
+  type: Type;
+  kind: Kind | null;
   component: string;
   aspects: string[];
   rows: string[];
@@ -76,38 +78,14 @@ export interface IssueFile {
   schema: 1;
   generated: string;
   material: string;
-  counts: { kinds: Record<string, number>; statuses: Record<string, number>; aspects: Record<string, number> };
+  counts: { types: Record<string, number>; kinds: Record<string, number>; statuses: Record<string, number>; aspects: Record<string, number> };
   issues: IssueEntry[];
 }
 
-/** The row ids `conformance/matrix.json` holds, and its material version. */
-export interface Matrix {
-  material: string;
-  rows: Set<string>;
-}
-
-export const readMatrix = async (path = MATRIX): Promise<Matrix> => {
-  const text = await readFile(path, "utf8");
-  return readMatrixText(text);
-};
-
-export const readMatrixText = (text: string): Matrix => {
-  const data = JSON.parse(text) as { material?: string; components?: { id: string; properties?: unknown[] }[] };
-  if (!Array.isArray(data.components)) throw new Error("conformance/matrix.json: no components array");
-  const rows = new Set<string>();
-  const walk = (value: unknown): void => {
-    if (Array.isArray(value)) {
-      for (const item of value) walk(item);
-      return;
-    }
-    if (value && typeof value === "object") {
-      const record = value as Record<string, unknown>;
-      if (typeof record.id === "string" && record.id.includes("/") && "property" in record) rows.add(record.id);
-      for (const item of Object.values(record)) walk(item);
-    }
-  };
-  for (const component of data.components) walk(component.properties ?? []);
-  return { material: data.material ?? "unknown", rows };
+/** The repository's package version, for the file's `material` field. */
+export const materialVersion = async (): Promise<string> => {
+  const manifest = JSON.parse(await readFile(resolve(ROOT, "package.json"), "utf8")) as { version?: string };
+  return manifest.version ?? "unknown";
 };
 
 /** The label names an issue carries that belong to the Conformance group. */
@@ -116,6 +94,15 @@ export const kindsOf = (issue: LinearIssue): Kind[] =>
 
 /** The first Conformance label in the group's own order, so the kind is stable. */
 export const kindOf = (issue: LinearIssue): Kind | null => kindsOf(issue)[0] ?? null;
+
+/** What kind of issue it is: a conformance one keeps its kind; the rest fall to their label. */
+export const typeOf = (issue: LinearIssue): Type => {
+  if (kindOf(issue) !== null) return "conformance";
+  const labels = issue.labels.map((label) => label.toLowerCase());
+  if (labels.includes("bug")) return "bug";
+  if (labels.includes("feature") || labels.includes("enhancement")) return "feature";
+  return "improvement";
+};
 
 /** `Matrix rows: a, b, c` on a line of the description. */
 export const rowsOf = (issue: LinearIssue): string[] => {
@@ -192,26 +179,24 @@ export const slugBaseOf = (issue: LinearIssue, rows: string[]): string => {
 };
 
 /** Maps the kept issues to entries, with slugs deduplicated in tracker-id order. */
-export const mapIssues = (issues: LinearIssue[], matrix: Matrix): IssueEntry[] => {
+export const mapIssues = (issues: LinearIssue[]): IssueEntry[] => {
   const kept = issues
     .filter((issue) => !canceled(issue))
-    .map((issue) => ({ issue, kind: kindOf(issue) }))
-    .filter((row): row is { issue: LinearIssue; kind: Kind } => row.kind !== null)
-    .sort((a, b) => a.issue.id.localeCompare(b.issue.id));
+    .sort((a, b) => a.id.localeCompare(b.id));
 
   const used = new Map<string, number>();
   const entries: IssueEntry[] = [];
-  for (const { issue, kind } of kept) {
+  for (const issue of kept) {
     const rows = rowsOf(issue);
-    const missing = rows.filter((row) => !matrix.rows.has(row));
-    if (missing.length > 0) throw new Error(`${issue.id}: matrix row(s) not in conformance/matrix.json: ${missing.join(", ")}`);
+    const kind = kindOf(issue);
     const base = slugBaseOf(issue, rows);
     const seen = (used.get(base) ?? 0) + 1;
     used.set(base, seen);
-    const status = statusOf(issue, kind);
+    const status = kind === null ? (issue.state.type.toLowerCase() === "completed" ? "fixed" : "open") : statusOf(issue, kind);
     entries.push({
       id: seen === 1 ? base : `${base}-${seen}`,
       title: issue.title,
+      type: typeOf(issue),
       kind,
       component: componentOf(issue),
       aspects: aspectsOf(issue),
@@ -234,14 +219,15 @@ const count = (values: string[]): Record<string, number> => {
   return counts;
 };
 
-export const buildFile = (issues: LinearIssue[], matrix: Matrix, generated: string): IssueFile => {
-  const entries = mapIssues(issues, matrix).sort((a, b) => a.id.localeCompare(b.id));
+export const buildFile = (issues: LinearIssue[], material: string, generated: string): IssueFile => {
+  const entries = mapIssues(issues).sort((a, b) => a.id.localeCompare(b.id));
   return {
     schema: 1,
     generated,
-    material: matrix.material,
+    material,
     counts: {
-      kinds: count(entries.map((entry) => entry.kind)),
+      types: count(entries.map((entry) => entry.type)),
+      kinds: count(entries.flatMap((entry) => (entry.kind === null ? [] : [entry.kind]))),
       statuses: count(entries.map((entry) => entry.status)),
       aspects: count(entries.flatMap((entry) => entry.aspects)),
     },
@@ -336,13 +322,13 @@ if (import.meta.main) {
     console.error("conformance-issues: set LINEAR_API_KEY (or pass --from <file>)");
     process.exit(2);
   }
-  const matrix = await readMatrix();
   const issues = from
     ? issuesFromResponse(JSON.parse(await readFile(from, "utf8")))
     : await fetchAll(key!);
-  const file = buildFile(issues, matrix, new Date().toISOString());
+  const file = buildFile(issues, await materialVersion(), new Date().toISOString());
   const text = serialize(file);
   guard(text);
+  await mkdir(dirname(OUTPUT), { recursive: true });
   await writeFile(OUTPUT, text);
   console.log(`conformance-issues: ${file.issues.length} issue(s) written to conformance/issues.json`);
 }

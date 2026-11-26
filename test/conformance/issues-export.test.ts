@@ -1,8 +1,7 @@
 // test/conformance/issues-export.test.ts
 //
-// The conformance issues export, against a synthetic Linear response and a
-// synthetic matrix. No key and no network: `issuesFromResponse` takes the saved
-// response, `readMatrixText` the matrix.
+// The conformance issues export, against a synthetic Linear response. No key
+// and no network: `issuesFromResponse` takes the saved response.
 import { describe, expect, test } from "bun:test";
 
 import { personaNames } from "../../scripts/public-names";
@@ -13,29 +12,12 @@ import {
   issuesFromResponse,
   kindOf,
   mapIssues,
-  readMatrixText,
   rowsOf,
   serialize,
   slugBaseOf,
   statusOf,
+  typeOf,
 } from "../../scripts/conformance-issues";
-
-const MATRIX = JSON.stringify({
-  schema: 1,
-  material: "3.16.7",
-  components: [
-    {
-      id: "card",
-      name: "Card",
-      properties: [
-        { id: "card/focus-elevation/filled/focus", property: "Focus elevation", aspect: "elevation", variant: "filled", state: "focus", spec: {}, compose: {}, material: {}, status: {} },
-        { id: "card/hover-layer/elevated/hover", property: "Hover layer", aspect: "colour", variant: "elevated", state: "hover", spec: {}, compose: {}, material: {}, status: {} },
-        { id: "card/dragged-layer/outlined/dragged", property: "Dragged layer", aspect: "colour", variant: "outlined", state: "dragged", spec: {}, compose: {}, material: {}, status: {} },
-      ],
-    },
-    { id: "button", name: "Button", properties: [{ id: "button/container-radius/filled/rest", property: "Container radius", aspect: "shape", variant: "filled", state: "rest", spec: {}, compose: {}, material: {}, status: {} }] },
-  ],
-});
 
 const node = (overrides: Record<string, unknown>) => ({
   id: "id-0",
@@ -66,8 +48,6 @@ const RESPONSE = {
           description: "Matrix rows: card/hover-layer/elevated/hover",
           labels: { nodes: [{ name: "drift-both" }, { name: "component/card" }, { name: "aspect/colour" }] },
           state: { name: "Done", type: "completed" },
-          labels2: undefined,
-          projectMilestone: null,
         }),
         node({
           id: "L-3",
@@ -109,35 +89,54 @@ const RESPONSE = {
           labels: { nodes: [{ name: "drift-spec" }, { name: "component/card" }] },
           state: { name: "Canceled", type: "canceled" },
         }),
+        node({
+          id: "L-9",
+          title: "Button: a feature request",
+          labels: { nodes: [{ name: "feature" }, { name: "component/button" }] },
+        }),
+        node({
+          id: "L-10",
+          title: "Tooling: an improvement",
+          labels: { nodes: [{ name: "improvement" }] },
+        }),
       ],
     },
   },
 };
 
-const matrix = readMatrixText(MATRIX);
-
 describe("conformance issues export", () => {
   test("reads the issues out of a saved response", () => {
     const issues = issuesFromResponse(RESPONSE);
-    expect(issues).toHaveLength(8);
+    expect(issues).toHaveLength(10);
     expect(issues[0]!.labels).toContain("drift-compose");
     expect(rowsOf(issues[0]!)).toEqual(["card/focus-elevation/filled/focus"]);
   });
 
-  test("the bug is excluded and the canceled issue dropped", () => {
+  test("every issue is exported, bugs included, and the canceled one is dropped", () => {
     const issues = issuesFromResponse(RESPONSE);
-    expect(issues.find((issue) => issue.id === "L-7")!.labels).not.toContain("drift-spec");
-    expect(kindOf(issues.find((issue) => issue.id === "L-7")!)).toBeNull();
     expect(canceled(issues.find((issue) => issue.id === "L-8")!)).toBe(true);
-    const entries = mapIssues(issues, matrix);
-    expect(entries.map((entry) => entry.id)).not.toContain("card/hover-layer-2");
+    const entries = mapIssues(issues);
+    expect(entries).toHaveLength(9);
     expect(entries.some((entry) => entry.title.includes("canceled"))).toBe(false);
-    expect(entries.some((entry) => entry.title.includes("bug"))).toBe(false);
+    const bug = entries.find((entry) => entry.title === "A bug, not a drift")!;
+    expect(bug.type).toBe("bug");
+    expect(bug.kind).toBeNull();
+    expect(bug.rows).toEqual([]);
+  });
+
+  test("its type stands beside its kind", () => {
+    const issues = issuesFromResponse(RESPONSE);
+    expect(typeOf(issues[0]!)).toBe("conformance");
+    expect(kindOf(issues[0]!)).toBe("drift-compose");
+    expect(typeOf(issues.find((issue) => issue.id === "L-7")!)).toBe("bug");
+    expect(typeOf(issues.find((issue) => issue.id === "L-9")!)).toBe("feature");
+    expect(typeOf(issues.find((issue) => issue.id === "L-10")!)).toBe("improvement");
+    expect(kindOf(issues.find((issue) => issue.id === "L-9")!)).toBeNull();
   });
 
   test("each kind maps to its entry", () => {
-    const entries = mapIssues(issuesFromResponse(RESPONSE), matrix);
-    const byKind = Object.fromEntries(entries.map((entry) => [entry.kind, entry]));
+    const entries = mapIssues(issuesFromResponse(RESPONSE));
+    const byKind = Object.fromEntries(entries.filter((entry) => entry.kind !== null).map((entry) => [entry.kind!, entry]));
     expect(byKind["drift-compose"]!.status).toBe("in-progress");
     expect(byKind["drift-compose"]!.target).toBe("next-patch");
     expect(byKind["drift-compose"]!.id).toBe("card/focus-elevation");
@@ -149,18 +148,18 @@ describe("conformance issues export", () => {
     expect(byKind["api-gap"]!.id).toBe("button/split-button-is-missing");
   });
 
+  test("rows are plain data, kept as the issue lists them", () => {
+    const issues = issuesFromResponse(RESPONSE);
+    const twoRows = { ...issues[0]!, description: "Matrix rows: card/hover-layer/elevated/hover, card/focus-elevation/filled/focus" };
+    expect(mapIssues([twoRows])[0]!.rows).toEqual(["card/focus-elevation/filled/focus", "card/hover-layer/elevated/hover"]);
+  });
+
   test("a fixed issue carries its version when a label names one", () => {
     const issues = issuesFromResponse(RESPONSE);
     const withRelease = { ...issues[2]!, labels: [...issues[2]!.labels, "release/3.16.8"] };
     expect(statusOf(withRelease, "drift-spec")).toBe("fixed");
-    const entries = mapIssues([withRelease], matrix);
+    const entries = mapIssues([withRelease]);
     expect(entries[0]!.fixed).toEqual({ version: "3.16.8" });
-  });
-
-  test("a row id the matrix does not hold is an error naming it", () => {
-    const issues = issuesFromResponse(RESPONSE);
-    const broken = { ...issues[0]!, description: "Matrix rows: card/not-a-row/filled/focus" };
-    expect(() => mapIssues([broken], matrix)).toThrow(/card\/not-a-row\/filled\/focus/);
   });
 
   test("no tracker id and no person name leaves the file", () => {
@@ -173,10 +172,8 @@ describe("conformance issues export", () => {
       title: `Card: focus elevation (${tracker}, asked by ${person})`,
       description: `Matrix rows: card/focus-elevation/filled/focus\n\nReported by ${person}, ${tracker}.`,
     };
-    const file = buildFile([leaky], matrix, "2026-11-26T00:00:00.000Z");
-    expect(() => guard(serialize(file))).toThrow();
-    // The title is the only field that carries the text, and nothing else does.
-    const clean = buildFile([{ ...leaky, title: "Card: focus elevation" }], matrix, "2026-11-26T00:00:00.000Z");
+    expect(() => guard(serialize(buildFile([leaky], "3.16.7", "2026-11-26T00:00:00.000Z")))).toThrow();
+    const clean = buildFile([{ ...leaky, title: "Card: focus elevation" }], "3.16.7", "2026-11-26T00:00:00.000Z");
     expect(() => guard(serialize(clean))).not.toThrow();
     expect(serialize(clean)).not.toContain("Matrix rows");
     expect(serialize(clean)).not.toContain("L-1");
@@ -193,17 +190,20 @@ describe("conformance issues export", () => {
   test("two issues on one row get a stable suffix", () => {
     const issues = issuesFromResponse(RESPONSE);
     const twin = { ...issues[0]!, id: "L-0" };
-    const entries = mapIssues([issues[0]!, twin], matrix);
+    const entries = mapIssues([issues[0]!, twin]);
     expect(entries.map((entry) => entry.id)).toEqual(["card/focus-elevation", "card/focus-elevation-2"]);
   });
 
   test("the file is deterministic apart from the timestamp", () => {
     const issues = issuesFromResponse(RESPONSE);
-    const first = serialize(buildFile(issues, matrix, "2026-11-26T00:00:00.000Z"));
-    const second = serialize(buildFile(issues, matrix, "2026-11-26T00:00:00.000Z"));
+    const first = serialize(buildFile(issues, "3.16.7", "2026-11-26T00:00:00.000Z"));
+    const second = serialize(buildFile(issues, "3.16.7", "2026-11-26T00:00:00.000Z"));
     expect(first).toBe(second);
-    const later = buildFile(issues, matrix, "2026-11-27T00:00:00.000Z");
+    const later = buildFile(issues, "3.16.7", "2026-11-27T00:00:00.000Z");
     expect(serialize(later).replace(/"2026-11-27[^"]*"/, "\"X\"")).toBe(first.replace(/"2026-11-26T00:00:00.000Z"/, "\"X\""));
-    expect(JSON.parse(first).counts.statuses).toEqual({ "decision-needed": 1, fixed: 2, "in-progress": 1, kept: 1, open: 1 });
+    const counts = JSON.parse(first).counts;
+    expect(counts.types).toEqual({ bug: 1, conformance: 6, feature: 1, improvement: 1 });
+    expect(counts.kinds).toEqual({ "api-gap": 1, "drift-both": 1, "drift-compose": 1, "drift-spec": 1, deviation: 1, "reference-conflict": 1 });
+    expect(counts.statuses).toEqual({ "decision-needed": 1, fixed: 2, "in-progress": 1, kept: 1, open: 4 });
   });
 });
