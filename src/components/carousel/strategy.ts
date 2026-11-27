@@ -28,6 +28,7 @@ import {
   lerpKeylineList,
   keylineListWithPivot,
 } from './keylines';
+import { CAROUSEL_DEFAULTS } from './constants';
 
 export interface Strategy {
   defaultKeylines: KeylineList;
@@ -63,6 +64,16 @@ const clampLerp = (outMin: number, outMax: number, inMin: number, inMax: number,
   return outMin + (outMax - outMin) * ((value - inMin) / (inMax - inMin));
 };
 
+/**
+ * Share the content padding across the non-anchor keylines.
+ *
+ * A small slot already at the 40dp floor stays there: the share is given
+ * back and the large items give up the same width, so the group still fills
+ * the container. The list is then shifted so its leading edge stays where
+ * the uniform share left it. Specs read 2026-11-27:
+ * https://m3.material.io/components/carousel/specs (small items 40–56dp).
+ * Compose subtracts the padding and does not put the floor back.
+ */
 const shiftedForContentPadding = (
   from: KeylineList,
   containerSize: number,
@@ -73,13 +84,41 @@ const shiftedForContentPadding = (
 ): KeylineList => {
   const nonAnchors = from.filter((k) => !k.isAnchor).length;
   const reduction = contentPadding / nonAnchors;
-  const shifted = keylineListWithPivot(
-    containerSize,
-    gap,
-    pivotIdx,
-    pivot.offset - reduction / 2 + contentPadding,
-    from.map((k) => ({ size: k.size - Math.abs(reduction), isAnchor: k.isAnchor })),
-  );
+  const abs = Math.abs(reduction);
+  const floor = CAROUSEL_DEFAULTS.MIN_SMALL_ITEM_WIDTH;
+  const smallCeiling = CAROUSEL_DEFAULTS.MAX_SMALL_ITEM_WIDTH;
+  const uniform = from.map((k) => ({ size: k.size - abs, isAnchor: k.isAnchor }));
+  const next = uniform.map((k, i) => ({
+    size: k.size,
+    isAnchor: k.isAnchor,
+    small: !from[i]!.isAnchor && from[i]!.size <= smallCeiling + 0.01,
+  }));
+  let debt = 0;
+  for (const keyline of next) {
+    if (!keyline.small || keyline.size >= floor) continue;
+    debt += floor - keyline.size;
+    keyline.size = floor;
+  }
+  let guard = 0;
+  while (debt > 0.0001 && guard++ < 8) {
+    const open = next.filter((keyline) => !keyline.isAnchor && !keyline.small && keyline.size > floor + 0.0001);
+    if (open.length === 0) break;
+    const share = debt / open.length;
+    for (const keyline of open) {
+      const take = Math.min(share, keyline.size - floor);
+      keyline.size -= take;
+      debt -= take;
+    }
+  }
+  const sizes = next.map((keyline) => ({ size: keyline.size, isAnchor: keyline.isAnchor }));
+  const pivotOffset = pivot.offset - reduction / 2 + contentPadding;
+  const aligned = keylineListWithPivot(containerSize, gap, pivotIdx, pivotOffset, uniform);
+  const lead = aligned[firstNonAnchorIndex(aligned)]!;
+  const targetLeft = lead.offset - lead.size / 2;
+  const trial = keylineListWithPivot(containerSize, gap, pivotIdx, pivotOffset, sizes);
+  const placed = trial[firstNonAnchorIndex(trial)]!;
+  const delta = targetLeft - (placed.offset - placed.size / 2);
+  const shifted = keylineListWithPivot(containerSize, gap, pivotIdx, pivotOffset + delta, sizes);
   return shifted.map((k, i) => ({ ...k, unadjustedOffset: from[i]!.unadjustedOffset }));
 };
 

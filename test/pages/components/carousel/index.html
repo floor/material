@@ -80,6 +80,75 @@ scenario(variants, {
   },
 });
 
+const visibleBox = (el) => {
+  const box = el.getBoundingClientRect();
+  const clip = getComputedStyle(el).clipPath;
+  const inset = /^inset\(0px ([\d.]+)px/.exec(clip);
+  const cut = inset ? Number(inset[1]) : 0;
+  return { left: box.left + cut, top: box.top, width: box.width - 2 * cut };
+};
+
+let blockCarousels = [];
+scenario(variants, {
+  title: "Block padding",
+  lookFor: "8px above the slides on multi-browse, uncontained, hero and centred hero; none on full-screen",
+  expected: "the first slide starts 8px below the carousel's top, and the carousel stays 240px tall; full-screen starts at 0px",
+  measure: () => {
+    if (!blockCarousels.length) return "not mounted";
+    return blockCarousels.map(({ name, el }) => {
+      const item = el.querySelector(".mtrl-carousel__item");
+      if (!item || item.getBoundingClientRect().height === 0) return `${name} pending`;
+      const top = visibleBox(item).top - el.getBoundingClientRect().top;
+      return `${name} ${top.toFixed(0)}px, height ${el.getBoundingClientRect().height.toFixed(0)}px`;
+    }).join("; ");
+  },
+  mount: (body) => {
+    blockCarousels = ["multi-browse", "uncontained", "hero", "hero-center", "full-screen"].map((variant) => {
+      const label = document.createElement("p");
+      label.textContent = variant;
+      const box = document.createElement("div");
+      box.style.cssText = "width:682px;height:240px;margin:0 0 16px";
+      body.append(label, box);
+      const carousel = createCarousel({ variant, slides });
+      box.append(carousel.element);
+      return { name: variant, el: carousel.element };
+    });
+  },
+});
+
+let openingCarousels = [];
+scenario(variants, {
+  title: "Opening preview",
+  lookFor: "the second slide of a hero and a centred hero, at rest, at least 40px wide",
+  expected: "the preview stays at least 40px; the first slide still starts 16px in, with an 8px gap",
+  measure: () => {
+    if (!openingCarousels.length) return "not mounted";
+    return openingCarousels.map(({ name, el }) => {
+      const items = [...el.querySelectorAll(".mtrl-carousel__item")];
+      const second = items.find((item) => item.getAttribute("aria-label") === "Slide 2");
+      const first = items.find((item) => item.getAttribute("aria-label") === "Slide 1");
+      if (!second || !first || second.getBoundingClientRect().width === 0) return `${name} pending`;
+      const root = el.getBoundingClientRect();
+      const a = visibleBox(first);
+      const b = visibleBox(second);
+      const gap = b.left - (a.left + a.width);
+      return `${name} preview ${b.width.toFixed(2)}px, inset ${ (a.left - root.left).toFixed(0) }px, gap ${gap.toFixed(0)}px`;
+    }).join("; ");
+  },
+  mount: (body) => {
+    openingCarousels = ["hero", "hero-center"].map((variant) => {
+      const label = document.createElement("p");
+      label.textContent = variant;
+      const box = document.createElement("div");
+      box.style.cssText = "width:682px;height:240px;margin:0 0 16px";
+      body.append(label, box);
+      const carousel = createCarousel({ variant, slides });
+      box.append(carousel.element);
+      return { name: variant, el: carousel.element };
+    });
+  },
+});
+
 const states = section(main, "States");
 scenario(states, {
   title: "Hover and focus",
