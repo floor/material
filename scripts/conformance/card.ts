@@ -38,7 +38,7 @@ const variants = ["elevated", "filled", "outlined"] as const;
 const cases: Case[] = variants.flatMap(variant =>
   (["light", "dark"] as const).flatMap(scheme => states.map(state => ({
     id: `${variant}/${scheme}/${state}`,
-    mount, scheme, properties: [...CONFORMANCE_PROPERTIES, "textAlign"],
+    mount, scheme, settleTransitions: true, properties: [...CONFORMANCE_PROPERTIES, "textAlign"],
     state: state === "dragged" ? "rest" : state as State,
     config: { variant, dragged: state === "dragged", disabled: state === "disabled" },
     parts: [...parts, ...(state === "hover" || state === "pressed" || state === "focus"

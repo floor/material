@@ -38,8 +38,6 @@
  *   bun run scripts/conformance/measure.ts button     # the worked example
  */
 import { existsSync, readFileSync, statSync } from "node:fs";
-
-import { settle } from "../browser-settle";
 import { join, resolve } from "node:path";
 
 import * as sass from "sass";
@@ -113,6 +111,8 @@ export type Case = {
    * aimed at a part still at width 0 has nowhere to land.
    */
   before?: number;
+  /** Wait for CSS transitions on the first part before reading its settled state. */
+  settleTransitions?: boolean;
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -364,8 +364,6 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           scheme: scheme ?? testCase.scheme ?? "light",
         },
       );
-      // A fixture's own mount delay: a menu opening on a timer, a dialog's
-      // open call landing, a focus task. It is not an animation, so it stays.
       if (testCase.before) await page.waitForTimeout(testCase.before);
       for (const key of testCase.keys ?? []) await page.keyboard.press(key);
       // The state is applied from the outside: Playwright's pointer and focus,
@@ -377,7 +375,13 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       }
       // A state that runs a spring settles before it is read: the conformance
       // value is the resting one, not a frame of the transition.
-      await settle(page, { target: "#mount" });
+      await page.waitForTimeout(500);
+      if (testCase.settleTransitions) {
+        await page.locator(testCase.parts[0]!.selector).first().evaluate(async element => {
+          const transitions = element.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition);
+          await Promise.allSettled(transitions.map(transition => transition.finished));
+        });
+      }
       const parts = await page.evaluate(
         ({ parts, properties }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
