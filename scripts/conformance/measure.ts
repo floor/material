@@ -379,6 +379,20 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       } catch {
         // A part that cannot take the state is read at rest.
       }
+      // A keyboard state lands after its key: a menu's ArrowDown opens the menu
+      // and moves focus to its first item a frame or more later, and a read
+      // taken at the first quiet frame sees an unfocused item -- in WebKit on a
+      // cold page that was an `outline-style: none` ring in the seed theme,
+      // which resolved to transparent (#00000000). The case's own state
+      // selector is the contract that the state landed; wait for it before
+      // settling, so the read is of the state the case names.
+      const verified = testCase.parts.find((part) => part.name === "verifiedState");
+      if (verified) {
+        await page.waitForFunction((selector) => !!document.querySelector(selector), verified.selector, { timeout: 5000 }).catch(() => {
+          // A selector that never matches is read as it stands; the fixture's
+          // own verifiedState assertion reports it.
+        });
+      }
       // Settle running animations, including a colour transition that starts on
       // a later frame, then the scrollers and the measured parts. Indefinite
       // loading indicators redraw their canvas on every frame and are excluded
