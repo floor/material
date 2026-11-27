@@ -27,7 +27,7 @@ import { setFormValue } from "../../../core/dom/form-value";
 import { activeElementOf } from "../../../core/dom/focus";
 import {
   arrowSign,
-  bubbleTransform,
+  bubbleTranslate,
   getAxis,
   handleTransform,
   isRtl,
@@ -688,20 +688,22 @@ export const withController =
     // Along the axis the position, clearing the side an earlier render or withDom
     // wrote: across a vertical track the stylesheet centres the element, and the
     // value indicator's stylesheet anchors it on the left, which RTL undoes.
-    const place = (element: HTMLElement, value: number, transform: string) => {
+    const handleOffset = handleTransform(axis);
+    const bubbleOffset = bubbleTranslate(axis);
+    const place = (element: HTMLElement, value: number, property: "transform" | "translate", offset: string) => {
       if (axis.vertical) element.style.left = "";
       if (axis.start === "right") element.style.left = "auto";
       if (axis.start === "left") element.style.right = "";
       element.style[axis.start] = visualPosition(value);
-      element.style.transform = transform;
+      element.style[property] = offset;
     };
-    place(handle, state.value, handleTransform(axis));
-    if (valueBubble) place(valueBubble, state.value, bubbleTransform(axis));
+    place(handle, state.value, "transform", handleOffset);
+    if (valueBubble) place(valueBubble, state.value, "translate", bubbleOffset);
 
     // Update second handle if range slider
     if (config.range && secondHandle && state.secondValue !== null) {
-      place(secondHandle, state.secondValue, handleTransform(axis));
-      if (secondValueBubble) place(secondValueBubble, state.secondValue, bubbleTransform(axis));
+      place(secondHandle, state.secondValue, "transform", handleOffset);
+      if (secondValueBubble) place(secondValueBubble, state.secondValue, "translate", bubbleOffset);
     }
 
     // The pressed handle narrows to 2dp (PressedHandleWidth) for as long as the
