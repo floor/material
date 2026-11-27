@@ -10,7 +10,10 @@
  *
  * 1. every animation and transition running on the target (or the document, or
  *    the element's subtree) has finished, capped at 2 s;
- * 2. one animation frame, so the final style has been laid out;
+ * 2. every scroller has stopped — a `scrollTo({behavior: "smooth"})` or a fling
+ *    is no Web Animations animation, so the document's scroller and every
+ *    scroll container in the target's subtree, open shadow roots included, are
+ *    read once per frame until two consecutive frames agree, capped at 2 s;
  * 3. the reading passed as `read` is taken once per frame until two consecutive
  *    frames agree, capped at 1 s.
  *
@@ -126,6 +129,76 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
   if (animations === "missing") throw new Error(`settle: ${target} is not in the page`);
   if (animations === "timeout") throw new Error(`settle: ${target ?? "the document"} was still animating after ${animationCapMs} ms`);
 
+  // A smooth scroll is invisible to the animation step above: the scrollers are
+  // read until two frames agree, so a bare settle() after a goTo is correct by
+  // construction.
+  const scrolled = await page.evaluate(
+    async ({ target: selector, cap }) => {
+      const root = selector ? document.querySelector(selector) : document;
+      if (!root) return "missing" as const;
+      const scopes: Array<Element | Document | ShadowRoot> = [root];
+      const collect = (scope: Element | Document | ShadowRoot): void => {
+        for (const element of scope.querySelectorAll("*")) {
+          if (!element.shadowRoot) continue;
+          scopes.push(element.shadowRoot);
+          collect(element.shadowRoot);
+        }
+      };
+      collect(root);
+      // The target may itself be a shadow host: its own root is not a descendant.
+      if (root instanceof Element && root.shadowRoot) {
+        scopes.push(root.shadowRoot);
+        collect(root.shadowRoot);
+      }
+      const read = (): string => {
+        const positions: string[] = [];
+        const scroller = document.scrollingElement;
+        if (scroller) positions.push(`${scroller.scrollLeft},${scroller.scrollTop}`);
+        for (const scope of scopes) {
+          const elements = scope instanceof Element ? [scope, ...scope.querySelectorAll("*")] : [...scope.querySelectorAll("*")];
+          for (const element of elements) {
+            if (!(element instanceof HTMLElement)) continue;
+            if (element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight) continue;
+            const style = getComputedStyle(element);
+            if (!/auto|scroll/.test(style.overflowX) && !/auto|scroll/.test(style.overflowY)) continue;
+            positions.push(`${element.scrollLeft},${element.scrollTop}`);
+          }
+        }
+        return positions.join("|");
+      };
+      // WebKit scrolls smooth scrolls on the compositor, so its JS-visible
+      // position can repeat mid-flight: a scroll event counts as motion too.
+      let events = 0;
+      const onScroll = (): void => {
+        events += 1;
+      };
+      document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+      const sample = (): Promise<{ position: string; events: number }> =>
+        new Promise((done) => requestAnimationFrame(() => done({ position: read(), events })));
+      const started = Date.now();
+      let previous = await sample();
+      let stable = 0;
+      try {
+        for (;;) {
+          const next = await sample();
+          const quiet = next.position === previous.position && next.events === previous.events;
+          stable = quiet ? stable + 1 : 0;
+          // Three quiet frames: a scroll that has not begun yet starts within
+          // the first, and a compositor-driven one keeps firing events.
+          if (stable >= 3) return "settled";
+          if (Date.now() - started > cap) return `scrolling:${next.position}`;
+          previous = next;
+        }
+      } finally {
+        document.removeEventListener("scroll", onScroll, { capture: true } as EventListenerOptions);
+      }
+    },
+    { target: target ?? null, cap: animationCapMs },
+  );
+  if (scrolled === "missing") throw new Error(`settle: ${target} is not in the page`);
+  if (scrolled !== "settled") {
+    throw new Error(`settle: ${target ?? "the document"} was still scrolling after ${animationCapMs} ms (${scrolled.slice("scrolling:".length)})`);
+  }
   await frame();
   if (!read) return undefined;
 

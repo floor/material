@@ -17,6 +17,23 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.8] - 2026-11-27
+
+Search bars leave 16 px at the end when they have no trailing action, and cards use the correct focus elevation and state-layer opacities.
+
+### Fixed
+
+- **Search bar spacing.** With no trailing action, the browser measured 8 px between the text area and the bar’s end when the clear button was disabled, and 56 px when the default clear button was hidden. Both cases now leave 16 px in contained and divided bars, in left-to-right and right-to-left layouts ([#495](https://github.com/floor/material/pull/495)).
+- **Card focus, hover and drag.** In Chromium and WebKit, focused filled and outlined cards measured elevation Level 1 and now stay at Level 0. Elevated cards still focus at Level 1. The elevated card’s hover layer went from 0% to 8% opacity, and all three variants’ drag layers went from 0% to 16% ([#497](https://github.com/floor/material/pull/497)).
+
+The conformance matrix in the repository compares [Material Design 3](https://m3.material.io/) with Compose Material 3 1.5.0 and verifies colour, type, shape and elevation roles across three themes ([#496](https://github.com/floor/material/pull/496), [#501](https://github.com/floor/material/pull/501), [#502](https://github.com/floor/material/pull/502)). CI skips browser jobs for changes outside their scope ([#499](https://github.com/floor/material/pull/499)), and browser checks use a shared, tested helper to wait for animations and scrolling to settle ([#503](https://github.com/floor/material/pull/503), [#505](https://github.com/floor/material/pull/505), [#506](https://github.com/floor/material/pull/506)).
+
+The release PR’s package job measured **923,516 B** compressed,
+**5,264,682 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **339 B** from 3.16.7
+([run 45938273038](https://github.com/floor/material/actions/runs/45938273038/job/140306764571)).
+
 ## [3.16.7] - 2026-11-26
 
 Menus and selects keep their items in view, hidden bottom app bars stay out of the Tab order, and keyboard focus is clearer across the library.
@@ -7479,7 +7496,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.7...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.8...HEAD
+[3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
 [3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
 [3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
 [3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5

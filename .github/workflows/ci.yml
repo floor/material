@@ -381,6 +381,9 @@ jobs:
           - group: text-field-chips
             browsers: chromium webkit
             checks: text-field-chips:check
+          - group: settle-helper
+            browsers: chromium webkit
+            checks: browser-settle:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-roles:check theme-origins:check spring-tokens:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
