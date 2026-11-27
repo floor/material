@@ -9,14 +9,15 @@
 // false stay as given.
 import { afterAll, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
+import { clearGlobalDefaults, setComponentDefaults } from '../../../src/core/config/global';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const name of ['window', 'document', 'HTMLElement', 'HTMLButtonElement', 'Element', 'Node', 'Event', 'MouseEvent', 'FocusEvent', 'KeyboardEvent', 'CustomEvent', 'MutationObserver']) {
   Object.defineProperty(globalThis, name, { configurable: true, writable: true, value: name === 'window' ? dom.window : Reflect.get(dom.window, name) });
 }
 globalThis.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
-globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
-globalThis.cancelAnimationFrame = () => {};
+globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
+globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window);
 afterAll(() => dom.window.close());
 
 const { default: createTooltip } = await import('../../../src/components/tooltip');
@@ -32,6 +33,21 @@ test('a spread that leaves variant undefined keeps the default class', () => {
   expect(tooltip.element.classList.contains('mtrl-tooltip--default')).toBe(true);
   expect(tooltip.element.className.includes('undefined')).toBe(false);
   tooltip.destroy();
+});
+
+test('an undefined variant uses the global default', () => {
+  (setComponentDefaults as (name: string, config: object) => void)('tooltip', { variant: 'rich' });
+  try {
+    const tooltip = createTooltip({ text: 'Save', target, variant: undefined });
+    try {
+      expect(tooltip.element.classList.contains('mtrl-tooltip--rich')).toBe(true);
+      expect(tooltip.element.classList.contains('mtrl-tooltip--default')).toBe(false);
+    } finally {
+      tooltip.destroy();
+    }
+  } finally {
+    clearGlobalDefaults();
+  }
 });
 
 test('an explicit variant still replaces the default', () => {
@@ -60,7 +76,8 @@ test('an own non-enumerable class still renders', () => {
 
 test('an enumerable symbol key is kept, and null and false stay as given', () => {
   const mark = Symbol('mark');
-  const merged = createBaseConfig({ text: 'Save', target, variant: null as unknown as string, showOnHover: false, [mark]: 'kept' });
+  const config = { text: 'Save', target, variant: null as unknown as string, showOnHover: false, [mark]: 'kept' };
+  const merged = createBaseConfig(config);
   expect(Reflect.get(merged, mark)).toBe('kept');
   expect(merged.variant).toBe(null);
   expect(merged.showOnHover).toBe(false);

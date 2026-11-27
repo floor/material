@@ -94,18 +94,27 @@ export const createComponentConfig = <T extends BaseComponentConfig & object>(
 };
 
 /**
- * Fills defaults the merge overwrote with undefined.
- *
- * A spread options object passes the key with an undefined value, and the
- * merge copies that over the default. The user config is not rebuilt, so a
- * prototype getter, a non-enumerable property, and an enumerable symbol stay
- * as the merge left them. null and false are values, so they stay as given.
+ * Restores values overwritten with undefined after the normal config merge.
+ * A defined global default wins over a built-in one, including null and false.
  */
-export const keepDefaults = <T extends object>(merged: T, defaults: T): T => {
-  const target = merged as Record<string, unknown>;
-  const source = defaults as Record<string, unknown>;
-  for (const key of Object.keys(defaults)) {
-    if (target[key] === undefined && source[key] !== undefined) target[key] = source[key];
+export const keepDefaults = <T extends object>(
+  merged: T,
+  defaults: T,
+  componentName: string,
+): T => {
+  const target = merged as Record<PropertyKey, unknown>;
+  const globalDefaults = getComponentDefaults(componentName as keyof ComponentConfigMap);
+  const sources = [globalDefaults, defaults] as Record<PropertyKey, unknown>[];
+  for (const key of Reflect.ownKeys(target)) {
+    // The merge resolves className separately and may remove the class alias.
+    if (key === "className" || target[key] !== undefined) continue;
+    for (const source of sources) {
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      const value = source[key];
+      if (value === undefined) continue;
+      target[key] = value;
+      break;
+    }
   }
   return merged;
 };

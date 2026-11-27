@@ -45,7 +45,7 @@ export const createBaseConfig = (
     config,
     "extended-fab"
   ) as ExtendedFabConfig;
-  return keepDefaults(merged, defaultConfig);
+  return keepDefaults(merged, defaultConfig, "extended-fab");
 };
 
 /**

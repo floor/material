@@ -9,6 +9,7 @@
 // and null and false stay as given.
 import { afterAll, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
+import { clearGlobalDefaults, setComponentDefaults } from '../../../src/core/config/global';
 
 const dom = new JSDOM('<!doctype html><body></body>', { pretendToBeVisual: true });
 for (const name of ['window', 'document', 'HTMLElement', 'HTMLButtonElement', 'Element', 'Node', 'Event', 'CustomEvent', 'MouseEvent', 'KeyboardEvent']) {
@@ -27,6 +28,22 @@ test('a spread that leaves variant and width undefined keeps the default class a
   expect(fab.element.classList.contains('mtrl-extended-fab--primary-container')).toBe(true);
   expect(fab.element.classList.contains('mtrl-extended-fab--fixed')).toBe(true);
   fab.destroy();
+});
+
+test('undefined options use defined global defaults before built-in defaults', () => {
+  (setComponentDefaults as (name: string, config: object) => void)('extended-fab', { variant: 'tertiary', width: undefined, ariaLabel: 'Create item' });
+  try {
+    const fab = createExtendedFab({ text: 'Create', variant: undefined, width: undefined, ariaLabel: undefined });
+    try {
+      expect(fab.element.classList.contains('mtrl-extended-fab--tertiary')).toBe(true);
+      expect(fab.element.classList.contains('mtrl-extended-fab--fixed')).toBe(true);
+      expect(fab.element.getAttribute('aria-label')).toBe('Create item');
+    } finally {
+      fab.destroy();
+    }
+  } finally {
+    clearGlobalDefaults();
+  }
 });
 
 test('an explicit variant and width still replace the defaults', () => {
