@@ -30,6 +30,13 @@ export async function publishStepCommands(): Promise<string> {
   return step.run;
 }
 
+/** Keep the catalogue layout and field width while removing checkout-specific provenance. */
+export function catalogueForSize(document: string): string {
+  const stamp = /^( +"sourceCommit": ")[0-9a-f]{40}(",)$/m;
+  assert.match(document, stamp, "Missing source commit in the built token catalogue");
+  return document.replace(stamp, (_line, before, after) => before + "0".repeat(40) + after);
+}
+
 /**
  * Install the npm tarball without dependencies or network access.
  *
@@ -37,14 +44,20 @@ export async function publishStepCommands(): Promise<string> {
  * packable files are staged exactly as publish.yml stages them, with the
  * shipped Sass normalized (scripts/package-stage.ts), publish.yml's own step
  * runs there (it strips the manifest and puts npm-readme.md in README.md's
- * place), and npm packs the result. The working tree is never written.
+ * place), and npm packs the result. Size measurements use a fixed source
+ * commit in the staged token catalogue. The built catalogue and the
+ * publishing workflow keep the actual source commit.
  */
-export async function createPackageFixture() {
+export async function createPackageFixture({ forSize = false } = {}) {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "mtrl-consumer-")));
   const cleanup = () => rm(directory, { recursive: true, force: true });
   try {
     const stage = join(directory, "stage");
     await stagePackage(stage);
+    const catalogue = Bun.file(join(stage, "dist/tokens/catalogue.json"));
+    if (forSize && await catalogue.exists()) {
+      await Bun.write(catalogue, catalogueForSize(await catalogue.text()));
+    }
     // As GitHub runs a step: bash, stopping at the first failing command.
     await run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", await publishStepCommands()], stage);
     const [pack] = JSON.parse(await run([

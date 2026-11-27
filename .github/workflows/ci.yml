@@ -345,13 +345,12 @@ jobs:
       - name: Measure the previous release
         working-directory: .size-release-base
         run: |
+          # Use the same pack and Vite measurements on both checkouts.
+          bun "$GITHUB_WORKSPACE/scripts/check-package-size.ts"
           if [ -f scripts/size-policy.ts ]; then
-            bun scripts/check-package-size.ts
             bun scripts/size.ts
           else
-            # The first baseline predates the JSON emitters. Use the same
-            # measurement code on the release checkout and its built package.
-            bun "$GITHUB_WORKSPACE/scripts/check-package-size.ts"
+            # The first baseline predates the JSON emitters.
             MTRL_SIZE_ROOT="$PWD" bun "$GITHUB_WORKSPACE/scripts/size.ts"
           fi
       - name: Packed imports and size measurements
@@ -398,6 +397,8 @@ jobs:
           name: package-sizes
           path: |
             analysis/size-report.md
+            analysis/component-size.json
+            analysis/package-size.json
             analysis/release-sizes
           retention-days: 7
 

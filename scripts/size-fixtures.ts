@@ -29,7 +29,12 @@ export async function measureConsumerSizes(directory: string) {
     await writeFile(entry, code);
     const result = await build({
       root: directory, configFile: false, envFile: false, logLevel: "error",
-      build: { write: false, minify: true, lib: { entry, formats: ["es"] } },
+      build: {
+        write: false, minify: true, lib: { entry, formats: ["es"] },
+        // Rolldown uses cwd in emitted module comments. Those paths also
+        // affect hashed chunk names, so resolve them from the fixture root.
+        rolldownOptions: { cwd: directory },
+      },
     });
     assert(!("on" in result), "Unexpected Vite watcher");
     const outputs = (Array.isArray(result) ? result : [result]).flatMap(output => output.output);
