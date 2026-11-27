@@ -179,14 +179,8 @@ $component: "#{$prefix}-menu";
             @include m.state-layer(t.color("on-surface"), "pressed");
         }
 
-        // Submenu: the label reserves the arrow (24dp at the 12dp end padding)
-        // and the 12dp between elements.
+        // Submenu indicator
         &--submenu {
-            .#{$component}__item-text,
-            .#{$component}__item-label {
-                padding-inline-end: 36px;
-            }
-
             &::after {
                 content: "";
                 position: absolute;
@@ -246,14 +240,6 @@ $component: "#{$prefix}-menu";
             background-color: t.color("secondary-container");
             color: t.color("on-secondary-container");
 
-            // The check is an 18dp mark at the 12dp end padding: the label
-            // reserves it and the 12dp between elements.
-            &:not(.#{$component}__item--submenu) {
-                .#{$component}__item-text,
-                .#{$component}__item-label {
-                    padding-inline-end: 30px;
-                }
-            }
 
             &:hover {
                 @include m.state-layer(t.color("on-secondary-container"), "hover");
@@ -370,6 +356,24 @@ $component: "#{$prefix}-menu";
         }
     }
 
+    // The baseline menu's trailing marks (the selected check, the submenu
+    // arrow) sit in the item's 12dp end padding. The content row reserves
+    // their room once -- the mark and the 12dp between elements -- so the
+    // label and any shortcut beside it stay clear, however many nested text
+    // elements carry them. The vertical menu places its own marks and keeps
+    // its own padding.
+    &:not(&--vertical) {
+        .#{$component}__item--selected:not(.#{$component}__item--submenu) .#{$component}__item-content {
+            // 18dp check + 10dp between it and the content, as main's 40dp
+            // end padding held: 12dp item padding + 28dp here.
+            padding-inline-end: 28px;
+        }
+
+        .#{$component}__item--submenu .#{$component}__item-content {
+            padding-inline-end: 36px;
+        }
+    }
+
     // Divider
     &__divider {
         height: 1px;
@@ -438,7 +442,7 @@ $component: "#{$prefix}-menu";
             // focused or pressed (owner decision 2026-11-27; the vibrant
             // mapping is tertiary-based, m3.material.io/components/menus/specs).
             // A selected item keeps the selection's own colours.
-            .#{$component}__item:not(.#{$component}__item--selected) {
+            .#{$component}__item:not(.#{$component}__item--selected):not(.#{$component}__item--disabled) {
                 &:hover .#{$component}__item-icon,
                 &:focus-visible .#{$component}__item-icon,
                 &.#{$component}__item--active .#{$component}__item-icon,

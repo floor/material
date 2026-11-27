@@ -371,12 +371,12 @@ describe("explicit contrast levels are opt-in", () => {
     // bar with no shown trailing action ends its text 16dp from the edge, and
     // an empty value's clear button takes no room (+92 B; same file). A
     // vibrant menu's leading icon turns tertiary on hover, focus and press,
-    // and a baseline item keeps 12dp end padding with the label reserving the
-    // check's or arrow's room (styles/components/_menu.scss).
+    // and a baseline item keeps 12dp end padding with the content row
+    // reserving the check's or arrow's room once (styles/components/_menu.scss).
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
-      sha256: "9d7092703ac0540decd6fc0575b3aad704188176743a4403b9bbc1373416777e",
-      length: 556748,
+      sha256: "aa9119ca5d60a40722dbc920475c3920c22e7f10489b8aa65647ce9e8857fd61",
+      length: 556826,
     });
   });
 
