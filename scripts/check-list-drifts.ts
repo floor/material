@@ -57,7 +57,7 @@ const mount = () => {
     createList: (config: object) => { element: HTMLElement };
   }).createList;
   const withSingleSelectListbox = (window as unknown as {
-    withSingleSelectListbox: <T>(list: T) => T;
+    withSingleSelectListbox: <T>(list: T, options?: { indicator?: "leading" | "trailing" }) => T;
   }).withSingleSelectListbox;
   const icon = { type: "icon" as const, content: (window as unknown as { ICON: string }).ICON };
   const row = (id: string, extra: object) => ({ id, headline: id, leading: icon, trailing: icon, ...extra });
