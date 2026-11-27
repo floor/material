@@ -371,6 +371,7 @@ describe("explicit contrast levels are opt-in", () => {
     // bar with no shown trailing action ends its text 16dp from the edge, and
     // an empty value's clear button takes no room (+92 B; same file).
     // The slider pill contracts at full opacity before hiding (-153 B).
+    // The exit takes 200 ms.
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
       sha256: "b08db1bc811caee0fedab3c209f0cf7f25a6d57b69d87f964d209747c797fc07",

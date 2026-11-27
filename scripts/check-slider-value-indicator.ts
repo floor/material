@@ -61,6 +61,10 @@ interface Frame {
   clipPath: string;
   visible: boolean;
   visibility: string;
+  transformDuration: number;
+  opacityDuration: number;
+  opacityDelay: number;
+  visibilityDelay: number;
 }
 
 interface MotionSamples {
@@ -81,6 +85,13 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
       const b = indicator.getBoundingClientRect();
       const style = getComputedStyle(indicator);
       const transform = new DOMMatrixReadOnly(style.transform === "none" ? undefined : style.transform);
+      const properties = style.transitionProperty.split(",").map(property => property.trim());
+      const milliseconds = (list: string, property: string) => {
+        const values = list.split(",");
+        const index = properties.indexOf(property);
+        const time = index < 0 ? "" : values[index % values.length]!.trim();
+        return parseFloat(time) * (time.endsWith("ms") ? 1 : 1000);
+      };
       return {
         handleX: a.x + a.width / 2,
         valueX: b.x + b.width / 2,
@@ -91,6 +102,10 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
         clipPath: style.clipPath,
         visible: indicator.classList.contains("mtrl-slider__value--visible"),
         visibility: style.visibility,
+        transformDuration: milliseconds(style.transitionDuration, "transform"),
+        opacityDuration: milliseconds(style.transitionDuration, "opacity"),
+        opacityDelay: milliseconds(style.transitionDelay, "opacity"),
+        visibilityDelay: milliseconds(style.transitionDelay, "visibility"),
       };
     };
     const motion: MotionSamples = { start: read(), frames: [], recording: true };
@@ -216,7 +231,9 @@ try {
         const { start, rest, hidden } = result;
         console.log(`${id}: ${result.frames} frames, alignment ${format(result.alignment)}, lateral ${format(result.lateral)}, ` +
           `scale ${start.scale} → ${rest.scale} → ${hidden.scale}, translateY ${start.translateY} → ${rest.translateY} → ${hidden.translateY} px, ` +
-          `bottom drift ${format(result.bottomDrift)}, ${result.unclipped ? "whole pill" : "clipped"}`);
+          `bottom drift ${format(result.bottomDrift)}, ${result.unclipped ? "whole pill" : "clipped"}, ` +
+          `enter ${rest.transformDuration} ms (opacity ${rest.opacityDuration} ms), ` +
+          `exit ${hidden.transformDuration} ms (opacity ${hidden.opacityDuration} ms after ${hidden.opacityDelay} ms)`);
         check(!onTrack || result.moved > 50, `${id}: the track press did not move the handle`);
         check(near(result.alignment) && near(result.lateral) && near(result.bottomDrift), `${id}: the indicator left its moving anchor`);
         check(result.unclipped, `${id}: the pill was clipped`);
@@ -224,6 +241,10 @@ try {
         check(close(start.translateY, 5) && close(rest.translateY, 0) && close(hidden.translateY, 5), `${id}: translateY did not rise and return`);
         check(result.entering && result.exiting, `${id}: never saw scale and translation moving together`);
         check(result.visibleExit, `${id}: the pill faded before the middle of its shrink`);
+        check(close(rest.transformDuration, 250) && close(hidden.transformDuration, 200),
+          `${id}: expected 250 ms entry and 200 ms exit, got ${rest.transformDuration} ms and ${hidden.transformDuration} ms`);
+        check(close(hidden.opacityDuration, 0) && close(hidden.opacityDelay, hidden.transformDuration) &&
+          close(hidden.visibilityDelay, hidden.transformDuration), `${id}: the pill must stay visible until the exit transform ends`);
       }
       for (const mode of ["plain", "dialog", "scroll", "rtl"] as const) {
         await mount(page, mode === "rtl");
