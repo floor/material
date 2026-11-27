@@ -39,6 +39,7 @@ const server = Bun.serve({
   },
 });
 
+const failures: string[] = [];
 const run = async (browser: Browser, engine: string): Promise<string[]> => {
   const lines: string[] = [];
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -46,19 +47,34 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     await page.goto(`http://127.0.0.1:${server.port}`);
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
 
-    // The document's own smooth scroll.
-    await page.evaluate(() => window.scrollTo({ top: 800, behavior: "smooth" }));
+    // The document's own smooth scroll. A block body returns nothing: an
+    // expression body would hand page.evaluate the Promise `scrollTo` returns
+    // in Chromium, which it awaits — the case would then have waited for the
+    // scroll itself and proved nothing about settle().
+    await page.evaluate(() => {
+      window.scrollTo({ top: 800, behavior: "smooth" });
+    });
     await settle(page);
     const scrollY = await page.evaluate(() => window.scrollY);
-    assert.equal(scrollY, 800, `${engine} document: a bare settle() waited for the smooth scroll (scrollY ${scrollY})`);
-    lines.push(`${engine} document smooth scroll`);
+    try {
+      assert.equal(scrollY, 800, `a bare settle() waited for the smooth scroll (scrollY ${scrollY})`);
+      lines.push(`${engine} document smooth scroll`);
+    } catch (error) {
+      failures.push(`${engine} document: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
-    // A scroll container in the light DOM.
-    await page.evaluate(() => (document.getElementById("box") as HTMLElement).scrollTo({ top: 120, behavior: "smooth" }));
+    // A scroll container in the light DOM, started the same way.
+    await page.evaluate(() => {
+      (document.getElementById("box") as HTMLElement).scrollTo({ top: 120, behavior: "smooth" });
+    });
     await settle(page);
     const boxTop = await page.evaluate(() => (document.getElementById("box") as HTMLElement).scrollTop);
-    assert.equal(boxTop, 120, `${engine} container: a bare settle() waited for the smooth scroll (scrollTop ${boxTop})`);
-    lines.push(`${engine} container smooth scroll`);
+    try {
+      assert.equal(boxTop, 120, `a bare settle() waited for the smooth scroll (scrollTop ${boxTop})`);
+      lines.push(`${engine} container smooth scroll`);
+    } catch (error) {
+      failures.push(`${engine} container: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
     // A scroll container inside a shadow root, reached through the target.
     await page.evaluate(() => {
@@ -67,8 +83,12 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     });
     await settle(page, { target: "#host" });
     const shadowLeft = await page.evaluate(() => document.getElementById("host")!.shadowRoot!.querySelector<HTMLElement>("#scroller")!.scrollLeft);
-    assert.equal(shadowLeft, 600, `${engine} shadow root: a settle() on the target waited for its scroller (scrollLeft ${shadowLeft})`);
-    lines.push(`${engine} shadow-root smooth scroll`);
+    try {
+      assert.equal(shadowLeft, 600, `a settle() on the target waited for its scroller (scrollLeft ${shadowLeft})`);
+      lines.push(`${engine} shadow-root smooth scroll`);
+    } catch (error) {
+      failures.push(`${engine} shadow root: ${error instanceof Error ? error.message : String(error)}`);
+    }
     return lines;
   } finally {
     await page.close();
@@ -100,4 +120,6 @@ if (webkitBrowser) {
 
 server.stop(true);
 for (const line of lines) console.log(`ok ${line}`);
+console.log(`browser settle: ${lines.length} passed, ${failures.length} failed`);
+assert.deepEqual(failures, [], `browser settle:\n  ${failures.join("\n  ")}`);
 console.log(`Passed browser settle: ${lines.length} smooth-scroll cases.`);
