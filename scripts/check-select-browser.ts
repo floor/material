@@ -40,7 +40,13 @@ type Row = {
 
 export async function checkSelectMenu(page: Page, api: "factory" | "factory-top" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
-    const options = [{ id: "cat", text: "Cat" }, { id: "dog", text: "Dog" }];
+    // The selected option's label is long enough to reach the mark if the
+    // mark's room were not reserved: at zero reserve it truncates under the
+    // mark, which the clipped-text check catches (proven in the review).
+    const options = [
+      { id: "cat", text: "Cat, a selected option whose label is long enough to reach the trailing mark" },
+      { id: "dog", text: "Dog" },
+    ];
     const role = (name: string): string => {
       const probe = document.createElement("i");
       probe.style.color = `var(--mtrl-sys-color-${name})`;
