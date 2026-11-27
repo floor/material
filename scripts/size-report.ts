@@ -5,6 +5,7 @@ import { FILES } from "./readme-blocks";
 import { replaceReadmeSizes } from "./readme-sizes";
 import { renderSizesMarkdown, type Result } from "./size";
 import { renderSizeDeltas, sizeFailures, type SizeRow } from "./size-policy";
+import { tableDiffs } from "./release-tables";
 
 interface PackageMeasurements {
   rows: SizeRow[];
@@ -37,6 +38,7 @@ async function main() {
   const pushBody = Bun.file("analysis/size-push-pr-body.txt");
   const body = event.pull_request?.body ?? (await pushBody.exists() ? await pushBody.text() : "");
   const failures = sizeFailures(base.rows, head.rows, body);
+  let releaseTableDiffs: string[] = [];
   const signed = (bytes: number) => `${bytes > 0 ? "+" : ""}${bytes.toLocaleString("en-US")} B`;
   const packed = `${head.pack.package.size.toLocaleString("en-US")} B packed (${signed(head.pack.package.size - base.pack.package.size)} since ${MTRL_SIZE_TAG}).`;
   const report = ["<!-- material-ci-size-report -->", "### Package size", "", packed,
@@ -48,19 +50,34 @@ async function main() {
     assert(revision, "Missing release revision");
     const output = "analysis/release-sizes";
     await mkdir(output, { recursive: true });
-    await writeFile(join(output, "SIZES.md"), renderSizesMarkdown(head.components.results, {
-      commit: revision.slice(0, 8), date: new Date().toISOString().slice(0, 10),
-    }));
+    const measured: Record<string, string> = {
+      "SIZES.md": renderSizesMarkdown(head.components.results, {
+        commit: revision.slice(0, 8), date: new Date().toISOString().slice(0, 10),
+      }),
+    };
     for (const file of FILES) {
-      const text = await Bun.file(file).text();
-      await writeFile(join(output, file), replaceReadmeSizes(text, head.pack.sizes));
+      measured[file] = replaceReadmeSizes(await Bun.file(file).text(), head.pack.sizes);
     }
+    for (const [file, text] of Object.entries(measured)) await writeFile(join(output, file), text);
+    // `release:prepare` pre-fills the tables from a local measurement; this
+    // run is the gate. A committed table that differs from the measurement
+    // fails the release pull request, whatever wrote it.
+    const committed: Record<string, string | undefined> = {};
+    for (const file of Object.keys(measured)) {
+      committed[file] = await Bun.file(file).text().catch(() => undefined);
+    }
+    releaseTableDiffs = tableDiffs(measured, committed);
   }
   if (failures.length) {
     for (const failure of failures) console.error(failure);
     process.exitCode = 1;
   } else {
     console.log(`Size policy passed against ${MTRL_SIZE_TAG}. ${packed}`);
+  }
+  if (releaseTableDiffs.length) {
+    console.error("The committed release size tables differ from this run's measurement:");
+    for (const diff of releaseTableDiffs) console.error(`- ${diff}`);
+    process.exitCode = 1;
   }
 }
 
