@@ -28,6 +28,7 @@ export type Probe =
   | { part: string; outline: true }
   | { part: string; contentInset: "left" | "right" | "bottom"; relativeTo: string }
   | { part: string; gap: "right" | "bottom"; relativeTo: string }
+  | { part: string; transitionDuration: string }
   | { part: string; read: "present" | "elevation" | "translateX" }
   | { part: string; read: "opacity"; paint?: string; opacityAncestor?: string }
   | { part: string; sideInsets: string }

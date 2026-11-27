@@ -168,6 +168,14 @@ function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, prob
     if (shadow === "0px 1px 2px 0px, 0px 1px 3px 1px") return "Level 1";
     return cssValue(style.boxShadow);
   }
+  if ("transitionDuration" in probe) {
+    const properties = style.transitionProperty?.split(",").map(property => property.trim());
+    const durations = style.transitionDuration?.split(",");
+    const index = properties?.lastIndexOf(probe.transitionDuration) ?? -1;
+    const value = index < 0 || !durations?.length ? undefined : durations[index % durations.length]?.trim();
+    if (!value || !/^[\d.]+m?s$/.test(value)) throw new Error(`${id}: missing ${probe.transitionDuration} transition duration`);
+    return `${decimal(parseFloat(value) * (value.endsWith("ms") ? 1 : 1000))}ms`;
+  }
   if ("gap" in probe) {
     const other = visibleRect(getPart(row, probe.relativeTo, id));
     return px(probe.gap === "right" ? other.x - rect.x - rect.width : other.y - rect.y - rect.height);

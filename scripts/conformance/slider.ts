@@ -47,10 +47,11 @@ const parts = [
   part("dot", root+"__dot:not([hidden])"), part("ticks", root+"__ticks:not([hidden],.mtrl-slider__ticks--active)"),
   part("activeTicks", root+"__ticks--active:not([hidden])"), part("insetIcon", root+"__inset-icon svg"),
   part("insetWrapper", root+"__inset-icon"), part("bubble", root+"__value--visible"),
+  part("hiddenBubble", `${root}__value:not(${root}__value--visible)`),
   part("sliderRole", `${handle}[role='slider'][aria-valuenow]`),
 ];
 const properties = [...fieldProperties, "backgroundImage", "backgroundSize", "backgroundPosition", "maskImage",
-  "maskSize", "top", "left", "right", "bottom", "scale", "transitionDuration", "clipPath",
+  "maskSize", "top", "left", "right", "bottom", "scale", "transitionDuration", "transitionProperty", "clipPath",
 ];
 const cases: Case[] = [];
 for (const size of ["XS","S","M","L","XL"] as const) {
