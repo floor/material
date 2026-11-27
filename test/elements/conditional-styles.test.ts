@@ -48,7 +48,7 @@ const condSpec = {
 /** The sheet texts the root holds, whichever mechanism it adopted them by. */
 const sheetTexts = (root: ShadowRoot): string[] =>
   "adoptedStyleSheets" in root && root.adoptedStyleSheets.length > 0
-    ? root.adoptedStyleSheets.map((sheet) => sheet.cssText)
+    ? root.adoptedStyleSheets.map((sheet) => Array.from(sheet.cssRules, (rule) => rule.cssText).join("\n"))
     : Array.from(root.querySelectorAll("style"), (style) => style.textContent ?? "");
 
 test("a conditional entry is adopted while its predicate holds and dropped after, without copies", async () => {
