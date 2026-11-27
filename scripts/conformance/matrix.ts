@@ -321,7 +321,8 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
       /^ShapeTokens\.CornerValue(\w+)$/.exec(token.raw)?.[1]?.replace(/^/, "Corner");
     if (shape && binding.aspect === "shape") {
       const top = /^topStart ([\d.]+)dp\b/.exec(reference.value ?? "");
-      return { ...reference, value: shape, resolved: { radius: top ? `${top[1]}dp` : reference.value! } };
+      const size = reference.value === "square (RectangleShape)" ? "0dp" : reference.value!;
+      return { ...reference, value: shape, resolved: { radius: top ? `${top[1]}dp` : size } };
     }
     const typeRole = /^TypographyKeyTokens\.(\w+)$/.exec(token.raw)?.[1] ??
       (token.file === "TypeScaleTokens" ? /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1] : undefined);
@@ -445,9 +446,15 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
         const metricStatus = (reference: SpecReference | ComposeReference, fromSpec: boolean): Status => {
           const details = reference.resolved;
           if (!details) return status(reference.value, fromSpec);
+          if ("radius" in details && reference.value === "CornerNone" && result.role === null) {
+            return status(details.radius, fromSpec);
+          }
           if (result.role !== reference.value) return "drift";
           if ("elevation" in details) return elevationRole(values.chromium) === result.role && elevationRole(values.webkit) === result.role ? "match" : "drift";
-          if ("radius" in details) return status(details.radius, fromSpec);
+          if ("radius" in details) {
+            if (result.role === "CornerFull" && details.radius === "circle (CornerFull)") return "match";
+            return status(details.radius, fromSpec);
+          }
           if ("tracking" in details) {
             const values: Record<string, string> = {
               fontSize: details.size, fontWeight: details.weight, lineHeight: details.lineHeight, letterSpacing: details.tracking,

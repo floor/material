@@ -1,6 +1,6 @@
 {
   "measured": "2026-11-27",
-  "materialCommit": "fb71cad2bdd6d462c62a615b37fe722ce84fc26e",
+  "materialCommit": "89890eafab85da3b94d42d65d222fcbd73d78805",
   "reference": {
     "compose": {
       "artifact": "androidx.compose.material3:material3",
