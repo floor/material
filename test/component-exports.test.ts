@@ -9,7 +9,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { componentNames, deferredNames, diffComponentExports, extraSubpaths, readComponentExports, readPinned } from "../scripts/component-exports";
+import { NON_COMPONENT_ENTRIES, componentNames, deferredNames, diffComponentExports, extraSubpaths, readComponentExports, readPinned } from "../scripts/component-exports";
 import { readRootExports } from "../scripts/root-exports";
 
 const ROOT = join(import.meta.dir, "..");
@@ -122,8 +122,10 @@ describe("the manifest lists each component subpath", () => {
       `./components/${name}`,
       ...(existsSync(join(ROOT, `src/components/${name}/constants.ts`)) ? [`./components/${name}/constants`] : []),
     ]);
+    // Opt-in entries ship at their own subpath, with a component-style index.
     const extra = [...extraSubpaths(), ...deferredNames()].map((name) => `./components/${name}`);
-    expect([...keys].sort()).toEqual([...expected, ...extra].sort());
+    const optIn = [...NON_COMPONENT_ENTRIES].map((name) => `./components/${name}`);
+    expect([...keys].sort()).toEqual([...expected, ...extra, ...optIn].sort());
   });
 
   test("each entry points at the module it names", () => {

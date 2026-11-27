@@ -582,6 +582,9 @@ export const installChips = <C extends ElementComponent>(
     target.addEventListener("compositionstart", onCompositionStart);
     target.addEventListener("compositionend", onCompositionEnd);
     target.addEventListener("blur", onBlur);
+    // Focus returning to the input runs the shared focus handler, which reads
+    // the draft alone; the class is re-asserted chip-side.
+    target.addEventListener("focus", () => queueMicrotask(syncEmpty));
 
     // Clicks on the row's empty space put the caret in the input.
     const onRowClick = (event: MouseEvent): void => {

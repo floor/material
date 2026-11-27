@@ -2,6 +2,8 @@ import { test, expect, describe } from "bun:test";
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
+import { NON_COMPONENT_ENTRIES } from "../../scripts/component-exports";
+
 const factories: Record<string, string> = {
   'tabs': 'createTabs',
   'split-button': 'createSplitButton',
@@ -50,7 +52,9 @@ describe("component default exports", () => {
   const dirs = readdirSync(componentsDir, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name)
-    .filter(name => existsSync(join(componentsDir, name, "index.ts")));
+    .filter(name => existsSync(join(componentsDir, name, "index.ts")))
+    // Opt-in entries have no factory: they ship an enhancer at their subpath.
+    .filter(name => !NON_COMPONENT_ENTRIES.has(name));
 
   test("the factory table covers exactly the available component entries", () => {
     const tableKeys = Object.keys(factories).sort();

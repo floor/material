@@ -328,6 +328,10 @@
       "types": "./dist/components/text-field/index.d.ts",
       "import": "./dist/components/text-field/index.js"
     },
+    "./components/text-field-chips": {
+      "types": "./dist/components/text-field-chips/index.d.ts",
+      "import": "./dist/components/text-field-chips/index.js"
+    },
     "./components/text-field/constants": {
       "types": "./dist/components/text-field/constants.d.ts",
       "import": "./dist/components/text-field/constants.js"
