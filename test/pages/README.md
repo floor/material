@@ -29,8 +29,11 @@ modules.
 - `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion).
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
+- `components/radios/` — `ripple: false` still paints the keyboard focus ring and the focus layer.
+- `components/select/` — the trailing arrow takes its colour with the field, and rotates 180° while the menu is open.
+- `components/extended-fab/` — undefined variant and width match omitted ones; a defined global variant wins.
 - `components/list/` — 12 px between the slots, 20 px segmented icons, the segmented trailing icon in on-surface, and a selected icon that turns on-surface while hovered, focused, or pressed.
-- `components/tooltip/` — the plain label stays to 1,400 ms after the pointer leaves and is gone after 1,500 ms plus its exit; Escape closes it at once.
+- `components/tooltip/` — an undefined variant matches an omitted one and a global default wins; the plain label stays to 1,400 ms after the pointer leaves and is gone after 1,500 ms plus its exit, and Escape closes it at once.
 
 ## Harness
 

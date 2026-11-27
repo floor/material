@@ -10,8 +10,23 @@
 <script type="module">
 import { initPage, section, scenario } from "../../shared/harness.js";
 import { createTooltip } from "../../../../dist/components/tooltip/index.js";
+import { setComponentDefaults } from "../../../../dist/core/config/global.js";
 await initPage({ name: "tooltip" });
 const main = document.getElementById("tp-main");
+
+const variantOf = (element) => {
+  if (element.classList.contains("mtrl-tooltip--rich")) return "rich";
+  if (element.classList.contains("mtrl-tooltip--plain")) return "plain";
+  if (element.classList.contains("mtrl-tooltip--default")) return "default";
+  return "none";
+};
+
+const trigger = (label) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  return button;
+};
 
 const variants = section(main, "Variants & sizes");
 scenario(variants, {
@@ -29,6 +44,21 @@ scenario(variants, {
     body.append(button);
     const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
     tooltip.element.id = "plain-tooltip";
+  },
+});
+scenario(variants, {
+  title: "Omitted variant",
+  lookFor: "the default tooltip class",
+  expected: "an omitted variant is default",
+  measure: () => {
+    const tip = document.getElementById("tip-omitted");
+    return tip ? `variant ${variantOf(tip)}` : "no tooltip";
+  },
+  mount: (body) => {
+    const button = trigger("Omitted");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button });
+    tooltip.element.id = "tip-omitted";
   },
 });
 
@@ -54,6 +84,21 @@ scenario(states, {
     body.append(button);
     const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
     tooltip.element.id = "focus-tooltip";
+  },
+});
+scenario(states, {
+  title: "Explicit rich",
+  lookFor: "the rich variant class",
+  expected: "an explicit variant replaces the default",
+  measure: () => {
+    const tip = document.getElementById("tip-rich");
+    return tip ? `variant ${variantOf(tip)}` : "no tooltip";
+  },
+  mount: (body) => {
+    const button = trigger("Rich");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button, variant: "rich" });
+    tooltip.element.id = "tip-rich";
   },
 });
 
@@ -110,6 +155,23 @@ scenario(interaction, {
     });
   },
 });
+scenario(interaction, {
+  title: "Hover",
+  lookFor: "the label while the pointer is on the button",
+  expected: "hover shows the default tooltip",
+  measure: () => {
+    const tip = document.getElementById("tip-hover");
+    if (!tip) return "no tooltip";
+    const shown = tip.classList.contains("mtrl-tooltip--visible");
+    return `${variantOf(tip)} · ${shown ? "shown" : "hidden"}`;
+  },
+  mount: (body) => {
+    const button = trigger("Hover");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button });
+    tooltip.element.id = "tip-hover";
+  },
+});
 
 const edge = section(main, "Edge cases");
 scenario(edge, {
@@ -144,6 +206,33 @@ scenario(edge, {
       if (state.leftAt !== null) state.returned = true;
       state.leftAt = null;
     });
+  },
+});
+scenario(edge, {
+  title: "Undefined variant",
+  lookFor: "a variant key left undefined, beside the omitted tooltip and a global default",
+  expected: "undefined matches omitted; a global rich default wins",
+  measure: () => {
+    const omitted = document.getElementById("tip-edge-omitted");
+    const blank = document.getElementById("tip-edge-undefined");
+    const global = document.getElementById("tip-edge-global");
+    if (!omitted || !blank || !global) return "no tooltips";
+    const leaked = blank.className.includes("undefined") || global.className.includes("undefined");
+    const same = variantOf(omitted) === variantOf(blank);
+    return `omitted ${variantOf(omitted)} · undefined ${same ? "matches omitted" : variantOf(blank)} · global ${variantOf(global)}${leaked ? " · class contains undefined" : ""}`;
+  },
+  mount: (body) => {
+    const omittedButton = trigger("Omitted");
+    const blankButton = trigger("Undefined");
+    const globalButton = trigger("Global");
+    body.append(omittedButton, blankButton, globalButton);
+    const omitted = createTooltip({ text: "Save", target: omittedButton });
+    const blank = createTooltip({ text: "Save", target: blankButton, variant: undefined });
+    setComponentDefaults("tooltip", { variant: "rich" });
+    const global = createTooltip({ text: "Save", target: globalButton, variant: undefined });
+    omitted.element.id = "tip-edge-omitted";
+    blank.element.id = "tip-edge-undefined";
+    global.element.id = "tip-edge-global";
   },
 });
 </script>
