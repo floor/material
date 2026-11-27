@@ -426,7 +426,6 @@ section("the empty class never appears with a chip and an empty draft", async (p
     w.sampling = true;
     const field = document.getElementById("field") as HTMLElement;
     const label = field.querySelector(".mtrl-text-field__label") as HTMLElement;
-    const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
     const tick = (): void => {
       if (!w.sampling) return;
       w.frames.push(label.getBoundingClientRect().top - field.getBoundingClientRect().top < 10);
@@ -438,7 +437,6 @@ section("the empty class never appears with a chip and an empty draft", async (p
     const state = await page.evaluate(() => {
       const field = document.getElementById("field") as HTMLElement;
       const labelEl = field.querySelector(".mtrl-text-field__label") as HTMLElement;
-      const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
       const outline = field.querySelector(".mtrl-text-field__outline") as HTMLElement;
       const w = window as unknown as { frames: boolean[]; sampling: boolean };
       w.sampling = false;
@@ -484,7 +482,6 @@ section("the empty class never appears with a chip and an empty draft", async (p
       w.sampling = true;
       const field = document.getElementById("field") as HTMLElement;
       const labelEl = field.querySelector(".mtrl-text-field__label") as HTMLElement;
-      const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
       const tick = (): void => {
         if (!w.sampling) return;
         w.frames.push(labelEl.getBoundingClientRect().top - field.getBoundingClientRect().top < 10);
