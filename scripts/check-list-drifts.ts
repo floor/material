@@ -39,7 +39,9 @@ const bundle = await Bun.build({
       build.onResolve({ filter: /^list-drifts-entry\.ts$/ }, () => ({ path: "list-drifts-entry.ts", namespace: "list-drifts" }));
       build.onLoad({ filter: /.*/, namespace: "list-drifts" }, () => ({
         contents: `import createList from ${JSON.stringify(resolve(repoRoot, "src/components/list/list.ts"))};
-window.createList = createList;`,
+import { withSingleSelectListbox } from ${JSON.stringify(resolve(repoRoot, "src/components/list/index.ts"))};
+window.createList = createList;
+window.withSingleSelectListbox = withSingleSelectListbox;`,
         loader: "ts",
       }));
     },
@@ -54,6 +56,9 @@ const mount = () => {
   const createList = (window as unknown as {
     createList: (config: object) => { element: HTMLElement };
   }).createList;
+  const withSingleSelectListbox = (window as unknown as {
+    withSingleSelectListbox: <T>(list: T) => T;
+  }).withSingleSelectListbox;
   const icon = { type: "icon" as const, content: (window as unknown as { ICON: string }).ICON };
   const row = (id: string, extra: object) => ({ id, headline: id, leading: icon, trailing: icon, ...extra });
   document.body.style.cssText = "margin:0;padding:16px";
@@ -106,6 +111,14 @@ const mount = () => {
   held.element.id = "held";
   const heldRow = held.element.querySelector("[data-id='held']");
   if (heldRow) heldRow.append(inside.element);
+  // A listbox nested in the same selected row: its radio is the one the
+  // selected row's radio rule must not reach.
+  const chooser = withSingleSelectListbox(createList({
+    ariaLabel: "Nested listbox",
+    items: [{ id: "pick", headline: "Pick", leading: icon }],
+  }), { indicator: "trailing" });
+  chooser.element.id = "chooser";
+  if (heldRow) heldRow.append(chooser.element);
   const frozen = createList({
     ariaLabel: "Disabled with a nested list",
     items: [row("frozen", { disabled: true })],
@@ -200,6 +213,9 @@ const snapshot = (page: Page) => page.evaluate(() => {
     chillHeadline: textOf(chill, "headline"),
     chillSupporting: textOf(chill, "supporting"),
     chillTextOpacity: opacityOf(chill, "text"),
+    pickRadioBorder: roleOf(getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement).borderTopColor),
+    pickRadioDot: getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement, "::after").transform,
+    insideActionLayer: roleOf(getComputedStyle(item("inside", "inside").querySelector(".mtrl-list__action") as HTMLElement, "::before").backgroundColor),
   };
 });
 
@@ -241,6 +257,11 @@ const run = async (page: Page, engine: string) => {
   assert.equal(rest.chillHeadline, "OnSurface", `${engine}: a standard list nested in a disabled row keeps its headline OnSurface`);
   assert.equal(rest.chillSupporting, "OnSurfaceVariant", `${engine}: a standard list nested in a disabled row keeps its supporting text OnSurfaceVariant`);
   assert.equal(rest.chillTextOpacity, "1", `${engine}: a standard list nested in a disabled row keeps its text at full opacity`);
+  assert.equal(rest.pickRadioBorder, "OnSurfaceVariant", `${engine}: an unselected listbox radio nested in a selected row keeps the OnSurfaceVariant ring`);
+  assert.equal(rest.pickRadioDot.startsWith("matrix(0,"), true, `${engine}: an unselected listbox radio nested in a selected row keeps its dot at scale 0 (${rest.pickRadioDot})`);
+  // The inner action's layer is what its hover paints; the selected row's own
+  // action layer colour must not reach it.
+  assert.equal(rest.insideActionLayer, "OnSurface", `${engine}: a list nested in a selected row keeps its action layer OnSurface`);
   assert.equal(rest.leadingStandard, 24, `${engine}: a standard icon stays 24`);
   assert.equal(rest.leadingSegmentedRole, "OnSurfaceVariant", `${engine}: a segmented leading icon stays OnSurfaceVariant`);
   assert.equal(rest.leadingNested, 24, `${engine}: a standard list nested in a segmented list keeps a 24px leading icon`);
@@ -284,7 +305,9 @@ const run = async (page: Page, engine: string) => {
   assert.equal(hovered.selectedTrailing, "OnSurface", `${engine}: list/trailing-icon-colour/standard/selected-hover`);
 
   await remount();
-  await page.hover("#held [data-id='held'] .mtrl-list__action");
+  // The row holds nested lists after its content; hover the action's own
+  // start, clear of them.
+  await page.hover("#held [data-id='held'] .mtrl-list__action", { position: { x: 8, y: 8 } });
   assert.equal(
     await page.evaluate(() => document.querySelector("#held [data-id='held']")?.classList.contains("mtrl-list__item--selected") ?? false),
     true,
@@ -295,7 +318,6 @@ const run = async (page: Page, engine: string) => {
   assert.equal(nestedHover.heldTrailing, "OnSurface", `${engine}: the selected row's own trailing icon is OnSurface while hovered`);
   assert.equal(nestedHover.insideLeading, "OnSurfaceVariant", `${engine}: a nested unselected leading icon stays OnSurfaceVariant while its selected parent is hovered`);
   assert.equal(nestedHover.insideTrailing, "OnSurfaceVariant", `${engine}: a nested unselected trailing icon stays OnSurfaceVariant while its selected parent is hovered`);
-
   await remount();
   await page.hover(action);
   await page.mouse.down();
