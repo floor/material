@@ -146,17 +146,17 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const nearestIndex = (position: number): number => {
-      // Only the uncontained variants clamp their trailing snaps to the
-      // range, so only they can produce snapped ties at the capped end —
-      // the readout names the item actually in view, the last of the ties.
-      // Contained snaps are distinct; the strict comparison keeps their
-      // indexes unchanged.
+      // An uncontained strip names the last of its tied end snaps. In a
+      // multi-browse focal group, keep a selection that shares the nearest snap
+      // so a scroll event cannot undo a keyboard or programmatic selection.
       const lastWins = variant === CAROUSEL_VARIANTS.UNCONTAINED;
+      const keepGroupSelection = variant === CAROUSEL_VARIANTS.MULTI_BROWSE;
       let best = 0;
       let bestDistance = Number.MAX_VALUE;
       snapPositions.forEach((snapPosition, i) => {
         const distance = Math.abs(position - snapPosition);
-        if (distance < bestDistance || (lastWins && distance === bestDistance)) {
+        const selectedAtSameSnap = keepGroupSelection && i === currentIndex && snapPosition === snapPositions[best];
+        if (distance < bestDistance || (distance === bestDistance && (lastWins || selectedAtSameSnap))) {
           bestDistance = distance;
           best = i;
         }
@@ -256,6 +256,16 @@ export const withScroll = (config: CarouselConfig) =>
           : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
       );
       const scrollRange = isUncontained ? maxScroll : Math.max(0, snapPositions[count - 1] ?? 0);
+      if (variant === CAROUSEL_VARIANTS.MULTI_BROWSE) {
+        // The strategy can assign a late item to the first focal slot even
+        // when that snap would overshoot the final focal group. Share the
+        // reachable stop with the following items to keep selection in order.
+        let previous = 0;
+        snapPositions = snapPositions.map(position => {
+          previous = Math.min(scrollRange, Math.max(previous, position));
+          return previous;
+        });
+      }
 
       // Track length and one snap point per item
       track.style[vertical ? "height" : "width"] = `${containerSize + scrollRange}px`;
@@ -666,8 +676,8 @@ export const withScroll = (config: CarouselConfig) =>
       // The capped end ties several snaps to the range: the wheel names the
       // item actually in view — the last of the tied snaps (the backward
       // scan already starts there), so a wheel to the end reads 24 / 24.
-      // Uncontained only: contained snaps are distinct, and the loop would
-      // walk a contained wheel past its own keyline (2 / 4 became 3 / 4).
+      // A multi-browse group keeps its first member on a forward wheel
+      // gesture. Its other members can be selected directly at that stop.
       if (variant === CAROUSEL_VARIANTS.UNCONTAINED && direction > 0) {
         while (index + 1 < count && snapPositions[index + 1] === snapPositions[index]) index++;
       }

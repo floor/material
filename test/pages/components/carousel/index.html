@@ -186,6 +186,38 @@ scenario(interaction, {
   },
 });
 
+let snapCarousel = null;
+const snapChanges = [];
+scenario(interaction, {
+  title: "Wide multi-browse snap order",
+  lookFor: "use Next slide, or focus slide 3 and press Right Arrow to select slides 4, 5 and 6",
+  expected: "slide 4 reaches the 812px end of the strip. Slides 5 and 6 keep that view and each selection emits one change",
+  measure: () => {
+    const scroller = snapCarousel?.element.querySelector(".mtrl-carousel__scroller");
+    if (!scroller) return "waiting for the carousel";
+    return `Slide ${snapCarousel.getCurrentSlide() + 1} of 6 · scroll ${Math.round(scroller.scrollLeft)} / ${scroller.scrollWidth - scroller.clientWidth}px · changes ${snapChanges.slice(-8).join(", ") || "none"}`;
+  },
+  mount: (body) => {
+    const viewport = document.createElement("div");
+    viewport.style.cssText = "max-width:100%;overflow-x:auto";
+    const box = document.createElement("div");
+    box.style.cssText = "width:900px;height:240px";
+    viewport.append(box);
+    snapCarousel = createCarousel({ variant: "multi-browse", slides, initialSlide: 2 });
+    snapCarousel.on("change", ({ value }) => snapChanges.push(value + 1));
+    box.append(snapCarousel.element);
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.textContent = "Previous slide";
+    previous.addEventListener("click", () => snapCarousel.prev());
+    const next = document.createElement("button");
+    next.type = "button";
+    next.textContent = "Next slide";
+    next.addEventListener("click", () => snapCarousel.next());
+    body.append(viewport, previous, next);
+  },
+});
+
 const edge = section(main, "Edge cases");
 scenario(edge, {
   title: "RTL and dark",
