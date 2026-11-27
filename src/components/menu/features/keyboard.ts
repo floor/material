@@ -1,7 +1,7 @@
 // src/components/menu/features/keyboard.ts
 
 import { createMenuTasks } from "./tasks";
-import { activeElementOf } from "../../../core/dom/focus";
+import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
 import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeyboardActions,
@@ -177,7 +177,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     menuElement: HTMLElement,
     interactionType: "keyboard" | "mouse",
     openingEvent?: Event,
-  ): void => {
+  ): (() => void) | undefined => {
     // Reset typeahead when menu opens
     resetTypeahead();
 
@@ -210,9 +210,16 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // Opened with a key: focus an item, which is what the spec asks for and
     // what a person navigating by key expects to see marked
     // (m3.material.io menu accessibility, "Initial focus").
-    if (interactionType === "keyboard" && items.length > 0) {
+    if (interactionType === "keyboard" && target) {
+      const before = deepActiveElement();
+      const beforeInRoot = activeElementOf(target);
       focusInMenu(target, menuElement);
-      return;
+      if (activeElementOf(target) === target) return;
+      return () => {
+        if (menuElement.contains(target) && activeElementOf(target) === beforeInRoot && deepActiveElement() === before) {
+          focusInMenu(target, menuElement);
+        }
+      };
     }
 
     // Opened with a pointer: focus the menu itself. Focus is still inside
@@ -222,6 +229,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     menuElement.setAttribute("tabindex", "-1");
     if (inContainer(menuElement)) menuElement.focus({ preventScroll: true });
     else menuElement.focus();
+    return undefined;
   };
 
   /**

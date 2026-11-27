@@ -722,7 +722,7 @@ export interface MenuFeatureHost {
       menuElement: HTMLElement,
       interactionType: "keyboard" | "mouse",
       openingEvent?: Event
-    ) => void;
+    ) => (() => void) | undefined;
     // Read by the opener feature, so a menu has one Tab tracker rather than
     // two: the same key press decides focus for both.
     isTabNavigationActive: () => boolean;

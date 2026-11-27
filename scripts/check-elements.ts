@@ -35,6 +35,7 @@ import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
+import { checkMenuConsumerFocus, checkStalledMenuFocus } from "./check-menu-opening-focus";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -185,6 +186,15 @@ try {
 
   if (selected("a")) await checkDeclarativeUpgrade(browser.browser()!);
   const defaultViewport = { width: 900, height: 700 };
+  if (selected("menu-opening-focus")) {
+    const consumerPage = await browser.browser()!.newPage({ viewport: defaultViewport });
+    try {
+      await consumerPage.goto(`http://127.0.0.1:${server.port}`);
+      await checkMenuConsumerFocus(consumerPage, !!webkitBrowser, check);
+    } finally {
+      await consumerPage.close();
+    }
+  }
   const page = await browser.browser()!.newPage({ viewport: defaultViewport });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -9727,17 +9737,19 @@ try {
         async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
       await focusIs(step, label);
     };
-    await page.focus("#mb");
-    await page.keyboard.press("Enter");
-    await focusedByKey("menu, opened with Enter", "Copy");
-    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
-    await page.keyboard.press("Escape");
-    await closed("menu, Escape, opened with Enter");
-    await settle();
-    await focusIs("menu, Escape, opened with Enter", "mb");
-    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
-    assert.equal(await focused(), "mb");
-    check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await checkStalledMenuFocus(page, "#mm", page.locator("#mb"), "copy", `menu (${reducedMotion})`);
+      assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
+      await page.keyboard.press("Escape");
+      await closed("menu, Escape, opened with Enter");
+      await settle();
+      await focusIs("menu, Escape, opened with Enter", "mb");
+      assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+      assert.equal(await focused(), "mb");
+      check(`menu: Enter focuses the first item after a stall and Escape returns focus (${reducedMotion})`);
+    }
+    await page.emulateMedia({ reducedMotion: null });
 
     // ArrowUp on the anchor opens the menu on its last item. The anchor puts
     // focus there 100ms after the key, and the menu's own initial focus, which runs

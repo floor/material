@@ -476,7 +476,7 @@ jobs:
             checks: menu-focus-ring:check
           - group: menu-drifts
             browsers: chromium webkit
-            checks: menu-drifts:check
+            checks: menu-drifts:check menu-opening-focus:check
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check
