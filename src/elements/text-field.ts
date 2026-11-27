@@ -77,7 +77,14 @@ const inputAttribute =
 const textFieldSpec = {
   name: "text-field",
   create: (config) => create(config as TextFieldConfig),
-  styles: ["text-field"],
+  // The chip sheets are declared, not registered: the element adopts them only
+  // while the host carries the attribute, and drops them when that goes. The
+  // chips sheet draws the chip itself; the text-field-chips sheet its row.
+  styles: [
+    "text-field",
+    { name: "chips", when: (host) => host.hasAttribute("chips") },
+    { name: "text-field-chips", when: (host) => host.hasAttribute("chips") },
+  ],
   // The field fills a host given a width, as a native input does. A hidden
   // field is not rendered at all, as a `hidden` host is not: it takes no space
   // before upgrade (the pre-upgrade rule) and none after, and its value still
@@ -160,7 +167,8 @@ const textFieldSpec = {
     "aria-label": { type: "string", config: "ariaLabel", update: inputAttribute("aria-label") },
     // Input chips: the attribute turns them on; separators and max-chips are
     // read by config(host) below, which recreates the field when they change.
-    chips: { type: "boolean", update: () => {} },
+    // A change rebuilds: the sheet and the chips follow the attribute.
+    chips: { type: "boolean" },
     separators: { type: "string", update: () => {} },
     "max-chips": { type: "number", update: () => {} },
   },

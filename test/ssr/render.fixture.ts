@@ -5,7 +5,7 @@ import { parseHTML } from "linkedom";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
 import { elements, cardElement, buttonElement } from "../../src/elements";
 import { registerStyles, RENDERED_HOST_ATTRIBUTE, styleText } from "../../src/elements/styles";
-import { SHADOW_BASE_STYLES, hostStyleText, type ElementSpec, type ElementComponent } from "../../src/elements/define";
+import { SHADOW_BASE_STYLES, hostStyleText, stylesFor, type ElementSpec, type ElementComponent } from "../../src/elements/define";
 import { pruneStyles } from "../../src/ssr/prune-styles";
 import { configureHTML } from "../../src/core/dom/html";
 const { renderElement } = await import("../../src/ssr");
@@ -175,7 +175,9 @@ test("generated nested hosts and factory style nodes are preserved", () => {
 test("eligible link and inline sequences match browser adoption names", () => {
   for (const { spec } of Object.values(elements)) {
     if (optedOut.has(spec.name)) continue;
-    const names = [...SHADOW_BASE_STYLES, ...spec.styles];
+    // The rendered host carries no attributes, so its conditional entries stay off.
+    const host = parseHTML("<html><body></body></html>").document.createElement(`m-${spec.name}`);
+    const names = [...SHADOW_BASE_STYLES, ...stylesFor(spec.styles, host)];
     const html = renderElement(`m-${spec.name}`, {}, "", { styles: "link", cssBase: "/css" });
     const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
     expect(urls, spec.name).toEqual([`hosts/${spec.name}`, ...names].map(name => `/css/${name}.css`));
@@ -193,6 +195,17 @@ test("eligible link and inline sequences match browser adoption names", () => {
     expect(sheet, spec.name).toBe(pruneStyles(full, present));
     expect(sheet.startsWith(hostStyleText(spec)), spec.name).toBe(true);
   }
+});
+test("a conditional style entry follows the host attribute", () => {
+  const plain = renderElement("m-text-field", {}, "", { styles: "link", cssBase: "/css" });
+  expect(plain).not.toContain("text-field-chips");
+  const chips = renderElement("m-text-field", { chips: "" }, "", { styles: "link", cssBase: "/css" });
+  expect(chips).toContain('/css/text-field-chips.css');
+  // The inline sheet carries the entry once, between the base sheets and the markup.
+  const inline = renderElement("m-text-field", { chips: "" });
+  const sheet = /<style>([^]*)<\/style>/.exec(inline)![1];
+  expect(sheet.split(".mtrl-text-field__chips").length - 1).toBeGreaterThan(0);
+  expect(inline.match(/text-field-chips\.css/g) ?? []).toHaveLength(0);
 });
 test("missing registered styles fail clearly", () => {
   const previous = styleText("button")!;

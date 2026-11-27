@@ -110,6 +110,9 @@ export interface ElementHost<C extends ElementComponent> extends HTMLElement {
   readonly dirty: boolean;
 }
 
+/** A style entry, or the sheet an attribute on the host turns on. */
+export type StyleEntry = string | { name: string; when: (host: HTMLElement) => boolean };
+
 /**
  * What `defineElement` builds an element from: its name, the factory, the
  * styles its shadow root adopts, and how attributes, properties, slots,
@@ -130,8 +133,13 @@ export interface ElementSpec<C extends ElementComponent> {
    * can opt out based on the authored host. Browser upgrade is unchanged.
    */
   ssr?: boolean | ((host: HTMLElement) => boolean);
-  /** Style entries, in cascade order. */
-  styles: readonly string[];
+  /**
+   * Style entries, in cascade order. An entry given as `{ name, when }` is
+   * adopted only while `when(host)` holds — the sheet an attribute turns on.
+   * `applyStyles` replaces the root's sheets with exactly the entries that
+   * pass, so a toggle adopts and drops without duplicates.
+   */
+  styles: readonly StyleEntry[];
   /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   /**
@@ -193,6 +201,18 @@ export interface DefineOptions {
 }
 
 export { DEFAULT_PREFIX };
+
+/** Every entry a spec can adopt, in cascade order, whatever the host. */
+export const styleNames = (styles: readonly StyleEntry[]): string[] =>
+  styles.map((entry) => (typeof entry === "string" ? entry : entry.name));
+
+/** The entries the host adopts now, in cascade order. */
+export const stylesFor = (styles: readonly StyleEntry[], host: HTMLElement): string[] =>
+  styles.filter((entry) => typeof entry === "string" || entry.when(host)).map((entry) =>
+    typeof entry === "string" ? entry : entry.name);
+
+/** Conditional entries whose CSS a host needed and no module registered. */
+const warnedMissing = new Set<string>();
 
 /**
  * Global base styles components rely on, which a shadow root does not inherit.
@@ -626,7 +646,15 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       // read again after the component it is restyled for exists.
       trackDirection(this);
       const root = this.shadowRoot as ShadowRoot;
-      applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
+      const adopted = stylesFor(spec.styles, this);
+      applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...adopted]);
+      // A conditional entry is only a page's to import when a host turns it
+      // on: report it then, once, not at define time on every page.
+      for (const name of adopted) {
+        if (hasStyles(name) || warnedMissing.has(name)) continue;
+        warnedMissing.add(name);
+        console.warn(`<${spec.name}> has no CSS for ${name}: import "material/elements/css/${name}" first.`);
+      }
       const component = spec.create(this.#config());
       this.component = component;
       // A factory that did not place the slot leaves the element without one.
@@ -948,7 +976,8 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
       if (!prepared) {
         prepared = true;
         registerStyles({ [`host:${spec.name}`]: hostStyleText(spec) });
-        const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
+        const staticEntries = spec.styles.filter((entry): entry is string => typeof entry === "string");
+        const missing = [...SHADOW_BASE_STYLES, ...staticEntries].filter((name) => !hasStyles(name));
         if (missing.length) {
           console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "material/elements/css/${spec.name}" first.`);
         }

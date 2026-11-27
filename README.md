@@ -169,17 +169,19 @@ Three names change, additively:
 ### Input chips in a text field
 
 A text field can hold input chips (m3.material.io chips). Type an address and
-press Enter or a separator and it becomes a chip; Backspace at the start of the
+press Enter or a separator and it becomes a chip. Backspace at the start of the
 input selects the last chip, and a second Backspace removes it; a second
-activation of a selected chip edits it as text. Chips wrap onto new rows with
-their 48dp targets intact, a pasted list splits into chips while text that is
-rejected or over the limit stays in the input, and the field submits one form
-entry per chip under its `name`. The option is opt-in: a field created without
-`chips` is unchanged.
+activation of a selected chip edits it as text.
+
+Chips wrap onto new rows with their 48dp targets intact. A pasted list splits
+into chips while text that is rejected or over the limit stays in the input,
+and the field submits one form entry per chip under its `name`. The option is
+opt-in: a field created without `chips` is unchanged.
 
 <!-- example: run, shows "To" -->
 ```typescript
 import 'material/styles';
+import 'material/styles/text-field-chips';
 import { createTextField } from 'material';
 
 const recipients = createTextField({
@@ -195,6 +197,13 @@ document.body.append(recipients.element);
 
 As an element: `<m-text-field chips name="to" label="To" type="email"></m-text-field>`,
 and the committed values are the element's `values` property.
+
+The element's shadow root needs the chip sheets. Import
+`material/elements/css/text-field-chips` for them. That module imports
+`material/elements/css/text-field` itself. The whole of `material/elements/css`
+also serves a page with every element. The element adopts the sheets only while
+the host carries `chips`, and drops them without a copy when the attribute
+goes.
 
 ### Factory control labels
 

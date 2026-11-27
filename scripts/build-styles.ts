@@ -264,7 +264,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   await write("ripple", "utilities/ripple", []);
   // Only components that have an element, and what their CSS depends on.
   const specs = Object.values(elements);
-  const names = resolveStyleDependencies(specs.flatMap(element => [...element.spec.styles]));
+  const names = resolveStyleDependencies(specs.flatMap(element => definition.styleNames(element.spec.styles)));
   // A pre-upgrade partial belongs to a CSS module or to an element name.
   // The deprecated top app bar's and drawer's specs reuse their component
   // sheets under the new names, which have no sheet of their own.

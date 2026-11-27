@@ -1,7 +1,7 @@
 // scripts/fixtures/ssr-parity.ts
 import { defineAll, elements, SHADOW_BASE_STYLES } from "../../dist/elements/index.js";
 import "../../dist/elements/css/index.js";
-import { hostStyleText } from "../../dist/elements/define.js";
+import { hostStyleText, stylesFor } from "../../dist/elements/define.js";
 import { styleText } from "../../dist/elements/styles.js";
 import { setHTML } from "../../dist/core/dom/html.js";
 import { pruneStyles } from "../../src/ssr/prune-styles.ts";
@@ -20,7 +20,7 @@ const classesOf = (root: ShadowRoot): string[] =>
 const textsOf = (element: Element): readonly string[] | undefined => {
   const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === element.localName)?.spec;
   if (!spec) return undefined;
-  return [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles].map(name => styleText(name) ?? hostStyleText(spec));
+  return [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...stylesFor(spec.styles, element)].map(name => styleText(name) ?? hostStyleText(spec));
 };
 const pruned = (texts: readonly string[], present: readonly string[]): string =>
   css(pruneStyles(texts.join("\n"), new Set(present)));
@@ -108,7 +108,7 @@ const api = {
   snapshot,
   styleOrder(host: Element) {
     const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === host.localName)!.spec;
-    const names = [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles];
+    const names = [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...stylesFor(spec.styles, host)];
     const texts = textsOf(host)!;
     const adopted = host.shadowRoot!.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"));
     return { names, sources: texts.map(css), adopted, expected: pruned(texts, classesOf(host.shadowRoot!)) };

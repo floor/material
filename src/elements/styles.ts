@@ -127,6 +127,11 @@ export const applyStyles = (root: ShadowRoot, names: readonly string[]): void =>
     root.adoptedStyleSheets = known.map((name) => sheetFor(name, sources.get(name) as string));
     return;
   }
+  // Without constructable sheets a rebuild appends again: drop the nodes this
+  // function put there first, so a toggled entry never doubles.
+  for (const node of Array.from(root.querySelectorAll("style"))) {
+    if (fallbackStyles.has(node)) node.remove();
+  }
   for (const name of known) {
     const style = document.createElement("style");
     style.textContent = sources.get(name) as string;
