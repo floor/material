@@ -321,6 +321,7 @@
     ".mtrl-carousel--vertical .mtrl-carousel__item",
     ".mtrl-carousel--vertical .mtrl-carousel__scroller",
     ".mtrl-carousel--vertical .mtrl-carousel__track",
+    ".mtrl-carousel:not(.mtrl-carousel--full-screen)",
     ".mtrl-carousel[data-dragging] .mtrl-carousel__scroller",
     ".mtrl-carousel[data-settling] .mtrl-carousel__scroller",
     ".mtrl-carousel__button",

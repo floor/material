@@ -447,6 +447,9 @@ jobs:
           - group: components-a
             browsers: chromium webkit
             checks: core:check carousel:check a11y-svg:check
+          - group: carousel-reference
+            browsers: chromium webkit
+            checks: carousel-reference:check
           - group: components-b
             browsers: chromium
             checks: consumer:check tabs:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
