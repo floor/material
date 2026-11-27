@@ -80,7 +80,7 @@ export type Part = {
   bitmap?: boolean;
 };
 
-export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
+export type State = "rest" | "hover" | "focus" | "pressed" | "disabled" | "dragged";
 
 export type Case = {
   /** The row id the table uses, e.g. "filled/m/rest". */
@@ -279,16 +279,21 @@ const applyState = async (page: Page, selector: string, state: State, focusTarge
   }
   else if (state === "disabled") {
     // The case's mount built it disabled; the state names the row.
-  } else if (state === "pressed") {
+  } else if (state === "pressed" || state === "dragged") {
     const box = await page.locator(selector).first().boundingBox();
-    if (!box) throw new Error(`pressed: ${selector} has no box`);
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    if (!box) throw new Error(`${state}: ${selector} has no box`);
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
     await page.mouse.down();
+    // A native drag starts only after the pointer moves past the platform
+    // threshold. The button stays down through the read; release ends it.
+    if (state === "dragged") await page.mouse.move(x + 40, y + 40, { steps: 10 });
   }
 };
 
 const releaseState = async (page: Page, state: State) => {
-  if (state === "pressed") await page.mouse.up();
+  if (state === "pressed" || state === "dragged") await page.mouse.up();
   if (state !== "rest") await page.mouse.move(0, 0);
 };
 

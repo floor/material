@@ -9,7 +9,6 @@ type Config = {
   middle?: boolean;
   square?: boolean;
   mixed?: boolean;
-  disabled?: boolean;
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
@@ -25,7 +24,6 @@ const mount: Case["mount"] = (mtrl, host, data) => {
     return {
       content, title: `Slide ${i + 1}`,
       ...(config.mixed ? { width: 140 + 25 * i, height: 100 + 16 * i } : {}),
-      ...(config.disabled && i === 0 ? { disabled: true } : {}),
     };
   });
   const carousel = create({
@@ -41,6 +39,7 @@ const root = ".mtrl-carousel";
 const item = root+"__item";
 const slide = (i: number) => `${item}[aria-label='Slide ${i}']`;
 const parts = [
+  // No slide is disabled: the component has no such item. The probe records the marker as absent.
   part("disabled", `${slide(1)}[aria-disabled="true"]`),
   part("root", root), part("scroller", root+"__scroller"), part("layer", root+"__layer"), part("track", root+"__track"),
   part("first", slide(1)), part("second", slide(2)), part("third", slide(3)), part("fourth", slide(4)),
@@ -64,7 +63,7 @@ for (const variant of ["multi-browse", "uncontained", "hero", "hero-center", "fu
   add("rtl",{direction:"rtl"});
   add("end",{atEnd:true});
   add("end-rtl",{direction:"rtl",atEnd:true});
-  if (variant === "uncontained") { add("mixed", { mixed: true }); add("disabled-item", { disabled: true }); }
+  if (variant === "uncontained") add("mixed", { mixed: true });
   if (variant==="hero-center") add("middle",{middle:true});
   if (variant==="full-screen") add("square",{square:true});
   for (const density of [-1,-2,-3]) add(`density/${density}`,{},"light",density);
