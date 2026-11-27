@@ -33,6 +33,7 @@ const value = ".mtrl-slider__value";
 const media = "#media-slider";
 const alarm = "#alarm-slider";
 const near = (error: number) => error <= 0.5;
+const close = (actual: number, expected: number) => Math.abs(actual - expected) <= 0.01;
 const format = (error: number) => `${error.toFixed(2)} px`;
 const failures: string[] = [];
 const check = (condition: boolean, message: string) => { if (!condition) failures.push(message); };
@@ -55,6 +56,15 @@ interface Frame {
   valueX: number;
   bottom: number;
   opacity: number;
+  scale: number;
+  translateY: number;
+  clipPath: string;
+}
+
+interface MotionSamples {
+  start: Frame;
+  frames: Frame[];
+  recording: boolean;
 }
 
 const sampleEntry = async (page: Page, onTrack: boolean) => {
@@ -64,20 +74,27 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
     const root = document.querySelector(media)!;
     const thumb = root.querySelector(handle)!;
     const indicator = root.querySelector(value)!;
-    const samples: Frame[] = [];
-    const state = window as Window & { valueFrames?: Frame[]; stopValueFrames?: boolean };
-    state.valueFrames = samples;
-    state.stopValueFrames = false;
-    const frame = () => {
-      if (state.stopValueFrames) return;
+    const read = (): Frame => {
       const a = thumb.getBoundingClientRect();
       const b = indicator.getBoundingClientRect();
-      samples.push({
+      const style = getComputedStyle(indicator);
+      const transform = new DOMMatrixReadOnly(style.transform === "none" ? undefined : style.transform);
+      return {
         handleX: a.x + a.width / 2,
         valueX: b.x + b.width / 2,
         bottom: b.bottom,
-        opacity: Number(getComputedStyle(indicator).opacity),
-      });
+        opacity: Number(style.opacity),
+        scale: transform.a,
+        translateY: transform.f,
+        clipPath: style.clipPath,
+      };
+    };
+    const motion: MotionSamples = { start: read(), frames: [], recording: true };
+    const state = window as Window & { valueMotion?: MotionSamples };
+    state.valueMotion = motion;
+    const frame = () => {
+      if (!motion.recording) return;
+      motion.frames.push(read());
       requestAnimationFrame(frame);
     };
     root.addEventListener("pointerdown", () => requestAnimationFrame(frame), { once: true });
@@ -88,21 +105,40 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
     target: media,
     until: () => page.locator(`${media} ${value}--visible`).count().then(count => count === 1),
   });
-  const samples = await page.evaluate(() => {
-    const state = window as Window & { valueFrames?: Frame[]; stopValueFrames?: boolean };
-    state.stopValueFrames = true;
-    return state.valueFrames ?? [];
+  const entry = await page.evaluate(() => {
+    const state = window as Window & { valueMotion?: MotionSamples };
+    return state.valueMotion!;
   });
   await page.mouse.up();
-  const rest = samples.at(-1);
-  assert(rest && samples.length >= 3 && rest.opacity >= 0.99, "indicator did not finish entering");
-  const worst = (difference: (frame: Frame) => number) => Math.max(...samples.map(frame => Math.abs(difference(frame))));
+  await settle(page, {
+    target: media,
+    until: () => page.locator(`${media} ${value}--visible`).count().then(count => count === 0),
+  });
+  const exit = await page.evaluate((entryFrames) => {
+    const state = window as Window & { valueMotion?: MotionSamples };
+    const motion = state.valueMotion!;
+    motion.recording = false;
+    return motion.frames.slice(entryFrames);
+  }, entry.frames.length);
+  const rest = entry.frames.at(-1);
+  assert(rest && entry.frames.length >= 3 && rest.opacity >= 0.99, "indicator did not finish entering");
+  const hidden = exit.at(-1);
+  assert(hidden && hidden.opacity <= 0.01, "indicator did not finish exiting");
+
+  const allFrames = [...entry.frames, ...exit];
+  const worst = (difference: (frame: Frame) => number) => Math.max(...allFrames.map(frame => Math.abs(difference(frame))));
   return {
-    frames: samples.length,
+    frames: entry.frames.length,
     moved: Math.abs(rest.handleX - initial.x - initial.width / 2),
     alignment: worst(frame => frame.valueX - frame.handleX),
     lateral: worst(frame => frame.valueX - rest.valueX),
-    vertical: worst(frame => frame.bottom - rest.bottom),
+    bottomDrift: worst(frame => frame.bottom - rest.bottom - frame.translateY),
+    start: entry.start,
+    rest,
+    hidden,
+    unclipped: allFrames.every(frame => frame.clipPath === "none"),
+    entering: entry.frames.some(frame => frame.scale > 0.1 && frame.scale < 0.9 && frame.translateY > 0.5),
+    exiting: exit.some(frame => frame.scale > 0.1 && frame.scale < 0.9 && frame.translateY > 0.5),
   };
 };
 
@@ -171,9 +207,16 @@ try {
         await mount(page);
         const result = await sampleEntry(page, onTrack);
         const id = `${engine.name()} ${onTrack ? "track" : "handle"} press`;
-        console.log(`${id}: ${result.frames} frames, alignment ${format(result.alignment)}, lateral ${format(result.lateral)}, bottom ${format(result.vertical)}`);
+        const { start, rest, hidden } = result;
+        console.log(`${id}: ${result.frames} frames, alignment ${format(result.alignment)}, lateral ${format(result.lateral)}, ` +
+          `scale ${start.scale} → ${rest.scale} → ${hidden.scale}, translateY ${start.translateY} → ${rest.translateY} → ${hidden.translateY} px, ` +
+          `bottom drift ${format(result.bottomDrift)}, ${result.unclipped ? "whole pill" : "clipped"}`);
         check(!onTrack || result.moved > 50, `${id}: the track press did not move the handle`);
-        check(near(result.alignment) && near(result.lateral) && near(result.vertical), `${id}: the entering indicator moved away from its anchor`);
+        check(near(result.alignment) && near(result.lateral) && near(result.bottomDrift), `${id}: the indicator left its moving anchor`);
+        check(result.unclipped, `${id}: the pill was clipped`);
+        check(close(start.scale, 0) && close(rest.scale, 1) && close(hidden.scale, 0), `${id}: scale did not grow and shrink from its base`);
+        check(close(start.translateY, 5) && close(rest.translateY, 0) && close(hidden.translateY, 5), `${id}: translateY did not rise and return`);
+        check(result.entering && result.exiting, `${id}: never saw scale and translation moving together`);
       }
       for (const mode of ["plain", "dialog", "scroll", "rtl"] as const) {
         await mount(page, mode === "rtl");

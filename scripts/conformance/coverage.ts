@@ -12,6 +12,7 @@ type Snapshot = { compose: typeof pin; files: Record<string, TokenFile> };
 type FileReview = {
   measured?: Record<string, string>;
   unmeasured?: string[];
+  unmeasuredNotes?: Record<string, string>;
   notApplicable?: Record<string, string>;
 };
 type Review = Record<string, Record<string, FileReview>>;
@@ -21,7 +22,7 @@ type Matrix = {
 };
 type Decision =
   | { status: "measured"; rowId: string }
-  | { status: "unmeasured" }
+  | { status: "unmeasured"; note?: string }
   | { status: "not-applicable"; reason: string };
 type Entry = Value & { component: string; file: string; token: string } & Decision;
 
@@ -85,7 +86,16 @@ function reviewFile(review: FileReview, rowIds: Set<string>, name: string): Map<
     if (!rowIds.has(rowId)) throw new Error(`${name}.${token} names a row outside this component: ${rowId}`);
     add(token, { status: "measured", rowId });
   }
-  for (const token of review.unmeasured ?? []) add(token, { status: "unmeasured" });
+  const notes = new Map(Object.entries(review.unmeasuredNotes ?? {}));
+  for (const token of review.unmeasured ?? []) {
+    const note = notes.get(token);
+    if (note !== undefined && (!note.trim() || /[\r\n]/.test(note))) {
+      throw new Error(`${name}.${token} needs a one-line note`);
+    }
+    add(token, note === undefined ? { status: "unmeasured" } : { status: "unmeasured", note });
+    notes.delete(token);
+  }
+  if (notes.size) throw new Error(`${name} has notes for tokens that are not unmeasured: ${[...notes.keys()].join(", ")}`);
   for (const [token, reason] of Object.entries(review.notApplicable ?? {})) {
     if (!reason.trim() || /[\r\n]/.test(reason)) throw new Error(`${name}.${token} needs a one-line reason`);
     add(token, { status: "not-applicable", reason });

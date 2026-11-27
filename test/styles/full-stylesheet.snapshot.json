@@ -2560,7 +2560,7 @@
     "--mtrl-slider-tick-color",
     "--mtrl-slider-tick-opacity",
     "--mtrl-slider-track-color",
-    "--mtrl-slider-value-hidden-clip",
+    "--mtrl-slider-value-entry-offset",
     "--mtrl-split-button-corner",
     "--mtrl-split-button-corner-active",
     "--mtrl-split-button-pill",
