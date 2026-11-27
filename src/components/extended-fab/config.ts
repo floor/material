@@ -2,7 +2,7 @@
 import {
   createComponentConfig,
   createElementConfig,
-  withoutUndefined,
+  keepDefaults,
 } from "../../core/config/component";
 import { ExtendedFabConfig, ExtendedFabComponent } from "./types";
 import { EXTENDED_FAB_CLASSES } from "./constants";
@@ -39,12 +39,14 @@ export const defaultConfig: ExtendedFabConfig = {
  */
 export const createBaseConfig = (
   config: ExtendedFabConfig = {}
-): ExtendedFabConfig =>
-  createComponentConfig(
+): ExtendedFabConfig => {
+  const merged = createComponentConfig(
     defaultConfig,
-    withoutUndefined(config),
+    config,
     "extended-fab"
   ) as ExtendedFabConfig;
+  return keepDefaults(merged, defaultConfig);
+};
 
 /**
  * Generates element configuration for the Extended FAB component

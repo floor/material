@@ -94,16 +94,21 @@ export const createComponentConfig = <T extends BaseComponentConfig & object>(
 };
 
 /**
- * Copies a configuration without keys whose value is undefined.
+ * Fills defaults the merge overwrote with undefined.
  *
- * A spread options object passes those keys. The merge then copies undefined
- * over a default, and a class built from the value is skipped or becomes
- * `--undefined`.
+ * A spread options object passes the key with an undefined value, and the
+ * merge copies that over the default. The user config is not rebuilt, so a
+ * prototype getter, a non-enumerable property, and an enumerable symbol stay
+ * as the merge left them. null and false are values, so they stay as given.
  */
-export const withoutUndefined = <T extends object>(config: T): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(config).filter((entry) => entry[1] !== undefined),
-  ) as Partial<T>;
+export const keepDefaults = <T extends object>(merged: T, defaults: T): T => {
+  const target = merged as Record<string, unknown>;
+  const source = defaults as Record<string, unknown>;
+  for (const key of Object.keys(defaults)) {
+    if (target[key] === undefined && source[key] !== undefined) target[key] = source[key];
+  }
+  return merged;
+};
 
 /**
  * Processes class names for an element, handling arrays, nulls and conditional classes

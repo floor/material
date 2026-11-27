@@ -1,10 +1,12 @@
 // test/components/extended-fab/undefined-defaults.test.ts
 //
 // A spread options object passes variant and width as keys whose values are
-// undefined. The merge copied that undefined over "primary-container" and
+// undefined. The merge copies that undefined over "primary-container" and
 // "fixed", and both classes are added only for a truthy value, so the button
-// lost its default colour class and its width class. Undefined keys are
-// dropped before the merge, so the documented defaults and the spread agree.
+// loses its default colour class and its width class. keepDefaults restores
+// those keys after the same merge as before. The user config is not rebuilt,
+// so a prototype getter, a non-enumerable class, and a symbol still arrive,
+// and null and false stay as given.
 import { afterAll, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
@@ -17,6 +19,7 @@ globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.windo
 afterAll(() => dom.window.close());
 
 const { default: createExtendedFab } = await import('../../../src/components/extended-fab');
+const { createBaseConfig } = await import('../../../src/components/extended-fab/config');
 
 test('a spread that leaves variant and width undefined keeps the default class and width', () => {
   const options: { variant?: string; width?: string } = {};
@@ -33,4 +36,29 @@ test('an explicit variant and width still replace the defaults', () => {
   expect(fab.element.classList.contains('mtrl-extended-fab--primary-container')).toBe(false);
   expect(fab.element.classList.contains('mtrl-extended-fab--fixed')).toBe(false);
   fab.destroy();
+});
+
+test('a className given by a prototype getter still renders', () => {
+  const proto = {};
+  Object.defineProperty(proto, 'className', { get: () => 'from-proto' });
+  const given = Object.assign(Object.create(proto), { text: 'Create' });
+  const fab = createExtendedFab(given);
+  expect(fab.element.classList.contains('from-proto')).toBe(true);
+  fab.destroy();
+});
+
+test('an own non-enumerable class still renders', () => {
+  const given = { text: 'Create' };
+  Object.defineProperty(given, 'class', { value: 'from-own', enumerable: false });
+  const fab = createExtendedFab(given);
+  expect(fab.element.classList.contains('from-own')).toBe(true);
+  fab.destroy();
+});
+
+test('an enumerable symbol key is kept, and null and false stay as given', () => {
+  const mark = Symbol('mark');
+  const merged = createBaseConfig({ text: 'Create', variant: null as unknown as string, ripple: false, [mark]: 'kept' });
+  expect(Reflect.get(merged, mark)).toBe('kept');
+  expect(merged.variant).toBe(null);
+  expect(merged.ripple).toBe(false);
 });

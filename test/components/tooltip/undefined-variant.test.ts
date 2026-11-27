@@ -1,10 +1,12 @@
 // test/components/tooltip/undefined-variant.test.ts
 //
 // A spread options object passes variant as a key whose value is undefined.
-// The merge copied that undefined over "default", and the class is
-// interpolated, so the element was `mtrl-tooltip--undefined` and missed the
-// default variant's 40px min-width. Undefined keys are dropped before the
-// merge, so the documented default and the spread agree.
+// The merge copies that undefined over "default", and the class is
+// interpolated, so the element is `mtrl-tooltip--undefined` and misses the
+// default variant's 40px min-width. keepDefaults restores that key after the
+// same merge as before. The user config is not rebuilt, so a prototype
+// getter, a non-enumerable class, and a symbol still arrive, and null and
+// false stay as given.
 import { afterAll, expect, test } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
@@ -18,6 +20,7 @@ globalThis.cancelAnimationFrame = () => {};
 afterAll(() => dom.window.close());
 
 const { default: createTooltip } = await import('../../../src/components/tooltip');
+const { createBaseConfig } = await import('../../../src/components/tooltip/config');
 
 const target = document.createElement('button');
 target.textContent = 'Save';
@@ -36,4 +39,29 @@ test('an explicit variant still replaces the default', () => {
   expect(tooltip.element.classList.contains('mtrl-tooltip--rich')).toBe(true);
   expect(tooltip.element.classList.contains('mtrl-tooltip--default')).toBe(false);
   tooltip.destroy();
+});
+
+test('a className given by a prototype getter still renders', () => {
+  const proto = {};
+  Object.defineProperty(proto, 'className', { get: () => 'from-proto' });
+  const given = Object.assign(Object.create(proto), { text: 'Save', target });
+  const tooltip = createTooltip(given);
+  expect(tooltip.element.classList.contains('from-proto')).toBe(true);
+  tooltip.destroy();
+});
+
+test('an own non-enumerable class still renders', () => {
+  const given = { text: 'Save', target };
+  Object.defineProperty(given, 'class', { value: 'from-own', enumerable: false });
+  const tooltip = createTooltip(given);
+  expect(tooltip.element.classList.contains('from-own')).toBe(true);
+  tooltip.destroy();
+});
+
+test('an enumerable symbol key is kept, and null and false stay as given', () => {
+  const mark = Symbol('mark');
+  const merged = createBaseConfig({ text: 'Save', target, variant: null as unknown as string, showOnHover: false, [mark]: 'kept' });
+  expect(Reflect.get(merged, mark)).toBe('kept');
+  expect(merged.variant).toBe(null);
+  expect(merged.showOnHover).toBe(false);
 });
