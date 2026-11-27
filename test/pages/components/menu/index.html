@@ -56,20 +56,22 @@
       });
     },
     measure: () => {
-      const item = (menu) => menu.element.querySelector(".mtrl-menu__item");
-      const height = (menu) => {
-        const node = item(menu);
-        return node ? Math.round(node.getBoundingClientRect().height) : null;
+      // Each menu shows its own reading: opening one closes the other, so a
+      // closed menu says so instead of hiding the open one's numbers.
+      const read = (menu, closed) => {
+        if (!menu.element.classList.contains("mtrl-menu--visible")) return closed;
+        const item = menu.element.querySelector(".mtrl-menu__item");
+        return item
+          ? {
+              height: Math.round(item.getBoundingClientRect().height),
+              padding: getComputedStyle(item).paddingInlineEnd,
+              reserved: getComputedStyle(item.querySelector(".mtrl-menu__item-content")).paddingInlineEnd,
+            }
+          : closed;
       };
-      const baseline = item(window.__baseline);
-      if (!window.__baseline.element.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
-      const verticalItem = item(window.__vertical);
       return json({
-        baselineItem: height(window.__baseline),
-        baselineEndPadding: getComputedStyle(baseline).paddingInlineEnd,
-        verticalItem: window.__vertical.element.classList.contains("mtrl-menu--visible") && verticalItem
-          ? { height: height(window.__vertical), padding: getComputedStyle(verticalItem).paddingInlineEnd, reserved: getComputedStyle(verticalItem.querySelector(".mtrl-menu__item-content")).paddingInlineEnd }
-          : "menu closed - press its Show",
+        baseline: read(window.__baseline, "menu closed - press Show"),
+        vertical: read(window.__vertical, "menu closed - press its Show"),
       });
     },
   });
