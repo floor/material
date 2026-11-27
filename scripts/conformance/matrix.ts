@@ -131,10 +131,26 @@ function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, prob
   const { style } = part;
   const rect = visibleRect(part);
   const px = (value: number) => `${decimal(value)}px`;
+  if ("contentInset" in probe) {
+    const reference = getPart(row, probe.relativeTo, id).rect;
+    const side = probe.contentInset;
+    const suffix = side[0]!.toUpperCase() + side.slice(1);
+    const padding = Number.parseFloat(style[`padding${suffix}`] ?? "");
+    const border = Number.parseFloat(style[`border${suffix}Width`] ?? "");
+    const distances = {
+      left: rect.x - (reference.x + reference.width),
+      right: reference.x - (rect.x + rect.width),
+      bottom: reference.y + reference.height - (rect.y + rect.height),
+    };
+    if (!Number.isFinite(padding + border)) throw new Error(`${id}: missing content inset geometry`);
+    return px(distances[side] + padding + border);
+  }
   if ("read" in probe) {
     if (probe.read === "opacity") {
-      if (!style.backgroundColor || !style.opacity) throw new Error(`${id}: missing background colour or opacity`);
-      return String(decimal(Number(style.opacity) * parseColour(style.backgroundColor).opacity));
+      const color = style[probe.paint ?? "backgroundColor"];
+      const ancestor = probe.opacityAncestor ? getPart(row, probe.opacityAncestor, id).style.opacity : "1";
+      if (!color || !style.opacity || !ancestor) throw new Error(`${id}: missing paint colour or opacity`);
+      return String(decimal(parseColour(color).opacity * Number(style.opacity) * Number(ancestor)));
     }
     if (probe.read === "translateX") {
       const matrix = /^matrix\(([^)]+)\)$/.exec(style.transform ?? "");
@@ -299,9 +315,11 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     const shape = /^ShapeKeyTokens\.(Corner\w+)$/.exec(token.raw)?.[1] ??
       /^ShapeTokens\.CornerValue(\w+)$/.exec(token.raw)?.[1]?.replace(/^/, "Corner");
     if (shape && binding.aspect === "shape") {
-      return { ...reference, value: shape, resolved: { radius: reference.value! } };
+      const top = /^topStart ([\d.]+)dp\b/.exec(reference.value ?? "");
+      return { ...reference, value: shape, resolved: { radius: top ? `${top[1]}dp` : reference.value! } };
     }
-    const typeRole = token.file === "TypeScaleTokens" && /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1];
+    const typeRole = /^TypographyKeyTokens\.(\w+)$/.exec(token.raw)?.[1] ??
+      (token.file === "TypeScaleTokens" ? /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1] : undefined);
     if (typeRole && binding.aspect === "typography") {
       const property = (suffix: string) => {
         const result = lookup.get(`TypeScaleTokens.${typeRole}${suffix}`);
