@@ -175,7 +175,7 @@ section("Enter and a separator commit, and the draft clears", async (page) => {
   assert.equal(await draftInput(page).inputValue(), "");
   assert.equal(await page.evaluate(() => (window as unknown as { field: { getValue: () => string } }).field.getValue()), "");
   // One form entry per chip under the field's name.
-  const formData = await page.evaluate(() => [...new FormData(document.getElementById("form") as HTMLFormElement).getAll("to")]);
+  const formData = await page.evaluate(() => [...new FormData(document.getElementById("form") as HTMLFormElement).getAll("to")].map(String));
   assert.deepEqual(formData, ["alice@example.com", "bob@example.com"]);
 });
 
@@ -621,7 +621,7 @@ section("an inline edit submits the new value", async (page) => {
   const submitted = await page.evaluate(() => {
     const form = document.getElementById("form") as HTMLFormElement;
     let entries: string[] = [];
-    const read = (event: Event) => { event.preventDefault(); entries = [...new FormData(form).getAll("to")]; };
+    const read = (event: Event) => { event.preventDefault(); entries = [...new FormData(form).getAll("to")].map(String); };
     form.addEventListener("submit", read, { once: true });
     form.requestSubmit();
     return entries;
