@@ -13,13 +13,6 @@
 $component: "#{base.$prefix}-chip";
 $container: "#{base.$prefix}-chips";
 
-// A chip hidden is not drawn: the chip's own `display` below would beat the
-// user agent's `[hidden] { display: none }`, and this sheet's layer is the one
-// no later layer overrides.
-.#{$component}[hidden] {
-    display: none;
-}
-
 .#{$component} {
     --#{base.$prefix}-chip-label-color: #{t.color("on-surface-variant")};
     --#{base.$prefix}-chip-leading-color: #{t.color("primary")};

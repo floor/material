@@ -22,6 +22,14 @@
 
 $component: "#{base.$prefix}-text-field";
 
+// The chip being edited is hidden while the draft input takes its place. The
+// chips sheet sets the chip's own display, which would beat the user agent's
+// `[hidden] { display: none }`; the rule lives here because only the chip
+// field hides a chip.
+.#{$component}--with-chips .#{base.$prefix}-chip[hidden] {
+    display: none;
+}
+
 .#{$component} {
     // ===== INPUT CHIPS =====
     // m3.material.io chips, "Input chips": the committed chips and the draft
