@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "material": "3.16.8",
+  "material": "3.16.9",
   "commit": "89890eafab85da3b94d42d65d222fcbd73d78805",
   "measured": "2026-11-27",
   "references": {
@@ -27694,7 +27694,7 @@
             "value": "1500ms",
             "url": "https://m3.material.io/components/tooltips/guidelines",
             "section": "Transient tooltips",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0ms",
@@ -27704,14 +27704,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/internal/BasicTooltip.kt#L274"
           },
           "material": {
-            "value": "100ms",
+            "value": "1500ms",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal. The reference choice is pending.",
+          "note": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal.",
           "issue": null
         },
         {
