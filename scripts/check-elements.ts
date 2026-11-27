@@ -35,6 +35,7 @@ import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
+import { checkStalledMenuFocus } from "./check-menu-opening-focus";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -9247,6 +9248,12 @@ try {
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
     check("FAB menu: presentation=menu loads the baseline menu into its shadow root, fits the viewport, and keeps a 4px gap");
 
+    const menuFab = page.getByRole("button", { name: "New" });
+    await checkStalledMenuFocus(page, "#fm2", menuFab, "doc", "FAB menu");
+    await page.keyboard.press("Escape");
+    await page.locator("#fm2[open]").waitFor({ state: "detached", timeout: 5000 });
+    check("FAB menu: the menu presentation focuses the first item after an opening stall");
+
     // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
     // each, and the state and the attribute are there when they return. In the
@@ -9729,27 +9736,7 @@ try {
     };
     for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.emulateMedia({ reducedMotion });
-      // Stall the task that places the menu, before the first transition frame.
-      // The opening class must make Copy focusable without a painted frame.
-      await page.evaluate(() => {
-        const host = document.getElementById("mm")!;
-        const root = host.shadowRoot!;
-        delete host.dataset.openingVisibility;
-        const observer = new MutationObserver(() => {
-          if (!root.querySelector(".mtrl-menu--visible")) return;
-          observer.disconnect();
-          const resume = performance.now() + 350;
-          while (performance.now() < resume) { /* Keep the renderer in this task. */ }
-          const copy = root.querySelector('[data-id="copy"]')!;
-          host.dataset.openingVisibility = getComputedStyle(copy).visibility;
-        });
-        observer.observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
-      });
-      await page.focus("#mb");
-      await page.keyboard.press("Enter");
-      await page.waitForFunction(() => document.getElementById("mm")?.hasAttribute("data-opening-visibility"), undefined, { timeout: 5000 });
-      assert.equal(await page.locator("#mm").getAttribute("data-opening-visibility"), "visible", `Copy is visible before the first transition frame (${reducedMotion})`);
-      await focusedByKey(`menu, opened with Enter after a stall (${reducedMotion})`, "Copy");
+      await checkStalledMenuFocus(page, "#mm", page.locator("#mb"), "copy", `menu (${reducedMotion})`);
       assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
       await page.keyboard.press("Escape");
       await closed("menu, Escape, opened with Enter");
@@ -9997,6 +9984,25 @@ try {
     await page.keyboard.press("Escape");
     await settle();
     check("menu: the anchor property takes an element; an anchor id resolves in the menu's own root first");
+
+    // Submenu options use the factory's menu-button path.
+    await fresh(page, '<div id="submenu-select" style="width: 280px"></div>');
+    await page.evaluate(() => {
+      const { createSelect } = (window as unknown as { mtrl: { createSelect: (config: object) => { element: HTMLElement } } }).mtrl;
+      const select = createSelect({
+        label: "Fruit",
+        options: [
+          { id: "apple", text: "Apple" },
+          { id: "citrus", text: "Citrus", hasSubmenu: true, submenu: [{ id: "lemon", text: "Lemon" }] },
+        ],
+      });
+      document.getElementById("submenu-select")!.append(select.element);
+    });
+    const submenuSelect = page.locator("#submenu-select input");
+    await checkStalledMenuFocus(page, "#submenu-select", submenuSelect, "apple", "select with submenu options");
+    await page.keyboard.press("Escape");
+    await page.locator("#submenu-select .mtrl-menu--visible").waitFor({ state: "detached", timeout: 5000 });
+    check("select: submenu options give the first item focus after an opening stall");
 
     // ------------------------------------------------------------ <m-select>
     await fresh(
