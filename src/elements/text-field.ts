@@ -182,6 +182,10 @@ const textFieldSpec = {
   },
   methods: ["select", "setError", "getValues", "setValues", "addChip", "removeChip"] as const,
   model: "value" as const,
+  // The declared `<m-chip>` children are the values' default, as a `values`
+  // attribute would be: a clean rebuild reads them again instead of carrying
+  // the old component's array over the new chips.
+  defaults: ["values"] as const,
   events: {
     input: { detail: (payload) => ({ value: (payload as { value: string }).value }) },
     change: { detail: (payload) => ({ value: (payload as { value: string }).value }) },

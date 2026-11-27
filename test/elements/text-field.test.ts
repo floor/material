@@ -39,3 +39,11 @@ test("<m-text-field> declares the chip sheets on the chips attribute", () => {
   // A change rebuilds: the sheets and the chips follow the attribute.
   expect(textFieldElement.spec.attributes?.chips).toEqual({ type: "boolean" });
 });
+
+// The declared <m-chip> children are the values' default, as m-list's items
+// are: a clean rebuild reads them again instead of carrying the old array.
+describe("<m-text-field>: the values' default", () => {
+  test("`values` is a default-backed property", () => {
+    expect(textFieldElement.spec.defaults).toEqual(["values"]);
+  });
+});
