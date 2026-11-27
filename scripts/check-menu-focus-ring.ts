@@ -86,6 +86,40 @@ const missingCase: Case = {
   ],
 };
 
+const vanishingMount = (mtrl: Record<string, unknown>, host: HTMLElement) => {
+  // The same baseline focus mount, inline (the mount source is serialized).
+  (window as Window & { conformanceMenu?: { destroy: () => void } }).conformanceMenu?.destroy();
+  document.documentElement.dir = "ltr";
+  host.style.width = "400px";
+  const opener = document.createElement("button");
+  opener.id = "menu-opener";
+  opener.textContent = "Actions";
+  host.append(opener);
+  const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
+  const menu = (mtrl.createMenu as (config: unknown) => { element: HTMLElement })(
+    { opener, variant: "baseline", color: "standard", width: "240px", offset: 8, openSubmenuOnHover: true,
+      items: [{ id: "a", text: "First", icon, shortcut: "⌘A" }, { id: "b", text: "Second", icon }, { id: "c", text: "Third", icon }] },
+  );
+  opener.focus();
+  const marker = document.createElement("span");
+  marker.setAttribute("data-vanish", "now");
+  marker.style.transition = "opacity 300ms";
+  host.append(marker);
+  // The marker exists for the wait. A finite animation keeps the settle busy
+  // while the marker is removed, so it is gone by the final read.
+  requestAnimationFrame(() => { marker.style.opacity = "0.5"; });
+  setTimeout(() => marker.remove(), 150);
+};
+const vanishingCase: Case = {
+  ...focusCase,
+  id: "baseline/light/unselected/focus-vanishing",
+  mount: vanishingMount as unknown as Case["mount"],
+  parts: [
+    { name: "item", selector: item, document: true },
+    { name: "verifiedState", selector: "[data-vanish='now']", document: true },
+  ],
+};
+
 const failures: string[] = [];
 for (const engine of ["webkit", "chromium"] as const) {
   const harness = await createConformanceHarness({ component: "menu", engine });
@@ -113,11 +147,22 @@ for (const engine of ["webkit", "chromium"] as const) {
         const message = error instanceof Error ? error.message : String(error);
         return message.includes(missingCase.id)
           && message.includes("data-missing='never'")
-          && /\b(seed|dark|light)\b/.test(message);
+          && /\((?:light|dark|seed)\)/.test(message);
       },
       `${engine}: a missing verified state must throw, naming the case, selector and theme`,
     );
-    console.log(`ok ${engine}: ${RUNS} seed-theme reads are the solid Secondary ring; a missing state throws naming case, selector and theme`);
+    // A state that lands and then vanishes during the settle reads as no state.
+    await assert.rejects(
+      () => harness.measure([vanishingCase]),
+      (error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        return message.includes(vanishingCase.id)
+          && message.includes("data-vanish='now'")
+          && /\((?:light|dark|seed)\)/.test(message);
+      },
+      `${engine}: a verified state that vanishes during the settle must throw`,
+    );
+    console.log(`ok ${engine}: ${RUNS} seed-theme reads are the solid Secondary ring; a missing or vanished state throws naming case, selector and theme`);
   } finally {
     await harness.close();
   }
