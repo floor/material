@@ -576,6 +576,9 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun run scripts/build.ts
+      - name: Compose token coverage matches the committed report
+        if: matrix.group == 'conformance-matrix'
+        run: bun run scripts/conformance/coverage.ts --check
       - name: Checks (${{ matrix.checks }})
         # A check that hangs must fail on its own, and name itself. On
         # 2026-11-03 this step held the adapters job for 30 minutes until the

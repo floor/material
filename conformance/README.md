@@ -19,3 +19,17 @@ Theme-dependent measurements name colour, type-scale, corner and elevation roles
 [overrides.json](overrides.json) holds the website values and reviewed runtime comparisons for cases where generated tokens give a different value or have no runtime use. A null reference value yields `no-value`. Issues remain null until public issues are assigned. [spec-values.json](spec-values.json) records additional values from the published specification pages with their section and read date. These entries fill gaps in the website reference. They leave Compose comparisons and Material measurements unchanged. Website typography retains the token table's design points, compared numerically with CSS pixels at the default scale. The table's 0 dp elevation compares with a flat surface.
 
 Before tagging a release, set the measurement date and Material input commit in `reference.json`, build that source and regenerate the matrix. The source commit identifies the measured implementation, so it precedes the commit recording the matrix. Keep published row IDs stable. Schema 1 changes are additive. The public repository and release tags carry the matrix outside the npm package.
+
+## Coverage
+
+[coverage.json](coverage.json) reports how many pinned Compose Material 3 component tokens the matrix measures. Coverage is measured ÷ (measured + unmeasured), rounded to two decimal places. The matrix's match, drift and no-value statuses describe comparisons with each reference.
+
+Coverage follows the component token in the fixture's row binding when a Compose override supplies a different runtime reference. Rows without a component token binding use the token named in the published matrix. Where several rows measure the same token, the report links to the first published row unless [coverage-map.json](coverage-map.json) chooses another of those rows.
+
+Component summaries list shared files. Overall totals count each file and token pair once. A pair counts as measured overall when any of its components measures it, and as not applicable only when every mapped component excludes it. Reviewed exclusions carry a reason and are outside the denominator. Carousel and side sheet have a null percentage because this pin has no component token files for them. The inventory excludes foundation files and runtime values that have no component token declaration.
+
+Run this command after a matrix, binding or mapping change.
+
+    bun run scripts/conformance/coverage.ts
+
+The CI check reads the committed sources offline. To reproduce the [token snapshot](compose-tokens-1.5.0.json), extract the flat token directory from the pinned source JAR in [reference.json](reference.json) and pass it to `bun run scripts/conformance/coverage.ts --snapshot <token directory>`. The command checks the file hashes before reading the tokens. When a row starts measuring a previously unmeasured token, remove that token from the corresponding `unmeasured` list.
