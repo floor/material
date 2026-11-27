@@ -709,11 +709,12 @@ jobs:
           git worktree add ../material-base "$base"
           cd ../material-base
           bun install --frozen-lockfile
+          export MTRL_CATALOGUE_INPUT_GRAPH=analysis/catalogue-identity-inputs.json
           bun run build
           npm pack --silent
           cd "$GITHUB_WORKSPACE"
           export MTRL_CATALOGUE_BASE_REVISION="$base"
-          export MTRL_CATALOGUE_INPUT_GRAPH=analysis/catalogue-identity-inputs.json
+          export MTRL_CATALOGUE_BASE_INPUT_GRAPH=../material-base/analysis/catalogue-identity-inputs.json
           bun run catalogue:identity:check
 
   # Tooling-only comparators. Dependencies and builds never enter the published package.

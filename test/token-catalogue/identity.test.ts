@@ -11,6 +11,10 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { filledSmallRoundCss } from "../../scripts/button-style-profile";
 import { profileStyleModule } from "../../scripts/optional-style-profiles";
+import {
+  catalogueInputReceipt, createCatalogueGraph, recordCatalogueSourceOutput,
+  type CatalogueInputReceipt,
+} from "../../scripts/catalogue-input-graph";
 
 const script = join(import.meta.dir, "..", "..", "scripts", "check-catalogue-identity.ts");
 
@@ -28,9 +32,10 @@ const pack = (root: string, name: string, files: Record<string, string>): string
 };
 
 /** The gate's verdict on one tarball pair: exit code and combined output. */
-const runGate = (branch: string, base: string, scope?: { cwd: string; revision: string; graph?: string }): { code: number; out: string } => {
+const runGate = (branch: string, base: string, scope?: { cwd: string; revision: string; graph?: string; baseGraph?: string }): { code: number; out: string } => {
   const args = scope ? ["--base-revision", scope.revision] : [];
   if (scope?.graph) args.push("--input-graph", scope.graph);
+  if (scope?.baseGraph) args.push("--base-input-graph", scope.baseGraph);
   const proc = Bun.spawnSync(["bun", "run", script, branch, base, ...args], { cwd: scope?.cwd });
   const text = (bytes: Uint8Array | undefined): string => (bytes ?? new Uint8Array()).toString();
   return { code: proc.exitCode, out: text(proc.stdout) + text(proc.stderr) };
@@ -48,6 +53,19 @@ const commit = (cwd: string, files: Record<string, string>): string => {
   git(cwd, "add", ".");
   git(cwd, "-c", "user.name=Identity Fixture", "-c", "user.email=identity@example.test", "commit", "-qm", "Fixture");
   return git(cwd, "rev-parse", "HEAD");
+};
+
+const receipt = (
+  root: string, name: string, outputs: Record<string, string>,
+  members: CatalogueInputReceipt["members"] = {}, addedMembers: CatalogueInputReceipt["addedMembers"] = {},
+): string => {
+  const graph = createCatalogueGraph();
+  for (const [source, text] of Object.entries(outputs)) {
+    recordCatalogueSourceOutput(graph, source.endsWith(".scss") ? "output.css" : "output.d.ts", source, text);
+  }
+  const path = join(root, `${name}.json`);
+  writeFileSync(path, JSON.stringify({ ...catalogueInputReceipt(graph), members, addedMembers }));
+  return path;
 };
 
 const readMe = ["# Fixture", "", "Docs.", ""].join("\n");
@@ -182,6 +200,7 @@ describe("catalogue identity gate", () => {
       const revision = commit(cwd, {
         "scripts/style-manifest.ts": "base manifest",
         "src/components/text-field/api.ts": "base API",
+        "src/styles/components/_text-field.scss": "base field",
         "src/components/chips/index.ts": "other component",
         "src/elements/text-field.ts": "base element",
         "src/elements/define.ts": "shared element helper",
@@ -189,6 +208,7 @@ describe("catalogue identity gate", () => {
       commit(cwd, {
         "scripts/style-manifest.ts": "new style entry",
         "src/components/text-field/api.ts": "new API",
+        "src/styles/components/_text-field.scss": "new field",
         "src/components/text-field/features/chips.ts": "new implementation",
         "src/elements/text-field.ts": "new element",
         "src/elements/define.ts": "shared integration",
@@ -213,10 +233,32 @@ describe("catalogue identity gate", () => {
         "dist/elements/text-field.js": "changed element",
         "dist/styles/text-field.css": "changed field",
       };
-      const scoped = runGate(pack(root, "scoped", after), base, { cwd, revision });
+      const oldOutputs = {
+        "src/components/text-field/api.ts": "export declare const version = 1;",
+        "src/elements/text-field.ts": "export declare const version = 1;",
+        "src/styles/components/_text-field.scss": ".field{width:10px}",
+      };
+      const baseGraph = receipt(root, "base-inputs", oldOutputs);
+      const outputs = {
+        "src/components/text-field/api.ts": "export declare const version = 2;",
+        "src/elements/text-field.ts": "export declare const version = 2;",
+        "src/styles/components/_text-field.scss": ".field{width:15px}",
+        "src/components/text-field/features/chips.ts": "export declare const chips = 1;",
+      };
+      const members = {
+        "dist/components/text-field/api.js": ["src/components/text-field/api.ts"],
+        "dist/components/text-field/index.d.ts": ["src/components/text-field/api.ts"],
+        "dist/elements/text-field.js": ["src/elements/text-field.ts"],
+        "dist/styles/text-field.css": ["src/styles/components/_text-field.scss"],
+      };
+      const graph = receipt(root, "inputs", outputs, {
+        ...members, "dist/styles.css": ["src/styles/components/_button.scss"],
+      });
+      const scope = { cwd, revision, graph, baseGraph };
+      const scoped = runGate(pack(root, "scoped", after), base, scope);
       expect(scoped.code).toBe(0);
-      expect(scoped.out).toContain("text-field changed dist/components/text-field/api.js");
-      expect(scoped.out).toContain("text-field changed dist/elements/text-field.js");
+      expect(scoped.out).toMatch(/changed dist\/components\/text-field\/api.js .* from src\/components\/text-field\/api.ts/);
+      expect(scoped.out).toMatch(/changed dist\/elements\/text-field.js .* from src\/elements\/text-field.ts/);
 
       const escaped = runGate(pack(root, "escaped", {
         ...after,
@@ -225,13 +267,21 @@ describe("catalogue identity gate", () => {
         "dist/elements/define.js": "shared drift",
         "dist/styles.css": "full sheet drift",
         "dist/styles/listbox.css": "unrelated listbox drift",
-      }), base, { cwd, revision });
+      }), base, scope);
       expect(escaped.code).toBe(1);
       expect(escaped.out).toContain("changed member dist/components/chips/index.js");
       expect(escaped.out).toContain("added member dist/components/text-field/features/chips.js");
       expect(escaped.out).toContain("changed member dist/elements/define.js");
       expect(escaped.out).toContain("changed member dist/styles.css");
       expect(escaped.out).toContain("changed member dist/styles/listbox.css");
+
+      const fullGraph = receipt(root, "full-inputs", outputs, {
+        ...members, "dist/styles.css": ["src/styles/components/_text-field.scss", "src/styles/components/_button.scss"],
+      });
+      const full = runGate(pack(root, "full", { ...after, "dist/styles.css": "changed field in the full sheet" }),
+        base, { ...scope, graph: fullGraph });
+      expect(full.code).toBe(0);
+      expect(full.out).toMatch(/changed dist\/styles\.css .* from src\/styles\/components\/_text-field\.scss/);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
@@ -239,53 +289,124 @@ describe("catalogue identity gate", () => {
     const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
     try {
       const cwd = join(root, "checkout");
-      const graph = join(root, "input-graph.json");
-      mkdirSync(cwd);
+        mkdirSync(cwd);
       git(cwd, "init", "-q");
       const revision = commit(cwd, {
         "src/elements/styles.ts": "base styles",
         "src/elements/define.ts": "shared element helper",
         "src/ssr/render-element.ts": "initial SSR",
         "src/ssr/browser.ts": "browser SSR",
+        "src/solid/jsx.ts": "old JSX",
       });
       commit(cwd, {
         "src/elements/styles.ts": "changed styles",
         "src/ssr/render-element.ts": "changed SSR",
+        "src/solid/jsx.ts": "new JSX",
+        "src/components/text-field/chips.ts": "new chips",
       });
-      writeFileSync(graph, JSON.stringify({
-        "elements/styles.js": ["src/elements/styles.ts"],
-        "elements/define.js": ["src/elements/define.ts"],
-        "ssr/index.js": ["src/ssr/render-element.ts"],
-        "ssr/browser.js": ["src/ssr/browser.ts"],
-      }));
+      const oldOutputs = {
+        "src/elements/styles.ts": "export declare const value = 1;",
+        "src/elements/define.ts": "export declare const value = 1;",
+        "src/ssr/render-element.ts": "export declare const value = 1;",
+        "src/ssr/browser.ts": "export declare const value = 1;",
+        "src/solid/jsx.ts": "export declare const value = 1;",
+      };
+      const baseGraph = receipt(root, "base-inputs", oldOutputs);
+      const graph = receipt(root, "inputs", {
+        ...oldOutputs,
+        "src/elements/styles.ts": "export declare const value = 2;",
+        "src/ssr/render-element.ts": "export declare const value = 2;",
+        "src/solid/jsx.ts": "export declare const value = 2;",
+        "src/components/text-field/chips.ts": "export declare const chips = 1;",
+      }, {
+        "dist/elements/styles.js": ["src/elements/styles.ts"],
+        "dist/elements/define.js": ["src/elements/define.ts"],
+        "dist/ssr/index.js": ["src/ssr/render-element.ts"],
+        "dist/ssr/browser.js": ["src/ssr/browser.ts"],
+        "dist/solid/jsx.d.ts": ["src/solid/jsx.ts"],
+        "dist/components/text-field/chips.js": ["src/components/text-field/chips.ts"],
+      }, {
+        "dist/components/text-field/features/trailing-icon.d.ts": ["src/components/text-field/chips.ts"],
+      });
+      const scope = { cwd, revision, graph, baseGraph };
       const before = {
         ...defaults,
         "dist/elements/styles.js": "base styles",
         "dist/elements/define.js": "shared element helper",
         "dist/ssr/index.js": "initial SSR",
         "dist/ssr/browser.js": "browser SSR",
+        "dist/solid/jsx.d.ts": "old JSX",
       };
       const base = pack(root, "base", before);
       const after = {
         ...before,
         "dist/elements/styles.js": "changed styles",
         "dist/ssr/index.js": "changed SSR",
+        "dist/solid/jsx.d.ts": "new JSX",
+        "dist/components/text-field/chips.js": "new chips",
+        "dist/components/text-field/features/trailing-icon.d.ts": "newly referenced declaration",
       };
       const changed = pack(root, "changed", after);
-      const allowed = runGate(changed, base, { cwd, revision, graph });
+      const allowed = runGate(changed, base, scope);
       expect(allowed.code).toBe(0);
       expect(allowed.out).toMatch(/changed dist\/elements\/styles\.js .* from src\/elements\/styles\.ts/);
       expect(allowed.out).toMatch(/changed dist\/ssr\/index\.js .* from src\/ssr\/render-element\.ts/);
+      expect(allowed.out).toMatch(/changed dist\/solid\/jsx.d.ts .* from src\/solid\/jsx.ts/);
+      expect(allowed.out).toContain("added dist/components/text-field/chips.js from src/components/text-field/chips.ts");
+      expect(allowed.out).toContain("added dist/components/text-field/features/trailing-icon.d.ts from src/components/text-field/chips.ts");
       expect(runGate(changed, base, { cwd, revision }).code).toBe(1);
 
       const drift = runGate(pack(root, "drift", {
         ...after,
         "dist/elements/define.js": "unrelated element drift",
         "dist/ssr/browser.js": "unrelated SSR drift",
-      }), base, { cwd, revision, graph });
+      }), base, scope);
       expect(drift.code).toBe(1);
       expect(drift.out).toContain("changed member dist/elements/define.js");
       expect(drift.out).toContain("changed member dist/ssr/browser.js");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test("equivalent compiler output from a touched source grants no scope", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const cwd = join(root, "checkout");
+      const source = "src/components/text-field/text-field.ts";
+      mkdirSync(cwd);
+      git(cwd, "init", "-q");
+      const original = [
+        'import type { A, B } from "./first.js";',
+        'import type { C } from "./second.js";',
+        "export declare const field: A & B & C;",
+      ].join("\n");
+      const reordered = [
+        '// A harmless comment.',
+        'import type { C } from "./second.js";   ',
+        'import type { B, A } from "./first.js";',
+        "export declare const field: A & B & C;",
+      ].join("\n");
+      const revision = commit(cwd, { [source]: original });
+      commit(cwd, { [source]: reordered });
+      const owned = "dist/components/text-field/text-field.d.ts";
+      const unrelated = {
+        "dist/components/text-field/api.js": "api",
+        "dist/elements/text-field.js": "element",
+        "dist/styles/text-field.css": "css",
+      };
+      const base = pack(root, "base", { ...defaults, ...unrelated, [owned]: original });
+      const branch = pack(root, "branch", {
+        ...defaults,
+        ...Object.fromEntries(Object.keys(unrelated).map(member => [member, "drift"])),
+        [owned]: reordered,
+      });
+      const baseGraph = receipt(root, "base-inputs", { [source]: original });
+      const graph = receipt(root, "inputs", { [source]: reordered }, { [owned]: [source] });
+      const result = runGate(branch, base, { cwd, revision, graph, baseGraph });
+      expect(result.code).toBe(1);
+      for (const member of [owned, ...Object.keys(unrelated)]) {
+        expect(result.out).toContain(`changed member ${member}`);
+      }
+      expect(result.out).not.toContain("Catalogue members backed by changed sources");
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 

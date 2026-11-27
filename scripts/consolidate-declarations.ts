@@ -374,7 +374,7 @@ class Consolidation {
    * source with no declaration beside it, and the generated shape an adapter
    * ships is not the pass's to change.
    */
-  chooseKept(): void {
+  chooseKept(graph?: CatalogueInputGraph): void {
     const seeds: string[] = [...this.modules.keys()].filter((file) => this.files.has(file.slice(0, -DTS.length)));
     for (const need of this.needs()) {
       if (need.name === "*" || this.exportingBarrel(need.target, need.name)) continue;
@@ -382,6 +382,10 @@ class Consolidation {
       const declaration = this.declarationOf(need.target, need.name, group);
       if (!declaration) throw new Error(`${need.target} does not declare ${need.name}, which ${need.importer} needs`);
       seeds.push(declaration.file);
+      if (graph) {
+        recordCatalogueInputs(graph.addedMembers, `dist/${declaration.file}`,
+          graph.members.get(`dist/${need.importer}`) ?? []);
+      }
     }
     const queue = [...seeds];
     while (queue.length > 0) {
@@ -392,7 +396,14 @@ class Consolidation {
       for (const specifier of specifiersOfSource(this.module(file).source)) {
         if (!specifier.startsWith(".")) continue;
         const target = this.resolve(file, specifier);
-        if (target && !this.targets.has(target)) queue.push(target);
+        if (!target || this.targets.has(target)) continue;
+        queue.push(target);
+        if (graph) {
+          recordCatalogueInputs(graph.addedMembers, `dist/${target}`, [
+            ...graph.members.get(`dist/${file}`) ?? [],
+            ...graph.addedMembers.get(`dist/${file}`) ?? [],
+          ]);
+        }
       }
     }
   }
@@ -503,7 +514,8 @@ class Consolidation {
       const text = this.buildGroup(barrel, [...members].sort());
       await writeFile(join(this.root, barrel), text);
       if (graph) {
-        recordCatalogueInputs(graph, barrel, members.flatMap(member => [...graph.get(member) ?? []]));
+        recordCatalogueInputs(graph.members, `dist/${barrel}`,
+          members.flatMap(member => [...graph.members.get(`dist/${member}`) ?? []]));
       }
     }
     for (const file of this.modules.keys()) {
@@ -1117,7 +1129,7 @@ export async function consolidateDeclarations(
   const consolidation = new Consolidation(root, files, exports);
   await consolidation.load();
   consolidation.loadBefore();
-  consolidation.chooseKept();
+  consolidation.chooseKept(graph);
   consolidation.routeNeeds();
   const { merged, kept } = await consolidation.apply(graph);
 

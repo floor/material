@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
+import { recordCatalogueInputs, recordCatalogueSourceOutput, type CatalogueInputGraph } from "./catalogue-input-graph";
 import * as sass from "sass";
 import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, baseElementsStyles, baseLiteStyles, typographyStyles, typographyDependencies, utilityStyles,
@@ -88,10 +88,26 @@ export function inBaseLayer(css: string): string {
  * the contrast block: `compileExplicitContrast`).
  */
 export function compileThemeSources(sources: string[], emit: ContrastEmit = "all"): string {
+  return compileTheme(sources, emit).css;
+}
+
+function compileTheme(sources: string[], emit: ContrastEmit): sass.CompileResult {
   const config = directionArmsPrelude() + (emit === "all" ? ""
     : `@use "themes/base-theme" as contrast-config with ($contrast-emit: ${emit});\n`);
   const body = sources.map((source, i) => `@use "${source}" as entry${i};`).join("\n");
-  return sass.compileString(config + body, sassOptions()).css;
+  return sass.compileString(config + body, sassOptions());
+}
+
+function recordStyleInputs(
+  graph: CatalogueInputGraph, output: string, sources: string[], compiled: sass.CompileResult,
+): void {
+  const inputs = compiled.loadedUrls.filter(url => url.protocol === "file:").map(url => fileURLToPath(url));
+  recordCatalogueInputs(graph.members, `dist/${output}`, inputs);
+  if (sources.length !== 1) return;
+  const partial = resolve("src/styles", sources[0]!.replace(/\/([^/]+)$/, "/_$1.scss"));
+  if (!inputs.includes(partial)) return;
+  recordCatalogueSourceOutput(graph, output, partial, compiled.css);
+  recordCatalogueInputs(graph.members, relative(process.cwd(), partial).split(sep).join("/"), [partial]);
 }
 
 const CONTRAST_MARKER = "// contrast roles: generated, do not edit";
@@ -152,8 +168,15 @@ export async function buildStyles(outdir: string, banner: string, graph?: Catalo
   assert.deepEqual(themes, themeStyles.map(name => `themes/_${name}.scss`).sort(), "Theme CSS manifest differs from the full stylesheet");
 
   async function emit(path: string, sources: string[], dependencies: string[] = [], contrast: ContrastEmit = "all") {
-    const css = compileThemeSources(sources, contrast);
+    const compiled = compileTheme(sources, contrast);
+    const { css } = compiled;
+    if (graph) recordStyleInputs(graph, `${path}.css`, sources, compiled);
     if (path.startsWith("styles/")) {
+      if (graph) {
+        // Sass determines which stylesheet pair exists. Its content does not
+        // drive changes to the generated module's manifest dependency imports.
+        recordCatalogueInputs(graph.addedMembers, `dist/${path}.js`, graph.members.get(`dist/${path}.css`) ?? []);
+      }
       const name = path.slice("styles/".length);
       // Vite can hoist shared CSS ahead of (or after) its consumer. Declare the
       // same cascade order in EVERY asset so the first loaded asset establishes
@@ -190,6 +213,7 @@ export async function buildStyles(outdir: string, banner: string, graph?: Catalo
   }
   await mkdir(`${outdir}/styles`, { recursive: true });
   await mkdir(`${outdir}/themes`, { recursive: true });
+  if (graph) recordCatalogueInputs(graph.members, "dist/styles.css", components.map(path => resolve("src/styles", path)));
   await writeFile(`${outdir}/styles.css`, `${banner}\n${full.css}\n`);
   // `import 'material/styles'` resolves through the types condition under NodeNext,
   // as the per-component entries do
@@ -246,15 +270,25 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   const { elements } = await import("../src/elements");
   const definition = await import("../src/elements/define");
   const { hostStyleText } = definition;
-  const recordStyles = graph && ((loaded: URL[]) => {
-    recordCatalogueInputs(graph, "elements/styles.js", loaded.filter(url => url.protocol === "file:").map(url => fileURLToPath(url)));
+  const recordPreupgrade = graph && ((name: string, compiled: sass.CompileResult) => {
+    const output = `elements/preupgrade/${name}.css`;
+    recordStyleInputs(graph, output, [`elements/${name}`], compiled);
+    const inputs = graph.members.get(`dist/${output}`) ?? [];
+    recordCatalogueInputs(graph.members, "dist/elements/preupgrade.css", inputs);
+    recordCatalogueInputs(graph.members, "dist/elements/styles.js", inputs);
   });
-  const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options, recordStyles);
+  const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options, recordPreupgrade);
   const styleExports: string[] = [];
   const write = async (name: string, source: string, imports: string[]) => {
     const compiled = sass.compileString(`@use "${source}";`, options);
-    recordStyles?.(compiled.loadedUrls);
     const { css } = compiled;
+    if (graph) {
+      const output = `elements/css/${name}`;
+      recordStyleInputs(graph, `${output}.css`, [source], compiled);
+      const inputs = graph.members.get(`dist/${output}.css`) ?? [];
+      recordCatalogueInputs(graph.addedMembers, `dist/${output}.js`, inputs);
+      recordCatalogueInputs(graph.members, "dist/elements/styles.js", inputs);
+    }
     styleExports.push(`export const ${styleIdentifier(name)} = ${JSON.stringify(css)};`);
     await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports));
     await writeFile(`${dir}/${name}.css`, css);
@@ -274,10 +308,16 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   await writeFile(`${dir}/index.d.ts`, "export {};\n");
   if (graph) {
     const { elementModules } = await import("./element-modules");
-    recordCatalogueInputs(graph, "elements/css/index.js", [
-      ...graph.get("elements/index.js") ?? [],
-      ...elementModules.map(({ module }) => `src/elements/${module}.ts`),
+    const registryInputs = graph.members.get("dist/elements/index.js") ?? [];
+    recordCatalogueInputs(graph.members, "dist/elements/css/index.js", [
+      ...registryInputs, ...elementModules.map(({ module }) => `src/elements/${module}.ts`),
     ]);
+    for (const { name, module } of elementModules) {
+      const spec = elements[name as keyof typeof elements].spec;
+      recordCatalogueInputs(graph.members, `dist/elements/css/hosts/${spec.name}.css`, [
+        `src/elements/${module}.ts`, ...graph.members.get("dist/elements/define.js") ?? [],
+      ]);
+    }
   }
 
   for (const element of Object.values(elements)) {
@@ -314,7 +354,7 @@ const SHARED_PREUPGRADE = ["config", "field", "index", "shared-app-bar", "shared
  * name. Every element has them, and every partial is an element's or shared.
  */
 export async function preupgradeStyles(
-  names: string[], options: sass.StringOptions<"sync">, recordInputs?: (urls: URL[]) => void,
+  names: string[], options: sass.StringOptions<"sync">, recordInputs?: (name: string, compiled: sass.CompileResult) => void,
 ): Promise<Map<string, string>> {
   const partials = (await readdir("src/styles/elements"))
     .map(file => /^_(.+)\.scss$/.exec(file)?.[1])
@@ -323,7 +363,7 @@ export async function preupgradeStyles(
   const rules = new Map<string, string>();
   for (const name of names) {
     const compiled = sass.compileString(`@use "elements/${name}";`, options);
-    recordInputs?.(compiled.loadedUrls);
+    recordInputs?.(name, compiled);
     const { css } = compiled;
     // Non-ASCII output would start with a byte order mark, which breaks the
     // first selector once the rules are concatenated.

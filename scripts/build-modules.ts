@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
 import { readFile, readdir, writeFile } from "node:fs/promises";
-import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
+import { recordCatalogueInputs, recordCatalogueSourceOutput, type CatalogueInputGraph } from "./catalogue-input-graph";
 
 const VENDOR_APACHE_BANNER = /^\/\*![\s\S]*?Copyright (20\d\d) Google LLC[\s\S]*?Licensed under the Apache License, Version 2\.0[\s\S]*?\*\//;
 
@@ -180,8 +180,9 @@ export function buildModules(outdir: string, graph?: CatalogueInputGraph) {
   const result = program.emit(undefined, (filename, text, _bom, _onError, sourceFiles) => {
     const member = relative(resolve(outdir), filename).replace(/\\/g, "/");
     if (graph && sourceFiles) {
-      recordCatalogueInputs(graph, member === "ssr/render-element.d.ts" ? "ssr/index.d.ts" : member,
-        sourceFiles.map(source => source.fileName));
+      const shipped = member === "ssr/render-element.d.ts" ? "ssr/index.d.ts" : member;
+      recordCatalogueInputs(graph.members, `dist/${shipped}`, sourceFiles.map(source => source.fileName));
+      for (const source of sourceFiles) recordCatalogueSourceOutput(graph, member, source.fileName, text);
     }
     // SSR JavaScript is bundled separately with its dev-only dependencies.
     // Its public declaration has no imports; keep the internal helpers private.
@@ -284,7 +285,8 @@ export async function buildSSR(outdir: string, graph?: CatalogueInputGraph) {
     const meta = typeof result.metafile === "string" ? JSON.parse(result.metafile) as Exclude<typeof result.metafile, string> : result.metafile;
     if (!meta) throw new Error("SSR bundle did not emit its input graph");
     for (const [file, output] of Object.entries(meta.outputs)) {
-      recordCatalogueInputs(graph, relative(resolve(outdir), resolve(outdir, "ssr", file)).replace(/\\/g, "/"), Object.keys(output.inputs));
+      const member = relative(resolve(outdir), resolve(outdir, "ssr", file)).replace(/\\/g, "/");
+      recordCatalogueInputs(graph.members, `dist/${member}`, Object.keys(output.inputs));
     }
   }
   // Minification must not drop the bundled dependencies' redistribution notices.

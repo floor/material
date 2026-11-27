@@ -34,23 +34,15 @@ export function styleManifestDependenciesOnly(before: string, after: string): bo
 }
 
 /** Compare the exact checkout the package was built from with its CI base. */
-export function changedSources(base: string): Set<string> {
-  const changed = execFileSync("git", [
-    "diff", "--no-renames", "--name-only", "-z", base, "HEAD", "--", "src/",
-  ], { encoding: "utf8" });
-  return new Set(changed.split("\0").filter(Boolean));
-}
-
-/** Registry membership distinguishes element modules from shared element code. */
-export function changedComponentNames(sources: ReadonlySet<string>, elementModules: ReadonlySet<string>): Set<string> {
-  const names = new Set<string>();
-  for (const path of sources) {
-    const component = /^src\/components\/([\w-]+)\//.exec(path)?.[1];
-    if (component) names.add(component);
-    const element = /^src\/elements\/([\w-]+)(?:\.tsx?$|\/)/.exec(path)?.[1];
-    if (element && elementModules.has(element)) names.add(element);
+export function changedSources(base: string): Map<string, string> {
+  const fields = execFileSync("git", [
+    "diff", "--no-renames", "--name-status", "-z", base, "HEAD", "--", "src/",
+  ], { encoding: "utf8" }).split("\0");
+  const changes = new Map<string, string>();
+  for (let index = 0; index + 1 < fields.length; index += 2) {
+    changes.set(fields[index + 1]!, fields[index]!);
   }
-  return names;
+  return changes;
 }
 
 if (import.meta.main) {

@@ -1,22 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
-import { changedComponentNames, styleManifestDependenciesOnly } from "../../scripts/catalogue-scope";
+import { styleManifestDependenciesOnly } from "../../scripts/catalogue-scope";
 
 const manifest = `"fab-menu": { source: "components/fab-menu", dependencies: ["fab", "menu"] },
   button: { source: "components/button", dependencies: ["progress"] },
 `;
 
 describe("catalogue identity scope", () => {
-  test("only factory sources and registered element modules establish component scope", () => {
-    const sources = new Set([
-      "src/components/text-field/features/chips.ts",
-      "src/elements/slider.ts",
-      "src/elements/define.ts",
-      "src/styles/components/_listbox.scss",
-    ]);
-    expect(changedComponentNames(sources, new Set(["text-field", "slider"]))).toEqual(new Set(["text-field", "slider"]));
-  });
-
   test("a dependency edge is not catalogue data", () => {
     const next = manifest.replace('["fab", "menu"]', '["button", "fab", "menu"]');
     expect(styleManifestDependenciesOnly(manifest, next)).toBe(true);

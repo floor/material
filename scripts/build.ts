@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { cp, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { CatalogueInputGraph } from "./catalogue-input-graph";
+import { catalogueInputReceipt, createCatalogueGraph } from "./catalogue-input-graph";
 import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { compareDeclarationIdentity } from "./check-declaration-identity";
@@ -14,7 +14,7 @@ import { generateTokenCatalogue } from "./generate-token-catalogue";
 
 const outdir = "./dist";
 const graphPath = process.env.MTRL_CATALOGUE_INPUT_GRAPH;
-const graph: CatalogueInputGraph | undefined = graphPath ? new Map() : undefined;
+const graph = graphPath ? createCatalogueGraph() : undefined;
 const pkg = await Bun.file("package.json").json();
 const banner = `/*! ${pkg.name} v${pkg.version} | MIT */`;
 
@@ -27,7 +27,7 @@ try {
     console.log("Building ESM modules and declarations...");
     buildModules(staging, graph);
     console.log("Writing the Svelte components...");
-    await emitSvelte(staging);
+    await emitSvelte(staging, graph);
     console.log("Building full and optional stylesheets...");
     await buildStyles(staging, banner, graph);
     // The versioned token catalogue is generated from the final CSS outputs
@@ -101,8 +101,7 @@ try {
     await rename(staging, outdir);
     if (graph && graphPath) {
       await mkdir(dirname(graphPath), { recursive: true });
-      const inputs = Object.fromEntries([...graph].map(([member, sources]) => [member, [...sources].sort()]));
-      await writeFile(graphPath, JSON.stringify(inputs) + "\n");
+      await writeFile(graphPath, JSON.stringify(catalogueInputReceipt(graph)) + "\n");
     }
     console.log(`Built ${pkg.name} ${pkg.version} in ${outdir}`);
   } finally {

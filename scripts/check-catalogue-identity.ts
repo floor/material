@@ -7,8 +7,8 @@
  * Two packed tarballs — the main tip this tree
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
- * identical bytes in existing members outside the scope of changed component
- * sources and recorded build inputs for shared element and SSR outputs. The explicit
+ * compare every existing member outside the recorded inputs whose own compiler
+ * output changed. The explicit
  * allowlist (the version fields of package.json, the dist/tokens catalogue
  * data files, and whole-line additions to README.md — documentation of the new
  * data may be added, existing documentation may not be rewritten). A new
@@ -22,7 +22,7 @@
  * scope, so its existing default bytes are all checked.
  *
  *   bun run catalogue:identity:check [branch.tgz] [base.tgz]
- *     [--base-revision <sha>] [--input-graph <json>]
+ *     [--base-revision <sha>] [--input-graph <json>] [--base-input-graph <json>]
  *
  * With no arguments the branch tarball is the one packed in this directory
  * and the base the one packed in ../material-base (the CI layout). If no Git
@@ -32,8 +32,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { changedComponentNames, changedSources } from "./catalogue-scope";
-import { elementModules, kebab, pascal } from "./element-modules";
+import { changedSources } from "./catalogue-scope";
+import type { CatalogueInputReceipt } from "./catalogue-input-graph";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 import { componentStyles } from "./style-manifest";
 
@@ -43,37 +43,45 @@ const sole = (directory: string): string => {
   return join(directory, tarballs[0]!);
 };
 const { positionals: [branchTgz = sole("."), mainTgz = sole("../material-base")], values } = parseArgs({
-  options: { "base-revision": { type: "string" }, "input-graph": { type: "string" } },
+  options: {
+    "base-revision": { type: "string" },
+    "input-graph": { type: "string" },
+    "base-input-graph": { type: "string" },
+  },
   allowPositionals: true,
 });
-const elementNames = new Set(elementModules.flatMap(({ name, module }) => [kebab(name), module]));
-const elementSourceNames = new Set(elementModules.map(({ module }) => module));
 const baseRevision = values["base-revision"] ?? process.env.MTRL_CATALOGUE_BASE_REVISION;
-const sources = baseRevision === undefined ? new Set<string>() : changedSources(baseRevision);
-const changedComponents = changedComponentNames(sources, elementSourceNames);
 const graphPath = values["input-graph"] ?? process.env.MTRL_CATALOGUE_INPUT_GRAPH;
-const inputs = new Map<string, string[]>(graphPath === undefined ? [] :
-  Object.entries(JSON.parse(readFileSync(graphPath, "utf8")) as Record<string, string[]>));
-const defaultStyleNames = new Set(Object.entries(componentStyles).filter(([, entry]) => !entry.optIn).map(([name]) => name));
-const svelteOwners = new Map([...elementNames].map(name => [pascal(name), name]));
+const baseGraphPath = values["base-input-graph"] ?? process.env.MTRL_CATALOGUE_BASE_INPUT_GRAPH;
 
-/** Map only single-component members. Shared bundles, declarations and the
- * full stylesheet have no component owner. */
-function componentOwner(member: string): string | undefined {
-  const factory = /^dist\/components\/([\w-]+)\/.+\.(?:js|d\.ts)$/.exec(member)?.[1];
-  if (factory) return factory;
+const readInputs = (path: string): CatalogueInputReceipt =>
+  JSON.parse(readFileSync(path, "utf8")) as CatalogueInputReceipt;
 
-  const element = /^dist\/(?:elements|react|solid|vue)\/([\w-]+)\.(?:js|d\.ts)$/.exec(member)?.[1];
-  if (element && elementNames.has(element)) return element;
+const changedInputs = new Set<string>();
+const graph = graphPath === undefined ? undefined : readInputs(graphPath);
+if (baseRevision && graph) {
+  const sources = changedSources(baseRevision);
+  // A data-only PR needs no graph for its base. A source change requires both
+  // receipts so a missing compiler fingerprint cannot widen its scope.
+  if (sources.size && baseGraphPath) {
+    const base = readInputs(baseGraphPath);
+    for (const [source, status] of sources) {
+      const own = graph.sourceOutputs[source];
+      const before = base.sourceOutputs[source];
+      if (own && (status === "A" || Object.entries(own).some(([output, hash]) =>
+        before?.[output] !== undefined && before[output] !== hash))) {
+        changedInputs.add(source);
+      }
+    }
+  }
+}
 
-  const svelte = /^dist\/svelte\/([\w-]+)\.svelte(?:\.d\.ts)?$/.exec(member)?.[1];
-  if (svelte) return svelteOwners.get(svelte);
-
-  const style = /^(?:dist\/(?:styles|elements\/css)\/|src\/styles\/components\/_)([\w-]+)\.(?:js|css|scss)$/.exec(member)?.[1];
-  if (style && defaultStyleNames.has(style)) return style;
-
-  const host = /^dist\/elements\/(?:css\/hosts|preupgrade)\/([\w-]+)\.css$/.exec(member)?.[1];
-  return host && elementNames.has(host) ? host : undefined;
+function memberChanges(member: string, added = false): string[] {
+  const inputs = new Set([
+    ...graph?.members[member] ?? [],
+    ...(added ? graph?.addedMembers[member] ?? [] : []),
+  ]);
+  return [...inputs].filter(source => changedInputs.has(source)).sort();
 }
 
 /** The normalized member map of a tarball: path -> content bytes. */
@@ -176,7 +184,13 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   const inMain = main.get(member);
   const inBranch = branch.get(member);
   if (inMain === undefined) {
-    if (!allowed(member) && !optionalAdditions.has(member) && !optInMember(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles, declared opt-in entries)`);
+    if (allowed(member) || optionalAdditions.has(member) || optInMember(member)) continue;
+    const inputs = memberChanges(member, true);
+    if (inputs.length) {
+      scopedChanges.push(`added ${member} from ${inputs.join(", ")}`);
+    } else {
+      problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles, declared opt-in entries)`);
+    }
     continue;
   }
   if (inBranch === undefined) {
@@ -188,17 +202,12 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
     continue;
   }
   if (!allowed(member)) {
-    const owner = componentOwner(member);
-    const sharedInputs = owner === undefined && /^dist\/(?:elements|ssr)\//.test(member)
-      ? (inputs.get(member.slice("dist/".length)) ?? []).filter(source => sources.has(source))
-      : [];
+    const inputs = memberChanges(member);
     const size = `${inMain.length} -> ${inBranch.length} bytes`;
-    if (owner && changedComponents.has(owner)) {
-      scopedChanges.push(`${owner} changed ${member} (${size})`);
-    } else if (sharedInputs.length) {
-      scopedChanges.push(`changed ${member} (${size}) from ${sharedInputs.join(", ")}`);
+    if (inputs.length) {
+      scopedChanges.push(`changed ${member} (${size}) from ${inputs.join(", ")}`);
     } else {
-      problems.push(`changed member ${member} (${size}) outside the changed component scope`);
+      problems.push(`changed member ${member} (${size}): no recorded input with changed compiler output`);
     }
   } else if (member === "README.md" && !additionsOnly(inMain, inBranch)) {
     problems.push("changed member README.md beyond whole-line additions: the new data may be documented, existing documentation may not be rewritten");
