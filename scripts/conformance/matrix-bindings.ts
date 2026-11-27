@@ -1,4 +1,5 @@
-import type { Aspect, FixtureBinding, Probe, RowBinding } from "./matrix-types";
+import { textFieldCoverageSpecs } from "./text-field-bindings";
+import type { FixtureBinding, Probe, RowBinding, RowSpec } from "./matrix-types";
 
 const height = (part: string): Probe => ({ part, box: "height" });
 const width = (part: string): Probe => ({ part, box: "width" });
@@ -19,7 +20,7 @@ const different = (part: string, relativeTo: string, axis: "width" | "height" | 
   ({ part, relativeTo, different: axis });
 const widthPair = (part: string, secondCase: string): Probe => ({ part, widthPair: secondCase });
 
-type Spec = [key: string, property: string, aspect: Aspect, fixtureCase: string, probe: Probe, token?: string, variant?: string];
+type Spec = RowSpec;
 const spec = ([key, property, aspect, fixtureCase, probe, token, variant]: Spec): RowBinding =>
   ({ key, property, aspect, case: fixtureCase, probe, token, variant });
 
@@ -370,6 +371,7 @@ export const bindings: FixtureBinding[] = [
     ["indicator-colour/primary", "Indicator tone", "colour", "primary-stacked/light/ltr/selected/rest/0", colour("indicator"), "PrimaryNavigationTabTokens.ActiveIndicatorColor", "primary"],
   ]),
   fixture("text-field", "Text field", [
+    ...textFieldCoverageSpecs,
     ["trailing-action-focus-ring/filled/focus", "Trailing action focus ring", "focus", "filled/trailing-focus", outline("trailing")],
     ["trailing-action-focus-ring/outlined/focus", "Trailing action focus ring", "focus", "outlined/trailing-focus", outline("trailing")],
     ["height/filled", "Container height", "size", "filled/light/rest", height("field"), undefined, "filled"],

@@ -279,14 +279,14 @@ try {
     near(placed.labelLeft, placed.trackLeft, `${labelPosition} label aligned with the track`);
   }
 
-  // Motion, with the slider's own transitions: a tap settles on the default spatial
+  // Motion without an indicator: a tap settles on the default spatial
   // spring (peaks about 270ms in, about 1.5% over, settled by 450ms), which the M3 sliders
   // video approaches (about 300ms, 3-5%); nothing moves on the first render or in a drag.
   const moving = await browser.browser()!.newPage({ viewport: { width: 600, height: 250 } });
   moving.on("pageerror", error => errors.push(error.message));
   await moving.goto(`http://127.0.0.1:${server.port}/?motion`);
   await moving.waitForFunction(() => window.ready);
-  await moving.evaluate(() => window.mount({ value: 50, label: "Volume" }, 320, "baseline", "light"));
+  await moving.evaluate(() => window.mount({ value: 50, label: "Volume", showValue: false }, 320, "baseline", "light"));
   await moving.waitForTimeout(60); // stays: the first render and the spring are under test
   assert(!(await moving.locator(".mtrl-slider--settling").count()), "the first render settles");
   const track = (await moving.locator(".mtrl-slider__container").boundingBox())!;

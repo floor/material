@@ -2155,12 +2155,6 @@
       "symbol": "MinHeight",
       "line": 1000,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L1000"
-    },
-    "spec": {
-      "value": "56dp",
-      "url": "https://m3.material.io/components/text-fields/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
     }
   },
   "text-field/leading-icon/filled": {
@@ -2174,19 +2168,13 @@
     }
   },
   "text-field/outline-width/outlined-focus": {
-    "reason": "Compose uses a 2 dp border. The newer 3 dp token is unused.",
+    "reason": "Compose uses a 2 dp border, matching the token in the released 1.5.0 artifact.",
     "compose": {
       "value": "2dp",
       "file": "TextFieldDefaults.kt",
       "symbol": "FocusedBorderThickness",
       "line": 910,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L910"
-    },
-    "spec": {
-      "value": "2dp",
-      "url": "https://m3.material.io/components/text-fields/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
     }
   },
   "text-field/trailing-action-focus-ring/filled/focus": {
