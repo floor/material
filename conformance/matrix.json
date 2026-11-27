@@ -3957,12 +3957,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
           },
           "material": {
-            "value": "0px",
+            "value": "8px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
@@ -3988,12 +3988,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
           },
           "material": {
-            "value": "0px",
+            "value": "8px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
@@ -4019,12 +4019,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
           },
           "material": {
-            "value": "0px",
+            "value": "8px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
@@ -4050,12 +4050,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Carousel.kt#L822"
           },
           "material": {
-            "value": "0px",
+            "value": "8px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "Compose has a configurable gap or content padding. This row compares default values. The reference choice is pending.",
           "issue": null
@@ -4490,12 +4490,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Strategy.kt#L561"
           },
           "material": {
-            "value": "34.67px",
+            "value": "40px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
           "issue": null
@@ -4521,12 +4521,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/carousel/Strategy.kt#L561"
           },
           "material": {
-            "value": "32px",
+            "value": "40px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "match"
+            "spec": "match",
+            "compose": "drift"
           },
           "note": "The website specifies a 40–56 dp small item. The Compose keyline strategy subtracts a share of configured padding without reapplying the floor. The reference choice is pending.",
           "issue": null
