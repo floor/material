@@ -398,6 +398,43 @@ scenario(edge, {
     paint();
   },
 });
+
+const measurements = section(host(), "Measurements");
+const dividerBox = document.createElement("div");
+scenario(measurements, {
+  title: "Divider gap and side insets",
+  lookFor: "the divider between two rows: the space above and below it, and its distance from the sheet's edges",
+  expected: "16 px between the divider and each row, and 28 px from each sheet edge (m3 navigation drawer specs)",
+  measure: () => {
+    const root = dividerBox.querySelector(".mtrl-drawer");
+    const sheet = root?.querySelector(".mtrl-drawer__sheet");
+    const divider = root?.querySelector(".mtrl-drawer__divider");
+    const before = root?.querySelector('[data-id="one"]');
+    const after = root?.querySelector('[data-id="two"]');
+    if (!sheet || !divider || !before || !after) return "no drawer";
+    const s = sheet.getBoundingClientRect();
+    const d = divider.getBoundingClientRect();
+    const b = before.getBoundingClientRect();
+    const a = after.getBoundingClientRect();
+    const round = (value) => Math.round(value * 10) / 10;
+    return `gap ${round(d.top - b.bottom)} / ${round(a.top - d.bottom)} px · inset ${round(d.left - s.left)} / ${round(s.right - d.right)} px`;
+  },
+  mount: (body) => {
+    body.append(dividerBox);
+    dividerBox.replaceChildren();
+    const drawer = createDrawer({
+      headline: "Divider",
+      variant: "standard",
+      open: true,
+      items: [
+        { id: "one", label: "One" },
+        { type: "divider" },
+        { id: "two", label: "Two" },
+      ],
+    });
+    dividerBox.append(drawer.element);
+  },
+});
 </script>
 </body>
 </html>
