@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Text field chips — owner test page</title>
+<title>Text field — owner test page</title>
 <!--
   The owner's test page for input chips inside a text field (design §6, review
   round 1). It loads the built package from dist/, as test:pages serves the
@@ -24,16 +24,24 @@
 </style>
 </head>
 <body>
-<h1>Input chips inside a text field</h1>
-<p class="note">Type a name and press Enter or a comma; Backspace twice at the start of the field selects and removes the last chip; a second activation of a chip edits it. The values below are measured from the live field.</p>
+<h1>Text field</h1>
+<p class="note">One page per component: each block names what to look for, the expected result, and a live measurement of the field below it.</p>
 
 <section>
+  <h2>Variants and sizes</h2>
+  <p class="note">A labelled field with input chips, filled and outlined, and a narrow one whose chips wrap onto rows 16px apart. <strong>Expected:</strong> the label keeps its line above the chips and the outlined notch stays open; the wrapped rows never overlap their 48dp targets.</p>
   <div class="stage">
     <div id="wide"></div>
     <div id="narrow"></div>
     <m-text-field id="element" chips label="To" name="to" type="email"></m-text-field>
     <form id="form"><m-text-field id="submitted" chips label="Recipients" name="to" type="email"></m-text-field></form>
   </div>
+  <h2>States</h2>
+  <p class="note">With a committed chip and an empty draft, blur, focus, typing and clearing, <code>setValue</code>, and the form's reset. <strong>Expected:</strong> the root never carries <code>--empty</code> while a chip is committed, so the label stays floated on every painted frame and the notch stays open.</p>
+  <h2>Interaction</h2>
+  <p class="note">Type a name and press Enter or a separator; Backspace twice at the start selects and removes the last chip; a second activation of a chip edits it. <strong>Expected:</strong> one chip per entry, the draft clears, and the status region says what was added or removed.</p>
+  <h2>Edge cases</h2>
+  <p class="note">An invalid email is kept as text; a pasted list splits while rejected or over-limit text stays; the first chip's two 48dp targets are measured with <code>elementFromPoint</code> at 100% and 200% zoom. <strong>Expected:</strong> no point resolves to the wrong action, and the action's own end belongs to the action.</p>
   <pre id="values">measuring…</pre>
 </section>
 
