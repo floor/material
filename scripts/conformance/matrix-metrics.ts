@@ -91,10 +91,11 @@ export function measureMetric(probe: MetricProbe, rows: [CaseResult, CaseResult]
       signature.every(value => value === shapeOverrides[`--mtrl-sys-shape-corner-${step}`]),
     ) : undefined;
     let role = token ? `Corner${pascal(token)}` : variants.every(isFull) ? "CornerFull" : null;
-    if (role === "CornerExtraLarge" && probe.style === "borderTopLeftRadius" && variants.every(part =>
+    if ((role === "CornerExtraSmall" || role === "CornerExtraLarge") &&
+        probe.style === "borderTopLeftRadius" && variants.every(part =>
       part.style.borderTopRightRadius === part.style.borderTopLeftRadius &&
       part.style.borderBottomLeftRadius === "0px" && part.style.borderBottomRightRadius === "0px",
-    )) role = "CornerExtraLargeTop";
+    )) role = `${role}Top`;
     return { role, resolved: { radius: raw } };
   }
   if (probe.kind === "typography") {
