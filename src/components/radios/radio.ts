@@ -77,12 +77,12 @@ export const withRadio =
     const radioCircle = document.createElement('span');
     radioCircle.classList.add(`${radiosClass}__circle`);
     
-    // Add ripple container if ripple is enabled
-    if (config.ripple !== false) {
-      const rippleContainer = document.createElement('span');
-      rippleContainer.classList.add(`${radiosClass}__ripple`);
-      radioControl.appendChild(rippleContainer);
-    }
+    // This span paints the state layer and the keyboard focus ring. It is not
+    // a press ripple, and ripple: false attaches none, so the span stays.
+    // Omitting it left a keyboard-focused radio with no visible indicator.
+    const rippleContainer = document.createElement('span');
+    rippleContainer.classList.add(`${radiosClass}__ripple`);
+    radioControl.appendChild(rippleContainer);
     
     // Add circle to control
     radioControl.appendChild(radioCircle);

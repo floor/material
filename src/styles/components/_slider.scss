@@ -11,16 +11,13 @@
 // video shows: a tap slides the handle over, peaking about 300ms in with a 3-5%
 // overshoot and settled by 450ms. The default spatial spring peaks at about 270ms
 // with 1.5% and settles in 450ms; the fast one (140ms, 9%) was visibly too strong. The controller sets
-// `--settling` for those changes alone, so a drag follows the pointer and a layout
-// render (the first one, a resize) never moves anything.
+// `--settling` for those changes except when the indicator first appears. A drag
+// follows the pointer and a layout render (the first one, a resize) has no spring.
 //
-// The value indicator grows out of the handle and shrinks back into it: in on
-// motionDurationMedium4 emphasized decelerate, out on motionDurationShort3
-// emphasized accelerate (material-components-android BaseSlider label animator).
-$bubble-in: v.motion('duration-medium4') v.motion('easing-emphasized-decelerate');
-$bubble-out: v.motion('duration-short3') v.motion('easing-emphasized-accelerate');
-$bubble-transition: scale $bubble-out, opacity $bubble-out, visibility 0s linear v.motion('duration-short3');
-$bubble-transition-visible: scale $bubble-in, opacity $bubble-in, visibility 0s;
+// The pill grows and moves away from the handle as in the Material slider demo.
+// Its position along the track is applied separately with the translate property.
+$bubble-duration: v.motion('duration-medium1');
+$bubble-transition: transform $bubble-duration v.motion('easing-emphasized'), m.spring(opacity, fast-effects);
 
 $component: '#{base.$prefix}-slider';
 
@@ -263,20 +260,21 @@ $component: '#{base.$prefix}-slider';
     border-radius: v.shape('full'); // the value indicator: a pill
     @include m.typography('label-large');
     white-space: nowrap;
-    transform: translateX(-50%);
+    translate: -50%;
+    transform: translate(var(--#{base.$prefix}-slider-value-entry-offset, 0px, 5px)) scale(0);
     transform-origin: 50% 100%;
-    scale: 0;
+    z-index: 5;
     visibility: hidden;
     opacity: 0;
-    transition: $bubble-transition;
+    transition: $bubble-transition, visibility 0s linear $bubble-duration;
     pointer-events: none;
     
     // Show value when interacting
     &--visible {
       visibility: visible;
       opacity: 1;
-      scale: 1;
-      transition: $bubble-transition-visible;
+      transform: translate(0, 0) scale(1);
+      transition: $bubble-transition, visibility 0s;
     }
   }
 
@@ -290,8 +288,7 @@ $component: '#{base.$prefix}-slider';
     // each piece's inner edge animates with the value change and never restarts
     // the piece's own position or length.
     .#{$component}__segment { transition: $settle-position, $settle-length, m.spring(box-shadow, default-spatial); }
-    .#{$component}__value { transition: $settle-position, $bubble-transition; }
-    .#{$component}__value--visible { transition: $settle-position, $bubble-transition-visible; }
+    .#{$component}__value--visible { transition: $settle-position, $bubble-transition, visibility 0s; }
   }
 
   // Vertical: the same parts turned a quarter. withTracks and the
@@ -323,10 +320,11 @@ $component: '#{base.$prefix}-slider';
     }
     // The value indicator sits beside the handle, on its start side.
     .#{$component}__value {
+      --#{base.$prefix}-slider-value-entry-offset: 5px, 0px;
+      transform-origin: 100% 50%;
       left: auto;
       bottom: auto;
       right: calc(50% + var(--#{base.$prefix}-slider-handle-height, 44px) / 2 + 12px);
-      transform-origin: 100% 50%;
     }
   }
   

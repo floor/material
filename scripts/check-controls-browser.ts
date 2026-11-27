@@ -209,8 +209,58 @@ async function checkRadios(page: Page): Promise<number> {
   const ring = await page.locator(`${item(3)} .mtrl-radios__ripple`).evaluate((el) => { const c = getComputedStyle(el); return `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}`; });
   assert.equal(ring, `3px solid ${await role(page, "secondary")} 2px`, "focus ring");
   checks += 10;
+  checks += await checkRadioFocusWithoutRipple(page);
   await page.evaluate(() => { (window as unknown as ControlsWindow).controlsHost.remove(); document.getElementById("before-radios")?.remove(); });
   return checks;
+}
+
+/**
+ * Keyboard focus with ripple: false, unchecked and checked. The span that
+ * paints the layer and the ring is absent on main, so this fails there.
+ * WebKit moves focus with Alt+Tab, the same key the conformance fixture uses.
+ */
+export async function checkRadioFocusWithoutRipple(page: Page): Promise<number> {
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => {
+    const state = window as unknown as ControlsWindow;
+    state.controlsHost?.remove();
+    const host = document.createElement("div");
+    host.style.cssText = "padding:24px";
+    state.controlsHost = host;
+    document.body.append(host);
+    const before = document.createElement("button");
+    before.id = "before-radio-focus";
+    host.append(before);
+    const { createRadios } = state.inputs;
+    const off = createRadios({ name: "focus-off", ripple: false, options: [{ value: "a", label: "Off" }] });
+    off.element.id = "rd-off";
+    host.append(off.element);
+    const on = createRadios({ name: "focus-on", ripple: false, value: "a", options: [{ value: "a", label: "On" }] });
+    on.element.id = "rd-on";
+    host.append(on.element);
+    before.focus();
+  });
+  const tab = page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab";
+  const mix = (name: string, percent: number) => page.evaluate(([name, percent]) => { const probe = document.createElement("i"); probe.style.color = `color-mix(in srgb, var(--mtrl-sys-color-${name}) ${percent}%, transparent)`; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c; }, [name, percent] as const);
+  const paint = (id: string) => page.locator(`#${id} .mtrl-radios__ripple`).evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { colour: c.backgroundColor, ring: `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}` };
+  });
+  const secondary = await role(page, "secondary");
+  await page.keyboard.press(tab);
+  await settle(page);
+  assert.equal(await page.locator("#rd-off input").evaluate((el) => (el as HTMLInputElement).matches(":focus-visible") && !(el as HTMLInputElement).checked), true, "unchecked radio has keyboard focus");
+  const off = await paint("rd-off");
+  assert.equal(off.colour, await mix("on-surface", 10), "unchecked focus layer: on-surface 0.10");
+  assert.equal(off.ring, `3px solid ${secondary} 2px`, "unchecked focus ring");
+  await page.keyboard.press(tab);
+  await settle(page);
+  assert.equal(await page.locator("#rd-on input").evaluate((el) => (el as HTMLInputElement).matches(":focus-visible") && (el as HTMLInputElement).checked), true, "checked radio has keyboard focus");
+  const on = await paint("rd-on");
+  assert.equal(on.colour, await mix("primary", 10), "checked focus layer: primary 0.10");
+  assert.equal(on.ring, `3px solid ${secondary} 2px`, "checked focus ring");
+  await page.evaluate(() => { (window as unknown as ControlsWindow).controlsHost?.remove(); });
+  return 6;
 }
 
 /** The three selection controls label their options in the same type: Body Large, a list item's headline. */
@@ -235,5 +285,5 @@ async function checkLabelType(page: Page): Promise<number> {
 export async function checkControls(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const checks = (await checkSwitch(page)) + (await checkCheckbox(page)) + (await checkRadios(page)) + (await checkLabelType(page));
-  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate; the radio ring, dot, state layers, keyboard focus and label gap; and one label type, Body Large, for all three.`);
+  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate; the radio ring, dot, state layers, keyboard focus and label gap, including the focus ring and layer when ripple is false; and one label type, Body Large, for all three.`);
 }

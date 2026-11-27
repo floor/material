@@ -9,6 +9,13 @@
   },
   "app-bar/leading-icon-size/small": {
     "reason": "The website sizes the glyph. Compose takes the navigation icon as a slot.",
+    "compose": {
+      "value": null,
+      "file": null,
+      "symbol": null,
+      "line": null,
+      "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+    },
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/app-bars/specs",
@@ -729,7 +736,7 @@
     }
   },
   "carousel/item-state/all/disabled": {
-    "reason": "The fixture asks for a disabled first item and checks its accessibility state.",
+    "reason": "Material has no disabled carousel item. The marker is absent, which drifts from the spec.",
     "spec": {
       "value": "Present",
       "url": "https://m3.material.io/components/carousel/specs",
@@ -1170,16 +1177,6 @@
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
     }
   },
-  "list/between-space/segmented-one-line/rest": {
-    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
-    "compose": {
-      "value": "12dp",
-      "file": "ListTokens.kt",
-      "symbol": "ItemBetweenSpace",
-      "line": 42,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L42"
-    }
-  },
   "list/bottom-space/segmented-one-line/rest": {
     "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
     "compose": {
@@ -1200,13 +1197,16 @@
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L201"
     }
   },
+  "list/divider-colour/standard/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1. The measured OutlineVariant matches the pinned Compose DividerTokens.Color and the website baseline colour diagram."
+  },
   "list/divider-trailing-space/inset/rest": {
     "reason": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Baseline list item measurements and padding",
+      "read": "2026-11-27"
     },
     "compose": {
       "value": "16dp",
@@ -1254,8 +1254,8 @@
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Baseline list item measurements and padding",
+      "read": "2026-11-27"
     }
   },
   "list/vertical-padding/segmented-three-line/rest": {
@@ -1294,6 +1294,15 @@
       "read": "2026-11-26"
     }
   },
+  "menu/active-container-radius/segmented/active": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/group-padding/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/label-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
   "menu/selected-colour/baseline": {
     "reason": "The baseline Compose menu item has no selected state.",
     "compose": {
@@ -1303,6 +1312,12 @@
       "line": 34,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L34"
     }
+  },
+  "menu/supporting-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/trailing-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
   },
   "navigation-bar/focus-ring/horizontal/focus": {
     "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
@@ -2148,12 +2163,6 @@
       "symbol": "MinHeight",
       "line": 1000,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L1000"
-    },
-    "spec": {
-      "value": "56dp",
-      "url": "https://m3.material.io/components/text-fields/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
     }
   },
   "text-field/leading-icon/filled": {
@@ -2167,19 +2176,13 @@
     }
   },
   "text-field/outline-width/outlined-focus": {
-    "reason": "Compose uses a 2 dp border. The newer 3 dp token is unused.",
+    "reason": "Compose uses a 2 dp border, matching the token in the released 1.5.0 artifact.",
     "compose": {
       "value": "2dp",
       "file": "TextFieldDefaults.kt",
       "symbol": "FocusedBorderThickness",
       "line": 910,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TextFieldDefaults.kt#L910"
-    },
-    "spec": {
-      "value": "2dp",
-      "url": "https://m3.material.io/components/text-fields/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
     }
   },
   "text-field/trailing-action-focus-ring/filled/focus": {

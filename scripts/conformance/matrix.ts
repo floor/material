@@ -3,7 +3,7 @@ import { closeSync, mkdtempSync, openSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import pin from "../../conformance/reference.json";
-import { bindings } from "./matrix-bindings";
+import { bindings, matrixRowId } from "./matrix-bindings";
 import { colourThemes, parseColour, readColourRoles, type ResolvedColours, type ThemePalettes } from "./matrix-colours";
 import { elevationRole, measureMetric, metricProbe } from "./matrix-metrics";
 import { matrixTokens } from "./matrix-reference";
@@ -23,8 +23,6 @@ const composeRelease = "https://developer.android.com/jetpack/androidx/releases/
 const kotlin = "compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3";
 
 const urlId = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
-const rowId = (component: string, key: string) => /^top-app-bar\/[^/]+\/[^/]+\/[^/]+$/.test(key)
-  ? key : `${component}/${key}`;
 const hex = /#[A-F\d]{6}\b/i;
 const colorMatch = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/;
 const asHex = (r: string, g: string, b: string) =>
@@ -82,7 +80,7 @@ function resolveColourReference<T extends SpecReference | ComposeReference>(refe
   };
 }
 
-function compareColour(probe: { part: string; style: string }, rows: [CaseResult, CaseResult], id: string) {
+function compareColour(probe: { part: string; style: string; backgroundUnder?: string }, rows: [CaseResult, CaseResult], id: string) {
   const [left, right] = rows;
   const palettes = left.themes?.palettes;
   if (!palettes || JSON.stringify(palettes) !== JSON.stringify(right.themes?.palettes)) {
@@ -94,6 +92,11 @@ function compareColour(probe: { part: string; style: string }, rows: [CaseResult
       if (probe.style === "outlineColor" && style?.outlineStyle === "none") return "rgba(0, 0, 0, 0)";
       const value = style?.[probe.style];
       if (!value) throw new Error(`${id}: missing ${probe.style} measurement in ${theme}`);
+      if (probe.backgroundUnder && parseColour(value).opacity === 0) {
+        const underlying = row.themes?.[theme][probe.backgroundUnder]?.style.backgroundColor;
+        if (!underlying) throw new Error(`${id}: missing underlying background in ${theme}`);
+        return underlying;
+      }
       return value;
     };
     return { light: read("light"), dark: read("dark"), seed: read("seed") };
@@ -133,10 +136,26 @@ function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, prob
   const { style } = part;
   const rect = visibleRect(part);
   const px = (value: number) => `${decimal(value)}px`;
+  if ("contentInset" in probe) {
+    const reference = getPart(row, probe.relativeTo, id).rect;
+    const side = probe.contentInset;
+    const suffix = side[0]!.toUpperCase() + side.slice(1);
+    const padding = Number.parseFloat(style[`padding${suffix}`] ?? "");
+    const border = Number.parseFloat(style[`border${suffix}Width`] ?? "");
+    const distances = {
+      left: rect.x - (reference.x + reference.width),
+      right: reference.x - (rect.x + rect.width),
+      bottom: reference.y + reference.height - (rect.y + rect.height),
+    };
+    if (!Number.isFinite(padding + border)) throw new Error(`${id}: missing content inset geometry`);
+    return px(distances[side] + padding + border);
+  }
   if ("read" in probe) {
     if (probe.read === "opacity") {
-      if (!style.backgroundColor || !style.opacity) throw new Error(`${id}: missing background colour or opacity`);
-      return String(decimal(Number(style.opacity) * parseColour(style.backgroundColor).opacity));
+      const color = style[probe.paint ?? "backgroundColor"];
+      const ancestor = probe.opacityAncestor ? getPart(row, probe.opacityAncestor, id).style.opacity : "1";
+      if (!color || !style.opacity || !ancestor) throw new Error(`${id}: missing paint colour or opacity`);
+      return String(decimal(parseColour(color).opacity * Number(style.opacity) * Number(ancestor)));
     }
     if (probe.read === "translateX") {
       const matrix = /^matrix\(([^)]+)\)$/.exec(style.transform ?? "");
@@ -245,7 +264,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     }
     fixtures.add(binding.fixture);
     for (const row of binding.rows) {
-      const id = rowId(binding.id, row.key);
+      const id = matrixRowId(binding.id, row.key);
       if (!urlId.test(id) || ids.has(id)) throw new Error(`Invalid or repeated row id ${id}`);
       ids.add(id);
       if (!overrides[id]?.compose && row.token) files.add(row.token.split(".")[0]!);
@@ -301,9 +320,12 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     const shape = /^ShapeKeyTokens\.(Corner\w+)$/.exec(token.raw)?.[1] ??
       /^ShapeTokens\.CornerValue(\w+)$/.exec(token.raw)?.[1]?.replace(/^/, "Corner");
     if (shape && binding.aspect === "shape") {
-      return { ...reference, value: shape, resolved: { radius: reference.value! } };
+      const top = /^topStart ([\d.]+)dp\b/.exec(reference.value ?? "");
+      const size = reference.value === "square (RectangleShape)" ? "0dp" : reference.value!;
+      return { ...reference, value: shape, resolved: { radius: top ? `${top[1]}dp` : size } };
     }
-    const typeRole = token.file === "TypeScaleTokens" && /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1];
+    const typeRole = /^TypographyKeyTokens\.(\w+)$/.exec(token.raw)?.[1] ??
+      (token.file === "TypeScaleTokens" ? /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1] : undefined);
     if (typeRole && binding.aspect === "typography") {
       const property = (suffix: string) => {
         const result = lookup.get(`TypeScaleTokens.${typeRole}${suffix}`);
@@ -350,7 +372,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     }
     const component = components.get(binding.id) ?? { id: binding.id, name: binding.name, properties: [] };
     for (const row of binding.rows) {
-      const id = rowId(binding.id, row.key);
+      const id = matrixRowId(binding.id, row.key);
       const existingSpec = overrides[id]?.spec ?? specDefault;
       const publishedSpec = specValues[id];
       const spec = publishedSpec ?? existingSpec;
@@ -424,9 +446,15 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
         const metricStatus = (reference: SpecReference | ComposeReference, fromSpec: boolean): Status => {
           const details = reference.resolved;
           if (!details) return status(reference.value, fromSpec);
+          if ("radius" in details && reference.value === "CornerNone" && result.role === null) {
+            return status(details.radius, fromSpec);
+          }
           if (result.role !== reference.value) return "drift";
           if ("elevation" in details) return elevationRole(values.chromium) === result.role && elevationRole(values.webkit) === result.role ? "match" : "drift";
-          if ("radius" in details) return status(details.radius, fromSpec);
+          if ("radius" in details) {
+            if (result.role === "CornerFull" && details.radius === "circle (CornerFull)") return "match";
+            return status(details.radius, fromSpec);
+          }
           if ("tracking" in details) {
             const values: Record<string, string> = {
               fontSize: details.size, fontWeight: details.weight, lineHeight: details.lineHeight, letterSpacing: details.tracking,

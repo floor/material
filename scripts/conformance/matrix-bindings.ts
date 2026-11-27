@@ -1,4 +1,7 @@
-import type { Aspect, FixtureBinding, Probe, RowBinding } from "./matrix-types";
+import { listCoverageSpecs } from "./list-bindings";
+import { menuCoverageSpecs } from "./menu-bindings";
+import { textFieldCoverageSpecs } from "./text-field-bindings";
+import type { FixtureBinding, Probe, RowBinding, RowSpec } from "./matrix-types";
 
 const height = (part: string): Probe => ({ part, box: "height" });
 const width = (part: string): Probe => ({ part, box: "width" });
@@ -19,7 +22,7 @@ const different = (part: string, relativeTo: string, axis: "width" | "height" | 
   ({ part, relativeTo, different: axis });
 const widthPair = (part: string, secondCase: string): Probe => ({ part, widthPair: secondCase });
 
-type Spec = [key: string, property: string, aspect: Aspect, fixtureCase: string, probe: Probe, token?: string, variant?: string];
+type Spec = RowSpec;
 const spec = ([key, property, aspect, fixtureCase, probe, token, variant]: Spec): RowBinding =>
   ({ key, property, aspect, case: fixtureCase, probe, token, variant });
 
@@ -83,6 +86,9 @@ const extendedGeometry = [["small", "Small"], ["medium", "Medium"], ["large", "L
   [`icon-label-gap/${size}`, "Icon to label space", "spacing", `size/${size}/rest`, css("root", "columnGap"), `ExtendedFab${token}Tokens.IconLabelSpace`, size],
 ]);
 
+export const matrixRowId = (component: string, key: string) => /^top-app-bar\/[^/]+\/[^/]+\/[^/]+$/.test(key)
+  ? key : `${component}/${key}`;
+
 export const bindings: FixtureBinding[] = [
   fixture("badge", "Badge", [
     ["container-height/small", "Container height", "size", "small/base/light", height("badge"), "BadgeTokens.Size", "small"],
@@ -140,7 +146,7 @@ export const bindings: FixtureBinding[] = [
   fixture("carousel", "Carousel", [
     ["mixed-item-widths/uncontained/rest", "Mixed item widths", "size", "uncontained/mixed", different("first", "second", "width")],
     ["mixed-aspect-ratios/uncontained/rest", "Mixed item aspect ratios", "size", "uncontained/mixed", different("first", "second", "aspectRatio")],
-    ["item-state/all/disabled", "Disabled item state", "other", "uncontained/disabled-item", present("disabled")],
+    ["item-state/all/disabled", "Disabled item state", "other", "uncontained/base/light", present("disabled")],
     ["inline-padding/multi-browse/rest", "Inline start padding", "spacing", "multi-browse/base/light", inset("first", "root", "left")],
     ["item-gap/multi-browse/rest", "Inter-item gap", "spacing", "multi-browse/base/light", gap("first", "second", "right")],
     ["block-padding/uncontained/rest", "Block start padding", "spacing", "uncontained/base/light", inset("first", "root", "top")],
@@ -159,7 +165,7 @@ export const bindings: FixtureBinding[] = [
     ["density/multi-browse/minus-one", "Container height", "density", "multi-browse/density/-1", height("root"), undefined, "multi-browse"],
   ]),
   fixture("checkbox", "Checkbox", [
-    ["box-height/default", "Box height", "size", "unselected/rest", height("icon")],
+    ["box-height/default", "Box height", "size", "unselected/rest", height("icon"), "CheckboxTokens.ContainerSize"],
     ["box-width/default", "Box width", "size", "unselected/rest", width("icon")],
     ["checked-colour", "Selected box tone", "colour", "selected/rest", colour("icon"), "CheckboxTokens.SelectedContainerColor"],
     ["focus-ring/default/focus", "Focus indicator", "focus", "unselected/focus", outline("state layer")],
@@ -213,8 +219,9 @@ export const bindings: FixtureBinding[] = [
     ["focus-ring/filled/focus", "Focus indicator", "focus", "filled/m/focus", outline("root"), undefined, "filled"],
   ]),
   fixture("list", "List", [
+    ...listCoverageSpecs,
     ["container-colour/segmented/rest", "Segmented row tone", "colour", "segmented/light/unselected/rest", colour("row")],
-    ["between-space/segmented-one-line/rest", "Segmented item gap", "spacing", "segmented/lines-1/density-0", gap("row", "second", "bottom")],
+    ["between-space/segmented-one-line/rest", "Segmented item gap", "spacing", "segmented/lines-1/density-0", gap("row", "second", "bottom"), "ListTokens.SegmentedGap"],
     ["divider-trailing-space/inset/rest", "Inset divider end spacing", "spacing", "standard/lines-3/density-0", inset("divider", "content", "right")],
     ["vertical-padding/segmented-two-line/rest", "Segmented vertical padding", "spacing", "segmented/lines-2/density-0", css("row", "paddingTop")],
     ["vertical-padding/segmented-three-line/rest", "Segmented vertical padding", "spacing", "segmented/lines-3/density-0", css("row", "paddingTop")],
@@ -231,6 +238,7 @@ export const bindings: FixtureBinding[] = [
     ["container-width", "Container width", "size", "contained/indeterminate/light", width("root"), "LoadingIndicatorTokens.ContainerWidth"],
   ]),
   fixture("menu", "Menu", [
+    ...menuCoverageSpecs,
     ["container-colour/baseline", "Container tone", "colour", "baseline/light/unselected/rest", colour("root"), "MenuTokens.ContainerColor", "baseline"],
     ["container-corner/baseline", "Container corner radius", "shape", "baseline/light/unselected/rest", corner("root"), "MenuTokens.ContainerShape", "baseline"],
     ["container-colour/standard", "Container tone", "colour", "standard/light/unselected/rest", colour("root"), "StandardMenuTokens.ContainerColor", "standard"],
@@ -296,7 +304,7 @@ export const bindings: FixtureBinding[] = [
     ["trailing-icon-colour/outlined/error-focus", "Error focus trailing icon tone", "colour", "outlined/light/error-focus", css("indicatorIcon", "color"), "OutlinedAutocompleteTokens.TextFieldErrorFocusTrailingIconColor"],
     ["menu-container-colour/filled/popup", "Popup tone", "colour", "filled/light/popup", colour("popup"), "FilledAutocompleteTokens.MenuContainerColor"],
     ["label-colour/outlined/hover", "Hovered outlined label tone", "colour", "outlined/light/hover", css("label", "color"), "OutlinedAutocompleteTokens.FieldHoverLabelTextColor"],
-    ["field-height/outlined", "Field height", "size", "outlined/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "outlined"],
+    ["field-height/outlined", "Field height", "size", "outlined/light/rest", height("field"), undefined, "outlined"],
     ["field-colour/outlined", "Field tone", "colour", "outlined/light/rest", colour("field"), undefined, "outlined"],
     ["trailing-icon/outlined", "Trailing icon size", "size", "outlined/light/rest", width("indicatorIcon"), "OutlinedAutocompleteTokens.TextFieldTrailingIconSize", "outlined"],
     ["menu-container-colour/outlined/popup", "Popup tone", "colour", "outlined/light/popup", colour("popup"), "OutlinedAutocompleteTokens.MenuContainerColor", "outlined"],
@@ -367,12 +375,13 @@ export const bindings: FixtureBinding[] = [
     ["indicator-colour/primary", "Indicator tone", "colour", "primary-stacked/light/ltr/selected/rest/0", colour("indicator"), "PrimaryNavigationTabTokens.ActiveIndicatorColor", "primary"],
   ]),
   fixture("text-field", "Text field", [
+    ...textFieldCoverageSpecs,
     ["trailing-action-focus-ring/filled/focus", "Trailing action focus ring", "focus", "filled/trailing-focus", outline("trailing")],
     ["trailing-action-focus-ring/outlined/focus", "Trailing action focus ring", "focus", "outlined/trailing-focus", outline("trailing")],
-    ["height/filled", "Container height", "size", "filled/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "filled"],
+    ["height/filled", "Container height", "size", "filled/light/rest", height("field"), undefined, "filled"],
     ["height/outlined", "Container height", "size", "outlined/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "outlined"],
     ["corner/outlined", "Container corner radius", "shape", "outlined/light/rest", corner("outline"), "OutlinedTextFieldTokens.ContainerShape", "outlined"],
-    ["outline-width/outlined-focus", "Focus outline width", "focus", "outlined/light/focus", css("outline", "borderTopWidth"), undefined, "outlined"],
+    ["outline-width/outlined-focus", "Focus outline width", "focus", "outlined/light/focus", css("outline", "borderTopWidth"), "OutlinedTextFieldTokens.FocusOutlineWidth", "outlined"],
     ["leading-icon/filled", "Leading icon size", "size", "filled/light/rest", width("leadingIcon"), "FilledTextFieldTokens.LeadingIconSize", "filled"],
   ]),
   fixture("time-picker", "Time picker", [
@@ -417,13 +426,13 @@ export const bindings: FixtureBinding[] = [
     ["top-app-bar/large-flexible/expressive/rest", "Large flexible variant", "other", "small/large-flexible", present("largeFlexible")],
     ["top-app-bar/subtitle/expressive/rest", "Subtitle", "other", "small/subtitle", present("subtitle")],
     ["top-app-bar/search-variant/expressive/rest", "Search variant", "other", "small/search", present("search")],
-    ["top-app-bar/leading-space/small/rest", "Small bar leading button inset", "spacing", "small/rest/light", inset("leading", "root", "left")],
-    ["top-app-bar/trailing-space/small/rest", "Small bar trailing button inset", "spacing", "small/rest/light", inset("lastTrailing", "root", "right")],
+    ["top-app-bar/leading-space/small/rest", "Small bar leading button inset", "spacing", "small/rest/light", inset("leading", "root", "left"), "AppBarTokens.LeadingSpace"],
+    ["top-app-bar/trailing-space/small/rest", "Small bar trailing button inset", "spacing", "small/rest/light", inset("lastTrailing", "root", "right"), "AppBarTokens.TrailingSpace"],
     ["top-app-bar/title-inset/medium-no-leading/rest", "Title inset without leading button", "spacing", "medium/no-leading", inset("title", "root", "left")],
     ["top-app-bar/title-inset/large-no-leading/rest", "Title inset without leading button", "spacing", "large/no-leading", inset("title", "root", "left")],
     ["container-height/small", "Bar height", "size", "small/rest/light", height("root"), "AppBarSmallTokens.ContainerHeight", "small"],
     ["container-height/centre", "Bar height", "size", "center/rest/light", height("root"), "AppBarSmallTokens.ContainerHeight", "centre-aligned"],
-    ["leading-icon-size/small", "Leading icon size", "size", "small/rest/light", width("leadingIcon"), undefined, "small"],
+    ["leading-icon-size/small", "Leading icon size", "size", "small/rest/light", width("leadingIcon"), "AppBarTokens.IconSize", "small"],
     ["leading-inset/small", "Leading target inset", "spacing", "small/rest/light", inset("leading", "root", "left"), undefined, "small"],
   ], "app-bar"),
 ];

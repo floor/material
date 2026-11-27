@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" data-theme="baseline" data-theme-mode="light">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound sliders</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--mtrl-sys-color-surface); color: var(--mtrl-sys-color-on-surface); font-family: var(--mtrl-ref-typeface-plain, sans-serif); }
+  #sound-panel { display: grid; gap: 16px; width: 360px; max-width: 100%; }
+  h1 { margin: 0; font-size: 22px; line-height: 28px; }
+</style>
+<main id="sound-panel">
+  <h1>Sound</h1>
+</main>
+<script type="module">
+  import { createSlider } from "../../../../dist/index.js";
+
+  const panel = document.querySelector("#sound-panel");
+  if (new URLSearchParams(location.search).get("dir") === "rtl") panel.dir = "rtl";
+  for (const [id, label, value] of [["media-slider", "Media volume", 25], ["alarm-slider", "Alarm volume", 20]]) {
+    const slider = createSlider({ label, ariaLabel: label, value, showValue: true });
+    slider.element.id = id;
+    panel.append(slider.element);
+  }
+</script>
+<section id="indicator-motion" aria-labelledby="indicator-motion-heading" style="max-width: 360px; margin-top: 24px;">
+  <h2>Interaction</h2>
+  <h3 id="indicator-motion-heading">Value indicator entrance and exit</h3>
+  <p>Press either handle or tap its track after the pill has hidden. The whole pill should grow from scale 0 to 1, rise 5 px, and stay horizontally centred within 0.5 px. On release, watch it shrink back toward the handle.</p>
+  <dl>
+    <dt>Scale on entry</dt><dd id="indicator-scale">—</dd>
+    <dt>Rise on entry</dt><dd id="indicator-rise">—</dd>
+    <dt>Maximum horizontal alignment error</dt><dd id="indicator-alignment">—</dd>
+  </dl>
+<script type="module">
+  const panel = document.querySelector("#sound-panel");
+  const scaleOutput = document.querySelector("#indicator-scale");
+  const riseOutput = document.querySelector("#indicator-rise");
+  const alignmentOutput = document.querySelector("#indicator-alignment");
+  let motionFrame = 0;
+  const readTransform = indicator => {
+    const { transform } = getComputedStyle(indicator);
+    return new DOMMatrixReadOnly(transform === "none" ? undefined : transform);
+  };
+
+  panel.addEventListener("pointerdown", event => {
+    const slider = event.target.closest(".mtrl-slider");
+    if (!slider) return;
+    cancelAnimationFrame(motionFrame);
+    const handle = slider.querySelector(".mtrl-slider__handle");
+    const indicator = slider.querySelector(".mtrl-slider__value");
+    const initial = readTransform(indicator);
+    let maximumError = 0;
+    const measure = () => {
+      const transform = readTransform(indicator);
+      const pill = indicator.getBoundingClientRect();
+      const thumb = handle.getBoundingClientRect();
+      maximumError = Math.max(maximumError, Math.abs(pill.x + pill.width / 2 - thumb.x - thumb.width / 2));
+      scaleOutput.textContent = `${initial.a.toFixed(2)} → ${transform.a.toFixed(2)}`;
+      riseOutput.textContent = `${(initial.f - transform.f).toFixed(2)} px`;
+      alignmentOutput.textContent = `${maximumError.toFixed(2)} px`;
+      if (indicator.getAnimations().some(animation => animation.playState === "running")) {
+        motionFrame = requestAnimationFrame(measure);
+      }
+    };
+    motionFrame = requestAnimationFrame(measure);
+  });
+</script>
+</section>
+</html>

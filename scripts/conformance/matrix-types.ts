@@ -23,14 +23,18 @@ export type Override = {
 type Box = "width" | "height" | "x" | "y";
 export type Probe =
   | { part: string; box: Box }
-  | { part: string; style: string }
+  | { part: string; style: string; backgroundUnder?: string }
   | { part: string; inset: "left" | "right" | "top" | "bottom"; relativeTo: string }
   | { part: string; outline: true }
+  | { part: string; contentInset: "left" | "right" | "bottom"; relativeTo: string }
   | { part: string; gap: "right" | "bottom"; relativeTo: string }
-  | { part: string; read: "present" | "opacity" | "elevation" | "translateX" }
+  | { part: string; read: "present" | "elevation" | "translateX" }
+  | { part: string; read: "opacity"; paint?: string; opacityAncestor?: string }
   | { part: string; sideInsets: string }
   | { part: string; widthPair: string }
   | { part: string; different: "width" | "height" | "aspectRatio"; relativeTo: string };
+
+export type RowSpec = [key: string, property: string, aspect: Aspect, fixtureCase: string, probe: Probe, token?: string, variant?: string];
 
 export type RowBinding = {
   /** Public id within its component, independent of the fixture case spelling. */

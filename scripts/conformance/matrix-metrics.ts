@@ -54,6 +54,7 @@ export function elevationRole(value: string): string | null {
   const geometry = value.replace(/(?:rgba?\([^)]*\)|color\(srgb[^)]*\))\s*/g, "");
   if (geometry === "none" || geometry === "0dp") return "Level0";
   if (geometry === "0px 1px 2px 0px, 0px 1px 3px 1px") return "Level1";
+  if (geometry === "0px 1px 2px 0px, 0px 2px 6px 2px") return "Level2";
   return /^Level ?[0-5]$/.test(value) ? value.replace(" ", "") : null;
 }
 
@@ -91,10 +92,11 @@ export function measureMetric(probe: MetricProbe, rows: [CaseResult, CaseResult]
       signature.every(value => value === shapeOverrides[`--mtrl-sys-shape-corner-${step}`]),
     ) : undefined;
     let role = token ? `Corner${pascal(token)}` : variants.every(isFull) ? "CornerFull" : null;
-    if (role === "CornerExtraLarge" && probe.style === "borderTopLeftRadius" && variants.every(part =>
+    if ((role === "CornerExtraSmall" || role === "CornerExtraLarge") &&
+        probe.style === "borderTopLeftRadius" && variants.every(part =>
       part.style.borderTopRightRadius === part.style.borderTopLeftRadius &&
       part.style.borderBottomLeftRadius === "0px" && part.style.borderBottomRightRadius === "0px",
-    )) role = "CornerExtraLargeTop";
+    )) role = `${role}Top`;
     return { role, resolved: { radius: raw } };
   }
   if (probe.kind === "typography") {
