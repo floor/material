@@ -95,9 +95,11 @@ const run = async (page: Page, engine: string) => {
   console.log(`${engine}: still shown at 1,400 ms, hidden after ${hideDelay} ms plus the ${EXIT_MS} ms exit`);
 };
 
-const chromiumContext = await launchChromium({ headless: true });
+const pageOptions = { viewport: { width: 800, height: 600 }, reducedMotion: "no-preference" as const };
+
+const chromiumContext = await launchChromium({ headless: true, ...pageOptions });
 try {
-  const page = await chromiumContext.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "no-preference" });
+  const page = await chromiumContext.newPage();
   await run(page, "chromium");
   await page.close();
 } finally {
@@ -105,8 +107,9 @@ try {
 }
 
 const webkitBrowser: Browser = await webkit.launch({ headless: true });
+const webkitContext = await webkitBrowser.newContext(pageOptions);
 try {
-  const page = await webkitBrowser.newPage({ viewport: { width: 800, height: 600 }, reducedMotion: "no-preference" });
+  const page = await webkitContext.newPage();
   await run(page, "webkit");
   await page.close();
 } finally {
