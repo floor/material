@@ -105,16 +105,17 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
   });
 
-  // Browser groups and comparators are the jobs a docs-only or tooling-only
-  // diff skips. Their commands still fail the job when the job runs. Every
-  // other command stays unconditional.
-  test("runs them unconditionally, and their failure fails the job", () => {
+  // Browser groups and comparators can skip on a docs-only or tooling-only diff.
+  // The main tree proof gates the three entry points to full CI.
+  const fullCi = "${{ !cancelled() && (needs.main-proof.result != 'success' || needs.main-proof.outputs.covered != 'true') }}";
+  test("uses only the declared job filters and fails on check errors", () => {
     const pathFilter = "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')";
     const loose: string[] = [];
     for (const [name, job] of Object.entries(workflow.jobs)) {
       const steps = job.steps.filter(step => commandsOf(job, step).length);
       if (!steps.length) continue;
-      const filtered = (name === "browser" || name === "comparators") && job.if === pathFilter;
+      const filtered = (name === "browser" || name === "comparators") && job.if === pathFilter ||
+        ["static", "tests", "build"].includes(name) && job.if === fullCi;
       if (job.if !== undefined && !filtered) loose.push(`${name}: if`);
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
@@ -177,8 +178,25 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(script).not.toContain("release:");
     expect(workflow.jobs.browser.needs).toEqual(["build", "changes"]);
     expect(workflow.jobs.comparators.needs).toEqual(["build", "changes"]);
-    expect(workflow.jobs.static.if).toBeUndefined();
-    expect(workflow.jobs.tests.if).toBeUndefined();
+  });
+
+  test("skips full CI only after a successful main tree proof", () => {
+    const { "main-proof": proof, static: staticJob, tests, build, package: pack } = workflow.jobs;
+    expect(proof.if).toBe("github.event_name == 'push' && github.ref == 'refs/heads/main'");
+    expect(proof.outputs?.covered).toBe("${{ steps.proof.outputs.covered }}");
+    expect(proof.steps.some(step => step.run === "bun scripts/main-ci-proof.ts check")).toBe(true);
+    for (const root of [staticJob, tests, build]) {
+      expect(root.needs).toBe("main-proof");
+      expect(root.if).toBe(fullCi);
+    }
+    const size = pack.steps.findIndex(step => step.run === "bun run size:report");
+    const record = pack.steps.findIndex(step => step.run === "bun scripts/main-ci-proof.ts record");
+    expect(size).toBeGreaterThanOrEqual(0);
+    expect(record).toBeGreaterThan(size);
+    expect(pack.steps[record].if).toBe("github.event_name == 'pull_request'");
+    const gate = workflow.jobs["ci-ok"].steps.map(step => step.run ?? "").join("\n");
+    expect(gate).toContain("needs.main-proof.result }}:${{ needs.main-proof.outputs.covered }}' != success:true");
+    expect(gate).toContain("needs.package.result }}' != success:success:success:success");
   });
 
   test("cancels a superseded pull request run and never a run on main", () => {

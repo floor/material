@@ -12,9 +12,9 @@
 # `ci-ok` and is still the status the main ruleset requires; branch protection
 # can move to `ci-ok` and drop `check` afterwards.
 #
-# A push to main runs the same checks on the merge commit itself, so the commit a
-# tag publishes carries a green run of its own instead of relying on the pull
-# request's. The nightly run on main stays as the safety net.
+# A push to main can reuse green PR checks after proving the tested tree and
+# size gate inputs match. Other pushes and the nightly run the full checks.
+# Tag publishing still builds and verifies the tagged commit.
 #
 # Benchmarks are excluded by default (test/benchmarks/bench.ts): they compare
 # elapsed time to fixed thresholds and fail on a busy runner, which would make
@@ -41,6 +41,31 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # A missing or mismatched receipt leaves the full CI jobs enabled.
+  main-proof:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      covered: ${{ steps.proof.outputs.covered }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The size baseline must resolve exactly as it does in the package job.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+      - name: Check for green PR CI on the same tree
+        id: proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bun scripts/main-ci-proof.ts check
+
   # First. A pull request is classified from its diff against the base, with a
   # shallow fetch of that commit and no third-party action. Push and schedule
   # runs set run_all: the filter does not apply on main. A release is a change
@@ -144,6 +169,8 @@ jobs:
 
   # Types, the strictness ratchets, lint and test-file naming, run side by side.
   static:
+    needs: main-proof
+    if: ${{ !cancelled() && (needs.main-proof.result != 'success' || needs.main-proof.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -191,6 +218,8 @@ jobs:
         run: bun run name:check
 
   tests:
+    needs: main-proof
+    if: ${{ !cancelled() && (needs.main-proof.result != 'success' || needs.main-proof.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -210,6 +239,8 @@ jobs:
 
   # The build alone, so the jobs that read dist/ start as soon as it exists.
   build:
+    needs: main-proof
+    if: ${{ !cancelled() && (needs.main-proof.result != 'success' || needs.main-proof.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -374,6 +405,22 @@ jobs:
           path: |
             analysis/size-report.md
             analysis/release-sizes
+          retention-days: 7
+
+      - name: Record PR merge and size evidence
+        if: github.event_name == 'pull_request'
+        env:
+          MTRL_SIZE_TAG: ${{ steps.release.outputs.tag }}
+          MTRL_SIZE_BASE_SHA: ${{ steps.release.outputs.sha }}
+        run: bun scripts/main-ci-proof.ts record
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          name: pr-merge-proof
+          path: analysis/pr-merge-proof.json
+          if-no-files-found: warn
+          overwrite: true
           retention-days: 7
 
   # The token can write only in this job, which never runs PR code. Forks
@@ -841,7 +888,7 @@ jobs:
   # cancelled job fails this one. Branch protection should require `ci-ok`.
   ci-ok:
     if: always()
-    needs: [changes, static, tests, build, package, size-comment, browser, identity, comparators, ssr-worker]
+    needs: [main-proof, changes, static, tests, build, package, size-comment, browser, identity, comparators, ssr-worker]
     runs-on: ubuntu-24.04
     steps:
       - name: Every job passed or was skipped
@@ -853,6 +900,7 @@ jobs:
               *) echo "::error::$2 is $1"; exit 1 ;;
             esac
           }
+          accept "${{ needs.main-proof.result }}" main-proof
           accept "${{ needs.changes.result }}" changes
           accept "${{ needs.static.result }}" static
           accept "${{ needs.tests.result }}" tests
@@ -863,6 +911,12 @@ jobs:
           accept "${{ needs.identity.result }}" identity
           accept "${{ needs.comparators.result }}" comparators
           accept "${{ needs.ssr-worker.result }}" ssr-worker
+          if [ '${{ needs.main-proof.result }}:${{ needs.main-proof.outputs.covered }}' != success:true ]; then
+            if [ '${{ needs.static.result }}:${{ needs.tests.result }}:${{ needs.build.result }}:${{ needs.package.result }}' != success:success:success:success ]; then
+              echo '::error::Full CI requires successful static, tests, build and package jobs'
+              exit 1
+            fi
+          fi
 
   # The status the main ruleset requires today. It follows ci-ok, so a skipped
   # browser job stays green here until branch protection moves to ci-ok.
