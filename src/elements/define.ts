@@ -97,7 +97,8 @@ export interface FormSpec<C> {
    * `restore` when it restores the form (history navigation, autofill).
    */
   state?: (component: C) => string;
-  restore?: (component: C, state: string) => void;
+  /** Restores that state; `host` is the element, for state an attribute decides. */
+  restore?: (component: C, state: string, host: HTMLElement) => void;
   disable?: (component: C, disabled: boolean) => void;
 }
 
@@ -535,7 +536,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         this.#restoreState = state; // applied once the component is built
         return;
       }
-      this.#quietly(() => spec.form?.restore?.(this.component as C, state));
+      this.#quietly(() => spec.form?.restore?.(this.component as C, state, this));
       this.#syncForm();
     }
 
@@ -695,7 +696,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       if (this.#restoreState !== null) {
         const state = this.#restoreState;
         this.#restoreState = null;
-        this.#quietly(() => spec.form?.restore?.(component, state));
+        this.#quietly(() => spec.form?.restore?.(component, state, this));
       }
 
       if (spec.form?.activate) {

@@ -221,7 +221,13 @@ const textFieldSpec = {
       const values = c.getValues();
       return values.length > 0 ? JSON.stringify({ v: values, d: c.getValue() }) : c.getValue();
     },
-    restore: (c, state) => {
+    restore: (c, state, host) => {
+      // Without chips the stored state is the draft itself, whatever it reads
+      // as: a plain field restores the literal, as a native input does.
+      if (!host.hasAttribute("chips")) {
+        c.setValue(state);
+        return;
+      }
       // Our state is `{"v": [...], "d": "..."}`; any other string is a draft,
       // including one that starts with a brace (`{draft`).
       let parsed: { v?: unknown; d?: unknown } | null = null;
