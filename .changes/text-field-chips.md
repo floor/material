@@ -1,0 +1,3 @@
+Section: Added
+
+**Input chips inside a text field.** `createTextField({ chips: true })` and `<m-text-field chips>` turn the field's text into input chips (m3.material.io chips): typing Enter or a separator commits the draft as a chip, Backspace at the start of the input selects the last chip and a second Backspace removes it, a second activation of a selected chip edits it as text, and a pasted list splits into chips while rejected or over-limit text stays in the input for correction. Chips wrap onto new rows with the 48dp targets of each action intact, the field submits one form entry per chip under its `name`, `required` is satisfied by a committed chip, and reset and restore bring the chips back. The `chips` option is opt-in: a field created without it is unchanged.

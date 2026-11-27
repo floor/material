@@ -166,6 +166,36 @@ Three names change, additively:
 - **Navigation drawer.** The primary factory is `createNavigationDrawer`. The elements are `<m-navigation-drawer>` and `<m-navigation-drawer-item>`. The adapters are `NavigationDrawer` and `NavigationDrawerItem`. The old factory `createDrawer`, the old types, the `<m-drawer>` elements and the old adapters stay exported and working, marked deprecated.
 - **Bottom app bar.** It is deprecated: Material Design 3 Expressive replaces it with the docked toolbar. Use `createToolbar` with `placement="bottom"`. A centred FAB, adding a FAB after creation, a custom transition duration and a custom tag are not yet available there. The bottom app bar's code does not change.
 
+### Input chips in a text field
+
+A text field can hold input chips (m3.material.io chips). Type an address and
+press Enter or a separator and it becomes a chip; Backspace at the start of the
+input selects the last chip, and a second Backspace removes it; a second
+activation of a selected chip edits it as text. Chips wrap onto new rows with
+their 48dp targets intact, a pasted list splits into chips while text that is
+rejected or over the limit stays in the input, and the field submits one form
+entry per chip under its `name`. The option is opt-in: a field created without
+`chips` is unchanged.
+
+<!-- example: run, shows "To" -->
+```typescript
+import 'material/styles';
+import { createTextField } from 'material';
+
+const recipients = createTextField({
+  label: 'To',
+  name: 'to',
+  type: 'email',
+  chips: { separators: [',', ';'], maxChips: 10 },
+});
+
+recipients.on('add', ({ values }) => console.log('To:', values.join(', ')));
+document.body.append(recipients.element);
+```
+
+As an element: `<m-text-field chips name="to" label="To" type="email"></m-text-field>`,
+and the committed values are the element's `values` property.
+
 ### Factory control labels
 
 Checkbox, Switch, TextField and Slider factories accept `controlLabelOnly: true`

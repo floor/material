@@ -66,6 +66,16 @@ Import `material/styles/button` for any other variant, size or shape. This inclu
 
 Every component comes three ways: a factory, a custom element and a framework component. Each has a page with a playground on [md3.io/components](https://md3.io/components/).
 
+### Input chips in a text field
+
+`createTextField({ chips: true })` and `<m-text-field chips>` turn the field's
+text into input chips: Enter or a separator commits the draft, Backspace at the
+start selects the last chip and a second Backspace removes it, and a second
+activation of a selected chip edits it as text. Each chip submits as its own
+form entry under the field's `name`. See the
+[README](https://github.com/floor/material#input-chips-in-a-text-field) for the
+options and an e-mail recipients example.
+
 ## Bottom app bar compatibility entry
 
 The experimental `material/components/bottom-app-bar-toolbar` factory keeps the legacy bottom app bar API with docked-toolbar styling. Import its stylesheet explicitly, including on pages using the full stylesheet:
