@@ -7,28 +7,28 @@
     "sha256": "d389bb542a1637dc202e715b279a178be1b0d51886234fe2810a92427c07b2a6"
   },
   "totals": {
-    "tokens": 2146,
-    "measured": 177,
-    "unmeasured": 1969,
-    "notApplicable": 0,
-    "coveragePercent": 8.25
+    "tokens": 2069,
+    "measured": 189,
+    "unmeasured": 1877,
+    "notApplicable": 3,
+    "coveragePercent": 9.15
   },
   "components": [
     {
       "component": "app-bar",
       "tokens": 29,
-      "measured": 1,
-      "unmeasured": 28,
+      "measured": 4,
+      "unmeasured": 25,
       "notApplicable": 0,
-      "coveragePercent": 3.45
+      "coveragePercent": 13.79
     },
     {
       "component": "badge",
       "tokens": 8,
-      "measured": 3,
-      "unmeasured": 5,
+      "measured": 4,
+      "unmeasured": 4,
       "notApplicable": 0,
-      "coveragePercent": 37.5
+      "coveragePercent": 50
     },
     {
       "component": "bottom-app-bar",
@@ -49,10 +49,17 @@
     {
       "component": "button",
       "tokens": 295,
-      "measured": 27,
-      "unmeasured": 268,
+      "measured": 29,
+      "unmeasured": 266,
       "notApplicable": 0,
-      "coveragePercent": 9.15
+      "coveragePercent": 9.83,
+      "sharedFiles": [
+        "ButtonLargeTokens.kt",
+        "ButtonMediumTokens.kt",
+        "ButtonSmallTokens.kt",
+        "ButtonXLargeTokens.kt",
+        "ButtonXSmallTokens.kt"
+      ]
     },
     {
       "component": "button-group",
@@ -60,7 +67,14 @@
       "measured": 6,
       "unmeasured": 57,
       "notApplicable": 0,
-      "coveragePercent": 9.52
+      "coveragePercent": 9.52,
+      "sharedFiles": [
+        "ButtonLargeTokens.kt",
+        "ButtonMediumTokens.kt",
+        "ButtonSmallTokens.kt",
+        "ButtonXLargeTokens.kt",
+        "ButtonXSmallTokens.kt"
+      ]
     },
     {
       "component": "card",
@@ -81,10 +95,10 @@
     {
       "component": "checkbox",
       "tokens": 45,
-      "measured": 1,
-      "unmeasured": 44,
+      "measured": 2,
+      "unmeasured": 43,
       "notApplicable": 0,
-      "coveragePercent": 2.22
+      "coveragePercent": 4.44
     },
     {
       "component": "chips",
@@ -98,9 +112,9 @@
       "component": "datepicker",
       "tokens": 57,
       "measured": 4,
-      "unmeasured": 53,
-      "notApplicable": 0,
-      "coveragePercent": 7.02
+      "unmeasured": 52,
+      "notApplicable": 1,
+      "coveragePercent": 7.14
     },
     {
       "component": "dialog",
@@ -121,10 +135,10 @@
     {
       "component": "extended-fab",
       "tokens": 38,
-      "measured": 7,
-      "unmeasured": 31,
+      "measured": 9,
+      "unmeasured": 29,
       "notApplicable": 0,
-      "coveragePercent": 18.42
+      "coveragePercent": 23.68
     },
     {
       "component": "fab",
@@ -154,9 +168,9 @@
       "component": "list",
       "tokens": 146,
       "measured": 7,
-      "unmeasured": 139,
-      "notApplicable": 0,
-      "coveragePercent": 4.79
+      "unmeasured": 137,
+      "notApplicable": 2,
+      "coveragePercent": 4.86
     },
     {
       "component": "loading-indicator",
@@ -177,18 +191,18 @@
     {
       "component": "navigation-bar",
       "tokens": 22,
-      "measured": 4,
-      "unmeasured": 18,
+      "measured": 5,
+      "unmeasured": 17,
       "notApplicable": 0,
-      "coveragePercent": 18.18
+      "coveragePercent": 22.73
     },
     {
       "component": "navigation-drawer",
       "tokens": 35,
-      "measured": 3,
-      "unmeasured": 32,
+      "measured": 4,
+      "unmeasured": 31,
       "notApplicable": 0,
-      "coveragePercent": 8.57
+      "coveragePercent": 11.43
     },
     {
       "component": "navigation-rail",
@@ -224,11 +238,11 @@
     },
     {
       "component": "select",
-      "tokens": 138,
-      "measured": 9,
-      "unmeasured": 129,
+      "tokens": 130,
+      "measured": 10,
+      "unmeasured": 120,
       "notApplicable": 0,
-      "coveragePercent": 6.52
+      "coveragePercent": 7.69
     },
     {
       "component": "side-sheet",
@@ -257,10 +271,10 @@
     {
       "component": "split-button",
       "tokens": 61,
-      "measured": 9,
-      "unmeasured": 52,
+      "measured": 10,
+      "unmeasured": 51,
       "notApplicable": 0,
-      "coveragePercent": 14.75
+      "coveragePercent": 16.39
     },
     {
       "component": "switch",
@@ -273,26 +287,26 @@
     {
       "component": "tabs",
       "tokens": 44,
-      "measured": 5,
-      "unmeasured": 39,
+      "measured": 7,
+      "unmeasured": 37,
       "notApplicable": 0,
-      "coveragePercent": 11.36
+      "coveragePercent": 15.91
     },
     {
       "component": "text-field",
       "tokens": 130,
-      "measured": 3,
-      "unmeasured": 127,
+      "measured": 4,
+      "unmeasured": 126,
       "notApplicable": 0,
-      "coveragePercent": 2.31
+      "coveragePercent": 3.08
     },
     {
       "component": "timepicker",
-      "tokens": 103,
-      "measured": 3,
-      "unmeasured": 100,
+      "tokens": 89,
+      "measured": 4,
+      "unmeasured": 85,
       "notApplicable": 0,
-      "coveragePercent": 2.91
+      "coveragePercent": 4.49
     },
     {
       "component": "toolbar",
@@ -324,7 +338,7 @@
     {"component":"app-bar","file":"AppBarMediumFlexibleTokens.kt","token":"TitleFont","kind":"typography-role","value":"HeadlineMedium","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarMediumTokens.kt","token":"ContainerHeight","kind":"dp","value":112,"status":"unmeasured"},
     {"component":"app-bar","file":"AppBarMediumTokens.kt","token":"TitleFont","kind":"typography-role","value":"HeadlineSmall","status":"unmeasured"},
-    {"component":"app-bar","file":"AppBarSmallTokens.kt","token":"ContainerHeight","kind":"dp","value":64,"status":"measured","rowId":"app-bar/container-height/centre"},
+    {"component":"app-bar","file":"AppBarSmallTokens.kt","token":"ContainerHeight","kind":"dp","value":64,"status":"measured","rowId":"app-bar/container-height/small"},
     {"component":"app-bar","file":"AppBarSmallTokens.kt","token":"SubtitleFont","kind":"typography-role","value":"LabelMedium","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarSmallTokens.kt","token":"TitleFont","kind":"typography-role","value":"TitleLarge","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"AvatarSize","kind":"dp","value":32,"status":"unmeasured"},
@@ -332,17 +346,17 @@
     {"component":"app-bar","file":"AppBarTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level0","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerNone","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"IconButtonSpace","kind":"dp","value":0,"status":"unmeasured"},
-    {"component":"app-bar","file":"AppBarTokens.kt","token":"IconSize","kind":"dp","value":24,"status":"unmeasured"},
+    {"component":"app-bar","file":"AppBarTokens.kt","token":"IconSize","kind":"dp","value":24,"status":"measured","rowId":"app-bar/leading-icon-size/small"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"LeadingIconColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
-    {"component":"app-bar","file":"AppBarTokens.kt","token":"LeadingSpace","kind":"dp","value":4,"status":"unmeasured"},
+    {"component":"app-bar","file":"AppBarTokens.kt","token":"LeadingSpace","kind":"dp","value":4,"status":"measured","rowId":"top-app-bar/leading-space/small/rest"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"OnScrollContainerColor","kind":"colour-role","value":"SurfaceContainer","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"OnScrollContainerElevation","kind":"elevation","value":"Level2","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"SubtitleColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"TitleColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"app-bar","file":"AppBarTokens.kt","token":"TrailingIconColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
-    {"component":"app-bar","file":"AppBarTokens.kt","token":"TrailingSpace","kind":"dp","value":4,"status":"unmeasured"},
-    {"component":"badge","file":"BadgeTokens.kt","token":"Color","kind":"colour-role","value":"Error","status":"measured","rowId":"badge/container-colour/large"},
-    {"component":"badge","file":"BadgeTokens.kt","token":"LargeColor","kind":"colour-role","value":"Error","status":"unmeasured"},
+    {"component":"app-bar","file":"AppBarTokens.kt","token":"TrailingSpace","kind":"dp","value":4,"status":"measured","rowId":"top-app-bar/trailing-space/small/rest"},
+    {"component":"badge","file":"BadgeTokens.kt","token":"Color","kind":"colour-role","value":"Error","status":"measured","rowId":"badge/container-colour/small"},
+    {"component":"badge","file":"BadgeTokens.kt","token":"LargeColor","kind":"colour-role","value":"Error","status":"measured","rowId":"badge/container-colour/large"},
     {"component":"badge","file":"BadgeTokens.kt","token":"LargeLabelTextColor","kind":"colour-role","value":"OnError","status":"unmeasured"},
     {"component":"badge","file":"BadgeTokens.kt","token":"LargeLabelTextFont","kind":"typography-role","value":"LabelSmall","status":"unmeasured"},
     {"component":"badge","file":"BadgeTokens.kt","token":"LargeShape","kind":"shape","value":"CornerFull","status":"unmeasured"},
@@ -427,7 +441,7 @@
     {"component":"button","file":"ButtonMediumTokens.kt","token":"IconLabelSpace","kind":"dp","value":8,"status":"measured","rowId":"button/icon-label-gap/m"},
     {"component":"button","file":"ButtonMediumTokens.kt","token":"IconSize","kind":"dp","value":24,"status":"measured","rowId":"button/icon-size/m"},
     {"component":"button","file":"ButtonMediumTokens.kt","token":"LeadingSpace","kind":"dp","value":24,"status":"measured","rowId":"button/padding-start/m"},
-    {"component":"button","file":"ButtonMediumTokens.kt","token":"OutlinedOutlineWidth","kind":"dp","value":1,"status":"unmeasured"},
+    {"component":"button","file":"ButtonMediumTokens.kt","token":"OutlinedOutlineWidth","kind":"dp","value":1,"status":"measured","rowId":"button/outline-width/outlined"},
     {"component":"button","file":"ButtonMediumTokens.kt","token":"PressedContainerShape","kind":"shape","value":"CornerMedium","status":"unmeasured"},
     {"component":"button","file":"ButtonMediumTokens.kt","token":"SelectedContainerShapeRound","kind":"shape","value":"CornerFull","status":"unmeasured"},
     {"component":"button","file":"ButtonMediumTokens.kt","token":"SelectedContainerShapeSquare","kind":"shape","value":"CornerLarge","status":"unmeasured"},
@@ -438,7 +452,7 @@
     {"component":"button","file":"ButtonSmallTokens.kt","token":"IconLabelSpace","kind":"dp","value":8,"status":"measured","rowId":"button/icon-label-gap/s"},
     {"component":"button","file":"ButtonSmallTokens.kt","token":"IconSize","kind":"dp","value":20,"status":"measured","rowId":"button/icon-size/s"},
     {"component":"button","file":"ButtonSmallTokens.kt","token":"LeadingSpace","kind":"dp","value":16,"status":"measured","rowId":"button/padding-start/s"},
-    {"component":"button","file":"ButtonSmallTokens.kt","token":"OutlinedOutlineWidth","kind":"dp","value":1,"status":"measured","rowId":"button/outline-width/outlined"},
+    {"component":"button","file":"ButtonSmallTokens.kt","token":"OutlinedOutlineWidth","kind":"dp","value":1,"status":"unmeasured"},
     {"component":"button","file":"ButtonSmallTokens.kt","token":"PressedContainerShape","kind":"shape","value":"CornerSmall","status":"unmeasured"},
     {"component":"button","file":"ButtonSmallTokens.kt","token":"SelectedContainerShapeRound","kind":"shape","value":"CornerFull","status":"unmeasured"},
     {"component":"button","file":"ButtonSmallTokens.kt","token":"SelectedContainerShapeSquare","kind":"shape","value":"CornerMedium","status":"measured","rowId":"button/corner/square-s/selected"},
@@ -457,9 +471,9 @@
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"ContainerHeight","kind":"dp","value":32,"status":"measured","rowId":"button/container-height/elevated/xs"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"ContainerShapeRound","kind":"shape","value":"CornerFull","status":"unmeasured"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"ContainerShapeSquare","kind":"shape","value":"CornerMedium","status":"measured","rowId":"button/square-corner/xs"},
-    {"component":"button","file":"ButtonXSmallTokens.kt","token":"IconLabelSpace","kind":"dp","value":8,"status":"unmeasured"},
+    {"component":"button","file":"ButtonXSmallTokens.kt","token":"IconLabelSpace","kind":"dp","value":8,"status":"measured","rowId":"button/icon-label-gap/xs"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"IconSize","kind":"dp","value":20,"status":"measured","rowId":"button/icon-size/xs"},
-    {"component":"button","file":"ButtonXSmallTokens.kt","token":"LeadingSpace","kind":"dp","value":16,"status":"unmeasured"},
+    {"component":"button","file":"ButtonXSmallTokens.kt","token":"LeadingSpace","kind":"dp","value":16,"status":"measured","rowId":"button/padding-start/xs"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"OutlinedOutlineWidth","kind":"dp","value":1,"status":"unmeasured"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"PressedContainerShape","kind":"shape","value":"CornerSmall","status":"unmeasured"},
     {"component":"button","file":"ButtonXSmallTokens.kt","token":"SelectedContainerShapeRound","kind":"shape","value":"CornerFull","status":"unmeasured"},
@@ -765,7 +779,7 @@
     {"component":"card","file":"OutlinedCardTokens.kt","token":"PressedContainerElevation","kind":"elevation","value":"Level0","status":"unmeasured"},
     {"component":"card","file":"OutlinedCardTokens.kt","token":"PressedOutlineColor","kind":"colour-role","value":"OutlineVariant","status":"unmeasured"},
     {"component":"checkbox","file":"CheckboxTokens.kt","token":"ContainerShape","kind":"shape","value":"RoundedCornerShape(2.0.dp)","status":"unmeasured"},
-    {"component":"checkbox","file":"CheckboxTokens.kt","token":"ContainerSize","kind":"dp","value":18,"status":"unmeasured"},
+    {"component":"checkbox","file":"CheckboxTokens.kt","token":"ContainerSize","kind":"dp","value":18,"status":"measured","rowId":"checkbox/box-height/default"},
     {"component":"checkbox","file":"CheckboxTokens.kt","token":"FocusIndicatorColor","kind":"colour-role","value":"Secondary","status":"unmeasured"},
     {"component":"checkbox","file":"CheckboxTokens.kt","token":"IconSize","kind":"dp","value":18,"status":"unmeasured"},
     {"component":"checkbox","file":"CheckboxTokens.kt","token":"SelectedContainerColor","kind":"colour-role","value":"Primary","status":"measured","rowId":"checkbox/checked-colour"},
@@ -1033,7 +1047,7 @@
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level3","status":"unmeasured"},
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerHeight","kind":"dp","value":512,"status":"unmeasured"},
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"unmeasured"},
-    {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerSurfaceTintLayerColor","kind":"colour-role","value":"SurfaceTint","status":"unmeasured"},
+    {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerSurfaceTintLayerColor","kind":"colour-role","value":"SurfaceTint","status":"not-applicable","reason":"The date input uses a container colour without a separate legacy surface-tint overlay."},
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"ContainerWidth","kind":"dp","value":328,"status":"unmeasured"},
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"HeaderContainerHeight","kind":"dp","value":120,"status":"unmeasured"},
     {"component":"datepicker","file":"DateInputModalTokens.kt","token":"HeaderContainerWidth","kind":"dp","value":328,"status":"unmeasured"},
@@ -1104,12 +1118,12 @@
     {"component":"divider","file":"DividerTokens.kt","token":"Thickness","kind":"dp","value":1,"status":"measured","rowId":"divider/thickness/horizontal"},
     {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"ContainerHeight","kind":"dp","value":96,"status":"measured","rowId":"extended-fab/container-height/large"},
     {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"unmeasured"},
-    {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"IconLabelSpace","kind":"dp","value":20,"status":"unmeasured"},
+    {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"IconLabelSpace","kind":"dp","value":20,"status":"measured","rowId":"extended-fab/icon-label-gap/large"},
     {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"IconSize","kind":"dp","value":32,"status":"measured","rowId":"extended-fab/icon-size/large"},
     {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"LeadingSpace","kind":"dp","value":28,"status":"unmeasured"},
     {"component":"extended-fab","file":"ExtendedFabLargeTokens.kt","token":"TrailingSpace","kind":"dp","value":28,"status":"unmeasured"},
     {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"ContainerHeight","kind":"dp","value":80,"status":"measured","rowId":"extended-fab/container-height/medium"},
-    {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"IconLabelSpace","kind":"dp","value":16,"status":"unmeasured"},
+    {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"IconLabelSpace","kind":"dp","value":16,"status":"measured","rowId":"extended-fab/icon-label-gap/medium"},
     {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"IconSize","kind":"dp","value":28,"status":"measured","rowId":"extended-fab/icon-size/medium"},
     {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"LeadingSpace","kind":"dp","value":26,"status":"unmeasured"},
     {"component":"extended-fab","file":"ExtendedFabMediumTokens.kt","token":"TrailingSpace","kind":"dp","value":26,"status":"unmeasured"},
@@ -1357,7 +1371,7 @@
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledLeadingIconOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledOverlineColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledOverlineOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
-    {"component":"list","file":"ListTokens.kt","token":"ItemDisabledStateLayerOpacity","kind":"opacity","value":0.1,"status":"unmeasured"},
+    {"component":"list","file":"ListTokens.kt","token":"ItemDisabledStateLayerOpacity","kind":"opacity","value":0.1,"status":"not-applicable","reason":"Disabled list items do not paint an interaction state layer."},
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledSupportingTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledSupportingTextOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemDisabledTrailingIconColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
@@ -1414,7 +1428,7 @@
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledLeadingIconOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledOverlineColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledOverlineOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
-    {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledStateLayerOpacity","kind":"opacity","value":0.1,"status":"unmeasured"},
+    {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledStateLayerOpacity","kind":"opacity","value":0.1,"status":"not-applicable","reason":"Disabled list items do not paint an interaction state layer."},
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledSupportingTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledSupportingTextOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
     {"component":"list","file":"ListTokens.kt","token":"ItemSelectedDisabledTrailingIconColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
@@ -1658,7 +1672,7 @@
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ContainerColor","kind":"colour-role","value":"SurfaceContainer","status":"measured","rowId":"navigation-bar/container-colour"},
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level2","status":"unmeasured"},
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ContainerHeight","kind":"dp","value":64,"status":"measured","rowId":"navigation-bar/container-height/horizontal"},
-    {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ItemActiveIconColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
+    {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ItemActiveIconColor","kind":"colour-role","value":"OnSecondaryContainer","status":"measured","rowId":"navigation-bar/label-colour/horizontal/selected"},
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ItemActiveIndicatorColor","kind":"colour-role","value":"SecondaryContainer","status":"unmeasured"},
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ItemActiveIndicatorIconLabelSpace","kind":"dp","value":4,"status":"unmeasured"},
     {"component":"navigation-bar","file":"NavigationBarTokens.kt","token":"ItemActiveIndicatorShape","kind":"shape","value":"CornerFull","status":"unmeasured"},
@@ -1681,7 +1695,7 @@
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveIndicatorColor","kind":"colour-role","value":"SecondaryContainer","status":"measured","rowId":"navigation-drawer/indicator-colour"},
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveIndicatorHeight","kind":"dp","value":56,"status":"measured","rowId":"navigation-drawer/indicator-height"},
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveIndicatorShape","kind":"shape","value":"CornerFull","status":"unmeasured"},
-    {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveIndicatorWidth","kind":"dp","value":336,"status":"unmeasured"},
+    {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveIndicatorWidth","kind":"dp","value":336,"status":"measured","rowId":"navigation-drawer/indicator-width"},
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActiveLabelTextColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActivePressedIconColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
     {"component":"navigation-drawer","file":"NavigationDrawerTokens.kt","token":"ActivePressedLabelTextColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
@@ -1886,14 +1900,6 @@
     {"component":"select","file":"FilledAutocompleteTokens.kt","token":"TextFieldLeadingIconSize","kind":"dp","value":20,"status":"unmeasured"},
     {"component":"select","file":"FilledAutocompleteTokens.kt","token":"TextFieldTrailingIconColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"select","file":"FilledAutocompleteTokens.kt","token":"TextFieldTrailingIconSize","kind":"dp","value":24,"status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"ContainerColor","kind":"colour-role","value":"SurfaceContainer","status":"measured","rowId":"select/menu-container-colour/outlined/popup"},
-    {"component":"select","file":"MenuTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level2","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraSmall","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"FocusIndicatorColor","kind":"colour-role","value":"Secondary","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"ListItemSelectedContainerColor","kind":"colour-role","value":"SecondaryContainer","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"ListItemSelectedLabelTextColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"ListItemSelectedLeadingTrailingIconColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
-    {"component":"select","file":"MenuTokens.kt","token":"MenuListItemLeadingIconColor","kind":"colour-role","value":"OnSecondaryContainer","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldDisabledInputTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldDisabledInputTextOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldDisabledLabelTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
@@ -1921,7 +1927,7 @@
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldLabelTextFont","kind":"typography-role","value":"BodyLarge","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldSupportingTextColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"FieldSupportingTextFont","kind":"typography-role","value":"BodySmall","status":"unmeasured"},
-    {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"MenuContainerColor","kind":"colour-role","value":"SurfaceContainer","status":"unmeasured"},
+    {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"MenuContainerColor","kind":"colour-role","value":"SurfaceContainer","status":"measured","rowId":"select/menu-container-colour/outlined/popup"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"MenuContainerElevation","kind":"elevation","value":"Level2","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"MenuContainerShape","kind":"shape","value":"CornerExtraSmall","status":"measured","rowId":"select/menu-container-shape/outlined/popup"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldCaretColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
@@ -1957,7 +1963,7 @@
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldOutlineColor","kind":"colour-role","value":"Outline","status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldOutlineWidth","kind":"dp","value":1,"status":"unmeasured"},
     {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldTrailingIconColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
-    {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldTrailingIconSize","kind":"dp","value":24,"status":"unmeasured"},
+    {"component":"select","file":"OutlinedAutocompleteTokens.kt","token":"TextFieldTrailingIconSize","kind":"dp","value":24,"status":"measured","rowId":"select/trailing-icon/outlined"},
     {"component":"slider","file":"SliderTokens.kt","token":"ActiveContainerOpacity","kind":"opacity","value":1,"status":"unmeasured"},
     {"component":"slider","file":"SliderTokens.kt","token":"ActiveHandleHeight","kind":"dp","value":44,"status":"unmeasured"},
     {"component":"slider","file":"SliderTokens.kt","token":"ActiveHandleLeadingSpace","kind":"dp","value":6,"status":"unmeasured"},
@@ -2038,7 +2044,7 @@
     {"component":"split-button","file":"SplitButtonLargeTokens.kt","token":"TrailingButtonTrailingSpace","kind":"dp","value":29,"status":"unmeasured"},
     {"component":"split-button","file":"SplitButtonLargeTokens.kt","token":"TrailingIconSize","kind":"dp","value":38,"status":"unmeasured"},
     {"component":"split-button","file":"SplitButtonLargeTokens.kt","token":"TrailingInnerSelectedCornerCornerSizePercent","kind":"other","value":50,"status":"unmeasured"},
-    {"component":"split-button","file":"SplitButtonMediumTokens.kt","token":"BetweenSpace","kind":"dp","value":2,"status":"unmeasured"},
+    {"component":"split-button","file":"SplitButtonMediumTokens.kt","token":"BetweenSpace","kind":"dp","value":2,"status":"measured","rowId":"split-button/gap/size-m"},
     {"component":"split-button","file":"SplitButtonMediumTokens.kt","token":"ContainerHeight","kind":"dp","value":56,"status":"measured","rowId":"split-button/container-height/m"},
     {"component":"split-button","file":"SplitButtonMediumTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerFull","status":"unmeasured"},
     {"component":"split-button","file":"SplitButtonMediumTokens.kt","token":"InnerCornerCornerSize","kind":"shape","value":"CornerValueExtraSmall","status":"measured","rowId":"split-button/inner-corner/filled-m/rest"},
@@ -2160,7 +2166,7 @@
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level0","status":"unmeasured"},
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"ContainerHeight","kind":"dp","value":48,"status":"measured","rowId":"tabs/container-height/primary-text"},
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerNone","status":"unmeasured"},
-    {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"IconAndLabelTextContainerHeight","kind":"dp","value":64,"status":"unmeasured"},
+    {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"IconAndLabelTextContainerHeight","kind":"dp","value":64,"status":"measured","rowId":"tabs/container-height/primary-stacked"},
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"IconSize","kind":"dp","value":24,"status":"unmeasured"},
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"InactiveFocusIconColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"tabs","file":"PrimaryNavigationTabTokens.kt","token":"InactiveFocusLabelTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
@@ -2175,7 +2181,7 @@
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ActiveLabelTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ContainerColor","kind":"colour-role","value":"Surface","status":"measured","rowId":"tabs/container-colour/secondary/selected"},
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level0","status":"unmeasured"},
-    {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ContainerHeight","kind":"dp","value":48,"status":"unmeasured"},
+    {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ContainerHeight","kind":"dp","value":48,"status":"measured","rowId":"tabs/container-height/secondary-text"},
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerNone","status":"unmeasured"},
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"DividerColor","kind":"colour-role","value":"SurfaceVariant","status":"unmeasured"},
     {"component":"tabs","file":"SecondaryNavigationTabTokens.kt","token":"DividerHeight","kind":"dp","value":1,"status":"unmeasured"},
@@ -2256,7 +2262,7 @@
     {"component":"text-field","file":"FilledTextFieldTokens.kt","token":"TrailingIconColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"text-field","file":"FilledTextFieldTokens.kt","token":"TrailingIconSize","kind":"dp","value":24,"status":"unmeasured"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"CaretColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
-    {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"ContainerHeight","kind":"dp","value":56,"status":"unmeasured"},
+    {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"ContainerHeight","kind":"dp","value":56,"status":"measured","rowId":"text-field/height/outlined"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraSmall","status":"measured","rowId":"text-field/corner/outlined"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"DisabledInputColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"DisabledInputOpacity","kind":"opacity","value":0.38,"status":"unmeasured"},
@@ -2319,23 +2325,9 @@
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"SupportingFont","kind":"typography-role","value":"BodySmall","status":"unmeasured"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"TrailingIconColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"text-field","file":"OutlinedTextFieldTokens.kt","token":"TrailingIconSize","kind":"dp","value":24,"status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ActionFocusLabelTextColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ActionHoverLabelTextColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ActionLabelTextColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ActionLabelTextFont","kind":"typography-role","value":"LabelLarge","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ActionPressedLabelTextColor","kind":"colour-role","value":"Primary","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ContainerColor","kind":"colour-role","value":"SurfaceContainerHigh","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level3","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"measured","rowId":"timepicker/dialog-corner/dial"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"HeadlineColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"HeadlineFont","kind":"typography-role","value":"HeadlineSmall","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"IconColor","kind":"colour-role","value":"Secondary","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"IconSize","kind":"dp","value":24,"status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"SupportingTextColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
-    {"component":"timepicker","file":"DialogTokens.kt","token":"SupportingTextFont","kind":"typography-role","value":"BodyMedium","status":"unmeasured"},
     {"component":"timepicker","file":"TimeInputTokens.kt","token":"ContainerColor","kind":"colour-role","value":"SurfaceContainerHigh","status":"unmeasured"},
     {"component":"timepicker","file":"TimeInputTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level3","status":"unmeasured"},
-    {"component":"timepicker","file":"TimeInputTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"unmeasured"},
+    {"component":"timepicker","file":"TimeInputTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"measured","rowId":"timepicker/dialog-corner/input"},
     {"component":"timepicker","file":"TimeInputTokens.kt","token":"FocusIndicatorColor","kind":"colour-role","value":"Secondary","status":"unmeasured"},
     {"component":"timepicker","file":"TimeInputTokens.kt","token":"HeadlineColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"timepicker","file":"TimeInputTokens.kt","token":"HeadlineFont","kind":"typography-role","value":"LabelMedium","status":"unmeasured"},
@@ -2385,7 +2377,7 @@
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"ClockDialUnselectedLabelTextColor","kind":"colour-role","value":"OnSurface","status":"unmeasured"},
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"ContainerColor","kind":"colour-role","value":"SurfaceContainerHigh","status":"measured","rowId":"timepicker/dialog-colour/dial"},
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"ContainerElevation","kind":"elevation","value":"Level3","status":"unmeasured"},
-    {"component":"timepicker","file":"TimePickerTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"unmeasured"},
+    {"component":"timepicker","file":"TimePickerTokens.kt","token":"ContainerShape","kind":"shape","value":"CornerExtraLarge","status":"measured","rowId":"timepicker/dialog-corner/dial"},
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"HeadlineColor","kind":"colour-role","value":"OnSurfaceVariant","status":"unmeasured"},
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"HeadlineFont","kind":"typography-role","value":"LabelMedium","status":"unmeasured"},
     {"component":"timepicker","file":"TimePickerTokens.kt","token":"PeriodSelectorContainerShape","kind":"shape","value":"CornerSmall","status":"unmeasured"},

@@ -22,12 +22,14 @@ Before tagging a release, set the measurement date and Material input commit in 
 
 ## Coverage
 
-[coverage.json](coverage.json) reports how many pinned Compose Material 3 component tokens the matrix measures. Coverage is measured ÷ (measured + unmeasured), rounded to two decimal places. A measured token can match or drift in the matrix. Where several rows name the same token, coverage counts it once per component and links to the first row. Reviewed `not-applicable` entries carry a reason and are outside the denominator. A component with no applicable tokens has a null percentage.
+[coverage.json](coverage.json) reports how many pinned Compose Material 3 component tokens the matrix measures. Coverage is measured ÷ (measured + unmeasured), rounded to two decimal places. The matrix's match, drift and no-value statuses describe comparisons with each reference.
 
-The inventory covers the component and variant token files assigned in [coverage-map.json](coverage-map.json). Shared component files are counted for each component that uses them. Foundation tokens and values documented only in the website or Compose runtime are outside this inventory. Carousel and side sheet have no component token files in this pin.
+Coverage follows the component token in the fixture's row binding when a Compose override supplies a different runtime reference. Rows without a component token binding use the token named in the published matrix. Where several rows measure the same token, the report links to the first published row unless [coverage-map.json](coverage-map.json) chooses another of those rows.
 
-Run this command after a matrix or mapping change.
+Component summaries list shared files. Overall totals count each file and token pair once. A pair counts as measured overall when any of its components measures it, and as not applicable only when every mapped component excludes it. Reviewed exclusions carry a reason and are outside the denominator. Carousel and side sheet have a null percentage because this pin has no component token files for them. The inventory excludes foundation files and runtime values that have no component token declaration.
+
+Run this command after a matrix, binding or mapping change.
 
     bun run scripts/conformance/coverage.ts
 
-The CI check reads the committed matrix, mapping and [token snapshot](compose-tokens-1.5.0.json) offline. To reproduce the snapshot, extract the flat token directory from the pinned source JAR in [reference.json](reference.json) and pass it to `bun run scripts/conformance/coverage.ts --snapshot <token directory>`. The command checks the file hashes before reading the tokens. When a matrix row gains an exact Compose token reference, remove its previous review entry from the mapping.
+The CI check reads the committed sources offline. To reproduce the [token snapshot](compose-tokens-1.5.0.json), extract the flat token directory from the pinned source JAR in [reference.json](reference.json) and pass it to `bun run scripts/conformance/coverage.ts --snapshot <token directory>`. The command checks the file hashes before reading the tokens. When a row starts measuring a previously unmeasured token, remove that token from the corresponding `unmeasured` list.

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import reference from "../../conformance/reference.json";
 import { readComposeTokens, type ComposeToken } from "./compose-tokens";
+import { bindings, matrixRowId } from "./matrix-bindings";
 
 type Kind = "colour-role" | "typography-role" | "shape" | "elevation" | "dp" | "opacity" | "duration" | "easing" | "other";
 type Value = { kind: Kind; value: number | string };
@@ -92,7 +93,7 @@ function reviewFile(review: FileReview, rowIds: Set<string>, name: string): Map<
   return decisions;
 }
 
-function totals(entries: Entry[]) {
+function totals(entries: ReadonlyArray<{ status: Decision["status"] }>) {
   const measured = entries.filter(entry => entry.status === "measured").length;
   const unmeasured = entries.filter(entry => entry.status === "unmeasured").length;
   const applicable = measured + unmeasured;
@@ -116,18 +117,39 @@ function coverage(matrix: Matrix, inventory: Snapshot, review: Review) {
   if (matrixIds.size !== Object.keys(review).length || Object.keys(review).some(id => !matrixIds.has(id))) {
     throw new Error("Review files must be assigned for every matrix component");
   }
+  const namedTokens = new Map(bindings.flatMap(binding => binding.rows.flatMap(row =>
+    row.token ? [[matrixRowId(binding.id, row.key), row.token] as const] : [],
+  )));
+  const fileUse = new Map<string, number>();
+  for (const files of Object.values(review)) {
+    for (const file of Object.keys(files)) fileUse.set(file, (fileUse.get(file) ?? 0) + 1);
+  }
   const unusedFiles = new Set(Object.keys(inventory.files));
+  const distinct = new Map<string, Entry>();
+  const priority = { "not-applicable": 0, unmeasured: 1, measured: 2 };
   const entries: Entry[] = [];
   const components = matrix.components.map(({ id, properties }) => {
     const componentEntries: Entry[] = [];
     const files = review[id]!;
-    const automatic = new Map<string, string>();
-    for (const { id: rowId, compose: { file, symbol } } of properties) {
-      if (!file || !symbol || !Object.hasOwn(inventory.files[file] ?? {}, symbol)) continue;
+    const automatic = new Map<string, string[]>();
+    for (const { id: rowId, compose } of properties) {
+      const [object, boundSymbol] = namedTokens.get(rowId)?.split(".") ?? [];
+      const boundFile = `${object}.kt`;
+      // A Compose runtime override changes the comparison. The fixture still
+      // probes the component token named in its binding.
+      const bound = Object.hasOwn(inventory.files, boundFile);
+      const file = bound ? boundFile : compose.file;
+      const symbol = bound ? boundSymbol : compose.symbol;
+      if (!file || !symbol) continue;
+      if (!Object.hasOwn(inventory.files[file] ?? {}, symbol)) {
+        if (bound) throw new Error(`${rowId} names an unknown token ${file}:${symbol}`);
+        continue;
+      }
       if (!Object.hasOwn(files, file)) throw new Error(`${rowId} references ${file} outside its coverage scope`);
       const key = `${file}:${symbol}`;
-      // A token can be measured by several variants. Keep the first published row.
-      if (!automatic.has(key)) automatic.set(key, rowId);
+      const candidates = automatic.get(key) ?? [];
+      candidates.push(rowId);
+      automatic.set(key, candidates);
     }
     const rowIds = new Set(properties.map(row => row.id));
     for (const file of Object.keys(files).sort()) {
@@ -137,22 +159,31 @@ function coverage(matrix: Matrix, inventory: Snapshot, review: Review) {
       const name = `${id}/${file}`;
       const decisions = reviewFile(files[file]!, rowIds, name);
       for (const token of Object.keys(tokens).sort()) {
-        const rowId = automatic.get(`${file}:${token}`);
+        const key = `${file}:${token}`;
+        const candidates = automatic.get(key);
         const reviewed = decisions.get(token);
-        if (rowId && reviewed) throw new Error(`${name}.${token} already has an exact matrix reference`);
-        const decision: Decision | undefined = rowId ? { status: "measured", rowId } : reviewed;
+        if (candidates && reviewed &&
+            (reviewed.status !== "measured" || !candidates.includes(reviewed.rowId))) {
+          throw new Error(`${name}.${token} already has an exact matrix reference`);
+        }
+        const rowId = candidates?.[0];
+        const decision = reviewed ?? (rowId ? { status: "measured", rowId } as const : undefined);
         if (!decision) throw new Error(`${name}.${token} needs a reviewed decision`);
         decisions.delete(token);
-        componentEntries.push({ component: id, file, token, ...tokens[token]!, ...decision });
+        const entry: Entry = { component: id, file, token, ...tokens[token]!, ...decision };
+        componentEntries.push(entry);
+        const existing = distinct.get(key);
+        if (!existing || priority[entry.status] > priority[existing.status]) distinct.set(key, entry);
       }
       if (decisions.size) throw new Error(`${name} has unknown tokens: ${[...decisions.keys()].join(", ")}`);
     }
     entries.push(...componentEntries);
-    return { component: id, ...totals(componentEntries) };
+    const sharedFiles = Object.keys(files).filter(file => fileUse.get(file)! > 1).sort();
+    return { component: id, ...totals(componentEntries), ...(sharedFiles.length ? { sharedFiles } : {}) };
   });
   if (unusedFiles.size) throw new Error(`Snapshot files without matrix components: ${[...unusedFiles].join(", ")}`);
 
-  const summary = JSON.stringify({ schema: 1, compose: pin, totals: totals(entries), components }, null, 2);
+  const summary = JSON.stringify({ schema: 1, compose: pin, totals: totals([...distinct.values()]), components }, null, 2);
   const records = entries.map(entry => `    ${JSON.stringify(entry)}`).join(",\n");
   return `${summary.slice(0, -2)},\n  "entries": [\n${records}\n  ]\n}\n`;
 }

@@ -9,6 +9,13 @@
   },
   "app-bar/leading-icon-size/small": {
     "reason": "The website sizes the glyph. Compose takes the navigation icon as a slot.",
+    "compose": {
+      "value": null,
+      "file": null,
+      "symbol": null,
+      "line": null,
+      "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+    },
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/app-bars/specs",

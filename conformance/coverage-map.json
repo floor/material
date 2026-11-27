@@ -7,15 +7,12 @@
         "ContainerElevation",
         "ContainerShape",
         "IconButtonSpace",
-        "IconSize",
         "LeadingIconColor",
-        "LeadingSpace",
         "OnScrollContainerColor",
         "OnScrollContainerElevation",
         "SubtitleColor",
         "TitleColor",
-        "TrailingIconColor",
-        "TrailingSpace"
+        "TrailingIconColor"
       ]
     },
     "AppBarLargeTokens.kt": {
@@ -47,6 +44,9 @@
       ]
     },
     "AppBarSmallTokens.kt": {
+      "measured": {
+        "ContainerHeight": "app-bar/container-height/small"
+      },
       "unmeasured": [
         "SubtitleFont",
         "TitleFont"
@@ -56,7 +56,6 @@
   "badge": {
     "BadgeTokens.kt": {
       "unmeasured": [
-        "LargeColor",
         "LargeLabelTextColor",
         "LargeLabelTextFont",
         "LargeShape",
@@ -151,7 +150,6 @@
     "ButtonMediumTokens.kt": {
       "unmeasured": [
         "ContainerShapeRound",
-        "OutlinedOutlineWidth",
         "PressedContainerShape",
         "SelectedContainerShapeRound",
         "SelectedContainerShapeSquare",
@@ -161,6 +159,7 @@
     "ButtonSmallTokens.kt": {
       "unmeasured": [
         "ContainerShapeRound",
+        "OutlinedOutlineWidth",
         "PressedContainerShape",
         "SelectedContainerShapeRound",
         "TrailingSpace"
@@ -179,8 +178,6 @@
     "ButtonXSmallTokens.kt": {
       "unmeasured": [
         "ContainerShapeRound",
-        "IconLabelSpace",
-        "LeadingSpace",
         "OutlinedOutlineWidth",
         "PressedContainerShape",
         "SelectedContainerShapeRound",
@@ -545,7 +542,6 @@
     "CheckboxTokens.kt": {
       "unmeasured": [
         "ContainerShape",
-        "ContainerSize",
         "FocusIndicatorColor",
         "IconSize",
         "SelectedDisabledContainerColor",
@@ -830,7 +826,6 @@
         "ContainerElevation",
         "ContainerHeight",
         "ContainerShape",
-        "ContainerSurfaceTintLayerColor",
         "ContainerWidth",
         "HeaderContainerHeight",
         "HeaderContainerWidth",
@@ -838,7 +833,10 @@
         "HeaderHeadlineFont",
         "HeaderSupportingTextColor",
         "HeaderSupportingTextFont"
-      ]
+      ],
+      "notApplicable": {
+        "ContainerSurfaceTintLayerColor": "The date input uses a container colour without a separate legacy surface-tint overlay."
+      }
     },
     "DatePickerModalTokens.kt": {
       "unmeasured": [
@@ -911,14 +909,12 @@
     "ExtendedFabLargeTokens.kt": {
       "unmeasured": [
         "ContainerShape",
-        "IconLabelSpace",
         "LeadingSpace",
         "TrailingSpace"
       ]
     },
     "ExtendedFabMediumTokens.kt": {
       "unmeasured": [
-        "IconLabelSpace",
         "LeadingSpace",
         "TrailingSpace"
       ]
@@ -1225,7 +1221,6 @@
         "ItemDisabledLeadingIconOpacity",
         "ItemDisabledOverlineColor",
         "ItemDisabledOverlineOpacity",
-        "ItemDisabledStateLayerOpacity",
         "ItemDisabledSupportingTextColor",
         "ItemDisabledSupportingTextOpacity",
         "ItemDisabledTrailingIconColor",
@@ -1280,7 +1275,6 @@
         "ItemSelectedDisabledLeadingIconOpacity",
         "ItemSelectedDisabledOverlineColor",
         "ItemSelectedDisabledOverlineOpacity",
-        "ItemSelectedDisabledStateLayerOpacity",
         "ItemSelectedDisabledSupportingTextColor",
         "ItemSelectedDisabledSupportingTextOpacity",
         "ItemSelectedDisabledTrailingIconColor",
@@ -1322,7 +1316,11 @@
         "ItemTwoLineContainerHeight",
         "ItemUnselectedTrailingIconColor",
         "SegmentedGap"
-      ]
+      ],
+      "notApplicable": {
+        "ItemDisabledStateLayerOpacity": "Disabled list items do not paint an interaction state layer.",
+        "ItemSelectedDisabledStateLayerOpacity": "Disabled list items do not paint an interaction state layer."
+      }
     },
     "ReorderListTokens.kt": {
       "unmeasured": [
@@ -1547,7 +1545,6 @@
     "NavigationBarTokens.kt": {
       "unmeasured": [
         "ContainerElevation",
-        "ItemActiveIconColor",
         "ItemActiveIndicatorColor",
         "ItemActiveIndicatorIconLabelSpace",
         "ItemActiveIndicatorShape",
@@ -1584,7 +1581,6 @@
         "ActiveHoverLabelTextColor",
         "ActiveIconColor",
         "ActiveIndicatorShape",
-        "ActiveIndicatorWidth",
         "ActiveLabelTextColor",
         "ActivePressedIconColor",
         "ActivePressedLabelTextColor",
@@ -1838,17 +1834,6 @@
         "TextFieldTrailingIconSize"
       ]
     },
-    "MenuTokens.kt": {
-      "unmeasured": [
-        "ContainerElevation",
-        "ContainerShape",
-        "FocusIndicatorColor",
-        "ListItemSelectedContainerColor",
-        "ListItemSelectedLabelTextColor",
-        "ListItemSelectedLeadingTrailingIconColor",
-        "MenuListItemLeadingIconColor"
-      ]
-    },
     "OutlinedAutocompleteTokens.kt": {
       "unmeasured": [
         "FieldDisabledInputTextColor",
@@ -1877,7 +1862,6 @@
         "FieldLabelTextFont",
         "FieldSupportingTextColor",
         "FieldSupportingTextFont",
-        "MenuContainerColor",
         "MenuContainerElevation",
         "TextFieldCaretColor",
         "TextFieldContainerColor",
@@ -1909,8 +1893,7 @@
         "TextFieldLeadingIconSize",
         "TextFieldOutlineColor",
         "TextFieldOutlineWidth",
-        "TextFieldTrailingIconColor",
-        "TextFieldTrailingIconSize"
+        "TextFieldTrailingIconColor"
       ]
     }
   },
@@ -2005,7 +1988,6 @@
     },
     "SplitButtonMediumTokens.kt": {
       "unmeasured": [
-        "BetweenSpace",
         "ContainerShape",
         "InnerHoveredCornerCornerSize",
         "InnerPressedCornerCornerSize",
@@ -2133,7 +2115,6 @@
         "ActivePressedLabelTextColor",
         "ContainerElevation",
         "ContainerShape",
-        "IconAndLabelTextContainerHeight",
         "IconSize",
         "InactiveFocusIconColor",
         "InactiveFocusLabelTextColor",
@@ -2151,7 +2132,6 @@
         "ActiveIconColor",
         "ActiveLabelTextColor",
         "ContainerElevation",
-        "ContainerHeight",
         "ContainerShape",
         "DividerColor",
         "DividerHeight",
@@ -2239,12 +2219,8 @@
       ]
     },
     "OutlinedTextFieldTokens.kt": {
-      "measured": {
-        "FocusOutlineWidth": "text-field/outline-width/outlined-focus"
-      },
       "unmeasured": [
         "CaretColor",
-        "ContainerHeight",
         "DisabledInputColor",
         "DisabledInputOpacity",
         "DisabledLabelColor",
@@ -2309,28 +2285,10 @@
     }
   },
   "timepicker": {
-    "DialogTokens.kt": {
-      "unmeasured": [
-        "ActionFocusLabelTextColor",
-        "ActionHoverLabelTextColor",
-        "ActionLabelTextColor",
-        "ActionLabelTextFont",
-        "ActionPressedLabelTextColor",
-        "ContainerColor",
-        "ContainerElevation",
-        "HeadlineColor",
-        "HeadlineFont",
-        "IconColor",
-        "IconSize",
-        "SupportingTextColor",
-        "SupportingTextFont"
-      ]
-    },
     "TimeInputTokens.kt": {
       "unmeasured": [
         "ContainerColor",
         "ContainerElevation",
-        "ContainerShape",
         "FocusIndicatorColor",
         "HeadlineColor",
         "HeadlineFont",
@@ -2382,7 +2340,6 @@
         "ClockDialShape",
         "ClockDialUnselectedLabelTextColor",
         "ContainerElevation",
-        "ContainerShape",
         "HeadlineColor",
         "HeadlineFont",
         "PeriodSelectorContainerShape",
