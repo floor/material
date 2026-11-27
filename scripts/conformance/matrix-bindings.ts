@@ -1,4 +1,5 @@
 import { listCoverageSpecs } from "./list-bindings";
+import { menuCoverageSpecs } from "./menu-bindings";
 import { textFieldCoverageSpecs } from "./text-field-bindings";
 import type { FixtureBinding, Probe, RowBinding, RowSpec } from "./matrix-types";
 
@@ -237,6 +238,7 @@ export const bindings: FixtureBinding[] = [
     ["container-width", "Container width", "size", "contained/indeterminate/light", width("root"), "LoadingIndicatorTokens.ContainerWidth"],
   ]),
   fixture("menu", "Menu", [
+    ...menuCoverageSpecs,
     ["container-colour/baseline", "Container tone", "colour", "baseline/light/unselected/rest", colour("root"), "MenuTokens.ContainerColor", "baseline"],
     ["container-corner/baseline", "Container corner radius", "shape", "baseline/light/unselected/rest", corner("root"), "MenuTokens.ContainerShape", "baseline"],
     ["container-colour/standard", "Container tone", "colour", "standard/light/unselected/rest", colour("root"), "StandardMenuTokens.ContainerColor", "standard"],
