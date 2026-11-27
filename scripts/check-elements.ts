@@ -9727,35 +9727,39 @@ try {
         async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
       await focusIs(step, label);
     };
-    // Stall the task that places the menu, before the first transition frame.
-    // The opening class must make Copy focusable even if the focus timer is
-    // ready to run before the browser has painted the reveal.
-    await page.evaluate(() => {
-      const host = document.querySelector("m-menu")!;
-      const root = host.shadowRoot!;
-      const observer = new MutationObserver(() => {
-        if (!root.querySelector(".mtrl-menu--visible")) return;
-        observer.disconnect();
-        const resume = performance.now() + 350;
-        while (performance.now() < resume) { /* Keep the renderer in this task. */ }
-        const copy = root.querySelector('[data-id="copy"]')!;
-        host.dataset.openingVisibility = getComputedStyle(copy).visibility;
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      await page.emulateMedia({ reducedMotion });
+      // Stall the task that places the menu, before the first transition frame.
+      // The opening class must make Copy focusable without a painted frame.
+      await page.evaluate(() => {
+        const host = document.getElementById("mm")!;
+        const root = host.shadowRoot!;
+        delete host.dataset.openingVisibility;
+        const observer = new MutationObserver(() => {
+          if (!root.querySelector(".mtrl-menu--visible")) return;
+          observer.disconnect();
+          const resume = performance.now() + 350;
+          while (performance.now() < resume) { /* Keep the renderer in this task. */ }
+          const copy = root.querySelector('[data-id="copy"]')!;
+          host.dataset.openingVisibility = getComputedStyle(copy).visibility;
+        });
+        observer.observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
       });
-      observer.observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
-    });
-    await page.focus("#mb");
-    await page.keyboard.press("Enter");
-    await page.waitForFunction(() => document.querySelector("m-menu")?.hasAttribute("data-opening-visibility"), undefined, { timeout: 5000 });
-    assert.equal(await page.locator("m-menu#mm").getAttribute("data-opening-visibility"), "visible", "Copy is visible before the menu's first transition frame");
-    await focusedByKey("menu, opened with Enter after a stall", "Copy");
-    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
-    await page.keyboard.press("Escape");
-    await closed("menu, Escape, opened with Enter");
-    await settle();
-    await focusIs("menu, Escape, opened with Enter", "mb");
-    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
-    assert.equal(await focused(), "mb");
-    check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+      await page.focus("#mb");
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() => document.getElementById("mm")?.hasAttribute("data-opening-visibility"), undefined, { timeout: 5000 });
+      assert.equal(await page.locator("#mm").getAttribute("data-opening-visibility"), "visible", `Copy is visible before the first transition frame (${reducedMotion})`);
+      await focusedByKey(`menu, opened with Enter after a stall (${reducedMotion})`, "Copy");
+      assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
+      await page.keyboard.press("Escape");
+      await closed("menu, Escape, opened with Enter");
+      await settle();
+      await focusIs("menu, Escape, opened with Enter", "mb");
+      assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+      assert.equal(await focused(), "mb");
+      check(`menu: Enter focuses the first item after a stall and Escape returns focus (${reducedMotion})`);
+    }
+    await page.emulateMedia({ reducedMotion: null });
 
     // ArrowUp on the anchor opens the menu on its last item. The anchor puts
     // focus there 100ms after the key, and the menu's own initial focus, which runs
