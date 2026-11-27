@@ -68,10 +68,10 @@ describe('list stylesheet: standard', () => {
     expect(declared('.mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--image', 'border-radius')).toBe('0');
     expect(declared('.mtrl-list:not(.mtrl-list--segmented) .mtrl-list__leading--video', 'border-radius')).toBe('0');
   });
-  test('an inset divider is 16px from the start and 24px from the end', () => {
+  test('an inset divider is 16px from both sides', () => {
     expect(declared('.mtrl-list__divider', 'margin-block')).toBe('0');
     expect(declared('.mtrl-list__divider--inset', 'margin-inline-start')).toBe('16px');
-    expect(declared('.mtrl-list__divider--inset', 'margin-inline-end')).toBe('24px');
+    expect(declared('.mtrl-list__divider--inset', 'margin-inline-end')).toBe('16px');
   });
   test('a row paints surface, or --mtrl-list-item-container-color', () => {
     expect(declared('.mtrl-list__item', 'background'))

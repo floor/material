@@ -4,11 +4,10 @@
 //   bun run scripts/check-list-conformance.ts
 //
 // The page is the list factory and the list stylesheet, compiled for this run.
-// Light and dark, both directions. On main the selected standard row is square,
-// the inset divider is 72px / 16px, and a standard leading image is 8px.
+// Light and dark in both directions and both engines.
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium } from "playwright";
+import { chromium, webkit, type Browser } from "playwright";
 import { compileString } from "sass";
 
 const repoRoot = resolve(import.meta.dir, "..");
@@ -43,8 +42,7 @@ const corners = `(el) => {
   return [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomRightRadius, s.borderBottomLeftRadius].join(" ");
 }`;
 
-const browser = await chromium.launch({ headless: true });
-try {
+const check = async (browser: Browser, engine: string) => {
   const page = await browser.newPage({ viewport: { width: 480, height: 720 }, reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -88,7 +86,9 @@ try {
           return { start: s.marginInlineStart, end: s.marginInlineEnd, left: s.marginLeft, right: s.marginRight };
         };
         const selected = item("standard", "walk");
-        const inset = box(divider("standard", true));
+        const insetDivider = divider("standard", true);
+        const line = insetDivider.getBoundingClientRect();
+        const content = insetDivider.parentElement!.getBoundingClientRect();
         return {
           list: read(document.querySelector("#standard")!),
           selected: read(selected),
@@ -99,7 +99,11 @@ try {
           image: getComputedStyle(leading("standard", "walk", "image")).borderTopLeftRadius,
           video: getComputedStyle(leading("standard", "clip", "video")).borderTopLeftRadius,
           fill: getComputedStyle(selected).backgroundColor,
-          inset,
+          inset: {
+            ...box(insetDivider),
+            leftGap: line.left - content.left,
+            rightGap: content.right - line.right,
+          },
           full: box(divider("standard", false)),
           segmentedList: read(document.querySelector("#segmented")!),
           segmentedSelected: read(item("segmented", "walk")),
@@ -110,8 +114,6 @@ try {
       }, { theme, dir, corners });
       if (theme === "light") lightFill = measured.fill;
       if (theme === "dark") darkFill = measured.fill;
-      const wantLeft = dir === "ltr" ? "16px" : "24px";
-      const wantRight = dir === "ltr" ? "24px" : "16px";
       const expectEqual = (name: string, got: string, want: string) => {
         if (got !== want) failures.push(`${theme} ${dir} ${name}: ${got} !== ${want}`);
       };
@@ -123,9 +125,11 @@ try {
       expectEqual("standard image", measured.image, "0px");
       expectEqual("standard video", measured.video, "0px");
       expectEqual("inset start", measured.inset.start, "16px");
-      expectEqual("inset end", measured.inset.end, "24px");
-      expectEqual("inset left", measured.inset.left, wantLeft);
-      expectEqual("inset right", measured.inset.right, wantRight);
+      expectEqual("inset end", measured.inset.end, "16px");
+      expectEqual("inset left", measured.inset.left, "16px");
+      expectEqual("inset right", measured.inset.right, "16px");
+      expectEqual("divider left gap", String(measured.inset.leftGap), "16");
+      expectEqual("divider right gap", String(measured.inset.rightGap), "16");
       expectEqual("full divider start", measured.full.start, "0px");
       expectEqual("full divider end", measured.full.end, "0px");
       expectEqual("segmented list box", measured.segmentedList, "0px 0px 0px 0px");
@@ -134,10 +138,19 @@ try {
       expectEqual("segmented video", measured.segmentedVideo, "8px");
     }
   }
-  assert.equal(errors.length, 0, errors.join("\n"));
-  assert.deepEqual(failures, []);
-  assert.notEqual(lightFill, darkFill, "dark theme did not change the selected fill");
-  console.log("list conformance: selected 16px, divider 16/24, standard image 0, light/dark, ltr/rtl");
-} finally {
-  await browser.close();
+  assert.deepEqual(errors, [], `${engine}: page errors`);
+  assert.notEqual(lightFill, darkFill, `${engine}: dark theme did not change the selected fill`);
+  if (failures.length === 0) console.log(`${engine}: list conformance, divider 16 px on both sides in LTR and RTL`);
+  return failures.map(failure => `${engine} ${failure}`);
+};
+
+const failures: string[] = [];
+for (const engine of [chromium, webkit]) {
+  const browser = await engine.launch({ headless: true });
+  try {
+    failures.push(...await check(browser, engine.name()));
+  } finally {
+    await browser.close();
+  }
 }
+assert.deepEqual(failures, []);
