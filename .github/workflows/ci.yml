@@ -743,6 +743,10 @@ jobs:
     needs: [build, changes]
     if: "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')"
     runs-on: ubuntu-24.04
+    container:
+      # Playwright 1.63.0 Noble (linux/amd64), with Chromium and its system libraries.
+      image: mcr.microsoft.com/playwright@sha256:bc6ab0d6d44ff4826e4cb8c1e6d801e185bfc42bb0753f8e2a30efc70db054c7
+      options: --ipc=host
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -754,9 +758,10 @@ jobs:
       COMPARATOR_REVIEW_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.4.2"
+      - name: Install pinned Bun in the Playwright container
+        run: |
+          npm install --prefix "$RUNNER_TEMP/material-bun" --no-save --no-package-lock --no-audit --no-fund @oven/bun-linux-x64@1.4.2
+          install "$RUNNER_TEMP/material-bun/node_modules/@oven/bun-linux-x64/bin/bun" /usr/local/bin/bun
       - run: bun install --frozen-lockfile
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -766,12 +771,25 @@ jobs:
         with:
           node-version: "22.23.3"
       - name: Install locked comparator tooling (CI only)
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
+      - name: Check the comparator's Playwright image version
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
-          scripts/fixtures/comparators/node_modules/.bin/playwright install --with-deps chromium
+          node <<'NODE'
+          const assert = require('node:assert/strict')
+          const { readFileSync } = require('node:fs')
+          const { driverVersion } = JSON.parse(readFileSync(process.env.PLAYWRIGHT_BROWSERS_PATH + '/.docker-info', 'utf8'))
+          const { version } = require('./scripts/fixtures/comparators/node_modules/playwright/package.json')
+          assert.equal(driverVersion, version, 'Update the Playwright image digest to match the comparator lockfile')
+          console.log(`Playwright image and comparator package both use ${version}`)
+          NODE
       - name: Rendered fixture and per-asset comparison
         timeout-minutes: 10
-        run: bun run comparators:check
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: safe.directory
+        run: |
+          export GIT_CONFIG_VALUE_0="$GITHUB_WORKSPACE"
+          bun run comparators:check
       - name: Comparator evidence (including failed setup)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
