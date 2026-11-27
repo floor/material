@@ -144,6 +144,9 @@ try {
   // counted another way: every "./components/<name>" key. Which keys those must
   // be is test/component-exports.test.ts's check, so the number is read, not written here.
   const exportKeys = Object.keys(JSON.parse(await Bun.file("package.json").text()).exports);
+  // CI uses this same script on older releases. The measured checkout declares
+  // the feature; the packed manifest is what the probe has to verify.
+  const expectTextFieldChips = exportKeys.includes("./components/text-field-chips");
   // An opt-in entry ships a sheet and an enhancer, not a factory: it is
   // imported by name below, and it is not one of the factory entries this
   // count compares.
@@ -170,13 +173,6 @@ try {
     assert.equal(esm.addClass, undefined);
     // 3.0.0 is ESM-only: no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
-
-    // The opt-in entry exports the enhancer by name and is not on the root;
-    // its shadow-root sheet is a packed file, not a barrel member.
-    const { textFieldChips } = await import('material/components/text-field-chips');
-    assert.equal(typeof textFieldChips, 'function', 'material/components/text-field-chips must export textFieldChips');
-    assert.equal(esm.textFieldChips, undefined, 'the opt-in entry must not be on the root');
-    await import('material/elements/css/text-field-chips');
 
     const componentKeys = ${JSON.stringify(componentKeys)};
     // A filter that matches nothing would loop over nothing and pass
@@ -226,11 +222,15 @@ try {
     const field = createTextField({ label: 'Name' });
     field.setValue('Ada');
     assert.equal(field.getValue(), 'Ada');
-    // The packed enhancer installs real chips: an entry that only looks
-    // callable does not pass.
-    const chipped = createTextField({ label: 'Chips', chips: textFieldChips({ items: ['qa'] }) });
-    assert.deepEqual(chipped.getValues(), ['qa'], 'the packed enhancer installs the chips');
-    chipped.destroy();
+    if (${expectTextFieldChips}) {
+      const { textFieldChips } = await import('material/components/text-field-chips');
+      assert.equal(typeof textFieldChips, 'function', 'material/components/text-field-chips must export textFieldChips');
+      assert.equal(esm.textFieldChips, undefined, 'the opt-in entry must not be on the root');
+      await import('material/elements/css/text-field-chips');
+      const chipped = createTextField({ label: 'Chips', chips: textFieldChips({ items: ['qa'] }) });
+      assert.deepEqual(chipped.getValues(), ['qa'], 'the packed enhancer installs the chips');
+      chipped.destroy();
+    }
     const loading = button({ text: 'Upload', progress: { indeterminate: false } });
     document.body.append(loading.element);
     await loading.showProgress();

@@ -1,12 +1,8 @@
 #!/usr/bin/env bun
 /**
- * Input chips inside a text field, in Chromium and WebKit, against the design's
- * test plan (briefs/material/chip-field-design.md, §6).
- *
- * The sources are cited in the module's own subjects: m3.material.io chips
- * (specs, guidelines, accessibility; read 2026-11-27 through r.jina.ai) and
- * Compose 1.5.0 `InputChipTokens.kt` (anchors and padding), `Chip.kt`
- * (`inputChipPadding`).
+ * Input chips inside a text field in Chromium and WebKit. The geometry and
+ * interactions follow the Material 3 chips guidance and Compose 1.5.0
+ * `InputChipTokens.kt` and `Chip.kt`.
  *
  * Every read that follows a motion goes through `settle()`; nothing here waits
  * on a clock.
@@ -275,7 +271,6 @@ section("editing a chip shows one chip and the textbox in the snapshot", async (
   await action.click();
   await action.click();
   const tree = await snapshot(page);
-  console.log("DEBUG edit:", JSON.stringify(await page.evaluate(() => ({ sheets: [...document.styleSheets].map((sheet) => sheet.href), rules: [...document.styleSheets].flatMap((sheet) => { try { return [...sheet.cssRules].map((rule) => (rule as CSSStyleRule).selectorText ?? "").filter((text) => text.includes("chip[hidden]")); } catch { return []; } }), parent: document.querySelector("#field .mtrl-chip")!.parentElement!.className }))));
   assert.match(tree, /textbox "To"/);
   assert.equal((tree.match(/checkbox /g) ?? []).length, 1, tree);
 });
@@ -1004,6 +999,84 @@ section("a plain field keeps its input and restores its draft literally", async 
     return { values: (field as unknown as { getValues: () => string[] }).getValues(), draft: field.shadowRoot!.querySelector("input")!.value };
   }, JSON.stringify({ v: ["kept"], d: "draft text" }));
   assert.deepEqual(envelope, { values: ["kept"], draft: "draft text" }, "a chip field restores the envelope");
+});
+
+section("a separator change after upgrade applies to the current draft", async (page) => {
+  await mountElement(page);
+  await typeInto(page, "one");
+  await page.keyboard.press("Enter");
+  await typeInto(page, "two");
+  await page.locator("#field").evaluate((field) => field.setAttribute("separators", ";"));
+  await settle(page, { target: "#field" });
+  await draftInput(page).press(";");
+
+  const observed = await page.evaluate(() => {
+    const field = document.querySelector("m-text-field")!;
+    return { values: field.getValues(), draft: field.value };
+  });
+  assert.deepEqual(observed, { values: ["one", "two"], draft: "" },
+    `semicolon commits after an upgraded field changes its separator (${JSON.stringify(observed)})`);
+});
+
+section("a chip limit changed after upgrade applies to later commits", async (page) => {
+  await mountElement(page);
+  await page.locator("#field").evaluate((field) => field.setAttribute("max-chips", "1"));
+  await settle(page, { target: "#field" });
+  await typeInto(page, "one");
+  await page.keyboard.press("Enter");
+  await typeInto(page, "two");
+  await page.keyboard.press("Enter");
+
+  const observed = await page.evaluate(() => {
+    const field = document.querySelector("m-text-field")!;
+    return { values: field.getValues(), draft: field.value };
+  });
+  assert.deepEqual(observed, { values: ["one"], draft: "two" },
+    `the second chip stays in the draft at the new limit (${JSON.stringify(observed)})`);
+});
+
+section("a JSON-shaped draft survives a chip-mode save and restore with no chips", async (page) => {
+  await mountElement(page);
+  const literal = JSON.stringify({ v: ["fake-chip"], d: "shortened draft" });
+  const observed = await page.evaluate((draft) => {
+    const field = document.querySelector("m-text-field")!;
+    const save = (element: typeof field): string => {
+      const original = ElementInternals.prototype.setFormValue;
+      const captured: { state?: string } = {};
+      ElementInternals.prototype.setFormValue = function (value, state) {
+        if (typeof state === "string") captured.state = state;
+        original.call(this, value, state);
+      };
+      try {
+        element.value = draft;
+      } finally {
+        ElementInternals.prototype.setFormValue = original;
+      }
+      if (captured.state === undefined) throw new Error("the browser received no field state");
+      return captured.state;
+    };
+    const restore = (element: typeof field, state: string) =>
+      (element as typeof field & { formStateRestoreCallback(value: string): void }).formStateRestoreCallback(state);
+    const saved = save(field);
+    const plain = document.createElement("m-text-field");
+    const host = document.getElementById("host")!;
+    host.replaceChildren(plain);
+    const plainSaved = save(plain);
+    plain.value = "";
+    restore(plain, plainSaved);
+    const restored = document.createElement("m-text-field");
+    restored.setAttribute("chips", "");
+    host.replaceChildren(restored);
+    restore(restored, saved);
+    return { saved, values: restored.getValues(), draft: restored.value, plainSaved, plainRestored: plain.value };
+  }, literal);
+  assert.deepEqual(observed, {
+    saved: JSON.stringify({ v: [], d: literal }),
+    values: [],
+    draft: literal,
+    plainSaved: literal,
+    plainRestored: literal,
+  }, `chip mode restores the draft and no chips (${JSON.stringify(observed)})`);
 });
 
 // ---------------------------------------------------------------------------

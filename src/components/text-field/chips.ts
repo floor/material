@@ -12,7 +12,7 @@
 //   const recipients = createTextField({ label: "To", chips: textFieldChips({ separators: [",", ";"] }) });
 import type { ElementComponent } from "../../core/compose/component";
 import { installChips, type ChipsFeature } from "./features/chips";
-import type { TextFieldChipsConfig } from "./types";
+import type { TextFieldChipsConfig } from "./chip-types";
 
 /** The value `TextFieldConfig.chips` takes to enable chips. */
 export type TextFieldChipsEnhancer = <C extends ElementComponent>(component: C, config: object) => C & { chips?: ChipsFeature };

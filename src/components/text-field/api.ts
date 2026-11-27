@@ -5,9 +5,9 @@ import type {
   ApiOptions,
   TextFieldVariant,
   TextFieldEvents,
-  TextFieldChipItem,
 } from "./types";
-import type { ChipComponent } from "../chips/types";
+import type { ChipComponent } from "../chips";
+import type { TextFieldChipItem } from "./chip-types";
 import { warnDev } from "../../core/utils/warn";
 
 /**

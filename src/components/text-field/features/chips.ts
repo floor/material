@@ -1,8 +1,8 @@
 // src/components/text-field/features/chips.ts
 import type { ElementComponent } from "../../../core/compose/component";
 import createChip from "../../chips/chip/chip";
-import type { ChipComponent, ChipConfig, ChipOptions } from "../../chips/types";
-import type { TextFieldChipEventPayload, TextFieldChipItem, TextFieldChipsConfig } from "../types";
+import type { ChipComponent, ChipConfig } from "../../chips";
+import type { TextFieldChipEventPayload, TextFieldChipItem, TextFieldChipsConfig } from "../chip-types";
 
 /**
  * Input chips inside a text field (m3.material.io chips, "Input chips").
@@ -236,7 +236,7 @@ export const installChips = <C extends ElementComponent>(
         // Removal is the field's: the chip reports it and the field takes the
         // chip out, so its state, its form rows and its focus stay in step.
         onRemoved: (removed: ChipComponent) => removeAt(indexOf(removed), true),
-      } as ChipOptions);
+      });
       chip.action.tabIndex = -1;
       // The chip is a named group of its two actions (m3.material.io chips,
       // accessibility: a chip's label is its own text, the remove action is

@@ -165,11 +165,10 @@ export async function buildStyles(outdir: string, banner: string) {
       // base without moving either sheet's rules.
       // Contrast is emitted separately, in that same layer (`emitExplicit`).
       const layer = name === "typography" || name === "base-lite" ? "base" : name === "base-elements" ? "base" : name;
-      // An opt-in entry's rules are emitted unlayered: the component rules it
-      // refines are unlayered in the full stylesheet, and an unlayered rule
-      // beats every layered one. Its selectors are more specific than the
-      // rules they refine, so specificity decides in either load order.
-      if (componentStyles[name]?.optIn) {
+      // The chip row refines rules that are unlayered in the full sheet.
+      // Keep it unlayered so its more specific selectors win in either
+      // load order.
+      if (name === "text-field-chips") {
         await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
       } else {
         await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);

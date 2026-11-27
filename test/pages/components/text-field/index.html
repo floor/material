@@ -188,8 +188,70 @@
     measure: () => json({ ...chipInfo(window.__interactionField), live: live(window.__interactionField)?.textContent ?? "" }),
   });
 
+  let optionsField;
+  scenario(interaction, {
+    title: "Change a chip field’s options after upgrade",
+    lookFor: "press Apply chip options, type one and press semicolon, then type two and press Enter.",
+    expected: "one becomes a chip and two stays in the draft at the new one-chip limit.",
+    mount: (body) => {
+      const box = stage(body);
+      optionsField = document.createElement("m-text-field");
+      optionsField.className = "tp-field";
+      optionsField.setAttribute("label", "Recipients");
+      optionsField.setAttribute("chips", "");
+      const apply = document.createElement("button");
+      apply.type = "button";
+      apply.textContent = "Apply chip options";
+      apply.addEventListener("click", () => {
+        optionsField.setAttribute("separators", ";");
+        optionsField.setAttribute("max-chips", "1");
+        optionsField.shadowRoot.querySelector("input").focus();
+      });
+      box.append(optionsField, apply);
+    },
+    measure: () => json({
+      separator: optionsField.getAttribute("separators"),
+      maxChips: optionsField.getAttribute("max-chips"),
+      chips: optionsField.getValues(),
+      draft: optionsField.value,
+    }),
+  });
+
   // ------------------------------------------------------------- Edge cases
   const edges = section(main, "Edge cases");
+  let restoreField;
+  let savedDraft;
+  scenario(edges, {
+    title: "Save and restore a JSON-shaped draft",
+    lookFor: "press Save and restore draft to enter a sample draft, save it and restore the saved state.",
+    expected: "the literal draft returns and the chip list stays empty.",
+    mount: (body) => {
+      const box = stage(body);
+      restoreField = document.createElement("m-text-field");
+      restoreField.className = "tp-field";
+      restoreField.setAttribute("label", "Restored draft");
+      restoreField.setAttribute("chips", "");
+      const roundTrip = document.createElement("button");
+      roundTrip.type = "button";
+      roundTrip.textContent = "Save and restore draft";
+      roundTrip.addEventListener("click", () => {
+        const setFormValue = ElementInternals.prototype.setFormValue;
+        ElementInternals.prototype.setFormValue = function (value, state) {
+          savedDraft = state;
+          setFormValue.call(this, value, state);
+        };
+        try {
+          restoreField.value = JSON.stringify({ v: ["example"], d: "sample text" });
+        } finally {
+          ElementInternals.prototype.setFormValue = setFormValue;
+        }
+        restoreField.value = "";
+        restoreField.formStateRestoreCallback(savedDraft);
+      });
+      box.append(restoreField, roundTrip);
+    },
+    measure: () => json({ saved: savedDraft, chips: restoreField.getValues(), draft: restoreField.value }),
+  });
   scenario(edges, {
     title: "An invalid address stays as text",
     lookFor: "type an address without @ and press Enter.",

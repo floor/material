@@ -96,7 +96,7 @@ export interface FormSpec<C> {
    * The state the browser keeps for the control, to hand back through
    * `restore` when it restores the form (history navigation, autofill).
    */
-  state?: (component: C) => string;
+  state?: (component: C, host: HTMLElement) => string;
   /** Restores that state; `host` is the element, for state an attribute decides. */
   restore?: (component: C, state: string, host: HTMLElement) => void;
   disable?: (component: C, disabled: boolean) => void;
@@ -826,7 +826,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       const internals = this.internals;
       if (!form || !internals || !this.component) return;
       const value = form.value(this.component, this);
-      if (form.state) internals.setFormValue(value, form.state(this.component));
+      if (form.state) internals.setFormValue(value, form.state(this.component, this));
       else internals.setFormValue(value);
       // Not again while it stays valid: setting the validity was most of a
       // property set's cost, and a toggled checkbox that is not required

@@ -28,7 +28,8 @@
 import createTextField from "../components/text-field";
 import { textFieldChips } from "../components/text-field/chips";
 import { checkTrailingLabel } from "../components/text-field/api";
-import type { TextFieldComponent, TextFieldChipItem, TextFieldChipsConfig, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
+import type { TextFieldComponent, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
+import type { TextFieldChipItem, TextFieldChipsConfig } from "../components/text-field/chip-types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 /** The text field, with the methods the element adds to it. */
@@ -169,8 +170,8 @@ const textFieldSpec = {
     // read by config(host) below, which recreates the field when they change.
     // A change rebuilds: the sheet and the chips follow the attribute.
     chips: { type: "boolean" },
-    separators: { type: "string", update: () => {} },
-    "max-chips": { type: "number", update: () => {} },
+    separators: { type: "string" },
+    "max-chips": { type: "number" },
   },
   properties: {
     value: { get: (c) => c.getValue(), set: (c, v) => void c.setValue(String(v ?? "")) },
@@ -217,10 +218,9 @@ const textFieldSpec = {
     events: ["input", "change", "add", "remove"],
     activate: (c) => c.input.focus(),
     // The chips and the draft text travel together through a restore.
-    state: (c) => {
-      const values = c.getValues();
-      return values.length > 0 ? JSON.stringify({ v: values, d: c.getValue() }) : c.getValue();
-    },
+    state: (c, host) => host.hasAttribute("chips")
+      ? JSON.stringify({ v: c.getValues(), d: c.getValue() })
+      : c.getValue(),
     restore: (c, state, host) => {
       // Without chips the stored state is the draft itself, whatever it reads
       // as: a plain field restores the literal, as a native input does.

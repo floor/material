@@ -23,7 +23,7 @@ export const changePayload: Equals<Parameters<Parameters<typeof field.on<"change
 export const focusPayload: Equals<Parameters<Parameters<typeof field.on<"focus">>[1]>[0], TextFieldFocusPayload> = true;
 export const blurPayload: Equals<Parameters<Parameters<typeof field.on<"blur">>[1]>[0], TextFieldFocusPayload> = true;
 // A chip's addition and removal carry the values and the chip that changed.
-import type { TextFieldChipEventPayload } from "../../src/components/text-field/types";
+import type { TextFieldChipEventPayload } from "../../src/components/text-field/chip-types";
 export const addPayload: Equals<Parameters<Parameters<typeof field.on<"add">>[1]>[0], TextFieldChipEventPayload> = true;
 
 const onValue: TextFieldEvents["input"] = ({ value, isEmpty, isAutofilled }) => {
