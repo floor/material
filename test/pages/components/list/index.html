@@ -102,6 +102,51 @@ scenario(states, {
   },
 });
 
+scenario(states, {
+  title: "A list nested in a selected or disabled row",
+  lookFor: "the nested list's unselected icons, headline and text opacity beside the rows' own",
+  expected: "the nested list keeps OnSurfaceVariant icons, an OnSurface headline and full opacity; the rows' own icons keep OnSecondaryContainer, and OnSurface at 0.38 when disabled, with its text at 0.38",
+  measure: () => {
+    const held = item(document.getElementById("list-held"), "held");
+    const frozen = item(document.getElementById("list-frozen"), "frozen");
+    if (!held || !frozen) return "no list";
+    const role = (row, part) => roleOf(getComputedStyle(row.querySelector(`.mtrl-list__${part}`)).color);
+    const opacity = (row, part) => getComputedStyle(row.querySelector(`.mtrl-list__${part}`)).opacity;
+    const textRole = (row) => roleOf(getComputedStyle(row.querySelector(".mtrl-list__text .mtrl-list__headline")).color);
+    const inside = item(held, "inside");
+    const chill = item(frozen, "chill");
+    return [
+      `selected row ${role(held, "leading")}/${role(held, "trailing")} ${textRole(held)}`,
+      `nested ${role(inside, "leading")}/${role(inside, "trailing")} ${textRole(inside)} @ ${opacity(inside, "text")}`,
+      `disabled row ${role(frozen, "leading")}/${role(frozen, "trailing")} @ ${opacity(frozen, "leading")}, text @ ${opacity(frozen, "text")}`,
+      `nested ${role(chill, "leading")}/${role(chill, "trailing")} ${textRole(chill)} @ ${opacity(chill, "text")}`,
+    ].join(" · ");
+  },
+  mount: (body) => {
+    const held = createList({
+      ariaLabel: "Selected",
+      items: [{ id: "held", headline: "Selected row", selected: true, leading: icon, trailing: icon }],
+    });
+    const inside = createList({
+      ariaLabel: "Nested in selected",
+      items: [{ id: "inside", headline: "Nested", leading: icon, trailing: icon }],
+    });
+    item(held.element, "held").append(inside.element);
+    const frozen = createList({
+      ariaLabel: "Disabled",
+      items: [{ id: "frozen", headline: "Disabled row", disabled: true, leading: icon, trailing: icon }],
+    });
+    const chill = createList({
+      ariaLabel: "Nested in disabled",
+      items: [{ id: "chill", headline: "Nested", leading: icon, trailing: icon }],
+    });
+    item(frozen.element, "frozen").append(chill.element);
+    held.element.id = "list-held";
+    frozen.element.id = "list-frozen";
+    body.append(held.element, frozen.element);
+  },
+});
+
 const interaction = section(main, "Interaction");
 scenario(interaction, {
   title: "Space between the icon and the text",
