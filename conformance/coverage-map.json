@@ -1,0 +1,2472 @@
+{
+  "app-bar": {
+    "AppBarTokens.kt": {
+      "unmeasured": [
+        "AvatarSize",
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerShape",
+        "IconButtonSpace",
+        "IconSize",
+        "LeadingIconColor",
+        "LeadingSpace",
+        "OnScrollContainerColor",
+        "OnScrollContainerElevation",
+        "SubtitleColor",
+        "TitleColor",
+        "TrailingIconColor",
+        "TrailingSpace"
+      ]
+    },
+    "AppBarLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight",
+        "TitleFont"
+      ]
+    },
+    "AppBarLargeFlexibleTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight",
+        "LargeContainerHeight",
+        "SubtitleFont",
+        "TitleFont"
+      ]
+    },
+    "AppBarMediumTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight",
+        "TitleFont"
+      ]
+    },
+    "AppBarMediumFlexibleTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight",
+        "LargeContainerHeight",
+        "SubtitleFont",
+        "TitleFont"
+      ]
+    },
+    "AppBarSmallTokens.kt": {
+      "unmeasured": [
+        "SubtitleFont",
+        "TitleFont"
+      ]
+    }
+  },
+  "badge": {
+    "BadgeTokens.kt": {
+      "unmeasured": [
+        "LargeColor",
+        "LargeLabelTextColor",
+        "LargeLabelTextFont",
+        "LargeShape",
+        "Shape"
+      ]
+    }
+  },
+  "bottom-app-bar": {
+    "BottomAppBarTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "ContainerShape"
+      ]
+    }
+  },
+  "bottom-sheet": {
+    "SheetBottomTokens.kt": {
+      "unmeasured": [
+        "DockedDragHandleColor",
+        "DockedDragHandleHeight",
+        "DockedDragHandleWidth",
+        "DockedMinimizedContainerShape",
+        "DockedModalContainerElevation",
+        "DockedStandardContainerElevation",
+        "FocusIndicatorColor"
+      ]
+    }
+  },
+  "button": {
+    "BaselineButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerHeight",
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "FocusedLabelTextColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "HoveredLabelTextColor",
+        "IconColor",
+        "IconLabelSpace",
+        "IconSize",
+        "LabelTextColor",
+        "LabelTextSelectedColor",
+        "LabelTextUnselectedColor",
+        "LeadingSpace",
+        "PressedContainerElevation",
+        "PressedContainerShape",
+        "PressedIconColor",
+        "PressedLabelTextColor",
+        "SelectedContainerColor",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "SelectedFocusedIconColor",
+        "SelectedFocusedLabelTextColor",
+        "SelectedHoveredIconColor",
+        "SelectedHoveredLabelTextColor",
+        "SelectedIconColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedLabelTextColor",
+        "TrailingSpace",
+        "UnselectedContainerColor",
+        "UnselectedFocusedIconColor",
+        "UnselectedFocusedLabelTextColor",
+        "UnselectedHoveredIconColor",
+        "UnselectedHoveredLabelTextColor",
+        "UnselectedIconColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedLabelTextColor"
+      ]
+    },
+    "ButtonLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonMediumTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonXLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonXSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "IconLabelSpace",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ElevatedButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "FocusedLabelTextColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "HoveredLabelTextColor",
+        "IconColor",
+        "LabelTextColor",
+        "LabelTextSelectedColor",
+        "LabelTextUnselectedColor",
+        "PressedContainerElevation",
+        "PressedIconColor",
+        "PressedLabelTextColor",
+        "SelectedContainerColor",
+        "SelectedFocusedIconColor",
+        "SelectedFocusedLabelTextColor",
+        "SelectedHoveredIconColor",
+        "SelectedHoveredLabelTextColor",
+        "SelectedIconColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedLabelTextColor",
+        "UnselectedContainerColor",
+        "UnselectedFocusedIconColor",
+        "UnselectedFocusedLabelTextColor",
+        "UnselectedHoveredIconColor",
+        "UnselectedHoveredLabelTextColor",
+        "UnselectedIconColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedLabelTextColor"
+      ]
+    },
+    "FilledButtonTokens.kt": {
+      "unmeasured": [
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "FocusedLabelTextColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "HoveredLabelTextColor",
+        "IconColor",
+        "LabelTextColor",
+        "LabelTextSelectedColor",
+        "LabelTextUnselectedColor",
+        "PressedContainerElevation",
+        "PressedIconColor",
+        "PressedLabelTextColor",
+        "SelectedContainerColor",
+        "SelectedFocusedIconColor",
+        "SelectedFocusedLabelTextColor",
+        "SelectedHoveredIconColor",
+        "SelectedHoveredLabelTextColor",
+        "SelectedIconColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedLabelTextColor",
+        "UnselectedContainerColor",
+        "UnselectedFocusedIconColor",
+        "UnselectedFocusedLabelTextColor",
+        "UnselectedHoveredIconColor",
+        "UnselectedHoveredLabelTextColor",
+        "UnselectedIconColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedLabelTextColor"
+      ]
+    },
+    "FilledTonalButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerHeight",
+        "ContainerShape",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "FocusContainerElevation",
+        "FocusIconColor",
+        "FocusLabelTextColor",
+        "HoverContainerElevation",
+        "HoverIconColor",
+        "HoverLabelTextColor",
+        "IconColor",
+        "IconSize",
+        "LabelTextColor",
+        "LabelTextFont",
+        "PressedContainerElevation",
+        "PressedIconColor",
+        "PressedLabelTextColor"
+      ]
+    },
+    "OutlinedButtonTokens.kt": {
+      "unmeasured": [
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "DisabledOutlineColor",
+        "FocusedIconColor",
+        "FocusedLabelTextColor",
+        "FocusedOutlineColor",
+        "HoveredIconColor",
+        "HoveredLabelTextColor",
+        "HoveredOutlineColor",
+        "IconColor",
+        "LabelTextColor",
+        "OutlineColor",
+        "PressedIconColor",
+        "PressedLabelTextColor",
+        "PressedOutlineColor",
+        "SelectedContainerColor",
+        "SelectedDisabledContainerColor",
+        "SelectedFocusedIconColor",
+        "SelectedFocusedLabelTextColor",
+        "SelectedHoveredIconColor",
+        "SelectedHoveredLabelTextColor",
+        "SelectedIconColor",
+        "SelectedLabelTextColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedLabelTextColor",
+        "UnselectedDisabledOutlineColor",
+        "UnselectedFocusedIconColor",
+        "UnselectedFocusedLabelTextColor",
+        "UnselectedFocusedOutlineColor",
+        "UnselectedHoveredIconColor",
+        "UnselectedHoveredLabelTextColor",
+        "UnselectedHoveredOutlineColor",
+        "UnselectedIconColor",
+        "UnselectedLabelTextColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedLabelTextColor",
+        "UnselectedPressedOutlineColor"
+      ]
+    },
+    "TextButtonTokens.kt": {
+      "unmeasured": [
+        "DisabledContainerColor",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelColor",
+        "DisabledLabelOpacity",
+        "FocusedIconColor",
+        "FocusedLabelColor",
+        "HoveredIconColor",
+        "HoveredLabelColor",
+        "IconColor",
+        "LabelColor",
+        "PressedIconColor",
+        "PressedLabelColor"
+      ]
+    },
+    "TonalButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "FocusedLabelTextColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "HoveredLabelTextColor",
+        "IconColor",
+        "LabelTextColor",
+        "PressedContainerElevation",
+        "PressedIconColor",
+        "PressedLabelTextColor",
+        "SelectedContainerColor",
+        "SelectedFocusedIconColor",
+        "SelectedFocusedLabelTextColor",
+        "SelectedHoveredIconColor",
+        "SelectedHoveredLabelTextColor",
+        "SelectedIconColor",
+        "SelectedLabelTextColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedLabelTextColor",
+        "UnselectedContainerColor",
+        "UnselectedFocusedIconColor",
+        "UnselectedFocusedLabelTextColor",
+        "UnselectedHoveredIconColor",
+        "UnselectedHoveredLabelTextColor",
+        "UnselectedIconColor",
+        "UnselectedLabelTextColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedLabelTextColor"
+      ]
+    }
+  },
+  "button-group": {
+    "ButtonGroupSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight"
+      ]
+    },
+    "ButtonLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconLabelSpace",
+        "IconSize",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonMediumTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconLabelSpace",
+        "IconSize",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconLabelSpace",
+        "IconSize",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonXLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconLabelSpace",
+        "IconSize",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ButtonXSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconLabelSpace",
+        "IconSize",
+        "LeadingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "TrailingSpace"
+      ]
+    },
+    "ConnectedButtonGroupSmallTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerHeight",
+        "ContainerShape",
+        "InnerCornerCornerSize",
+        "PressedInnerCornerCornerSize",
+        "SelectedInnerCornerCornerSizePercent"
+      ]
+    }
+  },
+  "card": {
+    "ElevatedCardTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DraggedContainerElevation",
+        "FocusContainerElevation",
+        "FocusIndicatorColor",
+        "HoverContainerElevation",
+        "IconColor",
+        "IconSize",
+        "PressedContainerElevation"
+      ]
+    },
+    "FilledCardTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "DisabledContainerColor",
+        "DisabledContainerElevation",
+        "DisabledContainerOpacity",
+        "DraggedContainerElevation",
+        "FocusIndicatorColor",
+        "HoverContainerElevation",
+        "IconColor",
+        "IconSize",
+        "PressedContainerElevation"
+      ]
+    },
+    "OutlinedCardTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "DisabledContainerElevation",
+        "DisabledOutlineColor",
+        "DisabledOutlineOpacity",
+        "DraggedContainerElevation",
+        "DraggedOutlineColor",
+        "FocusOutlineColor",
+        "HoverContainerElevation",
+        "HoverOutlineColor",
+        "IconColor",
+        "IconSize",
+        "OutlineColor",
+        "OutlineWidth",
+        "PressedContainerElevation",
+        "PressedOutlineColor"
+      ]
+    }
+  },
+  "carousel": {},
+  "checkbox": {
+    "CheckboxTokens.kt": {
+      "unmeasured": [
+        "ContainerShape",
+        "ContainerSize",
+        "FocusIndicatorColor",
+        "IconSize",
+        "SelectedDisabledContainerColor",
+        "SelectedDisabledContainerOpacity",
+        "SelectedDisabledContainerOutlineWidth",
+        "SelectedDisabledIconColor",
+        "SelectedErrorContainerColor",
+        "SelectedErrorFocusContainerColor",
+        "SelectedErrorFocusIconColor",
+        "SelectedErrorHoverContainerColor",
+        "SelectedErrorHoverIconColor",
+        "SelectedErrorIconColor",
+        "SelectedErrorPressedContainerColor",
+        "SelectedErrorPressedIconColor",
+        "SelectedFocusContainerColor",
+        "SelectedFocusIconColor",
+        "SelectedFocusOutlineWidth",
+        "SelectedHoverContainerColor",
+        "SelectedHoverIconColor",
+        "SelectedHoverOutlineWidth",
+        "SelectedIconColor",
+        "SelectedOutlineWidth",
+        "SelectedPressedContainerColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedOutlineWidth",
+        "StateLayerShape",
+        "StateLayerSize",
+        "UnselectedDisabledContainerOpacity",
+        "UnselectedDisabledOutlineColor",
+        "UnselectedDisabledOutlineWidth",
+        "UnselectedErrorFocusOutlineColor",
+        "UnselectedErrorHoverOutlineColor",
+        "UnselectedErrorOutlineColor",
+        "UnselectedErrorPressedOutlineColor",
+        "UnselectedFocusOutlineColor",
+        "UnselectedFocusOutlineWidth",
+        "UnselectedHoverOutlineColor",
+        "UnselectedHoverOutlineWidth",
+        "UnselectedOutlineColor",
+        "UnselectedOutlineWidth",
+        "UnselectedPressedOutlineColor",
+        "UnselectedPressedOutlineWidth"
+      ]
+    }
+  },
+  "chips": {
+    "AssistChipTokens.kt": {
+      "unmeasured": [
+        "DisabledIconColor",
+        "DisabledIconOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "DraggedContainerElevation",
+        "DraggedIconColor",
+        "DraggedLabelTextColor",
+        "ElevatedContainerColor",
+        "ElevatedContainerElevation",
+        "ElevatedDisabledContainerColor",
+        "ElevatedDisabledContainerElevation",
+        "ElevatedDisabledContainerOpacity",
+        "ElevatedFocusContainerElevation",
+        "ElevatedHoverContainerElevation",
+        "ElevatedPressedContainerElevation",
+        "FlatContainerElevation",
+        "FlatDisabledOutlineColor",
+        "FlatDisabledOutlineOpacity",
+        "FlatFocusOutlineColor",
+        "FlatOutlineColor",
+        "FlatOutlineWidth",
+        "FocusIconColor",
+        "FocusIndicatorColor",
+        "FocusLabelTextColor",
+        "HoverIconColor",
+        "HoverLabelTextColor",
+        "IconColor",
+        "LabelTextColor",
+        "LabelTextFont",
+        "PressedIconColor",
+        "PressedLabelTextColor"
+      ]
+    },
+    "ChipsTokens.kt": {
+      "unmeasured": [
+        "AvatarShape",
+        "AvatarSize",
+        "ContainerElevation",
+        "DisabledLabelTextColor",
+        "DisabledLeadingIconColor",
+        "DisabledTrailingIconColor",
+        "DraggedContainerElevation",
+        "FocusedIndicatorColor",
+        "Height",
+        "LabelText",
+        "LeadingIconSize",
+        "PressedShape",
+        "SelectedContainerColor",
+        "SelectedDisabledContainerColor",
+        "SelectedDisabledContainerOpacity",
+        "SelectedLabelTextColor",
+        "SelectedLeadingIconColor",
+        "SelectedOutlineWidth",
+        "SelectedShape",
+        "SelectedTrailingIconColor",
+        "TrailingIconSize",
+        "UnselectedDisabledOutlineColor",
+        "UnselectedDisabledOutlineOpacity",
+        "UnselectedLabelTextColor",
+        "UnselectedLeadingIconColor",
+        "UnselectedOutlineColor",
+        "UnselectedOutlineWidth",
+        "UnselectedShape",
+        "UnselectedTrailingIconColor"
+      ]
+    },
+    "FilterChipTokens.kt": {
+      "unmeasured": [
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "DisabledLeadingIconColor",
+        "DisabledLeadingIconOpacity",
+        "DisabledTrailingIconColor",
+        "DisabledTrailingIconOpacity",
+        "DraggedContainerElevation",
+        "ElevatedContainerElevation",
+        "ElevatedDisabledContainerColor",
+        "ElevatedDisabledContainerElevation",
+        "ElevatedDisabledContainerOpacity",
+        "ElevatedFocusContainerElevation",
+        "ElevatedHoverContainerElevation",
+        "ElevatedPressedContainerElevation",
+        "ElevatedSelectedContainerColor",
+        "ElevatedUnselectedContainerColor",
+        "FlatContainerElevation",
+        "FlatDisabledSelectedContainerColor",
+        "FlatDisabledSelectedContainerOpacity",
+        "FlatDisabledUnselectedOutlineColor",
+        "FlatDisabledUnselectedOutlineOpacity",
+        "FlatSelectedFocusContainerElevation",
+        "FlatSelectedHoverContainerElevation",
+        "FlatSelectedOutlineWidth",
+        "FlatSelectedPressedContainerElevation",
+        "FlatUnselectedFocusContainerElevation",
+        "FlatUnselectedFocusOutlineColor",
+        "FlatUnselectedHoverContainerElevation",
+        "FlatUnselectedOutlineColor",
+        "FlatUnselectedOutlineWidth",
+        "FlatUnselectedPressedContainerElevation",
+        "FocusIndicatorColor",
+        "IconSize",
+        "LabelTextFont",
+        "SelectedDraggedLabelTextColor",
+        "SelectedDraggedLeadingIconColor",
+        "SelectedDraggedTrailingIconColor",
+        "SelectedFocusLabelTextColor",
+        "SelectedFocusLeadingIconColor",
+        "SelectedFocusTrailingIconColor",
+        "SelectedHoverLabelTextColor",
+        "SelectedHoverLeadingIconColor",
+        "SelectedHoverTrailingIconColor",
+        "SelectedLabelTextColor",
+        "SelectedLeadingIconColor",
+        "SelectedPressedLabelTextColor",
+        "SelectedPressedLeadingIconColor",
+        "SelectedPressedTrailingIconColor",
+        "SelectedTrailingIconColor",
+        "UnselectedDraggedLabelTextColor",
+        "UnselectedDraggedLeadingIconColor",
+        "UnselectedDraggedTrailingIconColor",
+        "UnselectedFocusLabelTextColor",
+        "UnselectedFocusLeadingIconColor",
+        "UnselectedFocusTrailingIconColor",
+        "UnselectedHoverLabelTextColor",
+        "UnselectedHoverLeadingIconColor",
+        "UnselectedHoverTrailingIconColor",
+        "UnselectedLabelTextColor",
+        "UnselectedLeadingIconColor",
+        "UnselectedPressedLabelTextColor",
+        "UnselectedPressedLeadingIconColor",
+        "UnselectedPressedTrailingIconColor",
+        "UnselectedTrailingIconColor"
+      ]
+    },
+    "InputChipTokens.kt": {
+      "unmeasured": [
+        "AvatarShape",
+        "AvatarSize",
+        "ContainerElevation",
+        "DisabledAvatarOpacity",
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "DisabledLeadingIconColor",
+        "DisabledLeadingIconOpacity",
+        "DisabledSelectedContainerColor",
+        "DisabledSelectedContainerOpacity",
+        "DisabledTrailingIconColor",
+        "DisabledTrailingIconOpacity",
+        "DisabledUnselectedOutlineColor",
+        "DisabledUnselectedOutlineOpacity",
+        "DraggedContainerElevation",
+        "FocusIndicatorColor",
+        "LabelTextFont",
+        "LeadingIconSize",
+        "SelectedContainerColor",
+        "SelectedDraggedLabelTextColor",
+        "SelectedDraggedLeadingIconColor",
+        "SelectedDraggedTrailingIconColor",
+        "SelectedFocusLabelTextColor",
+        "SelectedFocusLeadingIconColor",
+        "SelectedFocusTrailingIconColor",
+        "SelectedHoverLabelTextColor",
+        "SelectedHoverLeadingIconColor",
+        "SelectedHoverTrailingIconColor",
+        "SelectedLabelTextColor",
+        "SelectedLeadingIconColor",
+        "SelectedOutlineWidth",
+        "SelectedPressedLabelTextColor",
+        "SelectedPressedLeadingIconColor",
+        "SelectedPressedTrailingIconColor",
+        "SelectedTrailingIconColor",
+        "TrailingIconSize",
+        "UnselectedDraggedLabelTextColor",
+        "UnselectedDraggedLeadingIconColor",
+        "UnselectedDraggedTrailingIconColor",
+        "UnselectedFocusLabelTextColor",
+        "UnselectedFocusLeadingIconColor",
+        "UnselectedFocusOutlineColor",
+        "UnselectedFocusTrailingIconColor",
+        "UnselectedHoverLabelTextColor",
+        "UnselectedHoverLeadingIconColor",
+        "UnselectedHoverTrailingIconColor",
+        "UnselectedLabelTextColor",
+        "UnselectedLeadingIconColor",
+        "UnselectedOutlineColor",
+        "UnselectedOutlineWidth",
+        "UnselectedPressedLabelTextColor",
+        "UnselectedPressedLeadingIconColor",
+        "UnselectedPressedTrailingIconColor",
+        "UnselectedTrailingIconColor"
+      ]
+    },
+    "SuggestionChipTokens.kt": {
+      "unmeasured": [
+        "DisabledLabelTextColor",
+        "DisabledLabelTextOpacity",
+        "DisabledLeadingIconColor",
+        "DisabledLeadingIconOpacity",
+        "DraggedContainerElevation",
+        "DraggedLabelTextColor",
+        "DraggedLeadingIconColor",
+        "ElevatedContainerColor",
+        "ElevatedContainerElevation",
+        "ElevatedDisabledContainerColor",
+        "ElevatedDisabledContainerElevation",
+        "ElevatedDisabledContainerOpacity",
+        "ElevatedFocusContainerElevation",
+        "ElevatedHoverContainerElevation",
+        "ElevatedPressedContainerElevation",
+        "FlatContainerElevation",
+        "FlatDisabledOutlineColor",
+        "FlatDisabledOutlineOpacity",
+        "FlatFocusOutlineColor",
+        "FlatOutlineColor",
+        "FlatOutlineWidth",
+        "FocusIndicatorColor",
+        "FocusLabelTextColor",
+        "FocusLeadingIconColor",
+        "HoverLabelTextColor",
+        "HoverLeadingIconColor",
+        "LabelTextColor",
+        "LabelTextFont",
+        "LeadingIconColor",
+        "LeadingIconSize",
+        "PressedLabelTextColor",
+        "PressedLeadingIconColor"
+      ]
+    }
+  },
+  "datepicker": {
+    "DateInputModalTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerHeight",
+        "ContainerShape",
+        "ContainerSurfaceTintLayerColor",
+        "ContainerWidth",
+        "HeaderContainerHeight",
+        "HeaderContainerWidth",
+        "HeaderHeadlineColor",
+        "HeaderHeadlineFont",
+        "HeaderSupportingTextColor",
+        "HeaderSupportingTextFont"
+      ]
+    },
+    "DatePickerModalTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "ContainerHeight",
+        "DateContainerHeight",
+        "DateContainerShape",
+        "DateContainerWidth",
+        "DateLabelTextFont",
+        "DateSelectedContainerColor",
+        "DateSelectedLabelTextColor",
+        "DateStateLayerHeight",
+        "DateStateLayerShape",
+        "DateStateLayerWidth",
+        "DateTodayContainerOutlineColor",
+        "DateTodayContainerOutlineWidth",
+        "DateTodayLabelTextColor",
+        "DateUnselectedLabelTextColor",
+        "HeaderContainerHeight",
+        "HeaderContainerWidth",
+        "HeaderHeadlineColor",
+        "HeaderHeadlineFont",
+        "HeaderSupportingTextColor",
+        "HeaderSupportingTextFont",
+        "RangeSelectionActiveIndicatorContainerColor",
+        "RangeSelectionActiveIndicatorContainerHeight",
+        "RangeSelectionActiveIndicatorContainerShape",
+        "RangeSelectionContainerElevation",
+        "RangeSelectionContainerShape",
+        "RangeSelectionHeaderContainerHeight",
+        "RangeSelectionHeaderHeadlineFont",
+        "RangeSelectionMonthSubheadColor",
+        "RangeSelectionMonthSubheadFont",
+        "SelectionDateInRangeLabelTextColor",
+        "SelectionYearContainerHeight",
+        "SelectionYearLabelTextFont",
+        "SelectionYearSelectedContainerColor",
+        "SelectionYearSelectedLabelTextColor",
+        "SelectionYearStateLayerHeight",
+        "SelectionYearStateLayerShape",
+        "SelectionYearStateLayerWidth",
+        "SelectionYearUnselectedLabelTextColor",
+        "WeekdaysLabelTextColor",
+        "WeekdaysLabelTextFont"
+      ]
+    }
+  },
+  "dialog": {
+    "DialogTokens.kt": {
+      "unmeasured": [
+        "ActionFocusLabelTextColor",
+        "ActionHoverLabelTextColor",
+        "ActionLabelTextColor",
+        "ActionLabelTextFont",
+        "ActionPressedLabelTextColor",
+        "ContainerElevation",
+        "HeadlineColor",
+        "HeadlineFont",
+        "IconColor",
+        "IconSize",
+        "SupportingTextColor",
+        "SupportingTextFont"
+      ]
+    }
+  },
+  "divider": {
+    "DividerTokens.kt": {}
+  },
+  "extended-fab": {
+    "ExtendedFabLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShape",
+        "IconLabelSpace",
+        "LeadingSpace",
+        "TrailingSpace"
+      ]
+    },
+    "ExtendedFabMediumTokens.kt": {
+      "unmeasured": [
+        "IconLabelSpace",
+        "LeadingSpace",
+        "TrailingSpace"
+      ]
+    },
+    "ExtendedFabPrimaryTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerHeight",
+        "ContainerShape",
+        "FocusContainerElevation",
+        "FocusIconColor",
+        "FocusLabelTextColor",
+        "HoverContainerElevation",
+        "HoverIconColor",
+        "HoverLabelTextColor",
+        "IconColor",
+        "IconSize",
+        "LabelTextColor",
+        "LabelTextFont",
+        "LoweredContainerElevation",
+        "LoweredFocusContainerElevation",
+        "LoweredHoverContainerElevation",
+        "LoweredPressedContainerElevation",
+        "PressedContainerElevation",
+        "PressedIconColor",
+        "PressedLabelTextColor"
+      ]
+    },
+    "ExtendedFabSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerShape",
+        "LeadingSpace",
+        "TrailingSpace"
+      ]
+    }
+  },
+  "fab": {
+    "FabBaselineTokens.kt": {
+      "unmeasured": [
+        "ContainerShape"
+      ]
+    },
+    "FabLargeTokens.kt": {
+      "unmeasured": [
+        "ContainerShape"
+      ]
+    },
+    "FabMediumTokens.kt": {},
+    "FabPrimaryContainerTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "IconColor",
+        "PressedContainerElevation",
+        "PressedIconColor"
+      ]
+    },
+    "FabSecondaryContainerTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "FocusedContainerElevation",
+        "FocusedIconColor",
+        "HoveredContainerElevation",
+        "HoveredIconColor",
+        "IconColor",
+        "PressedContainerElevation",
+        "PressedIconColor"
+      ]
+    },
+    "FabSmallTokens.kt": {
+      "unmeasured": [
+        "ContainerHeight",
+        "ContainerShape",
+        "ContainerWidth",
+        "IconSize"
+      ]
+    }
+  },
+  "fab-menu": {
+    "FabMenuBaselineTokens.kt": {
+      "unmeasured": [
+        "CloseButtonBetweenSpace",
+        "CloseButtonContainerElevation",
+        "CloseButtonContainerShape",
+        "CloseButtonContainerWidth",
+        "ListItemBetweenSpace",
+        "ListItemContainerElevation",
+        "ListItemContainerShape",
+        "ListItemIconLabelSpace",
+        "ListItemLeadingSpace",
+        "ListItemTrailingSpace"
+      ]
+    }
+  },
+  "icon-button": {
+    "FilledIconButtonTokens.kt": {
+      "unmeasured": [
+        "Color",
+        "ContainerColor",
+        "DisabledColor",
+        "DisabledContainerColor",
+        "DisabledContainerOpacity",
+        "DisabledOpacity",
+        "FocusedColor",
+        "HoveredColor",
+        "PressedColor",
+        "SelectedColor",
+        "SelectedContainerColor",
+        "SelectedFocusedColor",
+        "SelectedHoveredColor",
+        "SelectedPressedColor",
+        "UnselectedColor",
+        "UnselectedContainerColor",
+        "UnselectedFocusedColor",
+        "UnselectedHoveredColor",
+        "UnselectedPressedColor"
+      ]
+    },
+    "FilledTonalIconButtonTokens.kt": {
+      "unmeasured": [
+        "Color",
+        "ContainerColor",
+        "DisabledColor",
+        "DisabledContainerColor",
+        "DisabledContainerOpacity",
+        "DisabledOpacity",
+        "FocusedColor",
+        "HoveredColor",
+        "PressedColor",
+        "SelectedColor",
+        "SelectedContainerColor",
+        "SelectedFocusedColor",
+        "SelectedHoveredColor",
+        "SelectedPressedColor",
+        "UnselectedColor",
+        "UnselectedContainerColor",
+        "UnselectedFocusedColor",
+        "UnselectedHoveredColor",
+        "UnselectedPressedColor"
+      ]
+    },
+    "IconButtonTokens.kt": {
+      "unmeasured": [
+        "Color",
+        "DisabledColor",
+        "DisabledOpacity",
+        "FocusedColor",
+        "HoveredColor",
+        "PressedColor",
+        "SelectedColor",
+        "SelectedFocusedColor",
+        "SelectedHoveredColor",
+        "SelectedPressedColor",
+        "UnselectedColor",
+        "UnselectedFocusedColor",
+        "UnselectedHoveredColor",
+        "UnselectedPressedColor"
+      ]
+    },
+    "LargeIconButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "IconSize",
+        "NarrowLeadingSpace",
+        "NarrowTrailingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "UniformLeadingSpace",
+        "UniformTrailingSpace",
+        "WideLeadingSpace",
+        "WideTrailingSpace"
+      ]
+    },
+    "MediumIconButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "DefaultLeadingSpace",
+        "DefaultTrailingSpace",
+        "IconSize",
+        "NarrowLeadingSpace",
+        "NarrowTrailingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "WideLeadingSpace",
+        "WideTrailingSpace"
+      ]
+    },
+    "OutlinedIconButtonTokens.kt": {
+      "unmeasured": [
+        "Color",
+        "DisabledColor",
+        "DisabledOpacity",
+        "DisabledOutlineColor",
+        "FocusedColor",
+        "HoveredColor",
+        "OutlineColor",
+        "PressedColor",
+        "SelectedColor",
+        "SelectedContainerColor",
+        "SelectedDisabledContainerColor",
+        "SelectedDisabledContainerOpacity",
+        "SelectedFocusedColor",
+        "SelectedHoveredColor",
+        "SelectedPressedColor",
+        "UnselectedColor",
+        "UnselectedDisabledOutlineColor",
+        "UnselectedFocusedColor",
+        "UnselectedHoveredColor",
+        "UnselectedOutlineColor",
+        "UnselectedPressedColor"
+      ]
+    },
+    "SmallIconButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "DefaultLeadingSpace",
+        "DefaultTrailingSpace",
+        "NarrowLeadingSpace",
+        "NarrowTrailingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "WideLeadingSpace",
+        "WideTrailingSpace"
+      ]
+    },
+    "XLargeIconButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "DefaultLeadingSpace",
+        "DefaultTrailingSpace",
+        "IconSize",
+        "NarrowLeadingSpace",
+        "NarrowTrailingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "WideLeadingSpace",
+        "WideTrailingSpace"
+      ]
+    },
+    "XSmallIconButtonTokens.kt": {
+      "unmeasured": [
+        "ContainerShapeRound",
+        "ContainerShapeSquare",
+        "DefaultLeadingSpace",
+        "DefaultTrailingSpace",
+        "IconSize",
+        "NarrowLeadingSpace",
+        "NarrowTrailingSpace",
+        "OutlinedOutlineWidth",
+        "PressedContainerShape",
+        "SelectedContainerShapeRound",
+        "SelectedContainerShapeSquare",
+        "WideLeadingSpace",
+        "WideTrailingSpace"
+      ]
+    }
+  },
+  "list": {
+    "ExpandedListTokens.kt": {
+      "unmeasured": [
+        "CollapsedItemTrailingIconContainerColor",
+        "CollapsedItemTrailingIconIconColor",
+        "ContainerShape",
+        "ExpandedItemContainerColor",
+        "ExpandedItemSegmentedContainerColor",
+        "ExpandedItemTrailingIconContainerColor",
+        "ExpandedItemTrailingIconIconColor",
+        "TrailingIconShape"
+      ]
+    },
+    "ListTokens.kt": {
+      "unmeasured": [
+        "ContainerShape",
+        "DividerBottomSpace",
+        "DividerLeadingSpace",
+        "DividerTopSpace",
+        "FocusIndicatorColor",
+        "ItemContainerColor",
+        "ItemContainerElevation",
+        "ItemContainerExpressiveShape",
+        "ItemContainerShape",
+        "ItemDisabledContainerExpressiveShape",
+        "ItemDisabledLabelTextColor",
+        "ItemDisabledLabelTextOpacity",
+        "ItemDisabledLeadingIconColor",
+        "ItemDisabledLeadingIconOpacity",
+        "ItemDisabledOverlineColor",
+        "ItemDisabledOverlineOpacity",
+        "ItemDisabledStateLayerOpacity",
+        "ItemDisabledSupportingTextColor",
+        "ItemDisabledSupportingTextOpacity",
+        "ItemDisabledTrailingIconColor",
+        "ItemDisabledTrailingIconOpacity",
+        "ItemDraggedContainerElevation",
+        "ItemDraggedContainerExpressiveShape",
+        "ItemDraggedLabelTextColor",
+        "ItemDraggedLeadingIconIconColor",
+        "ItemDraggedTrailingIconIconColor",
+        "ItemFocusLabelTextColor",
+        "ItemFocusLeadingIconIconColor",
+        "ItemFocusTrailingIconIconColor",
+        "ItemFocusedContainerExpressiveShape",
+        "ItemHoverLabelTextColor",
+        "ItemHoverLeadingIconIconColor",
+        "ItemHoverTrailingIconIconColor",
+        "ItemHoveredContainerExpressiveShape",
+        "ItemLabelTextColor",
+        "ItemLabelTextFont",
+        "ItemLargeLeadingVideoHeight",
+        "ItemLargeLeadingVideoWidth",
+        "ItemLeadingAvatarColor",
+        "ItemLeadingAvatarLabelColor",
+        "ItemLeadingAvatarLabelFont",
+        "ItemLeadingAvatarShape",
+        "ItemLeadingAvatarSize",
+        "ItemLeadingIconColor",
+        "ItemLeadingIconExpressiveSize",
+        "ItemLeadingIconSize",
+        "ItemLeadingImageExpressiveShape",
+        "ItemLeadingImageHeight",
+        "ItemLeadingImageShape",
+        "ItemLeadingImageWidth",
+        "ItemLeadingSpace",
+        "ItemLeadingVideoShape",
+        "ItemLeadingVideoWidth",
+        "ItemOneLineContainerHeight",
+        "ItemOverlineColor",
+        "ItemOverlineFont",
+        "ItemPressedContainerExpressiveShape",
+        "ItemPressedLabelTextColor",
+        "ItemPressedLeadingIconIconColor",
+        "ItemPressedTrailingIconIconColor",
+        "ItemSelectedContainerExpressiveShape",
+        "ItemSelectedContainerShape",
+        "ItemSelectedDisabledContainerColor",
+        "ItemSelectedDisabledContainerExpressiveShape",
+        "ItemSelectedDisabledContainerOpacity",
+        "ItemSelectedDisabledLabelTextColor",
+        "ItemSelectedDisabledLabelTextOpacity",
+        "ItemSelectedDisabledLeadingIconColor",
+        "ItemSelectedDisabledLeadingIconOpacity",
+        "ItemSelectedDisabledOverlineColor",
+        "ItemSelectedDisabledOverlineOpacity",
+        "ItemSelectedDisabledStateLayerOpacity",
+        "ItemSelectedDisabledSupportingTextColor",
+        "ItemSelectedDisabledSupportingTextOpacity",
+        "ItemSelectedDisabledTrailingIconColor",
+        "ItemSelectedDisabledTrailingIconOpacity",
+        "ItemSelectedDisabledTrailingSupportingTextColor",
+        "ItemSelectedDisabledTrailingSupportingTextOpacity",
+        "ItemSelectedDraggedContainerExpressiveShape",
+        "ItemSelectedDraggedLabelTextColor",
+        "ItemSelectedDraggedLeadingIconColor",
+        "ItemSelectedDraggedTrailingIconColor",
+        "ItemSelectedFocusLabelTextColor",
+        "ItemSelectedFocusLeadingIconColor",
+        "ItemSelectedFocusTrailingIconColor",
+        "ItemSelectedFocusedContainerExpressiveShape",
+        "ItemSelectedHoverLabelTextColor",
+        "ItemSelectedHoverLeadingIconColor",
+        "ItemSelectedHoverTrailingIconColor",
+        "ItemSelectedHoveredContainerExpressiveShape",
+        "ItemSelectedLabelTextColor",
+        "ItemSelectedLeadingIconColor",
+        "ItemSelectedOverlineColor",
+        "ItemSelectedPressedContainerExpressiveShape",
+        "ItemSelectedPressedLabelTextColor",
+        "ItemSelectedPressedLeadingIconColor",
+        "ItemSelectedPressedTrailingIconColor",
+        "ItemSelectedSupportingTextColor",
+        "ItemSelectedTrailingIconColor",
+        "ItemSelectedTrailingSupportingTextColor",
+        "ItemSmallLeadingVideoHeight",
+        "ItemSmallLeadingVideoWidth",
+        "ItemSupportingTextColor",
+        "ItemSupportingTextFont",
+        "ItemThreeLineContainerHeight",
+        "ItemTrailingIconColor",
+        "ItemTrailingIconExpressiveSize",
+        "ItemTrailingIconSize",
+        "ItemTrailingSupportingTextColor",
+        "ItemTrailingSupportingTextFont",
+        "ItemTwoLineContainerHeight",
+        "ItemUnselectedTrailingIconColor",
+        "SegmentedGap"
+      ]
+    },
+    "ReorderListTokens.kt": {
+      "unmeasured": [
+        "ItemContainerColor",
+        "ItemDropZoneColor",
+        "ItemLabelTextColor",
+        "ItemLeadingIconColor",
+        "ItemOverlineColor",
+        "ItemShape",
+        "ItemSupportingTextColor",
+        "ItemTrailingIconColor",
+        "ItemTrailingSupportingTextColor"
+      ]
+    },
+    "RevealListTokens.kt": {
+      "unmeasured": [
+        "ItemActionButtonIconIconColor",
+        "ItemActionIconButtonContainerColor",
+        "ItemButtonIconIconColor",
+        "ItemContainerColor",
+        "ItemContainerShape",
+        "ItemIconButtonActionContainerShape",
+        "ItemIconButtonContainerColor",
+        "ItemIconButtonContainerShape",
+        "ItemSegmentedContainerShape"
+      ]
+    }
+  },
+  "loading-indicator": {
+    "LoadingIndicatorTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorColor",
+        "ActiveSize",
+        "ContainedActiveColor",
+        "ContainedContainerColor",
+        "ContainerShape"
+      ]
+    }
+  },
+  "menu": {
+    "MenuTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "FocusIndicatorColor",
+        "ListItemSelectedLabelTextColor",
+        "ListItemSelectedLeadingTrailingIconColor",
+        "MenuListItemLeadingIconColor"
+      ]
+    },
+    "SegmentedMenuTokens.kt": {
+      "unmeasured": [
+        "ActiveContainerShape",
+        "ContainerElevation",
+        "GroupContainerColor",
+        "GroupPadding",
+        "GroupShape",
+        "HorizontalContainerBottomSpace",
+        "HorizontalContainerTopSpace",
+        "HorizontalIconOnlyItemBottomSpace",
+        "HorizontalIconOnlyItemLeadingSpace",
+        "HorizontalIconOnlyItemSelectedShape",
+        "HorizontalIconOnlyItemTopSpace",
+        "HorizontalIconOnlyItemTrailingSpace",
+        "HorizontalIconOnlySegmentedGap",
+        "HorizontalItemBetweenSpace",
+        "HorizontalItemBottomSpace",
+        "HorizontalItemFocusedShape",
+        "HorizontalItemHoveredShape",
+        "HorizontalItemLeadingSpace",
+        "HorizontalItemPressedShape",
+        "HorizontalItemSelectedFocusedShape",
+        "HorizontalItemSelectedHoveredShape",
+        "HorizontalItemSelectedPressedShape",
+        "HorizontalItemTopSpace",
+        "HorizontalItemTrailingSpace",
+        "HorizontalSegmentedGap",
+        "InactiveContainerShape",
+        "Item",
+        "ItemBetweenSpace",
+        "ItemBottomSpace",
+        "ItemFirstChildInnerCornerCornerSize",
+        "ItemFirstChildShape",
+        "ItemFocusIndicatorColor",
+        "ItemLabelTextFont",
+        "ItemLastChildInnerCornerCornerSize",
+        "ItemLastChildShape",
+        "ItemLeadingIconSize",
+        "ItemLeadingSpace",
+        "ItemSelectedShape",
+        "ItemShape",
+        "ItemSupportingTextFont",
+        "ItemTopSpace",
+        "ItemTrailingIconSize",
+        "ItemTrailingSpace",
+        "ItemTrailingSupportingTextFont",
+        "SegmentedGap"
+      ]
+    },
+    "StandardMenuTokens.kt": {
+      "unmeasured": [
+        "ButtonDisabledIconIconColor",
+        "ButtonIconIconColor",
+        "ButtonSelectedIconIconColor",
+        "DisabledButtonIconIconColor",
+        "IconButtonContainerColor",
+        "IconButtonSelectedContainerColor",
+        "ItemContainerColor",
+        "ItemDisabledLabelTextColor",
+        "ItemDisabledLabelTextOpacity",
+        "ItemDisabledLeadingIconColor",
+        "ItemDisabledLeadingIconOpacity",
+        "ItemDisabledSupportingTextColor",
+        "ItemDisabledSupportingTextOpacity",
+        "ItemDisabledTrailingIconColor",
+        "ItemDisabledTrailingIconOpacity",
+        "ItemDisabledTrailingSupportingTextColor",
+        "ItemDisabledTrailingSupportingTextOpacity",
+        "ItemFocusedLabelTextColor",
+        "ItemFocusedLeadingIconColor",
+        "ItemFocusedTrailingIconColor",
+        "ItemHoveredLabelTextColor",
+        "ItemHoveredLeadingIconColor",
+        "ItemHoveredTrailingIconColor",
+        "ItemLabelTextColor",
+        "ItemLeadingIconColor",
+        "ItemPressedLabelTextColor",
+        "ItemPressedLeadingIconColor",
+        "ItemPressedTrailingIconColor",
+        "ItemSelectedContainerColor",
+        "ItemSelectedDisabledContainerColor",
+        "ItemSelectedDisabledContainerOpacity",
+        "ItemSelectedDisabledLabelTextColor",
+        "ItemSelectedDisabledLabelTextOpacity",
+        "ItemSelectedDisabledLeadingIconColor",
+        "ItemSelectedDisabledLeadingIconOpacity",
+        "ItemSelectedDisabledTrailingIconColor",
+        "ItemSelectedDisabledTrailingIconOpacity",
+        "ItemSelectedDisabledTrailingSupportingTextColor",
+        "ItemSelectedFocusedLabelTextColor",
+        "ItemSelectedFocusedLeadingIconColor",
+        "ItemSelectedFocusedSupportingTextColor",
+        "ItemSelectedFocusedTrailingIconColor",
+        "ItemSelectedFocusedTrailingSupportingTextColor",
+        "ItemSelectedHoveredLabelTextColor",
+        "ItemSelectedHoveredLeadingIconColor",
+        "ItemSelectedHoveredSupportingTextColor",
+        "ItemSelectedHoveredTrailingIconColor",
+        "ItemSelectedHoveredTrailingSupportingTextColor",
+        "ItemSelectedLabelTextColor",
+        "ItemSelectedLeadingIconColor",
+        "ItemSelectedPressedLabelTextColor",
+        "ItemSelectedPressedLeadingIconColor",
+        "ItemSelectedPressedSupportingTextColor",
+        "ItemSelectedPressedTrailingIconColor",
+        "ItemSelectedPressedTrailingSupportingTextColor",
+        "ItemSelectedSupportingTextColor",
+        "ItemSelectedTrailingIconColor",
+        "ItemSelectedTrailingSupportingTextColor",
+        "ItemSupportingTextColor",
+        "ItemTrailingIconColor",
+        "ItemTrailingSupportingTextColor"
+      ]
+    },
+    "VibrantMenuTokens.kt": {
+      "unmeasured": [
+        "ButtonDisabledIconIconColor",
+        "ButtonIconIconColor",
+        "ButtonSelectedDisabledIconIconColor",
+        "ButtonSelectedIconIconColor",
+        "ContainerColor",
+        "IconButtonContainerColor",
+        "IconButtonSelectedContainerColor",
+        "ItemColor",
+        "ItemDisabledLabelTextColor",
+        "ItemDisabledLabelTextOpacity",
+        "ItemDisabledLeadingIconColor",
+        "ItemDisabledLeadingIconOpacity",
+        "ItemDisabledSupportingTextColor",
+        "ItemDisabledSupportingTextOpacity",
+        "ItemDisabledTrailingIconColor",
+        "ItemDisabledTrailingIconOpacity",
+        "ItemDisabledTrailingSupportingTextColor",
+        "ItemDisabledTrailingSupportingTextOpacity",
+        "ItemFocusedLabelTextColor",
+        "ItemFocusedLeadingIconColor",
+        "ItemFocusedSupportingTextColor",
+        "ItemFocusedTrailingIconColor",
+        "ItemFocusedTrailingSupportingTextColor",
+        "ItemHoveredLabelTextColor",
+        "ItemHoveredLeadingIconColor",
+        "ItemHoveredSupportingTextColor",
+        "ItemHoveredTrailingIconColor",
+        "ItemHoveredTrailingSupportingTextColor",
+        "ItemLabelTextColor",
+        "ItemLeadingIconColor",
+        "ItemPressedLabelTextColor",
+        "ItemPressedLeadingIconColor",
+        "ItemPressedSupportingTextColor",
+        "ItemPressedTrailingIconColor",
+        "ItemPressedTrailingSupportingTextColor",
+        "ItemSelectedContainerColor",
+        "ItemSelectedDisabledLabelTextOpacity",
+        "ItemSelectedDisabledLeadingIconOpacity",
+        "ItemSelectedDisabledSupportingTextOpacity",
+        "ItemSelectedDisabledTrailingIconOpacity",
+        "ItemSelectedDisabledTrailingSupportingTextOpacity",
+        "ItemSelectedFocusedLabelTextColor",
+        "ItemSelectedHoveredLabelTextColor",
+        "ItemSelectedLabelTextColor",
+        "ItemSelectedLeadingIconColor",
+        "ItemSelectedPressedLabelTextColor",
+        "ItemSelectedSupportingTextColor",
+        "ItemSelectedTrailingIconColor",
+        "ItemSelectedTrailingSupportingTextColor",
+        "ItemSupportingTextColor",
+        "ItemTrailingIconColor",
+        "ItemTrailingSupportingTextColor"
+      ]
+    }
+  },
+  "navigation-bar": {
+    "NavigationBarTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "ItemActiveIconColor",
+        "ItemActiveIndicatorColor",
+        "ItemActiveIndicatorIconLabelSpace",
+        "ItemActiveIndicatorShape",
+        "ItemActiveLabelTextColor",
+        "ItemBetweenSpace",
+        "ItemInactiveIconColor",
+        "ItemInactiveLabelTextColor",
+        "LabelTextFont",
+        "NavShape"
+      ]
+    },
+    "NavigationBarHorizontalItemTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorHeight",
+        "ActiveIndicatorLeadingSpace",
+        "IconSize"
+      ]
+    },
+    "NavigationBarVerticalItemTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorHeight",
+        "ActiveIndicatorWidth",
+        "ContainerBetweenSpace",
+        "IconSize"
+      ]
+    }
+  },
+  "navigation-drawer": {
+    "NavigationDrawerTokens.kt": {
+      "unmeasured": [
+        "ActiveFocusIconColor",
+        "ActiveFocusLabelTextColor",
+        "ActiveHoverIconColor",
+        "ActiveHoverLabelTextColor",
+        "ActiveIconColor",
+        "ActiveIndicatorShape",
+        "ActiveIndicatorWidth",
+        "ActiveLabelTextColor",
+        "ActivePressedIconColor",
+        "ActivePressedLabelTextColor",
+        "BottomContainerShape",
+        "ContainerHeightPercent",
+        "ContainerShape",
+        "FocusIndicatorColor",
+        "HeadlineColor",
+        "HeadlineFont",
+        "IconSize",
+        "InactiveFocusIconColor",
+        "InactiveFocusLabelTextColor",
+        "InactiveHoverIconColor",
+        "InactiveHoverLabelTextColor",
+        "InactiveIconColor",
+        "InactiveLabelTextColor",
+        "InactivePressedIconColor",
+        "InactivePressedLabelTextColor",
+        "LabelTextFont",
+        "LargeBadgeLabelColor",
+        "LargeBadgeLabelFont",
+        "ModalContainerColor",
+        "ModalContainerElevation",
+        "StandardContainerColor",
+        "StandardContainerElevation"
+      ]
+    }
+  },
+  "navigation-rail": {
+    "NavigationRailBaselineItemTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorIconLabelSpace",
+        "ActiveIndicatorLeadingSpace",
+        "ActiveIndicatorShape",
+        "ActiveIndicatorTrailingSpace",
+        "ContainerShape",
+        "ContainerVerticalSpace",
+        "HeaderSpaceMinimum"
+      ]
+    },
+    "NavigationRailCollapsedTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerShape",
+        "ItemVerticalSpace",
+        "NarrowContainerWidth",
+        "TopSpace"
+      ]
+    },
+    "NavigationRailColorTokens.kt": {
+      "unmeasured": [
+        "ItemActiveFocusedStateLayer",
+        "ItemActiveHoveredStateLayer",
+        "ItemActiveIcon",
+        "ItemActiveIndicator",
+        "ItemActiveLabelText",
+        "ItemActivePressedStateLayer",
+        "ItemInactiveFocusedStateLayer",
+        "ItemInactiveHoveredStateLayer",
+        "ItemInactiveIcon",
+        "ItemInactiveLabelText",
+        "ItemInactivePressedStateLayer"
+      ]
+    },
+    "NavigationRailExpandedTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "ContainerShape",
+        "ContainerWidthMaximum",
+        "ContainerWidthMinimum",
+        "ModalContainerColor",
+        "ModalContainerElevation",
+        "TopSpace"
+      ]
+    },
+    "NavigationRailHorizontalItemTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorHeight",
+        "FullWidthLeadingSpace",
+        "FullWidthTrailingSpace",
+        "IconLabelSpace",
+        "LabelTextFont",
+        "LeadingSpace"
+      ]
+    },
+    "NavigationRailVerticalItemTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorHeight",
+        "ActiveIndicatorWidth",
+        "IconLabelSpace",
+        "LabelTextFont",
+        "LeadingSpace",
+        "TrailingSpace"
+      ]
+    }
+  },
+  "progress": {
+    "CircularProgressIndicatorTokens.kt": {
+      "unmeasured": [
+        "ActiveThickness",
+        "ActiveWaveAmplitude",
+        "ActiveWaveWavelength",
+        "TrackActiveSpace",
+        "TrackThickness",
+        "WaveSize"
+      ]
+    },
+    "LinearProgressIndicatorTokens.kt": {
+      "unmeasured": [
+        "ActiveThickness",
+        "ActiveWaveAmplitude",
+        "ActiveWaveWavelength",
+        "IndeterminateActiveWaveWavelength",
+        "StopSize",
+        "StopTrailingSpace",
+        "TrackActiveSpace",
+        "TrackThickness",
+        "WaveHeight"
+      ]
+    },
+    "ProgressIndicatorTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorColor",
+        "ActiveShape",
+        "StopColor",
+        "StopShape",
+        "TrackColor",
+        "TrackShape"
+      ]
+    }
+  },
+  "radios": {
+    "RadioButtonTokens.kt": {
+      "unmeasured": [
+        "DisabledSelectedIconColor",
+        "DisabledSelectedIconOpacity",
+        "DisabledUnselectedIconColor",
+        "DisabledUnselectedIconOpacity",
+        "SelectedFocusIconColor",
+        "SelectedHoverIconColor",
+        "SelectedPressedIconColor",
+        "StateLayerSize",
+        "UnselectedFocusIconColor",
+        "UnselectedHoverIconColor",
+        "UnselectedIconColor",
+        "UnselectedPressedIconColor"
+      ]
+    }
+  },
+  "search": {
+    "SearchBarTokens.kt": {
+      "unmeasured": [
+        "AvatarShape",
+        "AvatarSize",
+        "ContainerElevation",
+        "ContainerShape",
+        "FocusIndicatorColor",
+        "HoverSupportingTextColor",
+        "InputTextColor",
+        "InputTextFont",
+        "LeadingIconColor",
+        "PressedSupportingTextColor",
+        "SupportingTextColor",
+        "SupportingTextFont",
+        "TrailingIconColor"
+      ]
+    },
+    "SearchViewTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "DividerColor",
+        "DockedContainerShape",
+        "DockedHeaderContainerHeight",
+        "FullScreenContainerShape",
+        "FullScreenHeaderContainerHeight",
+        "HeaderInputTextColor",
+        "HeaderInputTextFont",
+        "HeaderLeadingIconColor",
+        "HeaderSupportingTextColor",
+        "HeaderSupportingTextFont",
+        "HeaderTrailingIconColor"
+      ]
+    }
+  },
+  "select": {
+    "FilledAutocompleteTokens.kt": {
+      "unmeasured": [
+        "FieldDisabledInputTextColor",
+        "FieldDisabledInputTextOpacity",
+        "FieldDisabledLabelTextColor",
+        "FieldDisabledLabelTextOpacity",
+        "FieldDisabledSupportingTextColor",
+        "FieldDisabledSupportingTextOpacity",
+        "FieldErrorFocusInputTextColor",
+        "FieldErrorFocusLabelTextColor",
+        "FieldErrorFocusSupportingTextColor",
+        "FieldErrorHoverInputTextColor",
+        "FieldErrorHoverLabelTextColor",
+        "FieldErrorHoverSupportingTextColor",
+        "FieldErrorInputTextColor",
+        "FieldErrorLabelTextColor",
+        "FieldErrorSupportingTextColor",
+        "FieldFocusInputTextColor",
+        "FieldFocusLabelTextColor",
+        "FieldFocusSupportingTextColor",
+        "FieldHoverInputTextColor",
+        "FieldHoverLabelTextColor",
+        "FieldHoverSupportingTextColor",
+        "FieldInputTextColor",
+        "FieldInputTextFont",
+        "FieldLabelTextColor",
+        "FieldLabelTextFont",
+        "FieldSupportingTextColor",
+        "FieldSupportingTextFont",
+        "MenuContainerElevation",
+        "TextFieldActiveIndicatorColor",
+        "TextFieldActiveIndicatorHeight",
+        "TextFieldCaretColor",
+        "TextFieldContainerColor",
+        "TextFieldContainerShape",
+        "TextFieldDisabledActiveIndicatorColor",
+        "TextFieldDisabledActiveIndicatorHeight",
+        "TextFieldDisabledActiveIndicatorOpacity",
+        "TextFieldDisabledContainerColor",
+        "TextFieldDisabledContainerOpacity",
+        "TextFieldDisabledLeadingIconColor",
+        "TextFieldDisabledLeadingIconOpacity",
+        "TextFieldDisabledTrailingIconColor",
+        "TextFieldDisabledTrailingIconOpacity",
+        "TextFieldErrorActiveIndicatorColor",
+        "TextFieldErrorFocusActiveIndicatorColor",
+        "TextFieldErrorFocusCaretColor",
+        "TextFieldErrorFocusLeadingIconColor",
+        "TextFieldErrorHoverActiveIndicatorColor",
+        "TextFieldErrorHoverLeadingIconColor",
+        "TextFieldErrorHoverTrailingIconColor",
+        "TextFieldErrorLeadingIconColor",
+        "TextFieldErrorTrailingIconColor",
+        "TextFieldFocusActiveIndicatorColor",
+        "TextFieldFocusActiveIndicatorHeight",
+        "TextFieldFocusLeadingIconColor",
+        "TextFieldHoverActiveIndicatorColor",
+        "TextFieldHoverActiveIndicatorHeight",
+        "TextFieldHoverLeadingIconColor",
+        "TextFieldHoverTrailingIconColor",
+        "TextFieldLeadingIconColor",
+        "TextFieldLeadingIconSize",
+        "TextFieldTrailingIconColor",
+        "TextFieldTrailingIconSize"
+      ]
+    },
+    "MenuTokens.kt": {
+      "unmeasured": [
+        "ContainerElevation",
+        "ContainerShape",
+        "FocusIndicatorColor",
+        "ListItemSelectedContainerColor",
+        "ListItemSelectedLabelTextColor",
+        "ListItemSelectedLeadingTrailingIconColor",
+        "MenuListItemLeadingIconColor"
+      ]
+    },
+    "OutlinedAutocompleteTokens.kt": {
+      "unmeasured": [
+        "FieldDisabledInputTextColor",
+        "FieldDisabledInputTextOpacity",
+        "FieldDisabledLabelTextColor",
+        "FieldDisabledLabelTextOpacity",
+        "FieldDisabledSupportingTextColor",
+        "FieldDisabledSupportingTextOpacity",
+        "FieldErrorFocusInputTextColor",
+        "FieldErrorFocusLabelTextColor",
+        "FieldErrorFocusSupportingTextColor",
+        "FieldErrorHoverInputTextColor",
+        "FieldErrorHoverLabelTextColor",
+        "FieldErrorHoverSupportingTextColor",
+        "FieldErrorInputTextColor",
+        "FieldErrorLabelTextColor",
+        "FieldErrorSupportingTextColor",
+        "FieldFocusInputTextColor",
+        "FieldFocusLabelTextColor",
+        "FieldFocusSupportingTextColor",
+        "FieldHoverInputTextColor",
+        "FieldHoverSupportingTextColor",
+        "FieldInputTextColor",
+        "FieldInputTextFont",
+        "FieldLabelTextColor",
+        "FieldLabelTextFont",
+        "FieldSupportingTextColor",
+        "FieldSupportingTextFont",
+        "MenuContainerColor",
+        "MenuContainerElevation",
+        "TextFieldCaretColor",
+        "TextFieldContainerColor",
+        "TextFieldContainerShape",
+        "TextFieldDisabledLeadingIconColor",
+        "TextFieldDisabledLeadingIconOpacity",
+        "TextFieldDisabledOutlineColor",
+        "TextFieldDisabledOutlineOpacity",
+        "TextFieldDisabledOutlineWidth",
+        "TextFieldDisabledTrailingIconColor",
+        "TextFieldDisabledTrailingIconOpacity",
+        "TextFieldErrorFocusCaretColor",
+        "TextFieldErrorFocusLeadingIconColor",
+        "TextFieldErrorFocusOutlineColor",
+        "TextFieldErrorHoverLeadingIconColor",
+        "TextFieldErrorHoverOutlineColor",
+        "TextFieldErrorHoverTrailingIconColor",
+        "TextFieldErrorLeadingIconColor",
+        "TextFieldErrorOutlineColor",
+        "TextFieldErrorTrailingIconColor",
+        "TextFieldFocusLeadingIconColor",
+        "TextFieldFocusOutlineColor",
+        "TextFieldFocusOutlineWidth",
+        "TextFieldHoverLeadingIconColor",
+        "TextFieldHoverOutlineColor",
+        "TextFieldHoverOutlineWidth",
+        "TextFieldHoverTrailingIconColor",
+        "TextFieldLeadingIconColor",
+        "TextFieldLeadingIconSize",
+        "TextFieldOutlineColor",
+        "TextFieldOutlineWidth",
+        "TextFieldTrailingIconColor",
+        "TextFieldTrailingIconSize"
+      ]
+    }
+  },
+  "side-sheet": {},
+  "slider": {
+    "SliderTokens.kt": {
+      "unmeasured": [
+        "ActiveContainerOpacity",
+        "ActiveHandleHeight",
+        "ActiveHandleLeadingSpace",
+        "ActiveHandlePadding",
+        "ActiveHandleShape",
+        "ActiveHandleTrailingSpace",
+        "ActiveHandleWidth",
+        "ActiveTrackHeight",
+        "ActiveTrackShape",
+        "ActiveTrackShapeLeading",
+        "DisabledActiveTrackColor",
+        "DisabledActiveTrackOpacity",
+        "DisabledHandleColor",
+        "DisabledHandleOpacity",
+        "DisabledHandleWidth",
+        "DisabledInactiveTrackColor",
+        "DisabledInactiveTrackOpacity",
+        "DisabledStopColor",
+        "FocusActiveTrackColor",
+        "FocusHandleWidth",
+        "FocusInactiveTrackColor",
+        "FocusStopColor",
+        "HandleColor",
+        "HandleShape",
+        "HoverHandleColor",
+        "HoverHandleWidth",
+        "HoverStopColor",
+        "InactiveContainerOpacity",
+        "InactiveTrackColor",
+        "InactiveTrackHeight",
+        "InactiveTrackShape",
+        "LabelContainerColor",
+        "LabelTextColor",
+        "PressedActiveTrackColor",
+        "PressedHandleColor",
+        "PressedHandleWidth",
+        "PressedInactiveTrackColor",
+        "PressedStopColor",
+        "SliderActiveHandleColor",
+        "StopIndicatorColor",
+        "StopIndicatorColorSelected",
+        "StopIndicatorShape",
+        "StopIndicatorSize",
+        "StopIndicatorTrailingSpace",
+        "ValueIndicatorActiveBottomSpace",
+        "ValueIndicatorContainerColor",
+        "ValueIndicatorLabelTextColor",
+        "ValueIndicatorLabelTextFont"
+      ]
+    }
+  },
+  "snackbar": {
+    "SnackbarTokens.kt": {
+      "unmeasured": [
+        "ActionFocusLabelTextColor",
+        "ActionHoverLabelTextColor",
+        "ActionLabelTextColor",
+        "ActionLabelTextFont",
+        "ActionPressedLabelTextColor",
+        "ContainerElevation",
+        "FocusIconColor",
+        "HoverIconColor",
+        "IconColor",
+        "IconSize",
+        "PressedIconColor",
+        "SupportingTextColor",
+        "SupportingTextFont"
+      ]
+    }
+  },
+  "split-button": {
+    "SplitButtonLargeTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerShape",
+        "InnerHoveredCornerCornerSize",
+        "InnerPressedCornerCornerSize",
+        "LeadingButtonLeadingSpace",
+        "LeadingButtonTrailingSpace",
+        "TrailingButtonLeadingSpace",
+        "TrailingButtonTrailingSpace",
+        "TrailingIconSize",
+        "TrailingInnerSelectedCornerCornerSizePercent"
+      ]
+    },
+    "SplitButtonMediumTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerShape",
+        "InnerHoveredCornerCornerSize",
+        "InnerPressedCornerCornerSize",
+        "LeadingButtonLeadingSpace",
+        "LeadingButtonTrailingSpace",
+        "TrailingButtonLeadingSpace",
+        "TrailingButtonTrailingSpace",
+        "TrailingInnerSelectedCornerCornerSizePercent"
+      ]
+    },
+    "SplitButtonSmallTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerShape",
+        "InnerCornerCornerSize",
+        "InnerHoveredCornerCornerSize",
+        "InnerPressedCornerCornerSize",
+        "LeadingButtonLeadingSpace",
+        "LeadingButtonTrailingSpace",
+        "TrailingButtonLeadingSpace",
+        "TrailingButtonTrailingSpace",
+        "TrailingIconSize",
+        "TrailingInnerSelectedCornerCornerSizePercent"
+      ]
+    },
+    "SplitButtonXLargeTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerShape",
+        "InnerHoveredCornerCornerSize",
+        "InnerPressedCornerCornerSize",
+        "LeadingButtonLeadingSpace",
+        "LeadingButtonTrailingSpace",
+        "TrailingButtonLeadingSpace",
+        "TrailingButtonTrailingSpace",
+        "TrailingIconSize",
+        "TrailingInnerSelectedCornerCornerSizePercent"
+      ]
+    },
+    "SplitButtonXSmallTokens.kt": {
+      "unmeasured": [
+        "BetweenSpace",
+        "ContainerShape",
+        "InnerCornerCornerSize",
+        "InnerHoveredCornerCornerSize",
+        "InnerPressedCornerCornerSize",
+        "LeadingButtonLeadingSpace",
+        "LeadingButtonTrailingSpace",
+        "OuterCornerCornerSizePercent",
+        "TrailingButtonLeadingSpace",
+        "TrailingButtonTrailingSpace",
+        "TrailingIconSize",
+        "TrailingInnerSelectedCornerCornerSizePercent"
+      ]
+    }
+  },
+  "switch": {
+    "SwitchTokens.kt": {
+      "unmeasured": [
+        "DisabledSelectedHandleOpacity",
+        "DisabledSelectedIconColor",
+        "DisabledSelectedIconOpacity",
+        "DisabledSelectedTrackColor",
+        "DisabledUnselectedHandleColor",
+        "DisabledUnselectedHandleOpacity",
+        "DisabledUnselectedIconColor",
+        "DisabledUnselectedIconOpacity",
+        "DisabledUnselectedTrackOutlineColor",
+        "FocusIndicatorColor",
+        "HandleShape",
+        "IconHandleHeight",
+        "IconHandleWidth",
+        "PressedHandleHeight",
+        "PressedHandleWidth",
+        "SelectedFocusHandleColor",
+        "SelectedFocusIconColor",
+        "SelectedFocusTrackColor",
+        "SelectedHandleColor",
+        "SelectedHandleHeight",
+        "SelectedHoverHandleColor",
+        "SelectedHoverIconColor",
+        "SelectedHoverTrackColor",
+        "SelectedIconColor",
+        "SelectedIconSize",
+        "SelectedPressedHandleColor",
+        "SelectedPressedIconColor",
+        "SelectedPressedTrackColor",
+        "StateLayerShape",
+        "StateLayerSize",
+        "TrackOutlineWidth",
+        "TrackShape",
+        "UnselectedFocusHandleColor",
+        "UnselectedFocusIconColor",
+        "UnselectedFocusTrackColor",
+        "UnselectedFocusTrackOutlineColor",
+        "UnselectedHandleColor",
+        "UnselectedHandleHeight",
+        "UnselectedHandleWidth",
+        "UnselectedHoverHandleColor",
+        "UnselectedHoverIconColor",
+        "UnselectedHoverTrackColor",
+        "UnselectedHoverTrackOutlineColor",
+        "UnselectedIconColor",
+        "UnselectedIconSize",
+        "UnselectedPressedHandleColor",
+        "UnselectedPressedIconColor",
+        "UnselectedPressedTrackColor",
+        "UnselectedPressedTrackOutlineColor",
+        "UnselectedTrackColor",
+        "UnselectedTrackOutlineColor"
+      ]
+    }
+  },
+  "tabs": {
+    "PrimaryNavigationTabTokens.kt": {
+      "unmeasured": [
+        "ActiveFocusIconColor",
+        "ActiveFocusLabelTextColor",
+        "ActiveHoverIconColor",
+        "ActiveHoverLabelTextColor",
+        "ActiveIconColor",
+        "ActiveIndicatorShape",
+        "ActiveLabelTextColor",
+        "ActivePressedIconColor",
+        "ActivePressedLabelTextColor",
+        "ContainerElevation",
+        "ContainerShape",
+        "IconAndLabelTextContainerHeight",
+        "IconSize",
+        "InactiveFocusIconColor",
+        "InactiveFocusLabelTextColor",
+        "InactiveHoverIconColor",
+        "InactiveHoverLabelTextColor",
+        "InactiveIconColor",
+        "InactiveLabelTextColor",
+        "InactivePressedIconColor",
+        "InactivePressedLabelTextColor",
+        "LabelTextFont"
+      ]
+    },
+    "SecondaryNavigationTabTokens.kt": {
+      "unmeasured": [
+        "ActiveIconColor",
+        "ActiveLabelTextColor",
+        "ContainerElevation",
+        "ContainerHeight",
+        "ContainerShape",
+        "DividerColor",
+        "DividerHeight",
+        "FocusIconColor",
+        "FocusLabelTextColor",
+        "HoverIconColor",
+        "HoverLabelTextColor",
+        "IconSize",
+        "InactiveIconColor",
+        "InactiveLabelTextColor",
+        "LabelTextFont",
+        "PressedIconColor",
+        "PressedLabelTextColor"
+      ]
+    }
+  },
+  "text-field": {
+    "FilledTextFieldTokens.kt": {
+      "unmeasured": [
+        "ActiveIndicatorColor",
+        "ActiveIndicatorHeight",
+        "CaretColor",
+        "ContainerColor",
+        "ContainerShape",
+        "DisabledActiveIndicatorColor",
+        "DisabledActiveIndicatorHeight",
+        "DisabledActiveIndicatorOpacity",
+        "DisabledContainerColor",
+        "DisabledContainerOpacity",
+        "DisabledInputColor",
+        "DisabledInputOpacity",
+        "DisabledLabelColor",
+        "DisabledLabelOpacity",
+        "DisabledLeadingIconColor",
+        "DisabledLeadingIconOpacity",
+        "DisabledSupportingColor",
+        "DisabledSupportingOpacity",
+        "DisabledTrailingIconColor",
+        "DisabledTrailingIconOpacity",
+        "ErrorActiveIndicatorColor",
+        "ErrorFocusActiveIndicatorColor",
+        "ErrorFocusCaretColor",
+        "ErrorFocusInputColor",
+        "ErrorFocusLabelColor",
+        "ErrorFocusLeadingIconColor",
+        "ErrorFocusSupportingColor",
+        "ErrorFocusTrailingIconColor",
+        "ErrorHoverActiveIndicatorColor",
+        "ErrorHoverInputColor",
+        "ErrorHoverLabelColor",
+        "ErrorHoverLeadingIconColor",
+        "ErrorHoverSupportingColor",
+        "ErrorHoverTrailingIconColor",
+        "ErrorInputColor",
+        "ErrorLabelColor",
+        "ErrorLeadingIconColor",
+        "ErrorSupportingColor",
+        "ErrorTrailingIconColor",
+        "FocusActiveIndicatorColor",
+        "FocusActiveIndicatorHeight",
+        "FocusInputColor",
+        "FocusLabelColor",
+        "FocusLeadingIconColor",
+        "FocusSupportingColor",
+        "FocusTrailingIconColor",
+        "HoverActiveIndicatorColor",
+        "HoverActiveIndicatorHeight",
+        "HoverInputColor",
+        "HoverLabelColor",
+        "HoverLeadingIconColor",
+        "HoverSupportingColor",
+        "HoverTrailingIconColor",
+        "InputColor",
+        "InputFont",
+        "InputPlaceholderColor",
+        "InputPrefixColor",
+        "InputSuffixColor",
+        "LabelColor",
+        "LabelFont",
+        "LeadingIconColor",
+        "SupportingColor",
+        "SupportingFont",
+        "TrailingIconColor",
+        "TrailingIconSize"
+      ]
+    },
+    "OutlinedTextFieldTokens.kt": {
+      "measured": {
+        "FocusOutlineWidth": "text-field/outline-width/outlined-focus"
+      },
+      "unmeasured": [
+        "CaretColor",
+        "ContainerHeight",
+        "DisabledInputColor",
+        "DisabledInputOpacity",
+        "DisabledLabelColor",
+        "DisabledLabelOpacity",
+        "DisabledLeadingIconColor",
+        "DisabledLeadingIconOpacity",
+        "DisabledOutlineColor",
+        "DisabledOutlineOpacity",
+        "DisabledOutlineWidth",
+        "DisabledSupportingColor",
+        "DisabledSupportingOpacity",
+        "DisabledTrailingIconColor",
+        "DisabledTrailingIconOpacity",
+        "ErrorFocusCaretColor",
+        "ErrorFocusInputColor",
+        "ErrorFocusLabelColor",
+        "ErrorFocusLeadingIconColor",
+        "ErrorFocusOutlineColor",
+        "ErrorFocusSupportingColor",
+        "ErrorFocusTrailingIconColor",
+        "ErrorHoverInputColor",
+        "ErrorHoverLabelColor",
+        "ErrorHoverLeadingIconColor",
+        "ErrorHoverOutlineColor",
+        "ErrorHoverSupportingColor",
+        "ErrorHoverTrailingIconColor",
+        "ErrorInputColor",
+        "ErrorLabelColor",
+        "ErrorLeadingIconColor",
+        "ErrorOutlineColor",
+        "ErrorSupportingColor",
+        "ErrorTrailingIconColor",
+        "FocusInputColor",
+        "FocusLabelColor",
+        "FocusLeadingIconColor",
+        "FocusOutlineColor",
+        "FocusSupportingColor",
+        "FocusTrailingIconColor",
+        "HoverInputColor",
+        "HoverLabelColor",
+        "HoverLeadingIconColor",
+        "HoverOutlineColor",
+        "HoverOutlineWidth",
+        "HoverSupportingColor",
+        "HoverTrailingIconColor",
+        "InputColor",
+        "InputFont",
+        "InputPlaceholderColor",
+        "InputPrefixColor",
+        "InputSuffixColor",
+        "LabelColor",
+        "LabelFont",
+        "LeadingIconColor",
+        "LeadingIconSize",
+        "OutlineColor",
+        "OutlineWidth",
+        "SupportingColor",
+        "SupportingFont",
+        "TrailingIconColor",
+        "TrailingIconSize"
+      ]
+    }
+  },
+  "timepicker": {
+    "DialogTokens.kt": {
+      "unmeasured": [
+        "ActionFocusLabelTextColor",
+        "ActionHoverLabelTextColor",
+        "ActionLabelTextColor",
+        "ActionLabelTextFont",
+        "ActionPressedLabelTextColor",
+        "ContainerColor",
+        "ContainerElevation",
+        "HeadlineColor",
+        "HeadlineFont",
+        "IconColor",
+        "IconSize",
+        "SupportingTextColor",
+        "SupportingTextFont"
+      ]
+    },
+    "TimeInputTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerElevation",
+        "ContainerShape",
+        "FocusIndicatorColor",
+        "HeadlineColor",
+        "HeadlineFont",
+        "PeriodSelectorContainerHeight",
+        "PeriodSelectorContainerShape",
+        "PeriodSelectorContainerWidth",
+        "PeriodSelectorLabelTextFont",
+        "PeriodSelectorOutlineColor",
+        "PeriodSelectorOutlineWidth",
+        "PeriodSelectorSelectedContainerColor",
+        "PeriodSelectorSelectedFocusLabelTextColor",
+        "PeriodSelectorSelectedHoverLabelTextColor",
+        "PeriodSelectorSelectedLabelTextColor",
+        "PeriodSelectorSelectedPressedLabelTextColor",
+        "PeriodSelectorUnselectedFocusLabelTextColor",
+        "PeriodSelectorUnselectedHoverLabelTextColor",
+        "PeriodSelectorUnselectedLabelTextColor",
+        "PeriodSelectorUnselectedPressedLabelTextColor",
+        "TimeFieldContainerColor",
+        "TimeFieldContainerHeight",
+        "TimeFieldContainerShape",
+        "TimeFieldContainerWidth",
+        "TimeFieldFocusContainerColor",
+        "TimeFieldFocusLabelTextColor",
+        "TimeFieldFocusOutlineColor",
+        "TimeFieldFocusOutlineWidth",
+        "TimeFieldHoverLabelTextColor",
+        "TimeFieldLabelTextColor",
+        "TimeFieldLabelTextFont",
+        "TimeFieldSeparatorColor",
+        "TimeFieldSeparatorFont",
+        "TimeFieldSupportingTextColor",
+        "TimeFieldSupportingTextFont"
+      ]
+    },
+    "TimePickerTokens.kt": {
+      "unmeasured": [
+        "ClockDialColor",
+        "ClockDialLabelTextFont",
+        "ClockDialSelectedLabelTextColor",
+        "ClockDialSelectorCenterContainerColor",
+        "ClockDialSelectorCenterContainerShape",
+        "ClockDialSelectorCenterContainerSize",
+        "ClockDialSelectorHandleContainerColor",
+        "ClockDialSelectorHandleContainerShape",
+        "ClockDialSelectorHandleContainerSize",
+        "ClockDialSelectorTrackContainerColor",
+        "ClockDialSelectorTrackContainerWidth",
+        "ClockDialShape",
+        "ClockDialUnselectedLabelTextColor",
+        "ContainerElevation",
+        "ContainerShape",
+        "HeadlineColor",
+        "HeadlineFont",
+        "PeriodSelectorContainerShape",
+        "PeriodSelectorHorizontalContainerHeight",
+        "PeriodSelectorHorizontalContainerWidth",
+        "PeriodSelectorLabelTextFont",
+        "PeriodSelectorOutlineColor",
+        "PeriodSelectorOutlineWidth",
+        "PeriodSelectorSelectedContainerColor",
+        "PeriodSelectorSelectedFocusLabelTextColor",
+        "PeriodSelectorSelectedHoverLabelTextColor",
+        "PeriodSelectorSelectedLabelTextColor",
+        "PeriodSelectorSelectedPressedLabelTextColor",
+        "PeriodSelectorUnselectedFocusLabelTextColor",
+        "PeriodSelectorUnselectedHoverLabelTextColor",
+        "PeriodSelectorUnselectedLabelTextColor",
+        "PeriodSelectorUnselectedPressedLabelTextColor",
+        "PeriodSelectorVerticalContainerHeight",
+        "PeriodSelectorVerticalContainerWidth",
+        "TimeSelector24HVerticalContainerWidth",
+        "TimeSelectorContainerHeight",
+        "TimeSelectorContainerShape",
+        "TimeSelectorContainerWidth",
+        "TimeSelectorLabelTextFont",
+        "TimeSelectorSelectedContainerColor",
+        "TimeSelectorSelectedFocusLabelTextColor",
+        "TimeSelectorSelectedHoverLabelTextColor",
+        "TimeSelectorSelectedLabelTextColor",
+        "TimeSelectorSelectedPressedLabelTextColor",
+        "TimeSelectorSeparatorColor",
+        "TimeSelectorSeparatorFont",
+        "TimeSelectorUnselectedContainerColor",
+        "TimeSelectorUnselectedFocusLabelTextColor",
+        "TimeSelectorUnselectedHoverLabelTextColor",
+        "TimeSelectorUnselectedLabelTextColor",
+        "TimeSelectorUnselectedPressedLabelTextColor"
+      ]
+    }
+  },
+  "toolbar": {
+    "DockedToolbarTokens.kt": {
+      "unmeasured": [
+        "ContainerColor",
+        "ContainerLeadingSpace",
+        "ContainerMaxSpacing",
+        "ContainerMinSpacing",
+        "ContainerShape",
+        "ContainerTrailingSpace"
+      ]
+    },
+    "FloatingToolbarTokens.kt": {
+      "unmeasured": [
+        "ContainerBetweenSpace",
+        "ContainerExternalPadding",
+        "ContainerShape",
+        "ContainerTrailingSpace",
+        "VibrantButtonSelectedContainerColor",
+        "VibrantButtonSelectedIconColor",
+        "VibrantButtonSelectedTextColor",
+        "VibrantButtonUnselectedIconColor",
+        "VibrantButtonUnselectedTextColor"
+      ]
+    }
+  },
+  "tooltip": {
+    "PlainTooltipTokens.kt": {
+      "unmeasured": [
+        "SupportingTextColor",
+        "SupportingTextFont"
+      ]
+    },
+    "RichTooltipTokens.kt": {
+      "unmeasured": [
+        "ActionFocusLabelTextColor",
+        "ActionHoverLabelTextColor",
+        "ActionLabelTextColor",
+        "ActionLabelTextFont",
+        "ActionPressedLabelTextColor",
+        "ContainerElevation",
+        "SubheadColor",
+        "SubheadFont",
+        "SupportingTextColor",
+        "SupportingTextFont"
+      ]
+    }
+  }
+}

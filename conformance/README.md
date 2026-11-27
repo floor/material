@@ -19,3 +19,15 @@ Theme-dependent measurements name colour, type-scale, corner and elevation roles
 [overrides.json](overrides.json) holds the website values and reviewed runtime comparisons for cases where generated tokens give a different value or have no runtime use. A null reference value yields `no-value`. Issues remain null until public issues are assigned. [spec-values.json](spec-values.json) records additional values from the published specification pages with their section and read date. These entries fill gaps in the website reference. They leave Compose comparisons and Material measurements unchanged. Website typography retains the token table's design points, compared numerically with CSS pixels at the default scale. The table's 0 dp elevation compares with a flat surface.
 
 Before tagging a release, set the measurement date and Material input commit in `reference.json`, build that source and regenerate the matrix. The source commit identifies the measured implementation, so it precedes the commit recording the matrix. Keep published row IDs stable. Schema 1 changes are additive. The public repository and release tags carry the matrix outside the npm package.
+
+## Coverage
+
+[coverage.json](coverage.json) reports how many pinned Compose Material 3 component tokens the matrix measures. Coverage is measured ÷ (measured + unmeasured), rounded to two decimal places. A measured token can match or drift in the matrix. Where several rows name the same token, coverage counts it once per component and links to the first row. Reviewed `not-applicable` entries carry a reason and are outside the denominator. A component with no applicable tokens has a null percentage.
+
+The inventory covers the component and variant token files assigned in [coverage-map.json](coverage-map.json). Shared component files are counted for each component that uses them. Foundation tokens and values documented only in the website or Compose runtime are outside this inventory. Carousel and side sheet have no component token files in this pin.
+
+Run this command after a matrix or mapping change.
+
+    bun run scripts/conformance/coverage.ts
+
+The CI check reads the committed matrix, mapping and [token snapshot](compose-tokens-1.5.0.json) offline. To reproduce the snapshot, extract the flat token directory from the pinned source JAR in [reference.json](reference.json) and pass it to `bun run scripts/conformance/coverage.ts --snapshot <token directory>`. The command checks the file hashes before reading the tokens. When a matrix row gains an exact Compose token reference, remove its previous review entry from the mapping.
