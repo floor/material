@@ -269,7 +269,7 @@ $component: "#{base.$prefix}-list";
   // Specs table, read 2026-11-25: full width, or inset 16dp at the start and
   // 24dp at the end, with nothing above or below. Logical margins mirror.
   &__divider { height: 1px; min-height: 1px; background: t.color("outline-variant"); margin-block: 0; }
-  &__divider--inset { margin-inline-start: 16px; margin-inline-end: 24px; }
+  &__divider--inset { margin-inline-start: 16px; margin-inline-end: 16px; }
   &__subheader { @include m.typography("label-large"); color: t.color("on-surface-variant"); padding: 16px 16px 8px; }
   &__empty { @include m.typography("body-medium"); color: t.color("on-surface-variant"); padding: 16px; }
 }

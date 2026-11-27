@@ -452,10 +452,16 @@ jobs:
             checks: carousel-reference:check
           - group: components-b
             browsers: chromium
-            checks: consumer:check tabs:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
+            checks: consumer:check tabs:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
+          - group: navigation-rail
+            browsers: chromium webkit
+            checks: navigation-rail:check
           - group: tooltip-hide-delay
             browsers: chromium webkit
             checks: tooltip-hide-delay:check
+          - group: drawer-divider
+            browsers: chromium webkit
+            checks: drawer-divider:check
           - group: slider
             browsers: chromium webkit
             checks: slider:check
@@ -490,7 +496,7 @@ jobs:
             browsers: chromium
             checks: divider-sheet-conformance:check
           - group: list-conformance
-            browsers: chromium
+            browsers: chromium webkit
             checks: list-conformance:check
           - group: list-drifts
             browsers: chromium webkit

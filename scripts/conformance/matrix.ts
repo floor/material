@@ -430,6 +430,13 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
             .replace(/^\w+ (#[A-F\d]{6} at [\d.]+ opacity)$/i, "$1")
           : reference;
         const target = comparable(comparison);
+        if (reference === "Full rail width") {
+          return [left, right].every(result => {
+            const item = getPart(result, row.probe.part, id).rect;
+            const rail = getPart(result, "container", id).rect;
+            return Math.abs(item.x - rail.x) < 0.01 && Math.abs(item.width - rail.width) < 0.01;
+          }) ? "match" : "drift";
+        }
         const agrees = (value: string) => {
           if (reference === "Visible keyboard focus ring") {
             return Number(/^([\d.]+)px (?:solid|double|dotted|dashed) /.exec(value)?.[1] ?? 0) > 0;

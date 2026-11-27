@@ -584,6 +584,7 @@
     "tooltip-menu:check": "bun run scripts/check-tooltip-menu.ts",
     "tooltip-hide-delay:check": "bun run scripts/check-tooltip-hide-delay.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
+    "drawer-divider:check": "bun run scripts/check-drawer-divider.ts",
     "bottom-sheet:check": "bun run scripts/check-bottom-sheet-drag.ts",
     "rtl:check": "bun run scripts/check-rtl.ts",
     "switch-transition:check": "bun run scripts/check-switch-transition.ts",

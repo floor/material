@@ -7328,18 +7328,18 @@
             "value": "16dp",
             "file": "ListTokens.kt",
             "symbol": "DividerTrailingSpace",
-            "line": 36,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L36"
+            "line": 34,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L34-L35"
           },
           "material": {
-            "value": "24px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "match",
-            "compose": "drift"
+            "spec": "drift",
+            "compose": "match"
           },
-          "note": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
+          "note": "The Compose list token sets the trailing inset to 16 dp. The website shows 24 dp for the baseline trailing inset.",
           "issue": null
         },
         {
@@ -16863,7 +16863,7 @@
             "value": "28dp / 28dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp / 0dp",
@@ -16880,7 +16880,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 28dp insets govern because Compose renders a bare full-width divider. Material reports start and end separately so the standard sheet's border remains visible; the divider gives that 1px back from its margin so the inset reads 28dp from the container edge.",
           "issue": null
         },
         {
@@ -16894,7 +16894,7 @@
             "value": "28dp / 28dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp / 0dp",
@@ -16904,14 +16904,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "28px / 29px",
+            "value": "28px / 28px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 28dp insets govern because Compose renders a bare full-width divider. Material reports start and end separately so the standard sheet's border remains visible; the divider gives that 1px back from its margin so the inset reads 28dp from the container edge.",
           "issue": null
         },
         {
@@ -16925,7 +16925,7 @@
             "value": "16dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -16935,14 +16935,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "8px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 16dp governs because Compose renders caller-supplied content and a bare divider adds no surrounding vertical gap. The drawer's divider takes 16dp above and below.",
           "issue": null
         },
         {
@@ -16956,7 +16956,7 @@
             "value": "16dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -16966,14 +16966,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "8px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 16dp governs because Compose renders caller-supplied content and a bare divider adds no surrounding vertical gap. The drawer's divider takes 16dp above and below.",
           "issue": null
         },
         {
@@ -17304,25 +17304,25 @@
           "spec": {
             "value": "Full rail width",
             "url": "https://m3.material.io/components/navigation-rail/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "States",
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "Content-sized target",
             "file": "NavigationItem.kt",
             "symbol": "NavigationItem",
-            "line": 466,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L466"
+            "line": 441,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L441-L458"
           },
           "material": {
-            "value": "252px",
+            "value": "280px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width. The reference choice is pending.",
+          "note": "The site specifies a full-width target. Compose has no default item width, so the site sets the hit width. The indicator keeps its visual inset.",
           "issue": null
         },
         {
@@ -17335,8 +17335,8 @@
           "spec": {
             "value": "0dp",
             "url": "https://m3.material.io/components/navigation-rail/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "States",
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -17346,12 +17346,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/WideNavigationRail.kt#L357"
           },
           "material": {
-            "value": "14px",
+            "value": "0px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The website shows a full-width target. Compose applies no default horizontal padding to the modal dialog body.",
           "issue": null

@@ -26,12 +26,13 @@ modules.
 - `components/fab-menu/` — every placement; the long-list fit-then-shift readout.
 - `components/carousel/` — drag, flick, trackpad overscroll; the scroll readout with ghost lines.
 - `components/bottom-sheet/` — standard and modal; drag and settle with the state/offset readout.
-- `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion).
+- `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion), and the divider's 16 px gap and 28 px side insets.
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
 - `components/radios/` — `ripple: false` still paints the keyboard focus ring and the focus layer.
 - `components/select/` — the trailing arrow takes its colour with the field, and rotates 180° while the menu is open.
 - `components/extended-fab/` — undefined variant and width match omitted ones; a defined global variant wins.
+- `components/navigation-rail/` — expanded modal destinations, with live target and indicator widths.
 - `components/list/` — 12 px between the slots, 20 px segmented icons, the segmented trailing icon in on-surface, a selected icon that turns on-surface while hovered, focused, or pressed, and a list nested in a selected or disabled row that keeps its own unselected icon colour.
 - `components/tooltip/` — an undefined variant matches an omitted one and a global default wins; the plain label stays to 1,400 ms after the pointer leaves and is gone after 1,500 ms plus its exit, and Escape closes it at once.
 
