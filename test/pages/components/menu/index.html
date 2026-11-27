@@ -14,6 +14,8 @@
 <script type="module">
   import { initPage, section, scenario } from "../../shared/harness.js";
   import { createMenu } from "../../../../dist/index.js";
+  import { defineMenu } from "../../../../dist/elements/menu.js";
+  import "../../../../dist/elements/css/menu.js";
 
   const main = await initPage({ name: "menu" });
   const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
@@ -139,6 +141,52 @@
         tertiary,
       });
     },
+  });
+
+  let keyboardFocus = {};
+  scenario(interaction, {
+    title: "Initial keyboard focus after an opening stall",
+    lookFor: "focus Actions, press Enter, then Escape. Try it with the simulated stall enabled and disabled.",
+    expected: "Copy receives focus on Enter, and Escape returns focus to Actions. The menu keeps its opening and closing animation.",
+    mount: (body) => {
+      defineMenu();
+      body.innerHTML = `
+        <label><input type="checkbox" checked> Stall opening for 350 ms</label>
+        <button type="button" id="tp-menu-actions">Actions</button>
+        <m-menu anchor="tp-menu-actions" aria-label="Actions">
+          <m-menu-item value="copy">Copy</m-menu-item>
+          <m-menu-item value="paste">Paste</m-menu-item>
+        </m-menu>`;
+      const open = body.querySelector("button");
+      const slow = body.querySelector("input");
+      const root = body.querySelector("m-menu").shadowRoot;
+      let started = null;
+      open.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          started = performance.now();
+          keyboardFocus = { focus: "Actions" };
+        }
+      }, true);
+      const updateFocus = () => {
+        keyboardFocus.focus = root.activeElement?.textContent?.trim() || (document.activeElement === open ? "Actions" : "Outside");
+        if (started !== null && keyboardFocus.focus === "Copy") {
+          keyboardFocus.firstFocusMs = Math.round(performance.now() - started);
+          started = null;
+        }
+      };
+      open.addEventListener("focus", updateFocus);
+      root.addEventListener("focusin", updateFocus);
+      new MutationObserver(() => {
+        const surface = root.querySelector(".mtrl-menu--visible");
+        if (started === null || !surface || "openingVisibility" in keyboardFocus) return;
+        if (slow.checked) {
+          const resume = performance.now() + 350;
+          while (performance.now() < resume) { /* Simulate a stalled rendering task. */ }
+        }
+        keyboardFocus.openingVisibility = getComputedStyle(surface.querySelector('[data-id="copy"]')).visibility;
+      }).observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    },
+    measure: () => json(keyboardFocus),
   });
 
   // ------------------------------------------------------------- Edge cases

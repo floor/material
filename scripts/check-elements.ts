@@ -9727,9 +9727,27 @@ try {
         async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
       await focusIs(step, label);
     };
+    // Stall the task that places the menu, before the first transition frame.
+    // The opening class must make Copy focusable even if the focus timer is
+    // ready to run before the browser has painted the reveal.
+    await page.evaluate(() => {
+      const host = document.querySelector("m-menu")!;
+      const root = host.shadowRoot!;
+      const observer = new MutationObserver(() => {
+        if (!root.querySelector(".mtrl-menu--visible")) return;
+        observer.disconnect();
+        const resume = performance.now() + 350;
+        while (performance.now() < resume) { /* Keep the renderer in this task. */ }
+        const copy = root.querySelector('[data-id="copy"]')!;
+        host.dataset.openingVisibility = getComputedStyle(copy).visibility;
+      });
+      observer.observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await focusedByKey("menu, opened with Enter", "Copy");
+    await page.waitForFunction(() => document.querySelector("m-menu")?.hasAttribute("data-opening-visibility"), undefined, { timeout: 5000 });
+    assert.equal(await page.locator("m-menu#mm").getAttribute("data-opening-visibility"), "visible", "Copy is visible before the menu's first transition frame");
+    await focusedByKey("menu, opened with Enter after a stall", "Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await closed("menu, Escape, opened with Enter");

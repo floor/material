@@ -51,9 +51,8 @@ $component: "#{$prefix}-menu";
     // drawer's sections use too, so the two cannot drift.
     @include m.reveal-motion($withVisibility: true);
     pointer-events: none;
-    // Closed, the menu is out of the tab order and the accessibility tree: an
-    // <m-menu> keeps its closed menu in its shadow root, where its first item
-    // was a tab stop. A transition keeps it visible while it moves either way.
+    // Visibility keeps the closed menu out of the tab order and accessibility
+    // tree. Delay hiding on close so the exit animation can finish.
     visibility: hidden;
 
     // A top-layer menu is a popover (`layer: "top"`). The browser's popover
@@ -65,10 +64,9 @@ $component: "#{$prefix}-menu";
         border: 0;
     }
 
-    // Visible state: only the values flip — the base rule's single
-    // transition carries both directions (the shared mixin holds the closed
-    // values and the timing, so the two cannot drift).
     &--visible {
+        // Make items focusable as soon as opening starts, even before a paint.
+        transition-property: transform, opacity;
         transform: scaleY(1);
         opacity: 1;
         pointer-events: auto;
@@ -681,9 +679,13 @@ $component: "#{$prefix}-menu";
         transition:
             transform v.motion("duration-medium1") v.motion("easing-emphasized"),
             opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
-            visibility v.motion("duration-medium1"),
             border-radius v.motion("spring-fast-spatial-duration")
-                v.motion("spring-fast-spatial-easing");
+                v.motion("spring-fast-spatial-easing"),
+            visibility v.motion("duration-medium1");
+
+        &:where(.#{$component}--visible) {
+            transition-property: transform, opacity, border-radius;
+        }
 
         &.#{$component}--active {
             border-radius: 24px;
@@ -722,6 +724,10 @@ $component: "#{$prefix}-menu";
     // Reduced motion preference support
     @include m.reduced-motion {
         transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
+
+        &--visible {
+            transition-property: opacity;
+        }
 
         &,
         &--visible {

@@ -149,6 +149,46 @@ test("initial keyboard focus does not undo an arrow pressed before its timer", (
   tick(); // Run the delayed initial-focus callback.
   expect(document.activeElement).toBe(items[1]);
 });
+test.each(["none", "moved", "closed", "reopened", "kept failing"] as const)(
+  "a failed initial focus attempt can retry on one frame (interruption: %s)",
+  (interruption) => {
+    const menu = make(false, FLAT);
+    tick();
+    opener.focus();
+    menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+    tick();
+    const first = menu.element.querySelector<HTMLElement>(".mtrl-menu__item")!;
+    const focus = spyOn(first, "focus");
+    if (interruption === "kept failing") focus.mockImplementation(() => {});
+    else focus.mockImplementationOnce(() => {});
+
+    tick();
+    expect(document.activeElement).toBe(opener);
+    expect(focus).toHaveBeenCalledTimes(1);
+
+    const outside = document.createElement("button");
+    if (interruption === "moved") {
+      document.body.append(outside);
+      outside.focus();
+    } else if (interruption === "closed" || interruption === "reopened") {
+      menu.close();
+      if (interruption === "reopened") menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+    }
+
+    tick();
+    if (interruption === "none" || interruption === "kept failing") {
+      expect(focus).toHaveBeenCalledTimes(2);
+      expect(document.activeElement).toBe(interruption === "none" ? first : opener);
+      tick();
+      expect(focus).toHaveBeenCalledTimes(2);
+    } else {
+      expect(focus).toHaveBeenCalledTimes(1);
+      expect(document.activeElement).toBe(interruption === "moved" ? outside : opener);
+    }
+    focus.mockRestore();
+  },
+);
+
 test("initial focus respects an arrow inside a shadow-root menu", () => {
   const host = document.createElement("div");
   const root = host.attachShadow({ mode: "open" });

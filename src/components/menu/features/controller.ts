@@ -12,7 +12,8 @@ import {
   MenuPosition,
 } from "../types";
 import { menuOpened, menuClosed } from "./registry";
-import { eventWithin } from "./layer";
+import { eventWithin, focusWithin } from "./layer";
+import { deepActiveElement } from "../../../core/dom/focus";
 import { createSubmenuLoader, hasNestedItems, MenuSubmenuApi } from "./loader";
 import { eventsFrom, onTopLayerClose, showInTopLayer, type EventsFrom } from "../../../core/dom/layer";
 
@@ -472,6 +473,8 @@ const withController =
     // was opened by pointer, by key or by code.
     menuOpened(registryEntry, event);
 
+    const focusOrigin = !listbox && interactionType === "keyboard" ? deepActiveElement() : undefined;
+
     // Open from here on. A close still on its way out is abandoned.
     state.visible = true;
     tasks.clearTimeout(hideTimer);
@@ -531,15 +534,22 @@ const withController =
       // the string listener accepts, and not part of the public event type.
       component.emit("positioned", { menu: getComponent(), originalEvent: event });
 
-      // Step 4: Set up initial focus based on interaction type. A listbox
-      // leaves focus on its combobox.
-      if (!listbox) focusTimer = tasks.setTimeout(() => {
-        component.keyboard?.handleInitialFocus(
-          component.element,
-          interactionType,
-          event,
-        );
-      }, 100);
+      // A listbox leaves focus on its combobox.
+      if (!listbox && state.visible) {
+        const timer = tasks.setTimeout(() => {
+          if (focusOrigin !== undefined) {
+            const focused = deepActiveElement();
+            if (focused !== focusOrigin && !focusWithin(config, component.element, focused)) return;
+          }
+          const retry = component.keyboard?.handleInitialFocus(component.element, interactionType, event);
+          if (retry) tasks.requestAnimationFrame(() => {
+            // Only this opening can retry. The keyboard handler checks that
+            // focus and the destination still match the failed attempt.
+            if (focusTimer === timer) retry();
+          });
+        }, 100);
+        focusTimer = timer;
+      }
 
       // The menu follows its opener from the moment it is placed
       window.addEventListener("resize", handleWindowResize, {
@@ -568,6 +578,7 @@ const withController =
     state.visible = false;
     tasks.clearTimeout(showTimer);
     tasks.clearTimeout(focusTimer);
+    focusTimer = null;
 
     menuClosed(registryEntry);
 

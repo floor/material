@@ -1256,6 +1256,7 @@
     ".mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__group:last-child",
     ".mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__group>ul",
     ".mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__list",
+    ".mtrl-menu--vertical:where(.mtrl-menu--visible)",
     ".mtrl-menu--visible",
     ".mtrl-menu:focus-visible",
     ".mtrl-menu:not(.mtrl-menu--vertical) .mtrl-menu__item--selected:not(.mtrl-menu__item--submenu) .mtrl-menu__item-content",
