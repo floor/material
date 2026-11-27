@@ -12,7 +12,7 @@ const COMMANDS = [
   "bun test",
   // build, and the checks that read the built package
   "build", "dist-modules:check", "syntax:check", "typescale-defaults:check", "elements-css:check", "tokens:catalogue:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "declaration-exports:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
-  "adapters:size",
+  "adapters:size", "size:report",
   // the catalogue identity gate builds the merge base beside this tree, so
   // `build` runs a second time there (the step no-ops before it reaches the
   // build when no catalogue input changed)

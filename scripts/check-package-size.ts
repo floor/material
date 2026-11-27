@@ -7,9 +7,10 @@ import { gzipSync, brotliCompressSync } from "node:zlib";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
-import { BUTTON_INITIAL_GZIP, PACKAGE_GZIP, SSR_ENTRY, SSR_PAGE, TARBALL_BYTES, UNPACKED_BYTES } from "./budgets";
 import { createPackageFixture, run } from "./package-fixture";
 import { internalIdRefs } from "./internal-ids";
+import { measureConsumerSizes, measureSlider } from "./size-fixtures";
+import type { SizeRow } from "./size-policy";
 
 const fixture = await createPackageFixture();
 const { directory: temporary, pack } = fixture;
@@ -27,6 +28,7 @@ if (Number(packer.node.replace(/^v/, "").split(".")[0]) !== CI_NODE_MAJOR) {
       `!!   npx -y -p node@${CI_NODE_MAJOR} -p npm@10 -- bun run size:check\n`,
   );
 }
+const rows: SizeRow[] = [];
 const sizes: Record<string, { raw: number; gzip: number; brotli: number }> = {};
 function measure(data: Uint8Array) {
   return { raw: data.length, gzip: gzipSync(data, { level: 9 }).length, brotli: brotliCompressSync(data).length };
@@ -99,13 +101,7 @@ try {
   }
   sizes.ssr = measure(new Uint8Array(await Bun.file(join(fixture.installed, "dist/ssr/index.js")).arrayBuffer()));
   console.log(`SSR entry: ${sizes.ssr.raw} bytes raw, ${sizes.ssr.gzip} gzip (shared mtrl modules/CSS excluded)`);
-  // Linkedom and its dependencies plus the renderer, measured at
-  // 306,706 B raw / 111,726 B gzip, including dependency license notices.
-  // Client budgets below are unchanged.
-  // 307,059 raw tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  assert(sizes.ssr.raw < SSR_ENTRY.raw, `SSR entry exceeds ${SSR_ENTRY.raw.toLocaleString("en-US")} raw bytes`);
-  // 111,838 gzip tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  assert(sizes.ssr.gzip < SSR_ENTRY.gzip, `SSR entry exceeds ${SSR_ENTRY.gzip.toLocaleString("en-US")} gzip bytes`);
+  rows.push({ name: "SSR entry raw", bytes: sizes.ssr.raw }, { name: "SSR entry gzip", bytes: sizes.ssr.gzip });
   // What a server-rendered page weighs, by style mode. No other check asserts it.
   // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
   // scenario whose size moves most with the number of elements.
@@ -131,148 +127,17 @@ try {
       ...Array.from({ length: 10 }, () => String(renderElement("m-icon-button", { icon, "aria-label": "Favourite" }, "", options))),
       ...Array.from({ length: 4 }, () => String(renderElement("m-chips", { "aria-label": "Diet" }, chips, options))),
     ].join("\n"));
-    const budgets = {
-      // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
-      // main's reduced-motion rule in every root's host sheet (0.10.6), on the
-      // forward merge: 700,173 raw, 11,154 gzip against 42c1a111 plus main 23c03a2f.
-      // This merge: that block (275 B) plus data-mtrl-ssr="" (17 B), and no guard.
-      // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
-      // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
-      // follow the measurement.
-      // The inline sheet drops the rules the rendered markup cannot match
-      // (src/ssr/prune-styles.ts): 253,639 raw, 5,325 gzip, CI's package job on
-      // this branch. Measured plus 1% or 100, rounded up to 50, was 256,200 raw
-      // and 5,450 gzip; the floors mirror it, 251,100 and 5,200. The density
-      // scale's rules then took the raw row past that ceiling: 261,329 raw,
-      // 5,407 gzip in CI. Owner decision 2026-11-05: the raw ceiling is 263,950,
-      // the measured row plus 1% rounded up to 50, and the gzip row still fits.
-      inline: { options: {}, ...SSR_PAGE.inline },
-      // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
-      // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
-      // block is in the linked host sheet, so this HTML does not grow for it.
-      // Raw crosses next's 42,450, so its ceiling follows the rule (measured + 1%,
-      // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
-      // After the text-field rename merge the four numbers are unchanged:
-      // inline 700,921 / 11,166, link 42,741 / 1,038. Floors and ceilings stay.
-      link: { options: { styles: "link", cssBase: "/css" }, ...SSR_PAGE.link },
-    } as const;
-    for (const [mode, budget] of Object.entries(budgets)) {
-      const size = measure(page(budget.options));
+    const modes = { inline: {}, link: { styles: "link", cssBase: "/css" } };
+    for (const [mode, options] of Object.entries(modes)) {
+      const size = measure(page(options));
       sizes[`ssr-page-${mode}`] = size;
       console.log(`SSR page, ${mode}: ${size.raw} bytes raw, ${size.gzip} gzip, ${size.brotli} brotli (44 roots)`);
-      for (const unit of ["raw", "gzip"] as const) {
-        const [floor, ceiling] = budget[unit];
-        assert(size[unit] < ceiling, `SSR page (${mode}) exceeds ${ceiling.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}`);
-        assert(size[unit] > floor, `SSR page (${mode}) is under ${floor.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}. Smaller is welcome: set the budget again`);
-      }
+      for (const metric of ["raw", "gzip"] as const) rows.push({ name: `SSR page ${mode} ${metric}`, bytes: size[metric] });
     }
   }
-  // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
-  // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
-  // 1,010,000 for the 35 public Material shapes: 994,762 to 1,000,150,
-  // measured with CI's Node 22 / npm 10.
-  // Lowered to 885,000 when 3.0.0 dropped the CommonJS bundle: 997,366 to 872,414
-  // against 073eeeb, Node 22 / npm 10, keeping the headroom it had.
-  // Raised to 900,000 for the element CSS as .css files, which SSR's <link>
-  // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
-  // headroom it had.
-  // Raised for the bundled server-only SSR entry: 888,897 to 1,002,195,
-  // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
-  // The navigation bar: 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
-  // On main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
-  // On next, with the forward merge: 1,006,369 -> 1,063,466 against
-  // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
-  // Removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
-  // The overlays' open / close contract and Escape as a key press for every modal
-  // (core/dom/layer's stack and marker, in each modal's bundle and each element's):
-  // 1,066,924 measured, 76 under the ceiling, Node 22.23.3 / npm 10.9.9. Raised by the rule
-  // (measured plus 1%, up to the next 1,000).
-  // Merged tree, Node 22.23.3 / npm 10.9.9: 1,071,606. Measured + 1%,
-  // up to 1,000, is 1,083,000, above next's 1,078,000, so the ceiling stays.
-  // Merged again with next (reduced motion, the child selector): 1,073,438.
-  // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so it stays.
-  // The child subject is :defined: 1,073,624. Measured + 1%, up to 1,000,
-  // is 1,085,000, above 1,078,000, so it stays.
-  // The text-field rename merged in: 1,073,789. Measured + 1%, up to 1,000,
-  // is 1,085,000, above 1,078,000, so it stays.
-  // README and LICENSE are packed once (the build no longer copies them into dist);
-  // measured 1,075,142 (Node 22.23.3 / npm 10.9.9); measured + 1 %, rounded up to
-  // 1,000, is 1,086,000, above 1,078,000, so the ceiling returns to 1,078,000 and
-  // stays (this file's convention, stated in the comments above it: the rule's figure
-  // caps a raise; it does not move a ceiling the measurement is under).
-  // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
-  // and the manifest without its repository-only fields: 1,066,725 with main at 593162e0 in, same packer.
-  // Under 1,078,000, so the ceiling stays.
-  // #49's button-group pre-upgrade reservation: 1,078,362 at 45615776, Node
-  // 22.23.3 / npm 10.9.9, against 1,078,000; main's sheet at that head packs
-  // 1,076,913. The rule for explicit ceilings (measured plus 1%, up to the
-  // next 1,000, per scripts/size.ts) is 1,090,000.
-  // The build's declaration prune, dropping the 177 .d.ts no exports target or
-  // shipped declaration reaches: 1,023,153 at 32b0eb71, Node 22.23.3 / npm
-  // 10.9.9. Measured + 1%, up to 1,000, is 1,034,000.
-  // 3.2.7 ships declarations without their prose (build-modules.ts strips
-  // comments from every emitted .d.ts): local 1,096,754 -> 921,839, a
-  // -174,915 B cut that transfers to CI within noise, so ~914,635 under
-  // CI's packer. Measured + 1%, up to the next 1,000, is 924,000.
-  // The combined tree, prune and prose-free declarations together, local
-  // Node 26.8.1 / npm 11.19.0: 877,120. Measured + 1%, up to the next
-  // 1,000, is 886,000.
-  // The four SSR adapter entries lose their prose comments too (build-modules.ts):
-  // main 850584ff measured 884,987 with CI's Node 22.23.3 / npm 10.9.9 and the
-  // merged tree 881,568, a 3,419 B drop. Lowered by the drop, keeping the
-  // headroom it had: 886,000 - 3,419 = 882,581, up to the next 1,000 is 883,000.
-  // The readable, comment-stripped dist (build-modules.ts strips formatting after
-  // the prunes): the package job measures 863,703 B packed where the base packed
-  // 882,799. The ceiling carries 1,297 B over the measurement, as 883,000 carried
-  // 1,432 B over 881,568 when it was set: 865,000.
-  // This job self-checks it: a real figure above the ceiling fails here, and the
-  // margin is reviewed against the number this line prints.
   console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
-  assert(pack.size < TARBALL_BYTES, `npm tarball exceeds ${TARBALL_BYTES.toLocaleString("en-US")} bytes`);
-  // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
-  // the elements and framework adapters, whose shadow-root CSS repeats the
-  // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
-  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 3.0.0 drops.
-  // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
-  // 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
-  // The navigation bar: its component, element, adapters and CSS, 5,880,623 to
-  // 5,956,491 against 51455a6, same packer; the budget keeps about the headroom it had.
-  // On main: the generated SCSS plus standalone, base and full CSS copies,
-  // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
-  // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
-  // Removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
-  // The 3.0.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
-  // README and declaration text. The SSR style-modes docs add 4,458 (the README is
-  // packed twice, at the root and in dist/: 3,600; RenderOptions' TSDoc in the .d.ts: 858), to
-  // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised deliberately by the rule
-  // for explicit ceilings (measured plus 1%, up to the next 1,000).
-  // Merged tree, Node 22.23.3 / npm 10.9.9: 6,420,252. The pre-upgrade
-  // rules left the element modules. Measured + 1%, up to 1,000, is 6,485,000,
-  // above next's 6,458,000, so the ceiling stays.
-  // Merged again with next: 6,434,514. The child selector is in the 38 pre-upgrade
-  // files. Measured + 1%, up to 1,000, is 6,499,000, above 6,458,000, so it stays.
-  // The child subject is :defined: 6,435,269. Measured + 1%, up to 1,000,
-  // is 6,500,000, above 6,458,000, so it stays.
-  // The text-field rename merged in: 6,438,071. Measured + 1%, up to 1,000,
-  // is 6,503,000, above 6,458,000, so it stays.
-  // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
-  // 6,411,348. The README and LICENSE are packed once. Measured + 1%, up to
-  // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
-  // Merged with a8c24f7f, same packer: 6,410,644. Under 6,458,000,
-  // so the ceiling stays.
-  // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
-  // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
-  // The same declaration prune: 5,583,235 at 32b0eb71, Node 22.23.3 / npm 10.9.9.
-  // Measured + 1%, up to 1,000, is 5,640,000.
-  // 3.2.7's prose-free declarations: 6,516,507 -> 5,876,906 local, ~5,849,028
-  // under CI's packer by the same transferred delta. Measured + 1%, up to
-  // the next 1,000, is 5,908,000.
-  // The combined tree: 5,067,838 local, 1,623 files. Measured + 1%, up to
-  // the next 1,000, is 5,119,000.
-  // The lean listbox entry adds six files: 5,127,470 in CI over main's
-  // 5,099,705, 1,265 files. Measured + 1%, up to the next 1,000, is 5,179,000.
-  // Owner decision 2026-11-10: the unpacked package cap is 5,179,000.
-  assert(pack.unpackedSize < UNPACKED_BYTES, `Unpacked package exceeds ${UNPACKED_BYTES.toLocaleString("en-US")} bytes`);
+  rows.unshift({ name: "Tarball compressed", gate: "packed", bytes: pack.size },
+    { name: "Package unpacked", bytes: pack.unpackedSize });
 
   // The component entries the probe imports, and how many package.json exports,
   // counted another way: every "./components/<name>" key. Which keys those must
@@ -443,184 +308,22 @@ try {
     "--target", "ES2020", "--types", "node", "--typeRoots", resolve("node_modules/@types")]);
 
   const fixtures = [
-    // From its subpath since 3.0.0 removed it from the root
-    { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: PACKAGE_GZIP.addClass }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
-    // The nearest-boundary direction module: 13,923 measured, measured +1% is
-    // 14,062.23, the next multiple of 50 is 14,100.
-    { name: "button", code: "export { createButton } from 'material';", gzip: PACKAGE_GZIP.button }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-    // The URL scheme allowlist is reached through core/dom, so every bundle that builds
-    // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
-    // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
-    // all-js is 1,353 smaller, the shared code deduplicating across the barrel.
-    // Taking part in forms (N12) adds 187: a hidden input carrying the value,
-    // two of them for a range slider, kept in step inside render(). Measured
-    // 11,468 to 11,655 at 0.9.8. Four redesigns recovered 11 bytes between
-    // them — returning the input rather than an object of closures, writing
-    // only the content attribute, going through the shared createElement
-    // (which cost 5 more), and one formFields property rather than two — so
-    // the feature costs what it costs.
-    // The boolean-attribute predicate is reached through core/dom in
-    // the same way the URL allowlist is, so every bundle that builds an element
-    // carries it: +71 here, +79 button, +85 rail, +77 text field, +87 form,
-    // +107 all-js, measured against 73cbb0c. Slider again had the least
-    // headroom (11,652 of 11,700) and was the only fixture to cross its budget.
-    // Most of the cost is the eight attribute names themselves; an array with
-    // includes() in place of the Set measured 3 bytes worse, so this is close
-    // to what the check costs. Writing disabled="false" for disabled: false
-    // disabled the control, which is not a trade worth 71 bytes to keep.
-    // M3 conformance adds 888, 11,594 to 12,482 against
-    // 6b2143b: the three variants' track geometry after Compose's drawTrack with a stop
-    // at each end, the handle narrowing on focus, settling on a spring only for value
-    // changes that do not follow the pointer, the inset icon placed on whichever track
-    // holds it, and vertical orientation through one axis description shared by the
-    // track, the controller and the pointer handlers rather than a second code path.
-    // Range limits, keys and RTL add 302, 12,482 to 12,784: handles that stop
-    // at each other in drag, keys and setters with the inner ARIA bounds, PageUp and
-    // PageDown by a tenth of the steps, arrows that follow the track as drawn, and an
-    // axis that can start on the right.
-    // Raised from 12,900: the track's corner reads its shape token (12,983 measured).
-    // Raised from 13,090: the track, stops and inset icon are a percentage
-    // of the value, so the first paint does not wait on a measurement (13,356 measured).
-    // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // The nearest-boundary direction module: 13,434 measured, measured +1% is
-    // 13,568.34, the next multiple of 50 is 13,600.
-    { name: "slider", code: "export { createSlider } from 'material';", gzip: PACKAGE_GZIP.slider },
-    // The nearest-boundary direction module: 7,046 measured; kb(6.95) is 7,116
-    // (70 above, short of 100), kb(7.0) is 7,168 (122 above).
-    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: PACKAGE_GZIP["navigation-rail"] }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-    // Contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // Direct high values: 8,156 -> 7,631 gzip bytes (same packer).
-    // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // Typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
-    // Merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
-    { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';", gzip: PACKAGE_GZIP["navigation-rail-css"] },
-    // The required asterisk, the live error, the trailing icon button: 8,456 to
-    // 9,058 against 7cd57a6, Node 22 / npm 10.
-    // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    // The nearest-boundary direction module: 9,417 measured, measured +100 is
-    // 9,517, the next multiple of 50 is 9,550.
-    { name: "text-field", code: "export { createTextField } from 'material';", gzip: PACKAGE_GZIP["text-field"] },
-    // The nearest-boundary direction module: 20,161 measured, measured +1% is
-    // 20,363, the next multiple of 50 is 20,400.
-    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: PACKAGE_GZIP.form }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-    // The toolbar: 123,080 to 125,176, measured against b1dbf77.
-    // The FAB menu: 125,245 to 127,714, measured against 1bd8343.
-    // The Material shapes' geometry in the loading indicator: 127,894 to 128,195, measured against 5b314c5.
-    // The text field's asterisk, live error and trailing button: 128,187 to 128,802, against 7cd57a6.
-    // The carousel's opt-in wheel scrolling with momentum: 128,896 to 129,565 against
-    // 2ef11f0, Node 22 / npm 10.
-    // The main merge with the root class option: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
-    // isDisabled() on eleven components and the type exports: 129,650 to 129,773
-    // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
-    // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // The text-field rename merged in: 126,962, the same figure main packed.
-    // 38 B left under 127,000.
-    // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the bounded rule.
-    // The nearest-boundary direction module: 127,273 measured, measured +1% is
-    // 128,545.73, the next multiple of 50 is 128,550.
-    { name: "all-js", code: "export * from 'material';", gzip: PACKAGE_GZIP["all-js"] },
-    // Contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // Direct high values: 8,069 -> 7,542 gzip bytes (same packer).
-    // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // The base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
-    // Merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
-    { name: "base-css", code: "import 'material/styles/base';", gzip: PACKAGE_GZIP["base-css"] },
-    // The opt-in theme-only base: the roles, the tokens, the body theme and
-    // the global reduced-motion switch, with no reset, ripple or contrast
-    // modes. It has no `.mtrl-` class of its own, so its side-effect
-    // assertions are in the block below.
-    { name: "base-lite-css", code: "import 'material/styles/base-lite';", gzip: PACKAGE_GZIP["base-lite-css"] },
-    // The element base must fit the existing full-base ceiling; no budget increase.
-    { name: "base-elements-css", code: "import 'material/styles/base-elements';", gzip: PACKAGE_GZIP["base-css"] },
-    // Typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
-    // Merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
-    { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: PACKAGE_GZIP["button-css"] },
-    // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
-    // segments with their corners each way round, and the outline colour and width per
-    // state, in place of an input border and a focus overlay. The resting label shown
-    // alone: the placeholder's fill cleared and the affixes hidden
-    // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
-    // The text field's trailing icon button and asterisk: 8,245 to 8,426 against 7cd57a6.
-    // Contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // Direct high values: 11,342 -> 10,811 gzip bytes (same packer).
-    // 10,602 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // Typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
-    // Merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
-    // The text field's layout, against 1dc3bc72 (8,468). The input's padding beside a
-    // prefix or a suffix moves from the script to the stylesheet, two insets per side: 8,539
-    // (all-js gives back 86). A multiline field's first line and label where the single-line
-    // field has them, per variant and density: 8,595. The M3 insets, with the outlined input's
-    // side borders and the filled floated label's own rule gone: 8,542. The vertical metrics,
-    // with the affix's place no longer a rule per state: 8,499.
-    // The filled indicator's reduced-motion rule: 8,511. With main's package name taken in
-    // (47a3ebcd): 8,528. 8,528 + 100 = 8,628, rounded up to 8,650.
-    // The text field's insets as custom properties, mirrored by one block for both
-    // directions in place of a rule per case: 8,528 -> 8,268 against a8c24f7f.
-    // 8,268 + 100 = 8,368, rounded up to 8,400.
-    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: PACKAGE_GZIP["select-css"] },
-    // Contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // Direct high values: 7,639 -> 7,111 gzip bytes (same packer).
-    // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    // Typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
-    // Merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
-    { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: PACKAGE_GZIP["slider-css"] },
-    // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
-    // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
-    // bundle, so every budget before this one was set with its CSS missing, not excluded.
-    // Moving drawer, side sheet, bottom sheet and dialog onto the expressive springs adds
-    // 530 (measured, 47,908 to 48,438 at 0c2d347): each open and close state spells out
-    // its spring's linear() curve, and the copies sit too far apart for gzip to share.
-    // The inverse roles in every theme add about 500 (dist/styles.css at gzip
-    // level 9, 44,479 to 44,986): three roles in the light and dark block of 17 themes,
-    // spread across 34 blocks too far apart for gzip to share. The fixture read 48,709.
-    // A chip set's grid cell draws its own 3px focus ring and focus layer: +57
-    // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
-    // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
-    // 51,067. The time picker's DOM dial: measured 51,497 with both in. Its
-    // hour and minute radios: measured 51,628. The menu's top-layer rule
-    // (#251), with main at 312ca0e and the time picker tokens: measured 51,667. The
-    // modal surfaces in the top layer: +328, measured 51,995 at dba5ba9: the dialog, the
-    // two sheets and the modal drawer each undo the user agent's <dialog> box and fade a
-    // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
-    // Search's surface, a <dialog> in the top layer: measured 52,194. Its
-    // state layers and the contained variant: measured 52,328.
-    // Measured each alone on e36838c: dropping the --*-rgb twin of every colour
-    // role in every theme, 52,398 to 49,528; one button state layer in currentColor, its
-    // opacity alone per state, in place of a layer per colour style and toggle state:
-    // 48,934. With the themes on main merged and regenerated without twins: 48,794.
-    // The typeface and corner tokens: every font-family and token corner is
-    // var(--token, <compiled>), measured 50,184 to 50,678 (+494) at 64c1e86.
-    // The toolbar: 50,752 to 51,449, measured against b1dbf77.
-    // The FAB menu: 51,494 to 52,688, measured against 1bd8343.
-    // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
-    // The text field's trailing icon button and asterisk: 52,916 to 53,072 against 7cd57a6.
-    // The tabs indicator anchors in the stylesheet, and the slider visual is a size
-    // container so its ticks can use cqw/cqh: measured 53,386.
-    // The navigation bar's stylesheet: 53,389 to 54,659 against 51455a6.
-    // Contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
-    // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
-    // Removed four themes from the full stylesheet: 65,790 -> 62,120.
-    // 62,087 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // Merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
-    // The toolbar's marker selectors grew a default-tag arm each (:is()), the
-    // belt for marker-less markup: 62,746 to 62,755, ceiling to 62,760.
-    // The direction rule's second form, the host class that reaches a part
-    // inside a shadow tree (styles/abstract/_mixins.scss): 62,755 to 63,083
-    // against 9fb89b44, Node 22.23.3 / npm 10.9.9. 63,083 + 1% = 63,714,
-    // rounded up to 63,750, its ceiling.
-    // The CSS rows bundle with `target: "browser"`, whose default targets
-    // predate logical properties: Lightning CSS lowers them into physical
-    // declarations behind `:lang()` lists. The full-css row is therefore an
-    // old-target bundle — 12,426 `:lang()` arms, 7,577 of its 63,527 gzip
-    // bytes measured on ff835193 (#125). Current targets keep the logical
-    // properties and emit none; the row stays on the old-target build so the
-    // ceiling covers the larger bundle a consumer with old targets gets.
-    // dist/styles.css itself carries no `:lang()` or `:dir()` rule.
-    { name: "full-css", code: "import 'material/styles';", gzip: PACKAGE_GZIP["full-css"] },
+    { name: "addClass", code: "export { addClass } from 'material/core/dom';" },
+    { name: "button", code: "export { createButton } from 'material';" },
+    { name: "slider", code: "export { createSlider } from 'material';" },
+    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';" },
+    { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';" },
+    { name: "text-field", code: "export { createTextField } from 'material';" },
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';" },
+    { name: "all-js", code: "export * from 'material';" },
+    { name: "base-css", code: "import 'material/styles/base';" },
+    { name: "base-lite-css", code: "import 'material/styles/base-lite';" },
+    { name: "base-elements-css", code: "import 'material/styles/base-elements';" },
+    { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';" },
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';" },
+    { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';" },
+    { name: "full-css", code: "import 'material/styles';" },
   ];
-  // Complete the measurement report even when an earlier fixture exceeds its cap.
-  const overBudget: string[] = [];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
     await writeFile(entry, fixture.code);
@@ -631,7 +334,7 @@ try {
     assert.equal(outputs.length, 1, `${fixture.name}: expected one ${css ? "CSS" : "JS"} output`);
     const bytes = new Uint8Array(await outputs[0].arrayBuffer());
     sizes[fixture.name] = measure(bytes);
-    if (!(sizes[fixture.name].gzip <= fixture.gzip)) overBudget.push(`${fixture.name} exceeds ${fixture.gzip} gzip bytes: ${sizes[fixture.name].gzip}`);
+    rows.push({ name: `Packed ${fixture.name} gzip`, bytes: sizes[fixture.name].gzip });
     if (css) {
       const text = new TextDecoder().decode(bytes);
       assert(text.includes("--mtrl-sys-color-primary"), "CSS base theme was discarded");
@@ -702,24 +405,18 @@ try {
     const chunk = measure(new Uint8Array(await byPath.get(path)!.arrayBuffer()));
     for (const metric of ["raw", "gzip", "brotli"] as const) sizes["button-initial"][metric] += chunk[metric];
   }
-  // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  // The nearest-boundary direction module: 7,652 measured, measured +100 is
-  // 7,752, the next multiple of 50 is 7,800.
-  assert(sizes["button-initial"].gzip < BUTTON_INITIAL_GZIP, `Button initial payload exceeds ${BUTTON_INITIAL_GZIP.toLocaleString("en-US")} gzip bytes`);
+  rows.push({ name: "Packed button-initial gzip", bytes: sizes["button-initial"].gzip });
+  for (const adapter of ["react", "svelte", "vue", "solid"]) {
+    const bytes = Bun.file(join(fixture.installed, "dist", "ssr", `${adapter}.js`)).size;
+    rows.push({ name: `SSR adapter ${adapter} raw`, bytes });
+  }
+  const { size: slider } = await measureSlider();
+  rows.push({ name: "Slider inline gzip", bytes: slider.gzip });
+  rows.push(...(await measureConsumerSizes(temporary)).rows);
 
   console.table(sizes);
-  if (overBudget.length) {
-    // The normal component step is downstream of this gate. Keep its canonical
-    // rows available for review even when a packed fixture needs an owner decision.
-    console.error("Collecting canonical component rows before reporting packed budget failures.");
-    const report = Bun.spawn([process.execPath, join(import.meta.dir, "size.ts")], {
-      cwd: resolve(import.meta.dir, ".."), stdout: "inherit", stderr: "inherit",
-    });
-    console.error(`Component size diagnostic exited ${await report.exited}.`);
-  }
-  assert.equal(overBudget.length, 0, overBudget.join("\n"));
   await mkdir("analysis", { recursive: true });
-  await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
+  await writeFile("analysis/package-size.json", JSON.stringify({ rows, sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
   } }, null, 2) + "\n");
 } finally {
