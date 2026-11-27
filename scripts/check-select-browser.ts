@@ -110,13 +110,17 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const box = item.getBoundingClientRect();
       const style = getComputedStyle(item);
       const after = getComputedStyle(item, "::after");
-      // The mark's room is reserved on the content row, so the content box's
-      // padding ends under the mark while the text does not. Measure the text
-      // itself: the label's contents, or the item's when it carries no label.
+      // The mark's room is reserved on the content row, whose padding ends
+      // under the mark, while the label's own box stops 12px clear of it.
+      // Measure the option label's text and clip it to the label's box, the
+      // way the stylesheet clips it (overflow hidden, ellipsis): the item's
+      // padded content box is not text.
       const label = item.querySelector(".mtrl-menu__item-label .mtrl-menu__item-text") ?? item.querySelector(".mtrl-menu__item-text") ?? item;
       const range = document.createRange();
       range.selectNodeContents(label);
-      const text = range.getBoundingClientRect();
+      const rawText = range.getBoundingClientRect();
+      const labelBox = label.getBoundingClientRect();
+      const text = { left: Math.max(rawText.left, labelBox.left), right: Math.min(rawText.right, labelBox.right) };
       // The mark's box, from its own used left, margin and width inside the item
       const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);
       const right = left + parseFloat(after.width);
