@@ -253,6 +253,11 @@ Releases are published by GitHub Actions with npm trusted publishing
 
 Install the stable release with `npm install material`.
 
+The nightly main build and the tagged release verifier check the hashes for
+`styles.css`, `elements/styles.js`, expanded Sass main and compressed Sass main.
+Use the values printed by the failing CI job when updating the combined pins.
+To run the same check locally, build first and run `bun run combined-stylesheet-pins:check`.
+
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), assembles the changelog and updates
    `README.md` and `npm-readme.md` where the release changes them. Merge it

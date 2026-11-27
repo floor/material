@@ -8,4 +8,4 @@ CI compares each pull request and push to `main` with the latest `v*` release ta
 
 When a row grows by more than its threshold, include a line beginning `Size:` in the PR body that explains the growth. The delta is cumulative since the release, so explain when earlier merged changes account for the increase.
 
-Keep the size tables in `README.md`, `npm-readme.md` and `SIZES.md` for release updates. Release CI generates them in the `package-sizes` artifact. The release report records the total packed size and its change since the previous release. Stylesheet fixtures still record exact content and are updated with the source change that moves them.
+Keep the size tables in `README.md`, `npm-readme.md` and `SIZES.md` for release updates. Release CI generates them in the `package-sizes` artifact. The release report records the total packed size and its change since the previous release. Per-component stylesheet fixtures still record exact content and are updated with the source change that moves them. The four combined stylesheet pins are checked nightly and before publishing.
