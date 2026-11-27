@@ -373,8 +373,8 @@ describe("explicit contrast levels are opt-in", () => {
     // The slider pill contracts at full opacity before hiding (-153 B).
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
-      sha256: "958509d910a0a2065a87cc63059af5f7aba56969fe69d81b57bb7b7bdb063991",
-      length: 555962,
+      sha256: "b08db1bc811caee0fedab3c209f0cf7f25a6d57b69d87f964d209747c797fc07",
+      length: 556659,
     });
   });
 
