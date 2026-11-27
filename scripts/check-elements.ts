@@ -10715,10 +10715,11 @@ try {
     assert.equal(shown.aboveCover, true, "the tooltip is above the z-index 9999 sibling");
     check("tooltip top layer in a shadow root: shown on hover in its element's root, styled, at the unlayered position with the page scrolled, above z-index 9999");
 
-    // Leaving hides it: the hide delay, then the exit transition
+    // Leaving hides it after the 1.5 s delay, then the exit transition and the
+    // top-layer removal. 1,800 ms is past 1,500 + 150.
     const outside = await centerOf("pt-outside");
     await page.mouse.move(outside.x, outside.y);
-    await wait(400);
+    await wait(1800);
     const left = await tipState();
     // Focus shows it, blur hides it
     await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
@@ -11999,7 +12000,14 @@ try {
       await wait(300);
       const hovered = await visible();
       await page.mouse.move(600, 600);
-      await wait(400);
+      // The pointer leaving starts the 1.5 s hide. A 400 ms wait still saw the
+      // tooltip, so the focus read blamed no-show-on-focus. Wait until it is
+      // hidden, capped above that delay plus the 150 ms exit. The delay stays.
+      await settle(page, {
+        target: "#gt",
+        until: async () => !(await visible()),
+        untilCapMs: 2_200,
+      });
       await page.focus("#gtb");
       await wait(300);
       const focused = await visible();
