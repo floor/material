@@ -72,8 +72,12 @@ export const TOOLTIP_DEFAULTS = {
   VISIBLE: false,
   /** Default show delay in milliseconds */
   SHOW_DELAY: 300,
-  /** Default hide delay in milliseconds */
-  HIDE_DELAY: 100,
+  /**
+   * Default hide delay in milliseconds.
+   * https://m3.material.io/components/tooltips/guidelines (2026-11-27):
+   * "Both plain and rich tooltips disappear 1.5 seconds after navigating away from the target region."
+   */
+  HIDE_DELAY: 1500,
   /** Default offset from target in pixels */
   OFFSET: 8,
   /** Default arrow size in pixels */

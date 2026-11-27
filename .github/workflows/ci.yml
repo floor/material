@@ -442,6 +442,9 @@ jobs:
           - group: components-b
             browsers: chromium
             checks: consumer:check tabs:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
+          - group: tooltip-hide-delay
+            browsers: chromium webkit
+            checks: tooltip-hide-delay:check
           - group: slider
             browsers: chromium webkit
             checks: slider:check

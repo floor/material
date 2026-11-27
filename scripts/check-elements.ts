@@ -10691,10 +10691,11 @@ try {
     assert.equal(shown.aboveCover, true, "the tooltip is above the z-index 9999 sibling");
     check("tooltip top layer in a shadow root: shown on hover in its element's root, styled, at the unlayered position with the page scrolled, above z-index 9999");
 
-    // Leaving hides it: the hide delay, then the exit transition
+    // Leaving hides it after the 1.5 s delay, then the exit transition and the
+    // top-layer removal. 1,800 ms is past 1,500 + 150.
     const outside = await centerOf("pt-outside");
     await page.mouse.move(outside.x, outside.y);
-    await wait(400);
+    await wait(1800);
     const left = await tipState();
     // Focus shows it, blur hides it
     await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());

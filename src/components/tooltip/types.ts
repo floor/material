@@ -31,7 +31,7 @@ export const TOOLTIP_VARIANTS = {
  * Default values
  */
 export const DEFAULT_SHOW_DELAY = 300;
-export const DEFAULT_HIDE_DELAY = 100;
+export const DEFAULT_HIDE_DELAY = 1500;
 export const DEFAULT_OFFSET = 8;
 export const DEFAULT_ARROW_SIZE = 8;
 
@@ -87,8 +87,11 @@ export interface TooltipConfig {
   showDelay?: number;
   
   /** 
-   * Hide delay in milliseconds
-   * @default 100
+   * Hide delay in milliseconds. The pointer leaving the target waits this long;
+   * keyboard dismissal does not.
+   * https://m3.material.io/components/tooltips/guidelines (2026-11-27):
+   * "Both plain and rich tooltips disappear 1.5 seconds after navigating away from the target region."
+   * @default 1500
    */
   hideDelay?: number;
   
