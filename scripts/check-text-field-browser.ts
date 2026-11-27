@@ -67,18 +67,36 @@ export async function checkTextFieldLabelGeometry(page: Page): Promise<void> {
   const measured = await page.evaluate(async () => {
     const { createTextField } = (window as unknown as FieldWindow).inputs;
     const filled = createTextField({ label: "Email", variant: "filled", value: "a@b.c" });
-    const outlined = createTextField({ label: "Email", variant: "outlined", value: "a@b.c" });
     const animated = createTextField({ label: "Email", variant: "filled" });
-    const label = outlined.element.querySelector("label")!;
-    // Give layout the same fractional width in both engines, independently of fonts.
-    label.style.width = "120.625px";
-    document.body.append(filled.element, outlined.element, animated.element);
+    const stage = document.createElement("div");
+    const sizes = [["ltr", 120.625], ["rtl", 120.625], ["rtl", 232.625]] as const;
+    const outlined = sizes.map(([direction, width]) => {
+      const wrapper = document.createElement("div");
+      wrapper.dir = direction;
+      const field = createTextField({ label: "Email", variant: "outlined", value: "a@b.c" });
+      const label = field.element.querySelector("label")!;
+      // Exercise the same fractional width in both engines, independent of fonts.
+      label.style.width = `${width}px`;
+      wrapper.append(field.element);
+      stage.append(wrapper);
+      return { direction, width, field, label };
+    });
+    stage.append(filled.element, animated.element);
+    document.body.append(stage);
     try {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const filledLabel = filled.element.querySelector("label")!.getBoundingClientRect();
       const filledTop = filledLabel.top - filled.field.getBoundingClientRect().top;
-      const notch = outlined.element.querySelector(".mtrl-text-field__outline-notch")!.getBoundingClientRect();
-      const outlinedLabel = label.getBoundingClientRect();
+      const notches = outlined.map(({ direction, width, field, label }) => {
+        const notch = field.element.querySelector(".mtrl-text-field__outline-notch")!.getBoundingClientRect();
+        const box = label.getBoundingClientRect();
+        return {
+          direction,
+          width,
+          labelWidth: parseFloat(getComputedStyle(label).width),
+          padding: [box.left - notch.left, notch.right - box.right],
+        };
+      });
       const animation = (() => {
         if (matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
         const animatedLabel = animated.element.querySelector("label")!;
@@ -95,20 +113,22 @@ export async function checkTextFieldLabelGeometry(page: Page): Promise<void> {
       return {
         filledTop,
         filledHeight: filledLabel.height,
-        labelWidth: parseFloat(getComputedStyle(label).width),
-        padding: [outlinedLabel.left - notch.left, notch.right - outlinedLabel.right],
+        notches,
         animation,
       };
     } finally {
       filled.destroy();
-      outlined.destroy();
+      for (const { field } of outlined) field.destroy();
       animated.destroy();
+      stage.remove();
     }
   });
-  assert.equal(measured.labelWidth, 120.625, "the outlined label width exercises subpixel notch sizing");
   const failures = [];
   if (Math.abs(measured.filledTop - 8) > 0.5) failures.push("filled label top");
-  if (measured.padding.some((px) => Math.abs(px - 4) > 0.01)) failures.push("outlined notch padding");
+  for (const { direction, width, labelWidth, padding } of measured.notches) {
+    assert.equal(labelWidth, width, "the outlined label width exercises subpixel notch sizing");
+    if (padding.some((px) => Math.abs(px - 4) > 0.01)) failures.push(`${direction} ${width}px outlined notch padding`);
+  }
   if (measured.animation) {
     const { restingTop, startTop, midpointTop } = measured.animation;
     if (Math.abs(startTop - restingTop) > 0.5) failures.push("filled label jumps at float start");

@@ -171,6 +171,12 @@ export const withPlacement =
         element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         if (outline && notch) {
           if (labelWidth > 0) notch.style.width = `${labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2}px`;
+          // WebKit rounds a right-edge transform origin before scaling. Use
+          // the same fractional width for the label's pivot and its notch.
+          labelEl?.style.setProperty(
+            `--${PREFIX}-${COMPONENT}-label-origin-x`,
+            labelWidth > 0 ? `${labelWidth}px` : "",
+          );
           outline.classList.toggle(`${outlineClass}--notched`, isOutlined && !!labelEl && (isFocused || !isEmpty));
         }
 

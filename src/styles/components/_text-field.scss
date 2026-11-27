@@ -822,7 +822,7 @@ $component: "#{base.$prefix}-text-field";
         .#{$component}__label {
             left: auto;
             right: var(--#{$component}-start, 16px);
-            transform-origin: right top;
+            transform-origin: var(--#{$component}-label-origin-x, right) top;
         }
 
         .#{$component}__prefix {

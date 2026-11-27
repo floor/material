@@ -139,12 +139,12 @@ try {
   await checkMenuOpeners(page);
   await checkMenuOpenerPlacement(page);
   await checkControls(page);
-  // These checks already ran in Chromium. WebKit uses Alt+Tab for radio focus.
-  // The components-a shard installs Chromium only.
+  // These checks also run in WebKit in CI. A local install may have only Chromium.
   let webkitBrowser: Browser | null = null;
   try {
     webkitBrowser = await webkit.launch({ headless: true });
-  } catch {
+  } catch (error) {
+    if (process.env.CI === "true") throw error;
     console.log("core: WebKit is not installed here, text field label geometry and radio focus skipped");
   }
   if (webkitBrowser) {
