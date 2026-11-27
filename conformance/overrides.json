@@ -1201,7 +1201,7 @@
     "reason": "Reference conflict resolved with no change under rule 1. The measured OutlineVariant matches the pinned Compose DividerTokens.Color and the website baseline colour diagram."
   },
   "list/divider-trailing-space/inset/rest": {
-    "reason": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
+    "reason": "The Compose list token sets the trailing inset to 16 dp. The website shows 24 dp for the baseline trailing inset.",
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
@@ -1212,8 +1212,8 @@
       "value": "16dp",
       "file": "ListTokens.kt",
       "symbol": "DividerTrailingSpace",
-      "line": 36,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L36"
+      "line": 34,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L34-L35"
     }
   },
   "list/focus/standard": {

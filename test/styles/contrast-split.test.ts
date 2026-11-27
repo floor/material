@@ -374,7 +374,7 @@ describe("explicit contrast levels are opt-in", () => {
     // The exit takes 200 ms.
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
-      sha256: "dec80a3912af25b4b14121ec41c24e014fb1c00df7edb7864579d279e74a3790",
+      sha256: "7e61131760550532532826e380291b7b8cd8636787e266fa38b11ba23485e142",
       length: 558156,
     });
   });

@@ -49,7 +49,7 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
   }
   assert.equal(await page.locator('[data-id="large"] .mtrl-list__leading--video').evaluate(el => el.getBoundingClientRect().width), 114);
   assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineStart), "16px");
-  assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineEnd), "24px");
+  assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineEnd), "16px");
   assert.equal(await page.getByRole("button", { name: "Disabled", exact: true }).count(), 1, "Disabled rows must remain in the accessibility tree");
   const primary = page.locator('[data-id="one"] .mtrl-list__action');
   await primary.focus(); await page.keyboard.press("Space");

@@ -72,6 +72,35 @@ scenario(variants, {
   },
 });
 
+scenario(variants, {
+  title: "Inset and full-width dividers",
+  lookFor: "the inset line between the first two rows, then the full-width line. Toggle RTL to compare both directions.",
+  expected: "the inset line is 16 px from both edges. The full-width line meets both edges.",
+  measure: () => {
+    const root = document.getElementById("list-dividers");
+    const gaps = Array.from(root.querySelectorAll(".mtrl-list__divider"), (divider) => {
+      const line = divider.getBoundingClientRect();
+      const content = divider.parentElement.getBoundingClientRect();
+      return `${Math.round(line.left - content.left)} px / ${Math.round(content.right - line.right)} px`;
+    });
+    return `Left / right · Inset ${gaps[0]} · Full width ${gaps[1]}`;
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Divider sizes",
+      items: [
+        { id: "inset", headline: "Above inset divider" },
+        { kind: "divider", inset: true },
+        { id: "full", headline: "Above full-width divider" },
+        { kind: "divider" },
+        { id: "last", headline: "Last row" },
+      ],
+    });
+    list.element.id = "list-dividers";
+    body.append(list.element);
+  },
+});
+
 const states = section(main, "States");
 scenario(states, {
   title: "Selected icon colour",

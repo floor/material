@@ -490,7 +490,7 @@ jobs:
             browsers: chromium
             checks: divider-sheet-conformance:check
           - group: list-conformance
-            browsers: chromium
+            browsers: chromium webkit
             checks: list-conformance:check
           - group: list-drifts
             browsers: chromium webkit

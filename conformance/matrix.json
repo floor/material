@@ -7328,18 +7328,18 @@
             "value": "16dp",
             "file": "ListTokens.kt",
             "symbol": "DividerTrailingSpace",
-            "line": 36,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L36"
+            "line": 34,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L34-L35"
           },
           "material": {
-            "value": "24px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "match",
-            "compose": "drift"
+            "spec": "drift",
+            "compose": "match"
           },
-          "note": "The website uses a 24 dp trailing inset. The list token specifies 16 dp, while a standalone Compose divider fills the width supplied by the caller. The reference choice is pending.",
+          "note": "The Compose list token sets the trailing inset to 16 dp. The website shows 24 dp for the baseline trailing inset.",
           "issue": null
         },
         {
