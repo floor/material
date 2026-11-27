@@ -60,6 +60,11 @@
     return {
       empty: element.classList.contains("mtrl-text-field--empty"),
       labelTop: label && row ? Math.round(label.getBoundingClientRect().top - row.getBoundingClientRect().top) : null,
+      rowHeight: row ? Math.round(row.getBoundingClientRect().height) : null,
+      // The outlined label sits on the outline's top edge.
+      labelOnEdge: label && outline
+        ? Math.round(label.getBoundingClientRect().top + label.getBoundingClientRect().height / 2 - outline.getBoundingClientRect().top)
+        : null,
       notchOpen: outline ? outline.classList.contains("mtrl-text-field__outline--notched") : null,
       width: Math.round(box.width),
     };
@@ -142,6 +147,78 @@
       return json({ draft: field.getValue(), chips: field.getValues() });
     },
   });
+  scenario(edges, {
+    title: "A chip child added after upgrade becomes a chip",
+    lookFor: "the element is mounted with the chips attribute and no children; press Add a chip.",
+    expected: "each added <m-chip> child becomes a chip with its value, and removing the child takes the chip away.",
+    mount: (body) => {
+      const box = stage(body);
+      const element = document.createElement("m-text-field");
+      element.className = "tp-field tp-field--narrow";
+      element.setAttribute("label", "Added later");
+      element.setAttribute("chips", "");
+      box.append(element);
+      const add = document.createElement("button");
+      add.textContent = "Add a chip";
+      add.addEventListener("click", () => {
+        const chip = document.createElement("m-chip");
+        chip.setAttribute("value", `c${element.querySelectorAll("m-chip").length + 1}`);
+        chip.textContent = `c${element.querySelectorAll("m-chip").length + 1}`;
+        element.append(chip);
+      });
+      box.append(add);
+      window.__addedField = element;
+    },
+    measure: () => {
+      const element = window.__addedField;
+      const root = element.shadowRoot;
+      return json({ shadowChips: root?.querySelectorAll(".mtrl-chip").length ?? 0, lightChips: element.querySelectorAll("m-chip").length, values: element.getValues() });
+    },
+  });
+  scenario(edges, {
+    title: "The chip sheet in either load order",
+    lookFor: "press Load the chip sheet first and watch the row and input sizes; it restores on the next press.",
+    expected: "the row height and the input line measure the same with the chip sheet before or after the full stylesheet, and the chip keeps its 88dp minimum.",
+    mount: (body) => {
+      const box = stage(body);
+      const field = factoryField(box, { label: "Load order", items: ["a"] }, "tp-field tp-field--narrow");
+      const read = () => {
+        const element = field.element;
+        const row = element.querySelector(".mtrl-text-field__chips");
+        const input = element.querySelector(".mtrl-text-field__input");
+        const chip = element.querySelector(".mtrl-chip");
+        return {
+          row: row ? Math.round(row.getBoundingClientRect().height) : null,
+          input: input ? Math.round(input.getBoundingClientRect().height) : null,
+          chip: chip ? Math.round(chip.getBoundingClientRect().width) : null,
+        };
+      };
+      window.__orderField = field;
+      window.__orderReads = { after: read(), first: null };
+      const button = document.createElement("button");
+      button.textContent = "Load the chip sheet first";
+      button.addEventListener("click", () => {
+        const chipSheet = document.head.querySelector('link[href$="styles/text-field-chips.css"]');
+        const fullSheet = document.head.querySelector('link[href$="styles.css"]');
+        if (!chipSheet || !fullSheet) return;
+        const original = chipSheet.previousElementSibling;
+        if (window.__orderReads.first === null) {
+          fullSheet.before(chipSheet);
+          requestAnimationFrame(() => {
+            window.__orderReads.first = read();
+            window.__orderReads.flipped = true;
+          });
+        } else {
+          // Restore: the chip sheet goes back after the full stylesheet.
+          original ? original.after(chipSheet) : document.head.append(chipSheet);
+          window.__orderReads = { after: read(), first: window.__orderReads.first };
+        }
+      });
+      box.append(button);
+    },
+    measure: () => json({ flipped: !!window.__orderReads?.flipped, ...window.__orderReads }),
+  });
+
   scenario(edges, {
     title: "Both 48dp targets own their edge, at the browser's zoom",
     lookFor: "the chip's start belongs to its action and its end to the remove button; zoom the browser to 200% and the edges stay theirs.",
