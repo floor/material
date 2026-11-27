@@ -23,7 +23,7 @@ export type Override = {
 type Box = "width" | "height" | "x" | "y";
 export type Probe =
   | { part: string; box: Box }
-  | { part: string; style: string }
+  | { part: string; style: string; backgroundUnder?: string }
   | { part: string; inset: "left" | "right" | "top" | "bottom"; relativeTo: string }
   | { part: string; outline: true }
   | { part: string; contentInset: "left" | "right" | "bottom"; relativeTo: string }
