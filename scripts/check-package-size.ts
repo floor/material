@@ -12,20 +12,19 @@ import { internalIdRefs } from "./internal-ids";
 import { measureConsumerSizes, measureSlider } from "./size-fixtures";
 import type { SizeRow } from "./size-policy";
 
-const fixture = await createPackageFixture();
+const fixture = await createPackageFixture({ forSize: true });
 const { directory: temporary, pack } = fixture;
 
-// The packed size depends on the packer: npm's gzip differs between Node and npm
-// versions (#325: one dist packed to 998,498 B under Node 26 / npm 11 and to
-// 1,000,150 B under CI's Node 22 / npm 10). CI's figure is the one that counts.
-const CI_NODE_MAJOR = 22;
+// npm's gzip depends on both versions. Use the package job's exact toolchain
+// when comparing the local tarball measurement with the CI size report.
+const CI_NODE = "22.23.3";
+const CI_NPM = "10.9.9";
 const versionOf = (command: string): string => Bun.spawnSync([command, "--version"]).stdout.toString().trim();
 const packer = { node: versionOf("node"), npm: versionOf("npm") };
-if (Number(packer.node.replace(/^v/, "").split(".")[0]) !== CI_NODE_MAJOR) {
+if (packer.node !== `v${CI_NODE}` || packer.npm !== CI_NPM) {
   console.warn(
-    `\n!! Packed with Node ${packer.node} / npm ${packer.npm}, not CI's Node ${CI_NODE_MAJOR}: the packed size\n` +
-      `!! below is only indicative, and CI's is authoritative. For CI's figure, run\n` +
-      `!!   npx -y -p node@${CI_NODE_MAJOR} -p npm@10 -- bun run size:check\n`,
+    `\n!! Packed with Node ${packer.node} / npm ${packer.npm}. For CI's size measurement, run\n` +
+      `!!   npx -y -p node@${CI_NODE} -p npm@${CI_NPM} -- bun run size:check\n`,
   );
 }
 const rows: SizeRow[] = [];
