@@ -15,12 +15,12 @@ import { webkit, type Browser, type Page } from "playwright";
 import * as sass from "sass";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import { TOOLTIP_DEFAULTS } from "../src/components/tooltip/constants";
 import { componentStyles } from "./style-manifest";
 
 const EXIT_MS = 150;
 const hideDelay = TOOLTIP_DEFAULTS.HIDE_DELAY;
-assert.equal(hideDelay, 1500);
 
 const css = sass.compileString(`@use "${componentStyles.tooltip.source}";`, {
   loadPaths: [resolve("src/styles")],
@@ -72,6 +72,9 @@ const run = async (page: Page, engine: string) => {
   await page.waitForFunction(() => Reflect.get(window, "ready") === true);
   await page.locator("#anchor").hover();
   await page.waitForFunction(() => document.querySelector(".mtrl-tooltip")?.classList.contains("mtrl-tooltip--visible") === true);
+  // The visible class lands at the start of the enter fade. Reading then
+  // sees opacity 0 in Chromium and a mid-fade value in WebKit.
+  await settle(page, { target: ".mtrl-tooltip" });
   const shown = await read(page);
   assert.equal(shown.visible, true, `${engine}: hover did not show the tooltip`);
   assert.ok(shown.opacity > 0.9, `${engine}: the shown tooltip is not opaque (${shown.opacity})`);
@@ -111,4 +114,7 @@ try {
 }
 
 server.stop(true);
+// After the browser, so a branch whose default is still 100 ms fails on the
+// 1,400 ms read above, not on this constant before a browser opens.
+assert.equal(hideDelay, 1500);
 console.log("Plain tooltip hide delay is 1,500 ms after the pointer leaves.");
