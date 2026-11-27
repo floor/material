@@ -94,19 +94,23 @@ $component: "#{base.$prefix}-text-field";
             max-width: 100%;
         }
 
-        // Two 48dp targets on an 88dp chip would share its middle 8dp; M3 lets
-        // a target extend beyond the chip's container, so each keeps its own
-        // 48dp outside the other: the action runs from 8dp before the chip to
-        // 48dp before its end, the remove box from the chip's end 48dp back to
-        // 8dp after it. They meet exactly, and the row's 8dp gap means the
-        // neighbour's target meets there too, with no overlap.
+        // Two 48dp targets on an 88dp chip. The remove target runs from the
+        // chip's end 48dp back to 8dp past it -- beyond the container, as M3
+        // allows -- so it covers the chip's end and the row's 8dp gap. The
+        // action target then runs from 8dp before the chip to that box's
+        // start, 56dp (its 48dp minimum and the leading 8dp), and the two
+        // meet with no gap. The neighbour's action target begins 8dp before
+        // its chip, inside this chip's remove overhang; the remove's stacking
+        // keeps the seam with the chip it belongs to.
         .#{$component}__chips .mtrl-chip__action::before {
             inset-inline-start: -8px;
-            inset-inline-end: 48px;
+            inset-inline-end: auto;
+            width: 56px;
         }
 
         .#{$component}__chips .mtrl-chip__remove::before {
             inset-inline-end: -8px;
+            z-index: 1;
         }
     }
 
