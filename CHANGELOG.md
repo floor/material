@@ -28,6 +28,12 @@ Search bars leave 16 px at the end when they have no trailing action, and cards 
 
 The conformance matrix in the repository compares [Material Design 3](https://m3.material.io/) with Compose Material 3 1.5.0 and verifies colour, type, shape and elevation roles across three themes ([#496](https://github.com/floor/material/pull/496), [#501](https://github.com/floor/material/pull/501), [#502](https://github.com/floor/material/pull/502)). CI skips browser jobs for changes outside their scope ([#499](https://github.com/floor/material/pull/499)), and browser checks use a shared, tested helper to wait for animations and scrolling to settle ([#503](https://github.com/floor/material/pull/503), [#505](https://github.com/floor/material/pull/505), [#506](https://github.com/floor/material/pull/506)).
 
+The release PR’s package job measured **923,516 B** compressed,
+**5,264,682 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **339 B** from 3.16.7
+([run 45938273038](https://github.com/floor/material/actions/runs/45938273038/job/140306764571)).
+
 ## [3.16.7] - 2026-11-26
 
 Menus and selects keep their items in view, hidden bottom app bars stay out of the Tab order, and keyboard focus is clearer across the library.
