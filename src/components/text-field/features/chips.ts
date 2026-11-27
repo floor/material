@@ -571,8 +571,10 @@ export const installChips = <C extends ElementComponent>(
     const onBlur = (): void => {
       if (editingIndex !== null) commitEdit(false);
       // The shared blur handler toggles --empty from the draft alone; a field
-      // with chips is not empty.
-      queueMicrotask(syncEmpty);
+      // with chips is not empty. This listener is registered after the shared
+      // one, so the class is put right in the same tick: no frame paints the
+      // label at rest.
+      syncEmpty();
     };
 
     const target = input as HTMLInputElement;
@@ -584,7 +586,7 @@ export const installChips = <C extends ElementComponent>(
     target.addEventListener("blur", onBlur);
     // Focus returning to the input runs the shared focus handler, which reads
     // the draft alone; the class is re-asserted chip-side.
-    target.addEventListener("focus", () => queueMicrotask(syncEmpty));
+    target.addEventListener("focus", syncEmpty);
 
     // Clicks on the row's empty space put the caret in the input.
     const onRowClick = (event: MouseEvent): void => {
@@ -656,6 +658,19 @@ export const installChips = <C extends ElementComponent>(
       syncForm();
     });
     classObserver.observe(component.element, { attributes: true, attributeFilter: ["class"] });
+    // Silent setters write the class without an event (`setValue("")` through
+    // the API), so a class change is the last place to take it off: a mutation
+    // callback runs before the next paint, and one removal cannot re-trigger
+    // itself.
+    let fixingEmpty = false;
+    const emptyObserver = new MutationObserver(() => {
+      if (fixingEmpty || chips.length === 0) return;
+      if (!component.element.classList.contains(`${rootClass}--empty`)) return;
+      fixingEmpty = true;
+      component.element.classList.remove(`${rootClass}--empty`);
+      fixingEmpty = false;
+    });
+    emptyObserver.observe(component.element, { attributes: true, attributeFilter: ["class"] });
 
     // The form's own reset restores the chips the field started with. The
     // field is built before it is connected, so the form is not known at
@@ -685,6 +700,7 @@ export const installChips = <C extends ElementComponent>(
         resetForm?.removeEventListener("reset", onReset);
         observer.disconnect();
         classObserver.disconnect();
+        emptyObserver.disconnect();
         requiredObserver.disconnect();
         target.removeEventListener("keydown", onInputKeydown);
         target.removeEventListener("paste", onPaste);

@@ -411,6 +411,94 @@ section("forms: the element submits one entry per chip and restores its state", 
 });
 
 // ---------------------------------------------------------------------------
+// The empty state: with a committed chip and an empty draft, nothing that
+// writes --empty may let it stay on — the label keeps its floated place and
+// the outlined notch stays open, with no frame in between.
+section("the empty class never appears with a chip and an empty draft", async (page) => {
+  await mountFactory(page, { label: "To", variant: "outlined", chips: { items: ["a@b.com"] } });
+  await settle(page, { target: "#field" });
+  // Sample the paint: the label's place every frame from the action to three
+  // frames after it. A class toggled and put back within the tick never paints;
+  // a label that lands at rest for one frame does.
+  await page.evaluate(() => {
+    const w = window as unknown as { frames: boolean[]; sampling: boolean };
+    w.frames = [];
+    w.sampling = true;
+    const field = document.getElementById("field") as HTMLElement;
+    const label = field.querySelector(".mtrl-text-field__label") as HTMLElement;
+    const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
+    const tick = (): void => {
+      if (!w.sampling) return;
+      w.frames.push(label.getBoundingClientRect().top - field.getBoundingClientRect().top < 10);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  const inspect = async (label: string) => {
+    const state = await page.evaluate(() => {
+      const field = document.getElementById("field") as HTMLElement;
+      const labelEl = field.querySelector(".mtrl-text-field__label") as HTMLElement;
+      const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
+      const outline = field.querySelector(".mtrl-text-field__outline") as HTMLElement;
+      const w = window as unknown as { frames: boolean[]; sampling: boolean };
+      w.sampling = false;
+      return {
+        empty: field.classList.contains("mtrl-text-field--empty"),
+        frames: [...w.frames],
+        floated: labelEl.getBoundingClientRect().top - field.getBoundingClientRect().top < 10,
+        notched: outline.classList.contains("mtrl-text-field__outline--notched"),
+      };
+    });
+    assert.equal(state.empty, false, `${label}: --empty is not on the field`);
+    assert.ok(state.frames.length >= 2, `${label}: frames were sampled (${state.frames.length})`);
+    assert.equal(state.frames.every(Boolean), true, `${label}: the label stayed floated on every painted frame (${JSON.stringify(state.frames)})`);
+    assert.equal(state.floated, true, `${label}: the label is floated above the chips`);
+    assert.equal(state.notched, true, `${label}: the outlined notch is open`);
+  };
+  const paths: Array<[string, () => Promise<void>]> = [
+    ["blur", async () => {
+      await draftInput(page).click();
+      await page.locator("#outside").click();
+    }],
+    ["focus", async () => {
+      await draftInput(page).focus();
+    }],
+    ["input", async () => {
+      await draftInput(page).fill("draft");
+      await draftInput(page).fill("");
+    }],
+    ["setValue", async () => {
+      await page.evaluate(() => (window as unknown as { field: { setValue: (v: string) => void } }).field.setValue(""));
+    }],
+    ["clear", async () => {
+      await page.evaluate(() => (window as unknown as { field: { setValue: (v: string) => void } }).field.setValue("   "));
+    }],
+    ["reset", async () => {
+      await page.evaluate(() => (document.getElementById("form") as HTMLFormElement).reset());
+    }],
+  ];
+  for (const [label, run] of paths) {
+    await page.evaluate(() => {
+      const w = window as unknown as { frames: boolean[]; sampling: boolean };
+      w.frames = [];
+      w.sampling = true;
+      const field = document.getElementById("field") as HTMLElement;
+      const labelEl = field.querySelector(".mtrl-text-field__label") as HTMLElement;
+      const row = field.querySelector(".mtrl-text-field__chips") as HTMLElement;
+      const tick = (): void => {
+        if (!w.sampling) return;
+        w.frames.push(labelEl.getBoundingClientRect().top - field.getBoundingClientRect().top < 10);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await run();
+    await settle(page, { target: "#field" });
+    await inspect(label);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // The review round's blockers, each measured where it broke
 section("email mode rejects an invalid address and keeps it as text", async (page) => {
   await mountFactory(page, { label: "To", type: "email", chips: true });
