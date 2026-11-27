@@ -26,6 +26,7 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   schedule:
     - cron: "17 3 * * *"
 
@@ -232,8 +233,40 @@ jobs:
   package:
     needs: build
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      size-report: ${{ steps.size-report.outputs.available }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find the previous release on the base history
+        id: release
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          base="$BASE_SHA"
+          if [[ "$base" =~ ^0+$ ]]; then base="$GITHUB_SHA"; fi
+          tag=$(git describe --tags --match 'v*' --abbrev=0 "$base")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse "$tag^{commit}")" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base_version=$(git show "$base:package.json" | jq -er .version)
+            head_version=$(jq -er .version package.json)
+            if [[ "$PR_TITLE" == release:* || "$base_version" != "$head_version" ]]; then
+              echo 'candidate=true' >> "$GITHUB_OUTPUT"
+            fi
+          fi
+      - name: Check out the size baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.release.outputs.sha }}
+          path: .size-release-base
+          persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.2"
@@ -242,6 +275,11 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
+      - name: Build the previous release
+        working-directory: .size-release-base
+        run: |
+          bun install --frozen-lockfile
+          bun run scripts/build.ts
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
@@ -271,11 +309,23 @@ jobs:
         run: bun run ssr-comments:check
       - name: Packed SSR on Node and Bun, and browser isolation
         run: bun run ssr-consumer:check
-      - name: Packed imports and size budgets
+      - name: Measure the previous release
+        working-directory: .size-release-base
+        run: |
+          if [ -f scripts/size-policy.ts ]; then
+            bun scripts/check-package-size.ts
+            bun scripts/size.ts
+          else
+            # The first baseline predates the JSON emitters. Use the same
+            # measurement code on the release checkout and its built package.
+            bun "$GITHUB_WORKSPACE/scripts/check-package-size.ts"
+            MTRL_SIZE_ROOT="$PWD" bun "$GITHUB_WORKSPACE/scripts/size.ts"
+          fi
+      - name: Packed imports and size measurements
         run: bun run size:check
       - name: Public Sass entries compile from the packed package
         run: bun run styles-package:check
-      - name: README examples, specifiers, sizes and links against the packed package
+      - name: README examples, specifiers and links against the packed package
         run: bun run readme:check
       - name: The third-party notice is packed, and names the glyphs it covers
         run: bun run notice:check
@@ -285,10 +335,70 @@ jobs:
         run: bun run declaration-docs:check
       - name: Every packed declaration entry resolves to declarations a consumer can name and compile
         run: bun run declaration-exports:check
-      - name: Per-component gzip budgets
+      - name: Per-component gzip measurements
         run: bun run size
       - name: One adapter component ships only its element
         run: bun run adapters:size
+      - name: Find the merged PR size explanation on main
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" |
+            jq -r --arg sha "$GITHUB_SHA" '[.[] | select(.merged_at != null and .merge_commit_sha == $sha and .base.ref == "main") | .body // ""][0] // ""' \
+            > analysis/size-push-pr-body.txt
+      - name: Report and gate growth since the previous release
+        env:
+          MTRL_SIZE_BASE: .size-release-base
+          MTRL_SIZE_TAG: ${{ steps.release.outputs.tag }}
+          MTRL_SIZE_RELEASE: ${{ steps.release.outputs.candidate }}
+        run: bun run size:report
+      - name: Check for a size report
+        id: size-report
+        if: always()
+        run: |
+          if [ -s analysis/size-report.md ]; then echo 'available=true' >> "$GITHUB_OUTPUT"; fi
+      - name: Upload size report and release tables
+        if: always() && steps.size-report.outputs.available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-sizes
+          path: |
+            analysis/size-report.md
+            analysis/release-sizes
+          retention-days: 7
+
+  # The token can write only in this job, which never runs PR code. Forks
+  # keep the job summary because their pull request tokens are read-only.
+  size-comment:
+    needs: package
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.package.outputs.size-report == 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: package-sizes
+          path: reports
+      - name: Update the package size comment
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          report=reports/size-report.md
+          marker='<!-- material-ci-size-report -->'
+          [ -s "$report" ] && [ "$(head -n 1 "$report")" = "$marker" ] || exit 0
+          issue="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER"
+          comment=$(gh api --paginate "$issue/comments?per_page=100" --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- material-ci-size-report -->"))) | .id' | sed -n '1p')
+          if [ -n "$comment" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment" -F "body=@$report" --silent
+          else
+            gh api --method POST "$issue/comments" -F "body=@$report" --silent
+          fi
 
   # The browser checks, in groups that run side by side, on the build's dist/.
   # A run takes as long as its slowest group, so a check that grows moves to a
@@ -672,12 +782,12 @@ jobs:
   # cancelled job fails this one. Branch protection should require `ci-ok`.
   ci-ok:
     if: always()
-    needs: [changes, static, tests, build, package, browser, identity, comparators, ssr-worker]
+    needs: [changes, static, tests, build, package, size-comment, browser, identity, comparators, ssr-worker]
     runs-on: ubuntu-24.04
     steps:
       - name: Every job passed or was skipped
         run: |
-          echo 'changes=${{ needs.changes.result }} static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
+          echo 'changes=${{ needs.changes.result }} static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} size-comment=${{ needs.size-comment.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
           accept() {
             case "$1" in
               success|skipped) ;;
@@ -689,6 +799,7 @@ jobs:
           accept "${{ needs.tests.result }}" tests
           accept "${{ needs.build.result }}" build
           accept "${{ needs.package.result }}" package
+          accept "${{ needs.size-comment.result }}" size-comment
           accept "${{ needs.browser.result }}" browser
           accept "${{ needs.identity.result }}" identity
           accept "${{ needs.comparators.result }}" comparators

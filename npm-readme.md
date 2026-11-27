@@ -140,7 +140,7 @@ Each built-in theme's origin is data on `material/core/theme`: `THEME_ORIGINS` r
 
 ## Sizes
 
-What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package. The table records measurements from the latest release.
 
 <!-- sizes -->
 | Import | gzip |

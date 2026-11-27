@@ -5,8 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
-import { gzipSync } from "node:zlib";
-import { SLIDER_INLINE_GZIP } from "./budgets";
+import { measureSlider } from "./size-fixtures";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
 import { checkSliderNames } from "./fixtures/slider-names";
 import { settle } from "./browser-settle";
@@ -23,23 +22,7 @@ declare global {
 const reference = process.argv.find(arg => arg.startsWith("--reference="))?.slice(12);
 const artifacts = resolve("analysis/slider-dom");
 await mkdir(artifacts, { recursive: true });
-const bundle = await Bun.build({ entrypoints: [resolve("src/components/slider/index.ts")], minify: true, target: "browser" });
-assert(bundle.success, String(bundle.logs));
-const js = await bundle.outputs[0].text();
-const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).length };
-// The package budget for the slider (check-package-size.ts) moved to 11,500 when the URL
-// allowlist reached every bundle; this copy stayed at 11,000, 17 bytes above the slider
-// (10,983), until linking a label to its input (#67) added 19 and crossed it at 11,002.
-// It follows check-package-size.ts again at 12,600 for M3 conformance,
-// which took this build from 11,410 to 12,308; the breakdown is in that fixture.
-// Range limits, keys and RTL took it to 12,604; both copies move to 12,900.
-// Track, stops and the inset icon as a percentage of the value took it
-// to 13,151. The ceiling keeps about 150 bytes of room.
-// The nearest-boundary direction module took this build to 13,233; measured
-// +1% (13,365.33) rounded to the next 50 is 13,400, the same rule as the
-// package fixture's slider row.
-// 13,040 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-assert(size.gzip < SLIDER_INLINE_GZIP, `Slider JS exceeds ${SLIDER_INLINE_GZIP.toLocaleString("en-US")} gzip bytes: ${size.gzip}`);
+const { js, size } = await measureSlider();
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
