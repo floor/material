@@ -154,11 +154,14 @@ const run = async (page: Page, engine: string) => {
     const before = box('.mtrl-drawer__item[data-id="one"]');
     const after = box('.mtrl-drawer__item[data-id="two"]');
     const round = (value: number) => Math.round(value * 100) / 100;
+    const style = getComputedStyle(root.querySelector(".mtrl-drawer__sheet") as HTMLElement);
     return {
       gapBefore: round(divider.y - (before.y + before.height)),
       gapAfter: round(after.y - (divider.y + divider.height)),
       insetStart: round(divider.x - sheet.x),
       insetEnd: round(sheet.x + sheet.width - (divider.x + divider.width)),
+      borderLeft: style.borderLeftWidth,
+      borderRight: style.borderRightWidth,
     };
   });
   const toggle = (direction: string) => page.evaluate((value) => {
@@ -173,6 +176,9 @@ const run = async (page: Page, engine: string) => {
     assert.equal(reading.gapAfter, 16, `${engine}: element host (${direction}) — the space below the divider`);
     assert.equal(reading.insetStart, 28, `${engine}: element host (${direction}) — the start inset`);
     assert.equal(reading.insetEnd, 28, `${engine}: element host (${direction}) — the end inset`);
+    // The separator border faces the page: the right in LTR, the left in RTL.
+    assert.equal(reading.borderRight, direction === "ltr" ? "1px" : "0px", `${engine}: element host (${direction}) — the border on the right`);
+    assert.equal(reading.borderLeft, direction === "rtl" ? "1px" : "0px", `${engine}: element host (${direction}) — the border on the left`);
   }
   assert.deepEqual(errors, [], `${engine}: ${errors.join("\n")}`);
   console.log(`${engine}: divider 16 above and below, inset 28/28 in the standard and modal drawers, and a live element host keeps it through a direction toggle`);
