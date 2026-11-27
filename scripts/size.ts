@@ -7,41 +7,12 @@
  * then reports minified and gzipped size. Delta is against `core`: `pipe`,
  * `createBase` and `withElement`, the compose kernel a component starts from.
  *
- * A scenario that fails to compile fails the command. Every measured size has
- * a gzip budget, so a component that doubles cannot pass just because the
- * table still printed. The gzipped figure is the initial graph: static chunks
- * concatenated, which is what importing the component costs before any lazy
- * load. Dynamic imports (button → progress, card → button) are a separate
- * deferred column and are left out of `KNOWN_DEPS`, so their markers must not
- * appear in that initial graph.
+ * A scenario that fails to compile or leaks unrelated components fails the
+ * command. The initial and deferred gzip sizes feed the release-delta gate.
+ * Brotli at quality 11 is reported alongside gzip.
  *
- * Brotli is reported beside gzip for the same initial graph, at quality 11
- * (`node:zlib`, the setting check-adapter-size.ts uses — what a CDN serves).
- * It is reported, never gated: every budget in this file stays gzip.
- *
- * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
- * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
- * least 100 bytes above the measured gzip. Explicit byte ceilings for a
- * bundle (the constants in scripts/budgets.ts: the `gzip:` scenarios,
- * `full-css` and the other `*-css` ones, the SSR entry and pages,
- * `button-initial`, the Vite ceilings in check-consumer.ts, and the slider
- * entry in check-slider.ts) are measured plus 1% or 100 bytes, whichever is more, rounded up to the
- * next multiple of 50, and never above the ceiling `next` had before this
- * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
- * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
- * list, navigation-rail, select and switch, and the packed text field gzip,
- * were raised to the rule once, not grown. The unpacked size stayed at
- * 6,393,000 until the 3.0.0 contract work filled it; it is 6,458,000 by the
- * same rule (scripts/check-package-size.ts). The merged tree measured 6,420,252;
- * measured plus 1% is above that ceiling, so it stays.
- *
- * The published table. SIZES.md is generated from this script's own results by
- * `bun run size --markdown > SIZES.md`, and a plain `bun run size` fails when
- * the rows the committed file keeps between its `size-table` markers are not
- * what a fresh measurement says — the pull request that changes a size
- * refreshes the table, as readme:check has the README's `sizes` rows refreshed.
- * The commit and the date in the file's header stand outside the markers, so
- * they record when the table was regenerated without counting as drift.
+ * CI generates SIZES.md from the measured release candidate. The component
+ * table is also available locally with the command below.
  *
  * Usage:
  *   bun run size
@@ -51,16 +22,18 @@
 import { gzipSync } from "bun";
 import { brotliCompressSync, constants } from "node:zlib";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
-const root = resolve(import.meta.dir, "..");
+import type { SizeRow } from "./size-policy";
+
+const root = process.env.MTRL_SIZE_ROOT ?? resolve(import.meta.dir, "..");
 
 /** The commit the table was measured at, for the SIZES.md header. */
 const shortCommit = (): string => {
   try {
-    return execFileSync("git", ["rev-parse", "--short=8", "HEAD"], { encoding: "utf8" }).trim();
+    return execFileSync("git", ["rev-parse", "--short=8", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   } catch {
     return "unknown";
   }
@@ -157,130 +130,20 @@ export const SCENARIO_DEFS = [
 
 export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
 
-// ── Byte budget ───────────────────────────────────────────────────
-//
-// Until the pre-3.0.0 tightening the grid was 0.1 KB with about 100 bytes of
-// room, the same shape as vlist. The rule now in force is at the top of this
-// file. A budget exists to catch a regression, not a rounding. Sizes quoted
-// anywhere else come from a run of this script, never from this table.
-//
-// Filled from a measured run. Replace a ceiling only when the component
-// actually grew for a reason you can name.
-
-/** Tenth-of-a-KB ceiling, matching how sizes are quoted. */
-export const kb = (n: number): number => Math.floor(n * 1024);
-
 /**
  * Brotli of the initial graph at quality 11 — what a CDN serves, the setting
- * check-adapter-size.ts gates adapters on. Reported beside `gzBytes`; no
- * budget reads it.
+ * check-adapter-size.ts uses. Reported beside `gzBytes`.
  */
 export const brotliBytes = (bytes: Uint8Array): number =>
   brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length;
 
-export const BUDGET_BYTES: Record<ScenarioName, number> = {
-  // The nearest-[dir] direction module (core/dom/direction, 3.2.2) is shared
-  // by every entry, so every row below crosses its old ceiling by the module's
-  // ~100-200 gzip bytes. Each was raised on 2026-10-20 to its smallest 0.05-kB
-  // notch at least 100 bytes above the measured size; the per-row
-  // measured/ceiling record is in the pull request.
-
-  core: kb(3.25), // 2,951 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  badge: kb(5.45), // 5,226 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  "bottom-app-bar": kb(4.35),
-  // layer: "top" (the top-layer helper, the Tab wrap for slotted content, cancel and
-  // the backdrop): the bottom sheet 5,652 to 6,409, the side sheet 5,279 to 6,021
-  "bottom-sheet": 8_260, // a cancelled drag settles on the nearest anchor: 8,253 B gzip, rounded up to the next 10 B. the drag settles from the released position: 8,230 B gzip, already the next 10 B. A modal outside the top layer: inert page and Tab trap: 6,639; the handle as a button: 6,773; Escape as a key press on the shared stack (family 6 B): the modal one pays core/dom/layer's stack and marker once: 6,741 to 7,190. kb(7.1) is 7,270 (80 above, short of 100); raised to kb(7.15) = 7,321 (131 above), Node 22.23.3 / npm 10.9.9
-  "side-sheet": kb(6.85), // a modal outside the top layer: inert page and Tab trap: 6,242; Escape as a key press on the shared stack (family 6 B): the modal one pays core/dom/layer's stack and marker once: 6,230 to 6,672. kb(6.6) is 6,758 (86 above, short of 100); raised to kb(6.65) = 6,809 (137 above), Node 22.23.3 / npm 10.9.9
-  button: kb(7.6), // 7,434 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  "button-group": kb(12.05), // Select(unknown) clears with a dev warning: 11,912 → 12,094
-  // main's root class option on the forward merge: next 12,107 to 12,148.
-  // main's isDisabled() on the forward merge: next e8adc013 12,170 to 12,202; 12,208 on
-  // #406's final head (re-measured on the A2 forward merge); 11,796 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  // main's press fix (0.10.6: a neighbour's width starts from its measured length) on the
-  // forward merge: next 42c1a111 11,790 to 11,913. kb(11.7) is 11,980 (67 above, short of 100); raised to kb(11.75) = 12,032, Node 22.23.3 / npm 10.9.9.
-  card: kb(6.85), // 6,653 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  carousel: 12_145, // The carousel drag under a zoomed document, on the merged tree with the shared zoom helper: 12,131 B gzipped in CI 45707510292, the next 10 B. Preceding: The uncontained end-of-content cap on the merged tree: 12,034 B gzipped measured in CI 45684281101, the next 10 B. The carousel drag after a click: 11,935 B gzipped in CI 45673537279, the next 10 B. // The carousel drag after a click: 11,935 B gzipped in CI 45673537279, the next 10 B. Preceding: The carousel drag after a click: 11,886 B gzipped before the change and +37 B of code after it in CI 45671878156, the next 10 B. Preceding: The release's own pointer, seen in the capture phase: 11,886 B gzip in CI 45380209844, rounded up to the next 10 B, owner decision 2026-11-24. Preceding row:  The review fixes (outside release, uncontained space): 11,826 B gzip in CI 45376104610, rounded up to the next 10 B, owner decision 2026-11-24. Preceding row:  The carousel viewport layer: 11,799 B gzip in CI 45363617631, rounded up to the next 10 B, owner decision 2026-11-24. Preceding row: opt-in wheel scrolling with momentum: 10.3 to 10.9 KB against 2ef11f0; 11,106 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the dir MutationObserver for a flip at rest (#126: logical 0 is physical 0, so no scroll fires and the layout stayed stale): 11,468 to 11,482 against 335f6578; 11,600 measured +1% to the next 50, approved as a one-off
-  checkbox: kb(5.85), // Boolean change value plus the HTML valueAttribute token; main's isDisabled() on the forward merge: next 5,644 to 5,658. 5,645 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-  chips: kb(9.3), // Chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (follow-up): 9,305 to 9,319; 9,159 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  datepicker: 13_250, // Conformance; swiping; year list; full screen; read-only, required, one change shape: 12,332; aria-disabled: 12,412; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, and the docked picker's click by the marker: 12,407 to 12,878. kb(12.65) is 12,953 (75 above, short of 100); raised to kb(12.7) = 13,004 (126 above), Node 22.23.3 / npm 10.9.9
-  // material/components/datepicker/deferred: the shell, with the calendar
-  // imported on the first open (its payload in DEFERRED_BUDGET_BYTES below).
-  // 9,266 measured: the shell, the field and the stand-in the shell's surface
-  // tuple calls. kb(9.1) is 9,318 (52 above, short of 100); raised to
-  // kb(9.15) = 9,369 (103 above). The load error event, with its measured
-  // shrinks, brings the scenario to 9,377; raised to kb(9.17) = 9,390 (13
-  // above), owner decision 2026-11-17.
-  "datepicker-deferred": kb(9.17),
-  dialog: kb(13.3), // layer: "top", as the sheets: 12,047 to 12,870; the navigation bar's cascade layer name in every sheet: 12,999 to 13,005; 12,722 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the open / close contract (its own open state, the three tracked timers and their cancelling, the repeat-call and re-entry guards): 12,714 to 12,796 against f463146d. kb(12.55) is 12,851 (55 above, short of 100); raised to kb(12.6) = 12,902 (106 above), Node 22.23.3 / npm 10.9.9; dismissible when open() returns, except by the key press that opened it, and destroy() removing the document listeners: 12,796 to 12,821 against 67045e1e. kb(12.6) is 12,902 (81 above, short of 100); raised to kb(12.65) = 12,953 (132 above), Node 22.23.3 / npm 10.9.9; the opening key by a flag for the task of open(), in both layers, in place of the stamp: 12,821 to 12,814; Escape as a key press for the modals (family 6): the shared stack in core/dom/layer with one window listener for the topmost modal, the key press sent on as a cancel event in the top layer, and the forced close: 12,814 to 13,020 against 905a6441. kb(12.8) is 13,107 (87 above, short of 100); raised to kb(12.85) = 13,158 (138 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks): 13,020 to 13,201. kb(12.85) is 13,158 (43 under it) and kb(12.95) is 13,260 (59 above, short of 100); raised to kb(13) = 13,312 (111 above), Node 22.23.3 / npm 10.9.9; a key from inside another open <dialog> left to that dialog: 13,201 to 13,247. kb(13) is 13,312 (65 above, short of 100); raised to kb(13.05) = 13,363 (116 above), Node 22.23.3 / npm 10.9.9
-  divider: kb(3.9),
-  drawer: 10_190, // the modal drawer's layer: "top": 7,622 to 8,109; 7,864 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; Escape as a key press on the shared stack (family 6 B): the modal one pays core/dom/layer's stack and marker once, and the key press sent on as a cancel event in the top layer: 7,877 to 8,324. kb(8.2) is 8,396 (72 above, short of 100); raised to kb(8.25) = 8,448 (124 above), Node 22.23.3 / npm 10.9.9 Drawer links and expandable sections: 10,159 B in CI 44587668285; 10,180 B with live section state in CI 44592311998.
-  fab: kb(5.55), // 5,331 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  "fab-menu": 10_390, // The shift and the final button merge together: 10,386 B measured on the merged tree, rounded up to the next 10 B. The shift with the first button merge: 10,351 B measured, raised to the next 10 B. The list opens on the side with room, on top of the button items: 10,242, raised to the next 10 B. With the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304; the width reveal and the clamped colour easing: 8,381; 8,177 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; open in the call for the menu presentation, close() before the surface arrives, and the last open() winning during the load (families 3 and 5): 8,174 to 8,204 against e64fbafa. kb(8.1) is 8,294 (90 above, short of 100); raised to kb(8.15) = 8,345 (141 above), Node 22.23.3 / npm 10.9.9; list items are buttons, without the progress chunk createButton keeps: 8,426 to 9,880. kb(9.65) is 9,881 (1 above) and kb(9.7) is 9,932 (52 above, short of 100); raised to kb(9.75) = 9,984 (104 above)
-  "extended-fab": kb(6.15), // 5,929 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  "icon-button": kb(6.5), // 6,374 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  list: 7_420, // Full list anatomy. 6,578 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; raised to 7,270 by the owner's decision, 2026-11-05; raised to 7,420 for the rebuilt-row control names, whose stacked measurement is 7,396, owner decision 2026-11-17.
-  // layer: "top" and the core/dom top-layer helper add 485 (12,519 to 13,004)
-  menu: 13_600, // The menu in a scrolling container: 13,583 B gzipped in CI 45844480676, the next 10 B. Preceding: The selected option's layout scroll: 13,060 B gzipped in CI 45833236861, measured + 10 B under the owner's standing budget rule (2026-11-19). Preceding: kb(12.75) = 13,056. 12,453 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks): 12,494 to 12,660 against e64fbafa's tree. kb(12.45) is 12,748 (88 above, short of 100); raised to kb(12.5) = 12,800 (140 above), Node 22.23.3 / npm 10.9.9
-  "navigation-bar": kb(6.05), // 5,848, its destinations shared with the rail
-  "navigation-rail": kb(6.85), // 6,693 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
-  progress: kb(10.6),
-  "loading-indicator": kb(9.5), // the Compose-exact shapes: 9,138 to 9,447, the first-arc split 149 B of it
-  "split-button": kb(9.65), // the menu is loaded on first open (menu/on-demand.ts): 17,760 to 9,677 measured against ae4c8298, its first-open payload in DEFERRED_BUDGET_BYTES below. The menu/inner symbol module and menu/on-demand are the only menu modules still initial. kb(9.5) is 9,728 (51 above, short of 100); raised to kb(9.55) = 9,779 (102 above), Node 22.23.3 / npm 10.9.9; the stand-in narrowed to the operations the select and split button reach (toggle, getSelected, setOpener, getOpener, off and the opener state gone): 9,677 to 9,595 measured at 1a46844c. kb(9.45) is 9,676 (81 above, short of 100); back to kb(9.5) = 9,728 (133 above), Node 22.23.3 / npm 10.9.9; an item skips the button registry: 9,728 to 9,757. kb(9.55) is 9,779 (22 above, short of 100) and kb(9.6) is 9,830 (73 above); raised to kb(9.65) = 9,881 (124 above)
-  radios: kb(5.35),
-  search: kb(11.05), // the open view in the top layer: 9,759; combobox, contained and divided: 10,114; minWidth and maxWidth: 10,161; trailing items, avatar, supporting text, reopening: 10,477; the deferred opening focus is cancelled: 10,509 to 10,566. kb(10.3) is 10,547, which does not fit; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, for the full-screen view: 10,518 to 10,956. kb(10.75) is 11,008 (52 above, short of 100); raised to kb(10.8) = 11,059 (103 above), Node 22.23.3 / npm 10.9.9
-  select: 13_546, // The selected option's layout scroll: 13,536 B gzipped in CI 45833236861, measured + 10 B under the owner's standing budget rule (2026-11-19). Preceding: kb(13.2) = 13,516. the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter: 20,608; main's root class option on the forward merge: next 20,743 to 20,790; 20,821 on the A2 forward merge (17 B left); the menu's tabindex reset: 20,867, which does not fit kb(20.35). 20,853 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 20,863 to 21,016. kb(20.6) is 21,094 (78 above, short of 100); raised to kb(20.65) = 21,145 (129 above), Node 22.23.3 / npm 10.9.9; the menu loaded on first open (menu/on-demand.ts): 21,002 to 13,484 measured against 9b8999ab, the menu/inner symbol module and menu/on-demand the only menu modules still initial, its first-open payload in DEFERRED_BUDGET_BYTES below. kb(13.25) is 13,568 (84 above, short of 100); tightened to kb(13.3) = 13,619 (135 above), Node 22.23.3 / npm 10.9.9; the stand-in narrowed to the operations the select and split button reach: 13,484 to 13,406 measured at 1a46844c. kb(13.15) is 13,465 (59 above, short of 100); tightened to kb(13.2) = 13,516 (110 above), Node 22.23.3 / npm 10.9.9
-  slider: kb(13.15), // Slider conformance; the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value: 13,276; 13,158 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
-  // follows modals opening and closing: 11,533 to 12,320
-  snackbar: kb(12.3), // 12,046 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; the button's body moved to compose.ts so a list item can take the button without its progress chunk: 12,441 to 12,469. kb(12.25) is 12,544 (75 above, short of 100); raised to kb(12.3) = 12,595 (126 above)
-  switch: kb(6.35), // #214 conformance; #218 node labels; 6,221 on the A2 forward merge (25 B left). 6,188 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
-  tabs: kb(13.6), // the indicator anchors to the active label instead of measuring it: 13,467; derived ids and the data-value panel lookup: 13,542 to 13,685; 13,359 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9. The local button merge rides in this bundle: 13,772 to 13,790. kb(13.55) is 13,875 (85 above, short of 100); raised to kb(13.6) = 13,926.
-  // the field, the supporting text row and the counter: 8,290. The required
-  // asterisk, the live error and the trailing icon button: 8,314 to 8,926 against 7cd57a6.
-  // main's placement on demand met next's placement timer reset: next 8,948 to 9,021 on the forward merge.
-  "text-field": kb(9.05),
-  timepicker: kb(11.43), // the draft, input event, dialog in the component's tree and disabled: 10,639; Escape as a key press on the shared stack (family 6 C): core/dom/layer's stack and marker, paid once, and the open option applied when the factory returns: 10,628 to 11,099. kb(10.9) is 11,161 (62 above, short of 100); raised to kb(10.95) = 11,212 (113 above), Node 22.23.3 / npm 10.9.9; owner decision 2026-11-09: 11,704 B for the time picker transitions in 3.10.1
-  "top-app-bar": kb(4.65),
-  toolbar: kb(11.3), // With its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374; the toggles' change value: 11,454 to 11,479; 11,166 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; an item skips the button registry: 11,468 to 11,470. kb(11.25) is 11,520 (50 above, short of 100); raised to kb(11.3) = 11,571 (101 above)
-  // material/core/shapes: every shape by name, and one shape alone
-  shapes: kb(4.2), // materialShapePath, all 35: 4,190
-  "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
-  tooltip: 6_480, // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952; the on-screen fix (flip on the placement axis, both-axis clamp, arrow re-anchor on clamp, class derived from final geometry): 6,298 gzipped, the smallest correct form — re-anchoring unconditionally breaks the rich rows' requested anchor, and a centre-comparison anchor pick misses the target at a clamped edge (floor/material#173). kb(6.1) = 6,246 raised to 6,300 for this fix only, 2026-11-01; raised to 6,400, owner decision 2026-11-10, to ship the tooltip fix (#347); raised to 6,480 for the tooltip touch fix, measured 6,476, owner decision 2026-11-19.
-  // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
-  // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
-  // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
-  // alone on dba5ba9); the time picker limits and steps: 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: 133_270, // The menu in a scrolling container plus the hidden bar on the merged tree: 133,251 B gzipped in CI 45848715799, the next 10 B. Preceding: The menu in a scrolling container: 133,234 B gzipped in CI 45844480676. Preceding: The hidden bar on the select tree: 132,671 B gzipped in CI 45841924445, raised to 132,690. Preceding: The selected option's layout scroll: 132,649 B gzipped in CI 45833236861, measured + 10 B under the owner's standing budget rule (2026-11-19). Preceding: The menu and select under a zoomed document: 132,484 B gzipped in CI 45697026426, the next 10 B. Preceding: The uncontained end-of-content cap on the merged tree: 132,396 B gzipped measured in CI 45684281101, the next 10 B. The carousel drag after a click: 132,289 B gzipped before the change and +37 B of code after it in CI 45671878156, the next 10 B. // The carousel drag after a click: 132,289 B gzipped before the change and +37 B of code after it in CI 45671878156, the next 10 B. Preceding: The pressed handle's pieces follow it by 1 px: 132,289 B gzipped in CI 45610268526, raised to measured + 10 B. Preceding row: the slider's handle on the track's corner scale and its pressed handle: 132,141 B gzipped in CI 45501132647, raised to measured + 10 B. Preceding row: the release's own pointer: 132,103 B gzipped in CI 45380209844, rounded up to the next 10 B, owner decision 2026-11-24. Preceding row:  The review fixes: 132,016 B gzipped in CI 45376104610, rounded up to the next 10 B, owner decision 2026-11-24. Preceding row:  The carousel viewport layer on the merged tree: 131,988 B gzipped measured in CI 45354453435, raised to the next 10 B, owner decision 2026-11-24. Previous row: A cancelled drag settles on the nearest anchor: 131,718 B measured, rounded up to the next 10 B. The sparse-drag settle: 131,697 B measured, rounded up to the next 10 B. The sheet follows the pointer and the peek height shares the spring: 131,682 B measured, rounded up to the next 10 B. The shift and the final button merge together: 130,862 B measured on the merged tree, rounded up to the next 10 B. The shift with the first button merge: 130,819 B measured, raised to the next 10 B. The list stays on the side it opened while it closes: 130,697, raised to the next 10 B. The list opens on the side with room, with the button items: 130,690, already the next 10 B. The search fix on main measured 130,370. List items are buttons, and the button body is shared so the menu leaves progress on createButton: 130,359 to 130,420. kb(127.45) = 130,508 (88 above). App bar and navigation drawer names, measured under the base ceiling (130,359 B in CI 45042493588); search in the top layer: 115,628; its combobox and variants: 115,909; search's trailing items and reopening: 116,488; the date picker's field states and one change shape: 116,800; the text field's field, supporting text row and counter: 117,305; the toolbar: 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu: 122,060; the FAB menu motion: 122,085 to 122,178; merged with main at 5bc71da: 122,232; the Material shapes: 122,267 to 122,619; the text field's asterisk, live error and trailing button: 122,623 to 123,218 against 7cd57a6; slider and tabs positions without measuring: 123,940; the navigation bar: 124,071 to 125,033 against 746b127 (with the checkbox); the carousel's wheel scrolling after the forward merge: 125,722 against cc8250e; config on* options as listeners, after the second merge with next: 124,359. kb(121.45) is 124,364 (5 bytes of room, short of 100). kb(121.5) is 124,416 (57 above). 124,359 raised to kb(121.55), not grown, against 43a5d49e, Node 22.23.3 / npm 10.9.9; the inner menu behind a symbol, split button setItems and getItems, and `setItems` creates the split button's menu when it had none: 124,355 to 124,469 against 4da0cd98. kb(121.6) is 124,518 (49 above, short of 100); raised to kb(121.65) = 124,569 (100 above), Node 22.23.3 / npm 10.9.9; the snackbar's queued state and isOpen(), a queued snackbar leaving the queue when hidden, dropped or destroyed, isOpen() on the date picker and its opening click, the split button's destroyed guard (family 4): 124,474 to 124,580 against 58322f08. kb(121.75) is 124,672 (92 above, short of 100); raised to kb(121.8) = 124,723, Node 22.23.3 / npm 10.9.9; the dialog's open / close contract (family 1): 124,469 to 124,538 against f463146d. kb(121.7) is 124,620 (82 above, short of 100); raised to kb(121.75) = 124,672 (134 above), Node 22.23.3 / npm 10.9.9; the dialog dismissible when open() returns (family 1): 124,562, 110 of room, not raised; families 1 and 4 together, merged with next df25eb0f: 124,674. kb(121.8) is 124,723 (49 above, short of 100); raised to kb(121.85) = 124,774 (100 above), Node 22.23.3 / npm 10.9.9; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it (family 2): 124,566 to 124,613 against d306d4c2. kb(121.75) is 124,672 (59 above, short of 100); raised to kb(121.8) = 124,723 (110 above), Node 22.23.3 / npm 10.9.9; families 1, 2 and 4 together, merged with 2c2990cc: 124,718, then 124,692 with the dead preventDefault off the menu's and the select's payloads (select 20,883 to 20,863). kb(121.85) is 124,774 (82 above, short of 100); raised to kb(121.9) = 124,825 (133 above), Node 22.23.3 / npm 10.9.9; the FAB menu's open in the call (families 3 and 5), with next 5d263059 merged (the family 4 follow-ups): 124,755. kb(121.9) is 124,825 (70 above, short of 100); raised to kb(121.95) = 124,876 (121 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals (family 6): the shared stack in core/dom/layer with one window listener for the topmost modal, the key press sent on as a cancel event in the top layer, and the forced close, for the dialog: 124,706 to 124,917 against 905a6441. kb(122.05) is 124,979 (62 above, short of 100); raised to kb(122.1) = 125,030 (113 above), Node 22.23.3 / npm 10.9.9; Escape as a key press for the modals and the marker (family 6 A), merged with next 18158bdc: 124,756 to 125,152. kb(122.3) is 125,235 (83 above, short of 100); raised to kb(122.35) = 125,286 (134 above), Node 22.23.3 / npm 10.9.9; a key from inside another open <dialog> left to that dialog: 125,155 to 125,203. kb(122.35) is 125,286 (83 above, short of 100); raised to kb(122.4) = 125,337 (134 above), Node 22.23.3 / npm 10.9.9; the modal sheets and the modal drawer on the stack (family 6 B): 125,195 to 125,259. kb(122.4) is 125,337 (78 above, short of 100); raised to kb(122.45) = 125,388 (129 above), Node 22.23.3 / npm 10.9.9; the pickers and the full-screen search on the stack (family 6 C): 125,259 to 125,357. kb(122.5) is 125,440 (83 above, short of 100); raised to kb(122.55) = 125,491 (134 above), Node 22.23.3 / npm 10.9.9; main's button-group press fix (0.10.6) on the forward merge: 125,360 to 125,486 against 42c1a111. kb(122.6) is 125,542 (56 above, short of 100); raised to kb(122.65) = 125,593, Node 22.23.3 / npm 10.9.9; the child selector on this merge: 125,486 to 125,492. kb(122.6) is 125,542 (50 above, short of 100); the ceiling stays at kb(122.65) = 125,593 (101 above); the menu's RTL position in shadow roots (3.0.1): 125,593 locally, 125,597 in CI against 5a4bd423. kb(122.65) is 125,593 (4 below in CI); raised to kb(122.8) = 125,747 (150 above), Node 22.23.3 / npm 10.9.9; the carousel's dir observer for a flip at rest and the physical drag read (#126): 125,849 to 125,896 against 335f6578; 127,200 measured +1% to the next 50, approved as a one-off; owner decision 2026-11-09: 127,500 for the 3.10.0 group, whose three pending changes measure 127,475 stacked (evidence run 42563626066); owner decision 2026-11-09: 127,850 B for the time picker transitions in 3.10.1 and card child actions in 3.11; raised to 128,000 B, owner decision 2026-11-10; raised to 128,120 B for the same 3.15.0 group, owner decision 2026-11-17; raised to 128,180 B for #388 together with the icon role, whose stacked measurement is 128,171 B, owner decision 2026-11-17; raised to 128,300 B for the menu's checked item (#416), measured 128,237 B, owner decision 2026-11-18; raised to 128,350 B for the divider insets and the bottom sheet corners, measured 128,342 B, owner decision 2026-11-19; raised to 128,380 B after the merge onto main, measured 128,371 B, owner decision 2026-11-19; raised to 128,420 B for the sheet container watch, measured 128,418 B, owner decision 2026-11-19; raised to 128,640 for the tooltip touch fix, measured 128,635, owner decision 2026-11-19.; raised to 128,660 for the closed-state attributes of a never-opened dialog and snackbar, measured 128,659, owner decision 2026-11-19 (standing rule: a size budget never blocks a PR). Drawer links and expandable sections: 130,341 B in CI 44587668285; 130,351 B with live section state in CI 44592311998.
-  // the time picker draft and search widths: 116,200 on c3e3e18; 124,245 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-};
-
-/**
- * Budgets for what a component loads with import() when it needs it, apart
- * from its initial graph: the deferred column. Same headroom rule.
- */
-export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
-  menu: kb(2.2), // the submenu feature, a chunk since then
-  "split-button": 18_170, // The menu in a scrolling container: 18,159 B gzipped in CI 45844480676, the next 10 B. Preceding: The menu and select under a zoomed document: 17,631 B gzipped in CI 45697026426, the next 10 B. Preceding: The shared placement rule: 17,540, already the next 10 B. the menu chunk, its shared chunk and the submenu chunk: 17,313 measured against ae4c8298. kb(17.0) is 17,408 (95 above, short of 100); raised to kb(17.05) = 17,459 (146 above)
-  select: 11_590, // The menu in a scrolling container: 11,573 B gzipped in CI 45844480676, the next 10 B. Preceding: The menu and select under a zoomed document: 11,037 B gzipped in CI 45697026426, the next 10 B. Preceding: The shared placement rule: 10,933, raised to the next 10 B. the menu chunk and its shared chunk, loaded on the first open (menu/on-demand.ts): 10,650 measured at 1a46844c, the 10.4 KB the deferred column had rounded. kb(10.4) is 10,649, below the measurement; kb(10.5) = 10,752 (102 above), Node 22.23.3 / npm 10.9.9; raised to 10,900 B for the menu's checked item (#416), measured 10,837, owner decision 2026-11-18
-  "fab-menu": 11_500, // The menu in a scrolling container: 11,482 B gzipped in CI 45844480676, the next 10 B. Preceding: The menu and select under a zoomed document: 10,950 B gzipped in CI 45697026426, the next 10 B. Preceding: the baseline menu of the menu presentation; the menu closed when close() returns: its state and `close` in the call, four tracked timers and their cancelling, the dismiss listeners added in open() and the flag for the event that opened it: 10,537 to 10,584 against d306d4c2. kb(10.4) is 10,649 (65 above, short of 100); raised to kb(10.45) = 10,700 (116 above), Node 22.23.3 / npm 10.9.9; the marker that tells the event in flight when open() ran from every later one, in place of the task flag (eventsFrom in core/dom/layer, one capture listener numbering key presses and clicks), through the menu: 10,582 to 10,738. kb(10.55) is 10,803 (65 above, short of 100); raised to kb(10.6) = 10,854 (116 above), Node 22.23.3 / npm 10.9.9; a list item uses composeButton, so the progress chunk stays on createButton: 10,842, under this ceiling
-  "datepicker-deferred": kb(6.3), // the calendar surface, imported on the first open: render, focus, day/month/year interaction and entry validation. 5,405 measured; kb(5.35) is 5,478 (73 above, short of 100); raised to kb(5.4) = 5,529 (124 above); the shell's split from the date-math module — its synchronous field path now ships in the first load as field-format, so the whole helper module loads with the calendar — moved the helper bytes into this column: raised to kb(6.3) = 6,451, owner decision 2026-11-09
-};
-
 export interface SizeGateInput {
   readonly buildFailures: readonly string[];
   readonly treeShakeFailures: readonly unknown[];
-  readonly overBudget: readonly string[];
-  /** Rows of the committed SIZES.md that a fresh measurement disagrees with. */
-  readonly tableDrift?: readonly string[];
 }
 
-/** The command fails if any scenario failed to build, leaked, grew past its budget, or drifted from the committed table. */
 export const sizeGateFails = (input: SizeGateInput): boolean =>
-  input.buildFailures.length > 0
-  || input.treeShakeFailures.length > 0
-  || input.overBudget.length > 0
-  || (input.tableDrift?.length ?? 0) > 0;
+  input.buildFailures.length > 0 || input.treeShakeFailures.length > 0;
 
 export const missingMeasuredScenarios = (
   measuredNames: readonly string[],
@@ -291,13 +154,8 @@ export const missingMeasuredScenarios = (
 
 // ── The published table (SIZES.md) ────────────────────────────────
 //
-// The same measurement as the console table, as Markdown: `core` (the kernel
-// every component starts from), every component, and `all`. The rows between
-// the markers are what a plain run compares the committed file against; the
-// header around them — the commit and the date — records when the table was
-// regenerated and is left out of the comparison.
+// The same kernel and component rows as the console table.
 
-export const SIZES_FILE = "SIZES.md";
 export const TABLE_OPEN = "<!-- size-table -->";
 export const TABLE_CLOSE = "<!-- /size-table -->";
 
@@ -339,40 +197,13 @@ export const renderSizesMarkdown = (
   "scenario that carries another component's code fails the run, not this table.",
   "",
   `Measured at ${measuredAt.commit} on ${measuredAt.date}. Regenerate with`,
-  "`bun run size --markdown > SIZES.md`; a plain `bun run size` fails when",
-  "these rows drift from a fresh measurement.",
+  "`bun run size --markdown > SIZES.md` on the release candidate.",
   "",
   TABLE_OPEN,
   renderSizesTable(results),
   TABLE_CLOSE,
   "",
 ].join("\n");
-
-/** Where the committed file and a fresh measurement disagree, row by row. */
-export const sizesTableDrift = (committed: string, fresh: string): readonly string[] => {
-  const rows = (text: string): readonly string[] | undefined => {
-    const open = text.indexOf(TABLE_OPEN);
-    const close = text.lastIndexOf(TABLE_CLOSE);
-    if (open === -1 || close === -1 || close < open) return undefined;
-    return text
-      .slice(open + TABLE_OPEN.length, close)
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-  };
-  const committedRows = rows(committed);
-  const freshRows = rows(fresh);
-  if (committedRows === undefined || freshRows === undefined) {
-    return [`no ${TABLE_OPEN} … ${TABLE_CLOSE} block: regenerate with \`bun run size --markdown > SIZES.md\``];
-  }
-  const drift: string[] = [];
-  for (let index = 0; index < Math.max(committedRows.length, freshRows.length); index += 1) {
-    const was = committedRows[index] ?? "(row missing)";
-    const now = freshRows[index] ?? "(row missing)";
-    if (was !== now) drift.push(`row ${index + 1}: committed ${was} — measured ${now}`);
-  }
-  return drift;
-};
 
 // ── Markers ───────────────────────────────────────────────────────
 //
@@ -828,51 +659,8 @@ const main = async (): Promise<void> => {
 
   report("");
 
-  const overBudget: string[] = [];
-
-  for (const scenario of scenarios) {
-    const budget = BUDGET_BYTES[scenario.name];
-    const result = results.find((item) => item.name === scenario.name);
-    if (!result) {
-      report(`  ✗ ${scenario.name}: not measured (build failed)`);
-      continue;
-    }
-    const over = result.gzBytes > budget;
-    if (over) overBudget.push(result.name);
-    report(
-      `  ${over ? "✗" : "✓"} ${scenario.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
-    );
-    const deferredBudget = DEFERRED_BUDGET_BYTES[scenario.name];
-    if (deferredBudget !== undefined) {
-      const deferredOver = result.deferredGzBytes > deferredBudget;
-      if (deferredOver) overBudget.push(`${result.name} (deferred)`);
-      report(
-        `  ${deferredOver ? "✗" : "✓"} ${result.name} deferred: ${result.deferredGzBytes} bytes gzipped (budget ${deferredBudget})`,
-      );
-    }
-  }
-
-  report("");
-
-  // The published table: regenerated on request, and on every plain run
-  // compared with the committed file, the way readme:check holds the README's
-  // `sizes` rows against size:check's measurement. A checkout without the file
-  // (the emitter, before the table lands) is not drift.
-  const tableDrift: string[] = [];
   if (markdown) {
     process.stdout.write(renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) }));
-  } else {
-    const sizesPath = join(root, SIZES_FILE);
-    if (existsSync(sizesPath)) {
-      const fresh = renderSizesMarkdown(results, { commit: shortCommit(), date: new Date().toISOString().slice(0, 10) });
-      tableDrift.push(...sizesTableDrift(readFileSync(sizesPath, "utf8"), fresh));
-      if (tableDrift.length === 0) {
-        report("  ✓ SIZES.md: the committed table matches this measurement");
-      } else {
-        for (const line of tableDrift) report(`  ✗ SIZES.md: ${line}`);
-      }
-      report("");
-    }
   }
 
   rmSync(scratch, { recursive: true, force: true });
@@ -881,9 +669,16 @@ const main = async (): Promise<void> => {
     if (!buildFailures.includes(name)) buildFailures.push(name);
   }
 
-  if (sizeGateFails({ buildFailures, treeShakeFailures, overBudget, tableDrift })) {
-    process.exit(1);
-  }
+  if (sizeGateFails({ buildFailures, treeShakeFailures })) process.exit(1);
+
+  const rows: SizeRow[] = results.flatMap(result => [
+    { name: `Component ${result.name} gzip`, gate: "component-gzip", bytes: result.gzBytes },
+    { name: `Component ${result.name} deferred gzip`, gate: "component-gzip", bytes: result.deferredGzBytes },
+  ]);
+  const analysis = join(root, "analysis");
+  mkdirSync(analysis, { recursive: true });
+  writeFileSync(join(analysis, "component-size.json"), JSON.stringify({ rows, results }) + "\n");
+
 };
 
 if (import.meta.main) {

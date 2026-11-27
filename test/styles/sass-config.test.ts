@@ -37,7 +37,8 @@ describe("public configure-once Sass", () => {
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {
       const original = compile(`@use "${entry}";`);
-      expect(createHash("sha256").update(original).digest("hex")).toBe(digest);
+      const measured = createHash("sha256").update(original).digest("hex");
+      expect(measured, `Replacement sass-config baseline sources.${entry} ${measured}`).toBe(digest);
       expect(compile(`@use "config"; @use "${entry}";`)).toBe(original);
     });
   }

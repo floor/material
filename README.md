@@ -989,7 +989,7 @@ The root remained 131,091 B gzip; the opt-in entry provides no root or default-b
 
 ## Sizes
 
-What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table records measurements from the latest release.
 
 <!-- sizes -->
 | Import | gzip |
@@ -1004,7 +1004,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | `material/styles`, the full stylesheet | 60.7 kB |
 <!-- /sizes -->
 
-`bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
+`bun run size` measures the initial and deferred JavaScript for each component. CI reports the change since the previous release on each pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size. The measured table — minified, gzipped and deferred, per component against the core kernel — is in [SIZES.md](SIZES.md).
 
 ## Browser support
 
