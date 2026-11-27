@@ -7,7 +7,8 @@
  * Two packed tarballs — the main tip this tree
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
- * identical bytes in existing members everywhere, except the explicit
+ * identical bytes in existing members outside the scope of changed component
+ * sources and recorded build inputs for shared element and SSR outputs. The explicit
  * allowlist (the version fields of package.json, the dist/tokens catalogue
  * data files, and whole-line additions to README.md — documentation of the new
  * data may be added, existing documentation may not be rewritten). A new
@@ -17,18 +18,22 @@
  * `material/styles/listbox`) ships at its own subpath and joins no barrel, root
  * export or default sheet, so it may add exactly its own files, export key and
  * check script without moving a default byte. Anything
- * else — a moved byte, a renamed file, a shifted bundle —
- * fails with the member named, because a data-only change has no business
- * touching a single default byte.
+ * else fails with the member named. A data-only change has an empty source
+ * scope, so its existing default bytes are all checked.
  *
  *   bun run catalogue:identity:check [branch.tgz] [base.tgz]
+ *     [--base-revision <sha>] [--input-graph <json>]
  *
  * With no arguments the branch tarball is the one packed in this directory
- * and the base the one packed in ../material-base (the CI layout).
+ * and the base the one packed in ../material-base (the CI layout). If no Git
+ * base revision is given, all existing component files are checked for identity.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
+import { changedComponentNames, changedSources } from "./catalogue-scope";
+import { elementModules, kebab, pascal } from "./element-modules";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 import { componentStyles } from "./style-manifest";
 
@@ -37,8 +42,39 @@ const sole = (directory: string): string => {
   if (tarballs.length !== 1) throw new Error(`${directory}: expected exactly one packed tarball, found ${tarballs.join(", ") || "none"}`);
   return join(directory, tarballs[0]!);
 };
-const branchTgz = process.argv[2] ?? sole(".");
-const mainTgz = process.argv[3] ?? sole("../material-base");
+const { positionals: [branchTgz = sole("."), mainTgz = sole("../material-base")], values } = parseArgs({
+  options: { "base-revision": { type: "string" }, "input-graph": { type: "string" } },
+  allowPositionals: true,
+});
+const elementNames = new Set(elementModules.flatMap(({ name, module }) => [kebab(name), module]));
+const elementSourceNames = new Set(elementModules.map(({ module }) => module));
+const baseRevision = values["base-revision"] ?? process.env.MTRL_CATALOGUE_BASE_REVISION;
+const sources = baseRevision === undefined ? new Set<string>() : changedSources(baseRevision);
+const changedComponents = changedComponentNames(sources, elementSourceNames);
+const graphPath = values["input-graph"] ?? process.env.MTRL_CATALOGUE_INPUT_GRAPH;
+const inputs = new Map<string, string[]>(graphPath === undefined ? [] :
+  Object.entries(JSON.parse(readFileSync(graphPath, "utf8")) as Record<string, string[]>));
+const defaultStyleNames = new Set(Object.entries(componentStyles).filter(([, entry]) => !entry.optIn).map(([name]) => name));
+const svelteOwners = new Map([...elementNames].map(name => [pascal(name), name]));
+
+/** Map only single-component members. Shared bundles, declarations and the
+ * full stylesheet have no component owner. */
+function componentOwner(member: string): string | undefined {
+  const factory = /^dist\/components\/([\w-]+)\/.+\.(?:js|d\.ts)$/.exec(member)?.[1];
+  if (factory) return factory;
+
+  const element = /^dist\/(?:elements|react|solid|vue)\/([\w-]+)\.(?:js|d\.ts)$/.exec(member)?.[1];
+  if (element && elementNames.has(element)) return element;
+
+  const svelte = /^dist\/svelte\/([\w-]+)\.svelte(?:\.d\.ts)?$/.exec(member)?.[1];
+  if (svelte) return svelteOwners.get(svelte);
+
+  const style = /^(?:dist\/(?:styles|elements\/css)\/|src\/styles\/components\/_)([\w-]+)\.(?:js|css|scss)$/.exec(member)?.[1];
+  if (style && defaultStyleNames.has(style)) return style;
+
+  const host = /^dist\/elements\/(?:css\/hosts|preupgrade)\/([\w-]+)\.css$/.exec(member)?.[1];
+  return host && elementNames.has(host) ? host : undefined;
+}
 
 /** The normalized member map of a tarball: path -> content bytes. */
 const readTarball = (tgz: string): Map<string, Buffer> => {
@@ -99,6 +135,8 @@ const additionsOnly = (before: Buffer, after: Buffer): boolean => {
 };
 
 const problems: string[] = [];
+const scopedChanges: string[] = [];
+let identicalMembers = 0;
 // A new optional stylesheet adds catalogue references. Permit only its exact
 // declared pair, validated against the unchanged parent sheet and dependency
 // imports. Once present on main, even these files are byte-frozen below.
@@ -145,9 +183,23 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
     problems.push(`removed member ${member}: the default surface cannot lose a file`);
     continue;
   }
-  if (inMain.equals(inBranch)) continue;
+  if (inMain.equals(inBranch)) {
+    identicalMembers++;
+    continue;
+  }
   if (!allowed(member)) {
-    problems.push(`changed member ${member} (${inMain.length} -> ${inBranch.length} bytes): a data-only change must not touch the default surface`);
+    const owner = componentOwner(member);
+    const sharedInputs = owner === undefined && /^dist\/(?:elements|ssr)\//.test(member)
+      ? (inputs.get(member.slice("dist/".length)) ?? []).filter(source => sources.has(source))
+      : [];
+    const size = `${inMain.length} -> ${inBranch.length} bytes`;
+    if (owner && changedComponents.has(owner)) {
+      scopedChanges.push(`${owner} changed ${member} (${size})`);
+    } else if (sharedInputs.length) {
+      scopedChanges.push(`changed ${member} (${size}) from ${sharedInputs.join(", ")}`);
+    } else {
+      problems.push(`changed member ${member} (${size}) outside the changed component scope`);
+    }
   } else if (member === "README.md" && !additionsOnly(inMain, inBranch)) {
     problems.push("changed member README.md beyond whole-line additions: the new data may be documented, existing documentation may not be rewritten");
   }
@@ -236,13 +288,17 @@ for (const [name, entry] of optInEntries) {
 // there is retired with this block. The member loop above already governs
 // these files: byte-identical members pass, and a regenerated catalogue
 // document or schema is the sanctioned data change this gate exists to
-// allow, while every default member and the whole manifest stay frozen
-// exactly as before.
+// allow. The same comparison holds all shared and component output to its
+// recorded source scope.
 
+if (scopedChanges.length) {
+  console.log("Catalogue members backed by changed sources");
+  for (const change of scopedChanges) console.log(`  - ${change}`);
+}
 if (problems.length) {
   console.error(`catalogue identity check failed (${problems.length} problem(s)):`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
 const added = [...branch.keys()].filter(member => !main.has(member));
-console.log(`catalogue identity check passed: ${main.size} default members byte-identical; additions: ${added.sort().join(", ")}`);
+console.log(`catalogue identity check passed: ${identicalMembers} existing members byte-identical, ${scopedChanges.length} scoped changes; additions: ${added.sort().join(", ")}`);

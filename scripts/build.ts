@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { cp, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
+import type { CatalogueInputGraph } from "./catalogue-input-graph";
 import { buildModules, buildSSR, stripShippedModules } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { compareDeclarationIdentity } from "./check-declaration-identity";
@@ -11,6 +13,8 @@ import { emitSvelte } from "./svelte-package";
 import { generateTokenCatalogue } from "./generate-token-catalogue";
 
 const outdir = "./dist";
+const graphPath = process.env.MTRL_CATALOGUE_INPUT_GRAPH;
+const graph: CatalogueInputGraph | undefined = graphPath ? new Map() : undefined;
 const pkg = await Bun.file("package.json").json();
 const banner = `/*! ${pkg.name} v${pkg.version} | MIT */`;
 
@@ -21,11 +25,11 @@ try {
   const beforeDocs = await mkdtemp("./.mtrl-doc-proof-");
   try {
     console.log("Building ESM modules and declarations...");
-    buildModules(staging);
+    buildModules(staging, graph);
     console.log("Writing the Svelte components...");
     await emitSvelte(staging);
     console.log("Building full and optional stylesheets...");
-    await buildStyles(staging, banner);
+    await buildStyles(staging, banner, graph);
     // The versioned token catalogue is generated from the final CSS outputs
     // while packing, never committed: nothing generated enters git, and the
     // build supplies the implementation commit the data records (see
@@ -35,7 +39,7 @@ try {
     const catalogue = await generateTokenCatalogue(staging, pkg.version, "analysis");
     console.log(`Generated the token catalogue (${catalogue.raw} B raw, ${catalogue.gzip} B gzip)`);
     console.log("Bundling the server-only SSR entry...");
-    await buildSSR(staging);
+    await buildSSR(staging, graph);
 
     // Keep the nested manifest in sync, including CSS side effects and exports.
     const relocate = (value: unknown): unknown => {
@@ -75,7 +79,7 @@ try {
     // Fold the declarations no `exports` entry names into the barrel that
     // exports their directory, so a consumer reads one file per entry instead
     // of one per module. The pass keeps each barrel's exported names exactly.
-    const consolidated = await consolidateDeclarations(staging, manifest.exports);
+    const consolidated = await consolidateDeclarations(staging, manifest.exports, undefined, graph);
     console.log(
       `Consolidated ${consolidated.merged} declarations into ${consolidated.groups} barrels ` +
       `(${consolidated.bytes} bytes, ${consolidated.kept.length} kept)`,
@@ -95,6 +99,11 @@ try {
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);
+    if (graph && graphPath) {
+      await mkdir(dirname(graphPath), { recursive: true });
+      const inputs = Object.fromEntries([...graph].map(([member, sources]) => [member, [...sources].sort()]));
+      await writeFile(graphPath, JSON.stringify(inputs) + "\n");
+    }
     console.log(`Built ${pkg.name} ${pkg.version} in ${outdir}`);
   } finally {
     await rm(staging, { recursive: true, force: true });

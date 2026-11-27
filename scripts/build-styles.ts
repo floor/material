@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
 import * as sass from "sass";
 import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, baseElementsStyles, baseLiteStyles, typographyStyles, typographyDependencies, utilityStyles,
@@ -135,7 +136,7 @@ async function validateRuntimeDependencies(outdir: string) {
   assert.equal(missing.size, 0, [...missing].join("\n"));
 }
 
-export async function buildStyles(outdir: string, banner: string) {
+export async function buildStyles(outdir: string, banner: string, graph?: CatalogueInputGraph) {
   resolveStyleDependencies(Object.keys(componentStyles));
   await validateRuntimeDependencies(outdir);
   const options = sassOptions();
@@ -216,7 +217,7 @@ export async function buildStyles(outdir: string, banner: string) {
     await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
     await emitExplicit(`themes/${name}-contrast`, name, false);
   }
-  await emitElementStyles(outdir, options, banner);
+  await emitElementStyles(outdir, options, banner, graph);
 }
 
 /**
@@ -238,17 +239,22 @@ export async function buildStyles(outdir: string, banner: string) {
  * spec name, each wrapped in `@layer mtrl.preupgrade`. `preupgradeStyles(prefix)`
  * in `elements/preupgrade.js` builds the whole sheet for another tag prefix.
  */
-async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string) {
+async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string, graph?: CatalogueInputGraph) {
   const dir = `${outdir}/elements/css`;
   await mkdir(dir, { recursive: true });
   await mkdir(`${dir}/hosts`, { recursive: true });
   const { elements } = await import("../src/elements");
   const definition = await import("../src/elements/define");
   const { hostStyleText } = definition;
-  const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
+  const recordStyles = graph && ((loaded: URL[]) => {
+    recordCatalogueInputs(graph, "elements/styles.js", loaded.filter(url => url.protocol === "file:").map(url => fileURLToPath(url)));
+  });
+  const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options, recordStyles);
   const styleExports: string[] = [];
   const write = async (name: string, source: string, imports: string[]) => {
-    const css = sass.compileString(`@use "${source}";`, options).css;
+    const compiled = sass.compileString(`@use "${source}";`, options);
+    recordStyles?.(compiled.loadedUrls);
+    const { css } = compiled;
     styleExports.push(`export const ${styleIdentifier(name)} = ${JSON.stringify(css)};`);
     await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports));
     await writeFile(`${dir}/${name}.css`, css);
@@ -266,6 +272,13 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
   await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
   await writeFile(`${dir}/index.d.ts`, "export {};\n");
+  if (graph) {
+    const { elementModules } = await import("./element-modules");
+    recordCatalogueInputs(graph, "elements/css/index.js", [
+      ...graph.get("elements/index.js") ?? [],
+      ...elementModules.map(({ module }) => `src/elements/${module}.ts`),
+    ]);
+  }
 
   for (const element of Object.values(elements)) {
     const hostCss = hostStyleText(element.spec);
@@ -300,14 +313,18 @@ const SHARED_PREUPGRADE = ["config", "field", "index", "shared-app-bar", "shared
  * Each element's pre-upgrade rules (src/styles/elements/_<name>.scss), by
  * name. Every element has them, and every partial is an element's or shared.
  */
-export async function preupgradeStyles(names: string[], options: sass.StringOptions<"sync">): Promise<Map<string, string>> {
+export async function preupgradeStyles(
+  names: string[], options: sass.StringOptions<"sync">, recordInputs?: (urls: URL[]) => void,
+): Promise<Map<string, string>> {
   const partials = (await readdir("src/styles/elements"))
     .map(file => /^_(.+)\.scss$/.exec(file)?.[1])
     .filter((name): name is string => !!name && !SHARED_PREUPGRADE.includes(name));
   assert.deepEqual([...partials].sort(), [...names].sort(), "Pre-upgrade partials differ from the elements");
   const rules = new Map<string, string>();
   for (const name of names) {
-    const css = sass.compileString(`@use "elements/${name}";`, options).css;
+    const compiled = sass.compileString(`@use "elements/${name}";`, options);
+    recordInputs?.(compiled.loadedUrls);
+    const { css } = compiled;
     // Non-ASCII output would start with a byte order mark, which breaks the
     // first selector once the rules are concatenated.
     assert(/^[\x20-\x7e\n]*$/.test(css), `Pre-upgrade CSS for ${name} is not printable ASCII`);

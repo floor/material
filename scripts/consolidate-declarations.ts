@@ -2,6 +2,7 @@ import ts from "typescript";
 import { readdir, readFile, rmdir, stat, unlink, writeFile } from "node:fs/promises";
 import { join, posix, resolve } from "node:path";
 import { exportTargets } from "./prune-declarations";
+import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
 
 /**
  * Fold the internal declaration modules into the exported barrels.
@@ -483,7 +484,7 @@ class Consolidation {
   }
 
   /** Merge every group, rewrite the other shipped declarations, delete the folded files. */
-  async apply(): Promise<{ merged: string[]; kept: string[] }> {
+  async apply(graph?: CatalogueInputGraph): Promise<{ merged: string[]; kept: string[] }> {
     for (const file of this.modules.keys()) {
       if (this.targets.has(file) || this.kept.has(file)) continue;
       const barrel = this.canonical(file);
@@ -501,6 +502,9 @@ class Consolidation {
       // and its shadowing-renaming allocation — must not depend on it.
       const text = this.buildGroup(barrel, [...members].sort());
       await writeFile(join(this.root, barrel), text);
+      if (graph) {
+        recordCatalogueInputs(graph, barrel, members.flatMap(member => [...graph.get(member) ?? []]));
+      }
     }
     for (const file of this.modules.keys()) {
       if (!this.targets.has(file) || this.groups.has(file)) continue;
@@ -1099,6 +1103,7 @@ export async function consolidateDeclarations(
   outdir: string,
   exports: unknown,
   fileOrder?: (files: string[]) => string[],
+  graph?: CatalogueInputGraph,
 ): Promise<ConsolidateResult> {
   const root = resolve(outdir);
   // The directory walk returns the filesystem's order, which varies between
@@ -1114,7 +1119,7 @@ export async function consolidateDeclarations(
   consolidation.loadBefore();
   consolidation.chooseKept();
   consolidation.routeNeeds();
-  const { merged, kept } = await consolidation.apply();
+  const { merged, kept } = await consolidation.apply(graph);
 
   let bytes = 0;
   for (const file of merged) {

@@ -28,10 +28,26 @@ const pack = (root: string, name: string, files: Record<string, string>): string
 };
 
 /** The gate's verdict on one tarball pair: exit code and combined output. */
-const runGate = (branch: string, base: string): { code: number; out: string } => {
-  const proc = Bun.spawnSync(["bun", "run", script, branch, base]);
+const runGate = (branch: string, base: string, scope?: { cwd: string; revision: string; graph?: string }): { code: number; out: string } => {
+  const args = scope ? ["--base-revision", scope.revision] : [];
+  if (scope?.graph) args.push("--input-graph", scope.graph);
+  const proc = Bun.spawnSync(["bun", "run", script, branch, base, ...args], { cwd: scope?.cwd });
   const text = (bytes: Uint8Array | undefined): string => (bytes ?? new Uint8Array()).toString();
   return { code: proc.exitCode, out: text(proc.stdout) + text(proc.stderr) };
+};
+
+const git = (cwd: string, ...args: string[]): string =>
+  execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+
+const commit = (cwd: string, files: Record<string, string>): string => {
+  for (const [path, bytes] of Object.entries(files)) {
+    const target = join(cwd, path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+  }
+  git(cwd, "add", ".");
+  git(cwd, "-c", "user.name=Identity Fixture", "-c", "user.email=identity@example.test", "commit", "-qm", "Fixture");
+  return git(cwd, "rev-parse", "HEAD");
 };
 
 const readMe = ["# Fixture", "", "Docs.", ""].join("\n");
@@ -155,6 +171,147 @@ describe("catalogue identity gate", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  test("catalogue and text-field source changes may move only text-field members", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const cwd = join(root, "checkout");
+      mkdirSync(cwd);
+      git(cwd, "init", "-q");
+      const revision = commit(cwd, {
+        "scripts/style-manifest.ts": "base manifest",
+        "src/components/text-field/api.ts": "base API",
+        "src/components/chips/index.ts": "other component",
+        "src/elements/text-field.ts": "base element",
+        "src/elements/define.ts": "shared element helper",
+      });
+      commit(cwd, {
+        "scripts/style-manifest.ts": "new style entry",
+        "src/components/text-field/api.ts": "new API",
+        "src/components/text-field/features/chips.ts": "new implementation",
+        "src/elements/text-field.ts": "new element",
+        "src/elements/define.ts": "shared integration",
+      });
+      const before = {
+        ...defaults,
+        "dist/components/text-field/index.js": "base entry",
+        "dist/components/text-field/api.js": "base API",
+        "dist/components/text-field/index.d.ts": "base types",
+        "dist/elements/text-field.js": "base element",
+        "dist/styles/text-field.css": "base field",
+        "dist/components/chips/index.js": "other component",
+        "dist/elements/define.js": "shared element helper",
+        "dist/styles.css": "full stylesheet",
+      };
+      const base = pack(root, "base", before);
+      const after = {
+        ...before,
+        "dist/components/text-field/api.js": "changed API",
+        "dist/components/text-field/index.d.ts": "changed types",
+        "dist/elements/text-field.js": "changed element",
+        "dist/styles/text-field.css": "changed field",
+      };
+      const scoped = runGate(pack(root, "scoped", after), base, { cwd, revision });
+      expect(scoped.code).toBe(0);
+      expect(scoped.out).toContain("text-field changed dist/components/text-field/api.js");
+      expect(scoped.out).toContain("text-field changed dist/elements/text-field.js");
+
+      const escaped = runGate(pack(root, "escaped", {
+        ...after,
+        "dist/components/chips/index.js": "unrelated drift",
+        "dist/components/text-field/features/chips.js": "new implementation",
+        "dist/elements/define.js": "shared drift",
+        "dist/styles.css": "full sheet drift",
+      }), base, { cwd, revision });
+      expect(escaped.code).toBe(1);
+      expect(escaped.out).toContain("changed member dist/components/chips/index.js");
+      expect(escaped.out).toContain("added member dist/components/text-field/features/chips.js");
+      expect(escaped.out).toContain("changed member dist/elements/define.js");
+      expect(escaped.out).toContain("changed member dist/styles.css");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test("shared element and SSR outputs require their own changed build input", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const cwd = join(root, "checkout");
+      const graph = join(root, "input-graph.json");
+      mkdirSync(cwd);
+      git(cwd, "init", "-q");
+      const revision = commit(cwd, {
+        "src/elements/styles.ts": "base styles",
+        "src/elements/define.ts": "shared element helper",
+        "src/ssr/render-element.ts": "initial SSR",
+        "src/ssr/browser.ts": "browser SSR",
+      });
+      commit(cwd, {
+        "src/elements/styles.ts": "changed styles",
+        "src/ssr/render-element.ts": "changed SSR",
+      });
+      writeFileSync(graph, JSON.stringify({
+        "elements/styles.js": ["src/elements/styles.ts"],
+        "elements/define.js": ["src/elements/define.ts"],
+        "ssr/index.js": ["src/ssr/render-element.ts"],
+        "ssr/browser.js": ["src/ssr/browser.ts"],
+      }));
+      const before = {
+        ...defaults,
+        "dist/elements/styles.js": "base styles",
+        "dist/elements/define.js": "shared element helper",
+        "dist/ssr/index.js": "initial SSR",
+        "dist/ssr/browser.js": "browser SSR",
+      };
+      const base = pack(root, "base", before);
+      const after = {
+        ...before,
+        "dist/elements/styles.js": "changed styles",
+        "dist/ssr/index.js": "changed SSR",
+      };
+      const changed = pack(root, "changed", after);
+      const allowed = runGate(changed, base, { cwd, revision, graph });
+      expect(allowed.code).toBe(0);
+      expect(allowed.out).toMatch(/changed dist\/elements\/styles\.js .* from src\/elements\/styles\.ts/);
+      expect(allowed.out).toMatch(/changed dist\/ssr\/index\.js .* from src\/ssr\/render-element\.ts/);
+      expect(runGate(changed, base, { cwd, revision }).code).toBe(1);
+
+      const drift = runGate(pack(root, "drift", {
+        ...after,
+        "dist/elements/define.js": "unrelated element drift",
+        "dist/ssr/browser.js": "unrelated SSR drift",
+      }), base, { cwd, revision, graph });
+      expect(drift.code).toBe(1);
+      expect(drift.out).toContain("changed member dist/elements/define.js");
+      expect(drift.out).toContain("changed member dist/ssr/browser.js");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test("manifest-only edits still freeze every default member", () => {
+    const root = mkdtempSync(join(tmpdir(), "mtrl-identity-"));
+    try {
+      const cwd = join(root, "checkout");
+      mkdirSync(cwd);
+      git(cwd, "init", "-q");
+      const revision = commit(cwd, {
+        "scripts/style-manifest.ts": 'export const typographyDependencies = ["base"];',
+        "src/components/text-field/api.ts": "same source",
+      });
+      commit(cwd, { "scripts/style-manifest.ts": 'export const typographyDependencies = ["base", "button"];' });
+      const before = {
+        ...defaults,
+        "dist/styles/typography.js": 'import "./base.js";',
+        "dist/components/text-field/api.js": "same source",
+      };
+      const base = pack(root, "base", before);
+      const drift = runGate(pack(root, "drift", {
+        ...before,
+        "dist/styles/typography.js": 'import "./base.js";\nimport "./button.js";',
+        "dist/components/text-field/api.js": "same source plus one byte.",
+      }), base, { cwd, revision });
+      expect(drift.code).toBe(1);
+      expect(drift.out).toContain("changed member dist/styles/typography.js");
+      expect(drift.out).toContain("changed member dist/components/text-field/api.js");
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
   test("a changed default member fails with the member named", () => {

@@ -1,6 +1,7 @@
 import ts from "typescript";
 import { dirname, join, relative, resolve } from "node:path";
 import { readFile, readdir, writeFile } from "node:fs/promises";
+import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
 
 const VENDOR_APACHE_BANNER = /^\/\*![\s\S]*?Copyright (20\d\d) Google LLC[\s\S]*?Licensed under the Apache License, Version 2\.0[\s\S]*?\*\//;
 
@@ -150,7 +151,7 @@ export function printDeclarationModule(filename: string, text: string): string {
 }
 
 /** Emit the original module graph so consumers can tree-shake and code-split it. */
-export function buildModules(outdir: string) {
+export function buildModules(outdir: string, graph?: CatalogueInputGraph) {
   const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
   if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"));
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd(), {
@@ -176,10 +177,15 @@ export function buildModules(outdir: string) {
     }));
   }
 
-  const result = program.emit(undefined, (filename, text) => {
+  const result = program.emit(undefined, (filename, text, _bom, _onError, sourceFiles) => {
+    const member = relative(resolve(outdir), filename).replace(/\\/g, "/");
+    if (graph && sourceFiles) {
+      recordCatalogueInputs(graph, member === "ssr/render-element.d.ts" ? "ssr/index.d.ts" : member,
+        sourceFiles.map(source => source.fileName));
+    }
     // SSR JavaScript is bundled separately with its dev-only dependencies.
     // Its public declaration has no imports; keep the internal helpers private.
-    if (relative(resolve(outdir), filename).replace(/\\/g, "/").startsWith("ssr/")) {
+    if (member.startsWith("ssr/")) {
       if (filename.endsWith("/ssr/render-element.d.ts")) {
         ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), printDeclarationModule(filename, text));
       }
@@ -237,7 +243,7 @@ export function buildModules(outdir: string) {
 }
 
 /** Bundle the server implementation and linkedom, sharing mtrl's existing modules. */
-export async function buildSSR(outdir: string) {
+export async function buildSSR(outdir: string, graph?: CatalogueInputGraph) {
   const src = resolve("src");
   const server = resolve(src, "ssr");
   const packages = new Set<string>();
@@ -245,6 +251,7 @@ export async function buildSSR(outdir: string) {
     entrypoints: [join(server, "index.ts"), join(server, "browser.ts")],
     outdir: join(outdir, "ssr"),
     target: "node", format: "esm", minify: true,
+    metafile: graph !== undefined,
     plugins: [{
       name: "shared-mtrl-modules",
       setup(build) {
@@ -269,8 +276,17 @@ export async function buildSSR(outdir: string) {
         });
       },
     }],
-  });
+  } as Parameters<typeof Bun.build>[0] & { metafile: boolean }) as Awaited<ReturnType<typeof Bun.build>> & {
+    metafile?: string | { outputs: Record<string, { inputs: Record<string, unknown> }> };
+  };
   if (!result.success) throw new AggregateError(result.logs, "SSR bundle failed");
+  if (graph) {
+    const meta = typeof result.metafile === "string" ? JSON.parse(result.metafile) as Exclude<typeof result.metafile, string> : result.metafile;
+    if (!meta) throw new Error("SSR bundle did not emit its input graph");
+    for (const [file, output] of Object.entries(meta.outputs)) {
+      recordCatalogueInputs(graph, relative(resolve(outdir), resolve(outdir, "ssr", file)).replace(/\\/g, "/"), Object.keys(output.inputs));
+    }
+  }
   // Minification must not drop the bundled dependencies' redistribution notices.
   const notices: string[] = [];
   for (const root of [...packages].sort()) {
